@@ -1,0 +1,1 @@
+export { createStorageAdapter } from './storageAdapter';
