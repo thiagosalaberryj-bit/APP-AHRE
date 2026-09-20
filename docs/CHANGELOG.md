@@ -21,6 +21,10 @@ documentación se registran en este archivo.
 - Se agregaron dependencias base para navegación, almacenamiento local,
   seguridad, formularios, validación, fechas, imágenes, tipografías, íconos,
   animaciones y configuración del entorno.
+- Se agregó la documentación del modelo de datos local en
+  `docs/base-de-datos/base-datos-local.md`.
+- Se documentaron depósitos, movimientos, transferencias, deudas, pagos y
+  gastos compartidos.
 
 ### Cambiado
 
@@ -32,6 +36,9 @@ documentación se registran en este archivo.
   aprobadas y compatibles con Expo SDK 57.
 - Se agregaron en `app.json` los plugins necesarios para algunas dependencias
   nativas de Expo.
+- Se definieron las categorías como valores predefinidos del campo `categoria`
+  de los movimientos, sin crear una tabla independiente.
+- Se ajustó el nombre visible de la aplicación a `AHRE`.
 
 ### Verificación
 
@@ -39,6 +46,8 @@ documentación se registran en este archivo.
 - Metro generó correctamente el paquete para Android.
 - `expo-doctor` completó correctamente sus 21 comprobaciones.
 - La instalación de dependencias no presentó paquetes faltantes o inválidos.
+- El modelo local contempla el registro manual de deudas, pagos, transferencias
+  entre depósitos y gastos compartidos pagados por el usuario actual.
 - No se encontraron archivos TypeScript.
 - No se detectaron errores de formato en los cambios realizados.
 

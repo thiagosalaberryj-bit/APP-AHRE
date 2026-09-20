@@ -29,6 +29,8 @@ APP-AHRE/
 │   ├── CHANGELOG.md
 │   ├── arquitectura/
 │   │   └── estructura-app.md
+│   ├── base-de-datos/
+│   │   └── base-datos-local.md
 │   ├── configuracion/
 │   │   └── dependencias.md
 │   └── proceso/

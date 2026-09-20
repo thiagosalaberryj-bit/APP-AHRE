@@ -167,6 +167,7 @@ La descripción detallada de cada carpeta se encuentra en
 La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 
 - [Estructura de la aplicación](docs/arquitectura/estructura-app.md);
+- [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
 - [Historial de cambios](docs/CHANGELOG.md);
 - [Flujo de Issues, Pull Requests e historial de cambios](docs/proceso/flujo-issues-prs-changelog.md).
