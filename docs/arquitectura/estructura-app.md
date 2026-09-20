@@ -19,7 +19,6 @@ APP-AHRE/
 ├── App.js
 ├── index.js
 ├── app.json
-├── CHANGELOG.md
 ├── README.md
 ├── assets/
 │   ├── icon.png
@@ -27,6 +26,7 @@ APP-AHRE/
 │   ├── splash-icon.png
 │   └── android-icon-*.png
 ├── docs/
+│   ├── CHANGELOG.md
 │   ├── arquitectura/
 │   │   └── estructura-app.md
 │   └── proceso/

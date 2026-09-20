@@ -1,4 +1,4 @@
-# Flujo de trabajo con Issues, Pull Requests y Changelog
+# Flujo de trabajo con Issues, Pull Requests e historial de cambios
 
 Este documento define el flujo recomendado para trabajar en AHRE. Cada cambio
 debe estar relacionado con un Issue y llegar a `main` mediante un Pull Request
@@ -85,32 +85,32 @@ git diff
 
 ## 5. Responsabilidad sobre el Changelog
 
-La persona que implementa el Issue no debe modificar `CHANGELOG.md` dentro de
+La persona que implementa el Issue no debe modificar `docs/CHANGELOG.md` dentro de
 su rama de trabajo.
 
-Cuando el PR fue revisado y el reviewer confirma que el Issue está terminado,
-el reviewer es responsable de actualizar `CHANGELOG.md`. La entrada debe
+Cuando el PR fue revisado y el revisor confirma que el Issue está terminado,
+el revisor es responsable de actualizar `docs/CHANGELOG.md`. La entrada debe
 agregarse antes de mergear el PR o, si el flujo del proyecto lo requiere, en un
 commit posterior sobre `main`.
 
-Los cambios se agregan en la sección `Unreleased` y deben referenciar el Issue:
+Los cambios se agregan en la sección `Sin publicar` y deben referenciar el Issue:
 
 ```markdown
-## [Unreleased]
+## [Sin publicar]
 
-### Added
+### Añadido
 
 - Se agregó la estructura base de la aplicación. (#24)
 ```
 
 Categorías disponibles:
 
-- `Added`: funcionalidades, estructuras o documentación nuevas;
-- `Changed`: cambios en el comportamiento o la arquitectura existente;
-- `Fixed`: correcciones de errores;
-- `Removed`: funcionalidades o archivos eliminados.
+- `Añadido`: funcionalidades, estructuras o documentación nuevas;
+- `Cambiado`: cambios en el comportamiento o la arquitectura existente;
+- `Corregido`: correcciones de errores;
+- `Eliminado`: funcionalidades o archivos eliminados.
 
-El reviewer debe agregar la entrada después de verificar los cambios del PR y
+El revisor debe agregar la entrada después de verificar los cambios del PR y
 los criterios de aceptación. No se deben modificar versiones anteriores salvo
 para corregir un error de documentación.
 
@@ -173,7 +173,7 @@ que:
 - se cumplen los criterios de aceptación;
 - no se agregaron archivos o cambios innecesarios;
 - el proyecto continúa funcionando;
-- el reviewer actualizó el changelog;
+- el revisor actualizó el historial de cambios;
 - la documentación está actualizada.
 
 Si la revisión solicita cambios, realizarlos en la misma rama y publicar los
@@ -212,5 +212,5 @@ git push -u origin feature/issue-123-nombre-del-cambio
 
 Después, en GitHub: **Compare & pull request** → base `main` → completar la
 descripción → agregar `Closes #123` al final → solicitar una revisión. El
-reviewer actualiza `CHANGELOG.md` después de confirmar que el Issue está
+revisor actualiza `docs/CHANGELOG.md` después de confirmar que el Issue está
 terminado.

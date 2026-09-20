@@ -6,13 +6,10 @@
 
 <p>
   <img src="https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square" alt="Estado: en desarrollo" />
-  <img src="https://img.shields.io/badge/Versi%C3%B3n-1.0.0-2563EB?style=flat-square" alt="Versión 0.0.1" />
-</p>
-
-<p>
-  <img src="https://img.shields.io/badge/Plataforma-Android-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Plataforma Android" />
-  <img src="https://img.shields.io/badge/Expo-SDK%2057-000020?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
-  <img src="https://img.shields.io/badge/React%20Native-0.86.3-61DAFB?style=flat-square&logo=react&logoColor=20232A" alt="React Native 0.86.3" />
+  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.1.0-2563EB?style=flat-square" alt="Versión 0.1.0" />
+  <img src="https://img.shields.io/badge/Plataforma-Android-green?style=flat-square&logo=android&logoColor=green" alt="Plataforma Android" />
+  <img src="https://img.shields.io/badge/Expo-SDK%2057-white?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
+  <img src="https://img.shields.io/badge/React%20Native-0.86.3-61DAFB?style=flat-square&logo=react&logoColor=61DAFB" alt="React Native 0.86.3" />
 </p>
 
 </div>
@@ -125,7 +122,7 @@ Actualmente cuenta con:
 - pantalla inicial mínima para verificar la conexión entre las capas;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
-- changelog preparado para que el reviewer lo actualice al finalizar cada
+- historial de cambios preparado para que el revisor lo actualice al finalizar cada
   Issue.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. La
@@ -157,7 +154,7 @@ APP-AHRE/
 │   └── utils/              # Funciones auxiliares
 ├── App.js                  # Composición raíz de la aplicación
 ├── app.json                # Configuración de Expo
-├── CHANGELOG.md            # Historial de cambios
+├── docs/CHANGELOG.md       # Historial de cambios
 ├── index.js                # Registro de la aplicación en Expo
 └── README.md               # Descripción y alcance del repositorio
 ```
@@ -170,7 +167,8 @@ La descripción detallada de cada carpeta se encuentra en
 La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 
 - [Estructura de la aplicación](docs/arquitectura/estructura-app.md);
-- [Flujo de Issues, Pull Requests y Changelog](docs/proceso/flujo-issues-prs-changelog.md).
+- [Historial de cambios](docs/CHANGELOG.md);
+- [Flujo de Issues, Pull Requests e historial de cambios](docs/proceso/flujo-issues-prs-changelog.md).
 
 ## Cómo iniciar el proyecto
 
