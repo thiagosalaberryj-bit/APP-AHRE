@@ -143,7 +143,7 @@ versión comercial estable.
 ```text
 APP-AHRE/
 ├── assets/                 # Íconos e imágenes utilizadas por Expo
-├── docs/                   # Documentación de arquitectura y procesos
+├── docs/                   # Documentación de arquitectura, configuración y procesos
 ├── src/
 │   ├── components/         # Componentes reutilizables
 │   ├── constants/          # Valores constantes compartidos
@@ -167,6 +167,7 @@ La descripción detallada de cada carpeta se encuentra en
 La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 
 - [Estructura de la aplicación](docs/arquitectura/estructura-app.md);
+- [Dependencias de la aplicación](docs/configuracion/dependencias.md);
 - [Historial de cambios](docs/CHANGELOG.md);
 - [Flujo de Issues, Pull Requests e historial de cambios](docs/proceso/flujo-issues-prs-changelog.md).
 

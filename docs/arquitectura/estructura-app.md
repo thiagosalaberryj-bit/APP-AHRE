@@ -29,6 +29,8 @@ APP-AHRE/
 │   ├── CHANGELOG.md
 │   ├── arquitectura/
 │   │   └── estructura-app.md
+│   ├── configuracion/
+│   │   └── dependencias.md
 │   └── proceso/
 │       └── flujo-issues-prs-changelog.md
 ├── src/
@@ -119,7 +121,8 @@ para separarlos del código.
 ### `docs/`
 
 Contiene la documentación del proyecto. Las decisiones de arquitectura se
-guardan en `docs/arquitectura/` y los procesos de trabajo en `docs/proceso/`.
+guardan en `docs/arquitectura/`, la configuración técnica en `docs/configuracion/`
+y los procesos de trabajo en `docs/proceso/`.
 
 ## Convenciones
 
