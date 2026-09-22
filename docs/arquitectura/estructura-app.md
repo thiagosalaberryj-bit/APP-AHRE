@@ -33,6 +33,8 @@ APP-AHRE/
 │   │   └── base-datos-local.md
 │   ├── configuracion/
 │   │   └── dependencias.md
+│   ├── interfaces/
+│   │   └── sistema-visual.md
 │   └── proceso/
 │       └── flujo-issues-prs-changelog.md
 ├── src/
@@ -49,6 +51,9 @@ APP-AHRE/
 │   │   └── HomeScreen.js
 │   ├── services/
 │   │   └── index.js
+│   ├── styles/
+│   │   ├── colors.js
+│   │   └── globalStyles.js
 │   └── utils/
 │       └── structureSmokeTest.js
 ├── package.json
@@ -78,7 +83,8 @@ Ingresos, Egresos, OCR y Social.
 Contiene componentes visuales reutilizables entre dos o más pantallas. Los
 componentes utilizan PascalCase y un nombre relacionado con su responsabilidad,
 como `AmountInput.js` o `MovementCard.js`. `StructureStatus.js` es el componente
-inicial de verificación de la estructura.
+inicial de verificación de la estructura. Este Issue no crea todavía los
+componentes funcionales de las pantallas.
 
 ### `src/navigation/`
 
@@ -114,6 +120,13 @@ Contiene valores estáticos compartidos, como nombres de rutas, tipos de
 movimientos y categorías predeterminadas. Las constantes compartidas utilizan
 nombres en mayúsculas.
 
+### `src/styles/`
+
+Contiene los estilos globales y tokens visuales reutilizables de React Native.
+`colors.js` define la paleta y los temas claro/oscuro, mientras que
+`globalStyles.js` concentra el `StyleSheet`, el espaciado, la tipografía y los
+bordes. No contiene CSS web ni componentes completos.
+
 ### `assets/`
 
 Contiene recursos visuales y archivos estáticos utilizados por Expo, como
@@ -123,8 +136,9 @@ para separarlos del código.
 ### `docs/`
 
 Contiene la documentación del proyecto. Las decisiones de arquitectura se
-guardan en `docs/arquitectura/`, la configuración técnica en `docs/configuracion/`
-y los procesos de trabajo en `docs/proceso/`.
+guardan en `docs/arquitectura/`, el sistema visual en `docs/interfaces/`, la
+configuración técnica en `docs/configuracion/` y los procesos de trabajo en
+`docs/proceso/`.
 
 ## Convenciones
 
