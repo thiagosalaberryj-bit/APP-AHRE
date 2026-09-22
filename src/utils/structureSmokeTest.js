@@ -6,5 +6,15 @@ import { ROUTES } from '../constants/routes';
  * runner.
  */
 export function runStructureSmokeTest() {
-  return Boolean(ROUTES.HOME);
+  return Boolean(
+    ROUTES.INICIO &&
+      ROUTES.LOGIN &&
+      ROUTES.REGISTRO &&
+      ROUTES.PRINCIPAL &&
+      ROUTES.DASHBOARD &&
+      ROUTES.MOVIMIENTOS &&
+      ROUTES.NUEVO &&
+      ROUTES.ESTADISTICAS &&
+      ROUTES.SOCIAL,
+  );
 }

@@ -38,7 +38,7 @@ export const TIPOGRAFIA = Object.freeze({
     boton: 16,
     etiqueta: 14,
   }),
-  pesos: Object.freeze({ seminegrita: '600', negrita: '700' }),
+  pesos: Object.freeze({ regular: '400', medio: '500', seminegrita: '600', negrita: '700' }),
 });
 
 /**
@@ -48,6 +48,10 @@ export const TIPOGRAFIA = Object.freeze({
  */
 export function crearEstilosGlobales(theme = TEMAS.claro) {
   return StyleSheet.create({
+    areaSegura: {
+      flex: 1,
+      backgroundColor: theme.encabezado,
+    },
     pantalla: {
       flex: 1,
       backgroundColor: theme.fondo,

@@ -168,6 +168,7 @@ La descripción detallada de cada carpeta se encuentra en
 La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 
 - [Estructura de la aplicación](docs/arquitectura/estructura-app.md);
+- [Navegación](docs/arquitectura/navegacion.md);
 - [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);

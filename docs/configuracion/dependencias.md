@@ -28,6 +28,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | `expo-splash-screen` | `~57.0.9` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Evitar transiciones incorrectas al abrir AHRE y coordinar su inicio. |
 | `expo-sqlite` | `~57.0.3` | Permite utilizar una base de datos SQLite local. | Persistencia principal del enfoque offline-first. |
 | `expo-system-ui` | `~57.0.4` | Permite configurar aspectos de la interfaz nativa del sistema. | Fondo de la ventana y transición visual de inicio. |
+| `expo-navigation-bar` | `~57.0.2` | Permite definir el estilo de los controles de navegación del sistema Android. | Mantener controles oscuros sobre el fondo gris claro de las pantallas sin navbar interno. |
 | `@react-navigation/native` | `^7.4.1` | Base común para administrar la navegación en React Native. | Organización de los flujos y pantallas de AHRE. |
 | `@react-navigation/native-stack` | `^7.19.2` | Implementa navegación tipo pila entre pantallas. | Flujos como inicio de sesión, registro y detalle de movimientos. |
 | `@react-navigation/bottom-tabs` | `^7.19.2` | Implementa navegación mediante pestañas inferiores. | Acceso a Inicio, movimientos, estadísticas, notificaciones y perfil. |
@@ -66,6 +67,7 @@ Dependencias administradas por Expo:
 
 ```bash
 npx expo install expo-image-picker expo-constants
+npx expo install expo-navigation-bar
 ```
 
 Dependencias JavaScript:
@@ -85,6 +87,19 @@ No se incorpora `expo-camera` en esta etapa porque AHRE necesita inicialmente se
 ### `expo-constants`
 
 No reemplaza la configuración de `app.json`. Su función es permitir que el código consulte determinados valores de la aplicación y del entorno en tiempo de ejecución. La configuración general del proyecto continúa en `app.json`.
+
+### `expo-navigation-bar` y `expo-system-ui`
+
+`expo-system-ui` establece el fondo gris claro de la ventana y
+`expo-navigation-bar` configura los controles oscuros de navegación del sistema
+Android. Esto evita que la zona donde aparecen los botones del dispositivo
+quede blanca en las pantallas que no tienen el navbar interno de AHRE.
+
+### Recursos de identidad visual
+
+`assets/ahre-mark.png` se utiliza como ícono principal de la aplicación y como
+foreground del ícono adaptativo de Android. `assets/ahre-logo.png` conserva el
+nombre AHRE y se utiliza en la pantalla de carga y en el header del Dashboard.
 
 ### Formularios y fechas
 
@@ -108,10 +123,10 @@ Estas dependencias no se instalan todavía porque dependen de decisiones funcion
 
 ## Cantidad actual
 
-El proyecto tiene actualmente **26 dependencias directas**:
+El proyecto tiene actualmente **27 dependencias directas**:
 
 - 4 dependencias que ya formaban parte del proyecto base;
-- 22 dependencias incorporadas para la estructura base y los módulos iniciales.
+- 23 dependencias incorporadas para la estructura base y los módulos iniciales.
 
 No se incluyen las dependencias de módulos futuros hasta que exista una necesidad concreta y una decisión técnica documentada.
 
