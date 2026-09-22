@@ -28,6 +28,10 @@ documentación se registran en este archivo.
 - Se creó la carpeta `src/styles/` para centralizar la base visual de AHRE.
 - Se agregó la documentación del sistema visual en
   `docs/interfaces/sistema-visual.md`.
+- Se agregó la documentación de la estructura de navegación en
+  `docs/arquitectura/navegacion.md`.
+- Se incorporaron las pantallas base de Inicio, Login, Registro, Dashboard,
+  Movimientos, Nuevo, Estadísticas, Social y las pantallas secundarias.
 
 ### Cambiado
 
@@ -45,8 +49,39 @@ documentación se registran en este archivo.
 - Se definieron la paleta de colores, los temas claro y oscuro, la tipografía,
   el espaciado, los bordes y los estilos globales mediante `StyleSheet` de
   React Native en `src/styles/colors.js` y `src/styles/globalStyles.js`.
-- Se mantuvo `HomeScreen` como una pantalla mínima que importa y utiliza los
-  estilos globales sin implementar todavía componentes funcionales completos.
+- Se configuró la navegación inferior con las secciones Inicio, Movimientos,
+  Nuevo, Estadísticas y Social.
+- Se configuró la navegación secundaria mediante `Native Stack`, con un
+  encabezado verde reutilizable y una flecha de regreso para las pantallas que
+  se abren desde Dashboard o Nuevo.
+- Se dejó Inicio, Login y Registro sin encabezado verde ni navbar interno, con
+  fondo claro y status bar acorde al diseño.
+- Se ajustó el navbar inferior para ocupar el ancho de la pantalla, mantener
+  el fondo blanco, usar íconos compactos y quedar ligeramente separado de los
+  botones del sistema.
+- Se configuró `expo-system-ui` y `expo-navigation-bar` para que la zona de
+  navegación del sistema Android use el fondo gris claro de las pantallas sin
+  navbar interno.
+- Se unificó el tamaño del header en las pantallas principales y secundarias y
+  se agregó el logo de AHRE con fondo transparente en `assets/ahre-logo.png`.
+- Se agregó `assets/ahre-mark.png` sin el nombre inferior para utilizarlo como
+  ícono principal de la aplicación y como foreground del ícono adaptativo de
+  Android.
+- Se configuró `assets/ahre-logo.png` como imagen de carga de Expo y se amplió
+  su representación en el header del Dashboard.
+- Se extendió el formato del header a Movimientos, Estadísticas y Social, con
+  sus títulos, accesos a notificaciones y perfil y descripciones breves.
+- Se igualó el tamaño de los títulos de esos headers con el de las pantallas
+  secundarias y se aumentó el tamaño de las descripciones.
+- Se renombró `DashboardHeader.js` a `MainHeader.js` y se definió el formato de
+  `SectionHeader.js` con título junto a la flecha y descripción inferior.
+- Se retiró el logo del header secundario y se dejaron las descripciones
+  alineadas a la izquierda y centradas verticalmente en el espacio inferior.
+- Se diferenció el header del Dashboard, incorporando el saludo y accesos a
+  notificaciones y perfil, mientras que las pantallas secundarias mantienen el
+  formato con flecha de regreso.
+- Se reemplazó la pantalla de ejemplo `HomeScreen` por `InicioScreen` como
+  punto de entrada del flujo de acceso.
 
 ### Verificación
 
@@ -59,6 +94,10 @@ documentación se registran en este archivo.
 - No se encontraron archivos TypeScript.
 - El bundle de Android compiló correctamente después de agregar los estilos
   globales.
+- Expo compiló correctamente después de incorporar la navegación por pestañas,
+  las rutas secundarias y los ajustes visuales del navbar.
+- Se comprobó que las pantallas principales y secundarias puedan cargarse sin
+  errores de navegación.
 - No se detectaron errores de formato en los cambios realizados.
 
 ### Estado

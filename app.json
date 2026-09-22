@@ -4,17 +4,20 @@
     "slug": "APP-AHRE",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/ahre-mark.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/ahre-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F4F4F4"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#024C42",
+        "foregroundImage": "./assets/ahre-mark.png"
       }
     },
     "web": {
@@ -24,7 +27,14 @@
       "expo-font",
       "expo-sqlite",
       "expo-secure-store",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      [
+        "expo-navigation-bar",
+        {
+          "style": "light",
+          "enforceContrast": false
+        }
+      ]
     ]
   }
 }

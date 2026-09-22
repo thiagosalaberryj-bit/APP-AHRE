@@ -22,13 +22,16 @@ APP-AHRE/
 ├── README.md
 ├── assets/
 │   ├── icon.png
+│   ├── ahre-mark.png
+│   ├── ahre-logo.png
 │   ├── favicon.png
 │   ├── splash-icon.png
 │   └── android-icon-*.png
 ├── docs/
 │   ├── CHANGELOG.md
 │   ├── arquitectura/
-│   │   └── estructura-app.md
+│   │   ├── estructura-app.md
+│   │   └── navegacion.md
 │   ├── base-de-datos/
 │   │   └── base-datos-local.md
 │   ├── configuracion/
@@ -39,6 +42,8 @@ APP-AHRE/
 │       └── flujo-issues-prs-changelog.md
 ├── src/
 │   ├── components/
+│   │   ├── MainHeader.js
+│   │   ├── SectionHeader.js
 │   │   └── StructureStatus.js
 │   ├── constants/
 │   │   └── routes.js
@@ -46,9 +51,24 @@ APP-AHRE/
 │   │   ├── index.js
 │   │   └── storageAdapter.js
 │   ├── navigation/
-│   │   └── AppNavigator.js
+│   │   ├── AppNavigator.js
+│   │   └── BottomTabBar.js
 │   ├── screens/
-│   │   └── HomeScreen.js
+│   │   ├── DashboardScreen.js
+│   │   ├── DepositoScreen.js
+│   │   ├── DetalleDepositoScreen.js
+│   │   ├── EgresoScreen.js
+│   │   ├── EstadisticasScreen.js
+│   │   ├── IngresoScreen.js
+│   │   ├── InicioScreen.js
+│   │   ├── LoginScreen.js
+│   │   ├── MovimientosScreen.js
+│   │   ├── NotificacionesScreen.js
+│   │   ├── NuevoScreen.js
+│   │   ├── OcrScreen.js
+│   │   ├── PerfilScreen.js
+│   │   ├── RegistroScreen.js
+│   │   └── SocialScreen.js
 │   ├── services/
 │   │   └── index.js
 │   ├── styles/
@@ -85,13 +105,17 @@ componentes utilizan PascalCase y un nombre relacionado con su responsabilidad,
 como `AmountInput.js` o `MovementCard.js`. `StructureStatus.js` es el componente
 inicial de verificación de la estructura. Este Issue no crea todavía los
 componentes funcionales de las pantallas.
+`MainHeader.js` define el encabezado de las secciones principales, con el logo
+de AHRE, título, descripción y accesos a notificaciones y perfil.
+`SectionHeader.js` define el encabezado reutilizable de las pantallas
+secundarias, con el título junto a la flecha de regreso y una descripción
+alineada a la izquierda y centrada verticalmente debajo.
 
 ### `src/navigation/`
 
-Contiene la composición de rutas y navegadores. `AppNavigator.js` es el punto de
-entrada actual y renderiza `HomeScreen`. Cuando existan flujos reales se podrá
-incorporar una librería de navegación; este Issue todavía no necesita esa
-dependencia.
+Contiene la composición de rutas y navegadores. `AppNavigator.js` combina un
+`Native Stack` para el flujo de acceso y las pantallas secundarias con un
+`Bottom Tab Navigator` para Inicio, Movimientos, Nuevo, Estadísticas y Social.
 
 ### `src/database/`
 
@@ -157,9 +181,10 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
   siendo el punto de registro de Expo.
 - Una pantalla mínima verifica la cadena `App → navegación → pantalla →
   componente`.
-- Todavía no se incorpora una librería de navegación, una base de datos
-  concreta ni un servicio remoto.
+- La navegación base está implementada con las dependencias de React
+  Navigation ya instaladas. La base de datos y los servicios todavía no se
+  conectan a las pantallas.
 - No se crean carpetas vacías para funcionalidades futuras. Las nuevas áreas se
   incorporarán cuando tengan pantallas, componentes o lógica real.
-- `structureSmokeTest.js` se importa desde `HomeScreen.js`. Cuando se incorpore
+- `structureSmokeTest.js` se importa desde `InicioScreen.js`. Cuando se incorpore
   un test runner, esta comprobación deberá trasladarse a pruebas automatizadas.
