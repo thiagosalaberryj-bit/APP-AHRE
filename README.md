@@ -143,7 +143,7 @@ versión comercial estable.
 ```text
 APP-AHRE/
 ├── assets/                 # Íconos e imágenes utilizadas por Expo
-├── docs/                   # Documentación de arquitectura, configuración y procesos
+├── docs/                   # Documentación de arquitectura, configuración, interfaz y procesos
 ├── src/
 │   ├── components/         # Componentes reutilizables
 │   ├── constants/          # Valores constantes compartidos
@@ -151,6 +151,7 @@ APP-AHRE/
 │   ├── navigation/         # Navegación de la aplicación
 │   ├── screens/            # Pantallas de AHRE
 │   ├── services/           # Servicios e integraciones futuras
+│   ├── styles/             # Estilos globales de React Native
 │   └── utils/              # Funciones auxiliares
 ├── App.js                  # Composición raíz de la aplicación
 ├── app.json                # Configuración de Expo
@@ -169,6 +170,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Estructura de la aplicación](docs/arquitectura/estructura-app.md);
 - [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
+- [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);
 - [Flujo de Issues, Pull Requests e historial de cambios](docs/proceso/flujo-issues-prs-changelog.md).
 

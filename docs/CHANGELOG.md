@@ -25,6 +25,9 @@ documentación se registran en este archivo.
   `docs/base-de-datos/base-datos-local.md`.
 - Se documentaron depósitos, movimientos, transferencias, deudas, pagos y
   gastos compartidos.
+- Se creó la carpeta `src/styles/` para centralizar la base visual de AHRE.
+- Se agregó la documentación del sistema visual en
+  `docs/interfaces/sistema-visual.md`.
 
 ### Cambiado
 
@@ -39,6 +42,11 @@ documentación se registran en este archivo.
 - Se definieron las categorías como valores predefinidos del campo `categoria`
   de los movimientos, sin crear una tabla independiente.
 - Se ajustó el nombre visible de la aplicación a `AHRE`.
+- Se definieron la paleta de colores, los temas claro y oscuro, la tipografía,
+  el espaciado, los bordes y los estilos globales mediante `StyleSheet` de
+  React Native en `src/styles/colors.js` y `src/styles/globalStyles.js`.
+- Se mantuvo `HomeScreen` como una pantalla mínima que importa y utiliza los
+  estilos globales sin implementar todavía componentes funcionales completos.
 
 ### Verificación
 
@@ -49,6 +57,8 @@ documentación se registran en este archivo.
 - El modelo local contempla el registro manual de deudas, pagos, transferencias
   entre depósitos y gastos compartidos pagados por el usuario actual.
 - No se encontraron archivos TypeScript.
+- El bundle de Android compiló correctamente después de agregar los estilos
+  globales.
 - No se detectaron errores de formato en los cambios realizados.
 
 ### Estado
