@@ -82,6 +82,21 @@ documentación se registran en este archivo.
   formato con flecha de regreso.
 - Se reemplazó la pantalla de ejemplo `HomeScreen` por `InicioScreen` como
   punto de entrada del flujo de acceso.
+- Se maquetó `InicioScreen` como bienvenida de AHRE con el símbolo de la marca,
+  el nombre en dos líneas y un fondo claro sin luces circulares.
+- Se ajustó el tamaño del logo y del nombre de AHRE para adaptarse al espacio
+  disponible y respetar las áreas seguras.
+- Se reemplazó el botón circular por un deslizador de ancho completo, con una
+  manija de esquinas redondeadas, un chevrón hacia la derecha y el texto
+  centrado en la pista.
+- El relleno del deslizador mantiene un segmento fijo que acompaña a la manija
+  y deja una estela continua del mismo color; al completar el recorrido, toda
+  la pista queda rellena. El mensaje «Iniciando AHRE…» se muestra en blanco.
+- La bienvenida avanza a Login al completar el deslizador; la comprobación de
+  sesión queda para un Issue futuro.
+- Se configuró la pantalla nativa de carga para acompañar los temas claro y
+  oscuro.
+- Se agregó la documentación de la pantalla en `docs/interfaces/inicio.md`.
 
 ### Verificación
 
@@ -96,6 +111,10 @@ documentación se registran en este archivo.
   globales.
 - Expo compiló correctamente después de incorporar la navegación por pestañas,
   las rutas secundarias y los ajustes visuales del navbar.
+- Se comprobó que la bienvenida permite abrir Login sin consultar la red ni
+  validar una sesión; la decisión entre Login y Dashboard queda pendiente.
+- Expo generó correctamente el bundle de Android tras los ajustes finales del
+  fondo y del deslizador de Inicio.
 - Se comprobó que las pantallas principales y secundarias puedan cargarse sin
   errores de navegación.
 - No se detectaron errores de formato en los cambios realizados.
