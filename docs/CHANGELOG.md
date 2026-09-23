@@ -3,6 +3,36 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [v0.2.0] - 2026-09-23 - no publicada
+
+### Cambiado
+
+- Se maquetó `InicioScreen` como bienvenida de AHRE con el símbolo de la marca,
+  el nombre en dos líneas y un fondo claro sin luces circulares.
+- Se ajustó el tamaño del logo y del nombre de AHRE para adaptarse al espacio
+  disponible y respetar las áreas seguras.
+- Se reemplazó el botón circular por un deslizador de ancho completo, con una
+  manija de esquinas redondeadas, un chevrón hacia la derecha y el texto
+  centrado en la pista.
+- El relleno del deslizador mantiene un segmento fijo que acompaña a la manija
+  y deja una estela continua del mismo color; al completar el recorrido, toda
+  la pista queda rellena. El mensaje «Iniciando AHRE…» se muestra en blanco.
+- La bienvenida avanza a Login al completar el deslizador; la comprobación de
+  sesión queda para un Issue futuro.
+- Se configuró la pantalla nativa de carga para acompañar los temas claro y
+  oscuro.
+
+### Documentación
+
+- Se documentó la pantalla inicial en `docs/interfaces/inicio.md`.
+
+### Verificación
+
+- Expo generó correctamente el bundle de Android tras los ajustes del fondo y
+  del deslizador de Inicio.
+- Se comprobó que la bienvenida abre Login sin consultar la red ni validar una
+  sesión; la decisión entre Login y Dashboard queda pendiente.
+
 ## [v0.1.0] - 2026-09-20 - no estable
 
 ### Añadido
@@ -80,8 +110,6 @@ documentación se registran en este archivo.
 - Se diferenció el header del Dashboard, incorporando el saludo y accesos a
   notificaciones y perfil, mientras que las pantallas secundarias mantienen el
   formato con flecha de regreso.
-- Se reemplazó la pantalla de ejemplo `HomeScreen` por `InicioScreen` como
-  punto de entrada del flujo de acceso.
 
 ### Verificación
 
