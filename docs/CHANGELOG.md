@@ -33,7 +33,7 @@ documentación se registran en este archivo.
 - Se comprobó que la bienvenida abre Login sin consultar la red ni validar una
   sesión; la decisión entre Login y Dashboard queda pendiente.
 
-## [v0.1.0] - 2026-09-20 - no publicada
+## [v0.1.0] - 2026-09-20 - no estable
 
 ### Añadido
 
