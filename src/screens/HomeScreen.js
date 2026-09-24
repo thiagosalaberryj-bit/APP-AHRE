@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 import {
   Animated,
   Easing,
@@ -10,7 +11,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RUTAS } from '../constants/routes';
@@ -109,13 +109,12 @@ export default function PantallaInicio({ navigation: navegacion }) {
 
   return (
     <View style={[estilos.pantalla, { backgroundColor: colorFondo }]}>
-      <StatusBar
-        style={tema.nombre === 'oscuro' ? 'light' : 'dark'}
-        backgroundColor={colorFondo}
-        translucent={false}
-      />
-
       <SafeAreaView edges={['top', 'bottom']} style={estilos.areaSegura}>
+        <StatusBar
+          backgroundColor={tema.fondo}
+          style={tema.nombre === 'oscuro' ? 'light' : 'dark'}
+          translucent={false}
+        />
         <View style={estilos.contenido}>
           <Image
             accessibilityLabel="Logo de AHRE"

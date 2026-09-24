@@ -13,6 +13,11 @@ estilos globales con estilos locales de layout cuando sea necesario.
 Los estilos globales se combinan con layouts locales cuando una interfaz lo
 necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
 `src/styles/authStyles.js` para sus distribuciones particulares.
+Dashboard y las demás pestañas principales usan `src/components/MainHeader.js`
+con el logo, los accesos a notificaciones y perfil, y el título de la sección.
+Las pantallas secundarias usan `src/components/CompactHeader.js` y sus estilos
+locales en `src/styles/CompactHeaderStyles.js`; Perfil conserva su encabezado
+propio. Inicio, Login y Registro no muestran el encabezado de navegación.
 
 ## Organización
 
@@ -20,6 +25,7 @@ necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
 src/
 └── styles/
     ├── HomeScreenStyles.js # Estilos propios de la pantalla de inicio
+    ├── CompactHeaderStyles.js # Estilos del encabezado compartido
     ├── authStyles.js    # Layout y detalles visuales de Login y Registro
     ├── colors.js        # Paleta, estados y temas
     └── globalStyles.js  # StyleSheet, tipografía, espaciado y bordes

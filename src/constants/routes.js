@@ -7,6 +7,7 @@ export const RUTAS = Object.freeze({
   MOVIMIENTOS: 'Movimientos',
   NUEVO: 'Nuevo',
   ESTADISTICAS: 'Estadisticas',
+  RESUMEN_ESTADISTICAS: 'ResumenEstadisticas',
   SOCIAL: 'Social',
   PERFIL: 'Perfil',
   NOTIFICACIONES: 'Notificaciones',
@@ -14,5 +15,6 @@ export const RUTAS = Object.freeze({
   EGRESO: 'Egreso',
   DEPOSITO: 'Deposito',
   DETALLE_DEPOSITO: 'DetalleDeposito',
+  DETALLE_CATEGORIA: 'DetalleCategoria',
   OCR: 'OCR',
 });

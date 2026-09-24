@@ -12,10 +12,11 @@ personalizados ni lógica de autenticación.
 
 ## Estructura de Login
 
-`src/screens/LoginScreen.js` presenta la identidad de AHRE, el título «Iniciá
-sesión», una explicación breve, el correo electrónico, la contraseña, el botón
-«Iniciar sesión» y el acceso «Ir a Registro». El botón lleva al Dashboard para
-comprobar el flujo visual, sin autenticar ni crear una sesión.
+`src/screens/LoginScreen.js` presenta el título «Iniciá sesión» dentro del
+contenido, una explicación breve, el correo electrónico, la contraseña, el
+botón «Iniciar sesión» y el acceso «Ir a Registro». No muestra un encabezado de
+navegación. El botón lleva al Dashboard para comprobar el flujo visual, sin
+autenticar ni crear una sesión.
 
 Campos previstos:
 
@@ -32,9 +33,10 @@ La recuperación todavía no tiene navegación asociada.
 
 ## Estructura de Registro
 
-`src/screens/RegistrationScreen.js` presenta el nombre, correo electrónico,
-contraseña, confirmación de contraseña, el botón «Registrarse» y el acceso
-«Volver a Login». Ambos regresan a la pantalla Login.
+`src/screens/RegistrationScreen.js` presenta el título «Creá tu cuenta» dentro
+del contenido, el nombre, correo electrónico, contraseña, confirmación de
+contraseña, el botón «Registrarse» y el acceso «Volver a Login». No muestra un
+encabezado de navegación. Ambos regresan a la pantalla Login.
 
 Campos previstos:
 
@@ -60,8 +62,8 @@ formulario.
 
 ## Componentes reutilizados
 
-- `src/components/AuthContainer.js` (`ContenedorAutenticacion`): marca,
-  encabezado, áreas seguras, desplazamiento y adaptación al teclado.
+- `src/components/AuthContainer.js` (`ContenedorAutenticacion`): áreas seguras,
+  desplazamiento, título y adaptación al teclado.
 - `src/components/AuthInput.js` (`CampoAutenticacion`): etiqueta, entrada de
   texto y representación de estados normal, enfocado, completado, error y
   deshabilitado.
@@ -115,8 +117,10 @@ usa las paletas clara u oscura existentes.
 Los campos muestran una indicación breve en gris dentro de cada entrada y usan
 un borde fino gris claro en su estado normal. En modo claro, las acciones
 principales intercambian los colores globales de fondo y texto; en modo oscuro
-conservan la combinación del tema. El texto de los botones va en negrita. La app
-actualiza el fondo nativo con `expo-system-ui` según el tema y el Native Stack
+conservan la combinación del tema. El texto de los botones va en negrita. Login
+y Registro mantienen la barra de estado según el tema y no muestran un
+encabezado de navegación. La app actualiza el fondo nativo con `expo-system-ui`
+según el tema y el Native Stack
 usa ese mismo color como fondo del contenido para evitar que aparezca un fondo
 blanco detrás de la transición entre pantallas. Ambas pantallas muestran al pie
 el copyright de AHRE con el año actual calculado al renderizar. La barra de

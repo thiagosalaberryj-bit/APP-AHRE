@@ -1,7 +1,7 @@
 import { Text, useColorScheme, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import EncabezadoSeccion from '../components/SectionHeader';
+import EncabezadoCompacto from '../components/CompactHeader';
 import { TEMAS } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
@@ -12,10 +12,9 @@ export default function PantallaNotificaciones({ navigation: navegacion }) {
   return (
     <SafeAreaView edges={['top']} style={estilos.areaSegura}>
       <View style={estilos.pantalla}>
-        <EncabezadoSeccion
+        <EncabezadoCompacto
           tema={tema}
           titulo="Notificaciones"
-          descripcion="Consulta los avisos importantes de AHRE."
           alVolver={() => navegacion.goBack()}
         />
         <View style={estilos.contenido}>

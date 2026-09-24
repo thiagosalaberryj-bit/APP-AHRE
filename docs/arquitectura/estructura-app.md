@@ -47,6 +47,7 @@ APP-AHRE/
 │   ├── components/
 │   │   ├── AuthContainer.js
 │   │   ├── AuthInput.js
+│   │   ├── CompactHeader.js
 │   │   ├── ErrorMessage.js
 │   │   ├── MainHeader.js
 │   │   ├── PasswordInput.js
@@ -59,8 +60,10 @@ APP-AHRE/
 │   │   └── storageAdapter.js
 │   ├── navigation/
 │   │   ├── AppNavigator.js
-│   │   └── BottomTabBar.js
+│   │   ├── BottomTabBar.js
+│   │   └── StatisticsNavigator.js
 │   ├── screens/
+│   │   ├── CategoryDetailScreen.js
 │   │   ├── DashboardScreen.js
 │   │   ├── DepositScreen.js
 │   │   ├── DepositDetailScreen.js
@@ -79,8 +82,11 @@ APP-AHRE/
 │   ├── services/
 │   │   └── index.js
 │   ├── styles/
+│   │   ├── CompactHeaderStyles.js
+│   │   ├── CategoryDetailScreenStyles.js
 │   │   ├── HomeScreenStyles.js
 │   │   ├── authStyles.js
+│   │   ├── StatisticsScreenStyles.js
 │   │   ├── colors.js
 │   │   └── globalStyles.js
 │   └── utils/
@@ -117,20 +123,23 @@ esperan sus componentes funcionales. Login y Registro reutilizan
 (`AuthInput.js`), `CampoContrasena` (`PasswordInput.js`), `BotonPrincipal`
 (`PrimaryButton.js`) y `MensajeError` (`ErrorMessage.js`); sus estilos de
 distribución están en `src/styles/authStyles.js`.
-`MainHeader.js` define el encabezado de las secciones principales, con el logo
-de AHRE, título, descripción y accesos a notificaciones y perfil.
-`SectionHeader.js` define el encabezado reutilizable de las pantallas
-secundarias, con el título junto a la flecha de regreso y una descripción
-alineada a la izquierda y centrada verticalmente debajo.
+`MainHeader.js` define el encabezado del Dashboard y las pestañas principales,
+con el logo de AHRE, el título de la sección y accesos a notificaciones y
+perfil. `CompactHeader.js` define el encabezado de las pantallas secundarias:
+regreso arriba, título abajo y fondo verde con bordes inferiores redondeados.
+Inicio, Login y Registro no muestran encabezado de navegación. Perfil conserva
+`SectionHeader.js`.
 
 ### `src/navigation/`
 
 Contiene la composición de rutas y navegadores. `AppNavigator.js` combina un
 `Native Stack` para el flujo de acceso y las pantallas secundarias con un
 `Bottom Tab Navigator` para Inicio, Movimientos, Nuevo, Estadísticas y Social.
-También determina si la ruta raíz muestra las pestañas y dibuja el fondo
-correspondiente detrás de los controles inferiores del sistema. Esa decisión
-solo modifica la presentación.
+Estadísticas utiliza además `StatisticsNavigator.js` para apilar el resumen y
+el detalle de categoría dentro de la misma pestaña. `AppNavigator.js` determina
+si la ruta raíz muestra las pestañas y dibuja el fondo correspondiente detrás
+de los controles inferiores del sistema. Esa decisión solo modifica la
+presentación.
 
 ### `src/database/`
 

@@ -180,6 +180,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
+- [Interfaz de estadísticas](docs/interfaces/estadisticas.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);
 - [Flujo de Issues, Pull Requests e historial de cambios](docs/proceso/flujo-issues-prs-changelog.md).
