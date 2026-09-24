@@ -1,9 +1,9 @@
-export const ROUTES = Object.freeze({
+export const RUTAS = Object.freeze({
   INICIO: 'Inicio',
-  LOGIN: 'Login',
+  INICIO_SESION: 'InicioSesion',
   REGISTRO: 'Registro',
   PRINCIPAL: 'Principal',
-  DASHBOARD: 'Dashboard',
+  PANEL: 'Panel',
   MOVIMIENTOS: 'Movimientos',
   NUEVO: 'Nuevo',
   ESTADISTICAS: 'Estadisticas',

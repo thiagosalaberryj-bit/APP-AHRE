@@ -6,7 +6,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square" alt="Estado: en desarrollo" />
-  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.1.0-2563EB?style=flat-square" alt="Versión 0.1.0" />
+  <img src="https://img.shields.io/badge/Versi%C3%B3n-1.0.0-2563EB?style=flat-square" alt="Versión 1.0.0" />
   <img src="https://img.shields.io/badge/Plataforma-Android-green?style=flat-square&logo=android&logoColor=green" alt="Plataforma Android" />
   <img src="https://img.shields.io/badge/Expo-SDK%2057-white?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
   <img src="https://img.shields.io/badge/React%20Native-0.86.3-61DAFB?style=flat-square&logo=react&logoColor=61DAFB" alt="React Native 0.86.3" />
@@ -119,15 +119,23 @@ Actualmente cuenta con:
 - entrada principal compatible con Expo y React Native;
 - estructura separada para pantallas, componentes, navegación, base local,
   servicios y utilidades;
-- pantalla inicial mínima para verificar la conexión entre las capas;
+- pantalla inicial con bienvenida y acceso visual a Login;
+- interfaces maquetadas para Login y Registro, con navegación visual entre
+  ambas y acceso de prueba al Dashboard;
+- temas claro y oscuro aplicados a las pantallas, componentes y barras del
+  sistema;
+- estados visuales de los inputs y componentes de carga/error listos para
+  conectarse a lógica futura;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
 - historial de cambios preparado para que el revisor lo actualice al finalizar cada
   Issue.
 
-Las funcionalidades completas de AHRE todavía no están implementadas. La
-versión `1.0.0` identifica la base inicial del proyecto y no representa una
-versión comercial estable.
+Las funcionalidades completas de AHRE todavía no están implementadas. Tampoco
+se implementaron la autenticación, el registro de usuarios, las validaciones ni
+la sesión: los formularios actuales solo presentan la interfaz y el flujo
+visual. La versión `1.0.0` identifica la base inicial del proyecto y no
+representa una versión comercial estable.
 
 ## Tecnología
 
@@ -171,6 +179,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Navegación](docs/arquitectura/navegacion.md);
 - [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
+- [Interfaces de autenticación](docs/interfaces/autenticacion.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);
 - [Flujo de Issues, Pull Requests e historial de cambios](docs/proceso/flujo-issues-prs-changelog.md).

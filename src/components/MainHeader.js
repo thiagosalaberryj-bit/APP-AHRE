@@ -4,53 +4,53 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { TEMAS } from '../styles/colors';
 
-export default function MainHeader({
-  title = 'Bienvenido',
-  description,
-  onNotifications,
-  onProfile,
-  theme = TEMAS.claro,
+export default function EncabezadoPrincipal({
+  titulo = 'Bienvenido',
+  descripcion,
+  alAbrirNotificaciones,
+  alAbrirPerfil,
+  tema = TEMAS.claro,
 }) {
   return (
-    <View style={[styles.container, { backgroundColor: theme.encabezado }]}>
-      <View style={styles.topRow}>
+    <View style={[estilos.contenedor, { backgroundColor: tema.encabezado }]}>
+      <View style={estilos.filaSuperior}>
         <Image
           accessibilityLabel="Logo de AHRE"
           resizeMode="contain"
           source={require('../../assets/ahre-logo.png')}
-          style={styles.logo}
+          style={estilos.logo}
         />
-        <Text numberOfLines={1} style={[styles.title, { color: theme.encabezadoTexto }]}>{title}</Text>
-        <View style={styles.actions}>
+        <Text numberOfLines={1} style={[estilos.titulo, { color: tema.encabezadoTexto }]}>{titulo}</Text>
+        <View style={estilos.acciones}>
           <Pressable
             accessibilityLabel="Notificaciones"
             accessibilityRole="button"
-            onPress={onNotifications}
-            style={[styles.actionButton, { backgroundColor: theme.contenedorVerde }]}
+            onPress={alAbrirNotificaciones}
+            style={[estilos.botonAccion, { backgroundColor: tema.contenedorVerde }]}
           >
-            <Ionicons name="notifications-outline" size={27} color={theme.botonPrincipal} />
+            <Ionicons name="notifications-outline" size={27} color={tema.botonPrincipal} />
           </Pressable>
           <Pressable
             accessibilityLabel="Perfil"
             accessibilityRole="button"
-            onPress={onProfile}
-            style={[styles.actionButton, { backgroundColor: theme.contenedorVerde }]}
+            onPress={alAbrirPerfil}
+            style={[estilos.botonAccion, { backgroundColor: tema.contenedorVerde }]}
           >
-            <Ionicons name="person-circle-outline" size={29} color={theme.botonPrincipal} />
+            <Ionicons name="person-circle-outline" size={29} color={tema.botonPrincipal} />
           </Pressable>
         </View>
       </View>
-      {description ? (
-        <View style={styles.descriptionContainer}>
-          <Text style={[styles.description, { color: theme.encabezadoTexto }]}>{description}</Text>
+      {descripcion ? (
+        <View style={estilos.contenedorDescripcion}>
+          <Text style={[estilos.descripcion, { color: tema.encabezadoTexto }]}>{descripcion}</Text>
         </View>
       ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  contenedor: {
     height: 150,
     justifyContent: 'flex-end',
     paddingHorizontal: ESPACIADO.pantalla,
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: BORDES.radios.contenedor,
     borderBottomRightRadius: BORDES.radios.contenedor,
   },
-  topRow: {
+  filaSuperior: {
     position: 'absolute',
     top: ESPACIADO.grande,
     left: ESPACIADO.pequeno,
@@ -71,19 +71,19 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
   },
-  title: {
+  titulo: {
     marginLeft: ESPACIADO.minimo,
     fontFamily: TIPOGRAFIA.familias.principal,
     fontSize: TIPOGRAFIA.tamanos.titulo,
     fontWeight: TIPOGRAFIA.pesos.negrita,
     flexShrink: 1,
   },
-  description: {
+  descripcion: {
     fontFamily: TIPOGRAFIA.familias.principal,
     fontSize: TIPOGRAFIA.tamanos.cuerpo,
     fontWeight: TIPOGRAFIA.pesos.regular,
   },
-  descriptionContainer: {
+  contenedorDescripcion: {
     position: 'absolute',
     left: ESPACIADO.pantalla,
     right: ESPACIADO.pantalla,
@@ -91,12 +91,12 @@ const styles = StyleSheet.create({
     height: 54,
     justifyContent: 'center',
   },
-  actions: {
+  acciones: {
     flexDirection: 'row',
     gap: ESPACIADO.pequeno,
     marginLeft: 'auto',
   },
-  actionButton: {
+  botonAccion: {
     width: 48,
     height: 48,
     alignItems: 'center',

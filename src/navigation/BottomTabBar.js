@@ -1,66 +1,67 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ROUTES } from '../constants/routes';
-import { COLORES_MARCA, COLORES_NEUTROS } from '../styles/colors';
+import { RUTAS } from '../constants/routes';
+import { TEMAS } from '../styles/colors';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 
-const ACTIVE_COLOR = COLORES_MARCA.verdeMedio;
-const INACTIVE_COLOR = COLORES_NEUTROS.textoPrincipal;
-
-export default function BottomTabBar({ state, descriptors, navigation }) {
-  const insets = useSafeAreaInsets();
+export default function BarraPestanasInferior({ state: estado, descriptors: descriptores, navigation: navegacion }) {
+  const margenesSeguros = useSafeAreaInsets();
+  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const estilos = crearEstilosBarra(tema);
+  const colorActivo = tema.foco;
+  const colorInactivo = tema.textoSecundario;
 
   return (
-    <View style={[styles.outer, { paddingBottom: Math.max(insets.bottom - ESPACIADO.pequeno, ESPACIADO.minimo) }]}>
-      <View style={styles.container}>
-        {state.routes.map((route, index) => {
-          const descriptor = descriptors[route.key];
-          const options = descriptor.options;
-          const focused = state.index === index;
-          const isNew = route.name === ROUTES.NUEVO;
-          const color = focused ? ACTIVE_COLOR : INACTIVE_COLOR;
-          const label = typeof options.tabBarLabel === 'string'
-            ? options.tabBarLabel
-            : options.title || route.name;
+    <View style={estilos.exterior}>
+      <View style={[estilos.contenedor, { paddingBottom: margenesSeguros.bottom }]}>
+        {estado.routes.map((ruta, indice) => {
+          const configuracionRuta = descriptores[ruta.key];
+          const opciones = configuracionRuta.options;
+          const seleccionada = estado.index === indice;
+          const esNuevo = ruta.name === RUTAS.NUEVO;
+          const colorIcono = seleccionada ? colorActivo : colorInactivo;
+          const etiqueta = typeof opciones.tabBarLabel === 'string'
+            ? opciones.tabBarLabel
+            : opciones.title || ruta.name;
 
-          const onPress = () => {
-            const event = navigation.emit({
+          const alPresionar = () => {
+            const evento = navegacion.emit({
               type: 'tabPress',
-              target: route.key,
+              target: ruta.key,
               canPreventDefault: true,
             });
 
-            if (!focused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
+            if (!seleccionada && !evento.defaultPrevented) {
+              navegacion.navigate(ruta.name, ruta.params);
             }
           };
 
-          const onLongPress = () => {
-            navigation.emit({ type: 'tabLongPress', target: route.key });
+          const alMantenerPresionado = () => {
+            navegacion.emit({ type: 'tabLongPress', target: ruta.key });
           };
 
-          const icon = options.tabBarIcon?.({
-            focused,
-            color: isNew ? COLORES_MARCA.verdeClaro : color,
-            size: isNew ? 24 : 26,
+          const icono = opciones.tabBarIcon?.({
+            focused: seleccionada,
+            color: esNuevo ? tema.botonPrincipal : colorIcono,
+            size: esNuevo ? 24 : 26,
           });
 
           return (
             <Pressable
-              key={route.key}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
+              key={ruta.key}
+              accessibilityLabel={opciones.tabBarAccessibilityLabel}
               accessibilityRole="tab"
-              accessibilityState={focused ? { selected: true } : {}}
-              accessibilityValue={options.tabBarAccessibilityValue}
-              onLongPress={onLongPress}
-              onPress={onPress}
-              testID={options.tabBarButtonTestID}
-              style={[styles.item, isNew && styles.newItem]}
+              accessibilityState={seleccionada ? { selected: true } : {}}
+              accessibilityValue={opciones.tabBarAccessibilityValue}
+              onLongPress={alMantenerPresionado}
+              onPress={alPresionar}
+              testID={opciones.tabBarButtonTestID}
+              style={[estilos.elemento, esNuevo && estilos.elementoNuevo]}
             >
-              {focused && !isNew ? <View style={styles.activeIndicator} /> : null}
-              {isNew ? <View style={styles.newIcon}>{icon}</View> : icon}
-              <Text style={[styles.label, { color }, isNew && styles.newLabel]}>{label}</Text>
+              {seleccionada && !esNuevo ? <View style={estilos.indicadorActivo} /> : null}
+              {esNuevo ? <View style={estilos.iconoNuevo}>{icono}</View> : icono}
+              <Text style={[estilos.etiqueta, { color: colorIcono }, esNuevo && estilos.etiquetaNuevo]}>{etiqueta}</Text>
             </Pressable>
           );
         })}
@@ -69,71 +70,74 @@ export default function BottomTabBar({ state, descriptors, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  outer: {
-    backgroundColor: COLORES_NEUTROS.superficie,
-    paddingHorizontal: 0,
-  },
-  container: {
-    minHeight: 64,
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    backgroundColor: COLORES_NEUTROS.superficie,
-    borderColor: COLORES_NEUTROS.borde,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    paddingHorizontal: ESPACIADO.pequeno,
-    paddingTop: ESPACIADO.minimo,
-  },
-  item: {
-    flex: 1,
-    minHeight: 56,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingHorizontal: ESPACIADO.minimo,
-    paddingTop: ESPACIADO.minimo,
-  },
-  newItem: {
-    paddingTop: ESPACIADO.minimo,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    top: -2,
-    width: 42,
-    height: 3,
-    backgroundColor: ACTIVE_COLOR,
-    borderRadius: BORDES.radios.circular,
-  },
-  newIcon: {
-    position: 'absolute',
-    top: -23,
-    width: 54,
-    height: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORES_MARCA.verdeOscuro,
-    borderColor: COLORES_MARCA.verdeClaro,
-    borderRadius: BORDES.radios.circular,
-    borderWidth: 0,
-    elevation: 6,
-    shadowColor: COLORES_MARCA.verdeClaro,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.55,
-    shadowRadius: 8,
-  },
-  label: {
-    marginTop: 2,
-    fontFamily: TIPOGRAFIA.familias.principal,
-    fontSize: 11,
-    fontWeight: TIPOGRAFIA.pesos.regular,
-    textAlign: 'center',
-  },
-  newLabel: {
-    position: 'absolute',
-    top: 34,
-  },
-});
+function crearEstilosBarra(tema) {
+  return StyleSheet.create({
+    exterior: {
+      // Deja visible el fondo de la pantalla en las esquinas redondeadas.
+      backgroundColor: tema.fondo,
+      paddingHorizontal: 0,
+    },
+    contenedor: {
+      minHeight: 64,
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
+      borderWidth: 1,
+      borderBottomWidth: 0,
+      paddingHorizontal: ESPACIADO.pequeno,
+      paddingTop: ESPACIADO.minimo,
+    },
+    elemento: {
+      flex: 1,
+      minHeight: 56,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingHorizontal: ESPACIADO.minimo,
+      paddingTop: ESPACIADO.minimo,
+    },
+    elementoNuevo: {
+      paddingTop: ESPACIADO.minimo,
+    },
+    indicadorActivo: {
+      position: 'absolute',
+      top: -2,
+      width: 42,
+      height: 3,
+      backgroundColor: tema.foco,
+      borderRadius: BORDES.radios.circular,
+    },
+    iconoNuevo: {
+      position: 'absolute',
+      top: -23,
+      width: 54,
+      height: 54,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tema.encabezado,
+      borderColor: tema.foco,
+      borderRadius: BORDES.radios.circular,
+      borderWidth: 0,
+      elevation: 3,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.16,
+      shadowRadius: 3,
+    },
+    etiqueta: {
+      marginTop: 2,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: 11,
+      fontWeight: TIPOGRAFIA.pesos.regular,
+      textAlign: 'center',
+    },
+    etiquetaNuevo: {
+      position: 'absolute',
+      top: 34,
+    },
+  });
+}

@@ -7,7 +7,8 @@ hacia Login. No comprueba sesiones ni decide todavía entre Login y Dashboard.
 
 ## Elementos visuales
 
-- Fondo claro uniforme, sin luces ni círculos decorativos.
+- Fondo uniforme del tema activo, sin luces ni círculos decorativos (`#F4F4F4`
+  en claro y `#081C19` en oscuro).
 - Símbolo de AHRE desde `assets/ahre-mark.png`.
 - Nombre de AHRE en dos líneas (`AH` y `RE`), centrado en la pantalla.
 - Deslizador inferior que ocupa el ancho disponible, respetando márgenes
@@ -32,10 +33,9 @@ Abrir AHRE → deslizar hasta el final → Iniciando AHRE… → Login
 
 ## Tema y áreas seguras
 
-Inicio utiliza por ahora el tema claro de la aplicación, independientemente de
-la preferencia de modo oscuro del dispositivo. El modo oscuro para esta pantalla
-queda para una etapa posterior. La barra de estado acompaña el fondo claro y el
-contenido respeta las áreas seguras del dispositivo.
+Inicio acompaña el modo claro u oscuro seleccionado en el dispositivo. La barra
+de estado, el fondo, el contenido y el área de navegación del sistema respetan
+el tema activo y las áreas seguras. No muestra la barra de pestañas de AHRE.
 
 ## Relación con el flujo futuro
 

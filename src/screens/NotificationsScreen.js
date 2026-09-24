@@ -5,7 +5,7 @@ import EncabezadoSeccion from '../components/SectionHeader';
 import { TEMAS } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
-export default function PantallaOCR({ navigation: navegacion }) {
+export default function PantallaNotificaciones({ navigation: navegacion }) {
   const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
   const estilos = crearEstilosGlobales(tema);
 
@@ -14,13 +14,12 @@ export default function PantallaOCR({ navigation: navegacion }) {
       <View style={estilos.pantalla}>
         <EncabezadoSeccion
           tema={tema}
-          titulo="OCR"
-          descripcion="Escanea comprobantes para registrar operaciones."
+          titulo="Notificaciones"
+          descripcion="Consulta los avisos importantes de AHRE."
           alVolver={() => navegacion.goBack()}
         />
         <View style={estilos.contenido}>
-          <Text style={estilos.subtitulo}>OCR</Text>
-          <Text style={estilos.textoSecundario}>La cámara y el reconocimiento se implementarán posteriormente.</Text>
+          <Text style={estilos.subtitulo}>Notificaciones</Text>
         </View>
       </View>
     </SafeAreaView>

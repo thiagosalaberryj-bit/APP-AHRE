@@ -1,20 +1,20 @@
-import { ROUTES } from '../constants/routes';
+import { RUTAS } from '../constants/routes';
 
 /**
  * Prueba de humo mínima para comprobar que la navegación puede importar sus
  * rutas. Se reemplazará por pruebas automatizadas cuando se incorpore un test
  * runner.
  */
-export function runStructureSmokeTest() {
+export function ejecutarPruebaHumoEstructura() {
   return Boolean(
-    ROUTES.INICIO &&
-      ROUTES.LOGIN &&
-      ROUTES.REGISTRO &&
-      ROUTES.PRINCIPAL &&
-      ROUTES.DASHBOARD &&
-      ROUTES.MOVIMIENTOS &&
-      ROUTES.NUEVO &&
-      ROUTES.ESTADISTICAS &&
-      ROUTES.SOCIAL,
+    RUTAS.INICIO &&
+      RUTAS.INICIO_SESION &&
+      RUTAS.REGISTRO &&
+      RUTAS.PRINCIPAL &&
+      RUTAS.PANEL &&
+      RUTAS.MOVIMIENTOS &&
+      RUTAS.NUEVO &&
+      RUTAS.ESTADISTICAS &&
+      RUTAS.SOCIAL,
   );
 }

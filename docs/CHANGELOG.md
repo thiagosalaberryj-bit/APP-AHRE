@@ -5,6 +5,18 @@ documentación se registran en este archivo.
 
 ## [v0.2.0] - 2026-09-23 - no publicada
 
+### Añadido
+
+- Se maquetaron Login y Registro con identidad de AHRE, campos de nombre,
+  correo, contraseña y confirmación, placeholders, controles para mostrar u
+  ocultar contraseña y navegación visual entre pantallas.
+- Se agregaron componentes reutilizables para contenedor de autenticación,
+  campos, contraseña, botón principal y mensaje de error.
+- Se agregaron estados visuales de campo normal, enfocado, completado, error y
+  deshabilitado, además de soporte de carga y error general en los componentes.
+- Se agregó el switch animado «Recordarme», el texto de recuperación de
+  contraseña, el aviso legal de una línea y el copyright con año dinámico.
+
 ### Cambiado
 
 - Se maquetó `InicioScreen` como bienvenida de AHRE con el símbolo de la marca,
@@ -21,17 +33,34 @@ documentación se registran en este archivo.
   sesión queda para un Issue futuro.
 - Se configuró la pantalla nativa de carga para acompañar los temas claro y
   oscuro.
+- Los botones de Login y Registro prueban el flujo visual Login → Dashboard y
+  Registro → Login sin autenticar, crear usuarios ni guardar sesión.
+- Las pantallas existentes siguen el tema claro u oscuro del sistema. La barra
+  inferior y la zona de controles del sistema Android usan colores acordes al
+  tema y a la ruta activa; fuera de esas pestañas se usa el fondo de pantalla.
+- Se ajustaron el contraste de los botones de autenticación, el peso de su texto,
+  los bordes y placeholders de inputs y la sombra del botón central «Nuevo».
 
 ### Documentación
 
 - Se documentó la pantalla inicial en `docs/interfaces/inicio.md`.
+- Se ampliaron la documentación de autenticación, navegación, tema visual,
+  pantalla inicial, estructura de carpetas y dependencias.
 
 ### Verificación
 
 - Expo generó correctamente el bundle de Android tras los ajustes del fondo y
   del deslizador de Inicio.
 - Se comprobó que la bienvenida abre Login sin consultar la red ni validar una
-  sesión; la decisión entre Login y Dashboard queda pendiente.
+  sesión; Login muestra el Dashboard como destino visual sin validar una sesión.
+
+### Alcance pendiente
+
+- No hay autenticación, registro real, recuperación de contraseña, aceptación
+  persistida de términos, validación, envío a servicios, persistencia de
+  sesión ni lógica de negocio en Login o Registro.
+- Los errores y la carga están preparados en los componentes, pero las
+  pantallas no los activan por ahora.
 
 ## [v0.1.0] - 2026-09-20 - no estable
 
