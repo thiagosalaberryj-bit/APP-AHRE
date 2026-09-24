@@ -3,19 +3,19 @@
  * La implementación concreta podrá ser AsyncStorage, SQLite u otra solución
  * compatible con Expo sin acoplarla a las pantallas.
  */
-export function createStorageAdapter(adapter) {
+export function crearAdaptadorAlmacenamiento(adaptador) {
   if (
-    !adapter ||
-    typeof adapter.getItem !== 'function' ||
-    typeof adapter.setItem !== 'function' ||
-    typeof adapter.removeItem !== 'function'
+    !adaptador ||
+    typeof adaptador.getItem !== 'function' ||
+    typeof adaptador.setItem !== 'function' ||
+    typeof adaptador.removeItem !== 'function'
   ) {
     throw new Error('El adaptador local debe implementar getItem, setItem y removeItem.');
   }
 
   return {
-    get: (key) => adapter.getItem(key),
-    set: (key, value) => adapter.setItem(key, value),
-    remove: (key) => adapter.removeItem(key),
+    obtener: (clave) => adaptador.getItem(clave),
+    guardar: (clave, valor) => adaptador.setItem(clave, valor),
+    eliminar: (clave) => adaptador.removeItem(clave),
   };
 }

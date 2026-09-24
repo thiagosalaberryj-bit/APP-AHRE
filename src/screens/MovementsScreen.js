@@ -6,7 +6,7 @@ import { TEMAS } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import EncabezadoPrincipal from '../components/MainHeader';
 
-export default function PantallaSocial({ navigation: navegacion }) {
+export default function PantallaMovimientos({ navigation: navegacion }) {
   const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
   const estilos = crearEstilosGlobales(tema);
   const abrirPantallaSecundaria = (ruta) => navegacion.getParent()?.navigate(ruta);
@@ -16,13 +16,13 @@ export default function PantallaSocial({ navigation: navegacion }) {
       <View style={estilos.pantalla}>
       <EncabezadoPrincipal
         tema={tema}
-        titulo="Social"
-        descripcion="Comparte y consulta actividades con tu entorno."
+        titulo="Movimientos"
+        descripcion="Consulta el historial general de tus operaciones."
         alAbrirNotificaciones={() => abrirPantallaSecundaria(RUTAS.NOTIFICACIONES)}
         alAbrirPerfil={() => abrirPantallaSecundaria(RUTAS.PERFIL)}
       />
       <View style={estilos.contenido}>
-        <Text style={estilos.textoSecundario}>El módulo social se definirá posteriormente.</Text>
+        <Text style={estilos.textoSecundario}>Aquí se mostrarán tus movimientos registrados.</Text>
       </View>
       </View>
     </SafeAreaView>

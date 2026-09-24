@@ -27,20 +27,20 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | `expo-secure-store` | `~57.0.4` | Guarda valores pequeños de forma segura utilizando mecanismos nativos del dispositivo. | Tokens, credenciales u otros datos sensibles de sesión. |
 | `expo-splash-screen` | `~57.0.9` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Evitar transiciones incorrectas al abrir AHRE y coordinar su inicio. |
 | `expo-sqlite` | `~57.0.3` | Permite utilizar una base de datos SQLite local. | Persistencia principal del enfoque offline-first. |
-| `expo-system-ui` | `~57.0.4` | Permite configurar aspectos de la interfaz nativa del sistema. | Fondo de la ventana y transición visual de inicio. |
-| `expo-navigation-bar` | `~57.0.2` | Permite definir el estilo de los controles de navegación del sistema Android. | Mantener controles oscuros sobre el fondo gris claro de las pantallas sin navbar interno. |
+| `expo-system-ui` | `~57.0.4` | Permite configurar aspectos de la interfaz nativa del sistema. | Fondo de la ventana según el tema activo y transiciones sin un fondo blanco inesperado. |
+| `expo-navigation-bar` | `~57.0.2` | Permite definir el estilo de los controles de navegación del sistema Android. | Cambiar el contraste de los controles según el tema; una capa de React Native pinta el fondo que corresponde a cada pantalla. |
 | `@react-navigation/native` | `^7.4.1` | Base común para administrar la navegación en React Native. | Organización de los flujos y pantallas de AHRE. |
 | `@react-navigation/native-stack` | `^7.19.2` | Implementa navegación tipo pila entre pantallas. | Flujos como inicio de sesión, registro y detalle de movimientos. |
-| `@react-navigation/bottom-tabs` | `^7.19.2` | Implementa navegación mediante pestañas inferiores. | Acceso a Inicio, movimientos, estadísticas, notificaciones y perfil. |
+| `@react-navigation/bottom-tabs` | `^7.19.2` | Implementa navegación mediante pestañas inferiores. | Acceso a Inicio, Movimientos, Nuevo, Estadísticas y Social. |
 | `react-native-screens` | `~4.26.0` | Optimiza la administración nativa de pantallas utilizadas por la navegación. | Soporte de los navegadores de React Navigation. |
-| `react-native-safe-area-context` | `~5.7.0` | Detecta áreas seguras del dispositivo, como barras de estado y cámaras frontales. | Evitar que el contenido quede debajo de elementos del sistema. |
+| `react-native-safe-area-context` | `~5.7.0` | Detecta áreas seguras del dispositivo, como barras del sistema y cámaras frontales. | Mantener formularios y navegación accesibles y calcular el inset que colorea la zona inferior de Android. |
 | `react-native-gesture-handler` | `~2.32.0` | Proporciona gestos nativos para interacciones táctiles. | Navegación, desplazamientos y futuras interacciones de la interfaz. |
 | `react-native-reanimated` | `4.5.1` | Permite crear animaciones ejecutadas de forma eficiente. | Transiciones y cambios de interfaz sin lógica de negocio. |
 | `react-native-worklets` | `0.10.1` | Proporciona la ejecución de funciones de Reanimated en contextos de trabajo. | Soporte requerido por la versión instalada de Reanimated. |
 | `react-native-svg` | `15.15.4` | Permite renderizar y manipular gráficos SVG. | Íconos, gráficos y recursos vectoriales de la interfaz. |
-| `react-hook-form` | `^7.88.0` | Administra el estado, los valores, el envío y el estado de los formularios. | Login, registro, depósitos, ingresos, egresos y edición de perfil. |
-| `zod` | `^4.6.5` | Define esquemas de validación y comprueba que los datos tengan el formato esperado. | Validación de campos antes de guardar o enviar información. |
-| `@hookform/resolvers` | `^5.9.1` | Conecta `react-hook-form` con librerías de validación como `zod`. | Ejecutar los esquemas de `zod` automáticamente dentro de los formularios. |
+| `react-hook-form` | `^7.88.0` | Base para administrar estado, valores, envío y estado de formularios. | Uso futuro en autenticación, depósitos, ingresos, egresos y perfil; Login y Registro visuales todavía no lo utilizan. |
+| `zod` | `^4.6.5` | Permite definir esquemas para validar formatos y reglas de datos. | Reglas futuras para formularios antes de guardar o enviar información; aún no se aplican a Login ni Registro. |
+| `@hookform/resolvers` | `^5.9.1` | Conecta `react-hook-form` con librerías de validación como `zod`. | Integración futura de validaciones dentro de los formularios. |
 | `date-fns` | `^4.4.0` | Proporciona funciones para analizar, comparar, ordenar y formatear fechas. | Movimientos, depósitos, estadísticas, filtros y reportes. |
 
 ## Cómo se complementan los formularios
@@ -60,6 +60,9 @@ formulario válido o errores por campo
 Por ejemplo, `react-hook-form` puede controlar el valor de un campo de monto, mientras que `zod` comprueba que sea obligatorio, numérico y mayor que cero. `@hookform/resolvers` permite que ese resultado llegue al formulario y se muestre junto al campo correspondiente.
 
 Instalarlas no crea formularios automáticamente. Solo deja disponible una base común para que las pantallas implementen formularios consistentes cuando se desarrollen sus funcionalidades.
+Login y Registro todavía no utilizan `react-hook-form`, `zod` ni sus resolvers:
+sus valores locales solo permiten escribir y presentar los campos. Las
+validaciones y el envío se incorporarán en el Issue de lógica de autenticación.
 
 ## Comandos utilizados
 
@@ -90,10 +93,17 @@ No reemplaza la configuración de `app.json`. Su función es permitir que el có
 
 ### `expo-navigation-bar` y `expo-system-ui`
 
-`expo-system-ui` establece el fondo gris claro de la ventana y
-`expo-navigation-bar` configura los controles oscuros de navegación del sistema
-Android. Esto evita que la zona donde aparecen los botones del dispositivo
-quede blanca en las pantallas que no tienen el navbar interno de AHRE.
+`expo-system-ui` establece el fondo de ventana usando el tema activo.
+`expo-navigation-bar` ajusta el contraste de los controles del sistema en
+Android. En `app.json`, `enforceContrast: false` permite que React Native dibuje
+el contenido hasta esa zona sin que Android agregue su propio velo de contraste.
+`AppNavigator.js` pinta el inset inferior con la superficie de las pestañas
+dentro de `PRINCIPAL` y con el fondo general en las otras pantallas;
+`BottomTabBar.js` extiende su propia superficie hasta el mismo inset.
+
+`enforceContrast` es configuración nativa del plugin. Si cambia, hay que
+regenerar o reconstruir la app Android para que se aplique; recargar JavaScript
+no modifica la configuración nativa de una app ya instalada.
 
 ### Recursos de identidad visual
 

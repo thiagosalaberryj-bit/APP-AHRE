@@ -1,1 +1,1 @@
-export { createStorageAdapter } from './storageAdapter';
+export { crearAdaptadorAlmacenamiento } from './storageAdapter';

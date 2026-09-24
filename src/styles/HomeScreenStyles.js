@@ -3,10 +3,10 @@ import { StyleSheet } from 'react-native';
 import { COLORES_MARCA } from './colors';
 import { ESPACIADO, TIPOGRAFIA } from './globalStyles';
 
-export const TAMANO_CONTROL_SLIDER = 52;
+export const TAMANO_CONTROL_DESLIZADOR = 52;
 
-export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoSlider) {
-  const altoSlider = TAMANO_CONTROL_SLIDER + ESPACIADO.pequeno * 2;
+export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoDeslizador) {
+  const altoDeslizador = TAMANO_CONTROL_DESLIZADOR + ESPACIADO.pequeno * 2;
   const colorLetras = tema.nombre === 'oscuro' ? '#FFFFFF' : COLORES_MARCA.verdeOscuro;
 
   return StyleSheet.create({
@@ -41,7 +41,7 @@ export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoSlider)
       transform: [
         {
           translateY:
-            (altoSlider + ESPACIADO.extraGrande - tamanoMarca - ESPACIADO.grande) / 2,
+            (altoDeslizador + ESPACIADO.extraGrande - tamanoMarca - ESPACIADO.grande) / 2,
         },
       ],
     },
@@ -57,9 +57,9 @@ export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoSlider)
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 5,
     },
-    slider: {
-      width: anchoSlider,
-      height: altoSlider,
+    deslizador: {
+      width: anchoDeslizador,
+      height: altoDeslizador,
       flexShrink: 0,
       justifyContent: 'center',
       marginBottom: ESPACIADO.extraGrande,
@@ -69,7 +69,7 @@ export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoSlider)
       borderWidth: 1,
       overflow: 'hidden',
     },
-    colaRellenoSlider: {
+    colaRellenoDeslizador: {
       position: 'absolute',
       top: 0,
       bottom: 0,
@@ -78,7 +78,7 @@ export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoSlider)
       borderTopLeftRadius: 20,
       borderBottomLeftRadius: 20,
     },
-    rellenoSlider: {
+    rellenoDeslizador: {
       position: 'absolute',
       top: 0,
       bottom: 0,
@@ -89,7 +89,7 @@ export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoSlider)
       borderTopRightRadius: 20,
       borderBottomRightRadius: 20,
     },
-    textoSlider: {
+    textoDeslizador: {
       position: 'absolute',
       left: ESPACIADO.pequeno,
       right: ESPACIADO.pequeno,
@@ -103,12 +103,12 @@ export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoSlider)
       color: '#FFFFFF',
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
-    controlSlider: {
+    controlDeslizador: {
       position: 'absolute',
       left: ESPACIADO.pequeno,
       top: ESPACIADO.pequeno,
-      width: TAMANO_CONTROL_SLIDER,
-      height: TAMANO_CONTROL_SLIDER,
+      width: TAMANO_CONTROL_DESLIZADOR,
+      height: TAMANO_CONTROL_DESLIZADOR,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: COLORES_MARCA.verdeClaro,
@@ -119,7 +119,7 @@ export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoSlider)
       shadowRadius: 3,
       elevation: 3,
     },
-    controlIniciando: {
+    controlDeslizadorIniciando: {
       backgroundColor: COLORES_MARCA.verdeOscuro,
     },
     flecha: {

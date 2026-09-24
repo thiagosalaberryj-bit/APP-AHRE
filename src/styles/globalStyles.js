@@ -16,7 +16,7 @@ export const ESPACIADO = Object.freeze({
 
 export const BORDES = Object.freeze({
   radios: Object.freeze({
-    input: 10,
+    campo: 10,
     boton: 12,
     tarjeta: 16,
     contenedor: 20,
@@ -46,79 +46,79 @@ export const TIPOGRAFIA = Object.freeze({
  * componerse a partir de esta base y de estilos locales de layout cuando sea
  * necesario.
  */
-export function crearEstilosGlobales(theme = TEMAS.claro) {
+export function crearEstilosGlobales(tema = TEMAS.claro) {
   return StyleSheet.create({
     areaSegura: {
       flex: 1,
-      backgroundColor: theme.encabezado,
+      backgroundColor: tema.encabezado,
     },
     pantalla: {
       flex: 1,
-      backgroundColor: theme.fondo,
+      backgroundColor: tema.fondo,
     },
     contenido: {
       padding: ESPACIADO.pantalla,
     },
     encabezado: {
-      backgroundColor: theme.encabezado,
+      backgroundColor: tema.encabezado,
       padding: ESPACIADO.pantalla,
       borderBottomLeftRadius: BORDES.radios.contenedor,
       borderBottomRightRadius: BORDES.radios.contenedor,
     },
     encabezadoTitulo: {
-      color: theme.encabezadoTexto,
+      color: tema.encabezadoTexto,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.titulo,
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
     encabezadoTexto: {
-      color: theme.botonPrincipal,
+      color: tema.botonPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
     },
     tarjeta: {
-      backgroundColor: theme.superficie,
-      borderColor: theme.borde,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
       borderRadius: BORDES.radios.tarjeta,
       borderWidth: BORDES.anchos.fino,
       padding: ESPACIADO.grande,
     },
     titulo: {
-      color: theme.textoPrincipal,
+      color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.titulo,
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
     subtitulo: {
-      color: theme.textoPrincipal,
+      color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.subtitulo,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     encabezadoSeccion: {
-      color: theme.textoPrincipal,
+      color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.encabezado,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     texto: {
-      color: theme.textoPrincipal,
+      color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.cuerpo,
     },
     textoSecundario: {
-      color: theme.textoSecundario,
+      color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
     },
     etiqueta: {
-      color: theme.textoPrincipal,
+      color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.etiqueta,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     monto: {
-      color: theme.textoPrincipal,
+      color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.monto,
       fontWeight: TIPOGRAFIA.pesos.negrita,
@@ -127,13 +127,13 @@ export function crearEstilosGlobales(theme = TEMAS.claro) {
       minHeight: 48,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.botonPrincipal,
+      backgroundColor: tema.botonPrincipal,
       borderRadius: BORDES.radios.boton,
       paddingHorizontal: ESPACIADO.grande,
       paddingVertical: ESPACIADO.medio,
     },
     textoBotonPrincipal: {
-      color: theme.botonPrincipalTexto,
+      color: tema.botonPrincipalTexto,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.boton,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
@@ -142,13 +142,13 @@ export function crearEstilosGlobales(theme = TEMAS.claro) {
       minHeight: 48,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.botonSecundario,
+      backgroundColor: tema.botonSecundario,
       borderRadius: BORDES.radios.boton,
       paddingHorizontal: ESPACIADO.grande,
       paddingVertical: ESPACIADO.medio,
     },
     textoBotonSecundario: {
-      color: theme.botonSecundarioTexto,
+      color: tema.botonSecundarioTexto,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.boton,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
@@ -161,7 +161,7 @@ export function crearEstilosGlobales(theme = TEMAS.claro) {
       paddingVertical: ESPACIADO.pequeno,
     },
     textoBotonTexto: {
-      color: theme.foco,
+      color: tema.foco,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.boton,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
@@ -170,71 +170,74 @@ export function crearEstilosGlobales(theme = TEMAS.claro) {
       minHeight: 48,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.fondoDeshabilitado,
+      backgroundColor: tema.fondoDeshabilitado,
       borderRadius: BORDES.radios.boton,
       paddingHorizontal: ESPACIADO.grande,
       paddingVertical: ESPACIADO.medio,
     },
     textoDeshabilitado: {
-      color: theme.deshabilitado,
+      color: tema.deshabilitado,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.boton,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
-    input: {
+    campo: {
       minHeight: 52,
-      backgroundColor: theme.superficie,
-      borderColor: theme.bordeFuerte,
-      borderRadius: BORDES.radios.input,
+      backgroundColor: tema.superficie,
+      borderColor: tema.bordeFuerte,
+      borderRadius: BORDES.radios.campo,
       borderWidth: BORDES.anchos.normal,
-      color: theme.textoPrincipal,
+      color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.cuerpo,
       paddingHorizontal: ESPACIADO.grande,
     },
-    inputEnfocado: {
-      borderColor: theme.foco,
+    campoEnfocado: {
+      borderColor: tema.foco,
     },
-    inputError: {
-      borderColor: '#C62828',
+    campoCompletado: {
+      borderColor: tema.exito,
     },
-    inputDeshabilitado: {
-      backgroundColor: theme.fondoDeshabilitado,
-      borderColor: theme.borde,
-      color: theme.deshabilitado,
+    campoError: {
+      borderColor: tema.error,
+    },
+    campoDeshabilitado: {
+      backgroundColor: tema.fondoDeshabilitado,
+      borderColor: tema.borde,
+      color: tema.deshabilitado,
     },
     textoAyuda: {
-      color: theme.textoSecundario,
+      color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.auxiliar,
     },
     textoError: {
-      color: '#C62828',
+      color: tema.error,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.auxiliar,
     },
     separador: {
-      backgroundColor: theme.borde,
+      backgroundColor: tema.borde,
       height: BORDES.anchos.fino,
     },
     iconoDetalle: {
       alignItems: 'center',
-      backgroundColor: theme.encabezado,
+      backgroundColor: tema.encabezado,
       borderRadius: BORDES.radios.circular,
       height: 44,
       justifyContent: 'center',
       width: 44,
     },
     textoIconoDetalle: {
-      color: theme.botonPrincipal,
+      color: tema.botonPrincipal,
       fontSize: TIPOGRAFIA.tamanos.encabezado,
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
     navegacion: {
       minHeight: 76,
       alignItems: 'stretch',
-      backgroundColor: theme.superficie,
-      borderColor: theme.borde,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
       borderTopWidth: BORDES.anchos.fino,
       flexDirection: 'row',
       paddingHorizontal: ESPACIADO.pequeno,
@@ -247,7 +250,7 @@ export function crearEstilosGlobales(theme = TEMAS.claro) {
       padding: ESPACIADO.pequeno,
     },
     navegacionActiva: {
-      borderTopColor: theme.foco,
+      borderTopColor: tema.foco,
       borderTopWidth: BORDES.anchos.normal,
     },
   });

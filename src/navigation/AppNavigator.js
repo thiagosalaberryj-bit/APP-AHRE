@@ -1,114 +1,141 @@
+import { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { Platform, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ROUTES } from '../constants/routes';
-import BottomTabBar from './BottomTabBar';
+import { RUTAS } from '../constants/routes';
+import BarraPestanasInferior from './BottomTabBar';
 import { TEMAS } from '../styles/colors';
-import DashboardScreen from '../screens/DashboardScreen';
-import DepositoScreen from '../screens/DepositoScreen';
-import DetalleDepositoScreen from '../screens/DetalleDepositoScreen';
-import EgresoScreen from '../screens/EgresoScreen';
-import EstadisticasScreen from '../screens/EstadisticasScreen';
-import IngresoScreen from '../screens/IngresoScreen';
-import InicioScreen from '../screens/InicioScreen';
-import LoginScreen from '../screens/LoginScreen';
-import MovimientosScreen from '../screens/MovimientosScreen';
-import NotificacionesScreen from '../screens/NotificacionesScreen';
-import OcrScreen from '../screens/OcrScreen';
-import PerfilScreen from '../screens/PerfilScreen';
-import RegistroScreen from '../screens/RegistroScreen';
-import SocialScreen from '../screens/SocialScreen';
-import NuevoScreen from '../screens/NuevoScreen';
+import PantallaPanel from '../screens/DashboardScreen';
+import PantallaDeposito from '../screens/DepositScreen';
+import PantallaDetalleDeposito from '../screens/DepositDetailScreen';
+import PantallaEgreso from '../screens/ExpenseScreen';
+import PantallaEstadisticas from '../screens/StatisticsScreen';
+import PantallaIngreso from '../screens/IncomeScreen';
+import PantallaInicio from '../screens/HomeScreen';
+import PantallaInicioSesion from '../screens/LoginScreen';
+import PantallaMovimientos from '../screens/MovementsScreen';
+import PantallaNotificaciones from '../screens/NotificationsScreen';
+import PantallaOCR from '../screens/OcrScreen';
+import PantallaPerfil from '../screens/ProfileScreen';
+import PantallaRegistro from '../screens/RegistrationScreen';
+import PantallaSocial from '../screens/SocialScreen';
+import PantallaNuevo from '../screens/CreateScreen';
 
-const Stack = createNativeStackNavigator();
-const Tabs = createBottomTabNavigator();
-const tema = TEMAS.claro;
+const PilaNavegacion = createNativeStackNavigator();
+const PestanasNavegacion = createBottomTabNavigator();
 
-function MainTabs() {
+function PestanasPrincipales() {
   return (
-    <Tabs.Navigator
+    <PestanasNavegacion.Navigator
       screenOptions={{
         headerShown: false,
       }}
-      tabBar={(props) => <BottomTabBar {...props} />}
+      tabBar={(propiedades) => <BarraPestanasInferior {...propiedades} />}
     >
-      <Tabs.Screen
-        name={ROUTES.DASHBOARD}
-        component={DashboardScreen}
+      <PestanasNavegacion.Screen
+        name={RUTAS.PANEL}
+        component={PantallaPanel}
         options={{
           title: 'Inicio',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={size} />
+          tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
+            <Ionicons name={seleccionada ? 'home' : 'home-outline'} color={colorIcono} size={tamano} />
           ),
         }}
       />
-      <Tabs.Screen
-        name={ROUTES.MOVIMIENTOS}
-        component={MovimientosScreen}
+      <PestanasNavegacion.Screen
+        name={RUTAS.MOVIMIENTOS}
+        component={PantallaMovimientos}
         options={{
           title: 'Movimientos',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'list' : 'list-outline'} color={color} size={size} />
+          tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
+            <Ionicons name={seleccionada ? 'list' : 'list-outline'} color={colorIcono} size={tamano} />
           ),
         }}
       />
-      <Tabs.Screen
-        name={ROUTES.NUEVO}
-        component={NuevoScreen}
+      <PestanasNavegacion.Screen
+        name={RUTAS.NUEVO}
+        component={PantallaNuevo}
         options={{
           title: 'Nuevo',
-          tabBarIcon: ({ color, size }) => <Ionicons name="add" color={color} size={size} />,
+          tabBarIcon: ({ color: colorIcono, size: tamano }) => <Ionicons name="add" color={colorIcono} size={tamano} />,
         }}
       />
-      <Tabs.Screen
-        name={ROUTES.ESTADISTICAS}
-        component={EstadisticasScreen}
+      <PestanasNavegacion.Screen
+        name={RUTAS.ESTADISTICAS}
+        component={PantallaEstadisticas}
         options={{
           title: 'Estadísticas',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} color={color} size={size} />
+          tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
+            <Ionicons name={seleccionada ? 'bar-chart' : 'bar-chart-outline'} color={colorIcono} size={tamano} />
           ),
         }}
       />
-      <Tabs.Screen
-        name={ROUTES.SOCIAL}
-        component={SocialScreen}
+      <PestanasNavegacion.Screen
+        name={RUTAS.SOCIAL}
+        component={PantallaSocial}
         options={{
           title: 'Social',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} color={color} size={size} />
+          tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
+            <Ionicons name={seleccionada ? 'people' : 'people-outline'} color={colorIcono} size={tamano} />
           ),
         }}
       />
-    </Tabs.Navigator>
+    </PestanasNavegacion.Navigator>
   );
 }
 
-export default function AppNavigator() {
+export default function NavegadorAplicacion() {
+  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const margenesSeguros = useSafeAreaInsets();
+  const [tieneBarraInferior, establecerBarraInferior] = useState(false);
+  const colorZonaNavegacion = tieneBarraInferior ? tema.superficie : tema.fondo;
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={ROUTES.INICIO}
-        screenOptions={{
-          headerStyle: { backgroundColor: tema.encabezado },
-          headerTintColor: tema.encabezadoTexto,
-          headerTitleStyle: { fontWeight: '700' },
+    <View style={{ flex: 1, backgroundColor: tema.fondo }}>
+      <NavigationContainer
+        onStateChange={(estadoNavegacion) => {
+          establecerBarraInferior(estadoNavegacion?.routes?.[estadoNavegacion.index]?.name === RUTAS.PRINCIPAL);
         }}
       >
-        <Stack.Screen name={ROUTES.INICIO} component={InicioScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.REGISTRO} component={RegistroScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.PRINCIPAL} component={MainTabs} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.PERFIL} component={PerfilScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.NOTIFICACIONES} component={NotificacionesScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.INGRESO} component={IngresoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.EGRESO} component={EgresoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.DEPOSITO} component={DepositoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.DETALLE_DEPOSITO} component={DetalleDepositoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={ROUTES.OCR} component={OcrScreen} options={{ headerShown: false }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+        <PilaNavegacion.Navigator
+          initialRouteName={RUTAS.INICIO}
+          screenOptions={{
+            contentStyle: { backgroundColor: tema.fondo },
+            headerStyle: { backgroundColor: tema.encabezado },
+            headerTintColor: tema.encabezadoTexto,
+            headerTitleStyle: { fontWeight: '700' },
+          }}
+        >
+          <PilaNavegacion.Screen name={RUTAS.INICIO} component={PantallaInicio} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.INICIO_SESION} component={PantallaInicioSesion} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.REGISTRO} component={PantallaRegistro} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.PRINCIPAL} component={PestanasPrincipales} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.PERFIL} component={PantallaPerfil} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.NOTIFICACIONES} component={PantallaNotificaciones} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.INGRESO} component={PantallaIngreso} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.EGRESO} component={PantallaEgreso} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.DEPOSITO} component={PantallaDeposito} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.DETALLE_DEPOSITO} component={PantallaDetalleDeposito} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.OCR} component={PantallaOCR} options={{ headerShown: false }} />
+        </PilaNavegacion.Navigator>
+      </NavigationContainer>
+      {Platform.OS === 'android' && margenesSeguros.bottom > 0 ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            left: 0,
+            height: margenesSeguros.bottom,
+            backgroundColor: colorZonaNavegacion,
+          }}
+        />
+      ) : null}
+    </View>
   );
 }

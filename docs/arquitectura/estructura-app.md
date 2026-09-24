@@ -5,8 +5,10 @@
 Esta estructura prepara AHRE, una aplicación móvil desarrollada con Expo y
 React Native utilizando JavaScript. El objetivo de este Issue es separar las
 responsabilidades principales y dejar puntos de extensión para futuras
-funcionalidades. Todavía no implementa los flujos completos de finanzas,
-autenticación, OCR, sincronización ni colaboración.
+funcionalidades. Login y Registro ya tienen una maquetación navegable, pero
+todavía no implementan autenticación, validación ni persistencia de sesión.
+Tampoco están implementados los flujos completos de finanzas, OCR,
+sincronización ni colaboración.
 
 El informe del proyecto define AHRE como una aplicación orientada inicialmente
 a Android y con un enfoque offline-first. Por eso la información local es el
@@ -37,14 +39,19 @@ APP-AHRE/
 │   ├── configuracion/
 │   │   └── dependencias.md
 │   ├── interfaces/
+│   │   ├── autenticacion.md
 │   │   └── sistema-visual.md
 │   └── proceso/
 │       └── flujo-issues-prs-changelog.md
 ├── src/
 │   ├── components/
+│   │   ├── AuthContainer.js
+│   │   ├── AuthInput.js
+│   │   ├── ErrorMessage.js
 │   │   ├── MainHeader.js
-│   │   ├── SectionHeader.js
-│   │   └── StructureStatus.js
+│   │   ├── PasswordInput.js
+│   │   ├── PrimaryButton.js
+│   │   └── SectionHeader.js
 │   ├── constants/
 │   │   └── routes.js
 │   ├── database/
@@ -55,23 +62,25 @@ APP-AHRE/
 │   │   └── BottomTabBar.js
 │   ├── screens/
 │   │   ├── DashboardScreen.js
-│   │   ├── DepositoScreen.js
-│   │   ├── DetalleDepositoScreen.js
-│   │   ├── EgresoScreen.js
-│   │   ├── EstadisticasScreen.js
-│   │   ├── IngresoScreen.js
-│   │   ├── InicioScreen.js
+│   │   ├── DepositScreen.js
+│   │   ├── DepositDetailScreen.js
+│   │   ├── ExpenseScreen.js
+│   │   ├── StatisticsScreen.js
+│   │   ├── IncomeScreen.js
+│   │   ├── HomeScreen.js
 │   │   ├── LoginScreen.js
-│   │   ├── MovimientosScreen.js
-│   │   ├── NotificacionesScreen.js
-│   │   ├── NuevoScreen.js
+│   │   ├── MovementsScreen.js
+│   │   ├── NotificationsScreen.js
+│   │   ├── CreateScreen.js
 │   │   ├── OcrScreen.js
-│   │   ├── PerfilScreen.js
-│   │   ├── RegistroScreen.js
+│   │   ├── ProfileScreen.js
+│   │   ├── RegistrationScreen.js
 │   │   └── SocialScreen.js
 │   ├── services/
 │   │   └── index.js
 │   ├── styles/
+│   │   ├── HomeScreenStyles.js
+│   │   ├── authStyles.js
 │   │   ├── colors.js
 │   │   └── globalStyles.js
 │   └── utils/
@@ -102,9 +111,12 @@ Ingresos, Egresos, OCR y Social.
 
 Contiene componentes visuales reutilizables entre dos o más pantallas. Los
 componentes utilizan PascalCase y un nombre relacionado con su responsabilidad,
-como `AmountInput.js` o `MovementCard.js`. `StructureStatus.js` es el componente
-inicial de verificación de la estructura. Este Issue no crea todavía los
-componentes funcionales de las pantallas.
+como `AmountInput.js` o `MovementCard.js`. Muchas pantallas financieras todavía
+esperan sus componentes funcionales. Login y Registro reutilizan
+`ContenedorAutenticacion` (`AuthContainer.js`), `CampoAutenticacion`
+(`AuthInput.js`), `CampoContrasena` (`PasswordInput.js`), `BotonPrincipal`
+(`PrimaryButton.js`) y `MensajeError` (`ErrorMessage.js`); sus estilos de
+distribución están en `src/styles/authStyles.js`.
 `MainHeader.js` define el encabezado de las secciones principales, con el logo
 de AHRE, título, descripción y accesos a notificaciones y perfil.
 `SectionHeader.js` define el encabezado reutilizable de las pantallas
@@ -116,6 +128,9 @@ alineada a la izquierda y centrada verticalmente debajo.
 Contiene la composición de rutas y navegadores. `AppNavigator.js` combina un
 `Native Stack` para el flujo de acceso y las pantallas secundarias con un
 `Bottom Tab Navigator` para Inicio, Movimientos, Nuevo, Estadísticas y Social.
+También determina si la ruta raíz muestra las pestañas y dibuja el fondo
+correspondiente detrás de los controles inferiores del sistema. Esa decisión
+solo modifica la presentación.
 
 ### `src/database/`
 
@@ -149,7 +164,9 @@ nombres en mayúsculas.
 Contiene los estilos globales y tokens visuales reutilizables de React Native.
 `colors.js` define la paleta y los temas claro/oscuro, mientras que
 `globalStyles.js` concentra el `StyleSheet`, el espaciado, la tipografía y los
-bordes. No contiene CSS web ni componentes completos.
+bordes. `authStyles.js` define layouts y detalles de autenticación basados en
+el tema global; `HomeScreenStyles.js` contiene estilos propios de la pantalla
+de inicio. No contiene CSS web ni componentes completos.
 
 ### `assets/`
 
@@ -167,6 +184,10 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
 ## Convenciones
 
 - Solo JavaScript: todos los archivos de código utilizan `.js`.
+- Los archivos fuente y sus rutas usan nombres en inglés.
+- Los identificadores propios de AHRE (variables, funciones, componentes y
+  propiedades internas) usan nombres en español directamente. Las APIs de
+  JavaScript, React Native, Expo y otras librerías conservan sus nombres.
 - Las carpetas utilizan nombres en minúscula.
 - Las pantallas y los componentes utilizan PascalCase.
 - Los hooks, servicios y utilidades utilizan nombres descriptivos en camelCase
@@ -186,5 +207,7 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
   conectan a las pantallas.
 - No se crean carpetas vacías para funcionalidades futuras. Las nuevas áreas se
   incorporarán cuando tengan pantallas, componentes o lógica real.
-- `structureSmokeTest.js` se importa desde `InicioScreen.js`. Cuando se incorpore
-  un test runner, esta comprobación deberá trasladarse a pruebas automatizadas.
+- `structureSmokeTest.js` contiene una función auxiliar que comprueba que las
+  rutas base estén definidas. Actualmente no está conectada a una pantalla; cuando
+  se incorpore un test runner, esta comprobación deberá trasladarse a pruebas
+  automatizadas.

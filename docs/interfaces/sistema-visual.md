@@ -2,22 +2,25 @@
 
 ## Objetivo
 
-Este documento define los estilos globales que utilizará AHRE antes de
-comenzar a maquetar las pantallas funcionales. La base está preparada para
-Expo y React Native utilizando JavaScript y `StyleSheet`.
+Este documento registra los tokens visuales y temas compartidos de AHRE. La
+aplicación está preparada para Expo y React Native utilizando JavaScript y
+`StyleSheet`.
 
 React Native no utiliza archivos CSS web. Por eso los estilos se organizan en
 archivos `.js` dentro de `src/styles/`. Las pantallas podrán combinar estos
 estilos globales con estilos locales de layout cuando sea necesario.
 
-Este Issue define la base visual; no implementa todavía todos los componentes
-ni las pantallas funcionales de AHRE.
+Los estilos globales se combinan con layouts locales cuando una interfaz lo
+necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
+`src/styles/authStyles.js` para sus distribuciones particulares.
 
 ## Organización
 
 ```text
 src/
 └── styles/
+    ├── HomeScreenStyles.js # Estilos propios de la pantalla de inicio
+    ├── authStyles.js    # Layout y detalles visuales de Login y Registro
     ├── colors.js        # Paleta, estados y temas
     └── globalStyles.js  # StyleSheet, tipografía, espaciado y bordes
 ```
@@ -81,8 +84,26 @@ Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender
 ## Tema claro y oscuro
 
 Los dos temas están definidos en `src/styles/colors.js` dentro de `TEMAS.claro`
-y `TEMAS.oscuro`. `crearEstilosGlobales(theme)` recibe uno de estos objetos y
+y `TEMAS.oscuro`. `crearEstilosGlobales(tema)` recibe uno de estos objetos y
 genera el `StyleSheet` correspondiente.
+
+Todas las pantallas leen el modo claro u oscuro del sistema y aplican el tema a
+fondos, texto, encabezados, controles y navegación inferior. `app.json` declara
+`userInterfaceStyle: "automatic"` y define fondos de splash para ambos modos.
+`App.js` actualiza el fondo nativo y el estilo de los controles Android: usa
+controles claros en tema oscuro y oscuros en tema claro. El Native Stack
+comparte el fondo del tema para evitar destellos blancos durante las
+transiciones.
+
+En las rutas que muestran la barra inferior, `BottomTabBar.js` usa el fondo de
+pantalla en el exterior de las esquinas superiores redondeadas y la superficie
+del tema dentro de la barra y en su inset inferior. `AppNavigator.js` reconoce
+la ruta superior `PRINCIPAL` y dibuja una capa no interactiva en el área segura
+inferior de Android: usa la superficie cuando están las pestañas y el fondo
+general en Inicio, Login, Registro y pantallas secundarias. El tamaño de esta
+capa viene de `useSafeAreaInsets()`; no bloquea toques ni altera el contenido.
+El plugin `expo-navigation-bar` declara `enforceContrast: false` para permitir
+que la interfaz pinte esa zona sin un velo de contraste de Android.
 
 ### Tema claro
 
@@ -151,7 +172,7 @@ Los radios y anchos están definidos dentro de `src/styles/globalStyles.js`:
 | Elemento | Valor |
 | --- | ---: |
 | Radio pequeño | `8` |
-| Input | `10` |
+| Campo | `10` |
 | Botón | `12` |
 | Tarjeta | `16` |
 | Contenedor | `20` |
@@ -168,14 +189,15 @@ Los radios y anchos están definidos dentro de `src/styles/globalStyles.js`:
 - títulos, subtítulos, texto, etiquetas y montos;
 - tarjetas;
 - botón principal, secundario, de texto y deshabilitado;
-- input normal, enfocado, con error y deshabilitado;
+- campos de entrada normales, enfocados, con error y deshabilitados;
 - mensajes de ayuda y error;
 - separadores;
 - iconos de detalle;
 - navegación inferior y sección activa.
 
-Estos son estilos base. La implementación de los componentes que los utilicen
-se realizará en los Issues funcionales correspondientes.
+Los estilos globales son consumidos por las pantallas y componentes existentes.
+Las reglas exclusivas de Login y Registro permanecen en `authStyles.js` para no
+duplicar tokens globales ni mezclar sus layouts con los de otras pantallas.
 
 ## Criterios de accesibilidad
 
@@ -185,7 +207,8 @@ se realizará en los Issues funcionales correspondientes.
 - Los controles interactivos deben mantener una zona táctil apropiada; la base
   utiliza como referencia `48` unidades para botones.
 - Los textos principales deben conservar contraste suficiente con su fondo.
-- Los estados de input deben comunicarse mediante borde y mensaje textual.
+- Los estados de los campos de entrada deben comunicarse mediante borde y
+  mensaje textual.
 - Debe probarse el diseño con el escalado de texto del sistema.
 - Los iconos deben acompañar una etiqueta cuando la acción no sea evidente.
 

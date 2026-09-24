@@ -4,38 +4,38 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { TEMAS } from '../styles/colors';
 
-export default function SectionHeader({ title, description, onBack, theme = TEMAS.claro }) {
+export default function EncabezadoSeccion({ titulo, descripcion, alVolver, tema = TEMAS.claro }) {
   return (
-    <View style={[styles.container, { backgroundColor: theme.encabezado }]}>
-      <View style={styles.topRow}>
+    <View style={[estilos.contenedor, { backgroundColor: tema.encabezado }]}>
+      <View style={estilos.filaSuperior}>
         <Pressable
           accessibilityLabel="Volver"
           accessibilityRole="button"
-          onPress={onBack}
-          style={[styles.backButton, { backgroundColor: theme.contenedorVerde }]}
+          onPress={alVolver}
+          style={[estilos.botonVolver, { backgroundColor: tema.contenedorVerde }]}
         >
-          <Ionicons name="chevron-back" size={30} color={theme.botonPrincipal} />
+          <Ionicons name="chevron-back" size={30} color={tema.botonPrincipal} />
         </Pressable>
-        <Text numberOfLines={1} style={[styles.title, { color: theme.encabezadoTexto }]}>{title}</Text>
+        <Text numberOfLines={1} style={[estilos.titulo, { color: tema.encabezadoTexto }]}>{titulo}</Text>
       </View>
-      {description ? (
-        <View style={styles.descriptionContainer}>
-          <Text style={[styles.description, { color: theme.encabezadoTexto }]}>{description}</Text>
+      {descripcion ? (
+        <View style={estilos.contenedorDescripcion}>
+          <Text style={[estilos.descripcion, { color: tema.encabezadoTexto }]}>{descripcion}</Text>
         </View>
       ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  contenedor: {
     height: 150,
     paddingHorizontal: ESPACIADO.pantalla,
     paddingBottom: ESPACIADO.extraGrande,
     borderBottomLeftRadius: BORDES.radios.contenedor,
     borderBottomRightRadius: BORDES.radios.contenedor,
   },
-  topRow: {
+  filaSuperior: {
     position: 'absolute',
     top: ESPACIADO.grande,
     left: ESPACIADO.pantalla,
@@ -44,26 +44,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  backButton: {
+  botonVolver: {
     width: 48,
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: BORDES.radios.boton,
   },
-  title: {
+  titulo: {
     marginLeft: ESPACIADO.medio,
     fontFamily: TIPOGRAFIA.familias.principal,
     fontSize: TIPOGRAFIA.tamanos.titulo,
     fontWeight: TIPOGRAFIA.pesos.negrita,
     flexShrink: 1,
   },
-  description: {
+  descripcion: {
     fontFamily: TIPOGRAFIA.familias.principal,
     fontSize: TIPOGRAFIA.tamanos.cuerpo,
     fontWeight: TIPOGRAFIA.pesos.regular,
   },
-  descriptionContainer: {
+  contenedorDescripcion: {
     position: 'absolute',
     left: ESPACIADO.pantalla,
     right: ESPACIADO.pantalla,
