@@ -2,7 +2,7 @@
 
 ## Alcance
 
-Este documento registra el formulario de egreso. En esta etapa no hay
+Este documento registra los formularios de egreso e ingreso. En esta etapa no hay
 persistencia, modificación de saldos, consultas reales, validaciones
 funcionales, ejecución de recurrencias, actualización del Dashboard ni
 estadísticas. La fecha, la hora y la frecuencia se mantienen solo en el estado
@@ -34,17 +34,46 @@ El formulario se abre desde `Dashboard → Egreso` o `Nuevo → Egreso`. La flec
 del encabezado permite volver; al pie queda únicamente la acción «Guardar
 egreso».
 
-## Diferencias visuales respecto de Ingreso
+## Estructura del formulario de ingreso
 
-- Título y descripción propios: «Nuevo egreso» y «Registra el dinero que
-  gastas».
-- La descripción es obligatoria y se marca con `*`.
+`src/screens/IncomeScreen.js` presenta «Nuevo ingreso» con la misma
+estructura y componentes compartidos que el egreso:
+
+```text
+Nuevo ingreso
+│
+├── Monto
+├── Descripción *
+├── Depósito
+├── Categoría
+├── Información adicional
+│   ├── Fecha
+│   ├── Hora
+│   └── Recurrente
+│
+└── Guardar ingreso
+```
+
+El formulario se abre desde `Dashboard → Ingreso` o `Nuevo → Ingreso`.
+La descripción es obligatoria y se marca con `*`. El monto usa teclado
+numérico con prefijo `$` y formato visual. El depósito y la categoría usan
+los mismos selectores compartidos con sus catálogos propios
+(`CATEGORIAS_INGRESO`). La fecha y la hora usan los modales compartidos;
+la recurrencia usa el `Conmutador` con frecuencias diaria, semanal, mensual
+o anual, solo en estado visual. «Guardar ingreso» usa la acción principal y
+muestra los errores y el estado de guardado simulado. El pie no incluye una
+acción para cancelar; la flecha del encabezado permite regresar al flujo
+anterior. No hay persistencia, saldos ni lógica funcional.
+
+## Diferencias visuales entre los formularios
+
+- Cada formulario presenta su título y descripción: «Nuevo ingreso» / «Registra
+  el dinero que recibes» y «Nuevo egreso» / «Registra el dinero que gastas».
+- La descripción es obligatoria y se marca con `*` en ambos formularios.
 - El selector compartido presenta catálogos distintos para ingresos y egresos.
-- La pantalla de Ingreso ya permite elegir su categoría; sus demás campos aún
-  no están maquetados.
-- El color de egreso (`#E7B0B0`) queda reservado para futuros listados; el
-  resto del formulario usa los tokens neutros y de foco. Las categorías tienen
-  acentos de color propios.
+- Ambos formularios incluyen monto, depósito, categoría, fecha, hora y
+  recurrencia. El color de egreso (`#E7B0B0`) queda reservado para futuros
+  listados; las categorías tienen acentos de color propios.
 
 ## Campos
 

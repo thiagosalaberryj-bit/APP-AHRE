@@ -18,9 +18,15 @@ documentación se registran en este archivo.
 - Se agregaron los detalles secundarios de categoría y movimiento, agrupación
   visual de movimientos por fecha y datos de detalle compatibles con el esquema
   documentado. (#14)
+- Se maquetó el formulario de ingreso con monto, descripción, depósito,
+  categoría, fecha, hora y recurrencia visual. (#11)
 
 ### Cambiado
 
+- Se retiró la acción «Cancelar» del pie del formulario de ingreso; el regreso
+  queda disponible desde la flecha del encabezado. (#11)
+- Se actualizó Expo SDK de `57.0.24` a `57.0.25` y `expo-image-picker` de
+  `57.0.19` a `57.0.20`. (#11)
 - Se compactaron los encabezados principales y secundarios a 120 puntos, con
   descripciones alineadas a la izquierda y centradas verticalmente.
 - Se ajustaron los gráficos para cambiar entre ellos con deslizamiento
@@ -38,11 +44,16 @@ documentación se registran en este archivo.
 - Se documentaron los controles, períodos, filtros, interacciones y el modelo
   de datos de las pantallas de Estadísticas en
   `docs/interfaces/estadisticas.md`; también se actualizó la navegación. (#14)
+- Se actualizaron el README, la interfaz de movimientos y las versiones de
+  Expo en la documentación de dependencias para reflejar el formulario de
+  ingreso y Expo SDK `57.0.25`. (#11)
 
 ### Alcance pendiente
 
 - El formulario de egreso valida los campos y simula el guardado, pero todavía
   no persiste los movimientos.
+- El formulario de ingreso representa los campos y simula el guardado, pero
+  todavía no persiste los movimientos ni ejecuta recurrencias. (#11)
 - Las estadísticas y sus detalles todavía utilizan datos de muestra y no
   consultan SQLite. (#14)
 
