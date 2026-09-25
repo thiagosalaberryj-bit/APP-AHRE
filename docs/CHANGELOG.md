@@ -3,7 +3,7 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [v0.3.0] - 2026-09-24 - no estable
+## [v0.3.0] - 2026-09-25 - no publicada
 
 ### Añadido
 
@@ -12,11 +12,22 @@ documentación se registran en este archivo.
 - Se agregó la opción de marcar un egreso como recurrente y elegir una
   frecuencia diaria, semanal, mensual o anual. (#12)
 - Se definieron categorías preestablecidas para ingresos y egresos. (#12)
+- Se completó el panel de Estadísticas con gráficos de distribución por
+  categoría y de columnas, filtros por tipo y categoría, selección de períodos
+  y exploración de valores al tocar o deslizar sobre los gráficos. (#14)
+- Se agregaron los detalles secundarios de categoría y movimiento, agrupación
+  visual de movimientos por fecha y datos de detalle compatibles con el esquema
+  documentado. (#14)
 
 ### Cambiado
 
 - Se compactaron los encabezados principales y secundarios a 120 puntos, con
   descripciones alineadas a la izquierda y centradas verticalmente.
+- Se ajustaron los gráficos para cambiar entre ellos con deslizamiento
+  horizontal, elegir fechas con calendario y recorrer las categorías debajo
+  del gráfico de columnas. (#14)
+- Se unificó el estilo y el comportamiento secundario de las pantallas de
+  detalle de categoría y movimiento. (#14)
 
 ### Documentación
 
@@ -24,11 +35,16 @@ documentación se registran en este archivo.
   tamaño y la alineación de los encabezados.
 - Se documentó el formulario y las categorías de movimientos en
   `docs/interfaces/movimientos.md`. (#12)
+- Se documentaron los controles, períodos, filtros, interacciones y el modelo
+  de datos de las pantallas de Estadísticas en
+  `docs/interfaces/estadisticas.md`; también se actualizó la navegación. (#14)
 
 ### Alcance pendiente
 
 - El formulario de egreso valida los campos y simula el guardado, pero todavía
   no persiste los movimientos.
+- Las estadísticas y sus detalles todavía utilizan datos de muestra y no
+  consultan SQLite. (#14)
 
 ## [v0.2.0] - 2026-09-24 - no estable
 
