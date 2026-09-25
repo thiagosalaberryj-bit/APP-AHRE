@@ -10,9 +10,15 @@ export default function EncabezadoPrincipal({
   alAbrirNotificaciones,
   alAbrirPerfil,
   tema = TEMAS.claro,
+  altura = 150,
 }) {
   return (
-    <View style={[estilos.contenedor, { backgroundColor: tema.encabezado }]}>
+    <View
+      style={[
+        estilos.contenedor,
+        { backgroundColor: tema.encabezado, height: altura },
+      ]}
+    >
       <View style={estilos.filaSuperior}>
         <Image
           accessibilityLabel="Logo de AHRE"
@@ -20,23 +26,45 @@ export default function EncabezadoPrincipal({
           source={require('../../assets/ahre-logo.png')}
           style={estilos.logo}
         />
-        <Text numberOfLines={1} style={[estilos.titulo, { color: tema.encabezadoTexto }]}>{titulo}</Text>
+        <Text
+          numberOfLines={1}
+          style={[
+            estilos.titulo,
+            { color: tema.encabezadoTexto },
+          ]}
+        >
+          {titulo}
+        </Text>
         <View style={estilos.acciones}>
           <Pressable
             accessibilityLabel="Notificaciones"
             accessibilityRole="button"
             onPress={alAbrirNotificaciones}
-            style={[estilos.botonAccion, { backgroundColor: tema.contenedorVerde }]}
+            style={[
+              estilos.botonAccion,
+              { backgroundColor: tema.contenedorVerde },
+            ]}
           >
-            <Ionicons name="notifications-outline" size={27} color={tema.botonPrincipal} />
+            <Ionicons
+              name="notifications-outline"
+              size={22}
+              color={tema.botonPrincipal}
+            />
           </Pressable>
           <Pressable
             accessibilityLabel="Perfil"
             accessibilityRole="button"
             onPress={alAbrirPerfil}
-            style={[estilos.botonAccion, { backgroundColor: tema.contenedorVerde }]}
+            style={[
+              estilos.botonAccion,
+              { backgroundColor: tema.contenedorVerde },
+            ]}
           >
-            <Ionicons name="person-circle-outline" size={29} color={tema.botonPrincipal} />
+            <Ionicons
+              name="person-circle-outline"
+              size={22}
+              color={tema.botonPrincipal}
+            />
           </Pressable>
         </View>
       </View>
@@ -60,21 +88,21 @@ const estilos = StyleSheet.create({
   },
   filaSuperior: {
     position: 'absolute',
-    top: ESPACIADO.grande,
-    left: ESPACIADO.pequeno,
-    right: ESPACIADO.grande,
-    height: 72,
+    top: ESPACIADO.pequeno,
+    left: ESPACIADO.medio,
+    right: ESPACIADO.medio,
+    height: 76,
     flexDirection: 'row',
     alignItems: 'center',
   },
   logo: {
-    width: 84,
-    height: 84,
+    width: 76,
+    height: 76,
   },
   titulo: {
-    marginLeft: ESPACIADO.minimo,
+    marginLeft: ESPACIADO.medio,
     fontFamily: TIPOGRAFIA.familias.principal,
-    fontSize: TIPOGRAFIA.tamanos.titulo,
+    fontSize: TIPOGRAFIA.tamanos.subtitulo,
     fontWeight: TIPOGRAFIA.pesos.negrita,
     flexShrink: 1,
   },
@@ -97,8 +125,8 @@ const estilos = StyleSheet.create({
     marginLeft: 'auto',
   },
   botonAccion: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: BORDES.radios.boton,
