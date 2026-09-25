@@ -6,7 +6,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/Estado-No%20estable-F97316?style=flat-square" alt="Estado: no estable" />
-  <img src="https://img.shields.io/badge/Versi%C3%B3n-1.0.0-2563EB?style=flat-square" alt="Versión 1.0.0" />
+  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.2.0-2563EB?style=flat-square" alt="Versión 0.2.0" />
   <img src="https://img.shields.io/badge/Plataforma-Android-green?style=flat-square&logo=android&logoColor=green" alt="Plataforma Android" />
   <img src="https://img.shields.io/badge/Expo-SDK%2057-white?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
   <img src="https://img.shields.io/badge/React%20Native-0.86.3-61DAFB?style=flat-square&logo=react&logoColor=61DAFB" alt="React Native 0.86.3" />
