@@ -136,7 +136,7 @@ Las funcionalidades completas de AHRE todavía no están implementadas. Tampoco
 se implementaron la autenticación, el registro de usuarios, las validaciones ni
 la sesión: los formularios actuales solo presentan la interfaz y el flujo
 visual. Los depósitos y movimientos del Dashboard son datos de ejemplo. La
-versión `1.0.0` se identifica como no estable para evaluación y no representa
+versión `0.2.0` se identifica como no estable para evaluación y no representa
 una versión comercial.
 
 ## Tecnología
