@@ -2,7 +2,7 @@
 
 ## Alcance
 
-Este documento registra el formulario de egreso. En esta etapa no hay
+Este documento registra los formularios de egreso e ingreso. En esta etapa no hay
 persistencia, modificación de saldos, consultas reales, validaciones
 funcionales, ejecución de recurrencias, actualización del Dashboard ni
 estadísticas. La fecha, la hora y la frecuencia se mantienen solo en el estado
@@ -33,6 +33,39 @@ Nuevo egreso
 El formulario se abre desde `Dashboard → Egreso` o `Nuevo → Egreso`. La flecha
 del encabezado permite volver; al pie queda únicamente la acción «Guardar
 egreso».
+
+## Estructura del formulario de ingreso
+
+`src/screens/IncomeScreen.js` presenta «Nuevo ingreso» con la misma
+estructura y componentes compartidos que el egreso:
+
+```text
+Nuevo ingreso
+│
+├── Monto
+├── Descripción *
+├── Depósito
+├── Categoría
+├── Información adicional
+│   ├── Fecha
+│   ├── Hora
+│   └── Recurrente
+│
+└── Acciones
+    ├── Guardar ingreso
+    └── Cancelar
+```
+
+El formulario se abre desde `Dashboard → Ingreso` o `Nuevo → Ingreso`.
+La descripción es obligatoria y se marca con `*`. El monto usa teclado
+numérico con prefijo `$` y formato visual. El depósito y la categoría usan
+los mismos selectores compartidos con sus catálogos propios
+(`CATEGORIAS_INGRESO`). La fecha y la hora usan los modales compartidos;
+la recurrencia usa el `Conmutador` con frecuencias diaria, semanal, mensual
+o anual, solo en estado visual. «Guardar ingreso» usa la acción principal y
+muestra los errores y el estado de guardado simulado; «Cancelar» regresa al
+flujo anterior sin registrar información. No hay persistencia, saldos ni
+lógica funcional.
 
 ## Diferencias visuales respecto de Ingreso
 
