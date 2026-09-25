@@ -5,8 +5,8 @@
 <p>Aplicación móvil para la administración de información financiera personal.</p>
 
 <p>
-  <img src="https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square" alt="Estado: en desarrollo" />
-  <img src="https://img.shields.io/badge/Versi%C3%B3n-1.0.0-2563EB?style=flat-square" alt="Versión 1.0.0" />
+  <img src="https://img.shields.io/badge/Estado-No%20estable-F97316?style=flat-square" alt="Estado: no estable" />
+  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.2.0-2563EB?style=flat-square" alt="Versión 0.2.0" />
   <img src="https://img.shields.io/badge/Plataforma-Android-green?style=flat-square&logo=android&logoColor=green" alt="Plataforma Android" />
   <img src="https://img.shields.io/badge/Expo-SDK%2057-white?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
   <img src="https://img.shields.io/badge/React%20Native-0.86.3-61DAFB?style=flat-square&logo=react&logoColor=61DAFB" alt="React Native 0.86.3" />
@@ -122,20 +122,22 @@ Actualmente cuenta con:
 - pantalla inicial con bienvenida y acceso visual a Login;
 - interfaces maquetadas para Login y Registro, con navegación visual entre
   ambas y acceso de prueba al Dashboard;
+- Dashboard maquetado con balance, acciones rápidas de ingreso, egreso y OCR,
+  depósitos y movimientos de ejemplo;
 - temas claro y oscuro aplicados a las pantallas, componentes y barras del
   sistema;
 - estados visuales de los inputs y componentes de carga/error listos para
   conectarse a lógica futura;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
-- historial de cambios preparado para que el revisor lo actualice al finalizar cada
-  Issue.
+- historial de cambios con las funcionalidades visuales recientes del Dashboard.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. Tampoco
 se implementaron la autenticación, el registro de usuarios, las validaciones ni
 la sesión: los formularios actuales solo presentan la interfaz y el flujo
-visual. La versión `1.0.0` identifica la base inicial del proyecto y no
-representa una versión comercial estable.
+visual. Los depósitos y movimientos del Dashboard son datos de ejemplo. La
+versión `0.2.0` se identifica como no estable para evaluación y no representa
+una versión comercial.
 
 ## Tecnología
 
@@ -179,6 +181,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Navegación](docs/arquitectura/navegacion.md);
 - [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
+- [Interfaz del Dashboard](docs/interfaces/dashboard.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);
