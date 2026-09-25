@@ -13,11 +13,6 @@ estilos globales con estilos locales de layout cuando sea necesario.
 Los estilos globales se combinan con layouts locales cuando una interfaz lo
 necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
 `src/styles/authStyles.js` para sus distribuciones particulares.
-Dashboard y las demás pestañas principales usan `src/components/MainHeader.js`
-con el logo, los accesos a notificaciones y perfil, y el título de la sección.
-Las pantallas secundarias usan `src/components/CompactHeader.js` y sus estilos
-locales en `src/styles/CompactHeaderStyles.js`; Perfil conserva su encabezado
-propio. Inicio, Login y Registro no muestran el encabezado de navegación.
 
 ## Organización
 
@@ -25,7 +20,6 @@ propio. Inicio, Login y Registro no muestran el encabezado de navegación.
 src/
 └── styles/
     ├── HomeScreenStyles.js # Estilos propios de la pantalla de inicio
-    ├── CompactHeaderStyles.js # Estilos del encabezado compartido
     ├── authStyles.js    # Layout y detalles visuales de Login y Registro
     ├── colors.js        # Paleta, estados y temas
     └── globalStyles.js  # StyleSheet, tipografía, espaciado y bordes
@@ -87,6 +81,12 @@ su tipo ni su estado.
 Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender
 únicamente del color.
 
+## Encabezados de pantalla
+
+Los encabezados principales y secundarios comparten una altura de `120` puntos.
+Las descripciones se alinean a la izquierda y quedan centradas verticalmente
+debajo de la fila del título.
+
 ## Tema claro y oscuro
 
 Los dos temas están definidos en `src/styles/colors.js` dentro de `TEMAS.claro`
@@ -96,10 +96,10 @@ genera el `StyleSheet` correspondiente.
 Todas las pantallas leen el modo claro u oscuro del sistema y aplican el tema a
 fondos, texto, encabezados, controles y navegación inferior. `app.json` declara
 `userInterfaceStyle: "automatic"` y define fondos de splash para ambos modos.
-`App.js` actualiza el fondo nativo y el estilo de los controles Android: usa
-controles claros en tema oscuro y oscuros en tema claro. El Native Stack
-comparte el fondo del tema para evitar destellos blancos durante las
-transiciones.
+`App.js` actualiza el fondo nativo. El estilo de los controles Android sigue
+el tema automático; no se fija otro estilo al inicio para evitar que compita
+con el fondo de cada pantalla. El Native Stack comparte el fondo del tema para
+evitar destellos blancos durante las transiciones.
 
 En las rutas que muestran la barra inferior, `BottomTabBar.js` usa el fondo de
 pantalla en el exterior de las esquinas superiores redondeadas y la superficie

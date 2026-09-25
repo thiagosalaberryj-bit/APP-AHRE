@@ -11,28 +11,52 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import EncabezadoPrincipal from '../components/MainHeader';
 import { RUTAS } from '../constants/routes';
-import { TEMAS } from '../styles/colors';
+import { COLORES_DEPOSITOS, COLORES_ESTADO, TEMAS } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDashboard } from '../styles/DashboardScreenStyles';
 
 const DEPOSITOS_SIMULADOS = Object.freeze([
-  { id: 'efectivo', nombre: 'Efectivo', tipo: 'Efectivo', saldo: '$ 354.000', icono: 'cash-outline' },
-  { id: 'mercado-pago', nombre: 'Mercado Pago', tipo: 'Billetera virtual', saldo: '$ 132.342', icono: 'phone-portrait-outline' },
-  { id: 'banco', nombre: 'Banco', tipo: 'Cuenta bancaria', saldo: '$ 239.023', icono: 'business-outline' },
+  {
+    id: 'efectivo',
+    nombre: 'Efectivo',
+    tipo: 'Efectivo',
+    descripcion: 'Para gastos diarios',
+    color: COLORES_DEPOSITOS[0],
+    saldo: '$ 354.000',
+    icono: 'cash-outline',
+  },
+  {
+    id: 'mercado-pago',
+    nombre: 'Mercado Pago',
+    tipo: 'Billetera virtual',
+    descripcion: 'Pagos y transferencias',
+    color: COLORES_DEPOSITOS[1],
+    saldo: '$ 132.342',
+    icono: 'phone-portrait-outline',
+  },
+  {
+    id: 'banco',
+    nombre: 'Banco',
+    tipo: 'Cuenta bancaria',
+    descripcion: 'Cuenta para ahorro y gastos',
+    color: COLORES_DEPOSITOS[3],
+    saldo: '$ 239.023',
+    icono: 'business-outline',
+  },
 ]);
 
 const MOVIMIENTOS_SIMULADOS = Object.freeze([
   { id: 'youtube-music', descripcion: 'YouTube Music', categoria: 'Suscripciones', fecha: 'Hoy', tipo: 'egreso', monto: '− $ 4.130', icono: 'arrow-up-outline' },
   { id: 'supermercado', descripcion: 'Supermercado', categoria: 'Alimentación', fecha: 'Ayer', tipo: 'egreso', monto: '− $ 48.500', icono: 'arrow-up-outline' },
-  { id: 'sueldo', descripcion: 'Sueldo', categoria: 'Trabajo', fecha: '22 sep', tipo: 'ingreso', monto: '+ $ 1.250.000', icono: 'arrow-down-outline' },
+  { id: 'sueldo', descripcion: 'Sueldo', categoria: 'Sueldo', fecha: '22 sep', tipo: 'ingreso', monto: '+ $ 1.250.000', icono: 'arrow-down-outline' },
   { id: 'farmacia', descripcion: 'Farmacia', categoria: 'Salud', fecha: '21 sep', tipo: 'egreso', monto: '− $ 7.250', icono: 'arrow-up-outline' },
   { id: 'venta', descripcion: 'Venta de bicicleta', categoria: 'Ventas', fecha: '20 sep', tipo: 'ingreso', monto: '+ $ 85.000', icono: 'arrow-down-outline' },
 ]);
 
 const ACCIONES_RAPIDAS = Object.freeze([
-  { etiqueta: 'Ingreso', icono: 'add-circle-outline', ruta: RUTAS.INGRESO },
-  { etiqueta: 'Egreso', icono: 'remove-circle-outline', ruta: RUTAS.EGRESO },
-  { etiqueta: 'Depósito', icono: 'wallet-outline', ruta: RUTAS.DEPOSITO },
+  { etiqueta: 'Ingreso', icono: 'add-circle', ruta: RUTAS.INGRESO },
+  { etiqueta: 'Egreso', icono: 'remove-circle', ruta: RUTAS.EGRESO },
+  { etiqueta: 'OCR', icono: 'scan-sharp', ruta: RUTAS.OCR },
 ]);
 
 const ESTA_CARGANDO = false;
@@ -43,7 +67,6 @@ export default function PantallaPanel({ navigation: navegacion }) {
   const estilos = crearEstilosDashboard(tema);
   const [saldoVisible, establecerSaldoVisible] = useState(true);
   const abrirPantalla = (ruta) => navegacion.getParent()?.navigate(ruta);
-
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
@@ -57,14 +80,14 @@ export default function PantallaPanel({ navigation: navegacion }) {
             descripcion="Thiago"
             alAbrirNotificaciones={() => abrirPantalla(RUTAS.NOTIFICACIONES)}
             alAbrirPerfil={() => abrirPantalla(RUTAS.PERFIL)}
-            altura={136}
+            altura={120}
           />
 
           <View style={estilos.contenidoDashboard}>
             <View style={estilos.contenedorTarjetaBalance}>
               <View style={[estilosGlobales.tarjeta, estilos.tarjetaBalance]}>
                 <View style={estilos.encabezadoBalance}>
-                  <Text style={[estilos.textoPestanaBalance, { color: tema.textoPrincipal }]}>Gastos</Text>
+                  <Text style={[estilos.textoPestanaBalance, { color: tema.textoPrincipal }]}>Balance</Text>
                 </View>
                 <View style={estilos.contenidoBalance}>
                   <View style={estilos.filaBalance}>
@@ -108,7 +131,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                           pressed && estilos.accionRapidaPresionada,
                         ]}
                       >
-                        <Ionicons color={tema.encabezado} name={accion.icono} size={23} />
+                        <Ionicons color={tema.encabezado} name={accion.icono} size={27} />
                         <Text style={estilos.textoAccionRapida}>{accion.etiqueta}</Text>
                       </Pressable>
                     ))}
@@ -125,7 +148,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                   onPress={() => abrirPantalla(RUTAS.DEPOSITO)}
                   style={estilos.accionSeccion}
                 >
-                  <Ionicons color={tema.textoPrincipal} name="add-outline" size={17} />
+                  <Ionicons color={tema.textoPrincipal} name="add-circle" size={20} />
                   <Text style={[estilos.textoAccionSeccion, { color: tema.textoPrincipal }]}>Nuevo depósito</Text>
                 </Pressable>
               </View>
@@ -143,8 +166,8 @@ export default function PantallaPanel({ navigation: navegacion }) {
                   </Text>
                 </View>
               ) : (
-                <View style={[estilosGlobales.tarjeta, estilos.listaDepositos]}>
-                  {DEPOSITOS_SIMULADOS.map((deposito, indice) => (
+                <View style={estilos.listaDepositos}>
+                  {DEPOSITOS_SIMULADOS.map((deposito) => (
                     <Pressable
                       accessibilityRole="button"
                       key={deposito.id}
@@ -152,17 +175,25 @@ export default function PantallaPanel({ navigation: navegacion }) {
                       style={({ pressed }) => [
                         estilos.filaDeposito,
                         pressed && estilos.elementoPresionado,
-                        indice === DEPOSITOS_SIMULADOS.length - 1 && estilos.ultimoElemento,
                       ]}
                     >
-                      <View style={estilos.iconoDeposito}>
-                        <Ionicons color={tema.botonPrincipal} name={deposito.icono} size={18} />
+                      <View style={[estilos.iconoDeposito, { backgroundColor: deposito.color }]}>
+                        <Ionicons color={tema.encabezado} name={deposito.icono} size={20} />
                       </View>
                       <View style={estilos.detalleElemento}>
                         <Text style={[estilosGlobales.texto, estilos.nombreElemento]}>{deposito.nombre}</Text>
+                        <Text
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                          style={estilos.descripcionDeposito}
+                        >
+                          {deposito.tipo} · {deposito.descripcion}
+                        </Text>
                       </View>
-                      <Text style={[estilosGlobales.etiqueta, estilos.saldoDeposito]}>{deposito.saldo}</Text>
-                      <Ionicons color={tema.textoSecundario} name="chevron-forward" size={17} />
+                      <View style={estilos.finalDeposito}>
+                        <Text style={[estilosGlobales.etiqueta, estilos.saldoDeposito]}>{deposito.saldo}</Text>
+                        <Ionicons color={tema.textoSecundario} name="chevron-forward" size={17} />
+                      </View>
                     </Pressable>
                   ))}
                 </View>
@@ -196,22 +227,28 @@ export default function PantallaPanel({ navigation: navegacion }) {
                 </View>
               ) : (
                 <View style={estilos.listaMovimientos}>
-                  {MOVIMIENTOS_SIMULADOS.slice(0, 5).map((movimiento) => (
-                    <View key={movimiento.id} style={estilos.filaMovimiento}>
-                      <View style={estilos.iconoMovimiento}>
-                        <Ionicons color={tema.botonPrincipal} name={movimiento.icono} size={18} />
-                      </View>
-                      <View style={estilos.detalleElemento}>
-                        <Text style={[estilosGlobales.texto, estilos.nombreElemento]}>{movimiento.descripcion}</Text>
-                        <Text style={estilosGlobales.textoAyuda}>
-                          {movimiento.categoria} · {movimiento.fecha}
+                  {MOVIMIENTOS_SIMULADOS.slice(0, 5).map((movimiento) => {
+                    const colorMovimiento = movimiento.tipo === 'ingreso'
+                      ? COLORES_ESTADO.ingreso
+                      : COLORES_ESTADO.egreso;
+
+                    return (
+                      <View key={movimiento.id} style={estilos.filaMovimiento}>
+                        <View style={[estilos.iconoMovimiento, { backgroundColor: colorMovimiento }]}>
+                          <Ionicons color={tema.encabezado} name={movimiento.icono} size={18} />
+                        </View>
+                        <View style={estilos.detalleElemento}>
+                          <Text style={[estilosGlobales.texto, estilos.nombreElemento]}>{movimiento.descripcion}</Text>
+                          <Text style={estilosGlobales.textoAyuda}>
+                            {movimiento.categoria} · {movimiento.fecha}
+                          </Text>
+                        </View>
+                        <Text style={[estilosGlobales.etiqueta, estilos.montoMovimiento]}>
+                          {movimiento.monto}
                         </Text>
                       </View>
-                      <Text style={[estilosGlobales.etiqueta, estilos.montoMovimiento]}>
-                        {movimiento.monto}
-                      </Text>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               )}
             </View>

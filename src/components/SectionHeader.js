@@ -29,18 +29,17 @@ export default function EncabezadoSeccion({ titulo, descripcion, alVolver, tema 
 
 const estilos = StyleSheet.create({
   contenedor: {
-    height: 150,
+    height: 120,
     paddingHorizontal: ESPACIADO.pantalla,
-    paddingBottom: ESPACIADO.extraGrande,
     borderBottomLeftRadius: BORDES.radios.contenedor,
     borderBottomRightRadius: BORDES.radios.contenedor,
   },
   filaSuperior: {
     position: 'absolute',
-    top: ESPACIADO.grande,
+    top: ESPACIADO.pequeno,
     left: ESPACIADO.pantalla,
     right: ESPACIADO.pantalla,
-    height: 52,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -68,7 +67,7 @@ const estilos = StyleSheet.create({
     left: ESPACIADO.pantalla,
     right: ESPACIADO.pantalla,
     bottom: 0,
-    height: 54,
+    height: 56,
     justifyContent: 'center',
   },
 });

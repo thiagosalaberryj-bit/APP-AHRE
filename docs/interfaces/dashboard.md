@@ -13,7 +13,7 @@ altura disponible.
 La pantalla se compone de:
 
 1. encabezado con marca, bienvenida, nombre y accesos a Notificaciones y Perfil;
-2. tarjeta de balance con una franja superior integrada titulada «Gastos»,
+2. tarjeta de balance con una franja superior integrada titulada «Balance»,
    control para ocultar el monto y acciones rápidas;
 3. tarjeta agrupada con la lista de depósitos y el acceso para crear uno;
 4. lista plana de hasta cinco movimientos recientes y acceso a Movimientos.
@@ -28,7 +28,7 @@ rutas existentes.
 
 La tarjeta de balance se superpone al borde inferior del encabezado verde y
 mantiene sus cuatro esquinas redondeadas. En su parte superior, una franja de
-ancho completo centra «Gastos» y la separa del saldo con un borde fino. Debajo
+ancho completo centra «Balance» y la separa del saldo con un borde fino. Debajo
 se muestran un monto de ejemplo de `$ 2.000.000`, un control de ojo para
 ocultarlo visualmente, una flecha que abre Movimientos y las tres acciones
 rápidas. El control no guarda una preferencia.
@@ -39,18 +39,19 @@ La tarjeta presenta tres accesos con ícono y etiqueta:
 
 - **Ingreso:** abre la pantalla existente de ingreso.
 - **Egreso:** abre la pantalla existente de egreso.
-- **Depósito:** abre la pantalla existente de depósito.
+- **OCR:** abre la pantalla existente de OCR.
 
 Estos accesos solo permiten probar la navegación. La carga de formularios y el
-registro real se implementarán posteriormente. OCR no forma parte de las tres
-acciones rápidas del Dashboard.
+registro real se implementarán posteriormente. OCR también está disponible en
+el menú inferior «Nuevo» bajo la etiqueta «Escanear OCR».
 
 ## Depósitos
 
-Efectivo, Mercado Pago y Banco aparecen dentro de una sola tarjeta con filas
-separadas, icono, nombre y saldo. El botón «Nuevo depósito» abre la ruta
-existente. Las filas también abren la pantalla de detalle disponible; los
-datos no se cargan dinámicamente.
+Efectivo, Mercado Pago y Banco aparecen como tarjetas compactas estáticas. Cada
+tarjeta muestra un icono sobre el color asignado desde `COLORES_DEPOSITOS`, el
+nombre, tipo y descripción en una sola línea pequeña, y el saldo. Los datos
+continúan siendo simulados. El botón «Nuevo depósito» abre la ruta existente.
+Las tarjetas también abren la pantalla de detalle disponible.
 
 La estructura incluye una presentación de carga y un estado vacío para cuando
 no haya depósitos.
@@ -59,8 +60,10 @@ no haya depósitos.
 
 La lista se presenta directamente sobre el fondo de pantalla y muestra como
 máximo cinco elementos simulados. Cada fila contiene descripción, categoría,
-fecha, signo e icono para distinguir ingresos y egresos sin depender solamente
-del color. «Ver todos» navega a la pestaña Movimientos.
+fecha, signo e icono. El fondo del icono usa `COLORES_ESTADO.ingreso` o
+`COLORES_ESTADO.egreso` según el tipo; el signo y el icono mantienen la
+distinción sin depender solamente del color. «Ver todos» navega a la pestaña
+Movimientos.
 
 La estructura incluye una presentación de carga y un estado vacío para cuando
 no haya movimientos.

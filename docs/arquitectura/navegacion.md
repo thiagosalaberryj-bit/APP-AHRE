@@ -18,16 +18,15 @@ segura inferior del dispositivo. El botón central «Nuevo» usa una sombra
 neutra y discreta. Solo aparece dentro de las cinco secciones principales
 posteriores al dashboard.
 
-La pantalla de bienvenida, Login y Registro no muestran un encabezado de
-navegación. Login y Registro presentan su título dentro del contenido. El
-Dashboard conserva su encabezado con logo, título de bienvenida, descripción y
-accesos a notificaciones y perfil. Las otras pestañas principales reutilizan
-`src/components/MainHeader.js` con el nombre de su sección y los mismos accesos.
-Las pantallas secundarias utilizan `src/components/CompactHeader.js`, con botón
-de regreso y título. Perfil mantiene su encabezado de sección con regreso. Las
-pantallas secundarias se apilan fuera del navegador de pestañas y no muestran
-la barra inferior. El detalle de categoría y de movimiento se apila en una
-navegación interna de Estadísticas, por lo que conserva esa barra.
+Las pantallas de inicio, login y registro no muestran el encabezado verde ni la
+barra inferior. El Dashboard, Movimientos, Nuevo, Estadísticas y Social
+utilizan `src/components/MainHeader.js`, con el logo de AHRE, título,
+descripción y accesos a notificaciones y perfil. Las pantallas secundarias
+utilizan `src/components/SectionHeader.js`, con el título junto a la flecha de
+regreso y una descripción alineada a la izquierda y centrada verticalmente
+debajo. Ambos encabezados tienen una altura compacta de `120` puntos. Como las
+pantallas secundarias se apilan fuera del navegador de pestañas, tampoco
+muestran la barra inferior.
 
 La barra inferior contiene:
 
@@ -45,8 +44,7 @@ Inicio | Movimientos | Nuevo | Estadísticas | Social
 | Dashboard | `src/screens/DashboardScreen.js` | Pestaña Inicio |
 | Movimientos | `src/screens/MovementsScreen.js` | Pestaña Movimientos |
 | Nuevo | `src/screens/CreateScreen.js` | Pestaña Nuevo |
-| Estadísticas | `src/screens/StatisticsScreen.js`, mediante `src/navigation/StatisticsNavigator.js` | Pestaña Estadísticas |
-| Detalle de categoría y movimiento | `src/screens/CategoryDetailScreen.js` | Importe de categoría o movimiento de Estadísticas |
+| Estadísticas | `src/screens/StatisticsScreen.js` | Pestaña Estadísticas |
 | Social | `src/screens/SocialScreen.js` | Pestaña Social |
 | Perfil | `src/screens/ProfileScreen.js` | Dashboard |
 | Notificaciones | `src/screens/NotificationsScreen.js` | Dashboard |
@@ -85,8 +83,6 @@ Dashboard / Inicio
 │   ├── Egreso
 │   └── Nuevo depósito
 ├── Estadísticas
-│   ├── seleccionar importe de categoría → detalle por año y mes
-│   └── movimiento relacionado → detalle del movimiento
 └── Social
 ```
 
@@ -117,19 +113,17 @@ sección Nuevo.
 ## Regreso entre pantallas
 
 Las pantallas secundarias utilizan el comportamiento normal del Stack Navigator.
-La pila interna de Estadísticas conserva la barra inferior al abrir el detalle
-de categoría o de un movimiento. Las flechas ejecutan `navigation.goBack()` para
-volver a la pantalla anterior. Las pestañas principales se cambian desde la
-barra inferior.
+La flecha del encabezado ejecuta `navigation.goBack()` para volver a la pantalla
+anterior. Las pestañas principales no necesitan un botón de regreso porque se
+cambian directamente desde la barra inferior.
 
 ## Controles de navegación del sistema
 
-`App.js` establece el fondo nativo inicial con el color de fondo del tema y
-ajusta en Android el color de los controles del sistema según el modo claro u
-oscuro: pide controles claros para el tema oscuro y controles oscuros para el
-tema claro. `app.json` activa el estilo de interfaz automático y configura
-`expo-navigation-bar` con `enforceContrast: false` para que el sistema no cubra
-con un velo propio el contenido dibujado por AHRE.
+`App.js` establece el fondo nativo con el color de fondo del tema. `app.json`
+activa `userInterfaceStyle: "automatic"` y configura `expo-navigation-bar` con
+`enforceContrast: false`. El estilo de los botones del sistema queda a cargo
+del tema automático; no se fija `style` en el plugin ni se llama a
+`NavigationBar.setStyle()` al iniciar.
 
 `AppNavigator.js` observa los cambios de ruta del `NavigationContainer`. Cuando
 la ruta superior es `PRINCIPAL`, dibuja una capa visual no interactiva en el
@@ -139,9 +133,23 @@ pestañas. En Inicio, Login, Registro y las rutas secundarias usa `tema.fondo`.
 de pantalla en las esquinas superiores redondeadas.
 
 Esta capa solo resuelve presentación y áreas seguras; no modifica el flujo de
-navegación ni implementa lógica de autenticación. `enforceContrast` forma parte
-de la configuración nativa de Expo: si cambia, hace falta regenerar o
-reconstruir la app Android para aplicarlo a una instalación existente.
+navegación ni implementa lógica de autenticación.
+
+### Error de color en la barra del sistema
+
+La configuración anterior fijaba `style: "light"` en `app.json`, aunque el tema
+claro muestra fondos gris claro y blanco. Además, `App.js` llamaba a
+`NavigationBar.setStyle()` al iniciar. Estas dos órdenes competían con el tema
+automático y podían hacer que Android aplicara una apariencia distinta a la
+franja inferior. Se eliminaron ambas; `enforceContrast: false` permanece para
+evitar el velo de contraste en una compilación propia.
+
+Al revisar esta zona, comprobar Inicio, Login, Registro y pantallas secundarias
+con fondo `tema.fondo`, y las cinco pestañas principales con
+`tema.superficie`. Revisar también los dos temas y volver de una pantalla
+secundaria a una pestaña. En Expo Go, cerrar y volver a abrir la experiencia
+después de cambiar `app.json`. Las opciones nativas del plugin requieren una
+nueva compilación para aplicarse a una app AHRE ya instalada.
 
 ## Límites actuales
 

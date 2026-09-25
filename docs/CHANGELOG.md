@@ -3,10 +3,39 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [v0.2.0] - 2026-09-23 - no publicada
+## [v0.3.0] - 2026-09-24 - no estable
 
 ### Añadido
 
+- Se maquetó el formulario de egreso con monto, descripción, depósito,
+  categorías y controles interactivos de fecha y hora. (#12)
+- Se agregó la opción de marcar un egreso como recurrente y elegir una
+  frecuencia diaria, semanal, mensual o anual. (#12)
+- Se definieron categorías preestablecidas para ingresos y egresos. (#12)
+
+### Cambiado
+
+- Se compactaron los encabezados principales y secundarios a 120 puntos, con
+  descripciones alineadas a la izquierda y centradas verticalmente.
+
+### Documentación
+
+- Se actualizaron las guías de navegación y sistema visual para describir el
+  tamaño y la alineación de los encabezados.
+- Se documentó el formulario y las categorías de movimientos en
+  `docs/interfaces/movimientos.md`. (#12)
+
+### Alcance pendiente
+
+- El formulario de egreso valida los campos y simula el guardado, pero todavía
+  no persiste los movimientos.
+
+## [v0.2.0] - 2026-09-24 - no estable
+
+### Añadido
+
+- Se maquetó el Dashboard principal con balance, acciones rápidas, depósitos
+  simulados con tipo y descripción, y movimientos recientes. (#8)
 - Se maquetaron Login y Registro con identidad de AHRE, campos de nombre,
   correo, contraseña y confirmación, placeholders, controles para mostrar u
   ocultar contraseña y navegación visual entre pantallas.
@@ -19,6 +48,8 @@ documentación se registran en este archivo.
 
 ### Cambiado
 
+- Se reemplazó la acción rápida de depósito por OCR, se tituló la tarjeta como
+  «Balance» y se aplicaron los colores de estado a ingresos y egresos. (#8)
 - Se maquetó `InicioScreen` como bienvenida de AHRE con el símbolo de la marca,
   el nombre en dos líneas y un fondo claro sin luces circulares.
 - Se ajustó el tamaño del logo y del nombre de AHRE para adaptarse al espacio
@@ -43,6 +74,8 @@ documentación se registran en este archivo.
 
 ### Documentación
 
+- Se documentó la interfaz del Dashboard y se actualizó el README con su estado
+  y alcance actuales. (#8)
 - Se documentó la pantalla inicial en `docs/interfaces/inicio.md`.
 - Se ampliaron la documentación de autenticación, navegación, tema visual,
   pantalla inicial, estructura de carpetas y dependencias.

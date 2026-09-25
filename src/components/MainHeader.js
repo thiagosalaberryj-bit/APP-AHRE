@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { TEMAS } from '../styles/colors';
@@ -12,87 +11,87 @@ export default function EncabezadoPrincipal({
   alAbrirPerfil,
   accesorioDerecho,
   tema = TEMAS.claro,
-  altura = 150,
+  altura = 120,
 }) {
   return (
-    <>
-      <StatusBar backgroundColor={tema.encabezado} style="light" translucent={false} />
-      <View
-        style={[
-          estilos.contenedor,
-          { backgroundColor: tema.encabezado, height: altura },
-        ]}
-      >
-        <View style={estilos.filaSuperior}>
-          <Image
-            accessibilityLabel="Logo de AHRE"
-            resizeMode="contain"
-            source={require('../../assets/ahre-logo.png')}
-            style={estilos.logo}
-          />
-          <Text
-            numberOfLines={1}
+    <View
+      style={[
+        estilos.contenedor,
+        { backgroundColor: tema.encabezado, height: altura },
+      ]}
+    >
+      <View style={estilos.filaSuperior}>
+        <Image
+          accessibilityLabel="Logo de AHRE"
+          resizeMode="contain"
+          source={require('../../assets/ahre-logo.png')}
+          style={estilos.logo}
+        />
+        <Text
+          numberOfLines={1}
+          style={[
+            estilos.titulo,
+            { color: tema.encabezadoTexto },
+          ]}
+        >
+          {titulo}
+        </Text>
+        <View style={estilos.acciones}>
+          <Pressable
+            accessibilityLabel="Notificaciones"
+            accessibilityRole="button"
+            onPress={alAbrirNotificaciones}
             style={[
-              estilos.titulo,
-              { color: tema.encabezadoTexto },
+              estilos.botonAccion,
+              { backgroundColor: tema.contenedorVerde },
             ]}
           >
-            {titulo}
-          </Text>
-          <View style={estilos.acciones}>
-            <Pressable
-              accessibilityLabel="Notificaciones"
-              accessibilityRole="button"
-              onPress={alAbrirNotificaciones}
-              style={[
-                estilos.botonAccion,
-                { backgroundColor: tema.contenedorVerde },
-              ]}
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={22}
-                color={tema.botonPrincipal}
-              />
-            </Pressable>
-            <Pressable
-              accessibilityLabel="Perfil"
-              accessibilityRole="button"
-              onPress={alAbrirPerfil}
-              style={[
-                estilos.botonAccion,
-                { backgroundColor: tema.contenedorVerde },
-              ]}
-            >
-              <Ionicons
-                name="person-circle-outline"
-                size={22}
-                color={tema.botonPrincipal}
-              />
-            </Pressable>
-          </View>
+            <Ionicons
+              name="notifications-outline"
+              size={22}
+              color={tema.botonPrincipal}
+            />
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Perfil"
+            accessibilityRole="button"
+            onPress={alAbrirPerfil}
+            style={[
+              estilos.botonAccion,
+              { backgroundColor: tema.contenedorVerde },
+            ]}
+          >
+            <Ionicons
+              name="person-circle-outline"
+              size={22}
+              color={tema.botonPrincipal}
+            />
+          </Pressable>
         </View>
-        {descripcion || accesorioDerecho ? (
-          <View style={estilos.contenedorDescripcion}>
-            {descripcion ? (
-              <Text style={[estilos.descripcion, { color: tema.encabezadoTexto }]}>
-                {descripcion}
-              </Text>
-            ) : <View />}
-            {accesorioDerecho}
-          </View>
-        ) : null}
       </View>
-    </>
+      {descripcion || accesorioDerecho ? (
+        <View
+          style={[
+            estilos.contenedorDescripcion,
+            accesorioDerecho && estilos.contenedorDescripcionConAccesorio,
+          ]}
+        >
+          {descripcion ? (
+            <Text style={[estilos.descripcion, { color: tema.encabezadoTexto }]}>
+              {descripcion}
+            </Text>
+          ) : <View />}
+          {accesorioDerecho}
+        </View>
+      ) : null}
+    </View>
   );
 }
 
 const estilos = StyleSheet.create({
   contenedor: {
-    height: 150,
-    justifyContent: 'flex-end',
+    height: 120,
     paddingHorizontal: ESPACIADO.pantalla,
-    paddingBottom: ESPACIADO.extraGrande,
     borderBottomLeftRadius: BORDES.radios.contenedor,
     borderBottomRightRadius: BORDES.radios.contenedor,
   },
@@ -101,13 +100,13 @@ const estilos = StyleSheet.create({
     top: ESPACIADO.pequeno,
     left: ESPACIADO.medio,
     right: ESPACIADO.medio,
-    height: 76,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
   },
   logo: {
-    width: 76,
-    height: 76,
+    width: 56,
+    height: 56,
   },
   titulo: {
     marginLeft: ESPACIADO.medio,
@@ -122,14 +121,17 @@ const estilos = StyleSheet.create({
     fontWeight: TIPOGRAFIA.pesos.regular,
   },
   contenedorDescripcion: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     position: 'absolute',
     left: ESPACIADO.pantalla,
     right: ESPACIADO.pantalla,
     bottom: 0,
-    height: 54,
+    height: 56,
+    justifyContent: 'center',
+  },
+  contenedorDescripcionConAccesorio: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   acciones: {
     flexDirection: 'row',

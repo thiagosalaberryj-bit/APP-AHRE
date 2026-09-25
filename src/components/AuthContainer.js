@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,11 +9,7 @@ export default function ContenedorAutenticacion({ tema, titulo, descripcion, chi
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilos.pantalla}>
-      <StatusBar
-        backgroundColor={tema.fondo}
-        style={tema.nombre === 'oscuro' ? 'light' : 'dark'}
-        translucent={false}
-      />
+      <StatusBar style={tema.nombre === 'oscuro' ? 'light' : 'dark'} backgroundColor={tema.fondo} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={estilos.ajustadorTeclado}
@@ -24,8 +20,24 @@ export default function ContenedorAutenticacion({ tema, titulo, descripcion, chi
           keyboardShouldPersistTaps="handled"
         >
           <View style={estilos.contenido}>
-            <Text style={estilos.titulo}>{titulo}</Text>
-            <Text style={estilos.descripcion}>{descripcion}</Text>
+            <View style={estilos.marca}>
+              <Image
+                accessibilityLabel="Símbolo de AHRE"
+                resizeMode="contain"
+                source={require('../../assets/ahre-mark.png')}
+                style={estilos.logo}
+              />
+              <View>
+                <Text style={estilos.nombreMarca}>AHRE</Text>
+                <Text style={estilos.eslogan}>Finanzas en orden</Text>
+              </View>
+            </View>
+
+            <View style={estilos.encabezado}>
+              <Text style={estilos.sobreTitulo}>TU ESPACIO FINANCIERO</Text>
+              <Text style={estilos.titulo}>{titulo}</Text>
+              <Text style={estilos.descripcion}>{descripcion}</Text>
+            </View>
 
             {contenido}
 
@@ -74,19 +86,50 @@ function crearEstilos(tema) {
       fontSize: TIPOGRAFIA.tamanos.auxiliar,
       textAlign: 'center',
     },
+    marca: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.pequeno,
+    },
+    logo: {
+      width: 44,
+      height: 44,
+    },
+    nombreMarca: {
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: 18,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+      letterSpacing: 2,
+    },
+    eslogan: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+    },
+    encabezado: {
+      marginTop: ESPACIADO.enorme,
+      marginBottom: ESPACIADO.extraGrande,
+      gap: ESPACIADO.pequeno,
+    },
+    sobreTitulo: {
+      color: tema.foco,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+      letterSpacing: 1.2,
+    },
+    titulo: {
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.titulo + 4,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+    },
     descripcion: {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.cuerpo,
       lineHeight: 23,
-      marginBottom: ESPACIADO.extraGrande,
-    },
-    titulo: {
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.titulo,
-      fontWeight: TIPOGRAFIA.pesos.negrita,
-      marginBottom: ESPACIADO.pequeno,
     },
   };
 }
