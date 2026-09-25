@@ -3,14 +3,13 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
   useColorScheme,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import SelectorCategoria from '../components/CategorySelector';
 import SelectorFecha from '../components/DateSelector';
@@ -21,12 +20,25 @@ import BotonPrincipal from '../components/PrimaryButton';
 import ControlRecurrencia from '../components/RecurrenceControl';
 import EncabezadoSeccion from '../components/SectionHeader';
 import SelectorHora from '../components/TimeSelector';
-import { CATEGORIAS_EGRESO, DEPOSITOS_SIMULADOS, FECHA_SIMULADA, HORA_SIMULADA } from '../constants/movimientos';
+import { CATEGORIAS_EGRESO, DEPOSITOS_SIMULADOS } from '../constants/movimientos';
 import { TEMAS } from '../styles/colors';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
-import { crearEstilosGlobales } from '../styles/globalStyles';
+import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
+
+const FRECUENCIAS_RECURRENCIA = Object.freeze([
+  Object.freeze({ id: 'diaria', nombre: 'Diaria' }),
+  Object.freeze({ id: 'semanal', nombre: 'Semanal' }),
+  Object.freeze({ id: 'mensual', nombre: 'Mensual' }),
+  Object.freeze({ id: 'anual', nombre: 'Anual' }),
+]);
+
+const obtenerHoraActual = () => {
+  const ahora = new Date();
+  return `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
+};
 
 export default function PantallaEgreso({ navigation: navegacion }) {
+  const insets = useSafeAreaInsets();
   const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilosMovimiento = crearEstilosEgreso(tema);
@@ -34,7 +46,10 @@ export default function PantallaEgreso({ navigation: navegacion }) {
   const [descripcion, establecerDescripcion] = useState('');
   const [depositoId, establecerDepositoId] = useState(null);
   const [categoriaId, establecerCategoriaId] = useState(null);
+  const [fecha, establecerFecha] = useState(() => new Date());
+  const [hora, establecerHora] = useState(obtenerHoraActual);
   const [recurrente, establecerRecurrente] = useState(false);
+  const [frecuencia, establecerFrecuencia] = useState('mensual');
   const [guardando, establecerGuardando] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [descripcionEnfocada, establecerDescripcionEnfocada] = useState(false);
@@ -70,7 +85,10 @@ export default function PantallaEgreso({ navigation: navegacion }) {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <ScrollView keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: insets.bottom + ESPACIADO.grande }}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={estilosMovimiento.formulario}>
               <EntradaMonto
                 tema={tema}
@@ -145,15 +163,15 @@ export default function PantallaEgreso({ navigation: navegacion }) {
                   <SelectorFecha
                     tema={tema}
                     estilosMovimiento={estilosMovimiento}
-                    valor={FECHA_SIMULADA}
-                    alPresionar={() => {}}
+                    valor={fecha}
+                    alSeleccionar={establecerFecha}
                   />
                   <View style={estilosMovimiento.separadorInformacion} />
                   <SelectorHora
                     tema={tema}
                     estilosMovimiento={estilosMovimiento}
-                    valor={HORA_SIMULADA}
-                    alPresionar={() => {}}
+                    valor={hora}
+                    alSeleccionar={establecerHora}
                   />
                   <View style={estilosMovimiento.separadorInformacion} />
                   <ControlRecurrencia
@@ -161,10 +179,15 @@ export default function PantallaEgreso({ navigation: navegacion }) {
                     estilosMovimiento={estilosMovimiento}
                     valor={recurrente}
                     alCambiar={establecerRecurrente}
+                    frecuencias={FRECUENCIAS_RECURRENCIA}
+                    frecuenciaSeleccionada={frecuencia}
+                    alCambiarFrecuencia={establecerFrecuencia}
                   />
                 </View>
                 <Text style={estilosGlobales.textoAyuda}>
-                  Alquiler, suscripción o servicio. La repetición se implementará después.
+                  {recurrente
+                    ? 'Elegí cada cuánto se repetirá este movimiento.'
+                    : 'Alquiler, suscripción o servicio.'}
                 </Text>
               </View>
 
@@ -183,13 +206,6 @@ export default function PantallaEgreso({ navigation: navegacion }) {
                   cargando={guardando}
                   alPresionar={guardarEgreso}
                 />
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => navegacion.goBack()}
-                  style={estilosGlobales.botonSecundario}
-                >
-                  <Text style={estilosGlobales.textoBotonSecundario}>Cancelar</Text>
-                </Pressable>
               </View>
             </View>
           </ScrollView>
