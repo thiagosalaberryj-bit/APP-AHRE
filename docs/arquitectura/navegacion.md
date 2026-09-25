@@ -119,12 +119,11 @@ cambian directamente desde la barra inferior.
 
 ## Controles de navegación del sistema
 
-`App.js` establece el fondo nativo inicial con el color de fondo del tema y
-ajusta en Android el color de los controles del sistema según el modo claro u
-oscuro: pide controles claros para el tema oscuro y controles oscuros para el
-tema claro. `app.json` activa el estilo de interfaz automático y configura
-`expo-navigation-bar` con `enforceContrast: false` para que el sistema no cubra
-con un velo propio el contenido dibujado por AHRE.
+`App.js` establece el fondo nativo con el color de fondo del tema. `app.json`
+activa `userInterfaceStyle: "automatic"` y configura `expo-navigation-bar` con
+`enforceContrast: false`. El estilo de los botones del sistema queda a cargo
+del tema automático; no se fija `style` en el plugin ni se llama a
+`NavigationBar.setStyle()` al iniciar.
 
 `AppNavigator.js` observa los cambios de ruta del `NavigationContainer`. Cuando
 la ruta superior es `PRINCIPAL`, dibuja una capa visual no interactiva en el
@@ -134,9 +133,23 @@ pestañas. En Inicio, Login, Registro y las rutas secundarias usa `tema.fondo`.
 de pantalla en las esquinas superiores redondeadas.
 
 Esta capa solo resuelve presentación y áreas seguras; no modifica el flujo de
-navegación ni implementa lógica de autenticación. `enforceContrast` forma parte
-de la configuración nativa de Expo: si cambia, hace falta regenerar o
-reconstruir la app Android para aplicarlo a una instalación existente.
+navegación ni implementa lógica de autenticación.
+
+### Error de color en la barra del sistema
+
+La configuración anterior fijaba `style: "light"` en `app.json`, aunque el tema
+claro muestra fondos gris claro y blanco. Además, `App.js` llamaba a
+`NavigationBar.setStyle()` al iniciar. Estas dos órdenes competían con el tema
+automático y podían hacer que Android aplicara una apariencia distinta a la
+franja inferior. Se eliminaron ambas; `enforceContrast: false` permanece para
+evitar el velo de contraste en una compilación propia.
+
+Al revisar esta zona, comprobar Inicio, Login, Registro y pantallas secundarias
+con fondo `tema.fondo`, y las cinco pestañas principales con
+`tema.superficie`. Revisar también los dos temas y volver de una pantalla
+secundaria a una pestaña. En Expo Go, cerrar y volver a abrir la experiencia
+después de cambiar `app.json`. Las opciones nativas del plugin requieren una
+nueva compilación para aplicarse a una app AHRE ya instalada.
 
 ## Límites actuales
 
