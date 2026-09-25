@@ -14,5 +14,7 @@ export const RUTAS = Object.freeze({
   EGRESO: 'Egreso',
   DEPOSITO: 'Deposito',
   DETALLE_DEPOSITO: 'DetalleDeposito',
+  DETALLE_CATEGORIA: 'DetalleCategoria',
+  DETALLE_MOVIMIENTO: 'DetalleMovimiento',
   OCR: 'OCR',
 });
