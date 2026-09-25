@@ -51,9 +51,7 @@ Nuevo ingreso
 │   ├── Hora
 │   └── Recurrente
 │
-└── Acciones
-    ├── Guardar ingreso
-    └── Cancelar
+└── Guardar ingreso
 ```
 
 El formulario se abre desde `Dashboard → Ingreso` o `Nuevo → Ingreso`.
@@ -63,21 +61,19 @@ los mismos selectores compartidos con sus catálogos propios
 (`CATEGORIAS_INGRESO`). La fecha y la hora usan los modales compartidos;
 la recurrencia usa el `Conmutador` con frecuencias diaria, semanal, mensual
 o anual, solo en estado visual. «Guardar ingreso» usa la acción principal y
-muestra los errores y el estado de guardado simulado; «Cancelar» regresa al
-flujo anterior sin registrar información. No hay persistencia, saldos ni
-lógica funcional.
+muestra los errores y el estado de guardado simulado. El pie no incluye una
+acción para cancelar; la flecha del encabezado permite regresar al flujo
+anterior. No hay persistencia, saldos ni lógica funcional.
 
-## Diferencias visuales respecto de Ingreso
+## Diferencias visuales entre los formularios
 
-- Título y descripción propios: «Nuevo egreso» y «Registra el dinero que
-  gastas».
-- La descripción es obligatoria y se marca con `*`.
+- Cada formulario presenta su título y descripción: «Nuevo ingreso» / «Registra
+  el dinero que recibes» y «Nuevo egreso» / «Registra el dinero que gastas».
+- La descripción es obligatoria y se marca con `*` en ambos formularios.
 - El selector compartido presenta catálogos distintos para ingresos y egresos.
-- La pantalla de Ingreso ya permite elegir su categoría; sus demás campos aún
-  no están maquetados.
-- El color de egreso (`#E7B0B0`) queda reservado para futuros listados; el
-  resto del formulario usa los tokens neutros y de foco. Las categorías tienen
-  acentos de color propios.
+- Ambos formularios incluyen monto, depósito, categoría, fecha, hora y
+  recurrencia. El color de egreso (`#E7B0B0`) queda reservado para futuros
+  listados; las categorías tienen acentos de color propios.
 
 ## Campos
 

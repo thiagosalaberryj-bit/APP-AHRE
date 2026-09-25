@@ -10,7 +10,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 
 | Dependencia | Versión | Finalidad | Uso en AHRE |
 | --- | --- | --- | --- |
-| `expo` | `~57.0.24` | Base del entorno Expo. | Ejecución y configuración general de la aplicación. |
+| `expo` | `~57.0.25` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
 | `expo-status-bar` | `~57.0.1` | Control de la barra de estado. | Ajustes visuales básicos de la aplicación. |
 | `react` | `19.2.3` | Biblioteca para construir la interfaz. | Pantallas y componentes de AHRE. |
 | `react-native` | `0.86.3` | Framework móvil utilizado por Expo. | Desarrollo de la aplicación para Android y otras plataformas compatibles. |
@@ -20,7 +20,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | Dependencia | Versión | Finalidad | Uso en AHRE |
 | --- | --- | --- | --- |
 | `@expo/vector-icons` | `^15.0.2` | Proporciona un conjunto de íconos compatibles con Expo y React Native. | Navegación, acciones y estados visuales de la interfaz. |
-| `expo-image-picker` | `~57.0.19` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes, documentos y futuras funciones de OCR. |
+| `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes, documentos y futuras funciones de OCR. |
 | `expo-constants` | `~57.0.19` | Expone información constante de la aplicación y del entorno de ejecución. | Configuración de entorno, versión de la aplicación y valores definidos en la configuración de Expo. |
 | `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Tipografía de la interfaz cuando se defina la identidad visual de AHRE. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Protección de acceso a la aplicación y operaciones sensibles. |

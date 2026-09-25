@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -207,13 +206,6 @@ export default function PantallaIngreso({ navigation: navegacion }) {
                   cargando={guardando}
                   alPresionar={guardarIngreso}
                 />
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => navegacion.goBack()}
-                  style={estilosGlobales.botonSecundario}
-                >
-                  <Text style={estilosGlobales.textoBotonSecundario}>Cancelar</Text>
-                </Pressable>
               </View>
             </View>
           </ScrollView>
