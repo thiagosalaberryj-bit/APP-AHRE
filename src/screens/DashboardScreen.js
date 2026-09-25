@@ -48,7 +48,7 @@ const DEPOSITOS_SIMULADOS = Object.freeze([
 const MOVIMIENTOS_SIMULADOS = Object.freeze([
   { id: 'youtube-music', descripcion: 'YouTube Music', categoria: 'Suscripciones', fecha: 'Hoy', tipo: 'egreso', monto: '− $ 4.130', icono: 'arrow-up-outline' },
   { id: 'supermercado', descripcion: 'Supermercado', categoria: 'Alimentación', fecha: 'Ayer', tipo: 'egreso', monto: '− $ 48.500', icono: 'arrow-up-outline' },
-  { id: 'sueldo', descripcion: 'Sueldo', categoria: 'Trabajo', fecha: '22 sep', tipo: 'ingreso', monto: '+ $ 1.250.000', icono: 'arrow-down-outline' },
+  { id: 'sueldo', descripcion: 'Sueldo', categoria: 'Sueldo', fecha: '22 sep', tipo: 'ingreso', monto: '+ $ 1.250.000', icono: 'arrow-down-outline' },
   { id: 'farmacia', descripcion: 'Farmacia', categoria: 'Salud', fecha: '21 sep', tipo: 'egreso', monto: '− $ 7.250', icono: 'arrow-up-outline' },
   { id: 'venta', descripcion: 'Venta de bicicleta', categoria: 'Ventas', fecha: '20 sep', tipo: 'ingreso', monto: '+ $ 85.000', icono: 'arrow-down-outline' },
 ]);
@@ -80,7 +80,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
             descripcion="Thiago"
             alAbrirNotificaciones={() => abrirPantalla(RUTAS.NOTIFICACIONES)}
             alAbrirPerfil={() => abrirPantalla(RUTAS.PERFIL)}
-            altura={136}
+            altura={120}
           />
 
           <View style={estilos.contenidoDashboard}>

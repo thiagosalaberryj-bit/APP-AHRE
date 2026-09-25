@@ -81,6 +81,12 @@ su tipo ni su estado.
 Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender
 únicamente del color.
 
+## Encabezados de pantalla
+
+Los encabezados principales y secundarios comparten una altura de `120` puntos.
+Las descripciones se alinean a la izquierda y quedan centradas verticalmente
+debajo de la fila del título.
+
 ## Tema claro y oscuro
 
 Los dos temas están definidos en `src/styles/colors.js` dentro de `TEMAS.claro`
@@ -90,10 +96,10 @@ genera el `StyleSheet` correspondiente.
 Todas las pantallas leen el modo claro u oscuro del sistema y aplican el tema a
 fondos, texto, encabezados, controles y navegación inferior. `app.json` declara
 `userInterfaceStyle: "automatic"` y define fondos de splash para ambos modos.
-`App.js` actualiza el fondo nativo y el estilo de los controles Android: usa
-controles claros en tema oscuro y oscuros en tema claro. El Native Stack
-comparte el fondo del tema para evitar destellos blancos durante las
-transiciones.
+`App.js` actualiza el fondo nativo. El estilo de los controles Android sigue
+el tema automático; no se fija otro estilo al inicio para evitar que compita
+con el fondo de cada pantalla. El Native Stack comparte el fondo del tema para
+evitar destellos blancos durante las transiciones.
 
 En las rutas que muestran la barra inferior, `BottomTabBar.js` usa el fondo de
 pantalla en el exterior de las esquinas superiores redondeadas y la superficie

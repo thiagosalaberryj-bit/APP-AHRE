@@ -131,17 +131,21 @@ Representa ingresos, egresos y los movimientos generados por una transferencia.
 Un movimiento anulado no se elimina del historial y deja de utilizarse para calcular el saldo.
 
 Las categorías no son una tabla. Son valores predefinidos por AHRE y se
-definen en una constante de movimientos en JavaScript, por ejemplo
-`src/constants/movimientoCategorias.js`.
+definen en `src/constants/movimientos.js` como `CATEGORIAS_INGRESO` y
+`CATEGORIAS_EGRESO`.
 
 Categorías iniciales para ingresos:
 
 ```text
-salario
+sueldo
 trabajo_independiente
 ventas
-transferencia_recibida
-regalo
+transferencias_recibidas
+devoluciones
+inversiones
+prestamos_recibidos
+regalos
+becas_ayudas
 otros_ingresos
 ```
 
@@ -150,15 +154,21 @@ Categorías iniciales para egresos:
 ```text
 alimentacion
 transporte
-vivienda
+hogar
 servicios
+suscripciones
 salud
 educacion
+entretenimiento
 compras
-ocio
-impuestos
+trabajo
 deudas
-otros_egresos
+transferencias
+impuestos
+viajes
+regalos
+mascotas
+otros_gastos
 ```
 
 SQLite guardará el valor como `TEXT`; la aplicación validará que corresponda

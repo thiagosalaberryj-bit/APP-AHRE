@@ -124,6 +124,9 @@ Actualmente cuenta con:
   ambas y acceso de prueba al Dashboard;
 - Dashboard maquetado con balance, acciones rápidas de ingreso, egreso y OCR,
   depósitos y movimientos de ejemplo;
+- selector de categorías con catálogos separados para ingresos y egresos; el
+  formulario de egreso incluye monto, descripción, depósito, fecha, hora y
+  recurrencia visual;
 - temas claro y oscuro aplicados a las pantallas, componentes y barras del
   sistema;
 - estados visuales de los inputs y componentes de carga/error listos para
@@ -136,8 +139,10 @@ Las funcionalidades completas de AHRE todavía no están implementadas. Tampoco
 se implementaron la autenticación, el registro de usuarios, las validaciones ni
 la sesión: los formularios actuales solo presentan la interfaz y el flujo
 visual. Los depósitos y movimientos del Dashboard son datos de ejemplo. La
-versión `0.2.0` se identifica como no estable para evaluación y no representa
-una versión comercial.
+selección de categorías y los formularios no persisten movimientos. La pantalla
+de ingreso solo incluye actualmente el selector de categorías. La versión
+`0.2.0` se identifica como no estable para evaluación y no representa una
+versión comercial.
 
 ## Tecnología
 
@@ -182,6 +187,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
 - [Interfaz del Dashboard](docs/interfaces/dashboard.md);
+- [Interfaces de movimientos](docs/interfaces/movimientos.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);

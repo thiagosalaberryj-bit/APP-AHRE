@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { Platform, useColorScheme } from 'react-native';
-import { NavigationBar } from 'expo-navigation-bar';
+import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as InterfazSistema from 'expo-system-ui';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,12 +12,6 @@ export default function Aplicacion() {
 
   useEffect(() => {
     InterfazSistema.setBackgroundColorAsync(tema.fondo);
-
-    if (Platform.OS === 'android') {
-      // `light` usa controles claros para fondos oscuros; `dark`, controles
-      // oscuros para fondos claros.
-      NavigationBar.setStyle(tema.nombre === 'oscuro' ? 'light' : 'dark');
-    }
   }, [tema]);
 
   return (
