@@ -8,11 +8,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RUTAS } from '../constants/routes';
 import BarraPestanasInferior from './BottomTabBar';
-import NavegadorEstadisticas from './StatisticsNavigator';
 import { TEMAS } from '../styles/colors';
 import PantallaPanel from '../screens/DashboardScreen';
 import PantallaDeposito from '../screens/DepositScreen';
 import PantallaDetalleDeposito from '../screens/DepositDetailScreen';
+import PantallaDetalleCategoria from '../screens/CategoryDetailScreen';
+import PantallaDetalleMovimiento from '../screens/MovementDetailScreen';
 import PantallaEgreso from '../screens/ExpenseScreen';
 import PantallaIngreso from '../screens/IncomeScreen';
 import PantallaInicio from '../screens/HomeScreen';
@@ -24,6 +25,7 @@ import PantallaPerfil from '../screens/ProfileScreen';
 import PantallaRegistro from '../screens/RegistrationScreen';
 import PantallaSocial from '../screens/SocialScreen';
 import PantallaNuevo from '../screens/CreateScreen';
+import PantallaEstadisticas from '../screens/StatisticsScreen';
 
 const PilaNavegacion = createNativeStackNavigator();
 const PestanasNavegacion = createBottomTabNavigator();
@@ -66,7 +68,7 @@ function PestanasPrincipales() {
       />
       <PestanasNavegacion.Screen
         name={RUTAS.ESTADISTICAS}
-        component={NavegadorEstadisticas}
+        component={PantallaEstadisticas}
         options={{
           title: 'Estadísticas',
           tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
@@ -120,6 +122,8 @@ export default function NavegadorAplicacion() {
           <PilaNavegacion.Screen name={RUTAS.EGRESO} component={PantallaEgreso} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.DEPOSITO} component={PantallaDeposito} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.DETALLE_DEPOSITO} component={PantallaDetalleDeposito} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.DETALLE_CATEGORIA} component={PantallaDetalleCategoria} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.DETALLE_MOVIMIENTO} component={PantallaDetalleMovimiento} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.OCR} component={PantallaOCR} options={{ headerShown: false }} />
         </PilaNavegacion.Navigator>
       </NavigationContainer>

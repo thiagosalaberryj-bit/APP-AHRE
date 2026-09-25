@@ -1,49 +1,60 @@
 # Estadísticas
 
-## Etapa 1: resumen mensual
+## Controles y navegación entre gráficos
 
-La pantalla presenta el encabezado principal compartido con las otras pestañas,
-con el título «Estadísticas» y accesos a notificaciones y perfil. Incluye una
-torta mensual y una lista de categorías simuladas. La torta usa cinco segmentos de colores con
-sus porcentajes visibles. Al tocar cualquier segmento se muestra junto al
-gráfico un indicador con su importe; por ejemplo, el segmento naranja del 15 %
-muestra `$ 250.000`. La lista presenta cada categoría en general y permite
-abrir su detalle.
+La pantalla usa el encabezado principal compartido y la descripción «Analiza
+tus ingresos y gastos». Ingresos y Egresos se muestran por separado. El filtro
+de categorías permite mostrar u ocultar categorías del tipo elegido; sus
+colores siguen el orden del catálogo y aparecen en tonos suaves.
 
-Esta etapa cubre la pantalla base y la selección de un segmento. Las demás
-representaciones y el detalle de categorías se describen en las etapas
-siguientes.
+Los gráficos forman un carrusel horizontal. Se cambia entre ellos deslizando
+la pantalla y los puntos debajo indican la vista activa. Cada vista tiene su
+propio título y rango. No hay botones para cambiar de gráfico.
 
-## Etapa 2: resumen anual
+## Distribución por categoría
 
-El resumen anual aparece en la misma posición que la torta mensual. Se cambia
-entre ambos gráficos con un deslizamiento horizontal manual o tocando los
-indicadores inferiores. El gráfico anual presenta doce columnas apiladas, una
-por mes. Cada columna está segmentada por categorías y muestra la abreviación
-del mes debajo. El selector de año aparece a la derecha del encabezado cuando
-se ve el gráfico anual. Los movimientos de la lista usan el color de fondo de
-su categoría.
+Admite Día, Semana, Mes y Año. Día y Semana abren un calendario para elegir
+cualquier fecha. La semana se calcula de lunes a domingo y el título muestra
+su rango, por ejemplo «21–27 de septiembre». Mes permite elegir mes y año; Año
+permite elegir el año. El gráfico circular resume todo el período sin separar
+sus días o meses. Al tocar un segmento se ve el importe y porcentaje de esa
+categoría. La lista abre el detalle de categoría.
 
-Los estilos propios de la pantalla están en
-`src/styles/StatisticsScreenStyles.js`. La pantalla respeta los temas claro y
-oscuro y reutiliza `react-native-svg`, dependencia ya instalada.
+## Gráfico de columnas
 
-## Etapa 3: detalle de categoría y movimientos
+Admite Semana y Año. Semana abre el calendario, calcula el lunes-domingo de la
+fecha elegida y presenta sus siete días. Año presenta los doce meses del año
+seleccionado. Las columnas separan las categorías con sus colores. Al tocar
+una columna o deslizar el dedo sobre ellas se ve el total y el importe de cada
+categoría de ese período.
 
-Al tocar el importe de una categoría seleccionada se abre su detalle. El
-encabezado muestra el icono y nombre de la categoría, el año, un selector
-horizontal de meses y el importe del período. La lista inferior presenta los
-movimientos simulados de esa categoría y mes. Al cambiar el mes, se actualizan
-el importe y los movimientos asociados. Al tocar un movimiento se abre su
-información de destinatario, método de pago y descripción.
+El detalle de categorías queda debajo del gráfico dentro del desplazamiento
+vertical de la pantalla, para poder recorrer la lista completa sin un área de
+scroll interna pequeña.
 
-El detalle de categoría y el detalle del movimiento reutilizan la ruta
-`DetalleCategoria` en modos distintos. Se encuentran dentro de la pila interna
-de Estadísticas para conservar visible la barra de navegación inferior. Los
-meses, importes y movimientos son datos de muestra: no se consultan ni calculan
-datos reales. La pantalla y sus estilos se encuentran en
-`src/screens/CategoryDetailScreen.js` y
-`src/styles/CategoryDetailScreenStyles.js`.
+## Detalles y datos
 
-Al tocar una zona vacía fuera de la torta se oculta el importe seleccionado.
-El importe también funciona como acceso al detalle de esa categoría.
+El detalle de categoría suma los movimientos de la categoría, el tipo y el mes
+seleccionados. Sus filas usan la descripción, fecha y hora, y monto. Al abrir
+una fila se muestra el detalle de movimiento con tipo, categoría, monto,
+descripción, fecha y hora, estado de anulación y depósito asociado. Los gráficos
+y detalles agregan los mismos registros de muestra por tipo, categoría y
+`fecha_hora`, y excluyen los que tienen `anulado` activo. Los campos
+corresponden al modelo `movimientos` de
+`docs/base-de-datos/base-datos-local.md`; el depósito se resuelve mediante
+`deposito_id`.
+
+Los montos y movimientos de estas pantallas siguen siendo datos de muestra:
+no se consultan ni guardan en SQLite. Los registros de muestra usan la forma
+del esquema, incluidos `id`, `deposito_id`, `categoria`, `tipo`, `monto`,
+`descripcion`, `fecha_hora` y `anulado`.
+
+El detalle de categoría y el de movimiento son rutas secundarias del Stack
+principal, fuera de las pestañas. Al abrirlos se oculta la barra inferior y la
+flecha vuelve a la pantalla anterior. Los archivos de la pantalla de
+estadísticas son `src/screens/StatisticsScreen.js` y
+`src/styles/StatisticsScreenStyles.js`. Las pantallas de detalle y sus estilos
+son `src/screens/CategoryDetailScreen.js`,
+`src/styles/CategoryDetailScreenStyles.js`,
+`src/screens/MovementDetailScreen.js` y
+`src/styles/MovementDetailScreenStyles.js`.

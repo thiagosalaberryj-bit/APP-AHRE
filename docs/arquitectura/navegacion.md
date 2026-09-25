@@ -45,6 +45,8 @@ Inicio | Movimientos | Nuevo | Estadísticas | Social
 | Movimientos | `src/screens/MovementsScreen.js` | Pestaña Movimientos |
 | Nuevo | `src/screens/CreateScreen.js` | Pestaña Nuevo |
 | Estadísticas | `src/screens/StatisticsScreen.js` | Pestaña Estadísticas |
+| Detalle de categoría | `src/screens/CategoryDetailScreen.js` | Estadísticas |
+| Detalle de movimiento | `src/screens/MovementDetailScreen.js` | Detalle de categoría |
 | Social | `src/screens/SocialScreen.js` | Pestaña Social |
 | Perfil | `src/screens/ProfileScreen.js` | Dashboard |
 | Notificaciones | `src/screens/NotificationsScreen.js` | Dashboard |
@@ -83,8 +85,14 @@ Dashboard / Inicio
 │   ├── Egreso
 │   └── Nuevo depósito
 ├── Estadísticas
+│   └── Detalle de categoría
+│       └── Detalle de movimiento
 └── Social
 ```
+
+El detalle de categoría y el detalle de movimiento se registran en el Stack
+principal, fuera del navegador de pestañas. Al abrirlos se oculta la barra
+inferior; volver regresa al detalle o a la pestaña de Estadísticas anterior.
 
 ## Flujo visual de autenticación
 

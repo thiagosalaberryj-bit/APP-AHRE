@@ -9,7 +9,6 @@ export default function EncabezadoPrincipal({
   descripcion,
   alAbrirNotificaciones,
   alAbrirPerfil,
-  accesorioDerecho,
   tema = TEMAS.claro,
   altura = 120,
 }) {
@@ -69,19 +68,9 @@ export default function EncabezadoPrincipal({
           </Pressable>
         </View>
       </View>
-      {descripcion || accesorioDerecho ? (
-        <View
-          style={[
-            estilos.contenedorDescripcion,
-            accesorioDerecho && estilos.contenedorDescripcionConAccesorio,
-          ]}
-        >
-          {descripcion ? (
-            <Text style={[estilos.descripcion, { color: tema.encabezadoTexto }]}>
-              {descripcion}
-            </Text>
-          ) : <View />}
-          {accesorioDerecho}
+      {descripcion ? (
+        <View style={estilos.contenedorDescripcion}>
+          <Text style={[estilos.descripcion, { color: tema.encabezadoTexto }]}>{descripcion}</Text>
         </View>
       ) : null}
     </View>
@@ -127,11 +116,6 @@ const estilos = StyleSheet.create({
     bottom: 0,
     height: 56,
     justifyContent: 'center',
-  },
-  contenedorDescripcionConAccesorio: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
   },
   acciones: {
     flexDirection: 'row',
