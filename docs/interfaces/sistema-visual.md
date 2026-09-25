@@ -81,6 +81,12 @@ su tipo ni su estado.
 Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender
 únicamente del color.
 
+## Encabezados de pantalla
+
+Los encabezados principales y secundarios comparten una altura de `120` puntos.
+Las descripciones se alinean a la izquierda y quedan centradas verticalmente
+debajo de la fila del título.
+
 ## Tema claro y oscuro
 
 Los dos temas están definidos en `src/styles/colors.js` dentro de `TEMAS.claro`

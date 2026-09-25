@@ -24,8 +24,9 @@ utilizan `src/components/MainHeader.js`, con el logo de AHRE, título,
 descripción y accesos a notificaciones y perfil. Las pantallas secundarias
 utilizan `src/components/SectionHeader.js`, con el título junto a la flecha de
 regreso y una descripción alineada a la izquierda y centrada verticalmente
-debajo. Como las pantallas secundarias se apilan fuera del navegador de
-pestañas, tampoco muestran la barra inferior.
+debajo. Ambos encabezados tienen una altura compacta de `120` puntos. Como las
+pantallas secundarias se apilan fuera del navegador de pestañas, tampoco
+muestran la barra inferior.
 
 La barra inferior contiene:
 

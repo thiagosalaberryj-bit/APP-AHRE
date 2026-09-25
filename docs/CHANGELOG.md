@@ -3,6 +3,33 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [v0.3.0] - 2026-09-24 - no estable
+
+### Añadido
+
+- Se maquetó el formulario de egreso con monto, descripción, depósito,
+  categorías y controles interactivos de fecha y hora. (#12)
+- Se agregó la opción de marcar un egreso como recurrente y elegir una
+  frecuencia diaria, semanal, mensual o anual. (#12)
+- Se definieron categorías preestablecidas para ingresos y egresos. (#12)
+
+### Cambiado
+
+- Se compactaron los encabezados principales y secundarios a 120 puntos, con
+  descripciones alineadas a la izquierda y centradas verticalmente.
+
+### Documentación
+
+- Se actualizaron las guías de navegación y sistema visual para describir el
+  tamaño y la alineación de los encabezados.
+- Se documentó el formulario y las categorías de movimientos en
+  `docs/interfaces/movimientos.md`. (#12)
+
+### Alcance pendiente
+
+- El formulario de egreso valida los campos y simula el guardado, pero todavía
+  no persiste los movimientos.
+
 ## [v0.2.0] - 2026-09-24 - no estable
 
 ### Añadido

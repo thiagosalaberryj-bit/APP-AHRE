@@ -10,7 +10,7 @@ export default function EncabezadoPrincipal({
   alAbrirNotificaciones,
   alAbrirPerfil,
   tema = TEMAS.claro,
-  altura = 150,
+  altura = 120,
 }) {
   return (
     <View
@@ -79,10 +79,8 @@ export default function EncabezadoPrincipal({
 
 const estilos = StyleSheet.create({
   contenedor: {
-    height: 150,
-    justifyContent: 'flex-end',
+    height: 120,
     paddingHorizontal: ESPACIADO.pantalla,
-    paddingBottom: ESPACIADO.extraGrande,
     borderBottomLeftRadius: BORDES.radios.contenedor,
     borderBottomRightRadius: BORDES.radios.contenedor,
   },
@@ -91,13 +89,13 @@ const estilos = StyleSheet.create({
     top: ESPACIADO.pequeno,
     left: ESPACIADO.medio,
     right: ESPACIADO.medio,
-    height: 76,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
   },
   logo: {
-    width: 76,
-    height: 76,
+    width: 56,
+    height: 56,
   },
   titulo: {
     marginLeft: ESPACIADO.medio,
@@ -116,7 +114,7 @@ const estilos = StyleSheet.create({
     left: ESPACIADO.pantalla,
     right: ESPACIADO.pantalla,
     bottom: 0,
-    height: 54,
+    height: 56,
     justifyContent: 'center',
   },
   acciones: {

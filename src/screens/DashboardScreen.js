@@ -80,7 +80,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
             descripcion="Thiago"
             alAbrirNotificaciones={() => abrirPantalla(RUTAS.NOTIFICACIONES)}
             alAbrirPerfil={() => abrirPantalla(RUTAS.PERFIL)}
-            altura={136}
+            altura={120}
           />
 
           <View style={estilos.contenidoDashboard}>
