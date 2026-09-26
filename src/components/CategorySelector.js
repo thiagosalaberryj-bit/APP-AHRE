@@ -17,57 +17,85 @@ export default function SelectorCategoria({
   etiqueta = 'Categoría',
   categorias,
   seleccionadaId,
-  alSeleccionar,
+  alSeleccionar = () => {},
+  seleccionMultiple = false,
+  seleccionadasIds = [],
+  alCambiarMulti = () => {},
+  variante = 'tarjetas',
+  cantidadPrincipales = 4,
+  carrusel = false,
   error,
 }) {
   const [modalVisible, establecerModalVisible] = useState(false);
-  const categoriasPrincipales = categorias.slice(0, 4);
-  const categoriasAdicionales = categorias.slice(4);
+  const enGrilla = variante === 'grilla';
+  const categoriasPrincipales = enGrilla ? categorias : categorias.slice(0, cantidadPrincipales);
+  const categoriasAdicionales = enGrilla ? [] : categorias.slice(cantidadPrincipales);
   const seleccionada = categorias.find((categoria) => categoria.id === seleccionadaId);
   const seleccionFueraDeVista = seleccionada
     && !categoriasPrincipales.some((categoria) => categoria.id === seleccionadaId);
 
   const seleccionarCategoria = (categoriaId) => {
+    if (seleccionMultiple) {
+      const activa = seleccionadasIds.includes(categoriaId);
+      alCambiarMulti(activa
+        ? seleccionadasIds.filter((id) => id !== categoriaId)
+        : [...seleccionadasIds, categoriaId]);
+      return;
+    }
     alSeleccionar(categoriaId);
     establecerModalVisible(false);
+  };
+
+  const categoriaActiva = (categoriaId) => (seleccionMultiple
+    ? seleccionadasIds.includes(categoriaId)
+    : seleccionadaId === categoriaId);
+
+  const mostrarTarjeta = (categoria) => {
+    const activa = categoriaActiva(categoria.id);
+    const indiceCategoria = categorias.findIndex(
+      (elemento) => elemento.id === categoria.id,
+    );
+    const color = COLORES_GRAFICOS[indiceCategoria % COLORES_GRAFICOS.length];
+    return (
+      <Pressable
+        key={categoria.id}
+        accessibilityLabel={categoria.nombre}
+        accessibilityRole="button"
+        accessibilityState={{ selected: activa }}
+        onPress={() => seleccionarCategoria(categoria.id)}
+        style={({ pressed: presionado }) => [
+          estilosMovimiento.tarjetaCategoria,
+          { backgroundColor: crearFondoCategoria(color, tema) },
+          activa ? estilosMovimiento.tarjetaCategoriaSeleccionada : null,
+          { borderColor: activa ? color : tema.borde },
+          presionado ? { opacity: 0.82 } : null,
+        ]}
+      >
+        <Ionicons
+          color={color}
+          name={categoria.icono}
+          size={22}
+        />
+        <Text numberOfLines={1} style={estilosMovimiento.nombreCategoria}>
+          {categoria.nombreCorto || categoria.nombre}
+        </Text>
+      </Pressable>
+    );
   };
 
   return (
     <View style={estilosMovimiento.grupo}>
       <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text>
-      <View style={estilosMovimiento.listaCategorias}>
-        {categoriasPrincipales.map((categoria) => {
-          const activa = categoria.id === seleccionadaId;
-          const indiceCategoria = categorias.findIndex(
-            (elemento) => elemento.id === categoria.id,
-          );
-          const color = COLORES_GRAFICOS[indiceCategoria % COLORES_GRAFICOS.length];
-          return (
-            <Pressable
-              key={categoria.id}
-              accessibilityLabel={categoria.nombre}
-              accessibilityRole="button"
-              accessibilityState={{ selected: activa }}
-              onPress={() => alSeleccionar(categoria.id)}
-              style={({ pressed: presionado }) => [
-                estilosMovimiento.tarjetaCategoria,
-                { backgroundColor: crearFondoCategoria(color, tema) },
-                activa ? estilosMovimiento.tarjetaCategoriaSeleccionada : null,
-                { borderColor: activa ? color : tema.borde },
-                presionado ? { opacity: 0.82 } : null,
-              ]}
-            >
-              <Ionicons
-                color={color}
-                name={categoria.icono}
-                size={22}
-              />
-              <Text numberOfLines={1} style={estilosMovimiento.nombreCategoria}>
-                {categoria.nombreCorto || categoria.nombre}
-              </Text>
-            </Pressable>
-          );
-        })}
+      {carrusel ? (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={estilosMovimiento.listaCategorias}>
+          {categorias.map((categoria) => mostrarTarjeta(categoria))}
+        </View>
+      </ScrollView>
+      ) : (
+      <View style={[estilosMovimiento.listaCategorias, enGrilla ? { flexWrap: 'wrap' } : null]}>
+        {categoriasPrincipales.map((categoria) => mostrarTarjeta(categoria))}
+        {enGrilla ? null : (
         <Pressable
           accessibilityLabel="Ver más categorías"
           accessibilityRole="button"
@@ -82,7 +110,9 @@ export default function SelectorCategoria({
           <Ionicons color={tema.foco} name="add-outline" size={24} />
           <Text style={estilosMovimiento.nombreCategoria}>Más</Text>
         </Pressable>
+        )}
       </View>
+      )}
       {seleccionFueraDeVista ? (
         <Text style={estilosGlobales.textoAyuda}>
           Seleccionada: {seleccionada.nombre}
@@ -92,6 +122,7 @@ export default function SelectorCategoria({
         <Text style={[estilosGlobales.textoError, estilosMovimiento.errorCampo]}>{error}</Text>
       ) : null}
 
+      {enGrilla ? null : (
       <Modal
         animationType="fade"
         onRequestClose={() => establecerModalVisible(false)}
@@ -158,6 +189,7 @@ export default function SelectorCategoria({
           </Pressable>
         </Pressable>
       </Modal>
+      )}
     </View>
   );
 }

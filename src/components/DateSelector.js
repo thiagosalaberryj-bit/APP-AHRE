@@ -20,13 +20,24 @@ const MESES = Object.freeze([
   'Diciembre',
 ]);
 
+const crearFondoRango = (color, tema) => {
+  const [rojo, verde, azul] = color.slice(1).match(/.{2}/g).map((valor) => parseInt(valor, 16));
+  const opacidad = tema.nombre === 'oscuro' ? 0.35 : 0.18;
+  return `rgba(${rojo}, ${verde}, ${azul}, ${opacidad})`;
+};
+
 export default function SelectorFecha({
   tema,
   estilosMovimiento,
   valor,
   alSeleccionar,
+  etiqueta = 'Fecha',
+  enLinea = false,
+  rangoInicio = null,
+  rangoFin = null,
 }) {
   const [modalVisible, establecerModalVisible] = useState(false);
+  const [expandido, establecerExpandido] = useState(false);
   const [mesVisible, establecerMesVisible] = useState(valor);
   const primerDia = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), 1).getDay();
   const cantidadDias = new Date(mesVisible.getFullYear(), mesVisible.getMonth() + 1, 0).getDate();
@@ -43,6 +54,13 @@ export default function SelectorFecha({
     establecerModalVisible(true);
   };
 
+  const alternarCalendario = () => {
+    if (!expandido) {
+      establecerMesVisible(new Date(valor.getFullYear(), valor.getMonth(), 1));
+    }
+    establecerExpandido((anterior) => !anterior);
+  };
+
   const cambiarMes = (desplazamiento) => {
     establecerMesVisible((mesActual) => new Date(
       mesActual.getFullYear(),
@@ -54,6 +72,7 @@ export default function SelectorFecha({
   const elegirFecha = (dia) => {
     alSeleccionar(new Date(mesVisible.getFullYear(), mesVisible.getMonth(), dia));
     establecerModalVisible(false);
+    establecerExpandido(false);
   };
 
   const elegirHoy = () => {
@@ -61,21 +80,109 @@ export default function SelectorFecha({
     alSeleccionar(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
     establecerMesVisible(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
     establecerModalVisible(false);
+    establecerExpandido(false);
   };
+
+  const mostrarCalendario = () => (
+    <>
+      <View style={estilosMovimiento.encabezadoCalendario}>
+        <Pressable
+          accessibilityLabel="Mes anterior"
+          accessibilityRole="button"
+          onPress={() => cambiarMes(-1)}
+          style={estilosMovimiento.botonMes}
+        >
+          <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
+        </Pressable>
+        <Text style={estilosMovimiento.mesCalendario}>
+          {MESES[mesVisible.getMonth()]} {mesVisible.getFullYear()}
+        </Text>
+        <Pressable
+          accessibilityLabel="Mes siguiente"
+          accessibilityRole="button"
+          onPress={() => cambiarMes(1)}
+          style={estilosMovimiento.botonMes}
+        >
+          <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
+        </Pressable>
+      </View>
+      <View style={estilosMovimiento.filaDiasSemana}>
+        {DIAS_SEMANA.map((dia, indice) => (
+          <Text key={`${dia}-${indice}`} style={estilosMovimiento.nombreDiaSemana}>
+            {dia}
+          </Text>
+        ))}
+      </View>
+      <View style={estilosMovimiento.calendario}>
+        {diasCalendario.map((dia, indice) => {
+          if (!dia) {
+            return <View key={`vacio-${indice}`} style={estilosMovimiento.celdaCalendario} />;
+          }
+
+          const fechaDia = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), dia);
+          const seleccionada = isSameDay(fechaDia, valor);
+          const esHoy = isSameDay(fechaDia, new Date());
+          const inicioRango = rangoInicio ? new Date(rangoInicio.getFullYear(), rangoInicio.getMonth(), rangoInicio.getDate()) : null;
+          const finRango = rangoFin ? new Date(rangoFin.getFullYear(), rangoFin.getMonth(), rangoFin.getDate()) : null;
+          const minimoRango = inicioRango && finRango && inicioRango <= finRango ? inicioRango : finRango;
+          const maximoRango = inicioRango && finRango && inicioRango <= finRango ? finRango : inicioRango;
+          const enRango = minimoRango && maximoRango && fechaDia > minimoRango && fechaDia < maximoRango;
+
+          return (
+            <View key={dia} style={estilosMovimiento.celdaCalendario}>
+              <Pressable
+                accessibilityLabel={format(fechaDia, 'd MMMM yyyy', { locale: es })}
+                accessibilityRole="button"
+                accessibilityState={{ selected: seleccionada }}
+                onPress={() => elegirFecha(dia)}
+                style={[
+                  estilosMovimiento.diaCalendario,
+                  esHoy ? estilosMovimiento.diaCalendarioHoy : null,
+                  enRango ? { backgroundColor: crearFondoRango(tema.foco, tema) } : null,
+                  seleccionada ? estilosMovimiento.diaCalendarioSeleccionado : null,
+                ]}
+              >
+                <Text
+                  style={[
+                    estilosMovimiento.textoDiaCalendario,
+                    seleccionada ? estilosMovimiento.textoDiaCalendarioSeleccionado : null,
+                  ]}
+                >
+                  {dia}
+                </Text>
+              </Pressable>
+            </View>
+          );
+        })}
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={elegirHoy}
+        style={estilosMovimiento.botonHoy}
+      >
+        <Text style={estilosMovimiento.textoBotonHoy}>Ir a hoy</Text>
+      </Pressable>
+    </>
+  );
 
   return (
     <>
       <Pressable
         accessibilityLabel={`Seleccionar fecha, ${textoFecha}`}
         accessibilityRole="button"
-        onPress={abrirCalendario}
+        accessibilityState={{ expanded: enLinea ? expandido : modalVisible }}
+        onPress={enLinea ? alternarCalendario : abrirCalendario}
         style={estilosMovimiento.filaInformacion}
       >
         <Ionicons color={tema.textoPrincipal} name="calendar-outline" size={22} />
-        <Text style={estilosMovimiento.etiquetaInformacion}>Fecha</Text>
+        <Text style={estilosMovimiento.etiquetaInformacion}>{etiqueta}</Text>
         <Text style={estilosMovimiento.valorInformacion}>{textoFecha}</Text>
+        {enLinea ? (
+          <Ionicons color={tema.textoSecundario} name={expandido ? 'chevron-up' : 'chevron-down'} size={20} />
+        ) : null}
       </Pressable>
-
+      {enLinea && expandido ? mostrarCalendario() : null}
+      {enLinea ? null : (
       <Modal
         animationType="fade"
         onRequestClose={() => establecerModalVisible(false)}
@@ -100,80 +207,11 @@ export default function SelectorFecha({
                 <Ionicons color={tema.textoPrincipal} name="close" size={22} />
               </Pressable>
             </View>
-            <View style={estilosMovimiento.encabezadoCalendario}>
-              <Pressable
-                accessibilityLabel="Mes anterior"
-                accessibilityRole="button"
-                onPress={() => cambiarMes(-1)}
-                style={estilosMovimiento.botonMes}
-              >
-                <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
-              </Pressable>
-              <Text style={estilosMovimiento.mesCalendario}>
-                {MESES[mesVisible.getMonth()]} {mesVisible.getFullYear()}
-              </Text>
-              <Pressable
-                accessibilityLabel="Mes siguiente"
-                accessibilityRole="button"
-                onPress={() => cambiarMes(1)}
-                style={estilosMovimiento.botonMes}
-              >
-                <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
-              </Pressable>
-            </View>
-            <View style={estilosMovimiento.filaDiasSemana}>
-              {DIAS_SEMANA.map((dia, indice) => (
-                <Text key={`${dia}-${indice}`} style={estilosMovimiento.nombreDiaSemana}>
-                  {dia}
-                </Text>
-              ))}
-            </View>
-            <View style={estilosMovimiento.calendario}>
-              {diasCalendario.map((dia, indice) => {
-                if (!dia) {
-                  return <View key={`vacio-${indice}`} style={estilosMovimiento.celdaCalendario} />;
-                }
-
-                const fechaDia = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), dia);
-                const seleccionada = isSameDay(fechaDia, valor);
-                const esHoy = isSameDay(fechaDia, new Date());
-
-                return (
-                  <View key={dia} style={estilosMovimiento.celdaCalendario}>
-                    <Pressable
-                      accessibilityLabel={format(fechaDia, 'd MMMM yyyy', { locale: es })}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: seleccionada }}
-                      onPress={() => elegirFecha(dia)}
-                      style={[
-                        estilosMovimiento.diaCalendario,
-                        esHoy ? estilosMovimiento.diaCalendarioHoy : null,
-                        seleccionada ? estilosMovimiento.diaCalendarioSeleccionado : null,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          estilosMovimiento.textoDiaCalendario,
-                          seleccionada ? estilosMovimiento.textoDiaCalendarioSeleccionado : null,
-                        ]}
-                      >
-                        {dia}
-                      </Text>
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              onPress={elegirHoy}
-              style={estilosMovimiento.botonHoy}
-            >
-              <Text style={estilosMovimiento.textoBotonHoy}>Ir a hoy</Text>
-            </Pressable>
+            {mostrarCalendario()}
           </Pressable>
         </Pressable>
       </Modal>
+      )}
     </>
   );
 }

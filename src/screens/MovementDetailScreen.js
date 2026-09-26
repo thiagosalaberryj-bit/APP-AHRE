@@ -52,11 +52,14 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   };
   const deposito = DEPOSITOS_SIMULADOS.find((item) => item.id === movimiento.deposito_id);
   const esAnulado = Boolean(movimiento.anulado);
+  const esRecurrente = Boolean(movimiento.recurrente);
+  const nombresFrecuencia = Object.freeze({ diaria: 'Diaria', semanal: 'Semanal', mensual: 'Mensual', anual: 'Anual' });
   const datosMovimiento = [
     { etiqueta: 'Tipo', valor: obtenerNombreTipo(movimiento.tipo) },
     { etiqueta: 'Categoría', valor: categoria.nombre || movimiento.categoria || '—' },
     { etiqueta: 'Fecha y hora', valor: formatearFechaHora(movimiento.fecha_hora) },
     { etiqueta: 'Depósito', valor: deposito?.nombre || '—' },
+    ...(esRecurrente ? [{ etiqueta: 'Recurrente', valor: `Sí · ${nombresFrecuencia[movimiento.frecuencia] || 'Mensual'}` }] : []),
     { etiqueta: 'Estado', valor: esAnulado ? 'Anulado' : 'Vigente' },
   ];
 
