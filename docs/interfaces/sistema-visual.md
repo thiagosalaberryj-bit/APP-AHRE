@@ -67,8 +67,11 @@ Siempre deben acompañarse con texto, signo o icono.
 Estos colores sirven para identificar visualmente un depósito y no representan
 su tipo ni su estado.
 
+`COLOR_DEPOSITO_PREDETERMINADO` usa el azul suave `#C3D1E3`, que también forma
+parte de esta paleta.
+
 ```text
-#BED5C8  #C3D1E3  #C8C7CA  #CEC0E1  #EDB8BC  #F6DB9F
+#BED5C8  #C3D1E3  #CEC0E1  #EDB8BC  #F6DB9F
 ```
 
 ### Colores para gráficos

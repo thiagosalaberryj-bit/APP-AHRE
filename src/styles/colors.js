@@ -25,10 +25,11 @@ export const COLORES_ESTADO = Object.freeze({
   enfoque: COLORES_MARCA.verdeMedio,
 });
 
+export const COLOR_DEPOSITO_PREDETERMINADO = '#C3D1E3';
+
 export const COLORES_DEPOSITOS = Object.freeze([
   '#BED5C8',
-  '#C3D1E3',
-  '#C8C7CA',
+  COLOR_DEPOSITO_PREDETERMINADO,
   '#CEC0E1',
   '#EDB8BC',
   '#F6DB9F',

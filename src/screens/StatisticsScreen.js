@@ -134,6 +134,7 @@ function mezclarColor(color, fondo, intensidad = 0.38) {
 
 function obtenerCategorias(tipoMovimiento, tema) {
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
+  const intensidadColor = tema.nombre === 'oscuro' ? 0.64 : 0.38;
 
   return catalogo.map((categoria, indice) => ({
     ...categoria,
@@ -141,6 +142,7 @@ function obtenerCategorias(tipoMovimiento, tema) {
     color: mezclarColor(
       COLORES_GRAFICOS[indice % COLORES_GRAFICOS.length],
       tema.superficie,
+      intensidadColor,
     ),
   }));
 }

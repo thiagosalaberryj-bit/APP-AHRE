@@ -50,8 +50,11 @@ el menú inferior «Nuevo» bajo la etiqueta «Escanear OCR».
 Efectivo, Mercado Pago y Banco aparecen como tarjetas compactas estáticas. Cada
 tarjeta muestra un icono sobre el color asignado desde `COLORES_DEPOSITOS`, el
 nombre, tipo y descripción en una sola línea pequeña, y el saldo. Los datos
-continúan siendo simulados. El botón «Nuevo depósito» abre la ruta existente.
-Las tarjetas también abren la pantalla de detalle disponible.
+continúan siendo simulados. Efectivo usa el color predeterminado azul suave
+(`#C3D1E3`) y un ícono verde oscuro para conservar el contraste. «Agregar
+depósito» se muestra como un acceso de texto en negrita y color de foco, junto
+con un ícono de suma; abre la ruta existente. Las tarjetas también abren la
+pantalla de detalle disponible.
 
 La estructura incluye una presentación de carga y un estado vacío para cuando
 no haya depósitos.
@@ -62,8 +65,10 @@ La lista se presenta directamente sobre el fondo de pantalla y muestra como
 máximo cinco elementos simulados. Cada fila contiene descripción, categoría,
 fecha, signo e icono. El fondo del icono usa `COLORES_ESTADO.ingreso` o
 `COLORES_ESTADO.egreso` según el tipo; el signo y el icono mantienen la
-distinción sin depender solamente del color. «Ver todos» navega a la pestaña
-Movimientos.
+distinción sin depender solamente del color. «Ver todos» se muestra como un
+acceso de texto en negrita y color de foco, con una flecha, y navega a la
+pestaña Movimientos. Los títulos de ambas secciones conservan el tamaño y la
+tipografía globales.
 
 La estructura incluye una presentación de carga y un estado vacío para cuando
 no haya movimientos.
