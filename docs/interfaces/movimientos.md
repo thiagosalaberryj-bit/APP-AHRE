@@ -235,6 +235,57 @@ en el ancho disponible sin scroll horizontal. Lee el modo claro u oscuro del
 sistema y aplica `TEMAS.claro` u `TEMAS.oscuro` a fondos, textos, bordes,
 botones y modales.
 
+## Historial y detalle de movimientos
+
+`src/screens/MovementsScreen.js` es pestaña tab con `MainHeader`
+(«Movimientos») y reutiliza `TarjetaMovimiento`
+(`src/components/MovementCard.js`), coherente con la fila de Dashboard:
+ícono de categoría con fondo del tipo, descripción, `categoría · fecha ·
+depósito`, etiqueta `Ingreso/Egreso` en texto y monto con signo. El color
+nunca es la única señal. Los estilos locales están en
+`src/styles/MovementsScreenStyles.js`.
+
+Cada tarjeta muestra descripción, monto, tipo, categoría, depósito y fecha.
+Los datos son `MOVIMIENTOS_SIMULADOS` locales (10 ingresos y egresos de
+varios depósitos, orden cronológico descendente), sin consultas a SQLite.
+
+### Buscador
+
+Campo pill con lupa, `placeholder` «Buscar», botón `X` para limpiar y
+estado sin resultados (`Sin resultados para “…”`). El filtrado es local
+sobre los datos simulados; no hay búsqueda real.
+
+### Filtros
+
+Botón `Filtros` que abre un `Modal` con Tipo (`Todos/Ingresos/Egresos`),
+Fecha (`Día/Semana/Mes/Personalizado` con fecha inicial y final: cada una usa
+`SelectorFecha` en variante inline con el mismo calendario de los
+formularios, dibujado dentro del modal de filtros sin abrir otro modal; los
+días entre ambas fechas se remarcan como trayecto), Monto (mínimo/máximo
+numéricos), Categoría (`SelectorCategoria` en carrusel horizontal con todas
+las opciones y selección múltiple que se quita al re-tocar, sin botón `Más`)
+y Depósito (`SelectorDeposito` en lista inline con selección múltiple y
+checkboxes, sin modal anidado). Encima de la lista se
+muestra `Sin filtros activos` o la cantidad activa (cada categoría y cada
+depósito elegidos suman), con acción `Limpiar
+filtros` que restablece todo visualmente. No hay filtros reales.
+
+### Detalle
+
+Al presionar una tarjeta se navega a `DETALLE_MOVIMIENTO`
+(`src/screens/MovementDetailScreen.js`, ya registrado) con
+`{movimiento, categoria}`. Muestra tipo, monto con signo, descripción,
+categoría, depósito, fecha y hora, estado y la fila `Recurrente: Sí ·
+Frecuencia` solo cuando el movimiento es recurrente. Al volver, los filtros
+se conservan porque el estado queda en la pantalla del historial.
+
+### Estados vacíos
+
+- **Cargando:** skeleton de 3 líneas durante ~1 segundo simulado.
+- **Sin movimientos:** tarjeta vacía cuando no hay datos base.
+- **Sin resultados de búsqueda:** mensaje con el texto buscado.
+- **Sin resultados por filtros:** mensaje con acción para limpiar.
+
 ## Funcionamiento sin conexión
 
 La pantalla solo usa componentes, estilos, íconos y constantes locales. No
