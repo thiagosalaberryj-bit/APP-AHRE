@@ -237,38 +237,59 @@ botones y modales.
 
 ## Historial y detalle de movimientos
 
-`src/screens/MovementsScreen.js` es pestaña tab con `MainHeader`
-(«Movimientos») y reutiliza `TarjetaMovimiento`
-(`src/components/MovementCard.js`), coherente con la fila de Dashboard:
-ícono de categoría con fondo del tipo, descripción, `categoría · fecha ·
-depósito`, etiqueta `Ingreso/Egreso` en texto y monto con signo. El color
-nunca es la única señal. Los estilos locales están en
+`src/screens/MovementsScreen.js` es pestaña con `MainHeader` («Movimientos») y
+agrupa los movimientos simulados por día. Los encabezados
+muestran «Hoy», «Ayer» o la fecha para los días anteriores. Cada tarjeta usa
+un ícono de categoría sobre el color del tipo y presenta `categoría ·
+descripción`, `hora · depósito`, «Ingreso» o «Egreso» y el monto con signo.
+La descripción se recorta cuando no entra; el tipo también se indica con texto,
+no solo con color. La misma composición se usa en los movimientos recientes del
+Dashboard. Los estilos locales están en
 `src/styles/MovementsScreenStyles.js`.
 
-Cada tarjeta muestra descripción, monto, tipo, categoría, depósito y fecha.
-Los datos son `MOVIMIENTOS_SIMULADOS` locales (10 ingresos y egresos de
-varios depósitos, orden cronológico descendente), sin consultas a SQLite.
+Las filas reutilizan `TarjetaMovimiento` (`src/components/MovementCard.js`) y
+los datos son `MOVIMIENTOS_SIMULADOS` locales (10 ingresos y egresos de varios
+depósitos, en orden cronológico descendente), sin consultas a SQLite. Al tocar
+una fila se abre el detalle del movimiento.
 
 ### Buscador
 
-Campo pill con lupa, `placeholder` «Buscar», botón `X` para limpiar y
-estado sin resultados (`Sin resultados para “…”`). El filtrado es local
-sobre los datos simulados; no hay búsqueda real.
+El buscador comparte la fila con el botón «Filtros». Tiene lupa,
+`placeholder` «Buscar» y botón `X` para limpiar. Su borde es fino y neutro en
+reposo; solo toma el color de foco mientras el campo está enfocado. La búsqueda
+es local sobre los datos simulados. Debajo aparecen los filtros aplicados como
+chips horizontales; cada chip se puede quitar y «Limpiar todo» restablece los
+filtros. Si no hay coincidencias, se muestra `Sin resultados para “…”`.
 
 ### Filtros
 
-Botón `Filtros` que abre un `Modal` con Tipo (`Todos/Ingresos/Egresos`),
-Fecha (`Día/Semana/Mes/Personalizado` con fecha inicial y final: cada una usa
-`SelectorFecha` en variante inline con el mismo calendario de los
-formularios, dibujado dentro del modal de filtros sin abrir otro modal; los
-días entre ambas fechas se remarcan como trayecto), Monto (mínimo/máximo
-numéricos), Categoría (`SelectorCategoria` en carrusel horizontal con todas
-las opciones y selección múltiple que se quita al re-tocar, sin botón `Más`)
-y Depósito (`SelectorDeposito` en lista inline con selección múltiple y
-checkboxes, sin modal anidado). Encima de la lista se
-muestra `Sin filtros activos` o la cantidad activa (cada categoría y cada
-depósito elegidos suman), con acción `Limpiar
-filtros` que restablece todo visualmente. No hay filtros reales.
+El botón «Filtros», de la misma altura que el buscador, abre una hoja modal
+sobre un overlay. El panel tiene un encabezado fijo y una manija que permite
+cerrarlo al deslizar hacia abajo. Las secciones se expanden dentro del panel y
+resumen su selección cuando están cerradas. El orden es Tipo, Fecha, Depósitos,
+Categorías y Monto.
+
+- **Tipo:** Todos, Ingresos o Egresos. Al elegir un tipo, Categorías muestra
+  solo las opciones de ese tipo y quita las selecciones incompatibles.
+- **Fecha:** Todo, Día, Mes o Rango. Día usa un calendario inline; Mes permite
+  elegir mes y año; Rango usa el mismo calendario para elegir inicio y fin, y
+  permanece abierto después de elegir la primera fecha.
+- **Depósitos:** aparecen todos seleccionados inicialmente. Si están todos
+  seleccionados no se restringen los resultados; al desmarcar alguno, se
+  filtran por los que continúan marcados. No se puede quitar el último depósito
+  hasta marcar otro. «Todos» vuelve a seleccionar cada depósito.
+- **Categorías:** selección múltiple en una grilla adaptable de tres o cuatro
+  columnas, sin desplazamiento horizontal. Los fondos usan el color de acento
+  de cada categoría (pastel en claro y más saturado en oscuro); la selección no
+  cierra el panel.
+- **Monto:** campos numéricos de mínimo y máximo.
+
+Los íconos de depósito usan la misma paleta, fondos e íconos del Dashboard.
+Cada criterio aplicado aparece como un chip que puede quitarse. Si solo queda
+un depósito seleccionado, su chip muestra el bloqueo hasta que se elija otro.
+«Limpiar filtros» restablece los criterios, incluidos todos los depósitos
+seleccionados. El filtrado es local sobre los datos de muestra; no hay consultas
+a SQLite.
 
 ### Detalle
 
