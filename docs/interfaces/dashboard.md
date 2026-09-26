@@ -16,7 +16,7 @@ La pantalla se compone de:
 2. tarjeta de balance con una franja superior integrada titulada «Balance»,
    control para ocultar el monto y acciones rápidas;
 3. tarjeta agrupada con la lista de depósitos y el acceso para crear uno;
-4. lista plana de hasta cinco movimientos recientes y acceso a Movimientos.
+4. hasta cinco movimientos recientes, agrupados por día, y acceso a Movimientos.
 
 No se muestra una sección de deudas en el Dashboard.
 
@@ -62,14 +62,16 @@ no haya depósitos.
 
 ## Movimientos recientes
 
-La lista se presenta directamente sobre el fondo de pantalla y muestra como
-máximo cinco elementos simulados. Cada fila contiene descripción, categoría,
-fecha, signo e icono. El fondo del icono usa `COLORES_ESTADO.ingreso` o
-`COLORES_ESTADO.egreso` según el tipo; el signo y el icono mantienen la
-distinción sin depender solamente del color. «Ver todos» se muestra como un
-acceso de texto en negrita y color de foco, con una flecha, y navega a la
-pestaña Movimientos. Los títulos de ambas secciones conservan el tamaño y la
-tipografía globales.
+La lista muestra como máximo cinco elementos simulados y los agrupa por día.
+Los encabezados dicen «Hoy» o «Ayer» cuando corresponde y muestran la fecha
+para los días anteriores. Cada movimiento usa una tarjeta con ícono sobre el
+color del tipo (`COLORES_ESTADO.ingreso` o `COLORES_ESTADO.egreso`), la línea
+`categoría · descripción`, la línea `hora · depósito`, el tipo «Ingreso» o
+«Egreso» y el monto con signo. La descripción se recorta si no entra; el color
+no es la única señal del tipo. Esta presentación coincide con la lista de la
+pestaña Movimientos. «Ver todos» se muestra como un acceso de texto en negrita
+y color de foco, con una flecha, y navega a esa pestaña. Los títulos de ambas
+secciones conservan el tamaño y la tipografía globales.
 
 La estructura incluye una presentación de carga y un estado vacío para cuando
 no haya movimientos.

@@ -2,7 +2,7 @@
   "expo": {
     "name": "AHRE",
     "slug": "APP-AHRE",
-    "version": "1.0.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "icon": "./assets/ahre-mark.png",
     "userInterfaceStyle": "automatic",

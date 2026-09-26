@@ -6,7 +6,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/Estado-No%20estable-F97316?style=flat-square" alt="Estado: no estable" />
-  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.2.0-2563EB?style=flat-square" alt="Versión 0.2.0" />
+  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.3.0-2563EB?style=flat-square" alt="Versión 0.3.0" />
   <img src="https://img.shields.io/badge/Plataforma-Android-green?style=flat-square&logo=android&logoColor=green" alt="Plataforma Android" />
   <img src="https://img.shields.io/badge/Expo-SDK%2057-white?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
   <img src="https://img.shields.io/badge/React%20Native-0.86.3-61DAFB?style=flat-square&logo=react&logoColor=61DAFB" alt="React Native 0.86.3" />
@@ -112,8 +112,8 @@ entre usuarios.
 
 ## Estado actual
 
-El proyecto se encuentra en la etapa de preparación de la estructura base.
-Actualmente cuenta con:
+El proyecto ofrece un prototipo visual no estable de sus principales
+interfaces. Actualmente cuenta con:
 
 - proyecto inicial configurado con Expo;
 - entrada principal compatible con Expo y React Native;
@@ -124,6 +124,8 @@ Actualmente cuenta con:
   ambas y acceso de prueba al Dashboard;
 - Dashboard maquetado con balance, acciones rápidas de ingreso, egreso y OCR,
   depósitos y movimientos de ejemplo;
+- pantalla de Movimientos con historial agrupado por día, búsqueda y filtros
+  visuales por tipo, fecha, monto, categoría y depósito;
 - formularios maquetados para ingresos y egresos, con monto, descripción,
   depósito, categoría, fecha, hora y recurrencia visual; ambos simulan el
   guardado sin persistir movimientos;
@@ -133,7 +135,8 @@ Actualmente cuenta con:
   conectarse a lógica futura;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
-- historial de cambios con las funcionalidades visuales recientes del Dashboard.
+- historial de cambios de la versión `0.3.0` con las interfaces y mejoras
+  visuales de los Issues recientes.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. Tampoco
 se implementaron la autenticación, el registro de usuarios, las validaciones ni
@@ -142,7 +145,7 @@ visual. Los depósitos y movimientos del Dashboard son datos de ejemplo. La
 selección de categorías y los formularios no persisten movimientos. El
 formulario de ingreso permite representar todos sus campos y regresar mediante
 la flecha del encabezado; no tiene una acción «Cancelar» en el pie. La versión
-`0.2.0` se identifica como no estable para evaluación y no representa una
+`0.3.0` se identifica como no estable para evaluación y no representa una
 versión comercial.
 
 ## Tecnología
