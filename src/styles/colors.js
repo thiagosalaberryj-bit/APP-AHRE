@@ -36,14 +36,14 @@ export const COLORES_DEPOSITOS = Object.freeze([
 ]);
 
 export const COLORES_GRAFICOS = Object.freeze([
-  '#E53935',
-  '#F57C00',
-  '#FBC02D',
-  '#8ED657',
-  '#2E7D32',
-  '#1E88E5',
-  '#8E6BE8',
-  '#E47AD3',
+  '#F5B3B2',
+  '#FBCD9E',
+  '#FDE7AF',
+  '#D4EFBF',
+  '#8EB38F',
+  '#89BCF4',
+  '#B7ACF6',
+  '#E9AAEF',
 ]);
 
 export const TEMAS = Object.freeze({

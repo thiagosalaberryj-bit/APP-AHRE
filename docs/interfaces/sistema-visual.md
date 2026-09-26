@@ -76,9 +76,13 @@ parte de esta paleta.
 
 ### Colores para gráficos
 
+La paleta de categorías utiliza tonos pastel fijos para que conserve la misma
+apariencia en los temas claro y oscuro. Se reutiliza en Estadísticas, los
+selectores de categorías y sus detalles.
+
 ```text
-#E53935  #F57C00  #FBC02D  #8ED657
-#2E7D32  #1E88E5  #8E6BE8  #E47AD3
+#F5B3B2  #FBCD9E  #FDE7AF  #D4EFBF
+#8EB38F  #89BCF4  #B7ACF6  #E9AAEF
 ```
 
 Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender

@@ -41,16 +41,9 @@ const NOMBRES_COLORES_CATEGORIAS = Object.freeze([
   'Rosa',
 ]);
 
-function suavizarColor(color) {
-  const canales = color.slice(1).match(/.{2}/g).map((valor) => parseInt(valor, 16));
-  const canalesSuaves = canales.map((canal) => Math.round(canal * 0.38 + 255 * 0.62));
-
-  return `#${canalesSuaves.map((canal) => canal.toString(16).padStart(2, '0')).join('')}`;
-}
-
 const COLORES_SELECTOR = Object.freeze(
   COLORES_GRAFICOS.map((color, indice) => ({
-    valor: suavizarColor(color),
+    valor: color,
     nombre: NOMBRES_COLORES_CATEGORIAS[indice],
   })),
 );

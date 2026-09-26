@@ -34,10 +34,10 @@ selector de categorías. «Más» abre un modal con Tarjeta y Ahorros. La selecc
 es local a la pantalla y no se guarda.
 
 El color predeterminado es el azul suave `#C3D1E3`. El selector mantiene una
-sola fila con tres tonos suaves de `COLORES_GRAFICOS` y «Más» abre el resto de
-la paleta con sus nombres: rojo, naranja, amarillo, verde claro, verde, azul,
-violeta y rosa. Los tonos suaves coinciden con los de Estadísticas en modo
-claro. La muestra seleccionada presenta un tick y un borde verde de foco; las
+sola fila con tres tonos de la paleta pastel compartida y «Más» abre el resto
+de la paleta con sus nombres: rojo, naranja, amarillo, verde claro, verde,
+azul, violeta y rosa. Los tonos coinciden con los de Estadísticas en ambos
+temas. La muestra seleccionada presenta un tick y un borde verde de foco; las
 demás conservan un borde neutro. Esto incluye el azul predeterminado y las
 opciones del modal. Si se elige un color adicional, «Más» muestra ese tono con
 el tick y el borde verde al cerrar el modal. El texto también informa el color

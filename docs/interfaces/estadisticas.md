@@ -5,9 +5,9 @@
 La pantalla usa el encabezado principal compartido y la descripción «Analiza
 tus ingresos y gastos». Ingresos y Egresos se muestran por separado. El filtro
 de categorías permite mostrar u ocultar categorías del tipo elegido; sus
-colores siguen el orden del catálogo y aparecen en tonos suaves.
-En modo oscuro se aumenta la intensidad de los tonos para que las categorías
-se distingan sobre las superficies oscuras.
+colores siguen el orden del catálogo y utilizan la paleta pastel compartida.
+Los mismos tonos se usan en modo claro y oscuro para mantener su apariencia al
+cambiar de tema.
 
 Los gráficos forman un carrusel horizontal. Se cambia entre ellos deslizando
 la pantalla y los puntos debajo indican la vista activa. Cada vista tiene su
