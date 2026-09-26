@@ -3,7 +3,7 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [v0.3.0] - 2026-09-25 - no publicada
+## [v0.3.0] - 2026-09-26 - no publicada
 
 ### Añadido
 
@@ -47,6 +47,12 @@ documentación se registran en este archivo.
   del gráfico de columnas. (#14)
 - Se unificó el estilo y el comportamiento secundario de las pantallas de
   detalle de categoría y movimiento. (#14)
+- Se reorganizó el historial de movimientos con filas de categoría y
+  descripción, metadatos de hora y depósito, y filtros en una hoja superpuesta
+  con selección adaptable de fechas, depósitos y categorías. (#13)
+- Los movimientos recientes del Dashboard adoptaron la presentación del
+  historial y se agrupan por día con rótulos «Hoy», «Ayer» y fechas anteriores.
+  (#13)
 
 ### Documentación
 
@@ -60,6 +66,8 @@ documentación se registran en este archivo.
 - Se documentaron los controles, períodos, filtros, interacciones y el modelo
   de datos de las pantallas de Estadísticas en
   `docs/interfaces/estadisticas.md`; también se actualizó la navegación. (#14)
+- Se actualizaron las guías de Movimientos y Dashboard para describir las filas,
+  el agrupamiento por día y el comportamiento de los filtros. (#13)
 - Se actualizaron el README, la interfaz de movimientos y las versiones de
   Expo en la documentación de dependencias para reflejar el formulario de
   ingreso y Expo SDK `57.0.25`. (#11)

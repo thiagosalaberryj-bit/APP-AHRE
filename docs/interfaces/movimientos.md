@@ -235,6 +235,78 @@ en el ancho disponible sin scroll horizontal. Lee el modo claro u oscuro del
 sistema y aplica `TEMAS.claro` u `TEMAS.oscuro` a fondos, textos, bordes,
 botones y modales.
 
+## Historial y detalle de movimientos
+
+`src/screens/MovementsScreen.js` es pestaña con `MainHeader` («Movimientos») y
+agrupa los movimientos simulados por día. Los encabezados
+muestran «Hoy», «Ayer» o la fecha para los días anteriores. Cada tarjeta usa
+un ícono de categoría sobre el color del tipo y presenta `categoría ·
+descripción`, `hora · depósito`, «Ingreso» o «Egreso» y el monto con signo.
+La descripción se recorta cuando no entra; el tipo también se indica con texto,
+no solo con color. La misma composición se usa en los movimientos recientes del
+Dashboard. Los estilos locales están en
+`src/styles/MovementsScreenStyles.js`.
+
+Las filas reutilizan `TarjetaMovimiento` (`src/components/MovementCard.js`) y
+los datos son `MOVIMIENTOS_SIMULADOS` locales (10 ingresos y egresos de varios
+depósitos, en orden cronológico descendente), sin consultas a SQLite. Al tocar
+una fila se abre el detalle del movimiento.
+
+### Buscador
+
+El buscador comparte la fila con el botón «Filtros». Tiene lupa,
+`placeholder` «Buscar» y botón `X` para limpiar. Su borde es fino y neutro en
+reposo; solo toma el color de foco mientras el campo está enfocado. La búsqueda
+es local sobre los datos simulados. Debajo aparecen los filtros aplicados como
+chips horizontales; cada chip se puede quitar y «Limpiar todo» restablece los
+filtros. Si no hay coincidencias, se muestra `Sin resultados para “…”`.
+
+### Filtros
+
+El botón «Filtros», de la misma altura que el buscador, abre una hoja modal
+sobre un overlay. El panel tiene un encabezado fijo y una manija que permite
+cerrarlo al deslizar hacia abajo. Las secciones se expanden dentro del panel y
+resumen su selección cuando están cerradas. El orden es Tipo, Fecha, Depósitos,
+Categorías y Monto.
+
+- **Tipo:** Todos, Ingresos o Egresos. Al elegir un tipo, Categorías muestra
+  solo las opciones de ese tipo y quita las selecciones incompatibles.
+- **Fecha:** Todo, Día, Mes o Rango. Día usa un calendario inline; Mes permite
+  elegir mes y año; Rango usa el mismo calendario para elegir inicio y fin, y
+  permanece abierto después de elegir la primera fecha.
+- **Depósitos:** aparecen todos seleccionados inicialmente. Si están todos
+  seleccionados no se restringen los resultados; al desmarcar alguno, se
+  filtran por los que continúan marcados. No se puede quitar el último depósito
+  hasta marcar otro. «Todos» vuelve a seleccionar cada depósito.
+- **Categorías:** selección múltiple en una grilla adaptable de tres o cuatro
+  columnas, sin desplazamiento horizontal. Los fondos usan el color de acento
+  de cada categoría (pastel en claro y más saturado en oscuro); la selección no
+  cierra el panel.
+- **Monto:** campos numéricos de mínimo y máximo.
+
+Los íconos de depósito usan la misma paleta, fondos e íconos del Dashboard.
+Cada criterio aplicado aparece como un chip que puede quitarse. Si solo queda
+un depósito seleccionado, su chip muestra el bloqueo hasta que se elija otro.
+«Limpiar filtros» restablece los criterios, incluidos todos los depósitos
+seleccionados. El filtrado es local sobre los datos de muestra; no hay consultas
+a SQLite.
+
+### Detalle
+
+Al presionar una tarjeta se navega a `DETALLE_MOVIMIENTO`
+(`src/screens/MovementDetailScreen.js`, ya registrado) con
+`{movimiento, categoria}`. Muestra tipo, monto con signo, descripción,
+categoría, depósito, fecha y hora, estado y la fila `Recurrente: Sí ·
+Frecuencia` solo cuando el movimiento es recurrente. Al volver, los filtros
+se conservan porque el estado queda en la pantalla del historial.
+
+### Estados vacíos
+
+- **Cargando:** skeleton de 3 líneas durante ~1 segundo simulado.
+- **Sin movimientos:** tarjeta vacía cuando no hay datos base.
+- **Sin resultados de búsqueda:** mensaje con el texto buscado.
+- **Sin resultados por filtros:** mensaje con acción para limpiar.
+
 ## Funcionamiento sin conexión
 
 La pantalla solo usa componentes, estilos, íconos y constantes locales. No
