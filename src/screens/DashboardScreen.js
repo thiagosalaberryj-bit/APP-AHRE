@@ -11,7 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import EncabezadoPrincipal from '../components/MainHeader';
 import { RUTAS } from '../constants/routes';
-import { COLORES_DEPOSITOS, COLORES_ESTADO, TEMAS } from '../styles/colors';
+import {
+  COLOR_DEPOSITO_PREDETERMINADO,
+  COLOR_ICONO_DEPOSITO,
+  COLORES_DEPOSITOS,
+  COLORES_ESTADO,
+  TEMAS,
+} from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDashboard } from '../styles/DashboardScreenStyles';
 
@@ -21,7 +27,7 @@ const DEPOSITOS_SIMULADOS = Object.freeze([
     nombre: 'Efectivo',
     tipo: 'Efectivo',
     descripcion: 'Para gastos diarios',
-    color: COLORES_DEPOSITOS[0],
+    color: COLOR_DEPOSITO_PREDETERMINADO,
     saldo: '$ 354.000',
     icono: 'cash-outline',
   },
@@ -39,7 +45,7 @@ const DEPOSITOS_SIMULADOS = Object.freeze([
     nombre: 'Banco',
     tipo: 'Cuenta bancaria',
     descripcion: 'Cuenta para ahorro y gastos',
-    color: COLORES_DEPOSITOS[3],
+    color: COLORES_DEPOSITOS[2],
     saldo: '$ 239.023',
     icono: 'business-outline',
   },
@@ -144,12 +150,16 @@ export default function PantallaPanel({ navigation: navegacion }) {
               <View style={estilos.encabezadoSeccion}>
                 <Text style={estilosGlobales.encabezadoSeccion}>Tus depósitos</Text>
                 <Pressable
+                  accessibilityLabel="Agregar depósito"
                   accessibilityRole="button"
                   onPress={() => abrirPantalla(RUTAS.DEPOSITO)}
-                  style={estilos.accionSeccion}
+                  style={({ pressed }) => [
+                    estilos.accionSeccion,
+                    pressed && estilos.accionSeccionPresionada,
+                  ]}
                 >
-                  <Ionicons color={tema.textoPrincipal} name="add-circle" size={20} />
-                  <Text style={[estilos.textoAccionSeccion, { color: tema.textoPrincipal }]}>Nuevo depósito</Text>
+                  <Ionicons color={tema.foco} name="add-circle-outline" size={19} />
+                  <Text style={estilos.textoAgregarDeposito}>Agregar depósito</Text>
                 </Pressable>
               </View>
 
@@ -178,7 +188,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                       ]}
                     >
                       <View style={[estilos.iconoDeposito, { backgroundColor: deposito.color }]}>
-                        <Ionicons color={tema.encabezado} name={deposito.icono} size={20} />
+                        <Ionicons color={COLOR_ICONO_DEPOSITO} name={deposito.icono} size={20} />
                       </View>
                       <View style={estilos.detalleElemento}>
                         <Text style={[estilosGlobales.texto, estilos.nombreElemento]}>{deposito.nombre}</Text>
@@ -204,12 +214,16 @@ export default function PantallaPanel({ navigation: navegacion }) {
               <View style={estilos.encabezadoSeccion}>
                 <Text style={estilosGlobales.encabezadoSeccion}>Movimientos recientes</Text>
                 <Pressable
+                  accessibilityLabel="Ver todos los movimientos"
                   accessibilityRole="button"
                   onPress={() => navegacion.navigate(RUTAS.MOVIMIENTOS)}
-                  style={estilos.accionSeccion}
+                  style={({ pressed }) => [
+                    estilos.accionSeccion,
+                    pressed && estilos.accionSeccionPresionada,
+                  ]}
                 >
-                  <Text style={[estilos.textoAccionSeccion, { color: tema.textoPrincipal }]}>Ver todos</Text>
-                  <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={16} />
+                  <Text style={estilos.textoVerTodos}>Ver todos</Text>
+                  <Ionicons color={tema.foco} name="chevron-forward" size={17} />
                 </Pressable>
               </View>
 

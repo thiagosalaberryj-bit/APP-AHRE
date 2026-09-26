@@ -7,6 +7,9 @@ documentación se registran en este archivo.
 
 ### Añadido
 
+- Se maquetó el formulario de creación de depósitos con saldo inicial, nombre,
+  tipo, ícono, color y descripción. La creación continúa simulada y no persiste
+  depósitos. (#9)
 - Se maquetó el formulario de egreso con monto, descripción, depósito,
   categorías y controles interactivos de fecha y hora. (#12)
 - Se agregó la opción de marcar un egreso como recurrente y elegir una
@@ -23,6 +26,15 @@ documentación se registran en este archivo.
 
 ### Cambiado
 
+- El saldo inicial del depósito aparece primero y comparte la presentación
+  destacada del monto de ingreso; el nombre queda debajo. (#9)
+- Se asignó a los depósitos una paleta propia de cinco colores con selección
+  marcada por un tick y un borde verde. El Dashboard muestra los íconos de los
+  depósitos en grafito, independiente del color de cada depósito. (#9)
+- Los colores de las categorías de Estadísticas mantienen tonos pastel en el
+  tema claro y usan una paleta neón en el tema oscuro, también en sus detalles.
+- Se actualizaron las referencias visuales de depósitos en el Dashboard y se
+  retiró el selector de colores adicionales del formulario. (#9)
 - Se retiró la acción «Cancelar» del pie del formulario de ingreso; el regreso
   queda disponible desde la flecha del encabezado. (#11)
 - Se actualizó Expo SDK de `57.0.24` a `57.0.25` y `expo-image-picker` de
@@ -37,6 +49,9 @@ documentación se registran en este archivo.
 
 ### Documentación
 
+- Se documentaron el formulario de depósitos, su paleta y la presentación de
+  sus íconos; también se actualizaron las guías de Estadísticas y del sistema
+  visual. (#9)
 - Se actualizaron las guías de navegación y sistema visual para describir el
   tamaño y la alineación de los encabezados.
 - Se documentó el formulario y las categorías de movimientos en
@@ -50,6 +65,8 @@ documentación se registran en este archivo.
 
 ### Alcance pendiente
 
+- El formulario de depósitos valida los campos y simula la creación, pero aún
+  no persiste depósitos. (#9)
 - El formulario de egreso valida los campos y simula el guardado, pero todavía
   no persiste los movimientos.
 - El formulario de ingreso representa los campos y simula el guardado, pero

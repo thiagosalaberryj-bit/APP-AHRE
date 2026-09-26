@@ -99,21 +99,33 @@ export function crearEstilosDashboard(tema) {
     encabezadoSeccion: {
       alignItems: 'center',
       flexDirection: 'row',
+      flexWrap: 'wrap',
       justifyContent: 'space-between',
-      minHeight: 32,
+      minHeight: 44,
+      gap: ESPACIADO.minimo,
     },
     accionSeccion: {
       alignItems: 'center',
       flexDirection: 'row',
       gap: ESPACIADO.minimo,
       justifyContent: 'center',
-      minHeight: 48,
-      paddingLeft: ESPACIADO.pequeno,
+      minHeight: 44,
+      paddingHorizontal: ESPACIADO.minimo,
     },
-    textoAccionSeccion: {
+    textoAgregarDeposito: {
+      color: tema.foco,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+    },
+    textoVerTodos: {
+      color: tema.foco,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+    },
+    accionSeccionPresionada: {
+      opacity: 0.62,
     },
     listaDepositos: {
       gap: ESPACIADO.minimo,

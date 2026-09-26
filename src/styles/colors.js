@@ -25,25 +25,42 @@ export const COLORES_ESTADO = Object.freeze({
   enfoque: COLORES_MARCA.verdeMedio,
 });
 
+export const COLOR_DEPOSITO_PREDETERMINADO = '#C3D1E3';
+export const COLOR_ICONO_DEPOSITO = '#263238';
+
 export const COLORES_DEPOSITOS = Object.freeze([
   '#BED5C8',
-  '#C3D1E3',
-  '#C8C7CA',
+  COLOR_DEPOSITO_PREDETERMINADO,
   '#CEC0E1',
   '#EDB8BC',
   '#F6DB9F',
 ]);
 
 export const COLORES_GRAFICOS = Object.freeze([
-  '#E53935',
-  '#F57C00',
-  '#FBC02D',
-  '#8ED657',
-  '#2E7D32',
-  '#1E88E5',
-  '#8E6BE8',
-  '#E47AD3',
+  '#F5B3B2',
+  '#FBCD9E',
+  '#FDE7AF',
+  '#D4EFBF',
+  '#8EB38F',
+  '#89BCF4',
+  '#B7ACF6',
+  '#E9AAEF',
 ]);
+
+export const COLORES_GRAFICOS_NEON = Object.freeze([
+  '#FF3D5A',
+  '#FF7A00',
+  '#FFEA00',
+  '#B6FF00',
+  '#00FF85',
+  '#00E5FF',
+  '#9D4DFF',
+  '#FF35D3',
+]);
+
+export function obtenerColoresGraficos(tema) {
+  return tema.nombre === 'oscuro' ? COLORES_GRAFICOS_NEON : COLORES_GRAFICOS;
+}
 
 export const TEMAS = Object.freeze({
   claro: Object.freeze({
