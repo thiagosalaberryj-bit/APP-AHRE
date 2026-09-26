@@ -73,3 +73,49 @@ estilos globales. Los estilos propios de distribución están en
 `COLOR_DEPOSITO_PREDETERMINADO`, `COLORES_GRAFICOS` y los tokens de
 `globalStyles.js`. La paleta se mantiene legible en modo claro y
 oscuro, y el formulario respeta el área segura superior e inferior.
+
+## Detalle de un depósito
+
+`src/screens/DepositDetailScreen.js` muestra el depósito seleccionado desde el
+Dashboard. La fila entrega el objeto de depósito a la ruta existente; la
+pantalla reutiliza `SectionHeader` para volver y toma los estilos de campos y
+tipografía de `globalStyles.js`. La distribución propia de esta pantalla vive en
+`src/styles/DepositDetailScreenStyles.js`.
+
+La tarjeta superior presenta el ícono sobre el color del depósito, nombre,
+tipo, descripción opcional y saldo destacado. El saldo se identifica como
+perteneciente a ese depósito; no es el balance general que aparece en el
+Dashboard. Los ejemplos cubren Efectivo, Billetera virtual y Banco. Banco
+incluye el estado visual sin movimientos.
+
+Debajo se muestra un buscador con lupa y acción para borrar el texto. Los
+filtros se despliegan en el mismo contenido desplazable e incluyen Día, Semana,
+Mes y Personalizado; este último presenta fecha inicial y final. También se
+muestran campos de monto mínimo y máximo, categorías simuladas, una indicación
+de filtros activos y la acción «Limpiar filtros». El buscador y los filtros
+solo preparan su presentación: al introducir búsqueda o activar filtros se
+muestra el estado vacío correspondiente y no se consulta ni filtra información
+real.
+
+La lista simulada representa descripción, categoría, fecha, tipo y monto de
+cada movimiento. Ingreso y Egreso se distinguen con texto y dirección de ícono,
+además del color. Las filas son seleccionables visualmente, pero todavía no
+navegan a edición o detalle de movimiento. El contenido permite desplazarse;
+los estados previstos incluyen carga, sin movimientos, sin resultados de
+búsqueda y sin resultados por filtros.
+
+El botón de opciones del depósito abre las acciones «Editar depósito» y
+«Eliminar depósito». Editar presenta un modal en la misma pantalla con nombre,
+tipo, ícono, color y descripción. El saldo se ve como dato bloqueado y no puede
+editarse. Los cambios del formulario son un borrador local: «Cancelar» los
+descarta y «Guardar cambios» informa que todavía no se guardan, conservando los
+datos originales.
+
+Eliminar abre una confirmación con «Cancelar» y una acción destructiva. La
+confirmación no elimina el depósito y comunica que la operación aún no está
+disponible. No se implementan persistencia, consultas, búsqueda, filtrado,
+actualización ni eliminación reales.
+
+La pantalla y sus modales usan el tema activo claro u oscuro, tokens de
+`globalStyles.js` y colores de `colors.js`. No se añade una pantalla separada
+para edición ni se modifica la navegación existente.

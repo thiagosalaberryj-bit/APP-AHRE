@@ -181,7 +181,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                     <Pressable
                       accessibilityRole="button"
                       key={deposito.id}
-                      onPress={() => abrirPantalla(RUTAS.DETALLE_DEPOSITO)}
+                      onPress={() => navegacion.getParent()?.navigate(RUTAS.DETALLE_DEPOSITO, { deposito })}
                       style={({ pressed }) => [
                         estilos.filaDeposito,
                         pressed && estilos.elementoPresionado,
