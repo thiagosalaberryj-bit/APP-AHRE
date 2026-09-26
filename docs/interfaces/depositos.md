@@ -17,11 +17,11 @@ está disponible. La flecha del encabezado vuelve a la pantalla anterior.
 
 | Campo | Requerido | Presentación |
 | --- | --- | --- |
-| Nombre | Sí | Texto de hasta 30 caracteres, con ejemplos y contador. |
-| Saldo inicial | Sí | Monto en pesos con prefijo `$` y teclado decimal. |
+| Saldo inicial | Sí | Primer campo del formulario; monto en pesos con prefijo `$`, presentación destacada como el monto de ingreso y teclado decimal. |
+| Nombre | Sí | Debajo del saldo inicial; texto de hasta 30 caracteres, con ejemplos y contador. |
 | Tipo de depósito | Sí | Selector entre Efectivo, Banco y Billetera virtual. |
 | Ícono | Sí, con una opción inicial | Grilla compacta con cuatro opciones visibles y «Más» para abrir las restantes. |
-| Color | No | Muestra azul suave predeterminada (`#C3D1E3`), tres tonos de categoría y «Más» para ver los ocho colores con sus nombres. |
+| Color | No | Muestra azul suave predeterminada (`#C3D1E3`) y cuatro alternativas de la paleta de depósitos, todas visibles. |
 | Descripción | No | Texto de hasta 60 caracteres con contador. |
 
 El catálogo de tipos corresponde a `efectivo`, `banco` y
@@ -33,15 +33,13 @@ Efectivo, Banco, Virtual, Billetera y «Más», siguiendo el patrón compacto de
 selector de categorías. «Más» abre un modal con Tarjeta y Ahorros. La selección
 es local a la pantalla y no se guarda.
 
-El color predeterminado es el azul suave `#C3D1E3`. El selector mantiene una
-sola fila con tres tonos de la paleta pastel compartida y «Más» abre el resto
-de la paleta con sus nombres: rojo, naranja, amarillo, verde claro, verde,
-azul, violeta y rosa. Los tonos coinciden con los de Estadísticas en ambos
-temas. La muestra seleccionada presenta un tick y un borde verde de foco; las
-demás conservan un borde neutro. Esto incluye el azul predeterminado y las
-opciones del modal. Si se elige un color adicional, «Más» muestra ese tono con
-el tick y el borde verde al cerrar el modal. El texto también informa el color
-seleccionado. La selección no se guarda.
+El color predeterminado es el azul suave `#C3D1E3`. El selector presenta en una
+sola fila los cinco colores de `COLORES_DEPOSITOS`: azul predeterminado, verde
+suave, violeta, rosa y amarillo suave. Esta paleta identifica depósitos y es
+independiente de los colores de categorías de Estadísticas. La opción
+seleccionada presenta un tick y un borde verde de foco; las demás conservan un
+borde neutro. El texto también informa el color seleccionado. La selección no
+se guarda.
 
 La descripción es opcional. Si queda vacía, la lógica futura podrá generar una
 con información del nombre y el tipo del depósito; la pantalla actual no la

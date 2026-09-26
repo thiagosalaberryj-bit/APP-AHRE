@@ -51,8 +51,9 @@ Efectivo, Mercado Pago y Banco aparecen como tarjetas compactas estáticas. Cada
 tarjeta muestra un icono sobre el color asignado desde `COLORES_DEPOSITOS`, el
 nombre, tipo y descripción en una sola línea pequeña, y el saldo. Los datos
 continúan siendo simulados. Efectivo usa el color predeterminado azul suave
-(`#C3D1E3`) y un ícono verde oscuro para conservar el contraste. «Agregar
-depósito» se muestra como un acceso de texto en negrita y color de foco, junto
+(`#C3D1E3`) y un ícono grafito (`#263238`) independiente del color del depósito.
+«Agregar depósito» se muestra como un acceso de texto en negrita y color de
+foco, junto
 con un ícono de suma; abre la ruta existente. Las tarjetas también abren la
 pantalla de detalle disponible.
 

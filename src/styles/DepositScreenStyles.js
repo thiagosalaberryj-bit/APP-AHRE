@@ -19,9 +19,6 @@ export function crearEstilosDeposito(tema) {
     grupo: {
       gap: ESPACIADO.pequeno,
     },
-    grupoSaldoInicial: {
-      marginTop: -ESPACIADO.pequeno,
-    },
     filaEntrada: {
       minHeight: 58,
       flexDirection: 'row',
@@ -52,7 +49,7 @@ export function crearEstilosDeposito(tema) {
       textAlign: 'right',
     },
     filaSaldo: {
-      minHeight: 72,
+      minHeight: 76,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
@@ -63,16 +60,23 @@ export function crearEstilosDeposito(tema) {
     simboloSaldo: {
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.titulo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+      fontSize: TIPOGRAFIA.tamanos.titulo + 4,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
     },
     entradaSaldo: {
       flex: 1,
       minWidth: 0,
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.titulo,
+      fontSize: TIPOGRAFIA.tamanos.titulo + 4,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
       paddingVertical: ESPACIADO.pequeno,
+    },
+    accionLimpiarSaldo: {
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     listaTipos: {
       flexDirection: 'row',
@@ -184,23 +188,6 @@ export function crearEstilosDeposito(tema) {
       justifyContent: 'center',
       minHeight: 64,
       gap: ESPACIADO.minimo,
-    },
-    muestraMasColores: {
-      width: 34,
-      height: 34,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderColor: tema.foco,
-      borderRadius: BORDES.radios.circular,
-      borderStyle: 'dashed',
-      borderWidth: BORDES.anchos.normal,
-    },
-    nombreMasColores: {
-      color: tema.foco,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar - 2,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      textAlign: 'center',
     },
     muestraColor: {
       width: 34,
@@ -327,21 +314,6 @@ export function crearEstilosDeposito(tema) {
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.cuerpo,
-    },
-    listaColoresModal: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-      justifyContent: 'space-around',
-      gap: ESPACIADO.pequeno,
-      paddingVertical: ESPACIADO.minimo,
-    },
-    opcionColorModal: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 72,
-      minHeight: 64,
-      gap: ESPACIADO.minimo,
     },
     mensajeError: {
       flexDirection: 'row',

@@ -19,7 +19,7 @@ import {
   DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
-import { COLORES_GRAFICOS, TEMAS } from '../styles/colors';
+import { obtenerColoresGraficos, TEMAS } from '../styles/colors';
 import { crearEstilosGlobales, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
 
@@ -122,13 +122,14 @@ function formatearSemanaSelector(fecha) {
   return `${inicio.getDate()} ${MESES[inicio.getMonth()].corto.toLowerCase()} ${inicio.getFullYear()}–${fin.getDate()} ${MESES[fin.getMonth()].corto.toLowerCase()} ${fin.getFullYear()}`;
 }
 
-function obtenerCategorias(tipoMovimiento) {
+function obtenerCategorias(tipoMovimiento, tema) {
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
+  const coloresGraficos = obtenerColoresGraficos(tema);
 
   return catalogo.map((categoria, indice) => ({
     ...categoria,
     indiceCategoria: indice,
-    color: COLORES_GRAFICOS[indice % COLORES_GRAFICOS.length],
+    color: coloresGraficos[indice % coloresGraficos.length],
   }));
 }
 
@@ -738,7 +739,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
   const [indiceColumnaSeleccionada, establecerIndiceColumnaSeleccionada] = useState(0);
 
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
-  const categorias = useMemo(() => obtenerCategorias(tipoMovimiento), [tipoMovimiento]);
+  const categorias = useMemo(() => obtenerCategorias(tipoMovimiento, tema), [tipoMovimiento, tema]);
   const categoriasVisibles = useMemo(
     () => categorias.filter((categoria) => categoriasSeleccionadas.includes(categoria.id)),
     [categorias, categoriasSeleccionadas],

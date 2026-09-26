@@ -13,6 +13,7 @@ import EncabezadoPrincipal from '../components/MainHeader';
 import { RUTAS } from '../constants/routes';
 import {
   COLOR_DEPOSITO_PREDETERMINADO,
+  COLOR_ICONO_DEPOSITO,
   COLORES_DEPOSITOS,
   COLORES_ESTADO,
   TEMAS,
@@ -187,7 +188,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                       ]}
                     >
                       <View style={[estilos.iconoDeposito, { backgroundColor: deposito.color }]}>
-                        <Ionicons color={tema.encabezado} name={deposito.icono} size={20} />
+                        <Ionicons color={COLOR_ICONO_DEPOSITO} name={deposito.icono} size={20} />
                       </View>
                       <View style={estilos.detalleElemento}>
                         <Text style={[estilosGlobales.texto, estilos.nombreElemento]}>{deposito.nombre}</Text>

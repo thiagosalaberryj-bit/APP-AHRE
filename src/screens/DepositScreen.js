@@ -18,7 +18,7 @@ import BotonPrincipal from '../components/PrimaryButton';
 import EncabezadoSeccion from '../components/SectionHeader';
 import {
   COLOR_DEPOSITO_PREDETERMINADO,
-  COLORES_GRAFICOS,
+  COLORES_DEPOSITOS,
   TEMAS,
 } from '../styles/colors';
 import { crearEstilosDeposito } from '../styles/DepositScreenStyles';
@@ -30,29 +30,21 @@ const TIPOS_DEPOSITO = Object.freeze([
   Object.freeze({ id: 'billetera_virtual', nombre: 'Billetera virtual', icono: 'phone-portrait-outline' }),
 ]);
 
-const NOMBRES_COLORES_CATEGORIAS = Object.freeze([
-  'Rojo',
-  'Naranja',
-  'Amarillo',
-  'Verde claro',
-  'Verde',
-  'Azul',
+const NOMBRES_COLORES_DEPOSITO = Object.freeze([
+  'Verde suave',
   'Violeta',
   'Rosa',
+  'Amarillo suave',
 ]);
 
 const COLORES_SELECTOR = Object.freeze(
-  COLORES_GRAFICOS.map((color, indice) => ({
-    valor: color,
-    nombre: NOMBRES_COLORES_CATEGORIAS[indice],
-  })),
+  COLORES_DEPOSITOS
+    .filter((color) => color !== COLOR_DEPOSITO_PREDETERMINADO)
+    .map((color, indice) => ({
+      valor: color,
+      nombre: NOMBRES_COLORES_DEPOSITO[indice],
+    })),
 );
-const COLORES_VISIBLES = Object.freeze([
-  COLORES_SELECTOR[0],
-  COLORES_SELECTOR[3],
-  COLORES_SELECTOR[5],
-]);
-
 const ICONOS_DEPOSITO = Object.freeze([
   Object.freeze({ id: 'cash-outline', nombre: 'Efectivo' }),
   Object.freeze({ id: 'business-outline', nombre: 'Banco' }),
@@ -79,7 +71,6 @@ export default function PantallaDeposito({ navigation: navegacion }) {
   const [color, establecerColor] = useState(null);
   const [descripcion, establecerDescripcion] = useState('');
   const [iconosAdicionalesVisibles, establecerIconosAdicionalesVisibles] = useState(false);
-  const [coloresAdicionalesVisibles, establecerColoresAdicionalesVisibles] = useState(false);
   const [nombreEnfocado, establecerNombreEnfocado] = useState(false);
   const [saldoEnfocado, establecerSaldoEnfocado] = useState(false);
   const [descripcionEnfocada, establecerDescripcionEnfocada] = useState(false);
@@ -107,10 +98,6 @@ export default function PantallaDeposito({ navigation: navegacion }) {
     icono && !ICONOS_PRINCIPALES.some((opcion) => opcion.id === icono),
   );
   const opcionColorSeleccionado = COLORES_SELECTOR.find((opcion) => opcion.valor === color);
-  const colorFueraDeVista = Boolean(
-    opcionColorSeleccionado
-      && !COLORES_VISIBLES.some((opcion) => opcion.valor === color),
-  );
   const errorGeneral = intentoGuardar && formularioInvalido
     ? 'Revisá los campos marcados antes de continuar.'
     : errorCreacion;
@@ -153,7 +140,6 @@ export default function PantallaDeposito({ navigation: navegacion }) {
   const seleccionarColor = (valorColor) => {
     establecerColor(valorColor);
     establecerErrorCreacion(null);
-    establecerColoresAdicionalesVisibles(false);
   };
 
   return (
@@ -174,6 +160,49 @@ export default function PantallaDeposito({ navigation: navegacion }) {
             keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             keyboardShouldPersistTaps="handled"
           >
+            <View style={estilos.grupo}>
+              <Text style={estilosGlobales.etiqueta}>Saldo inicial *</Text>
+              <View
+                style={[
+                  estilosGlobales.campo,
+                  estilos.filaSaldo,
+                  errorSaldo
+                    ? estilosGlobales.campoError
+                    : saldoEnfocado
+                      ? estilosGlobales.campoEnfocado
+                      : null,
+                ]}
+              >
+                <Text style={estilos.simboloSaldo}>$</Text>
+                <TextInput
+                  accessibilityLabel="Saldo inicial"
+                  accessibilityHint={errorSaldo || 'Ingresá el monto en pesos.'}
+                  keyboardType="decimal-pad"
+                  onBlur={() => establecerSaldoEnfocado(false)}
+                  onChangeText={cambiarSaldo}
+                  onFocus={() => establecerSaldoEnfocado(true)}
+                  placeholder="0"
+                  placeholderTextColor={tema.textoSecundario}
+                  returnKeyType="next"
+                  selectionColor={tema.foco}
+                  style={estilos.entradaSaldo}
+                  value={saldoInicial}
+                />
+                {saldoInicial ? (
+                  <Pressable
+                    accessibilityLabel="Limpiar saldo inicial"
+                    accessibilityRole="button"
+                    onPress={() => cambiarSaldo('')}
+                    style={estilos.accionLimpiarSaldo}
+                  >
+                    <Ionicons color={tema.textoSecundario} name="close-circle-outline" size={24} />
+                  </Pressable>
+                ) : null}
+              </View>
+              <Text style={estilosGlobales.textoAyuda}>Monto disponible al crear el depósito.</Text>
+              {errorSaldo ? <Text style={estilosGlobales.textoError}>{errorSaldo}</Text> : null}
+            </View>
+
             <View style={estilos.grupo}>
               <Text style={estilosGlobales.etiqueta}>Nombre del depósito *</Text>
               <View
@@ -215,49 +244,6 @@ export default function PantallaDeposito({ navigation: navegacion }) {
               </View>
               <Text style={estilos.contador}>{`${nombre.length}/30`}</Text>
               {errorNombre ? <Text style={estilosGlobales.textoError}>{errorNombre}</Text> : null}
-            </View>
-
-            <View style={[estilos.grupo, estilos.grupoSaldoInicial]}>
-              <Text style={estilosGlobales.etiqueta}>Saldo inicial *</Text>
-              <View
-                style={[
-                  estilosGlobales.campo,
-                  estilos.filaSaldo,
-                  errorSaldo
-                    ? estilosGlobales.campoError
-                    : saldoEnfocado
-                      ? estilosGlobales.campoEnfocado
-                      : null,
-                ]}
-              >
-                <Text style={estilos.simboloSaldo}>$</Text>
-                <TextInput
-                  accessibilityLabel="Saldo inicial"
-                  accessibilityHint={errorSaldo || 'Ingresá el monto en pesos.'}
-                  keyboardType="decimal-pad"
-                  onBlur={() => establecerSaldoEnfocado(false)}
-                  onChangeText={cambiarSaldo}
-                  onFocus={() => establecerSaldoEnfocado(true)}
-                  placeholder="0"
-                  placeholderTextColor={tema.textoSecundario}
-                  returnKeyType="done"
-                  selectionColor={tema.foco}
-                  style={estilos.entradaSaldo}
-                  value={saldoInicial}
-                />
-                {saldoInicial ? (
-                  <Pressable
-                    accessibilityLabel="Limpiar saldo inicial"
-                    accessibilityRole="button"
-                    onPress={() => cambiarSaldo('')}
-                    style={estilos.botonLimpiar}
-                  >
-                    <Ionicons color={tema.textoSecundario} name="close-circle" size={22} />
-                  </Pressable>
-                ) : null}
-              </View>
-              <Text style={estilosGlobales.textoAyuda}>Monto disponible al crear el depósito.</Text>
-              {errorSaldo ? <Text style={estilosGlobales.textoError}>{errorSaldo}</Text> : null}
             </View>
 
             <View style={estilos.grupo}>
@@ -382,7 +368,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                     Azul suave
                   </Text>
                 </Pressable>
-                {COLORES_VISIBLES.map(({ nombre, valor }) => {
+                {COLORES_SELECTOR.map(({ nombre, valor }) => {
                   const seleccionado = color === valor;
                   return (
                     <Pressable
@@ -413,32 +399,6 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                     </Pressable>
                   );
                 })}
-                <Pressable
-                  accessibilityLabel="Ver más colores"
-                  accessibilityRole="button"
-                  accessibilityState={{
-                    expanded: coloresAdicionalesVisibles,
-                    selected: colorFueraDeVista,
-                  }}
-                  onPress={() => establecerColoresAdicionalesVisibles(true)}
-                  style={({ pressed }) => [
-                    estilos.opcionColor,
-                    pressed && estilos.elementoPresionado,
-                  ]}
-                >
-                  <View style={[
-                    estilos.muestraMasColores,
-                    colorFueraDeVista && estilos.muestraColorSeleccionada,
-                    colorFueraDeVista && { backgroundColor: color },
-                  ]}>
-                    <Ionicons
-                      color={colorFueraDeVista ? tema.botonPrincipalTexto : tema.foco}
-                      name={colorFueraDeVista ? 'checkmark' : 'add-outline'}
-                      size={22}
-                    />
-                  </View>
-                  <Text style={estilos.nombreMasColores}>Más</Text>
-                </Pressable>
               </View>
               <View style={estilos.colorSeleccionadoInfo}>
                 <View
@@ -514,6 +474,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                 alPresionar={crearDeposito}
               />
             </View>
+
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
@@ -565,64 +526,6 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                 </Pressable>
               );
             })}
-          </Pressable>
-        </Pressable>
-      </Modal>
-      <Modal
-        animationType="fade"
-        onRequestClose={() => establecerColoresAdicionalesVisibles(false)}
-        transparent
-        visible={coloresAdicionalesVisibles}
-      >
-        <Pressable
-          accessibilityLabel="Cerrar selector de colores"
-          onPress={() => establecerColoresAdicionalesVisibles(false)}
-          style={estilos.fondoModal}
-        >
-          <Pressable onPress={() => {}} style={estilos.tarjetaModal}>
-            <View style={estilos.encabezadoModal}>
-              <Text style={estilos.tituloModal}>Más colores</Text>
-              <Pressable
-                accessibilityLabel="Cerrar"
-                accessibilityRole="button"
-                hitSlop={8}
-                onPress={() => establecerColoresAdicionalesVisibles(false)}
-                style={estilos.botonCerrarModal}
-              >
-                <Ionicons color={tema.textoPrincipal} name="close" size={22} />
-              </Pressable>
-            </View>
-            <View style={estilos.listaColoresModal}>
-              {COLORES_SELECTOR.map(({ nombre, valor }) => {
-                const seleccionado = color === valor;
-                return (
-                  <Pressable
-                    accessibilityLabel={`Color ${nombre}`}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: seleccionado }}
-                    key={valor}
-                    onPress={() => seleccionarColor(valor)}
-                    style={({ pressed }) => [
-                      estilos.opcionColorModal,
-                      pressed && estilos.elementoPresionado,
-                    ]}
-                  >
-                    <View style={[
-                      estilos.muestraColor,
-                      { backgroundColor: valor },
-                      seleccionado && estilos.muestraColorSeleccionada,
-                    ]}>
-                      {seleccionado ? (
-                        <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} />
-                      ) : null}
-                    </View>
-                    <Text style={[estilos.nombreColor, seleccionado && estilos.nombreColorSeleccionado]}>
-                      {nombre}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
           </Pressable>
         </Pressable>
       </Modal>

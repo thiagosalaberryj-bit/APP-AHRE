@@ -26,6 +26,7 @@ export const COLORES_ESTADO = Object.freeze({
 });
 
 export const COLOR_DEPOSITO_PREDETERMINADO = '#C3D1E3';
+export const COLOR_ICONO_DEPOSITO = '#263238';
 
 export const COLORES_DEPOSITOS = Object.freeze([
   '#BED5C8',
@@ -45,6 +46,21 @@ export const COLORES_GRAFICOS = Object.freeze([
   '#B7ACF6',
   '#E9AAEF',
 ]);
+
+export const COLORES_GRAFICOS_NEON = Object.freeze([
+  '#FF3D5A',
+  '#FF7A00',
+  '#FFEA00',
+  '#B6FF00',
+  '#00FF85',
+  '#00E5FF',
+  '#9D4DFF',
+  '#FF35D3',
+]);
+
+export function obtenerColoresGraficos(tema) {
+  return tema.nombre === 'oscuro' ? COLORES_GRAFICOS_NEON : COLORES_GRAFICOS;
+}
 
 export const TEMAS = Object.freeze({
   claro: Object.freeze({

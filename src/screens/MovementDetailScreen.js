@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import EncabezadoSeccion from '../components/SectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO, DEPOSITOS_SIMULADOS } from '../constants/movimientos';
-import { TEMAS } from '../styles/colors';
+import { obtenerColoresGraficos, TEMAS } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleMovimiento } from '../styles/MovementDetailScreenStyles';
 
@@ -46,9 +46,14 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   const categoriaRecibida = ruta.params?.categoria || {};
   const catalogo = movimiento.tipo === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   const categoriaCatalogo = catalogo.find((item) => item.id === movimiento.categoria);
+  const indiceCategoria = catalogo.findIndex((item) => item.id === movimiento.categoria);
+  const coloresGraficos = obtenerColoresGraficos(tema);
   const categoria = {
     ...(categoriaCatalogo || {}),
     ...categoriaRecibida,
+    color: indiceCategoria >= 0
+      ? coloresGraficos[indiceCategoria % coloresGraficos.length]
+      : categoriaRecibida.color || tema.foco,
   };
   const deposito = DEPOSITOS_SIMULADOS.find((item) => item.id === movimiento.deposito_id);
   const esAnulado = Boolean(movimiento.anulado);
