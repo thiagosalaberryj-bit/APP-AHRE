@@ -47,19 +47,19 @@ export const COLORES_GRAFICOS = Object.freeze([
   '#E9AAEF',
 ]);
 
-export const COLORES_GRAFICOS_NEON = Object.freeze([
-  '#FF3D5A',
-  '#FF7A00',
-  '#FFEA00',
-  '#B6FF00',
-  '#00FF85',
-  '#00E5FF',
-  '#9D4DFF',
-  '#FF35D3',
+export const COLORES_GRAFICOS_OSCURO = Object.freeze([
+  '#F58D8B',
+  '#F8B878',
+  '#F9D879',
+  '#BBE991',
+  '#84C889',
+  '#75B2F3',
+  '#A596F4',
+  '#E58FEF',
 ]);
 
 export function obtenerColoresGraficos(tema) {
-  return tema.nombre === 'oscuro' ? COLORES_GRAFICOS_NEON : COLORES_GRAFICOS;
+  return tema.nombre === 'oscuro' ? COLORES_GRAFICOS_OSCURO : COLORES_GRAFICOS;
 }
 
 export const TEMAS = Object.freeze({

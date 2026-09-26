@@ -32,7 +32,8 @@ documentación se registran en este archivo.
   marcada por un tick y un borde verde. El Dashboard muestra los íconos de los
   depósitos en grafito, independiente del color de cada depósito. (#9)
 - Los colores de las categorías de Estadísticas mantienen tonos pastel en el
-  tema claro y usan una paleta neón en el tema oscuro, también en sus detalles.
+  tema claro y usan una variante más saturada en el tema oscuro, también en sus
+  detalles.
 - Se actualizaron las referencias visuales de depósitos en el Dashboard y se
   retiró el selector de colores adicionales del formulario. (#9)
 - Se retiró la acción «Cancelar» del pie del formulario de ingreso; el regreso

@@ -79,16 +79,16 @@ separar su tono del color seleccionado para el depósito.
 ### Colores para gráficos
 
 La paleta de categorías utiliza tonos pastel en el tema claro y una variante
-neón en el tema oscuro para aumentar el contraste. Se reutiliza en Estadísticas,
-los selectores de categorías y sus detalles.
+ligeramente más saturada de esos tonos en el tema oscuro. Se reutiliza en
+Estadísticas, los selectores de categorías y sus detalles.
 
 ```text
 #F5B3B2  #FBCD9E  #FDE7AF  #D4EFBF
 #8EB38F  #89BCF4  #B7ACF6  #E9AAEF
 ```
 
-En modo oscuro se usan `#FF3D5A`, `#FF7A00`, `#FFEA00`, `#B6FF00`,
-`#00FF85`, `#00E5FF`, `#9D4DFF` y `#FF35D3`.
+En modo oscuro se usan `#F58D8B`, `#F8B878`, `#F9D879`, `#BBE991`,
+`#84C889`, `#75B2F3`, `#A596F4` y `#E58FEF`.
 
 Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender
 únicamente del color.
