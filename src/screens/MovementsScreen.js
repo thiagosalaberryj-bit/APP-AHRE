@@ -76,6 +76,13 @@ function formatearFechaCorta(fecha) {
 }
 
 function formatearFechaDia(fecha) {
+  const hoy = new Date();
+  const fechaNormalizada = crearFechaSinHora(fecha);
+  const hoyNormalizado = crearFechaSinHora(hoy);
+  const diferenciaDias = Math.round((hoyNormalizado - fechaNormalizada) / 86400000);
+
+  if (diferenciaDias === 0) return 'Hoy';
+  if (diferenciaDias === 1) return 'Ayer';
   return fecha.toLocaleDateString('es-AR', {
     day: 'numeric',
     month: 'long',
