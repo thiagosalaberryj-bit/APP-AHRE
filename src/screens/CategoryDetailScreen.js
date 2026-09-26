@@ -10,7 +10,7 @@ import {
   CATEGORIAS_INGRESO,
   DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
-import { COLORES_GRAFICOS, TEMAS } from '../styles/colors';
+import { obtenerColoresGraficos, TEMAS } from '../styles/colors';
 import { ESPACIADO, crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleCategoria } from '../styles/CategoryDetailScreenStyles';
 
@@ -76,10 +76,11 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   const indiceCategoria = catalogo.findIndex((item) => item.id === categoriaRecibida.id);
   const categoriaCatalogo = catalogo[indiceCategoria] || catalogo[0];
+  const coloresGraficos = obtenerColoresGraficos(tema);
   const categoria = {
     ...categoriaCatalogo,
     ...categoriaRecibida,
-    color: categoriaRecibida.color || COLORES_GRAFICOS[Math.max(0, indiceCategoria) % COLORES_GRAFICOS.length],
+    color: coloresGraficos[Math.max(0, indiceCategoria) % coloresGraficos.length],
   };
   const anio = ruta.params?.anio || new Date().getFullYear();
   const [mesSeleccionado, establecerMesSeleccionado] = useState(

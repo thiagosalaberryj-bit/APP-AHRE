@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
-import { COLORES_GRAFICOS } from '../styles/colors';
+import { obtenerColoresGraficos } from '../styles/colors';
 
 const crearFondoCategoria = (color, tema) => {
   const [rojo, verde, azul] = color.slice(1).match(/.{2}/g).map((valor) => parseInt(valor, 16));
@@ -30,6 +30,7 @@ export default function SelectorCategoria({
   const enGrilla = variante === 'grilla';
   const categoriasPrincipales = enGrilla ? categorias : categorias.slice(0, cantidadPrincipales);
   const categoriasAdicionales = enGrilla ? [] : categorias.slice(cantidadPrincipales);
+  const coloresGraficos = obtenerColoresGraficos(tema);
   const seleccionada = categorias.find((categoria) => categoria.id === seleccionadaId);
   const seleccionFueraDeVista = seleccionada
     && !categoriasPrincipales.some((categoria) => categoria.id === seleccionadaId);
@@ -55,7 +56,7 @@ export default function SelectorCategoria({
     const indiceCategoria = categorias.findIndex(
       (elemento) => elemento.id === categoria.id,
     );
-    const color = COLORES_GRAFICOS[indiceCategoria % COLORES_GRAFICOS.length];
+    const color = coloresGraficos[indiceCategoria % coloresGraficos.length];
     return (
       <Pressable
         key={categoria.id}
@@ -157,7 +158,7 @@ export default function SelectorCategoria({
                 const indiceCategoria = categorias.findIndex(
                   (elemento) => elemento.id === categoria.id,
                 );
-                const color = COLORES_GRAFICOS[indiceCategoria % COLORES_GRAFICOS.length];
+                const color = coloresGraficos[indiceCategoria % coloresGraficos.length];
                 return (
                   <Pressable
                     key={categoria.id}

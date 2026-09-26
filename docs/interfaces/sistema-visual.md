@@ -67,16 +67,28 @@ Siempre deben acompañarse con texto, signo o icono.
 Estos colores sirven para identificar visualmente un depósito y no representan
 su tipo ni su estado.
 
+`COLOR_DEPOSITO_PREDETERMINADO` usa el azul suave `#C3D1E3`, que también forma
+parte de esta paleta.
+Los íconos de depósitos usan el grafito `COLOR_ICONO_DEPOSITO` (`#263238`) para
+separar su tono del color seleccionado para el depósito.
+
 ```text
-#BED5C8  #C3D1E3  #C8C7CA  #CEC0E1  #EDB8BC  #F6DB9F
+#BED5C8  #C3D1E3  #CEC0E1  #EDB8BC  #F6DB9F
 ```
 
 ### Colores para gráficos
 
+La paleta de categorías utiliza tonos pastel en el tema claro y una variante
+ligeramente más saturada de esos tonos en el tema oscuro. Se reutiliza en
+Estadísticas, los selectores de categorías y sus detalles.
+
 ```text
-#E53935  #F57C00  #FBC02D  #8ED657
-#2E7D32  #1E88E5  #8E6BE8  #E47AD3
+#F5B3B2  #FBCD9E  #FDE7AF  #D4EFBF
+#8EB38F  #89BCF4  #B7ACF6  #E9AAEF
 ```
+
+En modo oscuro se usan `#F58D8B`, `#F8B878`, `#F9D879`, `#BBE991`,
+`#84C889`, `#75B2F3`, `#A596F4` y `#E58FEF`.
 
 Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender
 únicamente del color.

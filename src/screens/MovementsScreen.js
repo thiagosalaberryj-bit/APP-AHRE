@@ -58,6 +58,29 @@ const CATEGORIAS_FILTRO = Object.freeze([
   ...CATEGORIAS_EGRESO.filter((categoria) => !IDS_INGRESO.has(categoria.id)),
 ]);
 
+function formatearFechaDia(fecha) {
+  return fecha.toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+function agruparMovimientosPorDia(movimientos) {
+  return movimientos.reduce((grupos, movimiento) => {
+    const fecha = new Date(movimiento.fecha_hora);
+    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
+    let grupo = grupos[grupos.length - 1];
+
+    if (!grupo || grupo.clave !== clave) {
+      grupo = { clave, fecha, movimientos: [] };
+      grupos.push(grupo);
+    }
+
+    grupo.movimientos.push(movimiento);
+    return grupos;
+  }, []);
+}
+
 export default function PantallaMovimientos({ navigation: navegacion }) {
   const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
   const estilosGlobales = crearEstilosGlobales(tema);
@@ -74,6 +97,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
   const [depositoFiltroIds, establecerDepositoFiltroIds] = useState([]);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
   const [cargando, establecerCargando] = useState(true);
+  const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
 
   useEffect(() => {
     const temporizador = setTimeout(() => establecerCargando(false), 1200);
@@ -111,6 +135,10 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
       return true;
     }).slice().sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
   }, [busqueda, tipoFiltro, fechaFiltro, montoMinimo, montoMaximo, categoriaFiltroIds, depositoFiltroIds, fechaInicial, fechaFinal]);
+  const gruposMovimientos = useMemo(
+    () => agruparMovimientosPorDia(movimientosFiltrados),
+    [movimientosFiltrados],
+  );
 
   const limpiarFiltros = () => {
     establecerBusqueda('');
@@ -140,13 +168,19 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
         />
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={estilos.contenido}>
-            <View style={estilos.buscador}>
-              <Ionicons color={tema.botonPrincipal} name="search" size={22} />
+            <View style={[
+              estilosGlobales.campo,
+              estilos.buscador,
+              buscadorEnfocado ? estilosGlobales.campoEnfocado : null,
+            ]}>
+              <Ionicons color={tema.textoSecundario} name="search" size={22} />
               <TextInput
                 accessibilityLabel="Buscar movimientos"
+                onBlur={() => establecerBuscadorEnfocado(false)}
                 onChangeText={establecerBusqueda}
+                onFocus={() => establecerBuscadorEnfocado(true)}
                 placeholder="Buscar"
-                placeholderTextColor={tema.botonPrincipal}
+                placeholderTextColor={tema.textoSecundario}
                 selectionColor={tema.botonPrincipal}
                 style={estilos.entradaBuscador}
                 value={busqueda}
@@ -158,7 +192,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                   onPress={() => establecerBusqueda('')}
                   style={estilos.accionBuscador}
                 >
-                  <Ionicons color={tema.botonPrincipal} name="close-circle-outline" size={22} />
+                  <Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} />
                 </Pressable>
               ) : null}
             </View>
@@ -176,10 +210,14 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                 accessibilityLabel="Filtros"
                 accessibilityRole="button"
                 onPress={() => establecerFiltrosVisibles(true)}
-                style={estilos.botonFiltros}
+                style={({ pressed: presionado }) => [
+                  estilosGlobales.botonSecundario,
+                  estilos.botonFiltros,
+                  presionado ? { opacity: 0.85 } : null,
+                ]}
               >
-                <Ionicons color={tema.botonPrincipal} name="list" size={20} />
-                <Text style={estilos.textoBotonFiltros}>Filtros</Text>
+                <Ionicons color={tema.botonSecundarioTexto} name="list" size={20} />
+                <Text style={estilosGlobales.textoBotonSecundario}>Filtros</Text>
               </Pressable>
             </View>
 
@@ -208,14 +246,24 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
               </View>
             ) : (
               <View style={estilos.listaMovimientos}>
-                {movimientosFiltrados.map((movimiento) => (
-                  <TarjetaMovimiento
-                    key={movimiento.id}
-                    tema={tema}
-                    estilos={estilos}
-                    movimiento={movimiento}
-                    alPresionar={abrirDetalle}
-                  />
+                {gruposMovimientos.map((grupo) => (
+                  <View key={grupo.clave} style={estilos.grupoDia}>
+                    <Text accessibilityRole="header" style={estilos.tituloDia}>
+                      {formatearFechaDia(grupo.fecha)}
+                    </Text>
+                    <View style={estilos.movimientosDia}>
+                      {grupo.movimientos.map((movimiento) => (
+                        <TarjetaMovimiento
+                          key={movimiento.id}
+                          tema={tema}
+                          estilos={estilos}
+                          movimiento={movimiento}
+                          alPresionar={abrirDetalle}
+                          soloHora
+                        />
+                      ))}
+                    </View>
+                  </View>
                 ))}
               </View>
             )}

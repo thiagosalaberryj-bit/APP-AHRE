@@ -10,25 +10,31 @@ function formatearMontoLista(monto, tipo) {
   return tipo === 'ingreso' ? `+${valor}` : `-${valor}`;
 }
 
-function formatearFechaLista(fechaISO) {
+function formatearFechaLista(fechaISO, soloHora = false) {
   if (!fechaISO) return '—';
   const fecha = new Date(fechaISO);
   if (Number.isNaN(fecha.getTime())) return '—';
+  const hora = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
+  if (soloHora) return hora;
   const ahora = new Date();
   const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   const inicioFecha = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
   const dias = Math.round((inicioHoy - inicioFecha) / 86400000);
   const dia = dias === 0 ? 'Hoy' : dias === 1 ? 'Ayer' : fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
-  const hora = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
   return `${dia} · ${hora}`;
 }
 
-export default function TarjetaMovimiento({ tema, estilos, movimiento, alPresionar }) {
+export default function TarjetaMovimiento({ tema, estilos, movimiento, alPresionar, soloHora = false }) {
   const esIngreso = movimiento.tipo === 'ingreso';
   const catalogo = esIngreso ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   const categoria = catalogo.find((item) => item.id === movimiento.categoria) || {};
   const deposito = DEPOSITOS_SIMULADOS.find((item) => item.id === movimiento.deposito_id) || {};
   const colorTipo = esIngreso ? COLORES_ESTADO.ingreso : COLORES_ESTADO.egreso;
+  const nombreCategoria = categoria.nombre || movimiento.categoria;
+  const fechaMovimiento = formatearFechaLista(movimiento.fecha_hora, soloHora);
+  const metadatosMovimiento = soloHora
+    ? `${fechaMovimiento} · ${deposito.nombre || ''}`
+    : `${nombreCategoria} · ${fechaMovimiento} · ${deposito.nombre || ''}`;
 
   return (
     <Pressable
@@ -41,9 +47,27 @@ export default function TarjetaMovimiento({ tema, estilos, movimiento, alPresion
         <Ionicons color={tema.encabezado} name={categoria.icono || 'swap-horizontal-outline'} size={20} />
       </View>
       <View style={estilos.detalleMovimiento}>
-        <Text numberOfLines={1} style={estilos.nombreMovimiento}>{movimiento.descripcion}</Text>
-        <Text numberOfLines={1} style={estilos.metaMovimiento}>
-          {`${categoria.nombre || movimiento.categoria} · ${formatearFechaLista(movimiento.fecha_hora)} · ${deposito.nombre || ''}`}
+        {soloHora ? (
+          <View style={estilos.filaCategoriaDescripcion}>
+            <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.categoriaMovimiento}>
+              {nombreCategoria}
+            </Text>
+            <Text style={estilos.separadorMetadatos}>·</Text>
+            <Text
+              ellipsizeMode="tail"
+              numberOfLines={1}
+              style={[estilos.categoriaMovimiento, estilos.descripcionEnLinea]}
+            >
+              {movimiento.descripcion}
+            </Text>
+          </View>
+        ) : (
+          <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.nombreMovimiento}>
+            {movimiento.descripcion}
+          </Text>
+        )}
+        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metaMovimiento}>
+          {metadatosMovimiento}
         </Text>
         <Text style={estilos.tipoMovimiento}>{esIngreso ? 'Ingreso' : 'Egreso'}</Text>
       </View>

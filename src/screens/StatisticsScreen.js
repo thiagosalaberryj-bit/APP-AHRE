@@ -19,7 +19,7 @@ import {
   DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
-import { COLORES_GRAFICOS, TEMAS } from '../styles/colors';
+import { obtenerColoresGraficos, TEMAS } from '../styles/colors';
 import { crearEstilosGlobales, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
 
@@ -122,26 +122,14 @@ function formatearSemanaSelector(fecha) {
   return `${inicio.getDate()} ${MESES[inicio.getMonth()].corto.toLowerCase()} ${inicio.getFullYear()}–${fin.getDate()} ${MESES[fin.getMonth()].corto.toLowerCase()} ${fin.getFullYear()}`;
 }
 
-function mezclarColor(color, fondo, intensidad = 0.38) {
-  const canalesColor = color.slice(1).match(/.{2}/g).map((valor) => parseInt(valor, 16));
-  const canalesFondo = fondo.slice(1).match(/.{2}/g).map((valor) => parseInt(valor, 16));
-  const canalesSuaves = canalesColor.map((canal, indice) => (
-    Math.round(canal * intensidad + canalesFondo[indice] * (1 - intensidad))
-  ));
-
-  return `#${canalesSuaves.map((canal) => canal.toString(16).padStart(2, '0')).join('')}`;
-}
-
 function obtenerCategorias(tipoMovimiento, tema) {
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
+  const coloresGraficos = obtenerColoresGraficos(tema);
 
   return catalogo.map((categoria, indice) => ({
     ...categoria,
     indiceCategoria: indice,
-    color: mezclarColor(
-      COLORES_GRAFICOS[indice % COLORES_GRAFICOS.length],
-      tema.superficie,
-    ),
+    color: coloresGraficos[indice % coloresGraficos.length],
   }));
 }
 
