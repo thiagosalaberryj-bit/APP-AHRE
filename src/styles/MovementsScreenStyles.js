@@ -2,7 +2,9 @@ import { StyleSheet } from 'react-native';
 
 import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
 
-export function crearEstilosMovimientos(tema) {
+export function crearEstilosMovimientos(tema, anchoVentana = 390) {
+  const columnasCategoriasFiltro = anchoVentana >= 420 ? 4 : 3;
+  const anchoCategoriaFiltro = columnasCategoriasFiltro === 4 ? '22.5%' : '30%';
   const estiloTextoCategoriaDescripcion = {
     color: tema.textoPrincipal,
     fontFamily: TIPOGRAFIA.familias.principal,
@@ -23,6 +25,7 @@ export function crearEstilosMovimientos(tema) {
       gap: ESPACIADO.pequeno,
     },
     buscador: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
@@ -43,7 +46,15 @@ export function crearEstilosMovimientos(tema) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    filaFiltros: {
+    filaBusqueda: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.pequeno,
+    },
+    filtrosAplicados: {
+      gap: ESPACIADO.minimo,
+    },
+    encabezadoFiltrosAplicados: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -56,8 +67,218 @@ export function crearEstilosMovimientos(tema) {
       fontSize: TIPOGRAFIA.tamanos.secundario,
     },
     botonFiltros: {
+      height: 52,
+      minHeight: 52,
+      paddingVertical: 0,
+      justifyContent: 'center',
       flexDirection: 'row',
+      alignItems: 'center',
       gap: ESPACIADO.pequeno,
+    },
+    chipFecha: {
+      flex: 1,
+      minWidth: 58,
+      paddingHorizontal: ESPACIADO.medio,
+    },
+    textoAyudaFiltro: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+    },
+    grupoCalendarioFiltro: {
+      gap: ESPACIADO.pequeno,
+      paddingVertical: ESPACIADO.minimo,
+    },
+    seccionFiltro: {
+      backgroundColor: 'transparent',
+    },
+    encabezadoSeccionFiltro: {
+      minHeight: 50,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: ESPACIADO.pequeno,
+      borderBottomColor: tema.borde,
+      borderBottomWidth: BORDES.anchos.fino,
+      paddingHorizontal: ESPACIADO.minimo,
+    },
+    detalleEncabezadoSeccionFiltro: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.pequeno,
+    },
+    acentoSeccionFiltro: {
+      width: 3,
+      height: 30,
+      borderRadius: BORDES.radios.circular,
+    },
+    textosEncabezadoSeccionFiltro: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    tituloSeccionFiltro: {
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+    },
+    resumenSeccionFiltro: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+    },
+    contenidoSeccionFiltro: {
+      gap: ESPACIADO.pequeno,
+      paddingTop: ESPACIADO.pequeno,
+      paddingBottom: ESPACIADO.medio,
+      paddingHorizontal: ESPACIADO.minimo,
+    },
+    tarjetaCategoriaFiltro: {
+      width: anchoCategoriaFiltro,
+      minHeight: 76,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: ESPACIADO.minimo,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.campo,
+      borderWidth: BORDES.anchos.fino,
+      padding: ESPACIADO.pequeno,
+    },
+    grillaMeses: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      rowGap: ESPACIADO.pequeno,
+    },
+    opcionMes: {
+      width: '31.5%',
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.campo,
+      borderWidth: BORDES.anchos.fino,
+      paddingHorizontal: ESPACIADO.minimo,
+    },
+    opcionMesActiva: {
+      backgroundColor: tema.foco,
+      borderColor: tema.foco,
+    },
+    textoOpcionMes: {
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.medio,
+    },
+    textoOpcionMesActivo: {
+      color: tema.nombre === 'oscuro' ? tema.encabezado : tema.superficie,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+    },
+    fondoFiltros: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      paddingTop: ESPACIADO.pantalla,
+    },
+    overlayFiltros: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    },
+    fondoTactilFiltros: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+    },
+    encabezadoPanelFiltros: {
+      backgroundColor: tema.superficie,
+      borderBottomColor: tema.borde,
+      borderBottomWidth: BORDES.anchos.fino,
+      borderTopLeftRadius: BORDES.radios.tarjeta,
+      borderTopRightRadius: BORDES.radios.tarjeta,
+      paddingHorizontal: ESPACIADO.grande,
+      paddingBottom: ESPACIADO.minimo,
+    },
+    zonaManijaFiltros: {
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    encabezadoPanelContenido: {
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: ESPACIADO.pequeno,
+    },
+    manijaFiltros: {
+      width: 36,
+      height: 4,
+      backgroundColor: tema.borde,
+      borderRadius: BORDES.radios.circular,
+    },
+    panelFiltros: {
+      width: '100%',
+      maxWidth: 480,
+      maxHeight: '92%',
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderTopLeftRadius: BORDES.radios.tarjeta,
+      borderTopRightRadius: BORDES.radios.tarjeta,
+      borderTopWidth: BORDES.anchos.fino,
+      paddingTop: ESPACIADO.minimo,
+      paddingBottom: ESPACIADO.medio,
+      elevation: 12,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+    },
+    contenidoFiltrosScroll: {
+      paddingHorizontal: ESPACIADO.grande,
+      paddingTop: ESPACIADO.pequeno,
+      paddingBottom: ESPACIADO.pantalla,
+    },
+    listaSeccionesFiltro: {
+      gap: 0,
+    },
+    scrollFiltros: {
+      flexShrink: 1,
+    },
+    filaFiltrosAplicados: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: ESPACIADO.minimo,
+      paddingRight: ESPACIADO.minimo,
+    },
+    chipFiltroAplicado: {
+      alignItems: 'center',
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.boton,
+      borderWidth: BORDES.anchos.fino,
+      flexDirection: 'row',
+      flexShrink: 0,
+      gap: ESPACIADO.minimo,
+      minHeight: 40,
+      paddingHorizontal: ESPACIADO.medio,
+    },
+    textoChipFiltroAplicado: {
+      color: tema.textoPrincipal,
+      flexShrink: 1,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontWeight: TIPOGRAFIA.pesos.medio,
     },
     filaChips: {
       flexDirection: 'row',
@@ -233,6 +454,21 @@ export function crearEstilosMovimientos(tema) {
       borderWidth: BORDES.anchos.fino,
       padding: ESPACIADO.pequeno,
     },
+    listaDepositosFiltro: {
+      gap: 0,
+    },
+    accionesDepositosFiltro: {
+      flexDirection: 'row',
+      gap: ESPACIADO.grande,
+      paddingHorizontal: ESPACIADO.pequeno,
+      paddingVertical: ESPACIADO.minimo,
+    },
+    textoAccionDepositoFiltro: {
+      color: tema.foco,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+    },
     botonDeposito: {
       minHeight: 64,
       flexDirection: 'row',
@@ -310,6 +546,29 @@ export function crearEstilosMovimientos(tema) {
     opcionDepositoSeleccionada: {
       borderColor: tema.foco,
       borderWidth: BORDES.anchos.normal,
+    },
+    opcionDepositoFiltro: {
+      minHeight: 52,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.medio,
+      borderBottomColor: tema.borde,
+      borderBottomWidth: BORDES.anchos.fino,
+      paddingHorizontal: ESPACIADO.pequeno,
+      paddingVertical: ESPACIADO.pequeno,
+    },
+    iconoDepositoFiltro: {
+      width: 34,
+      height: 34,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: BORDES.radios.boton,
+    },
+    seleccionDepositoFiltro: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: ESPACIADO.minimo,
+      marginLeft: ESPACIADO.pequeno,
     },
     listaCategorias: {
       flexDirection: 'row',
@@ -411,6 +670,8 @@ export function crearEstilosMovimientos(tema) {
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
+      flexShrink: 1,
+      textAlign: 'right',
     },
     encabezadoCalendario: {
       minHeight: 48,

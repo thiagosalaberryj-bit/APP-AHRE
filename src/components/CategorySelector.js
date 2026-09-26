@@ -24,6 +24,8 @@ export default function SelectorCategoria({
   variante = 'tarjetas',
   cantidadPrincipales = 4,
   carrusel = false,
+  estiloTarjeta = null,
+  usarColorIconoComoRelleno = false,
   error,
 }) {
   const [modalVisible, establecerModalVisible] = useState(false);
@@ -57,6 +59,10 @@ export default function SelectorCategoria({
       (elemento) => elemento.id === categoria.id,
     );
     const color = coloresGraficos[indiceCategoria % coloresGraficos.length];
+    const colorFondo = usarColorIconoComoRelleno ? color : crearFondoCategoria(color, tema);
+    const colorIcono = usarColorIconoComoRelleno
+      ? (tema.nombre === 'oscuro' ? '#111111' : tema.textoPrincipal)
+      : color;
     return (
       <Pressable
         key={categoria.id}
@@ -65,19 +71,27 @@ export default function SelectorCategoria({
         accessibilityState={{ selected: activa }}
         onPress={() => seleccionarCategoria(categoria.id)}
         style={({ pressed: presionado }) => [
-          estilosMovimiento.tarjetaCategoria,
-          { backgroundColor: crearFondoCategoria(color, tema) },
+          estiloTarjeta || estilosMovimiento.tarjetaCategoria,
+          { backgroundColor: colorFondo },
           activa ? estilosMovimiento.tarjetaCategoriaSeleccionada : null,
-          { borderColor: activa ? color : tema.borde },
+          { borderColor: usarColorIconoComoRelleno
+            ? (activa ? tema.foco : color)
+            : (activa ? color : tema.borde) },
           presionado ? { opacity: 0.82 } : null,
         ]}
       >
         <Ionicons
-          color={color}
+          color={colorIcono}
           name={categoria.icono}
           size={22}
         />
-        <Text numberOfLines={1} style={estilosMovimiento.nombreCategoria}>
+        <Text
+          numberOfLines={1}
+          style={[
+            estilosMovimiento.nombreCategoria,
+            usarColorIconoComoRelleno ? { color: tema.nombre === 'oscuro' ? '#111111' : tema.textoPrincipal } : null,
+          ]}
+        >
           {categoria.nombreCorto || categoria.nombre}
         </Text>
       </Pressable>
@@ -86,7 +100,7 @@ export default function SelectorCategoria({
 
   return (
     <View style={estilosMovimiento.grupo}>
-      <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text>
+      {etiqueta ? <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text> : null}
       {carrusel ? (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={estilosMovimiento.listaCategorias}>

@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, Text, View } from 'react-native';
+import {
+  COLOR_DEPOSITO_PREDETERMINADO,
+  COLOR_ICONO_DEPOSITO,
+  COLORES_DEPOSITOS,
+} from '../styles/colors';
+
+const ESTILOS_ICONOS_DEPOSITO = Object.freeze({
+  efectivo: Object.freeze({ color: COLOR_DEPOSITO_PREDETERMINADO, icono: 'cash-outline' }),
+  'mercado-pago': Object.freeze({ color: COLORES_DEPOSITOS[1], icono: 'phone-portrait-outline' }),
+  'cuenta-bancaria': Object.freeze({ color: COLORES_DEPOSITOS[2], icono: 'business-outline' }),
+  banco: Object.freeze({ color: COLORES_DEPOSITOS[2], icono: 'business-outline' }),
+});
 
 export default function SelectorDeposito({
   tema,
@@ -26,6 +38,7 @@ export default function SelectorDeposito({
   const seleccionarDeposito = (depositoId, cerrar = true) => {
     if (seleccionMultiple) {
       const activo = seleccionadasIds.includes(depositoId);
+      if (enLinea && activo && seleccionadasIds.length === 1) return;
       alCambiarMulti(activo
         ? seleccionadasIds.filter((id) => id !== depositoId)
         : [...seleccionadasIds, depositoId]);
@@ -37,28 +50,61 @@ export default function SelectorDeposito({
 
   const mostrarOpcion = (deposito) => {
     const activo = depositoActivo(deposito.id);
+    const opcionFiltro = seleccionMultiple && enLinea;
+    const bloqueada = opcionFiltro && activo && seleccionadasIds.length === 1;
+    const estiloIconoDeposito = ESTILOS_ICONOS_DEPOSITO[deposito.id]
+      || { color: COLOR_DEPOSITO_PREDETERMINADO, icono: 'wallet-outline' };
     return (
       <Pressable
         key={deposito.id}
-        accessibilityRole="button"
-        accessibilityState={{ selected: activo }}
-        onPress={() => seleccionarDeposito(deposito.id)}
+        accessibilityRole={seleccionMultiple ? 'checkbox' : 'button'}
+        accessibilityState={seleccionMultiple
+          ? { checked: activo, disabled: bloqueada }
+          : { selected: activo }}
+        accessibilityHint={bloqueada ? 'Seleccioná otro depósito antes de quitar este.' : undefined}
+        disabled={bloqueada}
+        onPress={() => {
+          if (!bloqueada) seleccionarDeposito(deposito.id);
+        }}
         style={[
-          estilosMovimiento.opcionDeposito,
-          activo ? estilosMovimiento.opcionDepositoSeleccionada : null,
+          opcionFiltro ? estilosMovimiento.opcionDepositoFiltro : estilosMovimiento.opcionDeposito,
+          !opcionFiltro && activo ? estilosMovimiento.opcionDepositoSeleccionada : null,
         ]}
       >
-        <Ionicons
-          color={activo ? tema.foco : tema.textoSecundario}
-          name={seleccionMultiple
-            ? (activo ? 'checkbox' : 'checkbox-outline')
-            : (activo ? 'radio-button-on' : 'radio-button-off')}
-          size={20}
-        />
+        {opcionFiltro ? (
+          <View
+            style={[
+              estilosMovimiento.iconoDepositoFiltro,
+              { backgroundColor: estiloIconoDeposito.color },
+            ]}
+          >
+            <Ionicons color={COLOR_ICONO_DEPOSITO} name={estiloIconoDeposito.icono} size={20} />
+          </View>
+        ) : (
+          <Ionicons
+            color={activo ? tema.foco : tema.textoSecundario}
+            name={seleccionMultiple
+              ? (activo ? 'checkbox' : 'square-outline')
+              : (activo ? 'radio-button-on' : 'radio-button-off')}
+            size={20}
+          />
+        )}
         <View style={estilosMovimiento.textoDeposito}>
           <Text style={estilosMovimiento.nombreDeposito}>{deposito.nombre}</Text>
           <Text style={estilosMovimiento.saldoDeposito}>{deposito.saldoTexto}</Text>
         </View>
+        {opcionFiltro ? (
+          <View style={estilosMovimiento.seleccionDepositoFiltro}>
+            <Ionicons
+              color={activo ? tema.foco : tema.borde}
+              name={activo ? 'checkbox' : 'square-outline'}
+              size={22}
+            />
+            {bloqueada ? (
+              <Ionicons color={tema.textoSecundario} name="lock-closed" size={14} />
+            ) : null}
+          </View>
+        ) : null}
       </Pressable>
     );
   };
@@ -76,9 +122,20 @@ export default function SelectorDeposito({
 
   return (
     <View style={estilosMovimiento.grupo}>
-      <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text>
+      {etiqueta ? <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text> : null}
       {enLinea ? (
-        <View style={estilosMovimiento.listaDepositos}>
+        <View style={seleccionMultiple ? estilosMovimiento.listaDepositosFiltro : estilosMovimiento.listaDepositos}>
+          {seleccionMultiple ? (
+            <View style={estilosMovimiento.accionesDepositosFiltro}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Seleccionar todos los depósitos"
+                onPress={() => alCambiarMulti(depositos.map((deposito) => deposito.id))}
+              >
+                <Text style={estilosMovimiento.textoAccionDepositoFiltro}>Todos</Text>
+              </Pressable>
+            </View>
+          ) : null}
           {depositos.map((deposito) => mostrarOpcion(deposito))}
         </View>
       ) : (

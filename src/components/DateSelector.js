@@ -32,9 +32,12 @@ export default function SelectorFecha({
   valor,
   alSeleccionar,
   etiqueta = 'Fecha',
+  textoValor = null,
   enLinea = false,
   rangoInicio = null,
   rangoFin = null,
+  mantenerAbiertoAlSeleccionar = false,
+  resaltarExtremosRango = false,
 }) {
   const [modalVisible, establecerModalVisible] = useState(false);
   const [expandido, establecerExpandido] = useState(false);
@@ -45,9 +48,9 @@ export default function SelectorFecha({
     const dia = indice - primerDia + 1;
     return dia > 0 && dia <= cantidadDias ? dia : null;
   });
-  const textoFecha = isSameDay(valor, new Date())
+  const textoFecha = textoValor || (isSameDay(valor, new Date())
     ? `Hoy, ${format(valor, 'd MMM yyyy', { locale: es })}`
-    : format(valor, 'EEE d MMM yyyy', { locale: es });
+    : format(valor, 'EEE d MMM yyyy', { locale: es }));
 
   const abrirCalendario = () => {
     establecerMesVisible(new Date(valor.getFullYear(), valor.getMonth(), 1));
@@ -72,7 +75,7 @@ export default function SelectorFecha({
   const elegirFecha = (dia) => {
     alSeleccionar(new Date(mesVisible.getFullYear(), mesVisible.getMonth(), dia));
     establecerModalVisible(false);
-    establecerExpandido(false);
+    if (!mantenerAbiertoAlSeleccionar) establecerExpandido(false);
   };
 
   const elegirHoy = () => {
@@ -80,7 +83,7 @@ export default function SelectorFecha({
     alSeleccionar(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
     establecerMesVisible(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
     establecerModalVisible(false);
-    establecerExpandido(false);
+    if (!mantenerAbiertoAlSeleccionar) establecerExpandido(false);
   };
 
   const mostrarCalendario = () => (
@@ -120,13 +123,15 @@ export default function SelectorFecha({
           }
 
           const fechaDia = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), dia);
-          const seleccionada = isSameDay(fechaDia, valor);
           const esHoy = isSameDay(fechaDia, new Date());
           const inicioRango = rangoInicio ? new Date(rangoInicio.getFullYear(), rangoInicio.getMonth(), rangoInicio.getDate()) : null;
           const finRango = rangoFin ? new Date(rangoFin.getFullYear(), rangoFin.getMonth(), rangoFin.getDate()) : null;
           const minimoRango = inicioRango && finRango && inicioRango <= finRango ? inicioRango : finRango;
           const maximoRango = inicioRango && finRango && inicioRango <= finRango ? finRango : inicioRango;
           const enRango = minimoRango && maximoRango && fechaDia > minimoRango && fechaDia < maximoRango;
+          const seleccionada = resaltarExtremosRango
+            ? Boolean((inicioRango && isSameDay(fechaDia, inicioRango)) || (finRango && isSameDay(fechaDia, finRango)))
+            : isSameDay(fechaDia, valor);
 
           return (
             <View key={dia} style={estilosMovimiento.celdaCalendario}>
@@ -176,7 +181,7 @@ export default function SelectorFecha({
       >
         <Ionicons color={tema.textoPrincipal} name="calendar-outline" size={22} />
         <Text style={estilosMovimiento.etiquetaInformacion}>{etiqueta}</Text>
-        <Text style={estilosMovimiento.valorInformacion}>{textoFecha}</Text>
+        <Text numberOfLines={1} style={estilosMovimiento.valorInformacion}>{textoFecha}</Text>
         {enLinea ? (
           <Ionicons color={tema.textoSecundario} name={expandido ? 'chevron-up' : 'chevron-down'} size={20} />
         ) : null}
