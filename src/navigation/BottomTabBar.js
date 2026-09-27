@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { useContext, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { RUTAS } from '../constants/routes';
-import { COLORES_ESTADO, TEMAS } from '../styles/colors';
+import { COLORES_ESTADO } from '../styles/colors';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 
 const ACCIONES_NUEVO = Object.freeze([
@@ -15,7 +16,7 @@ const ACCIONES_NUEVO = Object.freeze([
 
 export default function BarraPestanasInferior({ state: estado, descriptors: descriptores, navigation: navegacion }) {
   const margenesSeguros = useSafeAreaInsets();
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilos = crearEstilosBarra(tema);
   const colorActivo = tema.foco;
   const colorInactivo = tema.textoSecundario;

@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { useContext, useRef, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import ContenedorAutenticacion from '../components/AuthContainer';
 import CampoAutenticacion from '../components/AuthInput';
 import MensajeError from '../components/ErrorMessage';
@@ -8,10 +9,10 @@ import CampoContrasena from '../components/PasswordInput';
 import BotonPrincipal from '../components/PrimaryButton';
 import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
-import { TEMAS } from '../styles/colors';
+
 
 export default function PantallaRegistro({ navigation: navegacion }) {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilosAutenticacion = crearEstilosAutenticacion(tema);
   const referenciaCorreo = useRef(null);

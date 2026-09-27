@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   Animated,
@@ -8,12 +8,12 @@ import {
   ScrollView,
   Text,
   TextInput,
-  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import SelectorCategoria from '../components/CategorySelector';
 import SelectorFecha from '../components/DateSelector';
 import SelectorDeposito from '../components/DepositSelector';
@@ -25,7 +25,7 @@ import {
   CATEGORIAS_INGRESO,
   DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
-import { TEMAS } from '../styles/colors';
+
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
 
@@ -138,7 +138,7 @@ function SeccionFiltro({
 
 export default function PantallaMovimientos({ navigation: navegacion }) {
   const { height: altoVentana, width: anchoVentana } = useWindowDimensions();
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosMovimientos(tema, anchoVentana);
   const abrirPantallaSecundaria = (ruta, parametros) => navegacion.getParent()?.navigate(ruta, parametros);

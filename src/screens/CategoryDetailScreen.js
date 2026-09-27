@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { useContext, useRef, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import EncabezadoSeccion from '../components/SectionHeader';
 import { RUTAS } from '../constants/routes';
 import {
@@ -10,7 +11,7 @@ import {
   CATEGORIAS_INGRESO,
   DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
-import { obtenerColoresGraficos, TEMAS } from '../styles/colors';
+import { obtenerColoresGraficos } from '../styles/colors';
 import { ESPACIADO, crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleCategoria } from '../styles/CategoryDetailScreenStyles';
 
@@ -68,7 +69,7 @@ function agruparMovimientosPorDia(movimientos) {
 }
 
 export default function PantallaDetalleCategoria({ navigation: navegacion, route: ruta }) {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleCategoria(tema);
   const categoriaRecibida = ruta.params?.categoria || {};

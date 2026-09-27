@@ -26,6 +26,11 @@ documentación se registran en este archivo.
 - Se incorporó el detalle de depósito con búsqueda y filtros locales por tipo,
   fecha, categorías y monto; los movimientos se agrupan por día y abren su
   pantalla de detalle. (#10)
+- Se añadió la pantalla de Perfil con datos de cuenta simulados, selección y
+  retiro de foto, edición de perfil y cambio de contraseña en flujos de
+  demostración. (#16)
+- Se agregaron opciones avanzadas futuras para Cuenta fantasma, Seguridad y
+  Registro, visibles como apartados próximamente. (#16)
 
 ### Cambiado
 
@@ -59,6 +64,11 @@ documentación se registran en este archivo.
 - Se ubicó el acceso a opciones del depósito arriba a la derecha y se renovaron
   los modales de opciones, edición y eliminación. La edición reutiliza los
   controles del formulario de creación sin saldo inicial. (#10)
+- El Perfil organiza sus datos en una tarjeta compacta, incluye la fecha de
+  registro y ubica Cerrar sesión al final de la pantalla. (#16)
+- La apariencia clara, oscura o del sistema se puede elegir desde Perfil y se
+  aplica en toda la aplicación durante la sesión; no se persiste al reiniciar.
+  (#16)
 
 ### Documentación
 
@@ -79,6 +89,9 @@ documentación se registran en este archivo.
   ingreso y Expo SDK `57.0.25`. (#11)
 - Se documentaron el detalle del depósito, sus filtros y la edición y
   eliminación simuladas. (#10)
+- Se actualizaron el README y las guías de Perfil, navegación, arquitectura y
+  sistema visual para describir las opciones del perfil y sus límites actuales.
+  (#16)
 
 ### Alcance pendiente
 
@@ -92,6 +105,11 @@ documentación se registran en este archivo.
   consultan SQLite. (#14)
 - La edición y eliminación de depósitos aún no guardan cambios ni ejecutan la
   operación. (#10)
+- La edición de perfil, los cambios de contraseña, el idioma, las notificaciones
+  y la foto funcionan solo como demostraciones locales; no hay autenticación ni
+  persistencia de cuenta. Cerrar sesión no revoca una sesión real. (#16)
+- Cuenta fantasma, Seguridad y Registro son apartados desactivados para una
+  implementación futura. (#16)
 
 ## [v0.2.0] - 2026-09-24 - no estable
 

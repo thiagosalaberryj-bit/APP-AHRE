@@ -106,9 +106,10 @@ corregido por el usuario antes de guardarse.
 
 ### Perfil y funciones sociales
 
-La aplicación podrá incorporar posteriormente la administración del perfil,
-salas de gastos compartidos y otras funciones relacionadas con la colaboración
-entre usuarios.
+La pantalla de Perfil presenta datos de cuenta de ejemplo, selección y retiro
+de foto, edición de datos y cambio de contraseña en flujos de demostración.
+Incluye preferencias de idioma, notificaciones y apariencia, además de apartados
+avanzados previstos para futuras funciones sociales y de cuenta.
 
 ## Estado actual
 
@@ -129,6 +130,9 @@ interfaces. Actualmente cuenta con:
 - formularios maquetados para ingresos y egresos, con monto, descripción,
   depósito, categoría, fecha, hora y recurrencia visual; ambos simulan el
   guardado sin persistir movimientos;
+- Perfil con datos de ejemplo, foto temporal, edición protegida por una
+  confirmación local de contraseña, cambio de contraseña de demostración y
+  apariencia compartida que solo se conserva durante la sesión;
 - temas claro y oscuro aplicados a las pantallas, componentes y barras del
   sistema;
 - estados visuales de los inputs y componentes de carga/error listos para
@@ -139,14 +143,15 @@ interfaces. Actualmente cuenta con:
   visuales de los Issues recientes.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. Tampoco
-se implementaron la autenticación, el registro de usuarios, las validaciones ni
-la sesión: los formularios actuales solo presentan la interfaz y el flujo
-visual. Los depósitos y movimientos del Dashboard son datos de ejemplo. La
-selección de categorías y los formularios no persisten movimientos. El
-formulario de ingreso permite representar todos sus campos y regresar mediante
-la flecha del encabezado; no tiene una acción «Cancelar» en el pie. La versión
-`0.3.0` se identifica como no estable para evaluación y no representa una
-versión comercial.
+se implementaron la autenticación ni el registro real de usuarios. Los flujos de
+edición y cambio de contraseña del Perfil son de demostración; el perfil, la foto,
+el idioma, las notificaciones y la apariencia no se persisten. Cerrar sesión solo
+cierra su modal porque aún no existe una sesión real. Los depósitos y movimientos
+del Dashboard son datos de ejemplo. La selección de categorías y los formularios
+no persisten movimientos. El formulario de ingreso permite representar todos
+sus campos y regresar mediante la flecha del encabezado; no tiene una acción
+«Cancelar» en el pie. La versión `0.3.0` se identifica como no estable para
+evaluación y no representa una versión comercial.
 
 ## Tecnología
 
@@ -166,6 +171,7 @@ APP-AHRE/
 ├── src/
 │   ├── components/         # Componentes reutilizables
 │   ├── constants/          # Valores constantes compartidos
+│   ├── contexts/           # Preferencias compartidas durante la sesión
 │   ├── database/           # Acceso y adaptadores de almacenamiento local
 │   ├── navigation/         # Navegación de la aplicación
 │   ├── screens/            # Pantallas de AHRE
@@ -191,6 +197,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
 - [Interfaz del Dashboard](docs/interfaces/dashboard.md);
+- [Interfaz del perfil](docs/interfaces/perfil.md);
 - [Interfaces de movimientos](docs/interfaces/movimientos.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);

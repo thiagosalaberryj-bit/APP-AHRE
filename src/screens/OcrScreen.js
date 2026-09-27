@@ -1,12 +1,14 @@
-import { Text, useColorScheme, View } from 'react-native';
+import { useContext } from 'react';
+import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import EncabezadoSeccion from '../components/SectionHeader';
-import { TEMAS } from '../styles/colors';
+
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
 export default function PantallaOCR({ navigation: navegacion }) {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilos = crearEstilosGlobales(tema);
 
   return (
