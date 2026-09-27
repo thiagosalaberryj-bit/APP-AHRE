@@ -1,13 +1,15 @@
-import { Button, Text, useColorScheme, View } from 'react-native';
+import { useContext } from 'react';
+import { Button, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { RUTAS } from '../constants/routes';
-import { TEMAS } from '../styles/colors';
+
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import EncabezadoPrincipal from '../components/MainHeader';
 
 export default function PantallaNuevo({ navigation: navegacion }) {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilos = crearEstilosGlobales(tema);
   const abrirPantalla = (ruta) => navegacion.getParent()?.navigate(ruta);
 

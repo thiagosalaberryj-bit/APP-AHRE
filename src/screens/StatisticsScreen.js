@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   Pressable,
   ScrollView,
   Text,
-  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -12,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import EncabezadoPrincipal from '../components/MainHeader';
 import {
   CATEGORIAS_EGRESO,
@@ -19,7 +19,7 @@ import {
   DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
-import { obtenerColoresGraficos, TEMAS } from '../styles/colors';
+import { obtenerColoresGraficos } from '../styles/colors';
 import { crearEstilosGlobales, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
 
@@ -712,7 +712,7 @@ function GraficoColumnas({
 }
 
 export default function PantallaEstadisticas({ navigation: navegacion }) {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const anchoPantalla = useWindowDimensions().width;
   const tamanoGrafico = Math.min(320, Math.max(248, anchoPantalla - 64));
   const estilosGlobales = crearEstilosGlobales(tema);

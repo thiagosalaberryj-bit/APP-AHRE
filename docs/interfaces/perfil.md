@@ -3,10 +3,10 @@
 ## Alcance
 
 Este documento registra el maquetado de la pantalla de Perfil. En esta etapa
-no hay actualización real del perfil, persistencia de idioma o tema, permisos
-de notificaciones, carga real de avatar, cierre de sesión ni comunicación con
-backend. Todos los datos son simulados y los estados solo se representan en
-pantalla.
+no hay persistencia del perfil, idioma o tema, permisos de notificaciones,
+cierre de sesión ni comunicación con backend. Los datos de cuenta son
+simulados. La selección de una foto y el tema funcionan durante la sesión, pero
+se reinician al cerrar la aplicación.
 
 ## Estructura de la pantalla
 
@@ -17,8 +17,9 @@ pantalla.
 Perfil
 │
 ├── Usuario
-│   ├── Avatar, Nombre, Correo
-│   └── Editar perfil → modal
+│   ├── Foto a la izquierda; nombre completo, correo y registro a su lado
+│   ├── Cambiar foto / Quitar foto → selector o avatar con iniciales
+│   └── Editar perfil → confirmar contraseña → modal
 │
 ├── Preferencias
 │   ├── Idioma → modal
@@ -26,10 +27,15 @@ Perfil
 │   └── Apariencia → chips
 │
 ├── Cuenta
-│   └── Cerrar sesión → confirmación
+│   └── Cambiar contraseña → modal de demostración
 │
-└── Avanzado
-    └── Acerca de AHRE → modal
+├── Ajustes avanzados
+│   ├── Restablecer apariencia → tema del dispositivo
+│   ├── Cuenta fantasma / Seguridad / Registro → próximamente
+│   └── Acerca de AHRE → modal
+
+└── Sesión
+    └── Cerrar sesión → confirmación, al final de la pantalla
 ```
 
 Se abre desde el botón de Perfil del Dashboard. La flecha del encabezado
@@ -40,25 +46,38 @@ temas claro y oscuro, incluidos modales y controles.
 
 ## Información del usuario
 
-Tarjeta superior con avatar circular (iniciales sobre
-`contenedorVerde`), nombre y correo simulados:
+Tarjeta superior en dos columnas: avatar circular a la izquierda (iniciales
+sobre `contenedorVerde` hasta seleccionar una foto) y los datos alineados a su
+lado. Nombre y correo se agrupan arriba; la fecha queda abajo a la altura de
+las acciones bajo el avatar. El nombre completo usa una sola línea, el mismo
+estilo destacado y puntos suspensivos si no entra. Correo y fecha de registro
+usan texto de apoyo más pequeño; la fecha abrevia el mes para mantenerse en
+una línea:
 
 ```text
 Thiago Salaberry
 thiago@ejemplo.com
+Miembro desde sep 2026
 ```
 
-Debajo, acción visual «Cambiar foto» sin selector real de imágenes. Al abrir
-la pantalla se muestra un skeleton de carga simulado (~1 segundo).
+«Cambiar foto» aparece debajo del avatar, abre la galería del dispositivo y
+recorta la imagen como un cuadrado. Cuando hay una foto, las acciones compactas
+«Cambiar» y «Quitar» aparecen en una misma línea para conservar el alto de la
+tarjeta. «Quitar» vuelve a mostrar las iniciales. La foto se conserva en
+memoria mientras la pantalla de Perfil está abierta; no se guarda en
+almacenamiento. Al abrir la pantalla se muestra un skeleton de carga simulado
+(~1 segundo).
 
 ## Modal de edición
 
-`Editar perfil` abre un `Modal` (no una pantalla independiente) con avatar,
-«Cambiar foto» visual, campo `Nombre`, campo `Correo electrónico` y
-acciones `Guardar cambios` (principal, con estado de guardado simulado) y
-`Cancelar`. Si el nombre está vacío al guardar, muestra «El nombre es
-obligatorio» en el campo y en `MensajeError`. Al guardar se actualiza la
-tarjeta solo en pantalla; no hay persistencia.
+`Editar perfil` abre primero un modal para ingresar la contraseña. Como la
+autenticación todavía no está conectada, el paso es local y de demostración; si
+ya se cambió la contraseña en esta sesión, compara contra ese valor temporal.
+Después abre un segundo modal (no una pantalla independiente) con los campos
+`Nombre` y `Correo electrónico`, y las acciones `Guardar cambios` (principal,
+con estado de guardado simulado) y `Cancelar`. Si el nombre está vacío al
+guardar, muestra «El nombre es obligatorio» en el campo y en `MensajeError`.
+Al guardar se actualiza la tarjeta solo en memoria.
 
 ## Preferencia de idioma
 
@@ -74,28 +93,43 @@ no pide permisos ni programa nada.
 
 ## Configuración de apariencia
 
-Fila `Apariencia` con el valor actual que abre un modal con `Modo
-sistema/Modo claro/Modo oscuro` y marca de selección. `Modo sistema` es el
-predeterminado y usa la apariencia del dispositivo. Es selección visual con
-ayuda aclaratoria: el cambio real de tema lo implementará el líder (hoy el
-tema lo define el sistema).
+Fila `Apariencia` con el valor actual que abre un modal con `Modo del
+sistema/Modo claro/Modo oscuro` y una descripción para cada opción. La
+selección cambia el tema de todas las pantallas de AHRE en el momento. `Modo
+del sistema` es el predeterminado y sigue la apariencia del dispositivo. El
+valor se conserva en memoria y vuelve a `Modo del sistema` al reiniciar la
+aplicación.
 
 ## Confirmación de cierre de sesión
 
-Fila `Cerrar sesión` en color de error, diferenciada de las configuraciones.
-Abre un modal con `¿Seguro que querés cerrar sesión?`, `Cancelar`
-(secundario) y `Cerrar sesión` (peligro). Ambas solo cierran el modal; no
-eliminan ninguna sesión.
+La fila `Cerrar sesión` aparece al final de la pantalla, separada de las
+configuraciones, con icono centrado sobre un rojo atenuado. Abre un modal con
+`¿Seguro que querés cerrar sesión?`, `Cancelar` (secundario) y `Cerrar sesión`
+(peligro). Ambas solo cierran el modal; no eliminan ninguna sesión.
+
+## Cambio de contraseña
+
+La fila `Cambiar contraseña` en `Cuenta` abre un modal con contraseña actual,
+nueva y confirmación. Comprueba que los campos estén completos y que las dos
+contraseñas nuevas coincidan. Como la autenticación no está conectada, el cambio
+es de demostración y solo se conserva durante la sesión.
 
 ## Configuración avanzada
 
-Grupo `Avanzado` con fila `Acerca de AHRE` que abre un modal estático con
-la descripción y la versión (`1.0.0`). No incluye exportar ni borrar datos:
-cualquier acción avanzada real será otro Issue.
+Grupo `Ajustes avanzados` con `Restablecer apariencia`, que vuelve al tema del
+dispositivo durante la sesión; los apartados `Cuenta fantasma`, `Seguridad` y
+`Registro` están desactivados con la etiqueta `Próximamente`; y `Acerca de AHRE`,
+que abre un modal estático con una descripción de las funciones de AHRE y la
+versión (`1.0.0`). No incluye exportar ni borrar datos: cualquier acción
+avanzada real será otro Issue.
 
 ## Estados visuales
 
 - **Cargando información:** skeleton al abrir la pantalla.
+- **Foto de perfil:** el selector del sistema permite elegir y recortar una
+  imagen; la vista previa se mantiene mientras Perfil está abierta.
+- **Confirmación de contraseña:** requiere un valor no vacío antes de mostrar
+  el editor; todavía no consulta credenciales reales.
 - **Guardando cambios:** `BotonPrincipal` con indicador y «Procesando…».
 - **Error:** borde y mensaje junto al campo de nombre y `MensajeError`
   general en el modal de edición.

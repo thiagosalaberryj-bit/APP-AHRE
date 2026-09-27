@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useContext, useCallback, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   Animated,
@@ -6,15 +6,15 @@ import {
   Image,
   PanResponder,
   Text,
-  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { RUTAS } from '../constants/routes';
-import { COLORES_MARCA, TEMAS } from '../styles/colors';
+import { COLORES_MARCA } from '../styles/colors';
 import { ESPACIADO } from '../styles/globalStyles';
 import {
   crearEstilosInicio,
@@ -24,7 +24,7 @@ import {
 const UMBRAL_INICIO = 0.82;
 
 export default function PantallaInicio({ navigation: navegacion }) {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const { width: anchoVentana, height: altoVentana } = useWindowDimensions();
   const anchoDeslizador = Math.max(0, anchoVentana - ESPACIADO.pantalla * 2);
   const recorridoDeslizador = Math.max(

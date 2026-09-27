@@ -54,6 +54,8 @@ APP-AHRE/
 │   │   └── SectionHeader.js
 │   ├── constants/
 │   │   └── routes.js
+│   ├── contexts/
+│   │   └── AppearanceContext.js
 │   ├── database/
 │   │   ├── index.js
 │   │   └── storageAdapter.js
@@ -158,6 +160,13 @@ base pueden importarse juntas.
 Contiene valores estáticos compartidos, como nombres de rutas, tipos de
 movimientos y categorías predeterminadas. Las constantes compartidas utilizan
 nombres en mayúsculas.
+
+### `src/contexts/`
+
+Contiene el estado compartido entre pantallas que debe vivir durante la sesión.
+`AppearanceContext.js` coordina la preferencia de apariencia, usa el tema del
+dispositivo en modo del sistema y ofrece los temas claro u oscuro elegidos en el
+Perfil. La preferencia no se guarda y vuelve al modo del sistema al reiniciar AHRE.
 
 ### `src/styles/`
 

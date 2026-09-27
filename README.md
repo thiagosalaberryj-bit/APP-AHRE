@@ -166,6 +166,7 @@ APP-AHRE/
 ├── src/
 │   ├── components/         # Componentes reutilizables
 │   ├── constants/          # Valores constantes compartidos
+│   ├── contexts/           # Preferencias compartidas durante la sesión
 │   ├── database/           # Acceso y adaptadores de almacenamiento local
 │   ├── navigation/         # Navegación de la aplicación
 │   ├── screens/            # Pantallas de AHRE

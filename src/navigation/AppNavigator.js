@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { useContext, useState } from 'react';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, useColorScheme, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { RUTAS } from '../constants/routes';
 import BarraPestanasInferior from './BottomTabBar';
-import { TEMAS } from '../styles/colors';
+
 import PantallaPanel from '../screens/DashboardScreen';
 import PantallaDeposito from '../screens/DepositScreen';
 import PantallaDetalleDeposito from '../screens/DepositDetailScreen';
@@ -91,14 +92,28 @@ function PestanasPrincipales() {
 }
 
 export default function NavegadorAplicacion() {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const margenesSeguros = useSafeAreaInsets();
   const [tieneBarraInferior, establecerBarraInferior] = useState(false);
   const colorZonaNavegacion = tieneBarraInferior ? tema.superficie : tema.fondo;
+  const temaNavegacionBase = tema.nombre === 'oscuro' ? DarkTheme : DefaultTheme;
+  const temaNavegacion = {
+    ...temaNavegacionBase,
+    colors: {
+      ...temaNavegacionBase.colors,
+      primary: tema.foco,
+      background: tema.fondo,
+      card: tema.superficie,
+      text: tema.textoPrincipal,
+      border: tema.borde,
+      notification: tema.error,
+    },
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: tema.fondo }}>
       <NavigationContainer
+        theme={temaNavegacion}
         onStateChange={(estadoNavegacion) => {
           establecerBarraInferior(estadoNavegacion?.routes?.[estadoNavegacion.index]?.name === RUTAS.PRINCIPAL);
         }}

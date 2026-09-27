@@ -1,23 +1,17 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import {
   Pressable,
   ScrollView,
   Text,
-  useColorScheme,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import EncabezadoPrincipal from '../components/MainHeader';
 import { RUTAS } from '../constants/routes';
-import {
-  COLOR_DEPOSITO_PREDETERMINADO,
-  COLOR_ICONO_DEPOSITO,
-  COLORES_DEPOSITOS,
-  COLORES_ESTADO,
-  TEMAS,
-} from '../styles/colors';
+import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS, COLORES_ESTADO } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDashboard } from '../styles/DashboardScreenStyles';
 
@@ -99,7 +93,7 @@ const ACCIONES_RAPIDAS = Object.freeze([
 const ESTA_CARGANDO = false;
 
 export default function PantallaPanel({ navigation: navegacion }) {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDashboard(tema);
   const [saldoVisible, establecerSaldoVisible] = useState(true);

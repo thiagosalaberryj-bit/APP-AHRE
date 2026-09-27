@@ -1,10 +1,12 @@
+import { useContext } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, Text, useColorScheme, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import EncabezadoSeccion from '../components/SectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO, DEPOSITOS_SIMULADOS } from '../constants/movimientos';
-import { obtenerColoresGraficos, TEMAS } from '../styles/colors';
+import { obtenerColoresGraficos } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleMovimiento } from '../styles/MovementDetailScreenStyles';
 
@@ -39,7 +41,7 @@ function obtenerNombreTipo(tipo) {
 }
 
 export default function PantallaDetalleMovimiento({ navigation: navegacion, route: ruta }) {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleMovimiento(tema);
   const movimiento = ruta.params?.movimiento || {};

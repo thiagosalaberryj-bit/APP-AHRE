@@ -127,11 +127,10 @@ cambian directamente desde la barra inferior.
 
 ## Controles de navegación del sistema
 
-`App.js` establece el fondo nativo con el color de fondo del tema. `app.json`
-activa `userInterfaceStyle: "automatic"` y configura `expo-navigation-bar` con
-`enforceContrast: false`. El estilo de los botones del sistema queda a cargo
-del tema automático; no se fija `style` en el plugin ni se llama a
-`NavigationBar.setStyle()` al iniciar.
+`App.js` establece el fondo nativo con el color de fondo del tema y actualiza el
+contraste de los botones del sistema en Android según la apariencia activa.
+`app.json` activa `userInterfaceStyle: "automatic"` y configura
+`expo-navigation-bar` con `enforceContrast: false`.
 
 `AppNavigator.js` observa los cambios de ruta del `NavigationContainer`. Cuando
 la ruta superior es `PRINCIPAL`, dibuja una capa visual no interactiva en el
@@ -143,14 +142,12 @@ de pantalla en las esquinas superiores redondeadas.
 Esta capa solo resuelve presentación y áreas seguras; no modifica el flujo de
 navegación ni implementa lógica de autenticación.
 
-### Error de color en la barra del sistema
+### Contraste de la barra del sistema
 
-La configuración anterior fijaba `style: "light"` en `app.json`, aunque el tema
-claro muestra fondos gris claro y blanco. Además, `App.js` llamaba a
-`NavigationBar.setStyle()` al iniciar. Estas dos órdenes competían con el tema
-automático y podían hacer que Android aplicara una apariencia distinta a la
-franja inferior. Se eliminaron ambas; `enforceContrast: false` permanece para
-evitar el velo de contraste en una compilación propia.
+La preferencia local de apariencia puede diferir del tema del dispositivo.
+`App.js` ajusta el color de los botones de navegación de Android junto con el
+tema de AHRE; `enforceContrast: false` permite que la aplicación pinte el fondo
+de esa zona.
 
 Al revisar esta zona, comprobar Inicio, Login, Registro y pantallas secundarias
 con fondo `tema.fondo`, y las cinco pestañas principales con

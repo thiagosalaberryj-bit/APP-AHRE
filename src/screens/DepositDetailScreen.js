@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   KeyboardAvoidingView,
@@ -9,13 +9,13 @@ import {
   ScrollView,
   Text,
   TextInput,
-  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import BotonPrincipal from '../components/PrimaryButton';
 import SelectorCategoria from '../components/CategorySelector';
 import SelectorFecha from '../components/DateSelector';
@@ -23,7 +23,7 @@ import TarjetaMovimiento from '../components/MovementCard';
 import EncabezadoSeccion from '../components/SectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
-import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS, TEMAS } from '../styles/colors';
+import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleDeposito } from '../styles/DepositDetailScreenStyles';
 import { crearEstilosDeposito } from '../styles/DepositScreenStyles';
@@ -162,7 +162,7 @@ function SeccionFiltro({ titulo, resumen, abierta, alAlternar, colorAcento, esti
 
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }) {
   const { height: altoVentana, width: anchoVentana } = useWindowDimensions();
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+  const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleDeposito(tema, anchoVentana);
   const estilosFormularioDeposito = crearEstilosDeposito(tema);

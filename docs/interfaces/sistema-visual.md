@@ -105,13 +105,16 @@ Los dos temas están definidos en `src/styles/colors.js` dentro de `TEMAS.claro`
 y `TEMAS.oscuro`. `crearEstilosGlobales(tema)` recibe uno de estos objetos y
 genera el `StyleSheet` correspondiente.
 
-Todas las pantallas leen el modo claro u oscuro del sistema y aplican el tema a
-fondos, texto, encabezados, controles y navegación inferior. `app.json` declara
+Todas las pantallas consumen la preferencia de apariencia compartida por AHRE.
+`Modo del sistema` sigue el modo claro u oscuro del dispositivo; `Modo claro` y
+`Modo oscuro` aplican el tema elegido a fondos, texto, encabezados, controles y
+navegación inferior. La preferencia vive en memoria y vuelve a `Modo del sistema`
+al reiniciar la aplicación. `app.json` declara
 `userInterfaceStyle: "automatic"` y define fondos de splash para ambos modos.
-`App.js` actualiza el fondo nativo. El estilo de los controles Android sigue
-el tema automático; no se fija otro estilo al inicio para evitar que compita
-con el fondo de cada pantalla. El Native Stack comparte el fondo del tema para
-evitar destellos blancos durante las transiciones.
+`App.js` actualiza el fondo nativo y el contraste de los controles Android según
+el tema activo. `AppNavigator.js` aplica los mismos colores al tema de React
+Navigation. El Native Stack comparte el fondo del tema para evitar destellos
+blancos durante las transiciones.
 
 En las rutas que muestran la barra inferior, `BottomTabBar.js` usa el fondo de
 pantalla en el exterior de las esquinas superiores redondeadas y la superficie

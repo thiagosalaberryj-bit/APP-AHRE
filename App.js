@@ -1,17 +1,21 @@
-import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { useContext, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import * as BarraNavegacion from 'expo-navigation-bar';
 import * as InterfazSistema from 'expo-system-ui';
+import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ContextoApariencia, ProveedorApariencia } from './src/contexts/AppearanceContext';
 import NavegadorAplicacion from './src/navigation/AppNavigator';
-import { TEMAS } from './src/styles/colors';
 
-export default function Aplicacion() {
-  const tema = useColorScheme() === 'dark' ? TEMAS.oscuro : TEMAS.claro;
+function ContenidoAplicacion() {
+  const { tema } = useContext(ContextoApariencia);
 
   useEffect(() => {
     InterfazSistema.setBackgroundColorAsync(tema.fondo);
+    if (Platform.OS === 'android') {
+      BarraNavegacion.setStyle(tema.nombre === 'oscuro' ? 'light' : 'dark');
+    }
   }, [tema]);
 
   return (
@@ -22,5 +26,13 @@ export default function Aplicacion() {
       />
       <NavegadorAplicacion />
     </SafeAreaProvider>
+  );
+}
+
+export default function Aplicacion() {
+  return (
+    <ProveedorApariencia>
+      <ContenidoAplicacion />
+    </ProveedorApariencia>
   );
 }
