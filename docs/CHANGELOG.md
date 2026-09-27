@@ -23,6 +23,9 @@ documentación se registran en este archivo.
   documentado. (#14)
 - Se maquetó el formulario de ingreso con monto, descripción, depósito,
   categoría, fecha, hora y recurrencia visual. (#11)
+- Se incorporó el detalle de depósito con búsqueda y filtros locales por tipo,
+  fecha, categorías y monto; los movimientos se agrupan por día y abren su
+  pantalla de detalle. (#10)
 
 ### Cambiado
 
@@ -53,6 +56,9 @@ documentación se registran en este archivo.
 - Los movimientos recientes del Dashboard adoptaron la presentación del
   historial y se agrupan por día con rótulos «Hoy», «Ayer» y fechas anteriores.
   (#13)
+- Se ubicó el acceso a opciones del depósito arriba a la derecha y se renovaron
+  los modales de opciones, edición y eliminación. La edición reutiliza los
+  controles del formulario de creación sin saldo inicial. (#10)
 
 ### Documentación
 
@@ -71,6 +77,8 @@ documentación se registran en este archivo.
 - Se actualizaron el README, la interfaz de movimientos y las versiones de
   Expo en la documentación de dependencias para reflejar el formulario de
   ingreso y Expo SDK `57.0.25`. (#11)
+- Se documentaron el detalle del depósito, sus filtros y la edición y
+  eliminación simuladas. (#10)
 
 ### Alcance pendiente
 
@@ -82,6 +90,8 @@ documentación se registran en este archivo.
   todavía no persiste los movimientos ni ejecuta recurrencias. (#11)
 - Las estadísticas y sus detalles todavía utilizan datos de muestra y no
   consultan SQLite. (#14)
+- La edición y eliminación de depósitos aún no guardan cambios ni ejecutan la
+  operación. (#10)
 
 ## [v0.2.0] - 2026-09-24 - no estable
 
