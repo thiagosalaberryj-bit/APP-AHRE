@@ -73,3 +73,63 @@ estilos globales. Los estilos propios de distribución están en
 `COLOR_DEPOSITO_PREDETERMINADO`, `COLORES_GRAFICOS` y los tokens de
 `globalStyles.js`. La paleta se mantiene legible en modo claro y
 oscuro, y el formulario respeta el área segura superior e inferior.
+
+## Detalle de un depósito
+
+`src/screens/DepositDetailScreen.js` muestra el depósito seleccionado desde el
+Dashboard. La fila entrega el objeto de depósito a la ruta existente; la
+pantalla reutiliza `SectionHeader` para volver, con el título «Detalle de
+depósito» y la descripción «Consultá el saldo y los movimientos de este
+depósito». Respeta las áreas seguras superior e inferior; la distribución propia
+de esta pantalla vive en `src/styles/DepositDetailScreenStyles.js`.
+
+La tarjeta superior presenta el ícono sobre el color del depósito, nombre,
+tipo, descripción opcional y saldo destacado. El saldo se identifica como
+perteneciente a ese depósito; no es el balance general que aparece en el
+Dashboard. Los ejemplos cubren Efectivo, Billetera virtual y Banco. Banco
+incluye el estado visual sin movimientos.
+
+Debajo del título «Movimientos» aparece una fila con el buscador y el botón
+«Filtros» a su lado. El buscador tiene lupa, placeholder «Buscar» y una acción
+para borrar el texto; solo toma el color de foco mientras está enfocado. Los
+filtros abren una hoja superpuesta con manija y cierre. Las secciones Tipo,
+Fecha, Categorías y Monto se pueden plegar y muestran un
+resumen cuando están cerradas. Tipo ofrece Todos, Ingresos y Egresos. Fecha
+ofrece Todo, Día, Mes y Rango, con calendario en línea para elegir el día o los
+extremos del rango, y una grilla de meses con navegación por año. Categorías
+usa la grilla coloreada y multiselección de Movimientos, limitada a las
+categorías presentes en el depósito y al tipo seleccionado. Monto permite
+indicar mínimo y máximo. El panel se puede cerrar con el botón, tocando fuera
+o arrastrando la manija hacia abajo.
+
+Los filtros se aplican localmente a los datos simulados. Los criterios activos
+aparecen debajo del buscador como chips que pueden quitarse; «Limpiar todo»
+restablece la búsqueda y los filtros. El rótulo muestra el número de criterios
+activos y el botón «Filtros» abre la hoja.
+El detalle no muestra un filtro de depósitos porque la lista ya está limitada
+al depósito seleccionado. No se consulta SQLite.
+
+La lista simulada reutiliza `TarjetaMovimiento` y agrupa los movimientos por
+día, con los rótulos «Hoy», «Ayer» o una fecha anterior. Cada tarjeta presenta
+categoría y descripción, hora y depósito, tipo e importe con signo, como en la
+pestaña Movimientos. Al tocar una fila se abre el detalle existente con la
+descripción del movimiento y sus datos. Los estados incluyen carga, sin
+movimientos, sin resultados de búsqueda y sin resultados por filtros.
+
+El botón de opciones del depósito, ubicado arriba a la derecha de la tarjeta,
+abre un modal que presenta directamente las acciones «Editar depósito» y
+«Eliminar depósito», sin repetir el nombre y el tipo del depósito. Editar
+presenta un modal en la misma pantalla que reutiliza la presentación y los
+controles del formulario de creación: nombre, tipo, ícono, color y descripción,
+sin saldo inicial. Los cambios del formulario son un borrador local:
+«Cancelar» los descarta y «Guardar cambios» informa que todavía no se guardan,
+conservando los datos originales.
+
+Eliminar abre una confirmación con el resumen del depósito, un aviso visual y
+las acciones «Cancelar» y «Eliminar». La confirmación no elimina el depósito y
+comunica que la operación aún no está disponible. No se implementan
+persistencia, consultas, actualización ni eliminación reales.
+
+La pantalla y sus modales usan el tema activo claro u oscuro, tokens de
+`globalStyles.js` y colores de `colors.js`. No se añade una pantalla separada
+para edición ni se modifica la navegación existente.

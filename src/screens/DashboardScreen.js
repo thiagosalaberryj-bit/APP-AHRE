@@ -52,12 +52,43 @@ const DEPOSITOS_SIMULADOS = Object.freeze([
 ]);
 
 const MOVIMIENTOS_SIMULADOS = Object.freeze([
-  { id: 'youtube-music', descripcion: 'YouTube Music', categoria: 'Suscripciones', fecha: 'Hoy', tipo: 'egreso', monto: '− $ 4.130', icono: 'arrow-up-outline' },
-  { id: 'supermercado', descripcion: 'Supermercado', categoria: 'Alimentación', fecha: 'Ayer', tipo: 'egreso', monto: '− $ 48.500', icono: 'arrow-up-outline' },
-  { id: 'sueldo', descripcion: 'Sueldo', categoria: 'Sueldo', fecha: '22 sep', tipo: 'ingreso', monto: '+ $ 1.250.000', icono: 'arrow-down-outline' },
-  { id: 'farmacia', descripcion: 'Farmacia', categoria: 'Salud', fecha: '21 sep', tipo: 'egreso', monto: '− $ 7.250', icono: 'arrow-up-outline' },
-  { id: 'venta', descripcion: 'Venta de bicicleta', categoria: 'Ventas', fecha: '20 sep', tipo: 'ingreso', monto: '+ $ 85.000', icono: 'arrow-down-outline' },
+  { id: 'youtube-music', descripcion: 'YouTube Music', categoria: 'Suscripciones', fecha_hora: '2026-09-26T09:40:00', deposito: 'Mercado Pago', tipo: 'egreso', monto: 4130, icono: 'repeat-outline' },
+  { id: 'supermercado', descripcion: 'Supermercado', categoria: 'Alimentación', fecha_hora: '2026-09-25T18:45:00', deposito: 'Mercado Pago', tipo: 'egreso', monto: 48500, icono: 'restaurant-outline' },
+  { id: 'sueldo', descripcion: 'Sueldo', categoria: 'Sueldo', fecha_hora: '2026-09-22T09:00:00', deposito: 'Efectivo', tipo: 'ingreso', monto: 1250000, icono: 'cash-outline' },
+  { id: 'farmacia', descripcion: 'Farmacia', categoria: 'Salud', fecha_hora: '2026-09-21T19:15:00', deposito: 'Cuenta bancaria', tipo: 'egreso', monto: 7250, icono: 'medkit-outline' },
+  { id: 'venta', descripcion: 'Venta de bicicleta', categoria: 'Ventas', fecha_hora: '2026-09-20T16:30:00', deposito: 'Efectivo', tipo: 'ingreso', monto: 85000, icono: 'storefront-outline' },
 ]);
+
+function formatearFechaDia(fecha) {
+  const hoy = new Date();
+  const fechaNormalizada = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+  const hoyNormalizado = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  const diferenciaDias = Math.round((hoyNormalizado - fechaNormalizada) / 86400000);
+
+  if (diferenciaDias === 0) return 'Hoy';
+  if (diferenciaDias === 1) return 'Ayer';
+  return fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
+}
+
+function formatearHora(fechaHora) {
+  return new Date(fechaHora).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function agruparMovimientosPorDia(movimientos) {
+  return movimientos.reduce((grupos, movimiento) => {
+    const fecha = new Date(movimiento.fecha_hora);
+    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
+    let grupo = grupos[grupos.length - 1];
+
+    if (!grupo || grupo.clave !== clave) {
+      grupo = { clave, fecha, movimientos: [] };
+      grupos.push(grupo);
+    }
+
+    grupo.movimientos.push(movimiento);
+    return grupos;
+  }, []);
+}
 
 const ACCIONES_RAPIDAS = Object.freeze([
   { etiqueta: 'Ingreso', icono: 'add-circle', ruta: RUTAS.INGRESO },
@@ -181,7 +212,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                     <Pressable
                       accessibilityRole="button"
                       key={deposito.id}
-                      onPress={() => abrirPantalla(RUTAS.DETALLE_DEPOSITO)}
+                      onPress={() => navegacion.getParent()?.navigate(RUTAS.DETALLE_DEPOSITO, { deposito })}
                       style={({ pressed }) => [
                         estilos.filaDeposito,
                         pressed && estilos.elementoPresionado,
@@ -241,28 +272,51 @@ export default function PantallaPanel({ navigation: navegacion }) {
                 </View>
               ) : (
                 <View style={estilos.listaMovimientos}>
-                  {MOVIMIENTOS_SIMULADOS.slice(0, 5).map((movimiento) => {
-                    const colorMovimiento = movimiento.tipo === 'ingreso'
-                      ? COLORES_ESTADO.ingreso
-                      : COLORES_ESTADO.egreso;
+                  {agruparMovimientosPorDia(MOVIMIENTOS_SIMULADOS.slice(0, 5)).map((grupo) => (
+                    <View key={grupo.clave} style={estilos.grupoDia}>
+                      <Text accessibilityRole="header" style={estilos.tituloDia}>
+                        {formatearFechaDia(grupo.fecha)}
+                      </Text>
+                      <View style={estilos.movimientosDia}>
+                        {grupo.movimientos.map((movimiento) => {
+                          const colorMovimiento = movimiento.tipo === 'ingreso'
+                            ? COLORES_ESTADO.ingreso
+                            : COLORES_ESTADO.egreso;
+                          const textoMonto = `${movimiento.tipo === 'ingreso' ? '+' : '-'}$${Math.round(movimiento.monto).toLocaleString('es-AR')}`;
 
-                    return (
-                      <View key={movimiento.id} style={estilos.filaMovimiento}>
-                        <View style={[estilos.iconoMovimiento, { backgroundColor: colorMovimiento }]}>
-                          <Ionicons color={tema.encabezado} name={movimiento.icono} size={18} />
-                        </View>
-                        <View style={estilos.detalleElemento}>
-                          <Text style={[estilosGlobales.texto, estilos.nombreElemento]}>{movimiento.descripcion}</Text>
-                          <Text style={estilosGlobales.textoAyuda}>
-                            {movimiento.categoria} · {movimiento.fecha}
-                          </Text>
-                        </View>
-                        <Text style={[estilosGlobales.etiqueta, estilos.montoMovimiento]}>
-                          {movimiento.monto}
-                        </Text>
+                          return (
+                            <View key={movimiento.id} style={estilos.filaMovimiento}>
+                              <View style={[estilos.iconoMovimiento, { backgroundColor: colorMovimiento }]}>
+                                <Ionicons color={tema.encabezado} name={movimiento.icono} size={20} />
+                              </View>
+                              <View style={estilos.detalleElemento}>
+                                <View style={estilos.filaCategoriaDescripcion}>
+                                  <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.categoriaMovimiento}>
+                                    {movimiento.categoria}
+                                  </Text>
+                                  <Text style={estilos.separadorMetadatos}>·</Text>
+                                  <Text
+                                    ellipsizeMode="tail"
+                                    numberOfLines={1}
+                                    style={[estilos.categoriaMovimiento, estilos.descripcionMovimiento]}
+                                  >
+                                    {movimiento.descripcion}
+                                  </Text>
+                                </View>
+                                <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metaMovimiento}>
+                                  {formatearHora(movimiento.fecha_hora)} · {movimiento.deposito}
+                                </Text>
+                                <Text style={estilos.tipoMovimiento}>
+                                  {movimiento.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
+                                </Text>
+                              </View>
+                              <Text style={estilos.montoMovimiento}>{textoMonto}</Text>
+                            </View>
+                          );
+                        })}
                       </View>
-                    );
-                  })}
+                    </View>
+                  ))}
                 </View>
               )}
             </View>

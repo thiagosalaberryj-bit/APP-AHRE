@@ -3,7 +3,7 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [v0.3.0] - 2026-09-25 - no publicada
+## [v0.3.0] - 2026-09-26 - no publicada
 
 ### Añadido
 
@@ -23,6 +23,9 @@ documentación se registran en este archivo.
   documentado. (#14)
 - Se maquetó el formulario de ingreso con monto, descripción, depósito,
   categoría, fecha, hora y recurrencia visual. (#11)
+- Se incorporó el detalle de depósito con búsqueda y filtros locales por tipo,
+  fecha, categorías y monto; los movimientos se agrupan por día y abren su
+  pantalla de detalle. (#10)
 
 ### Cambiado
 
@@ -47,6 +50,15 @@ documentación se registran en este archivo.
   del gráfico de columnas. (#14)
 - Se unificó el estilo y el comportamiento secundario de las pantallas de
   detalle de categoría y movimiento. (#14)
+- Se reorganizó el historial de movimientos con filas de categoría y
+  descripción, metadatos de hora y depósito, y filtros en una hoja superpuesta
+  con selección adaptable de fechas, depósitos y categorías. (#13)
+- Los movimientos recientes del Dashboard adoptaron la presentación del
+  historial y se agrupan por día con rótulos «Hoy», «Ayer» y fechas anteriores.
+  (#13)
+- Se ubicó el acceso a opciones del depósito arriba a la derecha y se renovaron
+  los modales de opciones, edición y eliminación. La edición reutiliza los
+  controles del formulario de creación sin saldo inicial. (#10)
 
 ### Documentación
 
@@ -60,9 +72,13 @@ documentación se registran en este archivo.
 - Se documentaron los controles, períodos, filtros, interacciones y el modelo
   de datos de las pantallas de Estadísticas en
   `docs/interfaces/estadisticas.md`; también se actualizó la navegación. (#14)
+- Se actualizaron las guías de Movimientos y Dashboard para describir las filas,
+  el agrupamiento por día y el comportamiento de los filtros. (#13)
 - Se actualizaron el README, la interfaz de movimientos y las versiones de
   Expo en la documentación de dependencias para reflejar el formulario de
   ingreso y Expo SDK `57.0.25`. (#11)
+- Se documentaron el detalle del depósito, sus filtros y la edición y
+  eliminación simuladas. (#10)
 
 ### Alcance pendiente
 
@@ -74,6 +90,8 @@ documentación se registran en este archivo.
   todavía no persiste los movimientos ni ejecuta recurrencias. (#11)
 - Las estadísticas y sus detalles todavía utilizan datos de muestra y no
   consultan SQLite. (#14)
+- La edición y eliminación de depósitos aún no guardan cambios ni ejecutan la
+  operación. (#10)
 
 ## [v0.2.0] - 2026-09-24 - no estable
 
