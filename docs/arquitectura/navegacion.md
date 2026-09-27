@@ -106,7 +106,9 @@ Inicio → Login → Dashboard
 Login → Registro → Login
 ```
 
-La validación de sesión y el cierre de sesión se implementarán posteriormente.
+La validación de sesión se implementará posteriormente. Perfil ofrece una
+confirmación visual para cerrar sesión, pero por ahora sus acciones solo cierran
+el modal y no existe una sesión que revocar.
 
 ## Depósitos
 
