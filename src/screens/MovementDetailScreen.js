@@ -69,11 +69,11 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   ];
 
   return (
-    <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
+    <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
         <EncabezadoSeccion
           alVolver={() => navegacion.goBack()}
-          descripcion="Consultá el depósito, la fecha y el importe."
+          descripcion="Consultá la descripción, el depósito, la fecha y el importe."
           tema={tema}
           titulo="Detalle de movimiento"
         />
