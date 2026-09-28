@@ -14,7 +14,10 @@ usuario realiza una operación
 → la interfaz muestra el resultado
 ```
 
-Este documento define la tecnología y el modelo inicial. La implementación del CRUD de cada entidad se realizará en los Issues correspondientes.
+Este documento define la tecnología y el modelo inicial. La estructura SQLite,
+las migraciones y la capa base de repositorios están descritas en
+[`implementacion.md`](implementacion.md). La lógica funcional de cada módulo
+seguirá incorporándose en sus Issues correspondientes.
 
 ## Tecnología seleccionada
 
@@ -575,4 +578,12 @@ src/database/
 Las categorías predefinidas se mantendrán en `src/constants/` porque no son
 datos almacenados en una tabla.
 
-Esta estructura se implementará gradualmente cuando se desarrollen las funcionalidades CRUD.
+La estructura inicial de repositorios se implementa en este Issue; los flujos
+completos de cada módulo se incorporarán con sus funcionalidades CRUD.
+
+## Implementación
+
+La primera versión de SQLite conserva este modelo y sus tablas. Las categorías
+continúan como catálogos constantes del código y no se almacenan en una tabla;
+la implementación y las restricciones efectivas se detallan en
+[`implementacion.md`](implementacion.md).

@@ -48,6 +48,21 @@ implementar.
   solicita autorización antes de aplicarla.
 - Conserva las convenciones documentadas de arquitectura, nombres y JavaScript.
 
+## Cambios en el esquema de la base de datos
+
+- Mientras AHRE no tenga una versión final publicada y el esquema siga en
+  desarrollo, aplica los cambios estructurales al esquema o migración inicial
+  (`001_initialSchema.js`). No agregues migraciones de transición para
+  convertir bases locales creadas por versiones anteriores de desarrollo.
+- Conserva el mecanismo de inicialización y versionado existente. Cuando el
+  esquema se estabilice para una versión publicada, las modificaciones
+  posteriores deberán usar nuevas migraciones para preservar los datos de las
+  personas usuarias al actualizar la aplicación.
+- No borres ni recrees automáticamente una base de datos existente para aplicar
+  cambios al esquema inicial. Si una base local de desarrollo necesita
+  reiniciarse, confirma primero que sus datos son descartables y que el Issue
+  autoriza ese reinicio.
+
 ## Estilos e interfaz
 
 - Reutiliza primero los tokens y estilos de `src/styles/` siempre que cubran la
