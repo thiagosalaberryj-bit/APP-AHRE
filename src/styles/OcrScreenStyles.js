@@ -99,21 +99,61 @@ export function crearEstilosOcr(tema) {
       fontSize: TIPOGRAFIA.tamanos.cuerpo,
       textAlign: 'center',
     },
-    avisoIncompleto: {
+    filaEtiqueta: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       gap: ESPACIADO.pequeno,
-      backgroundColor: tema.errorFondo,
-      borderColor: tema.foco,
-      borderRadius: BORDES.radios.campo,
+    },
+    descripcionMultilinea: {
+      minHeight: 132,
+      alignItems: 'flex-start',
+      paddingVertical: ESPACIADO.medio,
+    },
+    textoAyudaDescripcion: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+    },
+    tarjetaComprobante: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.medio,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.tarjeta,
       borderWidth: BORDES.anchos.fino,
       padding: ESPACIADO.medio,
     },
-    textoAviso: {
+    vistaPreviaComprobante: {
+      width: 56,
+      height: 72,
+      backgroundColor: tema.fondo,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.campo,
+      borderWidth: BORDES.anchos.fino,
+      overflow: 'hidden',
+    },
+    datosComprobante: {
       flex: 1,
+      minWidth: 0,
+      gap: ESPACIADO.minimo,
+    },
+    tituloComprobante: {
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+    },
+    nombreComprobante: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+    },
+    textoComprobante: {
+      color: tema.exito,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
     },
     accionSutil: {
       minHeight: 44,

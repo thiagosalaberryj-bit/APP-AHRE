@@ -1,7 +1,9 @@
 import { useContext, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -25,17 +27,17 @@ import { crearEstilosOcr } from '../styles/OcrScreenStyles';
 
 const RESULTADO_ESCANER = Object.freeze({
   monto: '24580',
-  descripcion: 'Supermercado',
-  categoriaId: 'alimentacion',
-  depositoId: 'mercado-pago',
+  descripcion: 'Leche x 2\nPan lactal\nFrutas de estación\nYogur natural',
+  categoriaId: null,
+  depositoId: null,
   hora: '18:45',
 });
 
 const RESULTADO_GALERIA = Object.freeze({
   monto: '12150',
-  descripcion: 'Ticket de compra',
+  descripcion: 'Café molido\nGalletitas\nAgua mineral',
   categoriaId: null,
-  depositoId: 'efectivo',
+  depositoId: null,
   hora: '12:30',
 });
 
@@ -52,30 +54,75 @@ export default function PantallaOCR({ navigation: navegacion }) {
   const [hora, establecerHora] = useState('18:45');
   const [categoriaId, establecerCategoriaId] = useState(null);
   const [depositoId, establecerDepositoId] = useState(null);
+  const [imagenComprobante, establecerImagenComprobante] = useState(null);
+  const [comprobanteAdjunto, establecerComprobanteAdjunto] = useState(false);
+  const [mensajeError, establecerMensajeError] = useState('');
+  const [tituloError, establecerTituloError] = useState('No pudimos leer correctamente el comprobante.');
 
-  const cargarResultado = (datos) => {
+  const cargarResultado = (datos, imagen) => {
     establecerMonto(datos.monto);
     establecerDescripcion(datos.descripcion);
     establecerFecha(new Date());
     establecerHora(datos.hora);
     establecerCategoriaId(datos.categoriaId);
     establecerDepositoId(datos.depositoId);
+    establecerImagenComprobante(imagen);
+    establecerComprobanteAdjunto(true);
   };
 
-  const iniciarProcesamiento = (origenElegido) => {
+  const iniciarProcesamiento = (origenElegido, imagen) => {
     establecerOrigen(origenElegido);
+    establecerMensajeError('');
     establecerEstado('procesando');
     setTimeout(() => {
-      cargarResultado(origenElegido === 'galeria' ? RESULTADO_GALERIA : RESULTADO_ESCANER);
+      cargarResultado(origenElegido === 'galeria' ? RESULTADO_GALERIA : RESULTADO_ESCANER, imagen);
       establecerEstado('resultado');
     }, 2000);
   };
 
-  const volverAEscanear = () => {
-    establecerEstado('camara');
+  const seleccionarComprobante = async (origenElegido) => {
+    try {
+      if (origenElegido === 'escaner') {
+        const permiso = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permiso.granted) {
+          establecerTituloError('No pudimos acceder a la cámara.');
+          establecerMensajeError('Permití el acceso a la cámara para fotografiar el comprobante.');
+          establecerEstado('error');
+          return;
+        }
+      }
+
+      const resultado = origenElegido === 'galeria'
+        ? await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: false,
+          quality: 1,
+        })
+        : await ImagePicker.launchCameraAsync({
+          mediaTypes: ['images'],
+          allowsEditing: false,
+          quality: 1,
+        });
+
+      if (resultado.canceled || !resultado.assets?.[0]) {
+        return;
+      }
+
+      const imagen = resultado.assets[0];
+      establecerImagenComprobante(imagen);
+      iniciarProcesamiento(origenElegido, imagen);
+    } catch {
+      establecerTituloError('No pudimos abrir el comprobante.');
+      establecerMensajeError('No pudimos abrir la imagen. Intentá nuevamente.');
+      establecerEstado('error');
+    }
   };
 
-  const incompleto = estado === 'resultado' && !categoriaId;
+  const volverAEscanear = () => {
+    establecerComprobanteAdjunto(false);
+    establecerImagenComprobante(null);
+    establecerEstado('camara');
+  };
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
@@ -83,7 +130,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
         <EncabezadoSeccion
           tema={tema}
           titulo="Escanear comprobante"
-          descripcion="Colocá el ticket dentro del área indicada."
+          descripcion="Tomá o elegí una foto del ticket."
           alVolver={() => navegacion.goBack()}
         />
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -98,10 +145,10 @@ export default function PantallaOCR({ navigation: navegacion }) {
                     <View style={[estilos.esquinaGuia, { right: 0, bottom: 0, borderRightWidth: 6, borderBottomWidth: 6, borderBottomRightRadius: 12 }]} />
                   </View>
                   <Ionicons color="#FFFFFF" name="receipt-outline" size={40} />
-                  <Text style={estilos.textoVisor}>La cámara se activará aquí próximamente.</Text>
+                  <Text style={estilos.textoVisor}>Asegurate de que el ticket se vea completo.</Text>
                 </View>
                 <Text style={estilos.instrucciones}>
-                  Colocá el ticket dentro del área indicada, con buena luz y sin arrugas.
+                  Usá buena luz y evitá sombras o arrugas.
                 </Text>
                 <View style={estilos.accionesEscaner}>
                   <View style={estilos.filaBotones}>
@@ -110,13 +157,13 @@ export default function PantallaOCR({ navigation: navegacion }) {
                         estilosAutenticacion={estilosMovimiento}
                         estilosGlobales={estilosGlobales}
                         titulo="Escanear"
-                        alPresionar={() => iniciarProcesamiento('escaner')}
+                        alPresionar={() => seleccionarComprobante('escaner')}
                       />
                     </View>
                     <View style={estilos.botonMitad}>
                       <Pressable
                         accessibilityRole="button"
-                        onPress={() => iniciarProcesamiento('galeria')}
+                        onPress={() => seleccionarComprobante('galeria')}
                         style={estilos.botonGaleria}
                       >
                         <Ionicons color={tema.textoPrincipal} name="image-outline" size={22} />
@@ -145,7 +192,11 @@ export default function PantallaOCR({ navigation: navegacion }) {
                 <Pressable
                   accessibilityLabel="Simular error de lectura"
                   accessibilityRole="button"
-                  onPress={() => establecerEstado('error')}
+                  onPress={() => {
+                    establecerTituloError('No pudimos leer correctamente el comprobante.');
+                    establecerMensajeError('Probá con mejor luz o cargá los datos manualmente desde Nuevo egreso.');
+                    establecerEstado('error');
+                  }}
                   style={estilos.accionSutil}
                 >
                   <Text style={estilos.textoAccionSutil}>Simular error de lectura</Text>
@@ -155,56 +206,59 @@ export default function PantallaOCR({ navigation: navegacion }) {
 
             {estado === 'resultado' ? (
               <>
-                {incompleto ? (
-                  <View style={estilos.avisoIncompleto}>
-                    <Ionicons color={tema.foco} name="alert-circle-outline" size={22} />
-                    <Text style={estilos.textoAviso}>
-                      No pudimos determinar la categoría. Elegila manualmente antes de confirmar.
-                    </Text>
-                  </View>
-                ) : null}
                 <EntradaMonto
                   tema={tema}
                   estilosGlobales={estilosGlobales}
                   estilosMovimiento={estilosMovimiento}
-                  etiqueta="Monto"
+                  etiqueta="Total del ticket"
                   valor={monto}
                   alCambiarTexto={establecerMonto}
                   alLimpiar={() => establecerMonto('')}
                 />
                 <View style={estilosMovimiento.grupo}>
-                  <Text style={estilosGlobales.etiqueta}>Descripción</Text>
-                  <View style={[estilosGlobales.campo, estilosMovimiento.filaDescripcion]}>
+                  <View style={estilos.filaEtiqueta}>
+                    <Text style={estilosGlobales.etiqueta}>Detalle de productos</Text>
+                    <Text style={estilosMovimiento.contador}>{descripcion.length}/500</Text>
+                  </View>
+                  <View style={[estilosGlobales.campo, estilosMovimiento.filaDescripcion, estilos.descripcionMultilinea]}>
                     <TextInput
-                      accessibilityLabel="Descripción detectada"
+                      accessibilityLabel="Detalle de productos del comprobante"
                       maxLength={500}
+                      multiline
                       onChangeText={establecerDescripcion}
-                      placeholder="Descripción del comprobante"
+                      placeholder="Escribí cada producto en una línea"
                       placeholderTextColor={tema.textoSecundario}
                       selectionColor={tema.foco}
                       style={estilosMovimiento.entradaDescripcion}
+                      textAlignVertical="top"
                       value={descripcion}
                     />
                   </View>
+                  <Text style={estilos.textoAyudaDescripcion}>
+                    El monto corresponde al total del ticket. Revisá o completá los productos.
+                  </Text>
                 </View>
-                <View style={estilosMovimiento.grupo}>
-                  <Text style={estilosGlobales.etiqueta}>Fecha y hora detectadas</Text>
-                  <View style={estilosMovimiento.tarjetaInformacion}>
-                    <SelectorFecha
-                      tema={tema}
-                      estilosMovimiento={estilosMovimiento}
-                      valor={fecha}
-                      alSeleccionar={establecerFecha}
+                {comprobanteAdjunto ? (
+                  <View
+                    accessibilityLabel="Comprobante adjunto al movimiento"
+                    style={estilos.tarjetaComprobante}
+                  >
+                    <Image
+                      accessibilityLabel="Vista previa del comprobante"
+                      resizeMode="cover"
+                      source={{ uri: imagenComprobante.uri }}
+                      style={estilos.vistaPreviaComprobante}
                     />
-                    <View style={estilosMovimiento.separadorInformacion} />
-                    <SelectorHora
-                      tema={tema}
-                      estilosMovimiento={estilosMovimiento}
-                      valor={hora}
-                      alSeleccionar={establecerHora}
-                    />
+                    <View style={estilos.datosComprobante}>
+                      <Text style={estilos.tituloComprobante}>Comprobante adjunto</Text>
+                      <Text numberOfLines={1} style={estilos.nombreComprobante}>
+                        {imagenComprobante.fileName || 'comprobante.jpg'}
+                      </Text>
+                      <Text style={estilos.textoComprobante}>Adjunto a este movimiento.</Text>
+                    </View>
+                    <Ionicons color={tema.exito} name="checkmark-circle" size={22} />
                   </View>
-                </View>
+                ) : null}
                 <SelectorCategoria
                   tema={tema}
                   estilosGlobales={estilosGlobales}
@@ -221,8 +275,26 @@ export default function PantallaOCR({ navigation: navegacion }) {
                   seleccionadoId={depositoId}
                   alSeleccionar={establecerDepositoId}
                 />
+                <View style={estilosMovimiento.grupo}>
+                  <Text style={estilosGlobales.etiqueta}>Fecha y hora</Text>
+                  <View style={estilosMovimiento.tarjetaInformacion}>
+                    <SelectorFecha
+                      tema={tema}
+                      estilosMovimiento={estilosMovimiento}
+                      valor={fecha}
+                      alSeleccionar={establecerFecha}
+                    />
+                    <View style={estilosMovimiento.separadorInformacion} />
+                    <SelectorHora
+                      tema={tema}
+                      estilosMovimiento={estilosMovimiento}
+                      valor={hora}
+                      alSeleccionar={establecerHora}
+                    />
+                  </View>
+                </View>
                 <Text style={estilosGlobales.textoAyuda}>
-                  Revisá y corregí los datos antes de confirmar. Todavía no se crea ningún egreso.
+                  Revisá los datos y confirmá el egreso. Podés completar lo que el comprobante no informa.
                 </Text>
                 <View style={estilos.accionesEscaner}>
                   <BotonPrincipal
@@ -253,15 +325,19 @@ export default function PantallaOCR({ navigation: navegacion }) {
             {estado === 'error' ? (
               <View style={estilos.tarjetaEstado}>
                 <Ionicons color={tema.error} name="alert-circle-outline" size={48} />
-                <Text style={estilos.tituloEstado}>No pudimos leer correctamente el comprobante.</Text>
+                <Text style={estilos.tituloEstado}>{tituloError}</Text>
                 <Text style={estilos.textoEstado}>
-                  Probá con mejor luz o cargá los datos manualmente desde Nuevo egreso.
+                  {mensajeError || 'Probá con mejor luz o cargá los datos manualmente desde Nuevo egreso.'}
                 </Text>
                 <BotonPrincipal
                   estilosAutenticacion={estilosMovimiento}
                   estilosGlobales={estilosGlobales}
                   titulo="Intentar nuevamente"
-                  alPresionar={() => iniciarProcesamiento(origen)}
+                  alPresionar={() => (
+                    imagenComprobante
+                      ? iniciarProcesamiento(origen, imagenComprobante)
+                      : seleccionarComprobante(origen)
+                  )}
                 />
                 <Pressable
                   accessibilityRole="button"

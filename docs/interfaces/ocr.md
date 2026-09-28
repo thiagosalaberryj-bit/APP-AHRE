@@ -2,11 +2,12 @@
 
 ## Alcance
 
-Este documento registra el maquetado del flujo de escaneo de tickets o
-comprobantes. En esta etapa no hay acceso a cámara, solicitud de permisos,
-captura real, reconocimiento de texto, interpretación del ticket, detección
-real de datos, almacenamiento del movimiento, actualización del saldo ni
-comunicación con backend. Todo es simulado y solo en pantalla.
+Este documento registra el flujo de escaneo de tickets o comprobantes. La
+cámara y la galería entregan una imagen real mediante `expo-image-picker`; su
+URI se conserva en el borrador local mientras se revisa el egreso. El
+reconocimiento y los datos extraídos continúan simulados. No se crea el
+movimiento, no se guarda la imagen de forma permanente, no se actualiza el saldo
+ni se comunica con un backend.
 
 ## Flujo de escaneo
 
@@ -16,72 +17,83 @@ estados locales en la misma pantalla:
 
 ```text
 Dashboard
-→ OCR (cámara)
-→ Escanear / Galería
+→ OCR
+→ tomar foto / Galería
 → procesando
-→ resultado (revisar, corregir, confirmar)
-→ error → Intentar nuevamente / Cancelar
+→ resultado (total, productos, comprobante, categoría, depósito, fecha y hora)
+→ confirmar egreso (visual)
 ```
 
 ## Pantalla inicial
 
-Área de cámara como placeholder oscuro con guía de esquinas en verde claro
-(según el mockup), instrucciones breves («Colocá el ticket dentro del área
-indicada, con buena luz y sin arrugas») y acciones mitad y mitad: `Escanear`
-(principal) y `Galería` (secundario con ícono). Sin botón `Cancelar` en
-cámara a pedido del líder (el regreso queda en la flecha del encabezado);
-sí hay `Cancelar` en resultado y error como exige el Issue. La guía usa
-proporciones relativas para adaptarse a distintos tamaños. El botón de
-galería es solo visual: entra al mismo flujo simulado sin abrir el selector
-del sistema ni pedir permisos (`expo-image-picker` ya instalado; su cableado
-real queda para el Issue de OCR funcional).
+Área de cámara como placeholder oscuro con guía de esquinas en verde claro,
+instrucciones («Tomá una foto clara del ticket o elegí una imagen de tu
+galería») y acciones mitad y mitad: `Escanear` (principal) y `Galería`
+(secundario con ícono). `Escanear` abre la cámara del sistema y solicita
+permiso cuando hace falta; `Galería` abre el selector del sistema. La imagen
+elegida se conserva en el borrador mientras se completa el formulario. Sin
+botón `Cancelar` en cámara (el regreso queda en la flecha del encabezado);
+sí hay `Cancelar` en resultado y error. La guía usa proporciones relativas
+para adaptarse a distintos tamaños.
 
 ## Estado procesando
 
 Tarjeta con indicador, «Analizando comprobante...» y aviso de espera, más
 `Cancelar`. Incluye un link sutil `Simular error de lectura`, solo ayuda de
-verificación para representar el error sin OCR real; se quita cuando llegue
-el reconocimiento funcional.
+verificación para representar el error sin OCR real. Los errores de permiso o
+de apertura de imagen pasan al estado de error descrito debajo.
 
-## Error de lectura
+## Error de lectura o acceso
 
-Tarjeta con ícono, «No pudimos leer correctamente el comprobante.»,
-sugerencia de reintento o carga manual, `Intentar nuevamente` (repite el
-procesamiento simulado) y `Cancelar`.
+Tarjeta con ícono y un mensaje acorde al problema: no se pudo leer el ticket,
+abrir la imagen o acceder a la cámara. Incluye una sugerencia de reintento o
+carga manual, `Intentar nuevamente` (repite el procesamiento o vuelve a abrir
+el selector) y `Cancelar`.
 
 ## Resultado del escaneo
 
-Formulario editable con los datos detectados (simulados):
+Formulario editable con los datos reconocidos (simulados), en este orden:
 
-- Monto (`EntradaMonto`, ej. `$ 24.580`), corregible con `X` para limpiar;
-- Descripción editable con contador implícito de 500;
-- Fecha y hora con `SelectorFecha` y `SelectorHora` (modales compartidos);
-- Categoría con `SelectorCategoria` (catálogo de egresos);
-- Depósito con `SelectorDeposito` (`Efectivo, Mercado Pago, Cuenta bancaria`).
+- Total del ticket (`EntradaMonto`, ej. `$ 24.580`), corregible con `X` para
+  limpiar;
+- Detalle de productos editable como texto multilínea, un producto por línea
+  y contador de 500;
+- Comprobante adjunto con vista previa de la imagen capturada o elegida;
+- Categoría con `SelectorCategoria` (catálogo de egresos), sin selección
+  inicial;
+- Depósito con `SelectorDeposito` (`Efectivo, Mercado Pago, Cuenta bancaria`),
+  sin selección inicial;
+- Fecha y hora con `SelectorFecha` y `SelectorHora` (modales compartidos), al
+  final para revisar o ajustar.
 
-Escáner lleva a un resultado completo; galería a uno **incompleto** (sin
-categoría, con aviso para elegirla manualmente). Acciones `Confirmar`
-(principal, visual, aún no crea el egreso), `Volver a escanear` y `Cancelar`.
+Escáner y galería llevan al mismo formulario. El usuario completa o confirma
+categoría, depósito, fecha y hora; no se muestra una alerta por datos que el
+OCR no pueda determinar. Acciones `Confirmar` (principal, visual, aún no crea
+el egreso), `Volver a escanear` y `Cancelar`.
 
 ## Estados visuales
 
 - **Cámara preparada:** visor + guía + instrucciones.
-- **Capturando:** el botón `Escanear` inicia el procesamiento (sin captura
-  real).
+- **Capturando:** `Escanear` abre la cámara del sistema y `Galería` abre el
+  selector de imágenes.
 - **Procesando:** indicador + mensaje + cancelación.
-- **Resultado detectado / incompleto:** formulario editable + aviso si falta
-  la categoría.
-- **Error de lectura:** mensaje + reintento + cancelación.
+- **Resultado:** total, detalle de productos, vista previa del comprobante y
+  selectores editables; los campos no detectables quedan para el usuario sin
+  alertas.
+- **Error de lectura o acceso:** mensaje + reintento + cancelación.
 
 ## Decisiones de diseño
 
 - Un solo archivo de pantalla con estados, como permite el Issue; sin
   pantallas nuevas.
-- Reutilización total: `MoneyInput, CategorySelector, DepositSelector,
+- Reutilización: `MoneyInput, CategorySelector, DepositSelector,
   DateSelector, TimeSelector, PrimaryButton, SectionHeader` sin modificarlos;
   los estilos de formulario vienen de `expenseStyles.js` (mismo lenguaje
   visual que crear un egreso) y lo propio del escáner en
   `src/styles/OcrScreenStyles.js`.
+- La imagen se mantiene en el borrador en memoria y se presenta como adjunto al
+  egreso; la persistencia del archivo y del movimiento queda pendiente de la
+  implementación funcional.
 - El tema viene de `ContextoApariencia`, como el resto de la app.
 - Sin `hover`: todo por foco, selección y texto.
 
