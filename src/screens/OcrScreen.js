@@ -253,7 +253,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
                       placeholderTextColor={tema.textoSecundario}
                       scrollEnabled
                       selectionColor={tema.foco}
-                      style={[estilosMovimiento.entradaDescripcion, estilos.descripcionCompacta]}
+                      style={estilosMovimiento.entradaDescripcion}
                       textAlignVertical="top"
                       value={descripcion}
                     />
