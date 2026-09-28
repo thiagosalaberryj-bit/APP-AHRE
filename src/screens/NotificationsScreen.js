@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import TarjetaNotificacion from '../components/NotificationCard';
@@ -14,58 +14,80 @@ const NOTIFICACIONES_SIMULADAS = Object.freeze([
   Object.freeze({
     id: 'recordatorio-gastos',
     titulo: 'Recordatorio',
-    mensaje: 'No olvides registrar tus gastos de hoy. Llevás 3 movimientos esta semana.',
-    fecha: 'Hoy · 20:00',
+    mensaje: 'No te olvides de registrar tus gastos de hoy.',
+    fechaHora: '2026-09-27T20:00:00',
     icono: 'receipt-outline',
     tipo: 'recordatorios',
   }),
   Object.freeze({
-    id: 'vencimiento-tarjeta',
-    titulo: 'Vencimiento próximo',
-    mensaje: 'El resumen de tu cuenta cierra en 3 días. Revisá tus egresos del mes.',
-    fecha: 'Ayer · 09:00',
-    icono: 'card-outline',
-    tipo: 'vencimientos',
-  }),
-  Object.freeze({
-    id: 'dinero-recibido',
-    titulo: 'Recibiste $ 11.000',
-    mensaje: 'Camila te envió dinero a Mercado Pago. Ya está disponible en tu depósito.',
-    fecha: '25/09 · 14:20',
-    icono: 'cash-outline',
-    tipo: 'movimientos',
-  }),
-  Object.freeze({
-    id: 'resumen-semanal',
-    titulo: 'Tu resumen semanal',
-    mensaje: 'Gastaste $ 48.500 esta semana: 60 % en Comida y 25 % en Transporte.',
-    fecha: '20/09 · 08:00',
-    icono: 'bar-chart-outline',
-    tipo: 'resumenes',
-  }),
-  Object.freeze({
     id: 'deuda-pendiente',
     titulo: 'Deuda pendiente',
-    mensaje: 'Juan todavía te debe $ 100 del gasto compartido del fin de semana.',
-    fecha: '18/09 · 19:30',
+    mensaje: 'Recordá que tenés una deuda pendiente de $ 100.',
+    fechaHora: '2026-09-26T09:00:00',
     icono: 'people-outline',
     tipo: 'vencimientos',
+  }),
+  Object.freeze({
+    id: 'movimientos-recurrentes',
+    titulo: 'Movimientos recurrentes',
+    mensaje: 'Tenés un ingreso recurrente de sueldo y un egreso recurrente de YouTube Music.',
+    fechaHora: '2026-09-24T09:40:00',
+    icono: 'repeat-outline',
+    tipo: 'movimientos',
   }),
 ]);
 
 const TIPOS_ALERTA = Object.freeze([
   Object.freeze({ id: 'recordatorios', nombre: 'Recordatorios de registro' }),
   Object.freeze({ id: 'vencimientos', nombre: 'Vencimientos y deudas' }),
-  Object.freeze({ id: 'movimientos', nombre: 'Movimientos recibidos' }),
+  Object.freeze({ id: 'movimientos', nombre: 'Movimientos registrados' }),
   Object.freeze({ id: 'resumenes', nombre: 'Resúmenes y novedades' }),
 ]);
 
+function crearFechaSinHora(fecha) {
+  return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+}
+
+function formatearFechaDia(fecha) {
+  const hoy = new Date();
+  const fechaNormalizada = crearFechaSinHora(fecha);
+  const hoyNormalizado = crearFechaSinHora(hoy);
+  const diferenciaDias = Math.round((hoyNormalizado - fechaNormalizada) / 86400000);
+
+  if (diferenciaDias === 0) return 'Hoy';
+  if (diferenciaDias === 1) return 'Ayer';
+  return fecha.toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+function agruparNotificacionesPorDia(notificaciones) {
+  return notificaciones
+    .slice()
+    .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))
+    .reduce((grupos, notificacion) => {
+      const fecha = new Date(notificacion.fechaHora);
+      const clave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
+      let grupo = grupos[grupos.length - 1];
+
+      if (!grupo || grupo.clave !== clave) {
+        grupo = { clave, fecha, notificaciones: [] };
+        grupos.push(grupo);
+      }
+
+      grupo.notificaciones.push(notificacion);
+      return grupos;
+    }, []);
+}
+
 export default function PantallaNotificaciones({ navigation: navegacion }) {
   const { tema } = useContext(ContextoApariencia);
+  const { bottom: insetInferior } = useSafeAreaInsets();
   const estilosGlobales = crearEstilosGlobales(tema);
-  const estilos = crearEstilosNotificaciones(tema);
+  const estilos = crearEstilosNotificaciones(tema, insetInferior);
   const [cargando, establecerCargando] = useState(true);
-  const [leidas, establecerLeidas] = useState(['dinero-recibido', 'resumen-semanal', 'deuda-pendiente']);
+  const [leidas, establecerLeidas] = useState(['deuda-pendiente']);
   const [expandidaId, establecerExpandidaId] = useState(null);
   const [ajustesVisibles, establecerAjustesVisibles] = useState(false);
   const [alertasActivas, establecerAlertasActivas] = useState(
@@ -80,6 +102,10 @@ export default function PantallaNotificaciones({ navigation: navegacion }) {
   const nuevas = useMemo(
     () => NOTIFICACIONES_SIMULADAS.filter((item) => !leidas.includes(item.id)),
     [leidas],
+  );
+  const gruposNotificaciones = useMemo(
+    () => agruparNotificacionesPorDia(NOTIFICACIONES_SIMULADAS),
+    [],
   );
 
   const alternarExpandida = (notificacion) => {
@@ -135,16 +161,25 @@ export default function PantallaNotificaciones({ navigation: navegacion }) {
               </View>
             ) : (
               <View style={estilos.listaNotificaciones}>
-                {NOTIFICACIONES_SIMULADAS.map((notificacion) => (
-                  <TarjetaNotificacion
-                    key={notificacion.id}
-                    tema={tema}
-                    estilos={estilos}
-                    notificacion={notificacion}
-                    nueva={!leidas.includes(notificacion.id)}
-                    expandida={expandidaId === notificacion.id}
-                    alPresionar={() => alternarExpandida(notificacion)}
-                  />
+                {gruposNotificaciones.map((grupo) => (
+                  <View key={grupo.clave} style={estilos.grupoDia}>
+                    <Text accessibilityRole="header" style={estilos.tituloDia}>
+                      {formatearFechaDia(grupo.fecha)}
+                    </Text>
+                    <View style={estilos.notificacionesDia}>
+                      {grupo.notificaciones.map((notificacion) => (
+                        <TarjetaNotificacion
+                          key={notificacion.id}
+                          tema={tema}
+                          estilos={estilos}
+                          notificacion={notificacion}
+                          nueva={!leidas.includes(notificacion.id)}
+                          expandida={expandidaId === notificacion.id}
+                          alPresionar={() => alternarExpandida(notificacion)}
+                        />
+                      ))}
+                    </View>
+                  </View>
                 ))}
               </View>
             )}

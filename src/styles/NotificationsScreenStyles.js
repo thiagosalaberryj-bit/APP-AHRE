@@ -2,12 +2,12 @@ import { StyleSheet } from 'react-native';
 
 import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
 
-export function crearEstilosNotificaciones(tema) {
+export function crearEstilosNotificaciones(tema, insetInferior = 0) {
   return StyleSheet.create({
     contenido: {
       gap: ESPACIADO.formulario,
       padding: ESPACIADO.pantalla,
-      paddingBottom: ESPACIADO.enorme,
+      paddingBottom: ESPACIADO.enorme + insetInferior,
       maxWidth: 480,
       width: '100%',
       alignSelf: 'center',
@@ -35,6 +35,19 @@ export function crearEstilosNotificaciones(tema) {
     },
     listaNotificaciones: {
       gap: ESPACIADO.medio,
+    },
+    grupoDia: {
+      gap: ESPACIADO.minimo,
+    },
+    tituloDia: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+      paddingHorizontal: ESPACIADO.minimo,
+    },
+    notificacionesDia: {
+      gap: ESPACIADO.pequeno,
     },
     tarjetaNotificacion: {
       flexDirection: 'row',
@@ -77,7 +90,7 @@ export function crearEstilosNotificaciones(tema) {
     tituloNuevo: {
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
-    fechaNotificacion: {
+    horaNotificacion: {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.auxiliar,

@@ -69,6 +69,9 @@ documentación se registran en este archivo.
 - La apariencia clara, oscura o del sistema se puede elegir desde Perfil y se
   aplica en toda la aplicación durante la sesión; no se persiste al reiniciar.
   (#16)
+- Se ajustaron los avisos simulados de Notificaciones a tres tarjetas y se
+  agruparon por día; el último aviso conserva espacio para mostrarse completo.
+  (#15)
 
 ### Documentación
 
@@ -92,6 +95,8 @@ documentación se registran en este archivo.
 - Se actualizaron el README y las guías de Perfil, navegación, arquitectura y
   sistema visual para describir las opciones del perfil y sus límites actuales.
   (#16)
+- Se documentaron los tres avisos simulados de Notificaciones, su agrupación
+  por día y el espacio de desplazamiento para el área segura inferior. (#15)
 
 ### Alcance pendiente
 

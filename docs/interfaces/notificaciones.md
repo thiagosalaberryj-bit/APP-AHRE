@@ -13,7 +13,8 @@ dispositivo ni navegación contextual. Todo es simulado y solo en pantalla.
 («Notificaciones») y lista desplazable. Se abre desde el botón de
 notificaciones del Dashboard; la flecha del encabezado regresa. El contenido
 limita su ancho a 480 puntos y acompaña los temas claro y oscuro, incluidos
-el modal y los controles.
+el modal y los controles. El scroll reserva espacio para el área segura inferior
+del dispositivo, de modo que la última tarjeta pueda verse completa.
 
 Encima de la lista hay una fila con el conteo visual (`2 nuevas sin leer`,
 `Estás al día`) y la rueda de ajustes que abre el modal de tipos de alerta.
@@ -24,19 +25,28 @@ Encima de la lista hay una fila con el conteo visual (`2 nuevas sin leer`,
 toda la lista:
 
 - ícono AHRE a la izquierda en contenedor verde;
-- título en negrita (nuevas) con fecha u horario a la derecha;
+- encabezado del día («Hoy», «Ayer» o fecha) fuera de las tarjetas, agrupando
+  las notificaciones más recientes primero;
+- título en negrita (nuevas) con la hora a la derecha;
 - mensaje en gris abajo (2 líneas, completo al expandir);
 - etiqueta `Nueva` en las no leídas.
+
+La hora queda dentro de cada tarjeta, mientras que el día se presenta como un
+encabezado independiente para separar los grupos, igual que en Movimientos.
 
 Datos simulados propios de AHRE (no promociones externas):
 
 ```text
-Recordatorio (Hoy · 20:00)
-Vencimiento próximo (Ayer · 09:00)
-Dinero recibido (25/09)
-Resumen semanal (20/09)
-Deuda pendiente (18/09)
+Hoy
+  Recordatorio · 20:00
+Ayer
+  Deuda pendiente · 09:00
+24 de septiembre
+  Movimientos recurrentes · 09:40
 ```
+
+La maqueta presenta tres avisos: recordatorio de gastos, deuda pendiente y
+movimientos recurrentes (ingreso y egreso).
 
 ## Diferenciación visual de estados
 
@@ -48,7 +58,7 @@ marca como leída solo en pantalla, sin persistencia.
 ## Ajustes de tipos de alerta
 
 El modal `Ajustes de notificaciones` lista `Recordatorios de registro,
-Vencimientos y deudas, Movimientos recibidos, Resúmenes y novedades` con
+Vencimientos y deudas, Movimientos registrados, Resúmenes y novedades` con
 `Conmutador` reutilizado y nota al pie. Todo visual, sin permisos ni
 programación. El badge con cantidad en el Dashboard queda como observación
 para un Issue futuro (el Issue actual lo excluye y tocaría el header

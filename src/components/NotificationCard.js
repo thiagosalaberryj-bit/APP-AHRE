@@ -1,6 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 
+function formatearHora(fechaHora) {
+  const fecha = new Date(fechaHora);
+  if (Number.isNaN(fecha.getTime())) return '—';
+  return `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
+}
+
 export default function TarjetaNotificacion({
   tema,
   estilos,
@@ -30,7 +36,7 @@ export default function TarjetaNotificacion({
           <Text style={[estilos.tituloNotificacion, nueva ? estilos.tituloNuevo : null]}>
             {notificacion.titulo}
           </Text>
-          <Text style={estilos.fechaNotificacion}>{notificacion.fecha}</Text>
+          <Text style={estilos.horaNotificacion}>{formatearHora(notificacion.fechaHora)}</Text>
         </View>
         <Text numberOfLines={expandida ? undefined : 2} style={estilos.mensajeNotificacion}>
           {notificacion.mensaje}
