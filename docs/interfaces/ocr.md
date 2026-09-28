@@ -57,8 +57,9 @@ Formulario editable con los datos reconocidos (simulados), en este orden:
 - Total del ticket (`EntradaMonto`, ej. `$ 24.580`), corregible con `X` para
   limpiar;
 - Detalle de productos editable como texto multilínea, un producto por línea
-  y contador de 500;
-- Comprobante adjunto con vista previa de la imagen capturada o elegida;
+  con cantidad, precio unitario y subtotal, y contador de 500;
+- Comprobante adjunto con vista previa completa de la imagen capturada o
+  elegida;
 - Categoría con `SelectorCategoria` (catálogo de egresos), sin selección
   inicial;
 - Depósito con `SelectorDeposito` (`Efectivo, Mercado Pago, Cuenta bancaria`),
@@ -94,6 +95,8 @@ el egreso), `Volver a escanear` y `Cancelar`.
 - La imagen se mantiene en el borrador en memoria y se presenta como adjunto al
   egreso; la persistencia del archivo y del movimiento queda pendiente de la
   implementación funcional.
+- El formulario se desplaza hasta el final, mantiene espacio para el área segura
+  inferior y evita que el teclado tape la descripción o las acciones.
 - El tema viene de `ContextoApariencia`, como el resto de la app.
 - Sin `hover`: todo por foco, selección y texto.
 

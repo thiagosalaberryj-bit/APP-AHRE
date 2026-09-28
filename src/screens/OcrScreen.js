@@ -4,13 +4,15 @@ import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
   Pressable,
+  Platform,
   ScrollView,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import SelectorCategoria from '../components/CategorySelector';
@@ -22,12 +24,17 @@ import EncabezadoSeccion from '../components/SectionHeader';
 import SelectorHora from '../components/TimeSelector';
 import { CATEGORIAS_EGRESO, DEPOSITOS_SIMULADOS } from '../constants/movimientos';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
-import { crearEstilosGlobales } from '../styles/globalStyles';
+import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
 import { crearEstilosOcr } from '../styles/OcrScreenStyles';
 
 const RESULTADO_ESCANER = Object.freeze({
   monto: '24580',
-  descripcion: 'Leche x 2\nPan lactal\nFrutas de estación\nYogur natural',
+  descripcion: [
+    'Leche — 2 × $ 1.900 = $ 3.800',
+    'Pan lactal — 1 × $ 3.500 = $ 3.500',
+    'Frutas de estación — 1 × $ 8.280 = $ 8.280',
+    'Yogur natural — 2 × $ 4.500 = $ 9.000',
+  ].join('\n'),
   categoriaId: null,
   depositoId: null,
   hora: '18:45',
@@ -35,13 +42,18 @@ const RESULTADO_ESCANER = Object.freeze({
 
 const RESULTADO_GALERIA = Object.freeze({
   monto: '12150',
-  descripcion: 'Café molido\nGalletitas\nAgua mineral',
+  descripcion: [
+    'Café molido — 1 × $ 5.150 = $ 5.150',
+    'Galletitas — 2 × $ 2.000 = $ 4.000',
+    'Agua mineral — 3 × $ 1.000 = $ 3.000',
+  ].join('\n'),
   categoriaId: null,
   depositoId: null,
   hora: '12:30',
 });
 
 export default function PantallaOCR({ navigation: navegacion }) {
+  const insets = useSafeAreaInsets();
   const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilosMovimiento = crearEstilosEgreso(tema);
@@ -133,7 +145,18 @@ export default function PantallaOCR({ navigation: navegacion }) {
           descripcion="Tomá o elegí una foto del ticket."
           alVolver={() => navegacion.goBack()}
         />
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            contentContainerStyle={[
+              estilos.contenedorDesplazamiento,
+              { paddingBottom: insets.bottom + ESPACIADO.grande },
+            ]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
           <View style={estilos.contenido}>
             {estado === 'camara' ? (
               <>
@@ -235,7 +258,8 @@ export default function PantallaOCR({ navigation: navegacion }) {
                     />
                   </View>
                   <Text style={estilos.textoAyudaDescripcion}>
-                    El monto corresponde al total del ticket. Revisá o completá los productos.
+                    Cada producto muestra cantidad, precio unitario y subtotal.
+                    Revisá que coincidan con el total.
                   </Text>
                 </View>
                 {comprobanteAdjunto ? (
@@ -245,7 +269,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
                   >
                     <Image
                       accessibilityLabel="Vista previa del comprobante"
-                      resizeMode="cover"
+                      resizeMode="contain"
                       source={{ uri: imagenComprobante.uri }}
                       style={estilos.vistaPreviaComprobante}
                     />
@@ -349,7 +373,8 @@ export default function PantallaOCR({ navigation: navegacion }) {
               </View>
             ) : null}
           </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     </SafeAreaView>
   );

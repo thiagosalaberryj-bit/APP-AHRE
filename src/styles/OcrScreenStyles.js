@@ -5,13 +5,16 @@ import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
 export function crearEstilosOcr(tema) {
   return StyleSheet.create({
     contenido: {
-      flex: 1,
+      flexGrow: 1,
       gap: ESPACIADO.formulario,
       padding: ESPACIADO.pantalla,
       paddingBottom: ESPACIADO.enorme,
       maxWidth: 480,
       width: '100%',
       alignSelf: 'center',
+    },
+    contenedorDesplazamiento: {
+      flexGrow: 1,
     },
     visor: {
       flex: 1,
@@ -106,7 +109,7 @@ export function crearEstilosOcr(tema) {
       gap: ESPACIADO.pequeno,
     },
     descripcionMultilinea: {
-      minHeight: 132,
+      minHeight: 200,
       alignItems: 'flex-start',
       paddingVertical: ESPACIADO.medio,
     },
@@ -126,8 +129,8 @@ export function crearEstilosOcr(tema) {
       padding: ESPACIADO.medio,
     },
     vistaPreviaComprobante: {
-      width: 56,
-      height: 72,
+      width: 72,
+      height: 104,
       backgroundColor: tema.fondo,
       borderColor: tema.borde,
       borderRadius: BORDES.radios.campo,
