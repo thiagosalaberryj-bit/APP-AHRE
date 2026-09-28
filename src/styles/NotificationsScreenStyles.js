@@ -1,0 +1,185 @@
+import { StyleSheet } from 'react-native';
+
+import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+
+export function crearEstilosNotificaciones(tema, insetInferior = 0) {
+  return StyleSheet.create({
+    contenido: {
+      gap: ESPACIADO.formulario,
+      padding: ESPACIADO.pantalla,
+      paddingBottom: ESPACIADO.enorme + insetInferior,
+      maxWidth: 480,
+      width: '100%',
+      alignSelf: 'center',
+    },
+    filaEncabezado: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: ESPACIADO.pequeno,
+    },
+    textoNuevas: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+    },
+    botonAjustes: {
+      width: 48,
+      height: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.boton,
+      borderWidth: BORDES.anchos.fino,
+    },
+    listaNotificaciones: {
+      gap: ESPACIADO.medio,
+    },
+    grupoDia: {
+      gap: ESPACIADO.minimo,
+    },
+    tituloDia: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+      paddingHorizontal: ESPACIADO.minimo,
+    },
+    notificacionesDia: {
+      gap: ESPACIADO.pequeno,
+    },
+    tarjetaNotificacion: {
+      flexDirection: 'row',
+      gap: ESPACIADO.medio,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.tarjeta,
+      borderWidth: BORDES.anchos.fino,
+      padding: ESPACIADO.grande,
+    },
+    tarjetaNueva: {
+      borderColor: tema.foco,
+      borderWidth: BORDES.anchos.normal,
+    },
+    iconoNotificacion: {
+      width: 52,
+      height: 52,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tema.contenedorVerde,
+      borderRadius: BORDES.radios.tarjeta,
+    },
+    contenidoNotificacion: {
+      flex: 1,
+      minWidth: 0,
+      gap: ESPACIADO.minimo,
+    },
+    filaTitulo: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: ESPACIADO.pequeno,
+    },
+    tituloNotificacion: {
+      flex: 1,
+      minWidth: 0,
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.cuerpo,
+    },
+    tituloNuevo: {
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+    },
+    horaNotificacion: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+    },
+    puntoNuevo: {
+      width: 10,
+      height: 10,
+      borderRadius: BORDES.radios.circular,
+      backgroundColor: tema.exito,
+      marginTop: ESPACIADO.minimo,
+    },
+    mensajeNotificacion: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      lineHeight: 20,
+    },
+    etiquetaNueva: {
+      alignSelf: 'flex-start',
+      color: tema.foco,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+    },
+    estadoVacio: {
+      alignItems: 'center',
+      gap: ESPACIADO.pequeno,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.tarjeta,
+      borderWidth: BORDES.anchos.fino,
+      padding: ESPACIADO.extraGrande,
+    },
+    textoEstadoVacio: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      textAlign: 'center',
+    },
+    lineaCarga: {
+      height: 16,
+      backgroundColor: tema.borde,
+      borderRadius: BORDES.radios.campo,
+    },
+    fondoSuperpuesto: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+      padding: ESPACIADO.pantalla,
+    },
+    tarjetaSuperpuesta: {
+      width: '100%',
+      maxWidth: 480,
+      gap: ESPACIADO.formulario,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.tarjeta,
+      borderWidth: BORDES.anchos.fino,
+      padding: ESPACIADO.extraGrande,
+      elevation: 8,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+    },
+    tituloModal: {
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.encabezado,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+      textAlign: 'center',
+    },
+    filaAjuste: {
+      minHeight: 56,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.medio,
+    },
+    textoAjuste: {
+      flex: 1,
+      minWidth: 0,
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.cuerpo,
+    },
+    separadorAjuste: {
+      height: BORDES.anchos.fino,
+      backgroundColor: tema.borde,
+    },
+  });
+}
