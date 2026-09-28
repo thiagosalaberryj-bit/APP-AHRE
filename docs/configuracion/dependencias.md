@@ -20,7 +20,9 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | Dependencia | Versión | Finalidad | Uso en AHRE |
 | --- | --- | --- | --- |
 | `@expo/vector-icons` | `^15.0.2` | Proporciona un conjunto de íconos compatibles con Expo y React Native. | Navegación, acciones y estados visuales de la interfaz. |
-| `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes, documentos y futuras funciones de OCR. |
+| `expo-camera` | `~57.0.5` | Muestra una vista previa de cámara dentro de la aplicación y captura fotografías. | Vista en vivo y captura de comprobantes en OCR; el obturador está debajo del visor. |
+| `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes elegidos desde la galería en OCR y documentos. |
+| `expo-image-manipulator` | `~57.0.20` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
 | `expo-constants` | `~57.0.19` | Expone información constante de la aplicación y del entorno de ejecución. | Configuración de entorno, versión de la aplicación y valores definidos en la configuración de Expo. |
 | `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Tipografía de la interfaz cuando se defina la identidad visual de AHRE. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Protección de acceso a la aplicación y operaciones sensibles. |
@@ -71,6 +73,8 @@ Dependencias administradas por Expo:
 ```bash
 npx expo install expo-image-picker expo-constants
 npx expo install expo-navigation-bar
+npx expo install expo-camera
+npx expo install expo-image-manipulator
 ```
 
 Dependencias JavaScript:
@@ -83,9 +87,18 @@ npm install react-hook-form zod @hookform/resolvers date-fns
 
 ### `expo-image-picker`
 
-La dependencia utiliza la interfaz del sistema para seleccionar una imagen o tomar una fotografía. La solicitud de permisos debe realizarse desde la funcionalidad que la necesite, por ejemplo, al cargar una imagen de perfil o un comprobante.
+La dependencia utiliza la interfaz del sistema para seleccionar una imagen o tomar una fotografía. En OCR se usa para elegir un comprobante de la galería; la captura integrada se realiza con `expo-camera`.
 
-No se incorpora `expo-camera` en esta etapa porque AHRE necesita inicialmente seleccionar imágenes o tomar fotografías desde el selector del sistema. Una cámara personalizada con vista previa, controles propios o captura continua deberá evaluarse en el issue correspondiente.
+### `expo-camera`
+
+La dependencia muestra la vista en vivo y captura la foto directamente desde el visor de OCR. Su plugin configura el permiso de cámara en iOS y Android; no se solicita acceso al micrófono ni se habilita el escaneo de códigos porque esta pantalla solo toma fotografías. Si cambia esta configuración nativa, hay que regenerar o reconstruir la aplicación para que se aplique.
+
+### `expo-image-manipulator`
+
+Al confirmar el encuadre en OCR, recorta el archivo local a la zona visible y
+guarda el resultado en la caché del dispositivo para adjuntarlo al borrador.
+Como contiene código nativo, una compilación de desarrollo existente debe
+reconstruirse para incluir esta dependencia.
 
 ### `expo-constants`
 
@@ -133,10 +146,10 @@ Estas dependencias no se instalan todavía porque dependen de decisiones funcion
 
 ## Cantidad actual
 
-El proyecto tiene actualmente **27 dependencias directas**:
+El proyecto tiene actualmente **29 dependencias directas**:
 
 - 4 dependencias que ya formaban parte del proyecto base;
-- 23 dependencias incorporadas para la estructura base y los módulos iniciales.
+- 25 dependencias incorporadas para la estructura base y los módulos iniciales.
 
 No se incluyen las dependencias de módulos futuros hasta que exista una necesidad concreta y una decisión técnica documentada.
 

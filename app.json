@@ -29,6 +29,15 @@
     },
     "plugins": [
       "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permití a AHRE acceder a la cámara para fotografiar comprobantes.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
+        }
+      ],
       "expo-sqlite",
       "expo-secure-store",
       "expo-splash-screen",
