@@ -6,7 +6,7 @@ export function crearEstilosOcr(tema) {
   return StyleSheet.create({
     contenido: {
       flexGrow: 1,
-      gap: ESPACIADO.formulario,
+      gap: ESPACIADO.medio,
       padding: ESPACIADO.pantalla,
       paddingBottom: ESPACIADO.enorme,
       maxWidth: 480,
@@ -17,8 +17,7 @@ export function crearEstilosOcr(tema) {
       flexGrow: 1,
     },
     visor: {
-      flex: 1,
-      minHeight: 480,
+      minHeight: 260,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: '#101010',
@@ -109,9 +108,15 @@ export function crearEstilosOcr(tema) {
       gap: ESPACIADO.pequeno,
     },
     descripcionMultilinea: {
-      minHeight: 200,
+      minHeight: 112,
+      maxHeight: 168,
       alignItems: 'flex-start',
-      paddingVertical: ESPACIADO.medio,
+      paddingVertical: ESPACIADO.minimo,
+    },
+    descripcionCompacta: {
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      lineHeight: 18,
+      paddingVertical: ESPACIADO.minimo,
     },
     textoAyudaDescripcion: {
       color: tema.textoSecundario,
@@ -129,8 +134,8 @@ export function crearEstilosOcr(tema) {
       padding: ESPACIADO.medio,
     },
     vistaPreviaComprobante: {
-      width: 72,
-      height: 104,
+      width: 64,
+      height: 88,
       backgroundColor: tema.fondo,
       borderColor: tema.borde,
       borderRadius: BORDES.radios.campo,

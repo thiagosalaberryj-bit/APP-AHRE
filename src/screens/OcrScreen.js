@@ -251,8 +251,9 @@ export default function PantallaOCR({ navigation: navegacion }) {
                       onChangeText={establecerDescripcion}
                       placeholder="Escribí cada producto en una línea"
                       placeholderTextColor={tema.textoSecundario}
+                      scrollEnabled
                       selectionColor={tema.foco}
-                      style={estilosMovimiento.entradaDescripcion}
+                      style={[estilosMovimiento.entradaDescripcion, estilos.descripcionCompacta]}
                       textAlignVertical="top"
                       value={descripcion}
                     />
@@ -334,13 +335,6 @@ export default function PantallaOCR({ navigation: navegacion }) {
                   >
                     <Ionicons color={tema.textoPrincipal} name="scan-outline" size={22} />
                     <Text style={estilos.textoBotonGaleria}>Volver a escanear</Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => navegacion.goBack()}
-                    style={estilosGlobales.botonSecundario}
-                  >
-                    <Text style={estilosGlobales.textoBotonSecundario}>Cancelar</Text>
                   </Pressable>
                 </View>
               </>
