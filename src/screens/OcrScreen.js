@@ -326,7 +326,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
         Math.round((imagenPendiente.height - alto) / 2 - desplazamientoRecorte.y / escalaPantalla),
       ));
       const contextoImagen = ImageManipulator.ImageManipulator.manipulate(imagenPendiente.uri);
-      contextoImagen.crop({ originX, originY, width: ancho, height: alto });
+      contextoImagen.crop({ originX: origenX, originY: origenY, width: ancho, height: alto });
       const imagenProcesada = await contextoImagen.renderAsync();
       const imagenRecortada = await imagenProcesada.saveAsync({
         compress: 0.9,
@@ -345,9 +345,16 @@ export default function PantallaOCR({ navigation: navegacion }) {
 
       establecerImagenPendiente(null);
       iniciarProcesamiento(origen, imagen);
-    } catch {
-      establecerTituloError('No pudimos ajustar la foto.');
-      establecerMensajeError('Volvé al encuadre e intentá confirmar el recorte otra vez.');
+    } catch (error) {
+      const detalleError = error instanceof Error ? error.message : String(error);
+      const requiereReconstruccion = /ExpoImageManipulator|native module|is not a function/i.test(detalleError);
+      console.error('Error al recortar el comprobante:', error);
+      establecerTituloError(requiereReconstruccion
+        ? 'Hay que actualizar la app instalada.'
+        : 'No pudimos recortar esta foto.');
+      establecerMensajeError(requiereReconstruccion
+        ? 'El recortador nativo no está incluido en esta versión instalada. Hace falta generar e instalar una compilación nueva de AHRE.'
+        : `Probá con otra foto. Detalle técnico: ${detalleError}`);
       establecerEstado('error');
     }
   };
@@ -389,28 +396,9 @@ export default function PantallaOCR({ navigation: navegacion }) {
                       style={estilos.vistaCamara}
                     />
                   ) : null}
-                  <View style={estilos.guia}>
-                    <View style={[estilos.esquinaGuia, { left: 0, top: 0, borderLeftWidth: 6, borderTopWidth: 6, borderTopLeftRadius: 12 }]} />
-                    <View style={[estilos.esquinaGuia, { right: 0, top: 0, borderRightWidth: 6, borderTopWidth: 6, borderTopRightRadius: 12 }]} />
-                    <View style={[estilos.esquinaGuia, { left: 0, bottom: 0, borderLeftWidth: 6, borderBottomWidth: 6, borderBottomLeftRadius: 12 }]} />
-                    <View style={[estilos.esquinaGuia, { right: 0, bottom: 0, borderRightWidth: 6, borderBottomWidth: 6, borderBottomRightRadius: 12 }]} />
-                  </View>
                   {mostrarVistaCamara ? (
                     camaraLista ? (
-                      <>
-                        <Text style={estilos.textoCamara}>Ubicá el ticket dentro del recuadro.</Text>
-                        <Pressable
-                          accessibilityLabel="Tomar foto del comprobante"
-                          accessibilityRole="button"
-                          accessibilityState={{ disabled: !camaraLista }}
-                          disabled={!camaraLista}
-                          onPress={capturarComprobante}
-                          style={estilos.botonCaptura}
-                        >
-                          <Ionicons color="#FFFFFF" name="camera" size={26} />
-                          <Text style={estilos.textoBotonCaptura}>Tomar foto</Text>
-                        </Pressable>
-                      </>
+                      <Text style={estilos.textoCamara}>Ubicá el ticket completo en la cámara.</Text>
                     ) : (
                       <View pointerEvents="none" style={estilos.estadoCamara}>
                         <ActivityIndicator color="#FFFFFF" size="large" />
@@ -424,6 +412,21 @@ export default function PantallaOCR({ navigation: navegacion }) {
                     </>
                   )}
                 </View>
+                {camaraActiva ? (
+                  <Pressable
+                    accessibilityLabel="Tomar foto del comprobante"
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: !camaraLista }}
+                    disabled={!camaraLista}
+                    onPress={capturarComprobante}
+                    style={[estilos.botonCaptura, !camaraLista && estilos.botonDeshabilitado]}
+                  >
+                    <Ionicons color={tema.botonPrincipalTexto} name="camera" size={26} />
+                    <Text style={estilos.textoBotonCaptura}>
+                      {camaraLista ? 'Tomar foto' : 'Preparando cámara...'}
+                    </Text>
+                  </Pressable>
+                ) : null}
                 <Text style={estilos.instrucciones}>
                   Usá buena luz y evitá sombras o arrugas.
                 </Text>

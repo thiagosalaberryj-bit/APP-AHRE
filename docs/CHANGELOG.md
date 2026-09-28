@@ -7,6 +7,12 @@ documentación se registran en este archivo.
 
 ### Añadido
 
+- Se incorporó el flujo visual de OCR con cámara en vivo, captura de fotos,
+  selección desde la galería y ajuste del encuadre antes de adjuntar el
+  comprobante al borrador del movimiento. (#17)
+- Se agregó la revisión del total del ticket y el detalle editable de productos
+  con cantidades, precios unitarios y subtotales; categoría, depósito, fecha y
+  hora quedan para completar o confirmar manualmente. (#17)
 - Se maquetó el formulario de creación de depósitos con saldo inicial, nombre,
   tipo, ícono, color y descripción. La creación continúa simulada y no persiste
   depósitos. (#9)
@@ -34,6 +40,9 @@ documentación se registran en este archivo.
 
 ### Cambiado
 
+- El botón «Tomar foto» queda debajo del visor de cámara. El usuario puede
+  mover y ampliar la imagen antes de confirmar el recorte que se adjunta; se
+  quitaron los contornos de color de los controles. (#17)
 - El saldo inicial del depósito aparece primero y comparte la presentación
   destacada del monto de ingreso; el nombre queda debajo. (#9)
 - Se asignó a los depósitos una paleta propia de cinco colores con selección
@@ -73,8 +82,16 @@ documentación se registran en este archivo.
   agruparon por día; el último aviso conserva espacio para mostrarse completo.
   (#15)
 
+### Corregido
+
+- Se corrigieron las coordenadas de origen que impedían confirmar el recorte de
+  la imagen del comprobante. (#17)
+
 ### Documentación
 
+- Se documentaron el flujo OCR y las dependencias `expo-camera` y
+  `expo-image-manipulator`; el proyecto queda registrado con 29 dependencias
+  directas. (#17)
 - Se documentaron el formulario de depósitos, su paleta y la presentación de
   sus íconos; también se actualizaron las guías de Estadísticas y del sistema
   visual. (#9)
@@ -115,6 +132,9 @@ documentación se registran en este archivo.
   persistencia de cuenta. Cerrar sesión no revoca una sesión real. (#16)
 - Cuenta fantasma, Seguridad y Registro son apartados desactivados para una
   implementación futura. (#16)
+- El reconocimiento OCR y la confirmación del egreso siguen simulados; el
+  comprobante recortado se conserva en caché y no se guarda de forma permanente
+  con el movimiento. (#17)
 
 ## [v0.2.0] - 2026-09-24 - no estable
 

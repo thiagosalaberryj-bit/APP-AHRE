@@ -27,9 +27,9 @@ Dashboard
 
 ## Pantalla inicial
 
-El visor muestra la vista previa de la cámara con una guía para encuadrar el
-ticket. `Escanear` solicita permiso y activa la cámara en ese espacio; el botón
-`Tomar foto` superpuesto toma la foto. `Galería` abre el selector del sistema.
+El visor muestra la vista previa de la cámara. `Escanear` solicita permiso y
+activa la cámara en ese espacio; el botón `Tomar foto`, ubicado debajo del
+visor, captura la imagen. `Galería` abre el selector del sistema.
 Luego se puede arrastrar la foto y usar los controles de zoom para ajustar el
 encuadre; `Usar este recorte` genera y adjunta ese recorte al borrador. `Volver
 a escanear` regresa al visor. La cámara se pausa al salir de esta pantalla, al
@@ -73,9 +73,10 @@ la acción `Cancelar` en el resultado.
 
 ## Estados visuales
 
-- **Cámara preparada:** guía e instrucciones en el visor.
-- **Vista en vivo:** imagen de la cámara y obturador dentro del visor; `Galería`
-  permite elegir otra imagen.
+- **Cámara preparada:** vista previa e instrucciones en el visor, con el
+  obturador debajo.
+- **Vista en vivo:** imagen de la cámara y botón de captura debajo del visor;
+  `Galería` permite elegir otra imagen.
 - **Ajuste de encuadre:** se arrastra la foto y se acerca o aleja con controles;
   se muestra una guía centrada y se confirma antes de generar el archivo
   recortado que queda adjunto al formulario.

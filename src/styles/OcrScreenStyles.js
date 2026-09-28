@@ -33,17 +33,6 @@ export function crearEstilosOcr(tema) {
       bottom: 0,
       left: 0,
     },
-    guia: {
-      position: 'absolute',
-      width: '62%',
-      height: '80%',
-    },
-    esquinaGuia: {
-      position: 'absolute',
-      width: 64,
-      height: 64,
-      borderColor: tema.botonPrincipal,
-    },
     textoVisor: {
       color: '#FFFFFF',
       fontFamily: TIPOGRAFIA.familias.principal,
@@ -75,9 +64,7 @@ export function crearEstilosOcr(tema) {
       padding: ESPACIADO.medio,
     },
     botonCaptura: {
-      position: 'absolute',
-      left: '50%',
-      bottom: ESPACIADO.grande,
+      alignSelf: 'center',
       minWidth: 168,
       height: 58,
       flexDirection: 'row',
@@ -85,12 +72,9 @@ export function crearEstilosOcr(tema) {
       justifyContent: 'center',
       gap: ESPACIADO.pequeno,
       backgroundColor: tema.botonPrincipal,
-      borderColor: '#FFFFFF',
       borderRadius: BORDES.radios.boton,
-      borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
-      marginLeft: -84,
-      elevation: 4,
+      elevation: 2,
     },
     textoBotonCaptura: {
       color: tema.botonPrincipalTexto,
@@ -109,9 +93,7 @@ export function crearEstilosOcr(tema) {
       width: '100%',
       position: 'relative',
       backgroundColor: '#101010',
-      borderColor: tema.borde,
       borderRadius: BORDES.radios.tarjeta,
-      borderWidth: BORDES.anchos.fino,
       overflow: 'hidden',
     },
     areaImagenRecorte: {
@@ -154,9 +136,7 @@ export function crearEstilosOcr(tema) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tema.superficie,
-      borderColor: tema.borde,
       borderRadius: BORDES.radios.circular,
-      borderWidth: BORDES.anchos.fino,
     },
     botonDeshabilitado: {
       opacity: 0.45,
@@ -210,9 +190,7 @@ export function crearEstilosOcr(tema) {
       gap: ESPACIADO.pequeno,
       marginTop: ESPACIADO.pequeno,
       backgroundColor: tema.superficie,
-      borderColor: tema.borde,
       borderRadius: BORDES.radios.boton,
-      borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
     },
     textoBotonGaleria: {
