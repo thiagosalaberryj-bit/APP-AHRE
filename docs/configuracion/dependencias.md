@@ -22,6 +22,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | `@expo/vector-icons` | `^15.0.2` | Proporciona un conjunto de íconos compatibles con Expo y React Native. | Navegación, acciones y estados visuales de la interfaz. |
 | `expo-camera` | `~57.0.5` | Muestra una vista previa de cámara dentro de la aplicación y captura fotografías. | Vista en vivo y captura de comprobantes en la pantalla OCR. |
 | `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes de OCR elegidos desde la galería y documentos. |
+| `expo-image-manipulator` | `~57.0.20` | Recorta y transforma imágenes locales en el dispositivo. | Genera el archivo del comprobante según el encuadre que el usuario ajusta en OCR. |
 | `expo-constants` | `~57.0.19` | Expone información constante de la aplicación y del entorno de ejecución. | Configuración de entorno, versión de la aplicación y valores definidos en la configuración de Expo. |
 | `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Tipografía de la interfaz cuando se defina la identidad visual de AHRE. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Protección de acceso a la aplicación y operaciones sensibles. |
@@ -73,6 +74,7 @@ Dependencias administradas por Expo:
 npx expo install expo-image-picker expo-constants
 npx expo install expo-navigation-bar
 npx expo install expo-camera
+npx expo install expo-image-manipulator
 ```
 
 Dependencias JavaScript:
@@ -90,6 +92,11 @@ La dependencia utiliza la interfaz del sistema para seleccionar una imagen o tom
 ### `expo-camera`
 
 La dependencia muestra la vista en vivo y captura la foto directamente desde el visor de OCR. Su plugin configura el permiso de cámara en iOS y Android; no se solicita acceso al micrófono ni se habilita el escaneo de códigos porque esta pantalla solo toma fotografías. Si cambia esta configuración nativa, hay que regenerar o reconstruir la aplicación para que se aplique.
+
+### `expo-image-manipulator`
+
+Al confirmar el encuadre en OCR, recorta el archivo local a la zona visible y
+guarda el resultado en la caché del dispositivo para adjuntarlo al borrador.
 
 ### `expo-constants`
 
@@ -137,10 +144,10 @@ Estas dependencias no se instalan todavía porque dependen de decisiones funcion
 
 ## Cantidad actual
 
-El proyecto tiene actualmente **28 dependencias directas**:
+El proyecto tiene actualmente **29 dependencias directas**:
 
 - 4 dependencias que ya formaban parte del proyecto base;
-- 24 dependencias incorporadas para la estructura base y los módulos iniciales.
+- 25 dependencias incorporadas para la estructura base y los módulos iniciales.
 
 No se incluyen las dependencias de módulos futuros hasta que exista una necesidad concreta y una decisión técnica documentada.
 

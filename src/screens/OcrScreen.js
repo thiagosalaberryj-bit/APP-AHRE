@@ -2,11 +2,13 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
+  PanResponder,
   Pressable,
   Platform,
   ScrollView,
@@ -54,6 +56,27 @@ const RESULTADO_GALERIA = Object.freeze({
   hora: '12:30',
 });
 
+function calcularMarcoRecorte(imagen, visor) {
+  if (!imagen?.width || !imagen?.height || !visor.width || !visor.height) {
+    return { ancho: 0, alto: 0, izquierda: 0, arriba: 0 };
+  }
+
+  const proporcion = imagen.width / imagen.height;
+  const ancho = Math.min(visor.width * 0.9, visor.height * 0.84 * proporcion);
+  const alto = ancho / proporcion;
+
+  return {
+    ancho,
+    alto,
+    izquierda: (visor.width - ancho) / 2,
+    arriba: (visor.height - alto) / 2,
+  };
+}
+
+function limitarDesplazamiento(valor, limite) {
+  return Math.max(-limite, Math.min(limite, valor));
+}
+
 export default function PantallaOCR({ navigation: navegacion }) {
   const insets = useSafeAreaInsets();
   const enfocada = useIsFocused();
@@ -67,6 +90,10 @@ export default function PantallaOCR({ navigation: navegacion }) {
   const [origen, establecerOrigen] = useState('escaner');
   const [camaraActiva, establecerCamaraActiva] = useState(false);
   const [camaraLista, establecerCamaraLista] = useState(false);
+  const [imagenPendiente, establecerImagenPendiente] = useState(null);
+  const [tamanoVisorRecorte, establecerTamanoVisorRecorte] = useState({ width: 0, height: 0 });
+  const [escalaRecorte, establecerEscalaRecorte] = useState(1);
+  const [desplazamientoRecorte, establecerDesplazamientoRecorte] = useState({ x: 0, y: 0 });
   const [monto, establecerMonto] = useState('');
   const [descripcion, establecerDescripcion] = useState('');
   const [fecha, establecerFecha] = useState(() => new Date());
@@ -77,12 +104,72 @@ export default function PantallaOCR({ navigation: navegacion }) {
   const [comprobanteAdjunto, establecerComprobanteAdjunto] = useState(false);
   const [mensajeError, establecerMensajeError] = useState('');
   const [tituloError, establecerTituloError] = useState('No pudimos leer correctamente el comprobante.');
+  const marcoRecorte = calcularMarcoRecorte(imagenPendiente, tamanoVisorRecorte);
+  const modeloRecorteRef = useRef(null);
+  const desplazamientoInicialRecorte = useRef({ x: 0, y: 0 });
+  modeloRecorteRef.current = {
+    marco: marcoRecorte,
+    escala: escalaRecorte,
+    desplazamiento: desplazamientoRecorte,
+  };
+  const gestosRecorte = useRef(null);
+  if (!gestosRecorte.current) {
+    gestosRecorte.current = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        desplazamientoInicialRecorte.current = modeloRecorteRef.current.desplazamiento;
+      },
+      onPanResponderMove: (_, gesto) => {
+        const modelo = modeloRecorteRef.current;
+        const limiteX = (modelo.marco.ancho * (modelo.escala - 1)) / 2;
+        const limiteY = (modelo.marco.alto * (modelo.escala - 1)) / 2;
+        establecerDesplazamientoRecorte({
+          x: limitarDesplazamiento(desplazamientoInicialRecorte.current.x + gesto.dx, limiteX),
+          y: limitarDesplazamiento(desplazamientoInicialRecorte.current.y + gesto.dy, limiteY),
+        });
+      },
+    });
+  }
 
   useEffect(() => {
     if (!enfocada) {
       establecerCamaraLista(false);
     }
   }, [enfocada]);
+
+  const prepararAjusteImagen = async (imagen, origenElegido) => {
+    let ancho = imagen.width;
+    let alto = imagen.height;
+
+    if (!ancho || !alto) {
+      try {
+        const dimensiones = await new Promise((resolver, rechazar) => {
+          Image.getSize(imagen.uri, (anchoImagen, altoImagen) => {
+            resolver({ width: anchoImagen, height: altoImagen });
+          }, rechazar);
+        });
+        ancho = dimensiones.width;
+        alto = dimensiones.height;
+      } catch {
+        establecerTituloError('No pudimos abrir la foto.');
+        establecerMensajeError('Elegí otra imagen o intentá tomar la foto nuevamente.');
+        establecerOrigen(origenElegido);
+        establecerEstado('error');
+        return;
+      }
+    }
+
+    establecerOrigen(origenElegido);
+    establecerImagenPendiente({ ...imagen, width: ancho, height: alto });
+    establecerTamanoVisorRecorte({ width: 0, height: 0 });
+    establecerEscalaRecorte(1);
+    establecerDesplazamientoRecorte({ x: 0, y: 0 });
+    establecerMensajeError('');
+    establecerCamaraActiva(false);
+    establecerCamaraLista(false);
+    establecerEstado('recorte');
+  };
 
   const cargarResultado = (datos, imagen) => {
     establecerMonto(datos.monto);
@@ -98,6 +185,8 @@ export default function PantallaOCR({ navigation: navegacion }) {
   const iniciarProcesamiento = (origenElegido, imagen) => {
     establecerOrigen(origenElegido);
     establecerMensajeError('');
+    establecerImagenComprobante(imagen);
+    establecerComprobanteAdjunto(true);
     establecerCamaraActiva(false);
     establecerCamaraLista(false);
     establecerEstado('procesando');
@@ -146,8 +235,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
         return;
       }
 
-      establecerImagenComprobante(imagen);
-      iniciarProcesamiento('escaner', imagen);
+      await prepararAjusteImagen(imagen, 'escaner');
     } catch {
       establecerCamaraActiva(false);
       establecerCamaraLista(false);
@@ -176,8 +264,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
       }
 
       const imagen = resultado.assets[0];
-      establecerImagenComprobante(imagen);
-      iniciarProcesamiento('galeria', imagen);
+      await prepararAjusteImagen(imagen, 'galeria');
     } catch {
       establecerTituloError('No pudimos abrir el comprobante.');
       establecerMensajeError('No pudimos abrir la imagen. Intentá nuevamente.');
@@ -198,9 +285,71 @@ export default function PantallaOCR({ navigation: navegacion }) {
   const volverAEscanear = () => {
     establecerComprobanteAdjunto(false);
     establecerImagenComprobante(null);
+    establecerImagenPendiente(null);
     establecerEstado('camara');
     establecerCamaraLista(false);
     establecerCamaraActiva(origen === 'escaner' && permisoCamara?.granted === true);
+  };
+
+  const cancelarAjusteRecorte = () => {
+    establecerImagenPendiente(null);
+    establecerEstado('camara');
+    establecerCamaraLista(false);
+    establecerCamaraActiva(permisoCamara?.granted === true);
+  };
+
+  const ajustarEscalaRecorte = (cambio) => {
+    const nuevaEscala = Math.max(1, Math.min(3.5, Math.round((escalaRecorte + cambio) * 100) / 100));
+    establecerEscalaRecorte(nuevaEscala);
+    establecerDesplazamientoRecorte((actual) => ({
+      x: limitarDesplazamiento(actual.x, (marcoRecorte.ancho * (nuevaEscala - 1)) / 2),
+      y: limitarDesplazamiento(actual.y, (marcoRecorte.alto * (nuevaEscala - 1)) / 2),
+    }));
+  };
+
+  const confirmarRecorte = async () => {
+    if (!imagenPendiente || !marcoRecorte.ancho || !marcoRecorte.alto) {
+      return;
+    }
+
+    establecerEstado('procesando');
+    try {
+      const ancho = Math.max(1, Math.floor(imagenPendiente.width / escalaRecorte));
+      const alto = Math.max(1, Math.floor(imagenPendiente.height / escalaRecorte));
+      const escalaPantalla = (marcoRecorte.ancho * escalaRecorte) / imagenPendiente.width;
+      const origenX = Math.max(0, Math.min(
+        imagenPendiente.width - ancho,
+        Math.round((imagenPendiente.width - ancho) / 2 - desplazamientoRecorte.x / escalaPantalla),
+      ));
+      const origenY = Math.max(0, Math.min(
+        imagenPendiente.height - alto,
+        Math.round((imagenPendiente.height - alto) / 2 - desplazamientoRecorte.y / escalaPantalla),
+      ));
+      const contextoImagen = ImageManipulator.ImageManipulator.manipulate(imagenPendiente.uri);
+      contextoImagen.crop({ originX, originY, width: ancho, height: alto });
+      const imagenProcesada = await contextoImagen.renderAsync();
+      const imagenRecortada = await imagenProcesada.saveAsync({
+        compress: 0.9,
+        format: ImageManipulator.SaveFormat.JPEG,
+      });
+      const imagen = {
+        ...imagenPendiente,
+        uri: imagenRecortada.uri,
+        width: imagenRecortada.width,
+        height: imagenRecortada.height,
+        mimeType: 'image/jpeg',
+        fileName: imagenPendiente.fileName
+          ? `${imagenPendiente.fileName.replace(/\.[^.]+$/, '')}-recorte.jpg`
+          : 'comprobante-recortado.jpg',
+      };
+
+      establecerImagenPendiente(null);
+      iniciarProcesamiento(origen, imagen);
+    } catch {
+      establecerTituloError('No pudimos ajustar la foto.');
+      establecerMensajeError('Volvé al encuadre e intentá confirmar el recorte otra vez.');
+      establecerEstado('error');
+    }
   };
 
   const mostrarVistaCamara = camaraActiva && enfocada;
@@ -258,7 +407,8 @@ export default function PantallaOCR({ navigation: navegacion }) {
                           onPress={capturarComprobante}
                           style={estilos.botonCaptura}
                         >
-                          <Ionicons color={tema.foco} name="camera" size={32} />
+                          <Ionicons color="#FFFFFF" name="camera" size={26} />
+                          <Text style={estilos.textoBotonCaptura}>Tomar foto</Text>
                         </Pressable>
                       </>
                     ) : (
@@ -309,6 +459,98 @@ export default function PantallaOCR({ navigation: navegacion }) {
                       </View>
                     </View>
                   )}
+                </View>
+              </>
+            ) : null}
+
+            {estado === 'recorte' ? (
+              <>
+                <Text style={estilos.instruccionesRecorte}>
+                  Acercá la foto y arrastrala hasta centrar la parte que querés adjuntar.
+                </Text>
+                <View
+                  onLayout={({ nativeEvent }) => establecerTamanoVisorRecorte({
+                    width: nativeEvent.layout.width,
+                    height: nativeEvent.layout.height,
+                  })}
+                  style={estilos.visorRecorte}
+                >
+                  <View {...gestosRecorte.current.panHandlers} style={estilos.areaImagenRecorte}>
+                    {marcoRecorte.ancho > 0 ? (
+                      <Image
+                        accessibilityLabel="Foto del comprobante, arrastrá para ajustar el encuadre"
+                        resizeMode="stretch"
+                        source={{ uri: imagenPendiente.uri }}
+                        style={[
+                          estilos.imagenRecorte,
+                          {
+                            width: marcoRecorte.ancho * escalaRecorte,
+                            height: marcoRecorte.alto * escalaRecorte,
+                            left: marcoRecorte.izquierda - (marcoRecorte.ancho * (escalaRecorte - 1)) / 2 + desplazamientoRecorte.x,
+                            top: marcoRecorte.arriba - (marcoRecorte.alto * (escalaRecorte - 1)) / 2 + desplazamientoRecorte.y,
+                          },
+                        ]}
+                      />
+                    ) : null}
+                  </View>
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      estilos.marcoRecorte,
+                      {
+                        width: marcoRecorte.ancho,
+                        height: marcoRecorte.alto,
+                        left: marcoRecorte.izquierda,
+                        top: marcoRecorte.arriba,
+                      },
+                    ]}
+                  >
+                    <View style={estilos.lineaMarcoVertical} />
+                    <View style={estilos.lineaMarcoHorizontal} />
+                  </View>
+                </View>
+                <View style={estilos.controlesRecorte}>
+                  <Pressable
+                    accessibilityLabel="Alejar la foto"
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: escalaRecorte <= 1 }}
+                    disabled={escalaRecorte <= 1}
+                    onPress={() => ajustarEscalaRecorte(-0.25)}
+                    style={[estilos.botonZoom, escalaRecorte <= 1 && estilos.botonDeshabilitado]}
+                  >
+                    <Ionicons color={tema.textoPrincipal} name="remove" size={24} />
+                  </Pressable>
+                  <Text style={estilos.textoZoom}>{Math.round(escalaRecorte * 100)}%</Text>
+                  <Pressable
+                    accessibilityLabel="Acercar la foto"
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: escalaRecorte >= 3.5 }}
+                    disabled={escalaRecorte >= 3.5}
+                    onPress={() => ajustarEscalaRecorte(0.25)}
+                    style={[estilos.botonZoom, escalaRecorte >= 3.5 && estilos.botonDeshabilitado]}
+                  >
+                    <Ionicons color={tema.textoPrincipal} name="add" size={24} />
+                  </Pressable>
+                </View>
+                <View style={estilos.accionesEscaner}>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={cancelarAjusteRecorte}
+                    style={estilos.botonGaleria}
+                  >
+                    <Ionicons color={tema.textoPrincipal} name="refresh-outline" size={22} />
+                    <Text style={estilos.textoBotonGaleria}>Volver a escanear</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityLabel="Usar el recorte y adjuntar la foto"
+                    accessibilityRole="button"
+                    disabled={!marcoRecorte.ancho}
+                    onPress={confirmarRecorte}
+                    style={[estilos.botonUsarRecorte, !marcoRecorte.ancho && estilos.botonDeshabilitado]}
+                  >
+                    <Ionicons color="#FFFFFF" name="checkmark-circle-outline" size={22} />
+                    <Text style={estilos.textoBotonUsarRecorte}>Usar este recorte</Text>
+                  </Pressable>
                 </View>
               </>
             ) : null}
@@ -467,11 +709,13 @@ export default function PantallaOCR({ navigation: navegacion }) {
                   estilosGlobales={estilosGlobales}
                   titulo="Intentar nuevamente"
                   alPresionar={() => (
-                    imagenComprobante
-                      ? iniciarProcesamiento(origen, imagenComprobante)
-                      : origen === 'escaner'
-                        ? activarCamara()
-                        : seleccionarComprobante()
+                    imagenPendiente
+                      ? establecerEstado('recorte')
+                      : imagenComprobante
+                        ? iniciarProcesamiento(origen, imagenComprobante)
+                        : origen === 'escaner'
+                          ? activarCamara()
+                          : seleccionarComprobante()
                   )}
                 />
                 <Pressable

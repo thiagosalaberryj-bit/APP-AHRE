@@ -19,6 +19,7 @@ la misma pantalla:
 Dashboard
 → OCR
 → vista en vivo / tomar foto o elegir imagen de la galería
+→ ajustar encuadre (arrastrar y acercar/alejar) / confirmar recorte
 → procesando
 → resultado (total, productos, comprobante, categoría, depósito, fecha y hora)
 → confirmar egreso (visual)
@@ -28,10 +29,12 @@ Dashboard
 
 El visor muestra la vista previa de la cámara con una guía para encuadrar el
 ticket. `Escanear` solicita permiso y activa la cámara en ese espacio; el botón
-de obturador superpuesto toma la foto. `Galería` abre el selector del sistema.
-La cámara se pausa al salir de esta pantalla o al revisar el resultado. La
-imagen se conserva en el borrador mientras se completa el formulario. En el
-resultado, `Volver a escanear` regresa al visor.
+`Tomar foto` superpuesto toma la foto. `Galería` abre el selector del sistema.
+Luego se puede arrastrar la foto y usar los controles de zoom para ajustar el
+encuadre; `Usar este recorte` genera y adjunta ese recorte al borrador. `Volver
+a escanear` regresa al visor. La cámara se pausa al salir de esta pantalla, al
+ajustar el encuadre y al revisar el resultado. La imagen recortada se conserva
+en el borrador mientras se completa el formulario.
 
 ## Estado procesando
 
@@ -54,8 +57,8 @@ Formulario editable con los datos reconocidos (simulados), en este orden:
 - Detalle de productos editable como texto multilínea, un producto por línea
   con cantidad, precio unitario y subtotal, y contador de 500 caracteres; la
   altura limitada permite desplazar descripciones extensas dentro del campo;
-- Comprobante adjunto con vista previa completa de la imagen capturada o
-  elegida;
+- Comprobante adjunto con vista previa de la imagen capturada o elegida y
+  recortada según el encuadre confirmado;
 - Categoría con `SelectorCategoria` (catálogo de egresos), sin selección
   inicial;
 - Depósito con `SelectorDeposito` (`Efectivo, Mercado Pago, Cuenta bancaria`),
@@ -73,6 +76,9 @@ la acción `Cancelar` en el resultado.
 - **Cámara preparada:** guía e instrucciones en el visor.
 - **Vista en vivo:** imagen de la cámara y obturador dentro del visor; `Galería`
   permite elegir otra imagen.
+- **Ajuste de encuadre:** se arrastra la foto y se acerca o aleja con controles;
+  se muestra una guía centrada y se confirma antes de generar el archivo
+  recortado que queda adjunto al formulario.
 - **Procesando:** indicador, mensaje y cancelación.
 - **Resultado:** total, detalle de productos, vista previa del comprobante y
   selectores editables; los campos no detectables quedan para el usuario sin
@@ -88,7 +94,8 @@ la acción `Cancelar` en el resultado.
   formulario vienen de `expenseStyles.js` y los estilos propios de esta pantalla
   de `src/styles/OcrScreenStyles.js`.
 - La imagen se mantiene en el borrador en memoria y se presenta como adjunto al
-  egreso; la persistencia del archivo y del movimiento queda pendiente de la
+  egreso; el archivo recortado se genera en la caché local, mientras que la
+  persistencia permanente del archivo y del movimiento queda pendiente de la
   implementación funcional.
 - La cámara se monta únicamente en OCR y cuando esa pantalla tiene el foco; se
   desmonta durante el procesamiento y al revisar el resultado.
