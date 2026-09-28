@@ -3,11 +3,11 @@
 ## Alcance
 
 Este documento registra el flujo de escaneo y carga de tickets o comprobantes.
-La cámara y la galería entregan una imagen real mediante `expo-image-picker`; su
-URI se conserva en el borrador local mientras se revisa el egreso. El
-reconocimiento y los datos extraídos continúan simulados. No se crea el
-movimiento, no se guarda la imagen de forma permanente, no se actualiza el saldo
-ni se comunica con un backend.
+La vista en vivo y la captura se realizan con `expo-camera`; `expo-image-picker`
+permite elegir una imagen de la galería. El URI se conserva en el borrador local
+mientras se revisa el egreso. El reconocimiento y los datos extraídos continúan
+simulados. No se crea el movimiento, no se guarda la imagen de forma permanente,
+no se actualiza el saldo ni se comunica con un backend.
 
 ## Flujo
 
@@ -18,7 +18,7 @@ la misma pantalla:
 ```text
 Dashboard
 → OCR
-→ tomar foto / elegir imagen de la galería
+→ vista en vivo / tomar foto o elegir imagen de la galería
 → procesando
 → resultado (total, productos, comprobante, categoría, depósito, fecha y hora)
 → confirmar egreso (visual)
@@ -26,11 +26,12 @@ Dashboard
 
 ## Pantalla inicial
 
-Área de cámara con guía visual e instrucciones. `Escanear` solicita permiso y
-abre la cámara del sistema; `Galería` abre el selector del sistema. La imagen
-seleccionada se conserva en el borrador mientras se completa el formulario. En
-el resultado, `Volver a escanear` regresa a la cámara. El regreso desde el
-inicio queda en la flecha del encabezado.
+El visor muestra la vista previa de la cámara con una guía para encuadrar el
+ticket. `Escanear` solicita permiso y activa la cámara en ese espacio; el botón
+de obturador superpuesto toma la foto. `Galería` abre el selector del sistema.
+La cámara se pausa al salir de esta pantalla o al revisar el resultado. La
+imagen se conserva en el borrador mientras se completa el formulario. En el
+resultado, `Volver a escanear` regresa al visor.
 
 ## Estado procesando
 
@@ -52,8 +53,7 @@ Formulario editable con los datos reconocidos (simulados), en este orden:
 - Total del ticket (`EntradaMonto`), corregible con `X` para limpiar;
 - Detalle de productos editable como texto multilínea, un producto por línea
   con cantidad, precio unitario y subtotal, y contador de 500 caracteres; la
-  letra compacta y la altura limitada permiten desplazar descripciones extensas
-  dentro del campo;
+  altura limitada permite desplazar descripciones extensas dentro del campo;
 - Comprobante adjunto con vista previa completa de la imagen capturada o
   elegida;
 - Categoría con `SelectorCategoria` (catálogo de egresos), sin selección
@@ -70,9 +70,9 @@ la acción `Cancelar` en el resultado.
 
 ## Estados visuales
 
-- **Cámara preparada:** visor, guía e instrucciones.
-- **Capturando:** `Escanear` abre la cámara y `Galería` abre el selector de
-  imágenes.
+- **Cámara preparada:** guía e instrucciones en el visor.
+- **Vista en vivo:** imagen de la cámara y obturador dentro del visor; `Galería`
+  permite elegir otra imagen.
 - **Procesando:** indicador, mensaje y cancelación.
 - **Resultado:** total, detalle de productos, vista previa del comprobante y
   selectores editables; los campos no detectables quedan para el usuario sin
@@ -90,11 +90,13 @@ la acción `Cancelar` en el resultado.
 - La imagen se mantiene en el borrador en memoria y se presenta como adjunto al
   egreso; la persistencia del archivo y del movimiento queda pendiente de la
   implementación funcional.
+- La cámara se monta únicamente en OCR y cuando esa pantalla tiene el foco; se
+  desmonta durante el procesamiento y al revisar el resultado.
 - El formulario se desplaza hasta el final, mantiene espacio para el área segura
   inferior y evita que el teclado tape la descripción o las acciones.
-- La descripción de productos usa letra compacta y altura máxima; el texto largo
-  se desplaza dentro del campo para dejar accesibles el resto del formulario y
-  la confirmación.
+- La descripción de productos conserva el tamaño de texto del formulario y usa
+  altura máxima; el texto largo se desplaza dentro del campo para dejar
+  accesibles el resto del formulario y la confirmación.
 - El tema viene de `ContextoApariencia`, como el resto de la app.
 - Sin `hover`: todo por foco, selección y texto.
 

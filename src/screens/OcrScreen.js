@@ -1,5 +1,7 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
@@ -54,12 +56,17 @@ const RESULTADO_GALERIA = Object.freeze({
 
 export default function PantallaOCR({ navigation: navegacion }) {
   const insets = useSafeAreaInsets();
+  const enfocada = useIsFocused();
+  const referenciaCamara = useRef(null);
+  const [permisoCamara, solicitarPermisoCamara] = useCameraPermissions();
   const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilosMovimiento = crearEstilosEgreso(tema);
   const estilos = crearEstilosOcr(tema);
   const [estado, establecerEstado] = useState('camara');
   const [origen, establecerOrigen] = useState('escaner');
+  const [camaraActiva, establecerCamaraActiva] = useState(false);
+  const [camaraLista, establecerCamaraLista] = useState(false);
   const [monto, establecerMonto] = useState('');
   const [descripcion, establecerDescripcion] = useState('');
   const [fecha, establecerFecha] = useState(() => new Date());
@@ -70,6 +77,12 @@ export default function PantallaOCR({ navigation: navegacion }) {
   const [comprobanteAdjunto, establecerComprobanteAdjunto] = useState(false);
   const [mensajeError, establecerMensajeError] = useState('');
   const [tituloError, establecerTituloError] = useState('No pudimos leer correctamente el comprobante.');
+
+  useEffect(() => {
+    if (!enfocada) {
+      establecerCamaraLista(false);
+    }
+  }, [enfocada]);
 
   const cargarResultado = (datos, imagen) => {
     establecerMonto(datos.monto);
@@ -85,6 +98,8 @@ export default function PantallaOCR({ navigation: navegacion }) {
   const iniciarProcesamiento = (origenElegido, imagen) => {
     establecerOrigen(origenElegido);
     establecerMensajeError('');
+    establecerCamaraActiva(false);
+    establecerCamaraLista(false);
     establecerEstado('procesando');
     setTimeout(() => {
       cargarResultado(origenElegido === 'galeria' ? RESULTADO_GALERIA : RESULTADO_ESCANER, imagen);
@@ -92,49 +107,103 @@ export default function PantallaOCR({ navigation: navegacion }) {
     }, 2000);
   };
 
-  const seleccionarComprobante = async (origenElegido) => {
+  const activarCamara = async () => {
+    establecerOrigen('escaner');
+
     try {
-      if (origenElegido === 'escaner') {
-        const permiso = await ImagePicker.requestCameraPermissionsAsync();
-        if (!permiso.granted) {
-          establecerTituloError('No pudimos acceder a la cámara.');
-          establecerMensajeError('Permití el acceso a la cámara para fotografiar el comprobante.');
-          establecerEstado('error');
-          return;
-        }
+      const permiso = permisoCamara?.granted
+        ? permisoCamara
+        : await solicitarPermisoCamara();
+
+      if (!permiso.granted) {
+        establecerOrigen('escaner');
+        establecerTituloError('No pudimos acceder a la cámara.');
+        establecerMensajeError('Permití el acceso a la cámara para fotografiar el comprobante.');
+        establecerEstado('error');
+        return;
       }
 
-      const resultado = origenElegido === 'galeria'
-        ? await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ['images'],
-          allowsEditing: false,
-          quality: 1,
-        })
-        : await ImagePicker.launchCameraAsync({
-          mediaTypes: ['images'],
-          allowsEditing: false,
-          quality: 1,
-        });
+      establecerOrigen('escaner');
+      establecerMensajeError('');
+      establecerCamaraLista(false);
+      establecerCamaraActiva(true);
+    } catch {
+      establecerTituloError('No pudimos abrir la cámara.');
+      establecerMensajeError('Intentá nuevamente o elegí una imagen de la galería.');
+      establecerEstado('error');
+    }
+  };
+
+  const capturarComprobante = async () => {
+    if (!camaraLista || !referenciaCamara.current) {
+      return;
+    }
+
+    try {
+      establecerCamaraLista(false);
+      const imagen = await referenciaCamara.current.takePictureAsync({ quality: 1 });
+      if (!imagen) {
+        return;
+      }
+
+      establecerImagenComprobante(imagen);
+      iniciarProcesamiento('escaner', imagen);
+    } catch {
+      establecerCamaraActiva(false);
+      establecerCamaraLista(false);
+      establecerTituloError('No pudimos tomar la foto.');
+      establecerMensajeError('Intentá nuevamente o elegí una imagen de la galería.');
+      establecerOrigen('escaner');
+      establecerEstado('error');
+    }
+  };
+
+  const seleccionarComprobante = async () => {
+    const camaraEstabaActiva = camaraActiva;
+    establecerCamaraActiva(false);
+    establecerCamaraLista(false);
+
+    try {
+      const resultado = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: false,
+        quality: 1,
+      });
 
       if (resultado.canceled || !resultado.assets?.[0]) {
+        establecerCamaraActiva(camaraEstabaActiva);
         return;
       }
 
       const imagen = resultado.assets[0];
       establecerImagenComprobante(imagen);
-      iniciarProcesamiento(origenElegido, imagen);
+      iniciarProcesamiento('galeria', imagen);
     } catch {
       establecerTituloError('No pudimos abrir el comprobante.');
       establecerMensajeError('No pudimos abrir la imagen. Intentá nuevamente.');
+      establecerOrigen('galeria');
       establecerEstado('error');
     }
+  };
+
+  const manejarErrorMontajeCamara = () => {
+    establecerCamaraActiva(false);
+    establecerCamaraLista(false);
+    establecerOrigen('escaner');
+    establecerTituloError('No pudimos abrir la cámara.');
+    establecerMensajeError('Intentá nuevamente o elegí una imagen de la galería.');
+    establecerEstado('error');
   };
 
   const volverAEscanear = () => {
     establecerComprobanteAdjunto(false);
     establecerImagenComprobante(null);
     establecerEstado('camara');
+    establecerCamaraLista(false);
+    establecerCamaraActiva(origen === 'escaner' && permisoCamara?.granted === true);
   };
+
+  const mostrarVistaCamara = camaraActiva && enfocada;
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
@@ -161,39 +230,85 @@ export default function PantallaOCR({ navigation: navegacion }) {
             {estado === 'camara' ? (
               <>
                 <View style={estilos.visor}>
+                  {mostrarVistaCamara ? (
+                    <CameraView
+                      active={enfocada}
+                      facing="back"
+                      onCameraReady={() => establecerCamaraLista(true)}
+                      onMountError={manejarErrorMontajeCamara}
+                      ref={referenciaCamara}
+                      style={estilos.vistaCamara}
+                    />
+                  ) : null}
                   <View style={estilos.guia}>
                     <View style={[estilos.esquinaGuia, { left: 0, top: 0, borderLeftWidth: 6, borderTopWidth: 6, borderTopLeftRadius: 12 }]} />
                     <View style={[estilos.esquinaGuia, { right: 0, top: 0, borderRightWidth: 6, borderTopWidth: 6, borderTopRightRadius: 12 }]} />
                     <View style={[estilos.esquinaGuia, { left: 0, bottom: 0, borderLeftWidth: 6, borderBottomWidth: 6, borderBottomLeftRadius: 12 }]} />
                     <View style={[estilos.esquinaGuia, { right: 0, bottom: 0, borderRightWidth: 6, borderBottomWidth: 6, borderBottomRightRadius: 12 }]} />
                   </View>
-                  <Ionicons color="#FFFFFF" name="receipt-outline" size={40} />
-                  <Text style={estilos.textoVisor}>Asegurate de que el ticket se vea completo.</Text>
+                  {mostrarVistaCamara ? (
+                    camaraLista ? (
+                      <>
+                        <Text style={estilos.textoCamara}>Ubicá el ticket dentro del recuadro.</Text>
+                        <Pressable
+                          accessibilityLabel="Tomar foto del comprobante"
+                          accessibilityRole="button"
+                          accessibilityState={{ disabled: !camaraLista }}
+                          disabled={!camaraLista}
+                          onPress={capturarComprobante}
+                          style={estilos.botonCaptura}
+                        >
+                          <Ionicons color={tema.foco} name="camera" size={32} />
+                        </Pressable>
+                      </>
+                    ) : (
+                      <View pointerEvents="none" style={estilos.estadoCamara}>
+                        <ActivityIndicator color="#FFFFFF" size="large" />
+                        <Text style={estilos.textoVisor}>Preparando cámara...</Text>
+                      </View>
+                    )
+                  ) : (
+                    <>
+                      <Ionicons color="#FFFFFF" name="receipt-outline" size={40} />
+                      <Text style={estilos.textoVisor}>Asegurate de que el ticket se vea completo.</Text>
+                    </>
+                  )}
                 </View>
                 <Text style={estilos.instrucciones}>
                   Usá buena luz y evitá sombras o arrugas.
                 </Text>
                 <View style={estilos.accionesEscaner}>
-                  <View style={estilos.filaBotones}>
-                    <View style={estilos.botonMitad}>
-                      <BotonPrincipal
-                        estilosAutenticacion={estilosMovimiento}
-                        estilosGlobales={estilosGlobales}
-                        titulo="Escanear"
-                        alPresionar={() => seleccionarComprobante('escaner')}
-                      />
+                  {camaraActiva ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={seleccionarComprobante}
+                      style={estilos.botonGaleria}
+                    >
+                      <Ionicons color={tema.textoPrincipal} name="image-outline" size={22} />
+                      <Text style={estilos.textoBotonGaleria}>Galería</Text>
+                    </Pressable>
+                  ) : (
+                    <View style={estilos.filaBotones}>
+                      <View style={estilos.botonMitad}>
+                        <BotonPrincipal
+                          estilosAutenticacion={estilosMovimiento}
+                          estilosGlobales={estilosGlobales}
+                          titulo="Escanear"
+                          alPresionar={activarCamara}
+                        />
+                      </View>
+                      <View style={estilos.botonMitad}>
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={seleccionarComprobante}
+                          style={estilos.botonGaleria}
+                        >
+                          <Ionicons color={tema.textoPrincipal} name="image-outline" size={22} />
+                          <Text style={estilos.textoBotonGaleria}>Galería</Text>
+                        </Pressable>
+                      </View>
                     </View>
-                    <View style={estilos.botonMitad}>
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={() => seleccionarComprobante('galeria')}
-                        style={estilos.botonGaleria}
-                      >
-                        <Ionicons color={tema.textoPrincipal} name="image-outline" size={22} />
-                        <Text style={estilos.textoBotonGaleria}>Galería</Text>
-                      </Pressable>
-                    </View>
-                  </View>
+                  )}
                 </View>
               </>
             ) : null}
@@ -354,7 +469,9 @@ export default function PantallaOCR({ navigation: navegacion }) {
                   alPresionar={() => (
                     imagenComprobante
                       ? iniciarProcesamiento(origen, imagenComprobante)
-                      : seleccionarComprobante(origen)
+                      : origen === 'escaner'
+                        ? activarCamara()
+                        : seleccionarComprobante()
                   )}
                 />
                 <Pressable
