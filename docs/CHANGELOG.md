@@ -24,7 +24,7 @@ documentación se registran en este archivo.
   acceso a los repositorios, la estrategia de saldos y las reglas de
   compensación. (#19)
 
-## [v0.3.0] - 2026-09-26 - no publicada
+## [v0.3.0] - 2026-09-26 - no estable
 
 ### Añadido
 

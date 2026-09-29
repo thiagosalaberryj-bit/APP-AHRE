@@ -68,21 +68,25 @@ El almacenamiento local representa el núcleo de la aplicación. Los servicios
 conectados se incorporarán como extensiones y no deben convertirse en una
 dependencia obligatoria para las funciones esenciales.
 
-## Contenido previsto de la aplicación
+## Áreas funcionales actuales y previstas
 
 ### Inicio y dashboard
 
-La pantalla principal permitirá consultar de forma resumida la situación
-financiera del usuario, incluyendo saldos, movimientos recientes y accesos a
-las operaciones más frecuentes.
+La interfaz actual presenta un resumen visual de la situación financiera, con
+saldo, depósitos, movimientos recientes y accesos a las operaciones frecuentes.
+Los datos que muestra son de ejemplo y todavía no se consultan ni se guardan en
+la base de datos local.
 
 ### Depósitos y movimientos
 
-Los depósitos representarán las distintas ubicaciones del dinero del usuario,
+Los depósitos representan las distintas ubicaciones del dinero del usuario,
 como efectivo, cuentas bancarias o billeteras virtuales.
 
-Los movimientos permitirán registrar ingresos, egresos y transferencias entre
-depósitos. Cada movimiento podrá incluir monto, fecha, categoría y descripción.
+Las interfaces permiten recorrer depósitos y movimientos de ejemplo, buscar y
+aplicar filtros, y abrir sus detalles. Los formularios de ingreso y egreso
+presentan monto, depósito, categoría, fecha, hora y recurrencia. El alta,
+edición y eliminación de depósitos, así como el guardado de movimientos,
+continúan simulados y no persisten información.
 
 ### Deudas y gastos compartidos
 
@@ -94,15 +98,16 @@ personas.
 
 ### Estadísticas y notificaciones
 
-Los datos registrados podrán utilizarse para consultar gastos por período,
-categoría o depósito. Las notificaciones podrán ayudar con recordatorios,
-movimientos recurrentes y deudas pendientes.
+La interfaz de Estadísticas ya muestra gráficos por categoría y período,
+filtros y detalles con datos de ejemplo. Notificaciones muestra avisos
+simulados agrupados por día. Las consultas reales, los recordatorios y las
+notificaciones del dispositivo todavía no están implementados.
 
 ### OCR
 
-Se prevé incorporar reconocimiento óptico de caracteres para asistir en la
-lectura de tickets y comprobantes. El resultado deberá poder ser revisado y
-corregido por el usuario antes de guardarse.
+La interfaz permite abrir la cámara, capturar o elegir una imagen, ajustar el
+encuadre y revisar un resultado simulado editable. El reconocimiento óptico de
+caracteres y el guardado del egreso todavía no están implementados.
 
 ### Perfil y funciones sociales
 
@@ -126,10 +131,20 @@ interfaces. Actualmente cuenta con:
 - Dashboard maquetado con balance, acciones rápidas de ingreso, egreso y OCR,
   depósitos y movimientos de ejemplo;
 - pantalla de Movimientos con historial agrupado por día, búsqueda y filtros
-  visuales por tipo, fecha, monto, categoría y depósito;
+  locales por tipo, fecha, monto, categoría y depósito, con detalles de
+  movimientos;
 - formularios maquetados para ingresos y egresos, con monto, descripción,
   depósito, categoría, fecha, hora y recurrencia visual; ambos simulan el
   guardado sin persistir movimientos;
+- formulario de creación de depósitos y detalle con búsqueda, filtros,
+  edición y eliminación simuladas; no se crean ni modifican depósitos reales;
+- pantalla de Estadísticas con gráficos interactivos por categoría y período,
+  filtros y detalles basados en datos de ejemplo;
+- pantalla de Notificaciones con avisos de muestra agrupados por día; no usa
+  notificaciones locales o push;
+- flujo OCR con cámara en vivo, captura o selección desde la galería, recorte y
+  revisión editable de un resultado simulado; no reconoce texto ni guarda el
+  egreso;
 - Perfil con datos de ejemplo, foto temporal, edición protegida por una
   confirmación local de contraseña, cambio de contraseña de demostración y
   apariencia compartida que solo se conserva durante la sesión;
@@ -150,8 +165,8 @@ cierra su modal porque aún no existe una sesión real. Los depósitos y movimie
 del Dashboard son datos de ejemplo. La selección de categorías y los formularios
 no persisten movimientos. El formulario de ingreso permite representar todos
 sus campos y regresar mediante la flecha del encabezado; no tiene una acción
-«Cancelar» en el pie. La versión `0.3.0` se identifica como no estable para
-evaluación y no representa una versión comercial.
+«Cancelar» en el pie. La versión `0.3.0` ya está publicada como versión no
+estable para evaluación y no representa una versión comercial.
 
 ## Tecnología
 
@@ -196,9 +211,14 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Navegación](docs/arquitectura/navegacion.md);
 - [Base de datos local](docs/base-de-datos/base-datos-local.md);
 - [Dependencias de la aplicación](docs/configuracion/dependencias.md);
+- [Pantalla inicial](docs/interfaces/inicio.md);
 - [Interfaz del Dashboard](docs/interfaces/dashboard.md);
+- [Formulario y detalle de depósitos](docs/interfaces/depositos.md);
 - [Interfaz del perfil](docs/interfaces/perfil.md);
 - [Interfaces de movimientos](docs/interfaces/movimientos.md);
+- [Interfaz de Estadísticas](docs/interfaces/estadisticas.md);
+- [Interfaz de Notificaciones](docs/interfaces/notificaciones.md);
+- [Flujo OCR de comprobantes](docs/interfaces/ocr.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);
