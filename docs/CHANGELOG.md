@@ -3,7 +3,7 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [v0.3.0] - 2026-09-26 - no publicada
+## [v0.3.0] - 2026-09-26 - no estable
 
 ### Añadido
 
