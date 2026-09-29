@@ -17,6 +17,7 @@ export async function aplicarEsquemaInicial(baseDatos) {
       nombre TEXT NOT NULL,
       tipo TEXT NOT NULL CHECK (tipo IN ('efectivo', 'banco', 'billetera_virtual')),
       saldo_inicial REAL NOT NULL,
+      saldo_actual REAL NOT NULL,
       icono TEXT NOT NULL,
       color TEXT,
       descripcion TEXT,
@@ -25,6 +26,16 @@ export async function aplicarEsquemaInicial(baseDatos) {
       fecha_actualizacion TEXT NOT NULL,
       UNIQUE (usuario_id, id),
       FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE RESTRICT
+    );
+
+    CREATE TABLE IF NOT EXISTS historial_saldos_deposito (
+      id TEXT PRIMARY KEY NOT NULL,
+      deposito_id TEXT NOT NULL,
+      saldo_anterior REAL NOT NULL,
+      saldo_informado REAL NOT NULL,
+      descripcion TEXT,
+      fecha_hora TEXT NOT NULL,
+      FOREIGN KEY (deposito_id) REFERENCES depositos (id) ON DELETE RESTRICT
     );
 
     CREATE TABLE IF NOT EXISTS preferencias (
@@ -61,10 +72,11 @@ export async function aplicarEsquemaInicial(baseDatos) {
       usuario_id TEXT NOT NULL,
       deposito_origen_id TEXT NOT NULL,
       deposito_destino_id TEXT NOT NULL,
-      monto REAL NOT NULL,
+      monto REAL NOT NULL CHECK (monto > 0),
       fecha_hora TEXT NOT NULL,
       descripcion TEXT,
       anulada INTEGER NOT NULL DEFAULT 0 CHECK (anulada IN (0, 1)),
+      reversion_de_id TEXT,
       fecha_creacion TEXT NOT NULL,
       fecha_actualizacion TEXT NOT NULL,
       CHECK (deposito_origen_id <> deposito_destino_id),
@@ -72,7 +84,8 @@ export async function aplicarEsquemaInicial(baseDatos) {
       FOREIGN KEY (usuario_id, deposito_origen_id)
         REFERENCES depositos (usuario_id, id) ON DELETE RESTRICT,
       FOREIGN KEY (usuario_id, deposito_destino_id)
-        REFERENCES depositos (usuario_id, id) ON DELETE RESTRICT
+        REFERENCES depositos (usuario_id, id) ON DELETE RESTRICT,
+      FOREIGN KEY (reversion_de_id) REFERENCES transferencias (id) ON DELETE RESTRICT
     );
 
     CREATE TABLE IF NOT EXISTS movimientos (
@@ -82,10 +95,11 @@ export async function aplicarEsquemaInicial(baseDatos) {
       recurrencia_id TEXT,
       transferencia_id TEXT,
       tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'egreso', 'transferencia_salida', 'transferencia_entrada')),
-      monto REAL NOT NULL,
+      monto REAL NOT NULL CHECK (monto > 0),
       descripcion TEXT NOT NULL,
       fecha_hora TEXT NOT NULL,
       anulado INTEGER NOT NULL DEFAULT 0 CHECK (anulado IN (0, 1)),
+      reversion_de_id TEXT,
       fecha_creacion TEXT NOT NULL,
       fecha_actualizacion TEXT NOT NULL,
       CHECK (
@@ -95,7 +109,8 @@ export async function aplicarEsquemaInicial(baseDatos) {
       CHECK (recurrencia_id IS NULL OR tipo IN ('ingreso', 'egreso')),
       FOREIGN KEY (deposito_id) REFERENCES depositos (id) ON DELETE RESTRICT,
       FOREIGN KEY (recurrencia_id) REFERENCES recurrencias (id) ON DELETE RESTRICT,
-      FOREIGN KEY (transferencia_id) REFERENCES transferencias (id) ON DELETE RESTRICT
+      FOREIGN KEY (transferencia_id) REFERENCES transferencias (id) ON DELETE RESTRICT,
+      FOREIGN KEY (reversion_de_id) REFERENCES movimientos (id) ON DELETE RESTRICT
     );
 
     CREATE TABLE IF NOT EXISTS personas (
@@ -176,6 +191,8 @@ export async function aplicarEsquemaInicial(baseDatos) {
       ON usuarios (correo_electronico);
     CREATE INDEX IF NOT EXISTS idx_depositos_usuario_activo
       ON depositos (usuario_id, activo);
+    CREATE INDEX IF NOT EXISTS idx_historial_saldos_deposito_fecha
+      ON historial_saldos_deposito (deposito_id, fecha_hora DESC);
     CREATE INDEX IF NOT EXISTS idx_movimientos_deposito_fecha
       ON movimientos (deposito_id, fecha_hora DESC);
     CREATE INDEX IF NOT EXISTS idx_movimientos_fecha
@@ -190,6 +207,10 @@ export async function aplicarEsquemaInicial(baseDatos) {
       ON movimientos (transferencia_id);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_movimientos_transferencia_tipo_unico
       ON movimientos (transferencia_id, tipo) WHERE transferencia_id IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_transferencias_reversion_unica
+      ON transferencias (reversion_de_id) WHERE reversion_de_id IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_movimientos_reversion_unica
+      ON movimientos (reversion_de_id) WHERE reversion_de_id IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_recurrencias_deposito_activa
       ON recurrencias (deposito_id, activa);
     CREATE INDEX IF NOT EXISTS idx_transferencias_usuario_fecha
@@ -251,6 +272,42 @@ export async function aplicarEsquemaInicial(baseDatos) {
     )
     BEGIN
       SELECT RAISE(ABORT, 'el movimiento no coincide con el depósito de la transferencia');
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS trg_transferencia_reversion_insert
+    BEFORE INSERT ON transferencias
+    FOR EACH ROW
+    WHEN NEW.reversion_de_id IS NOT NULL AND NOT EXISTS (
+      SELECT 1
+      FROM transferencias original
+      WHERE original.id = NEW.reversion_de_id
+        AND original.usuario_id = NEW.usuario_id
+        AND original.deposito_origen_id = NEW.deposito_destino_id
+        AND original.deposito_destino_id = NEW.deposito_origen_id
+        AND original.monto = NEW.monto
+    )
+    BEGIN
+      SELECT RAISE(ABORT, 'la reversión debe compensar la transferencia original');
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS trg_movimiento_reversion_insert
+    BEFORE INSERT ON movimientos
+    FOR EACH ROW
+    WHEN NEW.reversion_de_id IS NOT NULL AND NOT EXISTS (
+      SELECT 1
+      FROM movimientos original
+      WHERE original.id = NEW.reversion_de_id
+        AND original.transferencia_id IS NULL
+        AND original.deposito_id = NEW.deposito_id
+        AND original.monto = NEW.monto
+        AND original.anulado = 0
+        AND (
+          (original.tipo = 'ingreso' AND NEW.tipo = 'egreso') OR
+          (original.tipo = 'egreso' AND NEW.tipo = 'ingreso')
+        )
+    )
+    BEGIN
+      SELECT RAISE(ABORT, 'el movimiento de reversión debe compensar uno original');
     END;
 
     CREATE TRIGGER IF NOT EXISTS trg_movimientos_transferencia_update

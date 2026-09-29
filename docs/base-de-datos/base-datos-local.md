@@ -96,6 +96,7 @@ Representa los lugares donde el usuario tiene dinero.
 | `nombre` | `TEXT` | Nombre del depósito. |
 | `tipo` | `TEXT` | `efectivo`, `banco` o `billetera_virtual`. |
 | `saldo_inicial` | `REAL` | Saldo con el que se crea el depósito. |
+| `saldo_actual` | `REAL` | Saldo vigente, actualizado junto con cada movimiento. |
 | `icono` | `TEXT` | Identificador del ícono utilizado. |
 | `color` | `TEXT` | Color opcional del depósito. |
 | `descripcion` | `TEXT` | Descripción opcional. |
@@ -106,11 +107,34 @@ Representa los lugares donde el usuario tiene dinero.
 Un depósito solamente tiene un tipo. No tiene categorías asociadas. Las
 categorías se utilizan en los movimientos que afectan al depósito.
 
-El saldo actual no se guardará como fuente principal. Se calculará a partir del saldo inicial y sus movimientos.
+`saldo_actual` guarda el último saldo conocido para consultarlo directamente.
+`saldo_inicial` conserva el importe de apertura y los movimientos mantienen el
+historial de cambios. Cada alta, actualización o reversión de un movimiento
+actualiza `saldo_actual` dentro de la misma transacción.
 
-```text
-saldo actual = saldo inicial + ingresos - egresos
-```
+El saldo vigente parte de `saldo_inicial` hasta la primera conciliación. Luego,
+parte del último `saldo_informado` más las variaciones de los movimientos
+registrados desde esa conciliación. Si el usuario informa otro saldo vigente,
+se guarda el saldo anterior y el informado en `historial_saldos_deposito`; esa
+conciliación no modifica los movimientos previos. Las consultas leen
+`saldo_actual` directamente.
+
+### `historial_saldos_deposito`
+
+Conserva las conciliaciones manuales del saldo de cada depósito.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | `TEXT` | Identificador local. |
+| `deposito_id` | `TEXT` | Depósito conciliado. |
+| `saldo_anterior` | `REAL` | Saldo guardado antes de la conciliación. |
+| `saldo_informado` | `REAL` | Saldo que informó el usuario. |
+| `descripcion` | `TEXT` | Nota opcional sobre la conciliación. |
+| `fecha_hora` | `TEXT` | Momento de la conciliación. |
+
+`depositosRepositorio.actualizarSaldoInformado()` registra la conciliación y
+actualiza el saldo vigente en la misma transacción. Los movimientos posteriores
+continúan actualizando ese saldo por sus variaciones.
 
 ### `movimientos`
 
@@ -128,10 +152,16 @@ Representa ingresos, egresos y los movimientos generados por una transferencia.
 | `descripcion` | `TEXT` | Descripción del movimiento. |
 | `fecha_hora` | `TEXT` | Momento en que ocurrió. |
 | `anulado` | `INTEGER` | Indica si el movimiento fue anulado. |
+| `reversion_de_id` | `TEXT` | Movimiento original que compensa, si corresponde. |
 | `fecha_creacion` | `TEXT` | Fecha de creación. |
 | `fecha_actualizacion` | `TEXT` | Última modificación. |
 
-Un movimiento anulado no se elimina del historial y deja de utilizarse para calcular el saldo.
+Al eliminar un ingreso o egreso, el movimiento original se conserva y se crea
+otro movimiento del mismo monto y depósito, con el tipo opuesto. `reversion_de_id`
+lo vincula al original; ambos movimientos actualizan el saldo y su efecto neto
+es cero. La compensación usa `devoluciones` para un egreso revertido y
+`otros_gastos` para un ingreso revertido, según las categorías válidas del tipo.
+No se elimina físicamente el movimiento original.
 
 Las categorías no son una tabla. Son valores predefinidos por AHRE y se
 definen en `src/constants/movimientos.js` como `CATEGORIAS_INGRESO` y
@@ -191,6 +221,7 @@ Representa el traspaso de dinero entre dos depósitos del mismo usuario.
 | `fecha_hora` | `TEXT` | Momento de la transferencia. |
 | `descripcion` | `TEXT` | Descripción opcional. |
 | `anulada` | `INTEGER` | Indica si la transferencia fue anulada. |
+| `reversion_de_id` | `TEXT` | Transferencia original que compensa, si corresponde. |
 | `fecha_creacion` | `TEXT` | Fecha de creación. |
 | `fecha_actualizacion` | `TEXT` | Última modificación. |
 
@@ -201,7 +232,13 @@ depósito origen  → transferencia_salida
 depósito destino → transferencia_entrada
 ```
 
-La transferencia no representa un ingreso o egreso real del usuario. Solamente mueve el saldo de un depósito a otro.
+La transferencia no representa un ingreso o egreso real del usuario ni mueve
+dinero fuera de AHRE. Registra el traspaso y actualiza los saldos de los dos
+depósitos.
+
+Al eliminar una transferencia, se conserva y se marca como anulada. AHRE crea
+otra transferencia en sentido inverso y sus dos movimientos compensatorios; así
+se conserva el historial y se restauran ambos saldos.
 
 ### `recurrencias`
 
@@ -527,7 +564,9 @@ se registra la deuda
 
 ### Movimientos
 
-No se eliminan físicamente cuando forman parte del historial. Se marcan como anulados mediante `anulado`.
+No se eliminan físicamente ni se excluyen del historial. Se crea un movimiento
+opuesto enlazado mediante `reversion_de_id`; el original y la reversión quedan
+registrados.
 
 ### Depósitos
 
@@ -543,7 +582,8 @@ Se conservan y se cambia su estado a `cancelada` cuando corresponda.
 
 ### Gastos compartidos
 
-Se cambia su estado a `cancelado`. Las deudas relacionadas también deben cancelarse sin eliminar el historial.
+Se cambia su estado a `cancelado`, se cancelan las deudas relacionadas y se
+revierte el movimiento de egreso asociado sin eliminarlo del historial.
 
 ## Acceso a la base de datos
 

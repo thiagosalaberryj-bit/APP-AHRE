@@ -43,9 +43,10 @@ definido en el modelo. Los indicadores utilizan `INTEGER` con valores `0/1`.
 | --- | --- |
 | `usuarios` | `id`, `nombre`, `correo_electronico`, `activo`, `fecha_creacion`, `fecha_actualizacion` |
 | `preferencias` | `id`, `usuario_id`, `deposito_predeterminado_id`, `notificaciones_activas`, `fecha_creacion`, `fecha_actualizacion` |
-| `depositos` | `id`, `usuario_id`, `nombre`, `tipo`, `saldo_inicial`, `icono`, `color`, `descripcion`, `activo`, `fecha_creacion`, `fecha_actualizacion` |
-| `movimientos` | `id`, `deposito_id`, `categoria`, `recurrencia_id`, `transferencia_id`, `tipo`, `monto`, `descripcion`, `fecha_hora`, `anulado`, `fecha_creacion`, `fecha_actualizacion` |
-| `transferencias` | `id`, `usuario_id`, `deposito_origen_id`, `deposito_destino_id`, `monto`, `fecha_hora`, `descripcion`, `anulada`, `fecha_creacion`, `fecha_actualizacion` |
+| `depositos` | `id`, `usuario_id`, `nombre`, `tipo`, `saldo_inicial`, `saldo_actual`, `icono`, `color`, `descripcion`, `activo`, `fecha_creacion`, `fecha_actualizacion` |
+| `historial_saldos_deposito` | `id`, `deposito_id`, `saldo_anterior`, `saldo_informado`, `descripcion`, `fecha_hora` |
+| `movimientos` | `id`, `deposito_id`, `categoria`, `recurrencia_id`, `transferencia_id`, `tipo`, `monto`, `descripcion`, `fecha_hora`, `anulado`, `reversion_de_id`, `fecha_creacion`, `fecha_actualizacion` |
+| `transferencias` | `id`, `usuario_id`, `deposito_origen_id`, `deposito_destino_id`, `monto`, `fecha_hora`, `descripcion`, `anulada`, `reversion_de_id`, `fecha_creacion`, `fecha_actualizacion` |
 | `recurrencias` | `id`, `deposito_id`, `categoria`, `tipo`, `monto`, `descripcion`, `frecuencia`, `fecha_inicio`, `fecha_fin`, `proxima_ejecucion`, `activa`, `fecha_creacion`, `fecha_actualizacion` |
 | `personas` | `id`, `usuario_id`, `nombre`, `correo_electronico`, `es_usuario_actual`, `activa`, `fecha_creacion`, `fecha_actualizacion` |
 | `gastos_compartidos` | `id`, `usuario_id`, `movimiento_id`, `descripcion`, `monto_total`, `fecha`, `estado`, `fecha_creacion`, `fecha_actualizacion` |
@@ -64,13 +65,20 @@ SQLite ni se insertan de nuevo al iniciar.
   máximo una configuración. El depósito predeterminado debe pertenecer al
   mismo usuario.
 - Los depósitos y recurrencias pertenecen a un usuario o depósito existente.
+- El historial de saldos pertenece a un depósito y conserva conciliaciones
+  anteriores; no interviene como movimiento en el saldo.
 - Las transferencias requieren dos depósitos distintos del usuario indicado.
   El repositorio crea el registro y sus movimientos de salida y entrada en una
-  transacción; no se permite anular un solo lado de la transferencia.
+  transacción. Al anularla se conserva la operación original y se crea una
+  transferencia inversa con sus dos movimientos compensatorios.
 - Todo movimiento requiere un depósito existente. Las referencias a
   recurrencias y transferencias, cuando están presentes, también deben existir.
   Un movimiento de transferencia debe usar uno de los dos tipos de transferencia
   y debe corresponder al depósito de origen o destino registrado.
+- La reversión de un ingreso o egreso se guarda como otro movimiento del mismo
+  depósito y monto, con el tipo opuesto y una referencia única al movimiento
+  original. Los movimientos que pertenecen a una transferencia solo se revierten
+  anulando la transferencia completa.
 - Un gasto compartido requiere un movimiento de egreso existente del mismo
   usuario. Sus deudas, personas, participantes y pagos mantienen claves
   foráneas para impedir relaciones huérfanas.
@@ -81,6 +89,9 @@ SQLite ni se insertan de nuevo al iniciar.
 - Los tipos, estados, frecuencias e indicadores documentados se controlan con
   restricciones `CHECK`. La categoría se conserva como texto para que el
   catálogo siga en las constantes del proyecto.
+- Los montos de movimientos y transferencias deben ser positivos; la dirección
+  del impacto se determina por el tipo. Los repositorios validan que la categoría
+  corresponda al tipo de movimiento.
 - Las eliminaciones físicas quedan bloqueadas mientras haya referencias. Las
   claves estables no se pueden cambiar desde los repositorios.
 
@@ -111,16 +122,25 @@ gastos compartidos, participantes, deudas y pagos. Cada repositorio expone
 los valores se envían como parámetros de SQLite.
 
 Las consultas aceptan filtros por campos permitidos, ordenamiento validado,
-límite y desplazamiento. `depositosRepositorio.consultarSaldoActual()` calcula
-el saldo inicial más los ingresos y transferencias recibidas, menos los
-egresos y transferencias enviadas, excluyendo movimientos anulados. El saldo
-actual no se persiste como un campo modificable.
+límite y desplazamiento. `depositosRepositorio.consultarSaldoActual()` lee el
+campo `depositos.saldo_actual`. Al crear un depósito, ese campo se inicializa
+con `saldo_inicial`; cada ingreso, egreso, movimiento compensatorio o
+transferencia actualiza el saldo en la misma transacción que guarda el
+movimiento. `saldo_actual` no se modifica directamente mediante el CRUD genérico.
+`depositosRepositorio.actualizarSaldoInformado()` permite fijar localmente el
+saldo comunicado por el usuario: guarda el valor anterior y el nuevo en
+`historial_saldos_deposito` y actualiza el depósito dentro de la misma
+transacción. `consultarHistorialSaldos()` devuelve esas conciliaciones; no cambia
+los movimientos existentes.
 
 `transferenciasRepositorio.crear()` crea de forma atómica la transferencia y
-los dos movimientos asociados. La eliminación lógica anula la transferencia y
-ambos movimientos dentro de la misma transacción. La eliminación de un gasto
-compartido cancela las deudas relacionadas y anula el movimiento asociado en
-una única transacción.
+los dos movimientos asociados. Al eliminarla, marca la original como anulada y
+crea una transferencia inversa con dos movimientos nuevos. Los movimientos
+originales se conservan y ambos lados de la reversión actualizan sus respectivos
+saldos. La eliminación de un movimiento de ingreso o egreso crea un movimiento
+opuesto enlazado mediante `reversion_de_id`, sin borrar el original. La
+eliminación de un gasto compartido o pago de deuda usa esa misma reversión dentro
+de su transacción compuesta.
 
 El catálogo `categoriasRepositorio` ofrece lectura, búsqueda y filtro sobre
 las constantes. No ofrece escritura porque el modelo no guarda categorías en
@@ -149,24 +169,26 @@ ni movimientos simulados.
 
 - Usuario: `activo = 0`.
 - Depósito: `activo = 0`; mantiene el historial.
-- Movimiento: `anulado = 1`; deja de afectar el saldo.
-- Transferencia: `anulada = 1` y anulación de sus dos movimientos.
+- Movimiento: se crea un movimiento opuesto enlazado; ambos registros se
+  conservan en el historial.
+- Transferencia: se marca como anulada y se crea otra transferencia inversa con
+  dos movimientos compensatorios.
 - Recurrencia: `activa = 0`; los movimientos generados permanecen.
 - Persona: `activa = 0`.
 - Deuda: estado `cancelada`.
 - Gasto compartido: estado `cancelado`, deudas asociadas canceladas y egreso
-  relacionado anulado.
+  relacionado compensado por un movimiento inverso.
 - Preferencias: eliminación física, protegida por sus referencias.
 - Participantes: eliminación física solo si aún no tienen una deuda relacionada.
-- Pagos: al eliminarlos, una transacción anula el movimiento asociado, quita el
-  pago y recalcula el estado de la deuda.
+- Pagos: al eliminarlos, una transacción crea la reversión del movimiento
+  asociado, quita el pago y recalcula el estado de la deuda.
+- Historial de saldo: las conciliaciones se agregan; no se editan ni eliminan.
 
-El saldo se consulta, no se modifica directamente:
-
-```text
-saldo actual = saldo inicial + ingresos + transferencias recibidas
-               - egresos - transferencias enviadas
-```
+El campo del saldo vigente se actualiza en la misma transacción que el cambio
+del historial. Parte de `saldo_inicial` hasta la primera conciliación; luego,
+parte del último `saldo_informado` y suma las variaciones posteriores. Al
+registrar otro saldo informado, ese valor se convierte en la nueva base vigente;
+las consultas leen el saldo guardado sin recorrer todos los movimientos.
 
 ## Errores
 
@@ -177,12 +199,13 @@ técnico, no los valores de la operación.
 
 ## Verificación
 
-La exportación de Android con Expo se completó correctamente. También se comprobó
-el esquema con SQLite y se ejercitaron las operaciones de los repositorios con
-un adaptador de la interfaz asíncrona de `expo-sqlite`, incluyendo rollback y
-persistencia al cerrar y abrir la base. Los 22 archivos JavaScript de
-`src/database/` pasaron análisis sintáctico.
+Para estos cambios se comprobó el análisis sintáctico de los repositorios
+modificados y se ejecutó el esquema inicial en SQLite en memoria. Se verificó la
+creación de las doce tablas, las claves foráneas y la aceptación de ejemplos de
+transferencia y reversión de movimiento. `git diff --check` no reportó errores.
 
-La apertura en un dispositivo Android y la comprobación en modo avión todavía
-requieren verificación en un dispositivo. El código de base de datos no invoca
-interfaces de red.
+Este entorno no tiene un script de pruebas del proyecto; no se volvió a ejecutar
+el adaptador de repositorios de `expo-sqlite`, el flujo de persistencia al cerrar
+y abrir AHRE ni la apertura en Android y modo avión. Esas comprobaciones siguen
+pendientes para esta versión. El código de base de datos no invoca interfaces de
+red.

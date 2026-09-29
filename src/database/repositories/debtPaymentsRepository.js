@@ -1,6 +1,7 @@
 import { ejecutarTransaccion } from '../transactions';
 import { crearRepositorio } from './repositoryFactory';
 import { deudasRepositorio } from './debtsRepository';
+import { movimientosRepositorio } from './movementsRepository';
 
 const repositorioPagosDeuda = crearRepositorio({
   tabla: 'pagos_deuda',
@@ -19,12 +20,7 @@ async function eliminar(id) {
     }
 
     const deuda = await deudasRepositorio.consultarPorId(pago.deuda_id, transaccion);
-    await transaccion.runAsync(
-      `UPDATE movimientos
-       SET anulado = 1, fecha_actualizacion = ?
-       WHERE id = ? AND anulado = 0;`,
-      [new Date().toISOString(), pago.movimiento_id],
-    );
+    await movimientosRepositorio.eliminar(pago.movimiento_id, transaccion);
     await repositorioPagosDeuda.eliminar(id, transaccion);
 
     if (deuda && deuda.estado !== 'cancelada') {

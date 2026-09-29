@@ -1,4 +1,5 @@
 import { ejecutarTransaccion } from '../transactions';
+import { movimientosRepositorio } from './movementsRepository';
 import { crearRepositorio } from './repositoryFactory';
 
 const repositorioGastosCompartidos = crearRepositorio({
@@ -26,15 +27,13 @@ async function eliminar(id) {
     if (!gasto) {
       return false;
     }
+    if (gasto.estado === 'cancelado') {
+      return false;
+    }
 
     const ahora = new Date().toISOString();
     await repositorioGastosCompartidos.actualizar(id, { estado: 'cancelado' }, transaccion);
-    await transaccion.runAsync(
-      `UPDATE movimientos
-       SET anulado = 1, fecha_actualizacion = ?
-       WHERE id = ? AND anulado = 0;`,
-      [ahora, gasto.movimiento_id],
-    );
+    await movimientosRepositorio.eliminar(gasto.movimiento_id, transaccion);
     await transaccion.runAsync(
       `UPDATE deudas
        SET estado = 'cancelada', fecha_actualizacion = ?

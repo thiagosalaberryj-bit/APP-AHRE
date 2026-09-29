@@ -3,6 +3,27 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [v0.4.0] - 2026-09-29 - no publicada
+
+### Añadido
+
+- Se implementó la capa local de persistencia SQLite con inicialización,
+  versionado, esquema relacional y repositorios para las entidades del modelo.
+  Las operaciones compuestas usan transacciones y no dependen de Internet ni
+  de un backend. (#19)
+- Los depósitos guardan el saldo vigente y permiten registrar conciliaciones
+  manuales en un historial local. Los ingresos, egresos y transferencias
+  actualizan los saldos afectados. (#19)
+- La eliminación de ingresos y egresos conserva el movimiento original y crea
+  una compensación enlazada; las transferencias se compensan con otra
+  transferencia y sus movimientos asociados. (#19)
+
+### Documentación
+
+- Se documentaron el esquema SQLite, las relaciones, las transacciones, el
+  acceso a los repositorios, la estrategia de saldos y las reglas de
+  compensación. (#19)
+
 ## [v0.3.0] - 2026-09-26 - no publicada
 
 ### Añadido
