@@ -35,7 +35,8 @@ APP-AHRE/
 │   │   ├── estructura-app.md
 │   │   └── navegacion.md
 │   ├── base-de-datos/
-│   │   └── base-datos-local.md
+│   │   ├── base-datos-local.md
+│   │   └── implementacion.md
 │   ├── configuracion/
 │   │   └── dependencias.md
 │   ├── interfaces/
@@ -58,7 +59,29 @@ APP-AHRE/
 │   │   └── AppearanceContext.js
 │   ├── database/
 │   │   ├── index.js
-│   │   └── storageAdapter.js
+│   │   ├── connectionQueue.js
+│   │   ├── errors.js
+│   │   ├── identifiers.js
+│   │   ├── initialization.js
+│   │   ├── storageAdapter.js
+│   │   ├── transactions.js
+│   │   ├── migrations/
+│   │   │   └── 001_initialSchema.js
+│   │   └── repositories/
+│   │       ├── categoriesRepository.js
+│   │       ├── depositsRepository.js
+│   │       ├── debtPaymentsRepository.js
+│   │       ├── debtsRepository.js
+│   │       ├── movementsRepository.js
+│   │       ├── peopleRepository.js
+│   │       ├── preferencesRepository.js
+│   │       ├── recurrencesRepository.js
+│   │       ├── repositoryFactory.js
+│   │       ├── sharedExpenseParticipantsRepository.js
+│   │       ├── sharedExpensesRepository.js
+│   │       ├── transfersRepository.js
+│   │       ├── usersRepository.js
+│   │       └── index.js
 │   ├── navigation/
 │   │   ├── AppNavigator.js
 │   │   └── BottomTabBar.js
@@ -136,11 +159,11 @@ solo modifica la presentación.
 
 ### `src/database/`
 
-Contiene el acceso al almacenamiento local y sus adaptadores.
-`storageAdapter.js` define un contrato independiente de las pantallas que
-posteriormente podrá conectarse con AsyncStorage, SQLite u otra alternativa
-compatible con Expo. Los repositorios de depósitos, movimientos, categorías,
-deudas y pagos deben permanecer en esta capa o en sus subcarpetas.
+Contiene la inicialización de SQLite, las migraciones, la serialización de
+operaciones, el manejo de errores y los repositorios de cada entidad.
+`expo-sqlite` es el almacenamiento principal de datos relacionados. Las
+pantallas no ejecutan SQL directamente. `storageAdapter.js` conserva un
+contrato auxiliar de clave-valor y no reemplaza la base relacional.
 
 ### `src/services/`
 
@@ -209,11 +232,14 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
 
 - `App.js` continúa siendo el archivo raíz de composición y `index.js` continúa
   siendo el punto de registro de Expo.
+- Antes de mostrar la navegación, `App.js` inicializa la base local. El splash se
+  mantiene visible durante la preparación; si falla, se ofrece reintentar.
 - Una pantalla mínima verifica la cadena `App → navegación → pantalla →
   componente`.
 - La navegación base está implementada con las dependencias de React
-  Navigation ya instaladas. La base de datos y los servicios todavía no se
-  conectan a las pantallas.
+  Navigation ya instaladas. Los repositorios de SQLite están disponibles para
+  que los Issues funcionales conecten sus pantallas; las pantallas financieras
+  y los servicios externos todavía no se conectan a ellos.
 - No se crean carpetas vacías para funcionalidades futuras. Las nuevas áreas se
   incorporarán cuando tengan pantallas, componentes o lógica real.
 - `structureSmokeTest.js` contiene una función auxiliar que comprueba que las

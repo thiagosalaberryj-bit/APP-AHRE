@@ -1,7 +1,6 @@
 /**
- * Define el contrato que utilizará la aplicación para el almacenamiento local.
- * La implementación concreta podrá ser AsyncStorage, SQLite u otra solución
- * compatible con Expo sin acoplarla a las pantallas.
+ * Define un contrato auxiliar de almacenamiento clave-valor.
+ * Los datos relacionados de AHRE se guardan en SQLite mediante los repositorios.
  */
 export function crearAdaptadorAlmacenamiento(adaptador) {
   if (

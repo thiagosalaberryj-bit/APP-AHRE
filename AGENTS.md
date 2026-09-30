@@ -48,6 +48,25 @@ implementar.
   solicita autorización antes de aplicarla.
 - Conserva las convenciones documentadas de arquitectura, nombres y JavaScript.
 
+## Cambios en el esquema de la base de datos
+
+- Mientras AHRE no tenga una versión final publicada y el esquema siga en
+  desarrollo, aplica los cambios estructurales al esquema o migración inicial
+  (`001_initialSchema.js`). No agregues migraciones de transición para
+  convertir bases locales creadas por versiones anteriores de desarrollo.
+- Durante esta etapa, los datos locales de Expo usados para desarrollo y
+  pruebas se consideran descartables. Si un cambio en `001_initialSchema.js`
+  requiere una base limpia, puedes borrar los datos locales de la app o
+  reinstalarla para recrear la base; no hace falta agregar una migración ni
+  pedir confirmación para descartar esos datos de desarrollo.
+- Conserva el mecanismo de inicialización y versionado existente. Cuando el
+  esquema se estabilice para una versión publicada, las modificaciones
+  posteriores deberán usar nuevas migraciones para preservar los datos de las
+  personas usuarias al actualizar la aplicación.
+- Esta autorización se limita a datos locales de Expo en desarrollo y pruebas;
+  nunca borres datos de producción ni datos reales de personas usuarias para
+  aplicar cambios al esquema.
+
 ## Estilos e interfaz
 
 - Reutiliza primero los tokens y estilos de `src/styles/` siempre que cubran la
