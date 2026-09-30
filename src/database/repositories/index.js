@@ -1,4 +1,5 @@
 export { categoriasRepositorio } from './categoriesRepository';
+export { autenticacionRepositorio } from './authenticationRepository';
 export { depositosRepositorio } from './depositsRepository';
 export { deudasRepositorio } from './debtsRepository';
 export { gastosCompartidosRepositorio } from './sharedExpensesRepository';

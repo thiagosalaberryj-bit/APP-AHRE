@@ -2,10 +2,10 @@
 
 ## Objetivo
 
-Este documento define las rutas y los navegadores base de AHRE. Login y Registro
-tienen maquetación visual y navegación entre ambas. Todavía no contienen
-autenticación real, consultas a SQLite ni lógica financiera.
-
+Este documento define las rutas y los navegadores de AHRE. Login y Registro
+implementan la autenticación local y el acceso sin conexión. `App.js` prepara
+SQLite y siempre inicia la navegación en Inicio; la recuperación automática de
+sesión y el salto directo al Dashboard quedan para otro Issue.
 ## Navegadores utilizados
 
 - `Native Stack`: controla el inicio, login, registro y las pantallas
@@ -94,22 +94,23 @@ El detalle de categoría y el detalle de movimiento se registran en el Stack
 principal, fuera del navegador de pestañas. Al abrirlos se oculta la barra
 inferior; volver regresa al detalle o a la pestaña de Estadísticas anterior.
 
-## Flujo visual de autenticación
+## Flujo de autenticación local
 
-La autenticación todavía no es real. Login y Registro preparan el recorrido
-visual y sus estados. «Iniciar sesión» abre Dashboard para probar la navegación;
-«Registrarse» vuelve a Login. Estos botones no procesan datos ni crean una
-sesión.
+El Stack contiene Inicio, Login, Registro y las pantallas secundarias. Cada vez
+que AHRE se abre, muestra Inicio, sin comprobar ni usar la sesión guardada para
+elegir la ruta. La recuperación automática de sesión se implementará en otro
+Issue.
 
 ```text
-Inicio → Login → Dashboard
-Login → Registro → Login
+Inicio → Login → Registro → Login → Dashboard
 ```
 
-La validación de sesión se implementará posteriormente. Perfil ofrece una
-confirmación visual para cerrar sesión, pero por ahora sus acciones solo cierran
-el modal y no existe una sesión que revocar.
+Registro valida los datos y guarda la cuenta local antes de volver a Login.
+Login valida la contraseña y, si es correcta, restablece la pila en Dashboard
+para que el botón de regreso no muestre Login. Registro y Login no usan
+servicios remotos ni requieren conexión.
 
+La función `cerrarSesion()` ya está disponible en el servicio de sesión. La conexión del botón actual de Perfil queda para una tarea posterior.
 ## Depósitos
 
 El detalle de depósito utiliza una única pantalla reutilizable. Actualmente se
@@ -163,7 +164,6 @@ nueva compilación para aplicarse a una app AHRE ya instalada.
 En este Issue no se implementan:
 
 - diseño final de las pantallas;
-- autenticación o registro reales;
 - consultas a la base de datos;
 - creación de movimientos o depósitos;
 - gráficos, filtros o estadísticas;

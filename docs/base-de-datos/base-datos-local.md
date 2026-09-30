@@ -32,7 +32,7 @@ La elección se debe a que AHRE necesita:
 - conservar los datos entre reinicios de la aplicación;
 - dejar preparada una futura sincronización.
 
-`expo-secure-store` se utilizará únicamente para datos sensibles pequeños, como tokens o credenciales de sesión. No se utilizará para guardar movimientos, depósitos o deudas.
+`expo-secure-store` se utilizará para conservar el identificador de la sesión local en el dispositivo. Las contraseñas no se guardan allí ni en texto plano: SQLite conserva solamente su verificador derivado.
 
 No se utilizará `AsyncStorage` como base principal porque el modelo de AHRE necesita relaciones y consultas estructuradas.
 
@@ -65,10 +65,34 @@ Representa al usuario local de AHRE.
 | --- | --- | --- |
 | `id` | `TEXT` | Identificador local del usuario. |
 | `nombre` | `TEXT` | Nombre visible del usuario. |
-| `correo_electronico` | `TEXT` | Correo del usuario, si corresponde. |
+| `correo_electronico` | `TEXT` | Correo obligatorio y único sin distinguir mayúsculas de minúsculas. |
 | `activo` | `INTEGER` | Indica si el usuario está activo. |
 | `fecha_creacion` | `TEXT` | Fecha de creación. |
 | `fecha_actualizacion` | `TEXT` | Última modificación. |
+
+El correo se normaliza con espacios externos quitados y letras minúsculas antes
+de guardarlo. La base también aplica un índice único sobre `LOWER(correo_electronico)`.
+El verificador de contraseña vive en `credenciales_usuario`, separado de los
+datos de perfil.
+
+### `credenciales_usuario`
+
+Guarda el material local requerido para comprobar la contraseña de una cuenta.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `usuario_id` | `TEXT` | Usuario asociado; también es la clave primaria. |
+| `contrasena_verificador` | `TEXT` | Cadena con algoritmo, parámetros, sal aleatoria y resultado derivado; nunca contiene la contraseña original. |
+| `fecha_creacion` | `TEXT` | Fecha de creación del verificador. |
+| `fecha_actualizacion` | `TEXT` | Última modificación del verificador. |
+
+La implementación actual almacena un SHA-256 de la contraseña y una sal
+aleatoria de 16 bytes, calculado con `expo-crypto`. No guarda la contraseña en
+texto plano. Este hash rápido ofrece menos resistencia ante intentos de
+adivinación offline que un algoritmo de derivación lenta. Los verificadores de
+cuentas locales creados con formatos anteriores no se convierten; durante el
+desarrollo se limpia la base local y se crea la cuenta nuevamente al cambiar
+este formato.
 
 ### `preferencias`
 
@@ -84,6 +108,9 @@ Guarda las preferencias básicas del usuario.
 | `fecha_actualizacion` | `TEXT` | Última modificación. |
 
 Cada usuario tendrá como máximo un registro de preferencias.
+El registro local crea las preferencias en la misma transacción que el usuario
+y su verificador. `deposito_predeterminado_id` comienza en `NULL` y
+`notificaciones_activas` en `1`.
 
 ### `depositos`
 

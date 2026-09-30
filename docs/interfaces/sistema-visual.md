@@ -62,6 +62,26 @@ Siempre deben acompañarse con texto, signo o icono.
 | Información | `#1976D2` | Mensajes informativos |
 | Enfoque | `#296860` | Inputs enfocados y elementos seleccionados |
 
+### Notificaciones superiores
+
+Las notificaciones superiores conservan la misma tarjeta verde oscuro en los
+temas claro y oscuro. `COLORES_NOTIFICACIONES` centraliza el fondo, los textos,
+la barra de tiempo y el color del icono según el tipo de aviso. Los errores usan
+rosa claro, los éxitos verde claro y la información azul claro; el tipo también
+se comunica con un icono distinto.
+
+| Tipo | Color del icono | Valor |
+| --- | --- | --- |
+| Error | Rosa claro | `#FF8A80` |
+| Éxito | Verde claro de marca | `#CCEB6C` |
+| Información | Azul claro | `#89BCF4` |
+
+El texto, el botón de cierre y el progreso usan blanco; la base de la barra usa
+blanco con `22%` de opacidad. El componente no define colores aparte: consume
+los tokens de `src/styles/colors.js`.
+La API y los casos de uso compartidos se describen en
+[`docs/funcionalidades/notificaciones-toast.md`](../funcionalidades/notificaciones-toast.md).
+
 ### Colores para depósitos
 
 Estos colores sirven para identificar visualmente un depósito y no representan

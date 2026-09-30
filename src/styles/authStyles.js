@@ -126,6 +126,13 @@ export function crearEstilosAutenticacion(tema) {
       fontSize: TIPOGRAFIA.tamanos.secundario,
       lineHeight: 20,
     },
+    mensajeExito: {
+      color: tema.exito,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      lineHeight: 20,
+      textAlign: 'center',
+    },
     botonPrincipal: {
       minHeight: 56,
       flexDirection: 'row',

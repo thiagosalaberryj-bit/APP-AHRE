@@ -2,6 +2,7 @@ const MENSAJES_USUARIO = Object.freeze({
   inicializacion: 'No se pudo preparar la base de datos local. Intentá nuevamente.',
   migracion: 'No se pudo actualizar la base de datos local. Intentá nuevamente.',
   version: 'La base local pertenece a una versión más reciente de AHRE.',
+  usuario_duplicado: 'Ya existe una cuenta con ese correo electrónico.',
   consulta: 'No se pudo consultar la información local.',
   escritura: 'No se pudo guardar la información local.',
   integridad: 'La información contiene valores o relaciones no válidos.',

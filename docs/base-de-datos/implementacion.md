@@ -42,6 +42,7 @@ definido en el modelo. Los indicadores utilizan `INTEGER` con valores `0/1`.
 | Tabla | Campos |
 | --- | --- |
 | `usuarios` | `id`, `nombre`, `correo_electronico`, `activo`, `fecha_creacion`, `fecha_actualizacion` |
+| `credenciales_usuario` | `usuario_id`, `contrasena_verificador`, `fecha_creacion`, `fecha_actualizacion` |
 | `preferencias` | `id`, `usuario_id`, `deposito_predeterminado_id`, `notificaciones_activas`, `fecha_creacion`, `fecha_actualizacion` |
 | `depositos` | `id`, `usuario_id`, `nombre`, `tipo`, `saldo_inicial`, `saldo_actual`, `icono`, `color`, `descripcion`, `activo`, `fecha_creacion`, `fecha_actualizacion` |
 | `historial_saldos_deposito` | `id`, `deposito_id`, `saldo_anterior`, `saldo_informado`, `descripcion`, `fecha_hora` |
@@ -109,8 +110,9 @@ La migración crea índices para los filtros previstos por el diseño:
 - persona en participantes y deudas;
 - deuda y fecha de pagos.
 
-También limita a una la persona marcada como usuario actual por cada usuario y
-a un movimiento de cada tipo por transferencia.
+También limita a un correo electrónico normalizado por cuenta, a una la persona
+marcada como usuario actual por cada usuario y a un movimiento de cada tipo por
+transferencia.
 
 ## Repositorios y operaciones
 
@@ -165,6 +167,10 @@ constantes inmutables. Así no hay filas de catálogo que se puedan duplicar.
 La primera ejecución tampoco crea un usuario de ejemplo, depósitos de muestra
 ni movimientos simulados.
 
+El registro real crea `usuarios`, `credenciales_usuario` y `preferencias` en
+una sola transacción. Si una inserción falla, SQLite revierte las tres filas.
+No crea un depósito predeterminado: las preferencias empiezan sin uno asociado.
+
 ## Eliminación y saldo
 
 - Usuario: `activo = 0`.
@@ -199,13 +205,19 @@ técnico, no los valores de la operación.
 
 ## Verificación
 
-Para estos cambios se comprobó el análisis sintáctico de los repositorios
-modificados y se ejecutó el esquema inicial en SQLite en memoria. Se verificó la
-creación de las doce tablas, las claves foráneas y la aceptación de ejemplos de
-transferencia y reversión de movimiento. `git diff --check` no reportó errores.
+Para los cambios de persistencia se comprobó el análisis sintáctico de los
+repositorios modificados y se ejecutó el esquema inicial en SQLite en memoria.
+Se verificó la creación de las trece tablas, las claves foráneas y la aceptación
+de ejemplos de transferencia y reversión de movimiento. Para autenticación
+también se verificó el índice único normalizado del correo, la tabla de
+credenciales y las preferencias iniciales. Las comprobaciones de credenciales
+correspondieron a una revisión anterior. El formato actual usa SHA-256 con sal;
+esta modificación no se probó en un dispositivo. Como los datos son locales de
+desarrollo, las cuentas creadas con el formato anterior se descartan y se
+registran de nuevo. `git diff --check` no reportó errores.
 
-Este entorno no tiene un script de pruebas del proyecto; no se volvió a ejecutar
-el adaptador de repositorios de `expo-sqlite`, el flujo de persistencia al cerrar
-y abrir AHRE ni la apertura en Android y modo avión. Esas comprobaciones siguen
-pendientes para esta versión. El código de base de datos no invoca interfaces de
-red.
+Este entorno no tiene un script de pruebas del proyecto. No se ejecutó el
+adaptador de repositorios de `expo-sqlite` dentro de Expo, ni se probó el flujo
+completo de Registro, Login y cierre/reapertura en un dispositivo Android o en
+modo avión. Esas comprobaciones manuales siguen pendientes. El código de
+autenticación no invoca interfaces de red.

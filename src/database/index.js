@@ -4,6 +4,7 @@ export { generarIdentificador } from './identifiers';
 export { inicializarBaseDatos } from './initialization';
 export { ejecutarTransaccion } from './transactions';
 export {
+  autenticacionRepositorio,
   categoriasRepositorio,
   depositosRepositorio,
   deudasRepositorio,

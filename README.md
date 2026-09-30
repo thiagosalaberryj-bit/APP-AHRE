@@ -126,8 +126,10 @@ interfaces. Actualmente cuenta con:
 - estructura separada para pantallas, componentes, navegación, base local,
   servicios y utilidades;
 - pantalla inicial con bienvenida y acceso visual a Login;
-- interfaces maquetadas para Login y Registro, con navegación visual entre
-  ambas y acceso de prueba al Dashboard;
+- registro de usuarios locales con validación, correo único y verificador de
+  contraseña protegido;
+- Login local y sesión persistente opcional mediante SecureStore, sin conexión
+  a Internet;
 - Dashboard maquetado con balance, acciones rápidas de ingreso, egreso y OCR,
   depósitos y movimientos de ejemplo;
 - pantalla de Movimientos con historial agrupado por día, búsqueda y filtros
@@ -157,12 +159,15 @@ interfaces. Actualmente cuenta con:
 - historial de cambios de la versión `0.3.0` con las interfaces y mejoras
   visuales de los Issues recientes.
 
-Las funcionalidades completas de AHRE todavía no están implementadas. Tampoco
-se implementaron la autenticación ni el registro real de usuarios. Los flujos de
-edición y cambio de contraseña del Perfil son de demostración; el perfil, la foto,
-el idioma, las notificaciones y la apariencia no se persisten. Cerrar sesión solo
-cierra su modal porque aún no existe una sesión real. Los depósitos y movimientos
-del Dashboard son datos de ejemplo. La selección de categorías y los formularios
+Las funcionalidades completas de AHRE todavía no están implementadas. El
+registro y el Login ya crean y verifican cuentas localmente. Aunque Login puede
+guardar una sesión local, AHRE siempre inicia en la pantalla de bienvenida por
+ahora. Los flujos de edición y cambio de contraseña del
+Perfil son de demostración; el perfil, la foto,
+el idioma, las notificaciones y la apariencia no se persisten. El botón Cerrar
+sesión de Perfil sigue siendo visual; la operación local ya está disponible en
+el servicio y su conexión desde Perfil queda para un issue posterior. Los
+depósitos y movimientos del Dashboard son datos de ejemplo. La selección de categorías y los formularios
 no persisten movimientos. El formulario de ingreso permite representar todos
 sus campos y regresar mediante la flecha del encabezado; no tiene una acción
 «Cancelar» en el pie. La versión `0.3.0` ya está publicada como versión no
@@ -185,6 +190,7 @@ APP-AHRE/
 ├── docs/                   # Documentación de arquitectura, configuración, interfaz y procesos
 ├── src/
 │   ├── components/         # Componentes reutilizables
+│   ├── authentication/     # Registro, verificación de credenciales y sesión local
 │   ├── constants/          # Valores constantes compartidos
 │   ├── contexts/           # Preferencias compartidas durante la sesión
 │   ├── database/           # Acceso y adaptadores de almacenamiento local
@@ -220,6 +226,8 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Interfaz de Notificaciones](docs/interfaces/notificaciones.md);
 - [Flujo OCR de comprobantes](docs/interfaces/ocr.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
+- [Autenticación local](docs/funcionalidades/autenticacion-local.md);
+- [Notificaciones toast](docs/funcionalidades/notificaciones-toast.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);
 - [Flujo de Issues, Pull Requests e historial de cambios](docs/proceso/flujo-issues-prs-changelog.md).
