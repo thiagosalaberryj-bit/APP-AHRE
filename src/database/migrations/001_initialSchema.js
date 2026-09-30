@@ -5,10 +5,18 @@ export async function aplicarEsquemaInicial(baseDatos) {
     CREATE TABLE IF NOT EXISTS usuarios (
       id TEXT PRIMARY KEY NOT NULL,
       nombre TEXT NOT NULL,
-      correo_electronico TEXT,
+      correo_electronico TEXT NOT NULL,
       activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
       fecha_creacion TEXT NOT NULL,
       fecha_actualizacion TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS credenciales_usuario (
+      usuario_id TEXT PRIMARY KEY NOT NULL,
+      contrasena_verificador TEXT NOT NULL,
+      fecha_creacion TEXT NOT NULL,
+      fecha_actualizacion TEXT NOT NULL,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE RESTRICT
     );
 
     CREATE TABLE IF NOT EXISTS depositos (
@@ -187,8 +195,8 @@ export async function aplicarEsquemaInicial(baseDatos) {
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_personas_usuario_actual_unico
       ON personas (usuario_id) WHERE es_usuario_actual = 1;
-    CREATE INDEX IF NOT EXISTS idx_usuarios_correo_electronico
-      ON usuarios (correo_electronico);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_correo_electronico_unico
+      ON usuarios (LOWER(correo_electronico));
     CREATE INDEX IF NOT EXISTS idx_depositos_usuario_activo
       ON depositos (usuario_id, activo);
     CREATE INDEX IF NOT EXISTS idx_historial_saldos_deposito_fecha

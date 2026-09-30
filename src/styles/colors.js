@@ -110,3 +110,16 @@ export const TEMAS = Object.freeze({
     botonSecundarioTexto: COLORES_MARCA.verdeClaro,
   }),
 });
+
+export const COLORES_NOTIFICACIONES = Object.freeze({
+  fondo: COLORES_MARCA.verdeOscuro,
+  texto: COLORES_NEUTROS.superficie,
+  botonCerrar: COLORES_NEUTROS.superficie,
+  barraProgreso: COLORES_NEUTROS.superficie,
+  fondoBarraProgreso: 'rgba(255, 255, 255, 0.22)',
+  iconos: Object.freeze({
+    error: TEMAS.oscuro.error,
+    exito: COLORES_MARCA.verdeClaro,
+    informacion: COLORES_GRAFICOS[5],
+  }),
+});

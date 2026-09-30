@@ -14,6 +14,7 @@ import * as InterfazSistema from 'expo-system-ui';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ContextoApariencia, ProveedorApariencia } from './src/contexts/AppearanceContext';
+import { ProveedorAvisos } from './src/contexts/ToastContext';
 import { inicializarBaseDatos } from './src/database';
 import NavegadorAplicacion from './src/navigation/AppNavigator';
 
@@ -90,34 +91,36 @@ function ContenidoAplicacion() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar
-        style="light"
-        backgroundColor={tema.encabezado}
-      />
-      {estadoBaseDatos === 'lista' ? (
-        <NavegadorAplicacion />
-      ) : (
-        <View style={[estilosInicializacion.contenedor, { backgroundColor: tema.fondo }]}>
-          {estadoBaseDatos === 'preparando' ? (
-            <ActivityIndicator size="large" color={tema.foco} />
-          ) : (
-            <>
-              <Text style={[estilosInicializacion.textoError, { color: tema.textoPrincipal }]}>
-                {errorBaseDatos?.message || 'No se pudo preparar la base de datos local. Intentá nuevamente.'}
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => establecerIntentoInicializacion((intento) => intento + 1)}
-                style={[estilosInicializacion.botonReintentar, { backgroundColor: tema.botonPrincipal }]}
-              >
-                <Text style={[estilosInicializacion.textoBoton, { color: tema.botonPrincipalTexto }]}>
-                  Reintentar
+      <ProveedorAvisos>
+        <StatusBar
+          style="light"
+          backgroundColor={tema.encabezado}
+        />
+        {estadoBaseDatos === 'lista' ? (
+          <NavegadorAplicacion />
+        ) : (
+          <View style={[estilosInicializacion.contenedor, { backgroundColor: tema.fondo }]}>
+            {estadoBaseDatos === 'preparando' ? (
+              <ActivityIndicator size="large" color={tema.foco} />
+            ) : (
+              <>
+                <Text style={[estilosInicializacion.textoError, { color: tema.textoPrincipal }]}>
+                  {errorBaseDatos?.message || 'No se pudo preparar la base de datos local. Intentá nuevamente.'}
                 </Text>
-              </Pressable>
-            </>
-          )}
-        </View>
-      )}
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => establecerIntentoInicializacion((intento) => intento + 1)}
+                  style={[estilosInicializacion.botonReintentar, { backgroundColor: tema.botonPrincipal }]}
+                >
+                  <Text style={[estilosInicializacion.textoBoton, { color: tema.botonPrincipalTexto }]}>
+                    Reintentar
+                  </Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        )}
+      </ProveedorAvisos>
     </SafeAreaProvider>
   );
 }

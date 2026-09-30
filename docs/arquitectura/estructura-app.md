@@ -2,13 +2,10 @@
 
 ## Alcance
 
-Esta estructura prepara AHRE, una aplicación móvil desarrollada con Expo y
-React Native utilizando JavaScript. El objetivo de este Issue es separar las
-responsabilidades principales y dejar puntos de extensión para futuras
-funcionalidades. Login y Registro ya tienen una maquetación navegable, pero
-todavía no implementan autenticación, validación ni persistencia de sesión.
-Tampoco están implementados los flujos completos de finanzas, OCR,
-sincronización ni colaboración.
+Esta estructura organiza AHRE, una aplicación móvil desarrollada con Expo y
+React Native utilizando JavaScript. Login y Registro implementan autenticación
+local y persistencia de sesión. Los flujos completos de finanzas, OCR,
+sincronización y colaboración todavía no están implementados.
 
 El informe del proyecto define AHRE como una aplicación orientada inicialmente
 a Android y con un enfoque offline-first. Por eso la información local es el
@@ -42,9 +39,17 @@ APP-AHRE/
 │   ├── interfaces/
 │   │   ├── autenticacion.md
 │   │   └── sistema-visual.md
+│   ├── funcionalidades/
+│   │   ├── autenticacion-local.md
+│   │   └── notificaciones-toast.md
 │   └── proceso/
 │       └── flujo-issues-prs-changelog.md
 ├── src/
+│   ├── authentication/
+│   │   ├── authenticationService.js
+│   │   ├── errors.js
+│   │   ├── passwordSecurity.js
+│   │   └── sessionService.js
 │   ├── components/
 │   │   ├── AuthContainer.js
 │   │   ├── AuthInput.js
@@ -52,11 +57,13 @@ APP-AHRE/
 │   │   ├── MainHeader.js
 │   │   ├── PasswordInput.js
 │   │   ├── PrimaryButton.js
-│   │   └── SectionHeader.js
+│   │   ├── SectionHeader.js
+│   │   └── ToastNotification.js
 │   ├── constants/
 │   │   └── routes.js
 │   ├── contexts/
-│   │   └── AppearanceContext.js
+│   │   ├── AppearanceContext.js
+│   │   └── ToastContext.js
 │   ├── database/
 │   │   ├── index.js
 │   │   ├── connectionQueue.js
@@ -68,6 +75,7 @@ APP-AHRE/
 │   │   ├── migrations/
 │   │   │   └── 001_initialSchema.js
 │   │   └── repositories/
+│   │       ├── authenticationRepository.js
 │   │       ├── categoriesRepository.js
 │   │       ├── depositsRepository.js
 │   │       ├── debtPaymentsRepository.js
@@ -107,7 +115,8 @@ APP-AHRE/
 │   │   ├── HomeScreenStyles.js
 │   │   ├── authStyles.js
 │   │   ├── colors.js
-│   │   └── globalStyles.js
+│   │   ├── globalStyles.js
+│   │   └── toastNotificationStyles.js
 │   └── utils/
 │       └── structureSmokeTest.js
 ├── package.json
@@ -147,6 +156,12 @@ de AHRE, título, descripción y accesos a notificaciones y perfil.
 `SectionHeader.js` define el encabezado reutilizable de las pantallas
 secundarias, con el título junto a la flecha de regreso y una descripción
 alineada a la izquierda y centrada verticalmente debajo.
+`ToastNotification.js` dibuja avisos superiores con una barra de tiempo, cierre
+manual y gesto horizontal. El estado compartido entre pantallas vive en
+`src/contexts/ToastContext.js`. Las pantallas usan `mostrarAviso` para errores
+generales, confirmaciones y avisos breves; las validaciones específicas siguen
+junto al campo. El uso y los tipos disponibles están documentados en
+[`docs/funcionalidades/notificaciones-toast.md`](../funcionalidades/notificaciones-toast.md).
 
 ### `src/navigation/`
 
@@ -164,6 +179,13 @@ operaciones, el manejo de errores y los repositorios de cada entidad.
 `expo-sqlite` es el almacenamiento principal de datos relacionados. Las
 pantallas no ejecutan SQL directamente. `storageAdapter.js` conserva un
 contrato auxiliar de clave-valor y no reemplaza la base relacional.
+
+### `src/authentication/`
+
+Contiene el servicio de registro y login locales, la protección y verificación
+de contraseñas y el ciclo de vida de la sesión. Se comunica con el repositorio
+de autenticación para SQLite y con SecureStore únicamente para recordar el
+identificador de sesión.
 
 ### `src/services/`
 
@@ -190,6 +212,10 @@ Contiene el estado compartido entre pantallas que debe vivir durante la sesión.
 `AppearanceContext.js` coordina la preferencia de apariencia, usa el tema del
 dispositivo en modo del sistema y ofrece los temas claro u oscuro elegidos en el
 Perfil. La preferencia no se guarda y vuelve al modo del sistema al reiniciar AHRE.
+`ToastContext.js` conserva el aviso actual mientras cambian las rutas y lo
+presenta por encima del contenido de la aplicación. El proveedor también envuelve
+la navegación desde `App.js`, así las pantallas usan el mismo `ContextoAvisos`
+sin duplicar componentes de aviso.
 
 ### `src/styles/`
 
@@ -232,8 +258,9 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
 
 - `App.js` continúa siendo el archivo raíz de composición y `index.js` continúa
   siendo el punto de registro de Expo.
-- Antes de mostrar la navegación, `App.js` inicializa la base local. El splash se
-  mantiene visible durante la preparación; si falla, se ofrece reintentar.
+- Antes de mostrar la navegación, `App.js` inicializa la base local y deja Inicio
+  como ruta de entrada. El splash se mantiene visible durante la preparación;
+  recuperar la sesión automáticamente queda para otro Issue.
 - Una pantalla mínima verifica la cadena `App → navegación → pantalla →
   componente`.
 - La navegación base está implementada con las dependencias de React
