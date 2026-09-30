@@ -10,7 +10,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 
 | Dependencia | Versión | Finalidad | Uso en AHRE |
 | --- | --- | --- | --- |
-| `expo` | `~57.0.25` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
+| `expo` | `~57.0.26` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
 | `expo-status-bar` | `~57.0.1` | Control de la barra de estado. | Ajustes visuales básicos de la aplicación. |
 | `react` | `19.2.3` | Biblioteca para construir la interfaz. | Pantallas y componentes de AHRE. |
 | `react-native` | `0.86.3` | Framework móvil utilizado por Expo. | Desarrollo de la aplicación para Android y otras plataformas compatibles. |
@@ -20,18 +20,18 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | Dependencia | Versión | Finalidad | Uso en AHRE |
 | --- | --- | --- | --- |
 | `@expo/vector-icons` | `^15.0.2` | Proporciona un conjunto de íconos compatibles con Expo y React Native. | Navegación, acciones y estados visuales de la interfaz. |
-| `expo-camera` | `~57.0.5` | Muestra una vista previa de cámara dentro de la aplicación y captura fotografías. | Vista en vivo y captura de comprobantes en OCR; el obturador está debajo del visor. |
+| `expo-camera` | `~57.0.6` | Muestra una vista previa de cámara dentro de la aplicación y captura fotografías. | Vista en vivo y captura de comprobantes en OCR; el obturador está debajo del visor. |
 | `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes elegidos desde la galería en OCR y documentos. |
 | `expo-image-manipulator` | `~57.0.20` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
 | `expo-crypto` | `~57.0.3` | Genera bytes aleatorios y calcula resúmenes criptográficos con Expo. | `passwordSecurity.js` crea una sal de 16 bytes con `getRandomBytesAsync()` y deriva el verificador con una pasada SHA-256 mediante `digestStringAsync()`. |
-| `expo-constants` | `~57.0.19` | Expone información constante de la aplicación y del entorno de ejecución. | Está declarada, pero el código de AHRE todavía no la importa. |
+| `expo-constants` | `~57.0.20` | Expone información constante de la aplicación y del entorno de ejecución. | Está declarada, pero el código de AHRE todavía no la importa. |
 | `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Está declarada para una posible tipografía personalizada; AHRE todavía usa la fuente del sistema. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Está declarada, pero AHRE todavía no la importa ni activa flujos biométricos. |
 | `expo-secure-store` | `~57.0.4` | Guarda valores pequeños de forma segura utilizando mecanismos nativos del dispositivo. | `sessionService.js` guarda el identificador del usuario si «Recordarme» está activo. No guarda contraseñas ni sus verificadores. |
 | `expo-splash-screen` | `~57.0.9` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Evitar transiciones incorrectas al abrir AHRE y coordinar su inicio. |
 | `expo-sqlite` | `~57.0.3` | Permite utilizar una base de datos SQLite local. | Persistencia offline-first; también guarda las cuentas, sus verificadores y preferencias locales. |
 | `expo-system-ui` | `~57.0.4` | Permite configurar aspectos de la interfaz nativa del sistema. | Fondo de la ventana según el tema activo y transiciones sin un fondo blanco inesperado. |
-| `expo-navigation-bar` | `~57.0.2` | Permite definir el estilo de los controles de navegación del sistema Android. | Cambiar el contraste de los controles según el tema; una capa de React Native pinta el fondo que corresponde a cada pantalla. |
+| `expo-navigation-bar` | `~57.0.3` | Permite definir el estilo de los controles de navegación del sistema Android. | Cambiar el contraste de los controles según el tema; una capa de React Native pinta el fondo que corresponde a cada pantalla. |
 | `@react-navigation/native` | `^7.4.1` | Base común para administrar la navegación en React Native. | Organización de los flujos y pantallas de AHRE. |
 | `@react-navigation/native-stack` | `^7.19.2` | Implementa navegación tipo pila entre pantallas. | Flujos como inicio de sesión, registro y detalle de movimientos. |
 | `@react-navigation/bottom-tabs` | `^7.19.2` | Implementa navegación mediante pestañas inferiores. | Acceso a Inicio, Movimientos, Nuevo, Estadísticas y Social. |
@@ -157,6 +157,21 @@ No se agregan dependencias adicionales para módulos futuros hasta que exista
 una necesidad concreta y una decisión técnica documentada. Algunas
 dependencias ya declaradas permanecen sin uso directo y están identificadas en
 la tabla.
+
+## Cambios de versiones registrados
+
+En la actualización actual se cambiaron estas dependencias directas:
+
+| Paquete | Versión anterior | Versión actual |
+| --- | --- | --- |
+| `expo` | `~57.0.25` | `~57.0.26` |
+| `expo-camera` | `~57.0.5` | `~57.0.6` |
+| `expo-constants` | `~57.0.19` | `~57.0.20` |
+| `expo-navigation-bar` | `~57.0.2` | `~57.0.3` |
+
+El lockfile también resolvió `expo-modules-core` de `57.0.19` a `57.0.20`
+como dependencia transitiva de Expo; no se agrega directamente a
+`package.json`.
 
 ## Autenticación local y dependencias
 
