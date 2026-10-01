@@ -74,8 +74,10 @@ dependencia obligatoria para las funciones esenciales.
 
 La interfaz actual presenta un resumen visual de la situación financiera, con
 saldo, depósitos, movimientos recientes y accesos a las operaciones frecuentes.
-Los datos que muestra son de ejemplo y todavía no se consultan ni se guardan en
-la base de datos local.
+El Dashboard consulta el usuario de la sesión local, los depósitos y los
+movimientos en SQLite; calcula el balance desde `saldo_actual` y actualiza la
+información cuando vuelve a tomar el foco. Las demás pantallas financieras aún
+pueden mostrar datos de ejemplo y no guardar cambios.
 
 ### Depósitos y movimientos
 
@@ -137,8 +139,9 @@ interfaces. Actualmente cuenta con:
   validación biométrica antes de abrir el Dashboard cuando ya hay sesión;
 - carga de Inicio con barra verde animada, porcentaje y textos cambiantes, en
   modo claro y oscuro, durante 1,5 segundos después de validar la huella;
-- Dashboard maquetado con balance, acciones rápidas de ingreso, egreso y OCR,
-  depósitos y movimientos de ejemplo;
+- Dashboard conectado a la base local para mostrar al usuario, depósitos,
+  balance y hasta cinco movimientos recientes; mantiene los accesos rápidos a
+  ingreso, egreso y OCR;
 - pantalla de Movimientos con historial agrupado por día, búsqueda y filtros
   locales por tipo, fecha, monto, categoría y depósito, con detalles de
   movimientos;
@@ -175,8 +178,9 @@ de edición y cambio de contraseña del Perfil son de demostración; el perfil, 
 foto, el idioma, las notificaciones y la apariencia no se persisten. El botón Cerrar
 sesión de Perfil sigue siendo visual; la operación local ya está disponible en
 el servicio y su conexión desde Perfil queda para un issue posterior. Los
-depósitos y movimientos del Dashboard son datos de ejemplo. La selección de categorías y los formularios
-no persisten movimientos. El formulario de ingreso permite representar todos
+depósitos y movimientos de las otras pantallas financieras continúan siendo
+datos de ejemplo; el Dashboard lee su resumen desde SQLite. La selección de
+categorías y los formularios no persisten movimientos. El formulario de ingreso permite representar todos
 sus campos y regresar mediante la flecha del encabezado; no tiene una acción
 «Cancelar» en el pie. La versión `0.3.0` es la última publicada como versión
 no estable para evaluación; la `0.4.0` está documentada como no publicada en
@@ -237,6 +241,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
 - [Autenticación local](docs/funcionalidades/autenticacion-local.md);
 - [Lógica de inicio](docs/funcionalidades/inicio.md);
+- [Carga local del Dashboard](docs/funcionalidades/dashboard.md);
 - [Notificaciones toast](docs/funcionalidades/notificaciones-toast.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);
