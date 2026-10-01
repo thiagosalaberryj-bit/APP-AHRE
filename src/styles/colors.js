@@ -2,6 +2,7 @@ export const COLORES_MARCA = Object.freeze({
   verdeOscuro: '#024C42',
   verdeMedio: '#296860',
   verdeClaro: '#CCEB6C',
+  verdeBrillante: '#D7FF00',
 });
 
 export const COLORES_NEUTROS = Object.freeze({

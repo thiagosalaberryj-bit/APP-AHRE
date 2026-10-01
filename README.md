@@ -125,11 +125,18 @@ interfaces. Actualmente cuenta con:
 - entrada principal compatible con Expo y React Native;
 - estructura separada para pantallas, componentes, navegación, base local,
   servicios y utilidades;
-- pantalla inicial con bienvenida y acceso visual a Login;
+- pantalla de Inicio visible después de preparar SQLite; la sesión local se
+  comprueba al completar el deslizador;
 - registro de usuarios locales con validación, correo único y verificador de
   contraseña protegido;
 - Login local y sesión persistente opcional mediante SecureStore, sin conexión
   a Internet;
+- avisos toast reutilizables para errores, confirmaciones e información, con
+  tiempo visible, cierre manual y gesto para descartarlos;
+- inicio con preparación local de SQLite, consulta de sesión al deslizar y
+  validación biométrica antes de abrir el Dashboard cuando ya hay sesión;
+- carga de Inicio con barra verde animada, porcentaje y textos cambiantes, en
+  modo claro y oscuro, durante 1,5 segundos después de validar la huella;
 - Dashboard maquetado con balance, acciones rápidas de ingreso, egreso y OCR,
   depósitos y movimientos de ejemplo;
 - pantalla de Movimientos con historial agrupado por día, búsqueda y filtros
@@ -156,22 +163,24 @@ interfaces. Actualmente cuenta con:
   conectarse a lógica futura;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
-- historial de cambios de la versión `0.3.0` con las interfaces y mejoras
-  visuales de los Issues recientes.
+- historial con la versión `0.4.0` en preparación, que reúne persistencia,
+  autenticación local y la lógica de inicio de los Issues #19, #20 y #21.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. El
-registro y el Login ya crean y verifican cuentas localmente. Aunque Login puede
-guardar una sesión local, AHRE siempre inicia en la pantalla de bienvenida por
-ahora. Los flujos de edición y cambio de contraseña del
-Perfil son de demostración; el perfil, la foto,
-el idioma, las notificaciones y la apariencia no se persisten. El botón Cerrar
+registro y el Login ya crean y verifican cuentas localmente. Al abrir AHRE, la
+pantalla de Inicio permanece visible hasta que la persona desliza. Entonces,
+sin sesión conduce a Login; con sesión válida solicita la huella y muestra una
+carga animada antes de abrir el Dashboard. Los flujos
+de edición y cambio de contraseña del Perfil son de demostración; el perfil, la
+foto, el idioma, las notificaciones y la apariencia no se persisten. El botón Cerrar
 sesión de Perfil sigue siendo visual; la operación local ya está disponible en
 el servicio y su conexión desde Perfil queda para un issue posterior. Los
 depósitos y movimientos del Dashboard son datos de ejemplo. La selección de categorías y los formularios
 no persisten movimientos. El formulario de ingreso permite representar todos
 sus campos y regresar mediante la flecha del encabezado; no tiene una acción
-«Cancelar» en el pie. La versión `0.3.0` ya está publicada como versión no
-estable para evaluación y no representa una versión comercial.
+«Cancelar» en el pie. La versión `0.3.0` es la última publicada como versión
+no estable para evaluación; la `0.4.0` está documentada como no publicada en
+[`docs/CHANGELOG.md`](docs/CHANGELOG.md) y no representa una versión comercial.
 
 ## Tecnología
 
@@ -227,6 +236,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Flujo OCR de comprobantes](docs/interfaces/ocr.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
 - [Autenticación local](docs/funcionalidades/autenticacion-local.md);
+- [Lógica de inicio](docs/funcionalidades/inicio.md);
 - [Notificaciones toast](docs/funcionalidades/notificaciones-toast.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);

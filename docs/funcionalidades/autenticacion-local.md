@@ -46,7 +46,14 @@ La contraseña no se escribe en almacenamiento local, logs ni errores. Si la aut
 
 `sessionService.js` expone `crearSesion`, `obtenerSesionActual`, `comprobarSesion` y `cerrarSesion`. SecureStore contiene solo el identificador del usuario; no guarda la contraseña ni el verificador. La opción «Recordarme», activa inicialmente en Login, determina si ese identificador se persiste en SecureStore o queda únicamente en memoria hasta cerrar AHRE.
 
-Al iniciar AHRE, `App.js` prepara SQLite y siempre monta el navegador en Inicio. Aunque SecureStore conserve el identificador al usar «Recordarme», el arranque no lo consulta ni salta al Dashboard. La recuperación automática de sesión y su navegación quedan para otro Issue.
+Al abrir AHRE, `App.js` prepara SQLite y deja Inicio como ruta inicial; todavía
+no consulta la sesión. Cuando la persona completa el deslizador, Inicio llama a
+`obtenerSesionActual()`. Si SecureStore conserva el identificador guardado con
+«Recordarme» y el usuario existe y está activo, se solicita la huella local.
+Después de autenticar, Inicio muestra una carga animada de 1,5 segundos y abre
+el Dashboard. Si no hay sesión, reemplaza Inicio por Login sin solicitar
+biometría. Si el dispositivo no tiene biometría configurada, ofrece Login con
+contraseña. Inicio no queda en la pila después del destino.
 
 El servicio de cierre elimina la sesión de memoria y SecureStore. La conexión del botón de Perfil queda fuera de este issue y se realizará en un trabajo posterior.
 
@@ -54,7 +61,8 @@ El servicio de cierre elimina la sesión de memoria y SecureStore. La conexión 
 
 - El registro exitoso limpia la pila y muestra Login con un aviso de éxito.
 - El Login exitoso limpia la pila y muestra Dashboard, sin dejar Login atrás.
-- AHRE siempre abre en Inicio; desde allí la persona elige Login o Registro.
+- AHRE permanece en Inicio después de preparar SQLite; el deslizador consulta
+  la sesión y decide si abre Login o solicita biometría antes del Dashboard.
 - Login solo lleva al Dashboard después de verificar las credenciales.
 
 ## Errores y carga

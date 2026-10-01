@@ -2,13 +2,13 @@
 
 ## Alcance
 
-Login y Registro crean y validan cuentas en SQLite local. No consultan un backend, no requieren Internet y no realizan solicitudes de red. Cada arranque muestra Inicio; la recuperación automática de sesión queda para otro Issue.
+Login y Registro crean y validan cuentas en SQLite local. No consultan un backend, no requieren Internet y no realizan solicitudes de red. Al abrir AHRE, Inicio permanece visible hasta que la persona completa el deslizador. Sin sesión, abre Login; con sesión válida, solicita la huella y luego abre el Dashboard.
 
 ## Login
 
 `src/screens/LoginScreen.js` solicita correo electrónico y contraseña. Antes de consultar SQLite comprueba que ambos estén completos y que el correo tenga un formato válido. El correo se recorta y normaliza a minúsculas. Las credenciales inválidas muestran el mismo mensaje para un usuario inexistente o una contraseña incorrecta.
 
-El botón «Recordarme» está activo inicialmente. Al activarlo, el identificador de usuario de la sesión se guarda con `expo-secure-store`. Si se desactiva, la sesión se conserva solo mientras la aplicación está abierta. Por ahora ese identificador no se consulta al arrancar AHRE: siempre se muestra Inicio y la persona ingresa a Login manualmente. «¿Olvidaste tu contraseña?» permanece sin un flujo asociado; la recuperación remota no forma parte de esta funcionalidad.
+El botón «Recordarme» está activo inicialmente. Al activarlo, el identificador de usuario de la sesión se guarda con `expo-secure-store`. Si se desactiva, la sesión se conserva solo mientras la aplicación está abierta. Después de inicializar SQLite, AHRE permanece en Inicio; la sesión se consulta al completar el deslizador. «¿Olvidaste tu contraseña?» permanece sin un flujo asociado; la recuperación remota no forma parte de esta funcionalidad.
 
 El botón de Login muestra carga durante la verificación, impide pulsaciones repetidas y permite mostrar u ocultar la contraseña sin alterar su contenido. Al autenticar correctamente reemplaza la pila de navegación por el Dashboard, así el botón de regreso no vuelve al formulario.
 
@@ -55,7 +55,7 @@ informativos está documentado en
 | `comprobarSesion()` | Devuelve si hay una sesión válida. |
 | `cerrarSesion()` | Elimina la sesión de memoria y SecureStore. |
 
-SecureStore contiene únicamente el identificador del usuario; la contraseña y su verificador no se almacenan allí. Al arrancar, AHRE inicializa SQLite y muestra Inicio sin comprobar la sesión. `obtenerSesionActual()` y `comprobarSesion()` quedan disponibles para el Issue que defina la recuperación automática de sesión.
+SecureStore contiene únicamente el identificador del usuario; la contraseña y su verificador no se almacenan allí. Tras deslizar en Inicio, `obtenerSesionActual()` confirma que ese identificador corresponde a un usuario activo. Si no hay sesión o la referencia no corresponde a un usuario activo, se abre Login sin mostrar biometría; una referencia obsoleta se limpia. Si la sesión es válida, se solicita la huella del dispositivo antes de abrir el Dashboard. Los fallos de acceso a SecureStore o SQLite muestran un aviso y permiten volver a deslizar.
 
 La operación para cerrar sesión está disponible en el servicio. Conectar el botón existente de Perfil se mantiene para una tarea posterior, según el alcance definido para esta etapa.
 
@@ -74,7 +74,8 @@ La operación para cerrar sesión está disponible en el servicio. Conectar el b
 ## Navegación y conectividad
 
 ```text
-Inicio → Login → Registro → Login → Dashboard
+Inicio → deslizar → sin sesión → Login → Registro → Login → Dashboard
+Inicio → deslizar → sesión válida → huella → carga animada → Dashboard
 ```
 
 Registro y Login usan SQLite, SecureStore, generación aleatoria y cálculo local de SHA-256 con sal. No utilizan `fetch`, APIs remotas ni conectividad, por lo que el flujo puede usarse en modo avión.

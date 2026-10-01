@@ -37,6 +37,7 @@ Las constantes de rutas y otras constantes de dominio continúan en
 | Verde oscuro | `#024C42` | Encabezados, detalles, iconos de deuda y elementos principales |
 | Verde medio | `#296860` | Contenedores secundarios, botones de encabezado y enfoque |
 | Verde claro | `#CCEB6C` | Acciones principales, iconos destacados y texto sobre verde |
+| Verde brillante | `#D7FF00` | Relleno de la barra de progreso de inicio |
 | Fondo claro | `#F4F4F4` | Fondo general del modo claro |
 | Superficie | `#FFFFFF` | Tarjetas, formularios, contenedores y navegación |
 | Texto principal | `#111111` | Títulos, montos y contenido principal |

@@ -3,9 +3,9 @@
 ## Objetivo
 
 Este documento define las rutas y los navegadores de AHRE. Login y Registro
-implementan la autenticación local y el acceso sin conexión. `App.js` prepara
-SQLite y siempre inicia la navegación en Inicio; la recuperación automática de
-sesión y el salto directo al Dashboard quedan para otro Issue.
+implementan la autenticación local y el acceso sin conexión. Al abrir AHRE,
+`App.js` prepara SQLite y monta la navegación con Inicio como ruta inicial. La
+sesión se consulta cuando la persona completa el deslizador.
 ## Navegadores utilizados
 
 - `Native Stack`: controla el inicio, login, registro y las pantallas
@@ -94,15 +94,23 @@ El detalle de categoría y el detalle de movimiento se registran en el Stack
 principal, fuera del navegador de pestañas. Al abrirlos se oculta la barra
 inferior; volver regresa al detalle o a la pestaña de Estadísticas anterior.
 
-## Flujo de autenticación local
+## Flujo de inicio y autenticación local
 
-El Stack contiene Inicio, Login, Registro y las pantallas secundarias. Cada vez
-que AHRE se abre, muestra Inicio, sin comprobar ni usar la sesión guardada para
-elegir la ruta. La recuperación automática de sesión se implementará en otro
-Issue.
+Mientras se prepara SQLite, `App.js` mantiene la pantalla nativa de carga.
+Cuando la base está lista, Inicio aparece con el deslizador habilitado y queda
+como ruta inicial hasta que la persona completa el gesto. Si no hay sesión,
+Inicio se reemplaza por Login. Si la sesión es válida, se solicita la huella y,
+tras autenticar, Inicio muestra una pantalla de carga con barra de progreso
+durante 1,5 segundos antes de reemplazarse por Dashboard. Inicio no queda en la
+pila después de cualquiera de esos destinos.
 
 ```text
-Inicio → Login → Registro → Login → Dashboard
+Arranque → Inicio (preparando SQLite)
+        → Inicio (espera el deslizador)
+        ├── deslizar → sin sesión → Login
+        └── deslizar → sesión válida → huella → carga animada → Dashboard
+
+Login → Registro → Login → Dashboard
 ```
 
 Registro valida los datos y guarda la cuenta local antes de volver a Login.
@@ -110,7 +118,13 @@ Login valida la contraseña y, si es correcta, restablece la pila en Dashboard
 para que el botón de regreso no muestre Login. Registro y Login no usan
 servicios remotos ni requieren conexión.
 
-La función `cerrarSesion()` ya está disponible en el servicio de sesión. La conexión del botón actual de Perfil queda para una tarea posterior.
+Al consultar una sesión guardada después del gesto, el servicio confirma que el
+usuario local exista y esté activo. Si la referencia apunta a un usuario
+inexistente, se limpia y se abre Login. Si falla el almacenamiento o la
+consulta local, se muestra un aviso y el deslizador queda disponible para
+reintentar. La huella cancelada o incorrecta no abre el Dashboard. La función
+`cerrarSesion()` ya está disponible en el servicio; conectar el botón actual de
+Perfil queda para una tarea posterior.
 ## Depósitos
 
 El detalle de depósito utiliza una única pantalla reutilizable. Actualmente se
@@ -161,12 +175,13 @@ nueva compilación para aplicarse a una app AHRE ya instalada.
 
 ## Límites actuales
 
-En este Issue no se implementan:
+La navegación de esta aplicación no implementa por sí sola:
 
-- diseño final de las pantallas;
-- consultas a la base de datos;
-- creación de movimientos o depósitos;
-- gráficos, filtros o estadísticas;
-- cámara o reconocimiento OCR;
+- creación y persistencia de movimientos o depósitos;
+- consultas reales para gráficos, filtros o estadísticas;
+- reconocimiento OCR de comprobantes;
 - notificaciones reales;
-- lógica del módulo Social.
+- lógica funcional del módulo Social.
+
+El flujo de Inicio sí consulta la sesión local después del deslizador, como se
+describe arriba y en [`docs/funcionalidades/inicio.md`](../funcionalidades/inicio.md).
