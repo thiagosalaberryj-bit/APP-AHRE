@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -13,9 +13,11 @@ import * as PantallaCarga from 'expo-splash-screen';
 import * as InterfazSistema from 'expo-system-ui';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { RUTAS } from './src/constants/routes';
 import { ContextoApariencia, ProveedorApariencia } from './src/contexts/AppearanceContext';
 import { ProveedorAvisos } from './src/contexts/ToastContext';
 import { inicializarBaseDatos } from './src/database';
+import { ErrorBaseDatos } from './src/database/errors';
 import NavegadorAplicacion from './src/navigation/AppNavigator';
 
 PantallaCarga.preventAutoHideAsync().catch(() => {});
@@ -47,9 +49,15 @@ const estilosInicializacion = StyleSheet.create({
 
 function ContenidoAplicacion() {
   const { tema } = useContext(ContextoApariencia);
-  const [estadoBaseDatos, establecerEstadoBaseDatos] = useState('preparando');
-  const [errorBaseDatos, establecerErrorBaseDatos] = useState(null);
-  const [intentoInicializacion, establecerIntentoInicializacion] = useState(0);
+  const [estadoInicio, establecerEstadoInicio] = useState('preparando');
+  const [mensajeErrorInicio, establecerMensajeErrorInicio] = useState(null);
+  const [intentoInicio, establecerIntentoInicio] = useState(0);
+  const pantallaCargaOculta = useRef(false);
+  const ocultarPantallaCarga = useCallback(() => {
+    if (pantallaCargaOculta.current) return;
+    pantallaCargaOculta.current = true;
+    PantallaCarga.hideAsync().catch(() => {});
+  }, []);
 
   useEffect(() => {
     InterfazSistema.setBackgroundColorAsync(tema.fondo);
@@ -61,33 +69,34 @@ function ContenidoAplicacion() {
   useEffect(() => {
     let componenteActivo = true;
 
-    async function prepararBaseDatos() {
-      establecerEstadoBaseDatos('preparando');
-      establecerErrorBaseDatos(null);
+    async function prepararInicio() {
+      establecerEstadoInicio('preparando');
+      establecerMensajeErrorInicio(null);
 
       try {
         await inicializarBaseDatos();
+
         if (componenteActivo) {
-          establecerEstadoBaseDatos('lista');
+          establecerEstadoInicio('lista');
         }
       } catch (error) {
         if (componenteActivo) {
-          establecerErrorBaseDatos(error);
-          establecerEstadoBaseDatos('error');
-        }
-      } finally {
-        if (componenteActivo) {
-          await PantallaCarga.hideAsync().catch(() => {});
+          establecerMensajeErrorInicio(
+            error instanceof ErrorBaseDatos
+              ? error.message
+              : 'No se pudo preparar el inicio de AHRE. Intentá nuevamente.',
+          );
+          establecerEstadoInicio('error');
         }
       }
     }
 
-    prepararBaseDatos();
+    prepararInicio();
 
     return () => {
       componenteActivo = false;
     };
-  }, [intentoInicializacion]);
+  }, [intentoInicio]);
 
   return (
     <SafeAreaProvider>
@@ -96,27 +105,41 @@ function ContenidoAplicacion() {
           style="light"
           backgroundColor={tema.encabezado}
         />
-        {estadoBaseDatos === 'lista' ? (
-          <NavegadorAplicacion />
-        ) : (
+        {estadoInicio === 'preparando' ? (
           <View style={[estilosInicializacion.contenedor, { backgroundColor: tema.fondo }]}>
-            {estadoBaseDatos === 'preparando' ? (
-              <ActivityIndicator size="large" color={tema.foco} />
-            ) : (
+            {intentoInicio > 0 ? (
               <>
-                <Text style={[estilosInicializacion.textoError, { color: tema.textoPrincipal }]}>
-                  {errorBaseDatos?.message || 'No se pudo preparar la base de datos local. Intentá nuevamente.'}
+                <ActivityIndicator size="large" color={tema.foco} />
+                <Text
+                  style={[estilosInicializacion.textoError, { color: tema.textoPrincipal }]}
+                >
+                  Preparando el inicio…
+                </Text>
+              </>
+            ) : null}
+          </View>
+        ) : (
+          <View onLayout={ocultarPantallaCarga} style={{ flex: 1 }}>
+            {estadoInicio === 'lista' ? (
+              <NavegadorAplicacion rutaInicial={RUTAS.INICIO} />
+            ) : (
+              <View style={[estilosInicializacion.contenedor, { backgroundColor: tema.fondo }]}>
+                <Text
+                  accessibilityRole="alert"
+                  style={[estilosInicializacion.textoError, { color: tema.textoPrincipal }]}
+                >
+                  {mensajeErrorInicio || 'No se pudo preparar el inicio de AHRE. Intentá nuevamente.'}
                 </Text>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => establecerIntentoInicializacion((intento) => intento + 1)}
+                  onPress={() => establecerIntentoInicio((intento) => intento + 1)}
                   style={[estilosInicializacion.botonReintentar, { backgroundColor: tema.botonPrincipal }]}
                 >
                   <Text style={[estilosInicializacion.textoBoton, { color: tema.botonPrincipalTexto }]}>
                     Reintentar
                   </Text>
                 </Pressable>
-              </>
+              </View>
             )}
           </View>
         )}

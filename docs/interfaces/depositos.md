@@ -14,12 +14,12 @@ regresan sin guardar.
 
 | Campo | Requerido | Presentación |
 | --- | --- | --- |
-| Saldo inicial | Sí | Primer campo del formulario; monto en pesos con prefijo `$`, presentación destacada y teclado decimal. Acepta punto para miles y coma para centavos, hasta dos decimales; persiste como número y admite cero o valores positivos. |
-| Nombre | Sí | Debajo del saldo inicial; texto de hasta 30 caracteres, con ejemplos y contador. |
+| Saldo inicial | Sí | Primer campo del formulario; monto en pesos con prefijo `$`, presentación destacada y teclado decimal. La ayuda indica que la coma separa los decimales; admite hasta dos y persiste como número. |
+| Nombre | Sí | Debajo del saldo inicial; texto de hasta 30 caracteres, con ejemplos y contador junto al título del campo. |
 | Tipo de depósito | Sí | Selector entre Efectivo, Banco y Billetera virtual. |
 | Ícono | Sí, con una opción inicial | Grilla compacta con cuatro opciones visibles y «Más» para abrir las restantes; se persiste el nombre de Ionicons seleccionado. |
 | Color | No | Muestra azul suave predeterminada (`#C3D1E3`) y cuatro alternativas de la paleta de depósitos, todas visibles. |
-| Descripción | No | Texto de hasta 60 caracteres con contador. |
+| Descripción | No | Texto de hasta 60 caracteres con contador junto al título del campo y la indicación «Opcional». |
 
 El catálogo de tipos corresponde a `efectivo`, `banco` y
 `billetera_virtual`, según el modelo de datos de depósitos. La opción activa se
@@ -47,8 +47,9 @@ el nombre y tipo: `Fuente «{nombre}» · {tipo}`.
 - **Normal:** campos y superficies usan los tokens del tema activo.
 - **Enfocado:** los campos de texto usan el borde de foco global.
 - **Error:** al intentar guardar con datos faltantes o inválidos, el campo
-  correspondiente muestra borde y texto de error. Los errores de sesión o de
-  almacenamiento local se presentan mediante un aviso compartido.
+  correspondiente muestra borde y texto de error, y un toast resume que hay
+  que revisar los campos marcados. Los errores de sesión o de almacenamiento
+  local también se presentan mediante un aviso compartido.
 - **Guardando:** el botón principal presenta «Procesando…»; se deshabilitan los
   controles para evitar cambios o envíos repetidos mientras se guarda.
 - **Éxito:** el depósito queda en la base local y el formulario vuelve a la

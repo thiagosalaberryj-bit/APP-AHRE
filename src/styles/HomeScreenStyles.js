@@ -5,7 +5,14 @@ import { ESPACIADO, TIPOGRAFIA } from './globalStyles';
 
 export const TAMANO_CONTROL_DESLIZADOR = 52;
 
-export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoDeslizador) {
+export function crearEstilosInicio(
+  tema,
+  tamanoMarca,
+  tamanoLetras,
+  anchoDeslizador,
+  anchoLogoCarga,
+  altoLogoCarga,
+) {
   const altoDeslizador = TAMANO_CONTROL_DESLIZADOR + ESPACIADO.pequeno * 2;
   const colorLetras = tema.nombre === 'oscuro' ? '#FFFFFF' : COLORES_MARCA.verdeOscuro;
 
@@ -17,6 +24,57 @@ export function crearEstilosInicio(tema, tamanoMarca, tamanoLetras, anchoDesliza
     areaSegura: {
       flex: 1,
       backgroundColor: 'transparent',
+    },
+    pantallaCarga: {
+      flex: 1,
+      paddingHorizontal: ESPACIADO.extraGrande,
+    },
+    contenidoCarga: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    marcaCarga: {
+      width: anchoLogoCarga,
+      height: altoLogoCarga,
+    },
+    filaEstadoCarga: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: ESPACIADO.medio,
+    },
+    textoEstadoCarga: {
+      flex: 1,
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.medio,
+    },
+    textoPorcentajeCarga: {
+      marginLeft: ESPACIADO.medio,
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.negrita,
+    },
+    fondoBarraProgreso: {
+      width: '100%',
+      height: 16,
+      marginBottom: ESPACIADO.extraGrande,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: tema.borde,
+      overflow: 'hidden',
+      backgroundColor: tema.fondoDeshabilitado,
+    },
+    rellenoBarraProgreso: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: 0,
+      borderRadius: 7,
+      backgroundColor: COLORES_MARCA.verdeBrillante,
     },
     contenido: {
       flex: 1,

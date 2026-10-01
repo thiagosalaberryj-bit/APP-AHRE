@@ -18,9 +18,9 @@ desde SQLite queda fuera de este alcance.
 - **Nombre:** obligatorio, se recortan los espacios al comienzo y al final y
   admite hasta 30 caracteres.
 - **Saldo inicial:** obligatorio, admite cero o valores positivos con hasta dos
-  decimales. La entrada usa el formato local: punto para agrupar miles y coma
-  para separar centavos, por ejemplo `25.000,50`. Se convierte a un número en
-  pesos antes de persistirlo; nunca se guarda la cadena de presentación con `$`.
+  decimales. La entrada usa coma para separar los decimales, por ejemplo
+  `25000,50`. Se convierte a un número en pesos antes de persistirlo; nunca se
+  guarda la cadena de presentación con `$`.
   La columna usa el tipo `REAL` del esquema local. El saldo actual comienza con
   el mismo valor que el saldo inicial.
 - **Tipo:** obligatorio y limitado a `efectivo`, `banco` o
@@ -37,9 +37,11 @@ desde SQLite queda fuera de este alcance.
   nombre y el tipo legible del depósito.
 
 La validación se ejecuta en el formulario para mostrar errores junto a los
-campos y vuelve a ejecutarse en la lógica de depósitos antes de guardar. Se
-validan también los valores permitidos para tipo, ícono y color; la interfaz no
-puede introducir referencias arbitrarias.
+campos y vuelve a ejecutarse en la lógica de depósitos antes de guardar. Si hay
+campos inválidos, también se muestra un toast con un aviso general; el mensaje
+específico permanece junto a cada campo. Se validan también los valores
+permitidos para tipo, ícono y color; la interfaz no puede introducir
+referencias arbitrarias.
 
 ## Identificador, fecha y atomicidad
 

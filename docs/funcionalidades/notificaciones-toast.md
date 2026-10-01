@@ -13,13 +13,15 @@ Es un aviso temporal para dar respuesta a una acción; no es el historial de la
 pantalla Notificaciones, no se guarda en SQLite ni representa una notificación
 local o push del dispositivo.
 
-Usá mensajes junto a los campos para errores que la persona pueda corregir en
-el formulario, como un correo con formato incorrecto o un campo obligatorio.
-Usá el toast para el resultado general del envío, por ejemplo cuando falla el
-guardado o cuando la operación termina bien. Los errores que bloquean el inicio
-de la aplicación y requieren una acción persistente, como reintentar la
-inicialización de SQLite, deben permanecer visibles en la pantalla mientras
-sigan bloqueando el uso; un toast desaparece solo y no alcanza para ese estado.
+Mantené el mensaje específico junto al campo que la persona puede corregir.
+Cuando un envío falla por campos incompletos, usá también un toast breve para
+indicar que revise los campos marcados; no agregues otro mensaje general al pie
+del formulario. Usá el toast para el resultado general del envío, por ejemplo
+cuando falla el guardado o cuando la operación termina bien. Los errores que
+bloquean el inicio de la aplicación y requieren una acción persistente, como
+reintentar la inicialización de SQLite, deben permanecer visibles en la
+pantalla mientras sigan bloqueando el uso; un toast desaparece solo y no
+alcanza para ese estado.
 El tipo `exito` confirma que una acción terminó; no reemplaza un diálogo cuando
 la persona debe decidir si inicia una acción destructiva.
 
@@ -80,8 +82,8 @@ depende del tipo; los colores compartidos están en
 
 ## Uso actual
 
-Login y Registro ya usan este contexto para errores generales y confirmación de
-registro. Sus errores de validación siguen junto a cada campo para que se vea
-qué dato hay que corregir. Las pantallas que incorporen operaciones reales
-deben usar el mismo patrón y evitar crear avisos locales distintos para los
-mismos resultados.
+Login y Registro usan este contexto para errores generales y confirmación de
+registro. Los formularios de depósito, ingreso y egreso conservan los errores
+específicos junto a cada campo y muestran un toast si faltan datos al enviar.
+Las pantallas que incorporen operaciones reales deben usar el mismo patrón y
+evitar crear avisos locales distintos para los mismos resultados.

@@ -2,11 +2,13 @@
 
 ## Alcance
 
-Este documento registra los formularios de egreso e ingreso. En esta etapa no hay
-persistencia, modificación de saldos, consultas reales, validaciones
-funcionales, ejecución de recurrencias, actualización del Dashboard ni
-estadísticas. La fecha, la hora y la frecuencia se mantienen solo en el estado
-de la pantalla; los depósitos y las categorías son datos locales simulados.
+Este documento registra los formularios de egreso e ingreso. En esta etapa no
+hay persistencia, modificación de saldos, consultas reales, validación de
+negocio, ejecución de recurrencias, actualización del Dashboard ni estadísticas.
+Al enviar, los formularios señalan los campos obligatorios que faltan y muestran
+un aviso general mediante toast. La fecha, la hora y la frecuencia se mantienen
+solo en el estado de la pantalla; los depósitos y las categorías son datos
+locales simulados.
 
 ## Estructura del formulario de egreso
 
@@ -197,9 +199,9 @@ Toggle
 
 Los contenedores locales usan borde sutil por defecto y borde verde de foco
 solo en enfocado o seleccionado; las categorías usan sus propios acentos de
-color. En móvil no hay `hover`. Además se
-reutilizan `SectionHeader`, `PrimaryButton` y `ErrorMessage` sin
-modificarlos. Los estilos locales están en
+color. En móvil no hay `hover`. Además se reutilizan `SectionHeader`,
+`PrimaryButton` y `ContextoAvisos` sin modificar sus implementaciones. Los
+estilos locales están en
 `src/styles/expenseStyles.js` y consumen tokens de `colors.js` y
 `globalStyles.js`. Los datos simulados están en
 `src/constants/movimientos.js`.
@@ -218,11 +220,13 @@ modificarlos. Los estilos locales están en
   confirmar la hora actualiza el formulario.
 - **Frecuencia recurrente:** las cuatro opciones muestran la frecuencia activa
   cuando el conmutador está habilitado.
-- **Error general:** `MensajeError` con «Revisá los campos marcados antes
-  de guardar el egreso».
+- **Error general:** un toast indica que se revisen los campos marcados y los
+  errores específicos permanecen junto a los campos; no se muestra un mensaje
+  general al pie del formulario.
 
-Los errores solo se muestran al presionar «Guardar egreso» para representar
-los estados; no hay validación funcional, persistencia ni cálculo de saldos.
+Los avisos aparecen al presionar «Guardar ingreso» o «Guardar egreso». Solo se
+comprueban los campos obligatorios; no se persisten movimientos ni se calculan
+saldos.
 
 ## Teclado, scroll y temas
 

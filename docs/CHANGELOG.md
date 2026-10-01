@@ -17,12 +17,55 @@ documentación se registran en este archivo.
 - La eliminación de ingresos y egresos conserva el movimiento original y crea
   una compensación enlazada; las transferencias se compensan con otra
   transferencia y sus movimientos asociados. (#19)
+- Se conectaron Registro y Login con SQLite local: validación de campos,
+  correo único normalizado, verificador de contraseña con sal y creación de
+  sesión local opcional mediante SecureStore. El flujo funciona sin conexión.
+  (#20)
+- Se agregó un componente toast reutilizable para errores, confirmaciones y
+  avisos informativos, con animaciones de entrada y salida, barra de tiempo,
+  cierre automático, botón para cerrar y gesto horizontal. Los colores por tipo
+  se centralizaron en la paleta global. (#20)
+- Se conectó el formulario de creación de depósitos con la lógica de dominio y
+  SQLite local. Se guardan el nombre, el saldo inicial, el tipo, el ícono, el
+  color y la descripción; si esta última queda vacía, se genera a partir del
+  nombre y el tipo. (#22)
+
+### Cambiado
+
+- Se simplificó el cálculo local del verificador de contraseña a SHA-256 con
+  sal en una pasada para reducir la espera de Registro y Login en Expo Go.
+  (#20)
+- Los formularios de depósito, ingreso y egreso conservan los errores junto a
+  cada campo y muestran con un toast el aviso general cuando faltan datos. Se
+  quitó el mensaje general del pie; en depósitos, los contadores aparecen junto
+  al título y la ayuda indica que los decimales se ingresan con coma. (#22)
+- Se actualizaron Expo SDK de `57.0.25` a `57.0.26`, `expo-camera` de
+  `57.0.5` a `57.0.6`, `expo-constants` de `57.0.19` a `57.0.20` y
+  `expo-navigation-bar` de `57.0.2` a `57.0.3`. (#20)
+- Al abrir AHRE, SQLite se prepara antes de mostrar Inicio. El deslizador
+  consulta la sesión: sin sesión abre Login; con sesión válida solicita la
+  huella y muestra el logo completo con una barra animada, porcentaje y estado
+  durante 1,5 segundos antes de abrir el Dashboard. La carga respeta los temas
+  claro y oscuro. (#21)
+- El Dashboard dejó de mostrar datos simulados y ahora consulta el usuario,
+  los depósitos y los movimientos recientes desde SQLite. Calcula el balance
+  con los saldos actuales, muestra hasta cinco movimientos y actualiza los datos
+  al recuperar el foco. Se agregaron estados vacíos con acceso para crear el
+  primer depósito y reintento ante errores. (#27)
 
 ### Documentación
 
 - Se documentaron el esquema SQLite, las relaciones, las transacciones, el
   acceso a los repositorios, la estrategia de saldos y las reglas de
   compensación. (#19)
+- Se documentaron el registro y Login locales, la sesión, los avisos toast y
+  las versiones actualizadas de dependencias Expo. (#20)
+- Se documentaron el flujo de inicio, su navegación, la autenticación
+  biométrica y los estados de carga. (#21)
+- Se documentó la carga local del Dashboard y se actualizaron su guía de
+  interfaz y el README. (#27)
+- Se actualizaron las guías de creación de depósitos, formularios financieros
+  y notificaciones toast para describir la validación y su presentación. (#22)
 
 ## [v0.3.0] - 2026-09-26 - no estable
 

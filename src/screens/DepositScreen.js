@@ -22,7 +22,6 @@ import { ErrorBaseDatos } from '../database/errors';
 import { crearDeposito, ErrorDeposito } from '../deposits/depositService';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
-import MensajeError from '../components/ErrorMessage';
 import BotonPrincipal from '../components/PrimaryButton';
 import EncabezadoSeccion from '../components/SectionHeader';
 import { COLOR_DEPOSITO_PREDETERMINADO, COLORES_DEPOSITOS } from '../styles/colors';
@@ -93,7 +92,10 @@ export default function PantallaDeposito({ navigation: navegacion }) {
     if (guardandoRef.current) return;
 
     establecerIntentoGuardar(true);
-    if (formularioInvalido) return;
+    if (formularioInvalido) {
+      mostrarAviso('Revisá los campos marcados antes de crear el depósito.', { tipo: 'error' });
+      return;
+    }
 
     guardandoRef.current = true;
     establecerGuardando(true);
@@ -190,13 +192,16 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                 ) : null}
               </View>
               <Text style={estilosGlobales.textoAyuda}>
-                Monto en pesos. Usá punto para miles y coma para centavos.
+                Para ingresar decimales, usá coma.
               </Text>
               {errorSaldo ? <Text style={estilosGlobales.textoError}>{errorSaldo}</Text> : null}
             </View>
 
             <View style={estilos.grupo}>
-              <Text style={estilosGlobales.etiqueta}>Nombre del depósito *</Text>
+              <View style={estilos.encabezadoCampo}>
+                <Text style={estilosGlobales.etiqueta}>Nombre del depósito *</Text>
+                <Text style={estilos.contador}>{`${nombre.length}/30`}</Text>
+              </View>
               <View
                 style={[
                   estilosGlobales.campo,
@@ -236,7 +241,6 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   </Pressable>
                 ) : null}
               </View>
-              <Text style={estilos.contador}>{`${nombre.length}/30`}</Text>
               {errorNombre ? <Text style={estilosGlobales.textoError}>{errorNombre}</Text> : null}
             </View>
 
@@ -418,9 +422,12 @@ export default function PantallaDeposito({ navigation: navegacion }) {
             </View>
 
             <View style={estilos.grupo}>
-              <View style={estilos.encabezadoColor}>
+              <View style={estilos.encabezadoCampo}>
                 <Text style={estilosGlobales.etiqueta}>Descripción</Text>
-                <Text style={estilos.textoOpcional}>Opcional</Text>
+                <View style={estilos.detalleEncabezadoCampo}>
+                  <Text style={estilos.textoOpcional}>Opcional ·</Text>
+                  <Text style={estilos.contador}>{`${descripcion.length}/60`}</Text>
+                </View>
               </View>
               <View
                 style={[
@@ -456,16 +463,11 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   </Pressable>
                 ) : null}
               </View>
-              <Text style={estilos.contador}>{`${descripcion.length}/60`}</Text>
               {errorDescripcion ? <Text style={estilosGlobales.textoError}>{errorDescripcion}</Text> : null}
               <Text style={estilosGlobales.textoAyuda}>
                 Si la dejás vacía, se genera automáticamente con el nombre y el tipo.
               </Text>
             </View>
-
-            <MensajeError estilosAutenticacion={estilos} tema={tema}>
-              {intentoGuardar && formularioInvalido ? 'Revisá los campos marcados antes de crear el depósito.' : null}
-            </MensajeError>
 
             <View style={estilos.acciones}>
               <BotonPrincipal

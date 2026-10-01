@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ContextoAvisos } from '../contexts/ToastContext';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import SelectorCategoria from '../components/CategorySelector';
 import SelectorFecha from '../components/DateSelector';
 import SelectorDeposito from '../components/DepositSelector';
-import MensajeError from '../components/ErrorMessage';
 import EntradaMonto from '../components/MoneyInput';
 import BotonPrincipal from '../components/PrimaryButton';
 import ControlRecurrencia from '../components/RecurrenceControl';
@@ -39,6 +39,7 @@ const obtenerHoraActual = () => {
 
 export default function PantallaEgreso({ navigation: navegacion }) {
   const insets = useSafeAreaInsets();
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilosMovimiento = crearEstilosEgreso(tema);
@@ -58,14 +59,13 @@ export default function PantallaEgreso({ navigation: navegacion }) {
   const errorDescripcion = intentoGuardar && !descripcion.trim() ? 'La descripción es obligatoria.' : null;
   const errorDeposito = intentoGuardar && !depositoId ? 'Seleccioná el depósito del gasto.' : null;
   const errorCategoria = intentoGuardar && !categoriaId ? 'Seleccioná una categoría.' : null;
-  const errorGeneral =
-    intentoGuardar && (!monto.trim() || !descripcion.trim() || !depositoId || !categoriaId)
-      ? 'Revisá los campos marcados antes de guardar el egreso.'
-      : null;
+  const formularioInvalido = !monto.trim() || !descripcion.trim() || !depositoId || !categoriaId;
 
   const guardarEgreso = () => {
+    if (guardando) return;
     establecerIntentoGuardar(true);
-    if (!monto.trim() || !descripcion.trim() || !depositoId || !categoriaId || guardando) {
+    if (formularioInvalido) {
+      mostrarAviso('Revisá los campos marcados antes de guardar el egreso.', { tipo: 'error' });
       return;
     }
     establecerGuardando(true);
@@ -190,13 +190,6 @@ export default function PantallaEgreso({ navigation: navegacion }) {
                     : 'Alquiler, suscripción o servicio.'}
                 </Text>
               </View>
-
-              <MensajeError
-                estilosAutenticacion={estilosMovimiento}
-                tema={tema}
-              >
-                {errorGeneral}
-              </MensajeError>
 
               <View style={estilosMovimiento.acciones}>
                 <BotonPrincipal

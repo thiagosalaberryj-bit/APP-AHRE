@@ -9,8 +9,9 @@ let usuarioIdEnMemoria = null;
 async function limpiarAlmacenamientoSeguro() {
   try {
     await SecureStore.deleteItemAsync(CLAVE_SESION);
+    return true;
   } catch (_error) {
-    // Una sesión inválida no debe impedir que la aplicación llegue a Login.
+    return false;
   }
 }
 
@@ -43,8 +44,7 @@ export async function obtenerSesionActual() {
     try {
       usuarioId = await SecureStore.getItemAsync(CLAVE_SESION);
     } catch (_error) {
-      await limpiarAlmacenamientoSeguro();
-      return { usuario: null, inconsistente: true };
+      throw new ErrorAutenticacion('sesion_no_disponible');
     }
   }
 
@@ -52,21 +52,19 @@ export async function obtenerSesionActual() {
     return { usuario: null, inconsistente: false };
   }
 
-  try {
-    const usuario = await autenticacionRepositorio.consultarUsuarioActivoPorId(usuarioId);
-    if (!usuario) {
-      usuarioIdEnMemoria = null;
-      await limpiarAlmacenamientoSeguro();
-      return { usuario: null, inconsistente: true };
+  const usuario = await autenticacionRepositorio.consultarUsuarioActivoPorId(usuarioId);
+  if (!usuario) {
+    usuarioIdEnMemoria = null;
+    const sesionLimpiada = await limpiarAlmacenamientoSeguro();
+    if (!sesionLimpiada) {
+      throw new ErrorAutenticacion('sesion_no_disponible');
     }
 
-    usuarioIdEnMemoria = usuario.id;
-    return { usuario, inconsistente: false };
-  } catch (_error) {
-    usuarioIdEnMemoria = null;
-    await limpiarAlmacenamientoSeguro();
     return { usuario: null, inconsistente: true };
   }
+
+  usuarioIdEnMemoria = usuario.id;
+  return { usuario, inconsistente: false };
 }
 
 export async function comprobarSesion() {

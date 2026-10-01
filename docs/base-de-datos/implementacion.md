@@ -9,8 +9,9 @@ las operaciones no requieren Internet, backend ni servicios externos.
 La inicialización se expone mediante `inicializarBaseDatos()` en
 `src/database/initialization.js`. Mantiene una única conexión preparada y
 comparte la promesa inicial entre llamadas simultáneas. `App.js` la ejecuta
-antes de mostrar la navegación. Mientras se prepara la base se conserva el
-splash; si la inicialización falla, se muestra el error controlado y se puede
+antes de mostrar la navegación. Inicio queda como ruta inicial una vez lista la
+base; la sesión se consulta recién cuando la persona completa el deslizador. Si
+ocurre un error al preparar SQLite, se muestra el mensaje controlado y se puede
 volver a intentar.
 
 Al abrir la conexión se activa `PRAGMA foreign_keys = ON` y se comprueba que

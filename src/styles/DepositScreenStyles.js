@@ -48,6 +48,17 @@ export function crearEstilosDeposito(tema) {
       fontSize: TIPOGRAFIA.tamanos.auxiliar,
       textAlign: 'right',
     },
+    encabezadoCampo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: ESPACIADO.pequeno,
+    },
+    detalleEncabezadoCampo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.minimo,
+    },
     filaSaldo: {
       minHeight: 76,
       flexDirection: 'row',

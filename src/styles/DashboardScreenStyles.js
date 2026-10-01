@@ -67,6 +67,10 @@ export function crearEstilosDashboard(tema) {
     montoBalance: {
       fontSize: 28,
     },
+    lineaCargaBalance: {
+      height: 30,
+      width: 150,
+    },
     accionesRapidas: {
       flexDirection: 'row',
       gap: ESPACIADO.pequeno,
@@ -94,14 +98,14 @@ export function crearEstilosDashboard(tema) {
       textAlign: 'center',
     },
     seccion: {
-      gap: ESPACIADO.pequeno,
+      gap: 2,
     },
     encabezadoSeccion: {
       alignItems: 'center',
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'space-between',
-      minHeight: 44,
+      minHeight: 36,
       gap: ESPACIADO.minimo,
     },
     accionSeccion: {
@@ -264,13 +268,86 @@ export function crearEstilosDashboard(tema) {
       width: '68%',
     },
     estadoVacio: {
-      alignItems: 'center',
+      alignItems: 'stretch',
+      gap: ESPACIADO.medio,
       justifyContent: 'center',
-      minHeight: 88,
-      padding: ESPACIADO.grande,
+      minHeight: 112,
+      padding: ESPACIADO.medio,
+    },
+    contenidoEstadoVacio: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: ESPACIADO.medio,
+      width: '100%',
+    },
+    iconoEstadoVacio: {
+      alignItems: 'center',
+      backgroundColor: tema.fondoDeshabilitado,
+      borderRadius: BORDES.radios.circular,
+      height: 48,
+      justifyContent: 'center',
+      width: 48,
+    },
+    textoContenidoEstadoVacio: {
+      flex: 1,
+      gap: ESPACIADO.minimo,
+      minWidth: 0,
+    },
+    textoVacioTitulo: {
+      color: tema.textoPrincipal,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.cuerpo,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+      textAlign: 'left',
+    },
+    botonCrearDeposito: {
+      alignItems: 'center',
+      alignSelf: 'stretch',
+      backgroundColor: tema.botonPrincipal,
+      borderRadius: BORDES.radios.boton,
+      flexDirection: 'row',
+      gap: ESPACIADO.minimo,
+      justifyContent: 'center',
+      minHeight: 48,
+      paddingHorizontal: ESPACIADO.medio,
+    },
+    textoBotonCrearDeposito: {
+      color: tema.botonPrincipalTexto,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+    },
+    estadoError: {
+      alignItems: 'center',
+      backgroundColor: tema.errorFondo,
+      borderColor: tema.error,
+      borderRadius: BORDES.radios.tarjeta,
+      borderWidth: BORDES.anchos.fino,
+      gap: ESPACIADO.pequeno,
+      padding: ESPACIADO.medio,
+    },
+    textoError: {
+      color: tema.error,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      textAlign: 'center',
+    },
+    botonReintentar: {
+      alignItems: 'center',
+      backgroundColor: tema.botonPrincipal,
+      borderRadius: BORDES.radios.boton,
+      justifyContent: 'center',
+      minHeight: 36,
+      paddingHorizontal: ESPACIADO.medio,
+    },
+    textoReintentar: {
+      color: tema.botonPrincipalTexto,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     textoEstado: {
-      textAlign: 'center',
+      textAlign: 'left',
     },
   });
 }

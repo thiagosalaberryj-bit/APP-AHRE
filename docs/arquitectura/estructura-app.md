@@ -42,6 +42,8 @@ APP-AHRE/
 │   ├── funcionalidades/
 │   │   ├── autenticacion-local.md
 │   │   ├── depositos.md
+│   │   ├── dashboard.md
+│   │   ├── inicio.md
 │   │   └── notificaciones-toast.md
 │   └── proceso/
 │       └── flujo-issues-prs-changelog.md
@@ -270,9 +272,10 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
 
 - `App.js` continúa siendo el archivo raíz de composición y `index.js` continúa
   siendo el punto de registro de Expo.
-- Antes de mostrar la navegación, `App.js` inicializa la base local y deja Inicio
-  como ruta de entrada. El splash se mantiene visible durante la preparación;
-  recuperar la sesión automáticamente queda para otro Issue.
+- `App.js` muestra Inicio mientras prepara SQLite y la mantiene como ruta
+  inicial. El deslizador consulta la sesión: sin sesión reemplaza Inicio por
+  Login; con sesión válida solicita biometría y luego abre el Dashboard. Inicio
+  no queda en el historial después de ese destino.
 - Una pantalla mínima verifica la cadena `App → navegación → pantalla →
   componente`.
 - La navegación base está implementada con las dependencias de React
