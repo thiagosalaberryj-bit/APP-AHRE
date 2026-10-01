@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   KeyboardAvoidingView,
@@ -12,19 +12,22 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  ICONOS_ADICIONALES_DEPOSITO,
+  ICONOS_DEPOSITO,
+  ICONOS_PRINCIPALES_DEPOSITO,
+  TIPOS_DEPOSITO,
+} from '../constants/deposits';
+import { ErrorBaseDatos } from '../database/errors';
+import { crearDeposito, ErrorDeposito } from '../deposits/depositService';
+import { ContextoAvisos } from '../contexts/ToastContext';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
-import MensajeError from '../components/ErrorMessage';
 import BotonPrincipal from '../components/PrimaryButton';
 import EncabezadoSeccion from '../components/SectionHeader';
 import { COLOR_DEPOSITO_PREDETERMINADO, COLORES_DEPOSITOS } from '../styles/colors';
 import { crearEstilosDeposito } from '../styles/DepositScreenStyles';
 import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
-
-const TIPOS_DEPOSITO = Object.freeze([
-  Object.freeze({ id: 'efectivo', nombre: 'Efectivo', icono: 'cash-outline' }),
-  Object.freeze({ id: 'banco', nombre: 'Banco', icono: 'business-outline' }),
-  Object.freeze({ id: 'billetera_virtual', nombre: 'Billetera virtual', icono: 'phone-portrait-outline' }),
-]);
+import { validarDatosDeposito } from '../utils/depositValidation';
 
 const NOMBRES_COLORES_DEPOSITO = Object.freeze([
   'Verde suave',
@@ -41,25 +44,13 @@ const COLORES_SELECTOR = Object.freeze(
       nombre: NOMBRES_COLORES_DEPOSITO[indice],
     })),
 );
-const ICONOS_DEPOSITO = Object.freeze([
-  Object.freeze({ id: 'cash-outline', nombre: 'Efectivo' }),
-  Object.freeze({ id: 'business-outline', nombre: 'Banco' }),
-  Object.freeze({ id: 'phone-portrait-outline', nombre: 'Billetera virtual', nombreCorto: 'Virtual' }),
-  Object.freeze({ id: 'wallet-outline', nombre: 'Billetera' }),
-  Object.freeze({ id: 'card-outline', nombre: 'Tarjeta' }),
-  Object.freeze({ id: 'briefcase-outline', nombre: 'Ahorros', nombreCorto: 'Ahorro' }),
-]);
-
-const ICONOS_PRINCIPALES = ICONOS_DEPOSITO.slice(0, 4);
-const ICONOS_ADICIONALES = ICONOS_DEPOSITO.slice(4);
-
-const convertirSaldoANumero = (valor) => Number(valor.trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.'));
-
 export default function PantallaDeposito({ navigation: navegacion }) {
   const insets = useSafeAreaInsets();
   const { tema } = useContext(ContextoApariencia);
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDeposito(tema);
+  const guardandoRef = useRef(false);
   const [nombre, establecerNombre] = useState('');
   const [saldoInicial, establecerSaldoInicial] = useState('');
   const [tipo, establecerTipo] = useState(null);
@@ -72,70 +63,73 @@ export default function PantallaDeposito({ navigation: navegacion }) {
   const [descripcionEnfocada, establecerDescripcionEnfocada] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [guardando, establecerGuardando] = useState(false);
-  const [errorCreacion, establecerErrorCreacion] = useState(null);
-
-  const numeroSaldo = convertirSaldoANumero(saldoInicial);
-  const nombreInvalido = !nombre.trim();
-  const saldoInvalido =
-    !saldoInicial.trim() ||
-    !/\d/.test(saldoInicial) ||
-    !Number.isFinite(numeroSaldo) ||
-    numeroSaldo < 0;
-  const tipoInvalido = !tipo;
-  const errorNombre = intentoGuardar && nombreInvalido ? 'Ingresá el nombre del depósito.' : null;
-  const errorSaldo = intentoGuardar && saldoInvalido
-    ? saldoInicial.trim()
-      ? 'Ingresá un saldo válido.'
-      : 'Ingresá el saldo inicial.'
-    : null;
-  const errorTipo = intentoGuardar && tipoInvalido ? 'Elegí un tipo de depósito.' : null;
-  const formularioInvalido = nombreInvalido || saldoInvalido || tipoInvalido;
+  const datosFormulario = { nombre, saldo_inicial: saldoInicial, tipo, icono, color, descripcion };
+  const erroresFormulario = validarDatosDeposito(datosFormulario);
+  const errorNombre = intentoGuardar ? erroresFormulario.nombre : null;
+  const errorSaldo = intentoGuardar ? erroresFormulario.saldo_inicial : null;
+  const errorTipo = intentoGuardar ? erroresFormulario.tipo : null;
+  const errorIcono = intentoGuardar ? erroresFormulario.icono : null;
+  const errorColor = intentoGuardar ? erroresFormulario.color : null;
+  const errorDescripcion = intentoGuardar ? erroresFormulario.descripcion : null;
+  const formularioInvalido = Object.keys(erroresFormulario).length > 0;
   const iconoFueraDeVista = Boolean(
-    icono && !ICONOS_PRINCIPALES.some((opcion) => opcion.id === icono),
+    icono && !ICONOS_PRINCIPALES_DEPOSITO.some((opcion) => opcion.id === icono),
   );
   const opcionColorSeleccionado = COLORES_SELECTOR.find((opcion) => opcion.valor === color);
-  const errorGeneral = intentoGuardar && formularioInvalido
-    ? 'Revisá los campos marcados antes de continuar.'
-    : errorCreacion;
-
   const cambiarNombre = (valor) => {
     establecerNombre(valor);
-    establecerErrorCreacion(null);
   };
 
   const cambiarSaldo = (valor) => {
     establecerSaldoInicial(valor);
-    establecerErrorCreacion(null);
   };
 
   const cambiarDescripcion = (valor) => {
     establecerDescripcion(valor);
-    establecerErrorCreacion(null);
   };
 
-  const crearDeposito = () => {
+  const guardarDeposito = async () => {
+    if (guardandoRef.current) return;
+
     establecerIntentoGuardar(true);
-    if (formularioInvalido || guardando) return;
+    if (formularioInvalido) {
+      mostrarAviso('Revisá los campos marcados antes de crear el depósito.', { tipo: 'error' });
+      return;
+    }
 
-    establecerErrorCreacion(null);
+    guardandoRef.current = true;
     establecerGuardando(true);
-    setTimeout(() => {
+
+    try {
+      const depositoCreado = await crearDeposito(datosFormulario);
+      guardandoRef.current = false;
       establecerGuardando(false);
-      establecerErrorCreacion('La creación todavía no está disponible. No se guardó información.');
-    }, 1000);
+      mostrarAviso(`Se creó el depósito «${depositoCreado.nombre}».`, { tipo: 'exito' });
+      navegacion.goBack();
+    } catch (error) {
+      guardandoRef.current = false;
+      establecerGuardando(false);
+      if (error instanceof ErrorDeposito && error.errores) {
+        establecerIntentoGuardar(true);
+      }
+      const mensaje = error instanceof ErrorDeposito || error instanceof ErrorBaseDatos
+        ? error.message
+        : 'No se pudo crear el depósito. Intentá nuevamente.';
+      mostrarAviso(mensaje, { tipo: 'error' });
+    }
   };
 
-  const volver = () => navegacion.goBack();
+  const volver = () => {
+    if (!guardandoRef.current) navegacion.goBack();
+  };
 
   const seleccionarIcono = (idIcono) => {
     establecerIcono(idIcono);
-    establecerErrorCreacion(null);
     establecerIconosAdicionalesVisibles(false);
   };
 
   const seleccionarColor = (valorColor) => {
     establecerColor(valorColor);
-    establecerErrorCreacion(null);
   };
 
   return (
@@ -173,6 +167,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                 <TextInput
                   accessibilityLabel="Saldo inicial"
                   accessibilityHint={errorSaldo || 'Ingresá el monto en pesos.'}
+                  editable={!guardando}
                   keyboardType="decimal-pad"
                   onBlur={() => establecerSaldoEnfocado(false)}
                   onChangeText={cambiarSaldo}
@@ -188,6 +183,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   <Pressable
                     accessibilityLabel="Limpiar saldo inicial"
                     accessibilityRole="button"
+                    disabled={guardando}
                     onPress={() => cambiarSaldo('')}
                     style={estilos.accionLimpiarSaldo}
                   >
@@ -195,12 +191,17 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   </Pressable>
                 ) : null}
               </View>
-              <Text style={estilosGlobales.textoAyuda}>Monto disponible al crear el depósito.</Text>
+              <Text style={estilosGlobales.textoAyuda}>
+                Para ingresar decimales, usá coma.
+              </Text>
               {errorSaldo ? <Text style={estilosGlobales.textoError}>{errorSaldo}</Text> : null}
             </View>
 
             <View style={estilos.grupo}>
-              <Text style={estilosGlobales.etiqueta}>Nombre del depósito *</Text>
+              <View style={estilos.encabezadoCampo}>
+                <Text style={estilosGlobales.etiqueta}>Nombre del depósito *</Text>
+                <Text style={estilos.contador}>{`${nombre.length}/30`}</Text>
+              </View>
               <View
                 style={[
                   estilosGlobales.campo,
@@ -216,6 +217,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                 <TextInput
                   accessibilityLabel="Nombre del depósito"
                   accessibilityHint={errorNombre || undefined}
+                  editable={!guardando}
                   maxLength={30}
                   onBlur={() => establecerNombreEnfocado(false)}
                   onChangeText={cambiarNombre}
@@ -231,6 +233,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   <Pressable
                     accessibilityLabel="Limpiar nombre"
                     accessibilityRole="button"
+                    disabled={guardando}
                     onPress={() => cambiarNombre('')}
                     style={estilos.botonLimpiar}
                   >
@@ -238,7 +241,6 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   </Pressable>
                 ) : null}
               </View>
-              <Text style={estilos.contador}>{`${nombre.length}/30`}</Text>
               {errorNombre ? <Text style={estilosGlobales.textoError}>{errorNombre}</Text> : null}
             </View>
 
@@ -252,10 +254,10 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                       accessibilityLabel={opcion.nombre}
                       accessibilityRole="button"
                       accessibilityState={{ selected: seleccionada }}
+                      disabled={guardando}
                       key={opcion.id}
                       onPress={() => {
                         establecerTipo(opcion.id);
-                        establecerErrorCreacion(null);
                       }}
                       style={({ pressed }) => [
                         estilos.tarjetaTipo,
@@ -284,13 +286,14 @@ export default function PantallaDeposito({ navigation: navegacion }) {
             <View style={estilos.grupo}>
               <Text style={estilosGlobales.etiqueta}>Ícono</Text>
               <View style={estilos.listaIconos}>
-                {ICONOS_PRINCIPALES.map((opcion) => {
+                {ICONOS_PRINCIPALES_DEPOSITO.map((opcion) => {
                   const seleccionado = icono === opcion.id;
                   return (
                     <Pressable
                       accessibilityLabel={`Ícono ${opcion.nombre}`}
                       accessibilityRole="button"
                       accessibilityState={{ selected: seleccionado }}
+                      disabled={guardando}
                       key={opcion.id}
                       onPress={() => seleccionarIcono(opcion.id)}
                       style={({ pressed }) => [
@@ -314,6 +317,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   accessibilityLabel="Ver más íconos"
                   accessibilityRole="button"
                   accessibilityState={{ expanded: iconosAdicionalesVisibles }}
+                  disabled={guardando}
                   onPress={() => establecerIconosAdicionalesVisibles(true)}
                   style={({ pressed }) => [
                     estilos.botonIcono,
@@ -330,6 +334,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   Ícono seleccionado: {ICONOS_DEPOSITO.find((opcion) => opcion.id === icono).nombre}
                 </Text>
               ) : null}
+              {errorIcono ? <Text style={estilosGlobales.textoError}>{errorIcono}</Text> : null}
             </View>
 
             <View style={estilos.grupo}>
@@ -342,9 +347,9 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   accessibilityLabel="Color azul suave predeterminado"
                   accessibilityRole="button"
                   accessibilityState={{ selected: color === null }}
+                  disabled={guardando}
                   onPress={() => {
                     establecerColor(null);
-                    establecerErrorCreacion(null);
                   }}
                   style={({ pressed }) => [
                     estilos.opcionColor,
@@ -371,6 +376,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                       accessibilityLabel={`Color ${nombre}`}
                       accessibilityRole="button"
                       accessibilityState={{ selected: seleccionado }}
+                      disabled={guardando}
                       key={valor}
                       onPress={() => seleccionarColor(valor)}
                       style={({ pressed }) => [
@@ -412,12 +418,16 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                     : 'Color: Azul suave (predeterminado)'}
                 </Text>
               </View>
+              {errorColor ? <Text style={estilosGlobales.textoError}>{errorColor}</Text> : null}
             </View>
 
             <View style={estilos.grupo}>
-              <View style={estilos.encabezadoColor}>
+              <View style={estilos.encabezadoCampo}>
                 <Text style={estilosGlobales.etiqueta}>Descripción</Text>
-                <Text style={estilos.textoOpcional}>Opcional</Text>
+                <View style={estilos.detalleEncabezadoCampo}>
+                  <Text style={estilos.textoOpcional}>Opcional ·</Text>
+                  <Text style={estilos.contador}>{`${descripcion.length}/60`}</Text>
+                </View>
               </View>
               <View
                 style={[
@@ -429,6 +439,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                 <Ionicons color={tema.textoSecundario} name="document-text-outline" size={20} />
                 <TextInput
                   accessibilityLabel="Descripción opcional"
+                  editable={!guardando}
                   maxLength={60}
                   multiline
                   onBlur={() => establecerDescripcionEnfocada(false)}
@@ -444,6 +455,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   <Pressable
                     accessibilityLabel="Limpiar descripción"
                     accessibilityRole="button"
+                    disabled={guardando}
                     onPress={() => cambiarDescripcion('')}
                     style={estilos.botonLimpiar}
                   >
@@ -451,15 +463,11 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   </Pressable>
                 ) : null}
               </View>
-              <Text style={estilos.contador}>{`${descripcion.length}/60`}</Text>
+              {errorDescripcion ? <Text style={estilosGlobales.textoError}>{errorDescripcion}</Text> : null}
               <Text style={estilosGlobales.textoAyuda}>
-                Si la dejás vacía, podrá generarse más adelante usando el nombre y el tipo.
+                Si la dejás vacía, se genera automáticamente con el nombre y el tipo.
               </Text>
             </View>
-
-            <MensajeError estilosAutenticacion={estilos} tema={tema}>
-              {errorGeneral}
-            </MensajeError>
 
             <View style={estilos.acciones}>
               <BotonPrincipal
@@ -467,8 +475,23 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                 estilosGlobales={estilosGlobales}
                 titulo="Crear depósito"
                 cargando={guardando}
-                alPresionar={crearDeposito}
+                alPresionar={guardarDeposito}
               />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: guardando }}
+                disabled={guardando}
+                onPress={volver}
+                style={({ pressed }) => [
+                  estilosGlobales.botonSecundario,
+                  pressed && !guardando && estilos.elementoPresionado,
+                  guardando && estilosGlobales.botonDeshabilitado,
+                ]}
+              >
+                <Text style={guardando ? estilosGlobales.textoDeshabilitado : estilosGlobales.textoBotonSecundario}>
+                  Cancelar
+                </Text>
+              </Pressable>
             </View>
 
           </ScrollView>
@@ -498,7 +521,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                 <Ionicons color={tema.textoPrincipal} name="close" size={22} />
               </Pressable>
             </View>
-            {ICONOS_ADICIONALES.map((opcion) => {
+            {ICONOS_ADICIONALES_DEPOSITO.map((opcion) => {
               const seleccionado = icono === opcion.id;
               return (
                 <Pressable
@@ -506,6 +529,7 @@ export default function PantallaDeposito({ navigation: navegacion }) {
                   accessibilityLabel={`Ícono ${opcion.nombre}`}
                   accessibilityRole="button"
                   accessibilityState={{ selected: seleccionado }}
+                  disabled={guardando}
                   onPress={() => seleccionarIcono(opcion.id)}
                   style={[
                     estilos.opcionIconoModal,
