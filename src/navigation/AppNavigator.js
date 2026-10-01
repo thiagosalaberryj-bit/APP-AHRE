@@ -91,10 +91,10 @@ function PestanasPrincipales() {
   );
 }
 
-export default function NavegadorAplicacion() {
+export default function NavegadorAplicacion({ rutaInicial }) {
   const { tema } = useContext(ContextoApariencia);
   const margenesSeguros = useSafeAreaInsets();
-  const [tieneBarraInferior, establecerBarraInferior] = useState(false);
+  const [tieneBarraInferior, establecerBarraInferior] = useState(rutaInicial === RUTAS.PRINCIPAL);
   const colorZonaNavegacion = tieneBarraInferior ? tema.superficie : tema.fondo;
   const temaNavegacionBase = tema.nombre === 'oscuro' ? DarkTheme : DefaultTheme;
   const temaNavegacion = {
@@ -119,7 +119,7 @@ export default function NavegadorAplicacion() {
         }}
       >
         <PilaNavegacion.Navigator
-          initialRouteName={RUTAS.INICIO}
+          initialRouteName={rutaInicial}
           screenOptions={{
             contentStyle: { backgroundColor: tema.fondo },
             headerStyle: { backgroundColor: tema.encabezado },
