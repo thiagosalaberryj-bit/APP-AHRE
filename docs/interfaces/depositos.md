@@ -2,25 +2,22 @@
 
 ## Finalidad y alcance
 
-`src/screens/DepositScreen.js` presenta el formulario para preparar un nuevo
-depósito, es decir, una fuente donde el usuario organiza su dinero. Se abre
-desde «Nuevo depósito» en el Dashboard y usa la ruta de depósito ya registrada
-en `AppNavigator.js`.
-
-Esta pantalla es una maqueta: conserva los valores y las selecciones mientras
-está abierta, pero no crea depósitos, no escribe en SQLite y no modifica saldos.
-El botón «Crear depósito» muestra los estados de error o de procesamiento de
-manera simulada; al completar los campos, informa que la creación todavía no
-está disponible. La flecha del encabezado vuelve a la pantalla anterior.
+`src/screens/DepositScreen.js` presenta el formulario para crear un depósito,
+es decir, una fuente donde el usuario organiza su dinero. Se abre desde «Nuevo
+depósito» en el Dashboard y usa la ruta ya registrada en `AppNavigator.js`.
+Al crear, valida los campos y guarda el depósito en SQLite local a través de la
+lógica de depósitos y el repositorio; no requiere conexión a Internet. Si se
+completa correctamente, vuelve a la pantalla anterior. La flecha y «Cancelar»
+regresan sin guardar.
 
 ## Campos
 
 | Campo | Requerido | Presentación |
 | --- | --- | --- |
-| Saldo inicial | Sí | Primer campo del formulario; monto en pesos con prefijo `$`, presentación destacada como el monto de ingreso y teclado decimal. |
+| Saldo inicial | Sí | Primer campo del formulario; monto en pesos con prefijo `$`, presentación destacada y teclado decimal. Acepta punto para miles y coma para centavos, hasta dos decimales; persiste como número y admite cero o valores positivos. |
 | Nombre | Sí | Debajo del saldo inicial; texto de hasta 30 caracteres, con ejemplos y contador. |
 | Tipo de depósito | Sí | Selector entre Efectivo, Banco y Billetera virtual. |
-| Ícono | Sí, con una opción inicial | Grilla compacta con cuatro opciones visibles y «Más» para abrir las restantes. |
+| Ícono | Sí, con una opción inicial | Grilla compacta con cuatro opciones visibles y «Más» para abrir las restantes; se persiste el nombre de Ionicons seleccionado. |
 | Color | No | Muestra azul suave predeterminada (`#C3D1E3`) y cuatro alternativas de la paleta de depósitos, todas visibles. |
 | Descripción | No | Texto de hasta 60 caracteres con contador. |
 
@@ -30,34 +27,37 @@ indica con borde y cambio de fondo además del color, sin una marca de tilde.
 
 El ícono empieza con una opción de efectivo seleccionada. La grilla muestra
 Efectivo, Banco, Virtual, Billetera y «Más», siguiendo el patrón compacto del
-selector de categorías. «Más» abre un modal con Tarjeta y Ahorros. La selección
-es local a la pantalla y no se guarda.
+selector de categorías. «Más» abre un modal con Tarjeta y Ahorros. Se guarda la
+referencia permitida del ícono, no el componente visual.
 
 El color predeterminado es el azul suave `#C3D1E3`. El selector presenta en una
 sola fila los cinco colores de `COLORES_DEPOSITOS`: azul predeterminado, verde
 suave, violeta, rosa y amarillo suave. Esta paleta identifica depósitos y es
 independiente de los colores de categorías de Estadísticas. La opción
 seleccionada presenta un tick y un borde verde de foco; las demás conservan un
-borde neutro. El texto también informa el color seleccionado. La selección no
-se guarda.
+borde neutro. El texto también informa el color seleccionado. Se persiste el
+color elegido o el azul suave predeterminado.
 
-La descripción es opcional. Si queda vacía, la lógica futura podrá generar una
-con información del nombre y el tipo del depósito; la pantalla actual no la
-genera.
+La descripción es opcional. Se recortan los espacios y se admiten hasta 60
+caracteres. Si queda vacía, la lógica de depósitos genera una descripción con
+el nombre y tipo: `Fuente «{nombre}» · {tipo}`.
 
 ## Estados visuales
 
 - **Normal:** campos y superficies usan los tokens del tema activo.
 - **Enfocado:** los campos de texto usan el borde de foco global.
-- **Error:** al intentar continuar con nombre, saldo o tipo faltante o inválido,
-  el campo correspondiente muestra borde y texto de error. También se muestra
-  un mensaje general.
-- **Guardando:** el botón principal presenta «Procesando…» durante una pausa
-  simulada.
-- **Error general:** al terminar la pausa no se crea información; se indica que
-  el guardado aún no está disponible.
+- **Error:** al intentar guardar con datos faltantes o inválidos, el campo
+  correspondiente muestra borde y texto de error. Los errores de sesión o de
+  almacenamiento local se presentan mediante un aviso compartido.
+- **Guardando:** el botón principal presenta «Procesando…»; se deshabilitan los
+  controles para evitar cambios o envíos repetidos mientras se guarda.
+- **Éxito:** el depósito queda en la base local y el formulario vuelve a la
+  pantalla anterior.
 
-No se implementan reglas financieras, cálculos del saldo ni persistencia.
+El saldo inicial se guarda como número y también inicializa el saldo actual. No
+se implementan movimientos ni una actualización del Dashboard desde SQLite.
+Las reglas completas de persistencia se describen en
+[`docs/funcionalidades/depositos.md`](../funcionalidades/depositos.md).
 
 ## Teclado, adaptación y temas
 

@@ -41,6 +41,7 @@ APP-AHRE/
 │   │   └── sistema-visual.md
 │   ├── funcionalidades/
 │   │   ├── autenticacion-local.md
+│   │   ├── depositos.md
 │   │   └── notificaciones-toast.md
 │   └── proceso/
 │       └── flujo-issues-prs-changelog.md
@@ -60,10 +61,13 @@ APP-AHRE/
 │   │   ├── SectionHeader.js
 │   │   └── ToastNotification.js
 │   ├── constants/
+│   │   ├── deposits.js
 │   │   └── routes.js
 │   ├── contexts/
 │   │   ├── AppearanceContext.js
 │   │   └── ToastContext.js
+│   ├── deposits/
+│   │   └── depositService.js
 │   ├── database/
 │   │   ├── index.js
 │   │   ├── connectionQueue.js
@@ -118,6 +122,7 @@ APP-AHRE/
 │   │   ├── globalStyles.js
 │   │   └── toastNotificationStyles.js
 │   └── utils/
+│       ├── depositValidation.js
 │       └── structureSmokeTest.js
 ├── package.json
 └── package-lock.json
@@ -193,6 +198,12 @@ Contiene integraciones que requieran conexión o infraestructura externa, como
 sincronización, autenticación remota, OCR en línea o importaciones. Las
 funciones esenciales deben poder utilizarse sin esta capa.
 
+### `src/deposits/`
+
+Contiene la lógica de dominio de depósitos, como comprobar la sesión local,
+aplicar sus reglas de validación, construir la descripción automática y llamar
+al repositorio de SQLite. Las pantallas no realizan operaciones SQL.
+
 ### `src/utils/`
 
 Contiene funciones auxiliares puras que no dependen de una pantalla, como
@@ -205,6 +216,7 @@ base pueden importarse juntas.
 Contiene valores estáticos compartidos, como nombres de rutas, tipos de
 movimientos y categorías predeterminadas. Las constantes compartidas utilizan
 nombres en mayúsculas.
+`deposits.js` centraliza los tipos e íconos permitidos para crear depósitos.
 
 ### `src/contexts/`
 
@@ -264,9 +276,9 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
 - Una pantalla mínima verifica la cadena `App → navegación → pantalla →
   componente`.
 - La navegación base está implementada con las dependencias de React
-  Navigation ya instaladas. Los repositorios de SQLite están disponibles para
-  que los Issues funcionales conecten sus pantallas; las pantallas financieras
-  y los servicios externos todavía no se conectan a ellos.
+  Navigation ya instaladas. La creación de depósitos ya utiliza la lógica de
+  dominio y el repositorio local; otras pantallas financieras siguen el alcance
+  de sus respectivos Issues.
 - No se crean carpetas vacías para funcionalidades futuras. Las nuevas áreas se
   incorporarán cuando tengan pantallas, componentes o lógica real.
 - `structureSmokeTest.js` contiene una función auxiliar que comprueba que las

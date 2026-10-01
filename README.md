@@ -83,10 +83,10 @@ Los depósitos representan las distintas ubicaciones del dinero del usuario,
 como efectivo, cuentas bancarias o billeteras virtuales.
 
 Las interfaces permiten recorrer depósitos y movimientos de ejemplo, buscar y
-aplicar filtros, y abrir sus detalles. Los formularios de ingreso y egreso
-presentan monto, depósito, categoría, fecha, hora y recurrencia. El alta,
-edición y eliminación de depósitos, así como el guardado de movimientos,
-continúan simulados y no persisten información.
+aplicar filtros, y abrir sus detalles. El formulario de creación de depósitos
+guarda localmente nombre, saldo inicial, tipo, ícono, color y descripción. La
+edición y eliminación de depósitos, los formularios de ingreso y egreso y el
+guardado de movimientos continúan simulados y no persisten información.
 
 ### Deudas y gastos compartidos
 
@@ -138,8 +138,8 @@ interfaces. Actualmente cuenta con:
 - formularios maquetados para ingresos y egresos, con monto, descripción,
   depósito, categoría, fecha, hora y recurrencia visual; ambos simulan el
   guardado sin persistir movimientos;
-- formulario de creación de depósitos y detalle con búsqueda, filtros,
-  edición y eliminación simuladas; no se crean ni modifican depósitos reales;
+- formulario de creación de depósitos conectado a SQLite local; el detalle con
+  búsqueda, filtros, edición y eliminación sigue simulado;
 - pantalla de Estadísticas con gráficos interactivos por categoría y período,
   filtros y detalles basados en datos de ejemplo;
 - pantalla de Notificaciones con avisos de muestra agrupados por día; no usa
@@ -167,11 +167,13 @@ Perfil son de demostración; el perfil, la foto,
 el idioma, las notificaciones y la apariencia no se persisten. El botón Cerrar
 sesión de Perfil sigue siendo visual; la operación local ya está disponible en
 el servicio y su conexión desde Perfil queda para un issue posterior. Los
-depósitos y movimientos del Dashboard son datos de ejemplo. La selección de categorías y los formularios
-no persisten movimientos. El formulario de ingreso permite representar todos
-sus campos y regresar mediante la flecha del encabezado; no tiene una acción
-«Cancelar» en el pie. La versión `0.3.0` ya está publicada como versión no
-estable para evaluación y no representa una versión comercial.
+depósitos y movimientos que aparecen en el Dashboard siguen siendo datos de
+ejemplo, aunque la creación de depósitos ya los guarda en la base local. La
+selección de categorías y los formularios no persisten movimientos. El
+formulario de ingreso permite representar todos sus campos y regresar mediante
+la flecha del encabezado; no tiene una acción «Cancelar» en el pie. La versión
+`0.3.0` ya está publicada como versión no estable para evaluación y no
+representa una versión comercial.
 
 ## Tecnología
 
@@ -220,6 +222,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Pantalla inicial](docs/interfaces/inicio.md);
 - [Interfaz del Dashboard](docs/interfaces/dashboard.md);
 - [Formulario y detalle de depósitos](docs/interfaces/depositos.md);
+- [Creación local de depósitos](docs/funcionalidades/depositos.md);
 - [Interfaz del perfil](docs/interfaces/perfil.md);
 - [Interfaces de movimientos](docs/interfaces/movimientos.md);
 - [Interfaz de Estadísticas](docs/interfaces/estadisticas.md);
