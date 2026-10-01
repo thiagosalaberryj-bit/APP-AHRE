@@ -2,11 +2,12 @@
 
 ## Alcance
 
-El Dashboard presenta un resumen visual de la situación financiera y accesos a
-las operaciones principales. Los datos actuales son simulados: la pantalla no
-consulta SQLite ni persiste cambios. El diseño acompaña los temas claro y
-oscuro, y permite desplazarse verticalmente cuando el contenido supera la
-altura disponible.
+El Dashboard presenta un resumen de la información financiera local y accesos a
+las operaciones principales. Obtiene el usuario, los depósitos y los
+movimientos desde SQLite; no utiliza datos de ejemplo como fuente normal ni
+requiere conexión a Internet. La pantalla acompaña los temas claro y oscuro y
+permite desplazarse verticalmente cuando el contenido supera la altura
+disponible.
 
 ## Estructura
 
@@ -15,23 +16,23 @@ La pantalla se compone de:
 1. encabezado con marca, bienvenida, nombre y accesos a Notificaciones y Perfil;
 2. tarjeta de balance con una franja superior integrada titulada «Balance»,
    control para ocultar el monto y acciones rápidas;
-3. tarjeta agrupada con la lista de depósitos y el acceso para crear uno;
+3. lista local de depósitos y acceso para crear uno;
 4. hasta cinco movimientos recientes, agrupados por día, y acceso a Movimientos.
 
 No se muestra una sección de deudas en el Dashboard.
 
 ## Encabezado y balance
 
-El encabezado reutiliza `MainHeader.js` y muestra «Bienvenido», el nombre de
-ejemplo «Thiago» y accesos a Notificaciones y Perfil. Los accesos abren las
-rutas existentes.
+El encabezado reutiliza `MainHeader.js` y muestra el nombre devuelto por la
+sesión local junto con los accesos a Notificaciones y Perfil. La tarjeta de
+balance se superpone al borde inferior del encabezado verde y mantiene sus
+cuatro esquinas redondeadas. Su franja superior centra «Balance» y la separa
+del monto con un borde fino.
 
-La tarjeta de balance se superpone al borde inferior del encabezado verde y
-mantiene sus cuatro esquinas redondeadas. En su parte superior, una franja de
-ancho completo centra «Balance» y la separa del saldo con un borde fino. Debajo
-se muestran un monto de ejemplo de `$ 2.000.000`, un control de ojo para
-ocultarlo visualmente, una flecha que abre Movimientos y las tres acciones
-rápidas. El control no guarda una preferencia.
+El saldo general se calcula sumando `saldo_actual` de los depósitos consultados.
+No se guarda un balance separado. Si no hay depósitos, el monto es cero. El
+control de ojo solo oculta o muestra el saldo en pantalla y no guarda una
+preferencia.
 
 ## Acciones rápidas
 
@@ -41,55 +42,61 @@ La tarjeta presenta tres accesos con ícono y etiqueta:
 - **Egreso:** abre la pantalla existente de egreso.
 - **OCR:** abre la pantalla existente de OCR.
 
-Estos accesos solo permiten probar la navegación. La carga de formularios y el
-registro real se implementarán posteriormente. OCR también está disponible en
-el menú inferior «Nuevo» bajo la etiqueta «Escanear OCR».
+Estos accesos mantienen la navegación definida por la aplicación; sus
+formularios y operaciones no forman parte de la carga del Dashboard. OCR también
+está disponible en el menú inferior «Nuevo» bajo la etiqueta «Escanear OCR».
 
 ## Depósitos
 
-Efectivo, Mercado Pago y Banco aparecen como tarjetas compactas estáticas. Cada
-tarjeta muestra un icono sobre el color asignado desde `COLORES_DEPOSITOS`, el
-nombre, tipo y descripción en una sola línea pequeña, y el saldo. Los datos
-continúan siendo simulados. Efectivo usa el color predeterminado azul suave
-(`#C3D1E3`) y un ícono grafito (`#263238`) independiente del color del depósito.
-«Agregar depósito» se muestra como un acceso de texto en negrita y color de
-foco, junto
-con un ícono de suma; abre la ruta existente. Las tarjetas también abren la
-pantalla de detalle disponible.
+La lista se consulta para el usuario de la sesión local y representa cada fila
+con su identificador, nombre, tipo, descripción, icono, color y saldo actual. El
+icono y el color guardados se utilizan cuando están disponibles; se usan valores
+predeterminados visuales si faltan.
 
-La estructura incluye una presentación de carga y un estado vacío para cuando
-no haya depósitos.
+Si no hay depósitos, el estado vacío muestra un icono de billetera, una
+explicación y el botón «Crear depósito», que abre la ruta existente. Cuando hay
+depósitos, «Agregar depósito» aparece en el encabezado de la sección. Al
+seleccionar una fila, se abre Detalle de depósito y se envía el objeto
+consultado, que contiene el identificador del depósito. La lógica interna de
+esa pantalla corresponde a su propio issue.
 
 ## Movimientos recientes
 
-La lista muestra como máximo cinco elementos simulados y los agrupa por día.
-Los encabezados dicen «Hoy» o «Ayer» cuando corresponde y muestran la fecha
-para los días anteriores. Cada movimiento usa una tarjeta con ícono sobre el
-color del tipo (`COLORES_ESTADO.ingreso` o `COLORES_ESTADO.egreso`), la línea
-`categoría · descripción`, la línea `hora · depósito`, el tipo «Ingreso» o
-«Egreso» y el monto con signo. La descripción se recorta si no entra; el color
-no es la única señal del tipo. Esta presentación coincide con la lista de la
-pestaña Movimientos. «Ver todos» se muestra como un acceso de texto en negrita
-y color de foco, con una flecha, y navega a esa pestaña. Los títulos de ambas
-secciones conservan el tamaño y la tipografía globales.
+Se consultan y muestran hasta cinco movimientos asociados a los depósitos del
+usuario, ordenados por `fecha_hora` descendente y agrupados por día. Se
+representan su categoría, descripción, hora, depósito, tipo, monto e icono de
+categoría. Las transferencias entrantes se muestran como ingresos y las
+salientes como egresos. Los movimientos anulados no se incluyen.
 
-La estructura incluye una presentación de carga y un estado vacío para cuando
-no haya movimientos.
+Si la consulta no devuelve movimientos, se muestra un icono y un mensaje de
+estado vacío. «Ver todos» y la flecha del balance abren la pestaña Movimientos.
+
+## Carga, errores y actualización
+
+Al abrir el Dashboard o cuando vuelve a tomar el foco, la pantalla vuelve a
+consultar la sesión y la información financiera. Mientras espera muestra los
+esqueletos ya maquetados y no presenta datos de ejemplo. Si falla una consulta,
+se muestra un aviso y un estado con la acción «Reintentar»; la ausencia de
+depósitos o movimientos no se trata como error.
+
+Las lecturas se hacen exclusivamente mediante la base local. El Dashboard no
+consulta conectividad ni realiza solicitudes HTTP, por lo que sus datos
+disponibles se pueden consultar sin Wi-Fi ni datos móviles.
 
 ## Navegación inferior
 
 La barra mantiene las cinco pestañas existentes: Inicio, Movimientos, Nuevo,
-Estadísticas y Social. Se refuerza el borde del botón central y el peso de la
-etiqueta seleccionada para hacer más clara la navegación. Al tocar «Nuevo», se
-oscurece el fondo y aparecen en abanico las acciones rápidas
-Escanear OCR, Ingreso y Egreso. Cada acción cierra el menú y abre su ruta; tocar
-el fondo también lo cierra. Mantener presionado «Nuevo» no abre el menú.
+Estadísticas y Social. Al tocar «Nuevo», se oscurece el fondo y aparecen en
+abanico Escanear OCR, Ingreso y Egreso. Cada acción cierra el menú y abre su
+ruta; tocar el fondo también lo cierra. Mantener presionado «Nuevo» no abre el
+menú.
 
 ## Estilos y componentes
 
-`DashboardScreen.js` reutiliza `MainHeader.js`, las paletas de `colors.js` y
-los estilos globales. Las reglas propias de layout se encuentran en
+`DashboardScreen.js` reutiliza `MainHeader.js`, las paletas de `colors.js` y los
+estilos globales. Las reglas propias de layout se encuentran en
 `src/styles/DashboardScreenStyles.js`. Las filas y acciones que solo se usan en
 esta pantalla se mantienen locales para no ampliar componentes compartidos.
 
-Los ejemplos se mantienen en la pantalla y no requieren conexión a Internet.
+La lógica de consultas, límites, datos vacíos, actualización y pruebas manuales
+está descrita en [Dashboard local](../funcionalidades/dashboard.md).
