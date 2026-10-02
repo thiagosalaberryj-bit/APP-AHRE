@@ -29,6 +29,9 @@ documentación se registran en este archivo.
   SQLite local. Se guardan el nombre, el saldo inicial, el tipo, el ícono, el
   color y la descripción; si esta última queda vacía, se genera a partir del
   nombre y el tipo. (#22)
+- Se conectó el formulario de Ingreso con SQLite local: carga depósitos activos
+  y categorías de ingreso, valida los datos y guarda movimientos atómicamente
+  con su recurrencia y actualización de saldo. (#24)
 
 ### Cambiado
 
@@ -52,6 +55,10 @@ documentación se registran en este archivo.
   con los saldos actuales, muestra hasta cinco movimientos y actualiza los datos
   al recuperar el foco. Se agregaron estados vacíos con acceso para crear el
   primer depósito y reintento ante errores. (#27)
+- El formulario de Ingreso conserva el ancho y el espaciado de Egreso, recalcula
+  los errores al editar los campos y bloquea los controles mientras guarda. El
+  Dashboard conserva los datos visibles al actualizarse al recuperar el foco y
+  reserva los esqueletos para la carga inicial o un reintento sin datos. (#24)
 
 ### Documentación
 
@@ -66,6 +73,10 @@ documentación se registran en este archivo.
   interfaz y el README. (#27)
 - Se actualizaron las guías de creación de depósitos, formularios financieros
   y notificaciones toast para describir la validación y su presentación. (#22)
+- Se documentaron la creación local de ingresos, sus validaciones, la relación
+  obligatoria con depósitos, el saldo, la recurrencia y el funcionamiento sin
+  conexión. También se actualizó la documentación del Dashboard y el README
+  para describir la actualización sin reemplazo visual de los datos. (#24)
 
 ## [v0.3.0] - 2026-09-26 - no estable
 

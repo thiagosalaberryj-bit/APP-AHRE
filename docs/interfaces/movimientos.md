@@ -2,13 +2,12 @@
 
 ## Alcance
 
-Este documento registra los formularios de egreso e ingreso. En esta etapa no
-hay persistencia, modificación de saldos, consultas reales, validación de
-negocio, ejecución de recurrencias, actualización del Dashboard ni estadísticas.
-Al enviar, los formularios señalan los campos obligatorios que faltan y muestran
-un aviso general mediante toast. La fecha, la hora y la frecuencia se mantienen
-solo en el estado de la pantalla; los depósitos y las categorías son datos
-locales simulados.
+Este documento registra los formularios de egreso e ingreso. Ingreso consulta
+SQLite, valida y persiste el movimiento con su impacto en el saldo; Egreso
+continúa siendo una maqueta sin guardado. El ingreso carga depósitos y
+categorías locales, conserva fecha, hora y recurrencia, y muestra un aviso
+general mediante toast cuando hay errores. La ejecución automática de
+recurrencias y la actualización de estadísticas quedan fuera de este alcance.
 
 ## Estructura del formulario de egreso
 
@@ -62,10 +61,10 @@ numérico con prefijo `$` y formato visual. El depósito y la categoría usan
 los mismos selectores compartidos con sus catálogos propios
 (`CATEGORIAS_INGRESO`). La fecha y la hora usan los modales compartidos;
 la recurrencia usa el `Conmutador` con frecuencias diaria, semanal, mensual
-o anual, solo en estado visual. «Guardar ingreso» usa la acción principal y
-muestra los errores y el estado de guardado simulado. El pie no incluye una
-acción para cancelar; la flecha del encabezado permite regresar al flujo
-anterior. No hay persistencia, saldos ni lógica funcional.
+o anual. «Guardar ingreso» valida los campos, comprueba el depósito y la
+categoría y guarda el movimiento local; si se activa la recurrencia, también
+guarda su configuración. El pie no incluye una acción para cancelar; la flecha
+del encabezado permite regresar al flujo anterior.
 
 ## Diferencias visuales entre los formularios
 
@@ -97,7 +96,8 @@ ni guarda datos.
 ### Depósito
 
 `SelectorDeposito` (`src/components/DepositSelector.js`) con tarjeta
-desplegable y datos simulados de `src/constants/movimientos.js`:
+desplegable. Ingreso recibe los depósitos activos desde SQLite; Egreso continúa
+usando los datos simulados de `src/constants/movimientos.js`:
 
 ```text
 Efectivo
@@ -105,9 +105,9 @@ Mercado Pago
 Cuenta bancaria
 ```
 
-Muestra nombre y saldo simulado como texto. La lista se abre en un `Modal`
-transparente superpuesto para no desplazar el formulario; la selección se
-identifica con borde de foco y radio activo. No consulta la base de datos.
+Muestra nombre y saldo como texto. La lista se abre en un `Modal` transparente
+superpuesto para no desplazar el formulario; la selección se identifica con
+borde de foco y radio activo.
 
 ### Categoría
 
@@ -158,7 +158,7 @@ Otros ingresos
 ```
 
 El selector de ingreso conserva la selección mientras la pantalla está abierta;
-no guarda ni procesa movimientos.
+la pantalla valida el identificador contra el catálogo local antes de guardar.
 
 ### Fecha
 
@@ -214,8 +214,8 @@ estilos locales están en
   obligatoria».
 - **Depósito faltante:** borde y mensaje junto al selector.
 - **Categoría faltante:** mensaje junto a las tarjetas.
-- **Guardando:** `BotonPrincipal` con indicador y «Procesando…» durante
-  1,5 segundos simulados.
+- **Guardando:** `BotonPrincipal` con indicador y «Procesando…» mientras se
+  guarda el ingreso; en Egreso el estado continúa simulado durante 1,5 segundos.
 - **Fecha y hora:** los modales reflejan la selección vigente; elegir un día o
   confirmar la hora actualiza el formulario.
 - **Frecuencia recurrente:** las cuatro opciones muestran la frecuencia activa
@@ -224,9 +224,10 @@ estilos locales están en
   errores específicos permanecen junto a los campos; no se muestra un mensaje
   general al pie del formulario.
 
-Los avisos aparecen al presionar «Guardar ingreso» o «Guardar egreso». Solo se
-comprueban los campos obligatorios; no se persisten movimientos ni se calculan
-saldos.
+Los avisos aparecen al presionar «Guardar ingreso» o «Guardar egreso». Ingreso
+comprueba monto, descripción, depósito, categoría, fecha, hora y frecuencia
+cuando corresponde; persiste el movimiento y actualiza el saldo dentro de una
+transacción. Egreso solo comprueba los campos requeridos y no persiste datos.
 
 ## Teclado, scroll y temas
 

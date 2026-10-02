@@ -74,14 +74,18 @@ estado vacío. «Ver todos» y la flecha del balance abren la pestaña Movimient
 ## Carga, errores y actualización
 
 Al abrir el Dashboard o cuando vuelve a tomar el foco, la pantalla vuelve a
-consultar la sesión y la información financiera. Mientras espera muestra los
-esqueletos ya maquetados y no presenta datos de ejemplo. Si falla una consulta,
-se muestra un aviso y un estado con la acción «Reintentar»; la ausencia de
-depósitos o movimientos no se trata como error.
+consultar la sesión y la información financiera. En la primera consulta muestra
+los esqueletos ya maquetados; al volver a tomar el foco conserva los datos
+visibles mientras espera la actualización. Si falla una consulta, se muestra
+un aviso y un estado con la acción «Reintentar»; la ausencia de depósitos o
+movimientos no se trata como error.
 
-Las lecturas se hacen exclusivamente mediante la base local. El Dashboard no
-consulta conectividad ni realiza solicitudes HTTP, por lo que sus datos
-disponibles se pueden consultar sin Wi-Fi ni datos móviles.
+Las lecturas se hacen exclusivamente mediante la base local. Al volver a tomar
+el foco, la pantalla conserva el contenido ya visible mientras actualiza la
+consulta y solo muestra el estado de carga en la primera consulta o cuando se
+reintenta sin datos disponibles. El Dashboard no consulta conectividad ni
+realiza solicitudes HTTP, por lo que sus datos disponibles se pueden consultar
+sin Wi-Fi ni datos móviles.
 
 ## Navegación inferior
 
