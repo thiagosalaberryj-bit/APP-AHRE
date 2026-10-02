@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -64,8 +65,19 @@ export default function PantallaIngreso({ navigation: navegacion }) {
   const [errorCarga, establecerErrorCarga] = useState(null);
   const [guardando, establecerGuardando] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
-  const [errores, establecerErrores] = useState({});
   const [descripcionEnfocada, establecerDescripcionEnfocada] = useState(false);
+  const datosFormulario = {
+    monto,
+    descripcion,
+    deposito_id: depositoId,
+    categoria: categoriaId,
+    fecha,
+    hora,
+    recurrente,
+    frecuencia,
+  };
+  const errores = validarDatosIngreso(datosFormulario);
+  const mostrandoEstado = cargandoDatos || Boolean(errorCarga) || depositos.length === 0;
 
   const cargarDatos = useCallback(async () => {
     establecerCargandoDatos(true);
@@ -98,35 +110,23 @@ export default function PantallaIngreso({ navigation: navegacion }) {
   const guardarIngreso = async () => {
     if (accionEnCurso.current) return;
 
-    const datos = {
-      monto,
-      descripcion,
-      deposito_id: depositoId,
-      categoria: categoriaId,
-      fecha,
-      hora,
-      recurrente,
-      frecuencia,
-    };
-    const nuevosErrores = validarDatosIngreso(datos);
     establecerIntentoGuardar(true);
-    establecerErrores(nuevosErrores);
 
-    if (Object.keys(nuevosErrores).length > 0) {
+    if (Object.keys(errores).length > 0) {
       mostrarAviso('Revisá los campos marcados antes de guardar el ingreso.', { tipo: 'error' });
       return;
     }
 
     accionEnCurso.current = true;
+    Keyboard.dismiss();
     establecerGuardando(true);
 
     try {
-      await crearIngreso(datos);
+      await crearIngreso(datosFormulario);
       mostrarAviso('El ingreso se guardó correctamente.', { tipo: 'exito' });
       navegacion.goBack();
     } catch (error) {
       if (error instanceof ErrorIngreso && error.errores) {
-        establecerErrores(error.errores);
         establecerIntentoGuardar(true);
       }
 
@@ -199,17 +199,14 @@ export default function PantallaIngreso({ navigation: navegacion }) {
     const errorFechaHora = intentoGuardar ? errores.fecha_hora : null;
 
     return (
-      <View style={estilosMovimiento.formulario}>
+      <View pointerEvents={guardando ? 'none' : 'auto'} style={estilosMovimiento.formulario}>
         <EntradaMonto
           tema={tema}
           estilosGlobales={estilosGlobales}
           estilosMovimiento={estilosMovimiento}
           etiqueta="Monto"
           valor={monto}
-          alCambiarTexto={(valor) => {
-            establecerMonto(valor);
-            establecerErrores((actuales) => ({ ...actuales, monto: undefined }));
-          }}
+          alCambiarTexto={establecerMonto}
           alLimpiar={() => establecerMonto('')}
           error={errorMonto}
         />
@@ -231,13 +228,11 @@ export default function PantallaIngreso({ navigation: navegacion }) {
             <TextInput
               accessibilityLabel="Descripción"
               accessibilityHint={errorDescripcion || undefined}
+              editable={!guardando}
               maxLength={500}
               onBlur={() => establecerDescripcionEnfocada(false)}
               onFocus={() => establecerDescripcionEnfocada(true)}
-              onChangeText={(valor) => {
-                establecerDescripcion(valor);
-                establecerErrores((actuales) => ({ ...actuales, descripcion: undefined }));
-              }}
+              onChangeText={establecerDescripcion}
               placeholder="Ej: Sueldo, Venta, Devolución"
               placeholderTextColor={tema.textoSecundario}
               selectionColor={tema.foco}
@@ -259,10 +254,7 @@ export default function PantallaIngreso({ navigation: navegacion }) {
           estilosMovimiento={estilosMovimiento}
           depositos={depositos}
           seleccionadoId={depositoId}
-          alSeleccionar={(valor) => {
-            establecerDepositoId(valor);
-            establecerErrores((actuales) => ({ ...actuales, deposito_id: undefined }));
-          }}
+          alSeleccionar={establecerDepositoId}
           error={errorDeposito}
         />
 
@@ -272,10 +264,7 @@ export default function PantallaIngreso({ navigation: navegacion }) {
           estilosMovimiento={estilosMovimiento}
           categorias={categorias}
           seleccionadaId={categoriaId}
-          alSeleccionar={(valor) => {
-            establecerCategoriaId(valor);
-            establecerErrores((actuales) => ({ ...actuales, categoria: undefined }));
-          }}
+          alSeleccionar={establecerCategoriaId}
           error={errorCategoria}
         />
 
@@ -346,15 +335,12 @@ export default function PantallaIngreso({ navigation: navegacion }) {
           style={{ flex: 1 }}
         >
           <ScrollView
-            contentContainerStyle={{
-              padding: ESPACIADO.pantalla,
-              paddingBottom: insets.bottom + ESPACIADO.enorme,
-              maxWidth: 480,
-              width: '100%',
-              alignSelf: 'center',
-              flexGrow: 1,
-              justifyContent: cargandoDatos || errorCarga || depositos.length === 0 ? 'center' : 'flex-start',
-            }}
+            contentContainerStyle={[
+              mostrandoEstado && estilosMovimiento.formulario,
+              { paddingBottom: insets.bottom + ESPACIADO.grande },
+              mostrandoEstado && { flexGrow: 1, justifyContent: 'center' },
+            ]}
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             keyboardShouldPersistTaps="handled"
           >
             {renderizarEstado()}

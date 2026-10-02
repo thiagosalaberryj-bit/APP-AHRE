@@ -40,7 +40,9 @@ catálogo propio. La categoría se valida otra vez al crear el movimiento.
 - la frecuencia se valida cuando el ingreso es recurrente.
 
 Los errores se muestran junto a los campos y el toast resume que deben
-revisarse. Los fallos de consulta o guardado se informan sin exponer detalles
+revisarse. Después del primer intento, se recalculan al editar o limpiar los
+campos, como en Nuevo depósito: un valor que sigue inválido conserva su error.
+Los fallos de consulta o guardado se informan sin exponer detalles
 de SQLite.
 
 ## Recurrencia y saldo
@@ -60,7 +62,14 @@ ni se modifica parcialmente el saldo.
 Mientras se cargan depósitos y categorías se muestra un estado de carga. Si
 falla una consulta se ofrece reintentar. Mientras se guarda, el botón queda en
 estado de procesamiento y una referencia interna evita inserciones repetidas
-por pulsaciones múltiples.
+por pulsaciones múltiples. Los controles del formulario se bloquean durante
+el guardado.
+
+El formulario conserva el ancho y el espaciado de Egreso: el padding se aplica
+una sola vez en el contenedor del formulario, sin un margen exterior adicional
+en el ScrollView. Los estados de carga, error y ausencia de depósitos conservan
+su propio espacio y se centran en el área disponible. Al desplazar el contenido
+se descarta el teclado, como en Nuevo depósito.
 
 Al guardar correctamente se muestra una confirmación y se vuelve a la pantalla
 anterior. La flecha del encabezado permite cancelar; cancelar no llama al
