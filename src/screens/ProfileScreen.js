@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -16,10 +16,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
-import MensajeError from '../components/ErrorMessage';
+import { ContextoAvisos } from '../contexts/ToastContext';
 import BotonPrincipal from '../components/PrimaryButton';
 import EncabezadoSeccion from '../components/SectionHeader';
 import Conmutador from '../components/Toggle';
+import { RUTAS } from '../constants/routes';
+import { ErrorPerfil, actualizarPerfil, actualizarPreferencias, cargarPerfil, verificarContrasenaPerfil } from '../profile/profileService';
+import { cerrarSesion } from '../authentication/sessionService';
+import { validarDatosPerfil } from '../utils/authenticationValidation';
 
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosPerfil } from '../styles/ProfileScreenStyles';
@@ -41,8 +45,6 @@ const OPCIONES_AVANZADAS_FUTURAS = Object.freeze([
   Object.freeze({ id: 'registro', nombre: 'Registro', icono: 'document-text-outline' }),
 ]);
 
-const FECHA_REGISTRO_SIMULADA = '2026-09-20T12:00:00-03:00';
-
 function obtenerIniciales(nombre) {
   return nombre
     .trim()
@@ -53,6 +55,10 @@ function obtenerIniciales(nombre) {
 }
 
 function formatearFechaRegistro(fecha) {
+  if (!fecha || Number.isNaN(new Date(fecha).getTime())) {
+    return 'Sin fecha disponible';
+  }
+
   return new Intl.DateTimeFormat('es-AR', {
     month: 'short',
     year: 'numeric',
@@ -61,18 +67,23 @@ function formatearFechaRegistro(fecha) {
 
 export default function PantallaPerfil({ navigation: navegacion }) {
   const { tema, apariencia, establecerApariencia } = useContext(ContextoApariencia);
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosPerfil(tema);
+  const accionPreferenciaEnCurso = useRef(false);
   const [cargandoInfo, establecerCargandoInfo] = useState(true);
-  const [nombre, establecerNombre] = useState('Thiago Salaberry');
-  const [correo, establecerCorreo] = useState('thiago@ejemplo.com');
+  const [errorCarga, establecerErrorCarga] = useState(null);
+  const [nombre, establecerNombre] = useState('');
+  const [correo, establecerCorreo] = useState('');
+  const [fechaRegistro, establecerFechaRegistro] = useState(null);
   const [fotoPerfil, establecerFotoPerfil] = useState(null);
-  const [nombreEdicion, establecerNombreEdicion] = useState('Thiago Salaberry');
-  const [correoEdicion, establecerCorreoEdicion] = useState('thiago@ejemplo.com');
+  const [nombreEdicion, establecerNombreEdicion] = useState('');
+  const [correoEdicion, establecerCorreoEdicion] = useState('');
   const [modalEdicion, establecerModalEdicion] = useState(false);
   const [modalContrasena, establecerModalContrasena] = useState(false);
   const [contrasenaConfirmacion, establecerContrasenaConfirmacion] = useState('');
   const [errorContrasena, establecerErrorContrasena] = useState(null);
+  const [verificandoContrasena, establecerVerificandoContrasena] = useState(false);
   const [modalCambioContrasena, establecerModalCambioContrasena] = useState(false);
   const [contrasenaActualCambio, establecerContrasenaActualCambio] = useState('');
   const [contrasenaNueva, establecerContrasenaNueva] = useState('');
@@ -82,21 +93,54 @@ export default function PantallaPerfil({ navigation: navegacion }) {
   const [guardandoContrasena, establecerGuardandoContrasena] = useState(false);
   const [guardando, establecerGuardando] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
+  const [erroresEdicion, establecerErroresEdicion] = useState({});
   const [idioma, establecerIdioma] = useState('es');
   const [modalIdioma, establecerModalIdioma] = useState(false);
   const [notificaciones, establecerNotificaciones] = useState(true);
   const [modalApariencia, establecerModalApariencia] = useState(false);
   const [modalCierre, establecerModalCierre] = useState(false);
   const [modalAcercaDe, establecerModalAcercaDe] = useState(false);
+  const [cerrandoSesion, establecerCerrandoSesion] = useState(false);
 
   useEffect(() => {
-    const temporizador = setTimeout(() => establecerCargandoInfo(false), 1000);
-    return () => clearTimeout(temporizador);
-  }, []);
+    let componenteActivo = true;
+
+    async function cargarInformacion() {
+      establecerCargandoInfo(true);
+      establecerErrorCarga(null);
+      try {
+        const datos = await cargarPerfil();
+        if (!componenteActivo) return;
+        establecerNombre(datos.usuario.nombre);
+        establecerCorreo(datos.usuario.correo_electronico);
+        establecerFechaRegistro(datos.usuario.fecha_creacion);
+        establecerNombreEdicion(datos.usuario.nombre);
+        establecerCorreoEdicion(datos.usuario.correo_electronico);
+        establecerIdioma(datos.preferencias.idioma);
+        establecerNotificaciones(datos.preferencias.notificaciones_activas);
+        establecerApariencia(datos.preferencias.apariencia);
+      } catch (error) {
+        if (!componenteActivo) return;
+        establecerErrorCarga(
+          error instanceof ErrorPerfil
+            ? error.message
+            : 'No se pudo cargar tu perfil. Intentá nuevamente.',
+        );
+      } finally {
+        if (componenteActivo) establecerCargandoInfo(false);
+      }
+    }
+
+    cargarInformacion();
+    return () => {
+      componenteActivo = false;
+    };
+  }, [establecerApariencia]);
 
   const idiomaActual = IDIOMAS.find((item) => item.id === idioma);
   const aparienciaActual = APARIENCIAS.find((item) => item.id === apariencia);
-  const errorEdicion = intentoGuardar && !nombreEdicion.trim() ? 'El nombre es obligatorio.' : null;
+  const errorEdicion = intentoGuardar ? erroresEdicion.nombre : null;
+  const errorCorreoEdicion = intentoGuardar ? erroresEdicion.correo : null;
 
   const abrirConfirmacionEdicion = () => {
     establecerContrasenaConfirmacion('');
@@ -114,16 +158,31 @@ export default function PantallaPerfil({ navigation: navegacion }) {
     establecerModalEdicion(true);
   };
 
-  const confirmarContrasena = () => {
+  const confirmarContrasena = async () => {
+    if (verificandoContrasena) return;
     if (!contrasenaConfirmacion.trim()) {
       establecerErrorContrasena('Ingresá tu contraseña para continuar.');
       return;
     }
-    if (contrasenaDemo && contrasenaConfirmacion !== contrasenaDemo) {
-      establecerErrorContrasena('La contraseña no coincide.');
-      return;
+
+    establecerVerificandoContrasena(true);
+    try {
+      const contrasenaValida = await verificarContrasenaPerfil(contrasenaConfirmacion);
+      if (!contrasenaValida) {
+        establecerErrorContrasena('La contraseña no coincide.');
+        return;
+      }
+      abrirEdicion();
+    } catch (error) {
+      mostrarAviso(
+        error instanceof ErrorPerfil
+          ? error.message
+          : 'No se pudo verificar la contraseña. Intentá nuevamente.',
+        { tipo: 'error' },
+      );
+    } finally {
+      establecerVerificandoContrasena(false);
     }
-    abrirEdicion();
   };
 
   const abrirCambioContrasena = () => {
@@ -190,18 +249,104 @@ export default function PantallaPerfil({ navigation: navegacion }) {
 
   const quitarFoto = () => establecerFotoPerfil(null);
 
-  const guardarCambios = () => {
+  const guardarCambios = async () => {
+    if (guardando) return;
+    const datos = { nombre: nombreEdicion, correo: correoEdicion };
+    const nuevosErrores = validarDatosPerfil(datos);
     establecerIntentoGuardar(true);
-    if (!nombreEdicion.trim() || guardando) return;
+    establecerErroresEdicion(nuevosErrores);
+    if (Object.keys(nuevosErrores).length > 0) return;
+
     const nuevoNombre = nombreEdicion.trim();
-    const nuevoCorreo = correoEdicion.trim() || correo;
+    const nuevoCorreo = correoEdicion.trim();
     establecerGuardando(true);
-    setTimeout(() => {
+    try {
+      await actualizarPerfil(datos);
       establecerNombre(nuevoNombre);
       establecerCorreo(nuevoCorreo);
-      establecerGuardando(false);
       establecerModalEdicion(false);
-    }, 1200);
+      mostrarAviso('Los datos de tu perfil se guardaron.', { tipo: 'exito' });
+    } catch (error) {
+      if (error instanceof ErrorPerfil && error.errores) {
+        establecerErroresEdicion(error.errores);
+        establecerIntentoGuardar(true);
+      }
+      mostrarAviso(
+        error instanceof ErrorPerfil
+          ? error.message
+          : 'No se pudieron guardar los cambios. Intentá nuevamente.',
+        { tipo: 'error' },
+      );
+    } finally {
+      establecerGuardando(false);
+    }
+  };
+
+  const guardarPreferencia = async (cambios, actualizarEstado, restaurarEstado) => {
+    if (accionPreferenciaEnCurso.current) return;
+    accionPreferenciaEnCurso.current = true;
+    actualizarEstado();
+    try {
+      await actualizarPreferencias(cambios);
+    } catch (error) {
+      restaurarEstado();
+      mostrarAviso(
+        error instanceof ErrorPerfil
+          ? error.message
+          : 'No se pudo guardar la preferencia. Intentá nuevamente.',
+        { tipo: 'error' },
+      );
+    } finally {
+      accionPreferenciaEnCurso.current = false;
+    }
+  };
+
+  const seleccionarIdioma = (nuevoIdioma) => {
+    const idiomaAnterior = idioma;
+    establecerModalIdioma(false);
+    guardarPreferencia(
+      { idioma: nuevoIdioma },
+      () => establecerIdioma(nuevoIdioma),
+      () => establecerIdioma(idiomaAnterior),
+    );
+  };
+
+  const cambiarNotificaciones = (nuevoEstado) => {
+    const estadoAnterior = notificaciones;
+    guardarPreferencia(
+      { notificaciones_activas: nuevoEstado },
+      () => establecerNotificaciones(nuevoEstado),
+      () => establecerNotificaciones(estadoAnterior),
+    );
+  };
+
+  const seleccionarApariencia = (nuevaApariencia) => {
+    const aparienciaAnterior = apariencia;
+    establecerModalApariencia(false);
+    guardarPreferencia(
+      { apariencia: nuevaApariencia },
+      () => establecerApariencia(nuevaApariencia),
+      () => establecerApariencia(aparienciaAnterior),
+    );
+  };
+
+  const cerrarSesionLocal = async () => {
+    if (cerrandoSesion) return;
+    establecerCerrandoSesion(true);
+    try {
+      await cerrarSesion();
+      establecerApariencia('sistema');
+      navegacion.reset({ index: 0, routes: [{ name: RUTAS.INICIO_SESION }] });
+    } catch (error) {
+      mostrarAviso(
+        error instanceof ErrorPerfil
+          ? error.message
+          : 'No se pudo cerrar la sesión local. Intentá nuevamente.',
+        { tipo: 'error' },
+      );
+    } finally {
+      establecerCerrandoSesion(false);
+    }
   };
 
   return (
@@ -224,6 +369,17 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                   <View style={estilos.lineaCarga} />
                   <View style={estilos.lineaCarga} />
                   <View style={estilos.lineaCarga} />
+                </View>
+              ) : errorCarga ? (
+                <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
+                  <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{errorCarga}</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => navegacion.replace(RUTAS.INICIO_SESION)}
+                    style={estilosGlobales.botonPrincipal}
+                  >
+                    <Text style={estilosGlobales.textoBotonPrincipal}>Ir a Login</Text>
+                  </Pressable>
                 </View>
               ) : (
                 <>
@@ -274,7 +430,7 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                       <View style={estilos.fechaRegistro}>
                         <Ionicons color={tema.textoSecundario} name="calendar-outline" size={14} />
                         <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.textoFechaRegistro}>
-                          Miembro desde {formatearFechaRegistro(FECHA_REGISTRO_SIMULADA)}
+                          Miembro desde {formatearFechaRegistro(fechaRegistro)}
                         </Text>
                       </View>
                     </View>
@@ -326,7 +482,7 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                         <Conmutador
                           tema={tema}
                           valor={notificaciones}
-                          alCambiar={establecerNotificaciones}
+                          alCambiar={cambiarNotificaciones}
                           etiquetaAccesibilidad="Notificaciones"
                         />
                       </View>
@@ -370,7 +526,7 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                     <View style={estilos.tarjetaOpciones}>
                       <Pressable
                         accessibilityRole="button"
-                        onPress={() => establecerApariencia('sistema')}
+                        onPress={() => seleccionarApariencia('sistema')}
                         style={estilos.filaOpcion}
                       >
                         <View style={estilos.iconoSelector}>
@@ -473,12 +629,13 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                 ) : null}
               </View>
               <Text style={estilosGlobales.textoAyuda}>
-                La autenticación aún no está conectada; esta confirmación es solo local y de demostración.
+                Confirmamos tu contraseña local antes de permitir cambios en la cuenta.
               </Text>
               <BotonPrincipal
                 estilosAutenticacion={estilos}
                 estilosGlobales={estilosGlobales}
                 titulo="Continuar"
+                cargando={verificandoContrasena}
                 alPresionar={confirmarContrasena}
               />
               <Pressable
@@ -639,10 +796,10 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                         value={correoEdicion}
                       />
                     </View>
+                    {errorCorreoEdicion ? (
+                      <Text style={estilosGlobales.textoError}>{errorCorreoEdicion}</Text>
+                    ) : null}
                   </View>
-                  <MensajeError estilosAutenticacion={estilos} tema={tema}>
-                    {errorEdicion}
-                  </MensajeError>
                   <BotonPrincipal
                     estilosAutenticacion={estilos}
                     estilosGlobales={estilosGlobales}
@@ -683,10 +840,7 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                     <Pressable
                       accessibilityRole="button"
                       accessibilityState={{ selected: activo }}
-                      onPress={() => {
-                        establecerIdioma(opcion.id);
-                        establecerModalIdioma(false);
-                      }}
+                      onPress={() => seleccionarIdioma(opcion.id)}
                       style={[estilos.opcionSelector, activo && estilos.opcionSelectorActiva]}
                     >
                       <View style={estilos.contenidoOpcionSelector}>
@@ -726,10 +880,7 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                     <Pressable
                       accessibilityRole="button"
                       accessibilityState={{ selected: activo }}
-                      onPress={() => {
-                        establecerApariencia(opcion.id);
-                        establecerModalApariencia(false);
-                      }}
+                      onPress={() => seleccionarApariencia(opcion.id)}
                       style={[estilos.opcionSelector, activo && estilos.opcionSelectorActiva]}
                     >
                       <View style={estilos.iconoSelectorModal}>
@@ -749,7 +900,7 @@ export default function PantallaPerfil({ navigation: navegacion }) {
                 );
               })}
               <Text style={estilosGlobales.textoAyuda}>
-                La selección se mantiene mientras AHRE está abierta. Al reiniciar, vuelve al modo del sistema.
+                La selección se guarda en este dispositivo y se aplica en toda AHRE.
               </Text>
             </Pressable>
           </Pressable>
@@ -806,10 +957,11 @@ export default function PantallaPerfil({ navigation: navegacion }) {
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => establecerModalCierre(false)}
+                disabled={cerrandoSesion}
+                onPress={cerrarSesionLocal}
                 style={estilos.botonPeligro}
               >
-                <Text style={estilos.textoBotonPeligro}>Cerrar sesión</Text>
+                <Text style={estilos.textoBotonPeligro}>{cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión'}</Text>
               </Pressable>
             </Pressable>
           </Pressable>

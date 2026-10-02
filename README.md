@@ -113,8 +113,8 @@ caracteres y el guardado del egreso todavía no están implementados.
 
 ### Perfil y funciones sociales
 
-La pantalla de Perfil presenta datos de cuenta de ejemplo, selección y retiro
-de foto, edición de datos y cambio de contraseña en flujos de demostración.
+La pantalla de Perfil presenta los datos de la persona autenticada, permite
+editar nombre y correo con validación local, y ofrece cierre de sesión local.
 Incluye preferencias de idioma, notificaciones y apariencia, además de apartados
 avanzados previstos para futuras funciones sociales y de cuenta.
 
@@ -157,9 +157,9 @@ interfaces. Actualmente cuenta con:
 - flujo OCR con cámara en vivo, captura o selección desde la galería, recorte y
   revisión editable de un resultado simulado; no reconoce texto ni guarda el
   egreso;
-- Perfil con datos de ejemplo, foto temporal, edición protegida por una
-  confirmación local de contraseña, cambio de contraseña de demostración y
-  apariencia compartida que solo se conserva durante la sesión;
+- Perfil con datos locales del usuario, foto temporal, edición protegida por la
+  contraseña local, preferencias persistentes de idioma, notificaciones y
+  apariencia, y cierre de sesión local;
 - temas claro y oscuro aplicados a las pantallas, componentes y barras del
   sistema;
 - estados visuales de los inputs y componentes de carga/error listos para
@@ -174,11 +174,10 @@ Las funcionalidades completas de AHRE todavía no están implementadas. El
 registro y el Login ya crean y verifican cuentas localmente. Al abrir AHRE, la
 pantalla de Inicio permanece visible hasta que la persona desliza. Entonces,
 sin sesión conduce a Login; con sesión válida solicita la huella y muestra una
-carga animada antes de abrir el Dashboard. Los flujos
-de edición y cambio de contraseña del Perfil son de demostración; el perfil, la
-foto, el idioma, las notificaciones y la apariencia no se persisten. El botón Cerrar
-sesión de Perfil sigue siendo visual; la operación local ya está disponible en
-el servicio y su conexión desde Perfil queda para un issue posterior.
+carga animada antes de abrir el Dashboard. El cambio de contraseña y la foto de
+perfil siguen siendo de demostración o temporales. El perfil, el idioma, las
+notificaciones, la apariencia y el cierre de sesión ya usan la información local
+correspondiente.
 
 Los depósitos ya se pueden crear y guardar en la base local; el Dashboard lee
 su resumen desde SQLite. Los movimientos que aparecen en las otras pantallas
@@ -247,6 +246,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Autenticación local](docs/funcionalidades/autenticacion-local.md);
 - [Lógica de inicio](docs/funcionalidades/inicio.md);
 - [Carga local del Dashboard](docs/funcionalidades/dashboard.md);
+- [Perfil y preferencias locales](docs/funcionalidades/perfil.md);
 - [Notificaciones toast](docs/funcionalidades/notificaciones-toast.md);
 - [Sistema visual](docs/interfaces/sistema-visual.md);
 - [Historial de cambios](docs/CHANGELOG.md);

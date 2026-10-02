@@ -104,13 +104,15 @@ Guarda las preferencias básicas del usuario.
 | `usuario_id` | `TEXT` | Usuario al que pertenecen las preferencias. |
 | `deposito_predeterminado_id` | `TEXT` | Depósito utilizado por defecto. |
 | `notificaciones_activas` | `INTEGER` | Indica si las notificaciones están activas. |
+| `idioma` | `TEXT` | Idioma elegido: `es` o `en`. |
+| `apariencia` | `TEXT` | Apariencia elegida: `sistema`, `claro` u `oscuro`. |
 | `fecha_creacion` | `TEXT` | Fecha de creación. |
 | `fecha_actualizacion` | `TEXT` | Última modificación. |
 
 Cada usuario tendrá como máximo un registro de preferencias.
 El registro local crea las preferencias en la misma transacción que el usuario
 y su verificador. `deposito_predeterminado_id` comienza en `NULL` y
-`notificaciones_activas` en `1`.
+`notificaciones_activas` en `1`, `idioma` en `es` y `apariencia` en `sistema`.
 
 ### `depositos`
 

@@ -9,12 +9,13 @@ import CampoContrasena from '../components/PasswordInput';
 import BotonPrincipal from '../components/PrimaryButton';
 import { iniciarSesion } from '../authentication/authenticationService';
 import { RUTAS } from '../constants/routes';
+import { cargarPreferenciasActuales } from '../profile/profileService';
 import { validarInicioSesion } from '../utils/authenticationValidation';
 import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
 export default function PantallaInicioSesion({ navigation: navegacion }) {
-  const { tema } = useContext(ContextoApariencia);
+  const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilosAutenticacion = crearEstilosAutenticacion(tema);
@@ -59,6 +60,14 @@ export default function PantallaInicioSesion({ navigation: navegacion }) {
     establecerCargando(true);
     try {
       await iniciarSesion({ correo, contrasena, recordar: recordarme });
+      try {
+        const preferencias = await cargarPreferenciasActuales();
+        establecerApariencia(preferencias.apariencia);
+      } catch {
+        mostrarAviso('No se pudo cargar la apariencia guardada. Se usará el modo actual.', {
+          tipo: 'informacion',
+        });
+      }
       establecerContrasena('');
       navegacion.reset({ index: 0, routes: [{ name: RUTAS.PRINCIPAL }] });
     } catch (error) {
