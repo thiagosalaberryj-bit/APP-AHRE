@@ -51,6 +51,8 @@ export async function aplicarEsquemaInicial(baseDatos) {
       usuario_id TEXT NOT NULL UNIQUE,
       deposito_predeterminado_id TEXT,
       notificaciones_activas INTEGER NOT NULL DEFAULT 1 CHECK (notificaciones_activas IN (0, 1)),
+      idioma TEXT NOT NULL DEFAULT 'es' CHECK (idioma IN ('es', 'en')),
+      apariencia TEXT NOT NULL DEFAULT 'sistema' CHECK (apariencia IN ('sistema', 'claro', 'oscuro')),
       fecha_creacion TEXT NOT NULL,
       fecha_actualizacion TEXT NOT NULL,
       FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE RESTRICT,

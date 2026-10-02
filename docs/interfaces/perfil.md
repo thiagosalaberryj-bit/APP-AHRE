@@ -2,11 +2,11 @@
 
 ## Alcance
 
-Este documento registra el maquetado de la pantalla de Perfil. En esta etapa
-no hay persistencia del perfil, idioma o tema, permisos de notificaciones,
-cierre de sesión ni comunicación con backend. Los datos de cuenta son
-simulados. La selección de una foto y el tema funcionan durante la sesión, pero
-se reinician al cerrar la aplicación.
+Este documento registra la interfaz y el alcance local de la pantalla de
+Perfil. El usuario, el idioma, la apariencia, las notificaciones y el cierre de
+sesión se administran con SQLite y SecureStore, sin comunicación con backend.
+La selección de una foto continúa siendo temporal porque el avatar persistente
+queda fuera de este Issue.
 
 ## Estructura de la pantalla
 
@@ -70,26 +70,24 @@ almacenamiento. Al abrir la pantalla se muestra un skeleton de carga simulado
 
 ## Modal de edición
 
-`Editar perfil` abre primero un modal para ingresar la contraseña. Como la
-autenticación todavía no está conectada, el paso es local y de demostración; si
-ya se cambió la contraseña en esta sesión, compara contra ese valor temporal.
-Después abre un segundo modal (no una pantalla independiente) con los campos
-`Nombre` y `Correo electrónico`, y las acciones `Guardar cambios` (principal,
-con estado de guardado simulado) y `Cancelar`. Si el nombre está vacío al
-guardar, muestra «El nombre es obligatorio» en el campo y en `MensajeError`.
-Al guardar se actualiza la tarjeta solo en memoria.
+`Editar perfil` abre primero un modal para verificar la contraseña local contra
+el verificador almacenado. Después abre un segundo modal (no una pantalla
+independiente) con los campos `Nombre` y `Correo electrónico`, y las acciones
+`Guardar cambios` y `Cancelar`. Se validan campos obligatorios, formato,
+longitud y correo único antes de actualizar SQLite. Al guardar se actualiza la
+tarjeta inmediatamente.
 
 ## Preferencia de idioma
 
 Fila `Idioma` con el valor actual (`Español`) que abre un modal con
-`Español/Inglés` y marca de selección. Elegir uno lo muestra como actual
-solo en pantalla; las opciones reales y la persistencia quedan para después.
+`Español/Inglés` y marca de selección. Elegir uno guarda `es` o `en` en las
+preferencias locales y lo recupera al volver a abrir AHRE.
 
 ## Configuración de notificaciones
 
 Fila con `Conmutador` (`src/components/Toggle.js`, mismo patrón visual de
-Inicio de Sesión) y texto `Activadas/Desactivadas`. Solo cambia en pantalla;
-no pide permisos ni programa nada.
+Inicio de Sesión) y texto `Activadas/Desactivadas`. El estado se guarda como
+`notificaciones_activas`; todavía no solicita permisos ni programa avisos.
 
 ## Configuración de apariencia
 
@@ -97,15 +95,15 @@ Fila `Apariencia` con el valor actual que abre un modal con `Modo del
 sistema/Modo claro/Modo oscuro` y una descripción para cada opción. La
 selección cambia el tema de todas las pantallas de AHRE en el momento. `Modo
 del sistema` es el predeterminado y sigue la apariencia del dispositivo. El
-valor se conserva en memoria y vuelve a `Modo del sistema` al reiniciar la
-aplicación.
+valor se guarda en `preferencias` y se recupera al reiniciar la aplicación.
 
 ## Confirmación de cierre de sesión
 
 La fila `Cerrar sesión` aparece al final de la pantalla, separada de las
 configuraciones, con icono centrado sobre un rojo atenuado. Abre un modal con
 `¿Seguro que querés cerrar sesión?`, `Cancelar` (secundario) y `Cerrar sesión`
-(peligro). Ambas solo cierran el modal; no eliminan ninguna sesión.
+(peligro). Confirmar elimina la sesión local y reemplaza la pila por Login, sin
+borrar datos financieros ni preferencias.
 
 ## Cambio de contraseña
 
@@ -128,11 +126,11 @@ avanzada real será otro Issue.
 - **Cargando información:** skeleton al abrir la pantalla.
 - **Foto de perfil:** el selector del sistema permite elegir y recortar una
   imagen; la vista previa se mantiene mientras Perfil está abierta.
-- **Confirmación de contraseña:** requiere un valor no vacío antes de mostrar
-  el editor; todavía no consulta credenciales reales.
+- **Confirmación de contraseña:** verifica las credenciales locales antes de
+  mostrar el editor.
 - **Guardando cambios:** `BotonPrincipal` con indicador y «Procesando…».
-- **Error:** borde y mensaje junto al campo de nombre y `MensajeError`
-  general en el modal de edición.
+- **Error:** borde y mensaje junto al campo, con un aviso local cuando la
+  operación no puede completarse.
 
 ## Decisiones de diseño
 

@@ -1,5 +1,6 @@
 const EXPRESION_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const LONGITUD_MINIMA_CONTRASENA = 8;
+const LONGITUD_MAXIMA_NOMBRE = 80;
 
 function cantidadCaracteres(texto) {
   return Array.from(texto).length;
@@ -51,6 +52,26 @@ export function validarInicioSesion({ correo, contrasena }) {
   }
   if (!String(contrasena || '')) {
     errores.contrasena = 'Ingresá tu contraseña.';
+  }
+
+  return errores;
+}
+
+export function validarDatosPerfil({ nombre, correo }) {
+  const errores = {};
+  const nombreNormalizado = String(nombre || '').trim();
+  const correoNormalizado = normalizarCorreo(correo);
+
+  if (!nombreNormalizado) {
+    errores.nombre = 'Ingresá tu nombre.';
+  } else if (Array.from(nombreNormalizado).length > LONGITUD_MAXIMA_NOMBRE) {
+    errores.nombre = `El nombre puede tener hasta ${LONGITUD_MAXIMA_NOMBRE} caracteres.`;
+  }
+
+  if (!correoNormalizado) {
+    errores.correo = 'Ingresá tu correo electrónico.';
+  } else if (!EXPRESION_CORREO.test(correoNormalizado)) {
+    errores.correo = 'Ingresá un correo electrónico válido.';
   }
 
   return errores;

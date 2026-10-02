@@ -34,7 +34,7 @@ async function consultarCredencialesPorCorreo(correo) {
 async function consultarUsuarioActivoPorId(usuarioId) {
   return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) =>
     baseDatos.getFirstAsync(
-      `SELECT id, nombre, correo_electronico, activo
+      `SELECT id, nombre, correo_electronico, activo, fecha_creacion
       FROM usuarios
       WHERE id = ? AND activo = 1
       LIMIT 1;`,
@@ -71,8 +71,8 @@ async function crearCuenta({ nombre, correo, contrasenaVerificador }) {
       );
       await baseDatos.runAsync(
         `INSERT INTO preferencias
-          (id, usuario_id, deposito_predeterminado_id, notificaciones_activas, fecha_creacion, fecha_actualizacion)
-        VALUES (?, ?, NULL, 1, ?, ?);`,
+          (id, usuario_id, deposito_predeterminado_id, notificaciones_activas, idioma, apariencia, fecha_creacion, fecha_actualizacion)
+        VALUES (?, ?, NULL, 1, 'es', 'sistema', ?, ?);`,
         [generarIdentificador(), usuarioId, ahora, ahora],
       );
 
