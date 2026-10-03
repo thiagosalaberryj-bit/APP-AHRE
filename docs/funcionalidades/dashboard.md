@@ -40,8 +40,10 @@ los ingresos y egresos.
 
 Al tomar el foco, el Dashboard vuelve a consultar la sesión y los datos locales.
 Así puede reflejar depósitos o movimientos que otro módulo haya guardado antes
-de volver a la pantalla. Durante la consulta se muestran los esqueletos
-existentes y no se presentan datos simulados.
+de volver a la pantalla. Después de la primera carga, conserva los datos visibles
+mientras consulta la información actualizada; no reemplaza el contenido por
+esqueletos durante cada regreso al Dashboard. Los esqueletos se muestran en la
+carga inicial o al reintentar cuando todavía no hay datos.
 
 Si no se encuentra el usuario o falla una consulta, la pantalla no se cierra de
 forma inesperada: presenta un mensaje, emite un aviso toast y ofrece «Reintentar».

@@ -119,14 +119,15 @@ export default function PantallaPanel({ navigation: navegacion }) {
   const [cargando, establecerCargando] = useState(true);
   const [errorCarga, establecerErrorCarga] = useState(null);
   const secuenciaCarga = useRef(0);
+  const datosCargados = useRef(false);
   const abrirPantalla = (ruta) => navegacion.getParent()?.navigate(ruta);
 
-  const cargarDatos = useCallback(async () => {
+  const cargarDatos = useCallback(async (forzarCarga = false) => {
     const identificadorCarga = secuenciaCarga.current + 1;
     secuenciaCarga.current = identificadorCarga;
-    establecerCargando(true);
+    const mostrarCarga = forzarCarga || !datosCargados.current;
+    if (mostrarCarga) establecerCargando(true);
     establecerErrorCarga(null);
-    establecerUsuario(null);
     let usuarioNoDisponible = false;
 
     try {
@@ -161,6 +162,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
       );
 
       if (identificadorCarga !== secuenciaCarga.current) return;
+      datosCargados.current = true;
       establecerUsuario(sesion.usuario);
       establecerDepositos(depositosUsuario);
       establecerMovimientos(movimientosPreparados);
@@ -173,7 +175,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
       establecerErrorCarga(mensaje);
       mostrarAviso?.(mensaje, { tipo: 'error' });
     } finally {
-      if (identificadorCarga === secuenciaCarga.current) {
+      if (identificadorCarga === secuenciaCarga.current && mostrarCarga) {
         establecerCargando(false);
       }
     }
@@ -268,7 +270,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                 <Text style={estilos.textoError}>{errorCarga}</Text>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={cargarDatos}
+                  onPress={() => cargarDatos(!datosCargados.current)}
                   style={({ pressed }) => [
                     estilos.botonReintentar,
                     pressed && estilos.accionSeccionPresionada,
@@ -305,7 +307,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                   <View style={estilos.lineaCarga} />
                   <View style={estilos.lineaCarga} />
                 </View>
-              ) : errorCarga ? null : depositos.length === 0 ? (
+              ) : errorCarga && depositos.length === 0 ? null : depositos.length === 0 ? (
                 <View style={[estilosGlobales.tarjeta, estilos.estadoVacio]}>
                   <View style={estilos.contenidoEstadoVacio}>
                     <View style={estilos.iconoEstadoVacio}>
@@ -401,7 +403,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                   <View style={estilos.lineaCarga} />
                   <View style={estilos.lineaCarga} />
                 </View>
-              ) : errorCarga ? null : movimientos.length === 0 ? (
+              ) : errorCarga && movimientos.length === 0 ? null : movimientos.length === 0 ? (
                 <View style={[estilosGlobales.tarjeta, estilos.estadoVacio]}>
                   <View style={estilos.contenidoEstadoVacio}>
                     <View style={estilos.iconoEstadoVacio}>
