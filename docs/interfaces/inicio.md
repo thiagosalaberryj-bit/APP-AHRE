@@ -30,11 +30,13 @@ Abrir AHRE → Inicio → deslizar
 
 ## Comprobación y destino
 
-La sesión no se consulta al abrir la aplicación. El logo y la barra de carga
-aparecen únicamente después de autenticar la huella. Al completar el deslizador,
-una sesión válida activa el
-diálogo biométrico nativo; si no hay sesión, Inicio se reemplaza por Login sin
-solicitar la huella. El flujo y sus casos de error están documentados en
+La sesión no se valida al abrir la aplicación. Si SecureStore conserva el
+identificador recordado, AHRE carga su apariencia guardada antes de mostrar
+Inicio; esto no abre ni valida la sesión. El logo y la barra de carga aparecen
+únicamente después de autenticar la huella. Al completar el deslizador, una
+sesión válida activa el diálogo biométrico nativo y conserva el tema cargado; si
+no hay sesión, Inicio se reemplaza por Login sin solicitar la huella. El flujo
+y sus casos de error están documentados en
 [`docs/funcionalidades/inicio.md`](../funcionalidades/inicio.md).
 
 Cancelar o fallar la huella deja a la persona en Inicio con el deslizador listo
@@ -43,9 +45,10 @@ Login con contraseña.
 
 ## Tema, áreas seguras y conectividad
 
-Inicio acompaña el modo claro u oscuro seleccionado en el dispositivo. La barra
-de estado, el fondo, el contenido y el área de navegación del sistema respetan
-el tema activo y las áreas seguras. No muestra la barra de pestañas de AHRE.
+Inicio usa la apariencia guardada de la sesión recordada o, si no hay un
+identificador guardado, el modo claro u oscuro del dispositivo. La barra de
+estado, el fondo, el contenido y el área de navegación del sistema respetan el
+tema activo y las áreas seguras. No muestra la barra de pestañas de AHRE.
 
 La inicialización y la comprobación de sesión usan recursos locales. No
 comprueban conexión a Internet ni consultan servicios remotos.

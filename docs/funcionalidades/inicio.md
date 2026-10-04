@@ -3,13 +3,16 @@
 ## Alcance
 
 Al abrir AHRE, la aplicación prepara SQLite y deja visible la pantalla
-existente de Inicio. No consulta la sesión durante el arranque ni decide por sí
-sola si debe abrir Login o el Dashboard. La decisión se toma cuando la persona
-completa el deslizador.
+existente de Inicio. Si SecureStore conserva un identificador recordado, carga
+su preferencia de apariencia para aplicarla antes de mostrar Inicio; esta
+lectura no valida la sesión. La aplicación no decide durante el arranque si
+debe abrir Login o el Dashboard. La sesión se valida cuando la persona completa
+el deslizador.
 
 ```text
 abrir AHRE
 → inicializar SQLite
+→ cargar apariencia recordada, si existe
 → permanecer en Inicio
 → deslizar para iniciar
 → consultar la sesión local
@@ -25,6 +28,9 @@ texto fijo en el centro.
 `src/screens/HomeScreen.js` llama a `obtenerSesionActual()` al terminar el
 deslizamiento. El servicio recupera el identificador desde la memoria o
 `expo-secure-store` y confirma en SQLite que corresponda a un usuario activo.
+Si la sesión es válida, Inicio conserva la apariencia ya cargada durante el
+arranque y continúa con la comprobación biométrica; no vuelve a consultar ni a
+cambiar el tema en ese momento.
 
 - Sin sesión válida, Inicio se reemplaza por Login. No se solicita biometría.
 - Si la referencia guardada apunta a un usuario que ya no existe o está
@@ -83,11 +89,14 @@ botón Cerrar sesión de Perfil pertenece a otro issue.
 ## Verificación manual en Expo Go
 
 1. Abrir AHRE con y sin sesión y confirmar que ambas veces permanece en Inicio
-   hasta completar el deslizador.
+   hasta completar el deslizador. Con una sesión recordada y una apariencia
+   distinta a la del dispositivo, confirmar que Inicio ya aparece con la
+   apariencia guardada antes de deslizar.
 2. Sin sesión, deslizar y confirmar que abre Login sin mostrar el diálogo de
    biometría.
 3. Con una sesión válida y huella configurada, deslizar, confirmar la huella y
-   observar la carga animada durante 1,5 segundos antes del Dashboard.
+   observar la carga animada durante 1,5 segundos antes del Dashboard, sin un
+   cambio de apariencia después de validar la sesión.
 4. Cancelar o fallar la huella y confirmar que no se abre el Dashboard y el
    deslizador queda disponible para reintentar.
 5. Con una sesión válida pero sin biometría configurada, confirmar que se ofrece

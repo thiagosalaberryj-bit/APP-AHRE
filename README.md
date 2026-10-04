@@ -116,8 +116,10 @@ caracteres y el guardado del egreso todavía no están implementados.
 
 La pantalla de Perfil presenta los datos de la persona autenticada, permite
 editar nombre y correo con validación local, y ofrece cierre de sesión local.
-Incluye preferencias de idioma, notificaciones y apariencia, además de apartados
-avanzados previstos para futuras funciones sociales y de cuenta.
+Incluye cambio persistente de contraseña, preferencias locales de idioma,
+notificaciones y apariencia, y apartados avanzados previstos para futuras
+funciones sociales y de cuenta. La edición del perfil se confirma con la
+contraseña local o la huella configurada en el dispositivo.
 
 ## Estado actual
 
@@ -160,26 +162,26 @@ interfaces. Actualmente cuenta con:
   revisión editable de un resultado simulado; no reconoce texto ni guarda el
   egreso;
 - Perfil con datos locales del usuario, foto temporal, edición protegida por la
-  contraseña local, preferencias persistentes de idioma, notificaciones y
-  apariencia, y cierre de sesión local;
+  contraseña local o huella, cambio persistente de contraseña, preferencias de
+  idioma, notificaciones y apariencia, y cierre de sesión local;
 - temas claro y oscuro aplicados a las pantallas, componentes y barras del
   sistema;
 - estados visuales de los inputs y componentes de carga/error listos para
   conectarse a lógica futura;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
-- historial con la versión `0.4.0` en preparación, que reúne persistencia,
-  autenticación local, la lógica de inicio, creación de depósitos y carga del
-  Dashboard de los Issues #19, #20, #21, #22 y #27.
+- historial con la versión `0.4.0` en preparación y los cambios no publicados
+  de Perfil y preferencias locales del Issue #29.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. El
 registro y el Login ya crean y verifican cuentas localmente. Al abrir AHRE, la
 pantalla de Inicio permanece visible hasta que la persona desliza. Entonces,
 sin sesión conduce a Login; con sesión válida solicita la huella y muestra una
-carga animada antes de abrir el Dashboard. El cambio de contraseña y la foto de
-perfil siguen siendo de demostración o temporales. El perfil, el idioma, las
-notificaciones, la apariencia y el cierre de sesión ya usan la información local
-correspondiente.
+carga animada antes de abrir el Dashboard. El cambio de contraseña actualiza
+el verificador local que se usa en los siguientes ingresos; la foto de perfil
+sigue siendo temporal. El perfil, el idioma, las notificaciones y la apariencia
+se guardan localmente. El tema del sistema se usa al primer inicio y luego se
+recupera la apariencia guardada.
 
 Los depósitos ya se pueden crear y guardar en la base local; el Dashboard lee
 su resumen desde SQLite y conserva los datos visibles mientras actualiza la

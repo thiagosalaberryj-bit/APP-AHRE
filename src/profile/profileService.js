@@ -1,5 +1,11 @@
-import { obtenerSesionActual } from '../authentication/sessionService';
-import { verificarContrasena } from '../authentication/passwordSecurity';
+import {
+  obtenerIdentificadorSesionGuardado,
+  obtenerSesionActual,
+} from '../authentication/sessionService';
+import {
+  crearVerificadorContrasena,
+  verificarContrasena,
+} from '../authentication/passwordSecurity';
 import { autenticacionRepositorio, preferenciasRepositorio, usuariosRepositorio } from '../database/repositories';
 import { ErrorBaseDatos } from '../database/errors';
 import {
@@ -8,12 +14,18 @@ import {
   IDIOMA_PREDETERMINADO,
   IDIOMAS_PERMITIDOS,
 } from '../constants/profile';
-import { normalizarCorreo, validarDatosPerfil } from '../utils/authenticationValidation';
+import {
+  normalizarCorreo,
+  validarContrasena,
+  validarDatosPerfil,
+} from '../utils/authenticationValidation';
 
 const MENSAJES_ERROR = Object.freeze({
   datos_invalidos: 'Revisá los datos marcados antes de guardar los cambios.',
   sesion_no_disponible: 'No se encontró una sesión local activa. Iniciá sesión e intentá nuevamente.',
   correo_duplicado: 'Ya existe una cuenta con ese correo electrónico.',
+  contrasena_actual_incorrecta: 'La contraseña actual no coincide.',
+  contrasena_no_actualizada: 'No se pudo actualizar la contraseña. Intentá nuevamente.',
   preferencia_invalida: 'La preferencia seleccionada no es válida.',
   operacion_no_disponible: 'No se pudo actualizar el perfil. Intentá nuevamente.',
 });
@@ -66,6 +78,18 @@ export async function cargarPreferenciasActuales() {
   return consultarPreferencias(usuario.id);
 }
 
+export async function cargarAparienciaSesionGuardada() {
+  const usuarioId = await obtenerIdentificadorSesionGuardado();
+  if (!usuarioId) {
+    return APARIENCIA_PREDETERMINADA;
+  }
+
+  const preferencias = await consultarPreferencias(usuarioId);
+  return APARIENCIAS_PERMITIDAS.includes(preferencias.apariencia)
+    ? preferencias.apariencia
+    : APARIENCIA_PREDETERMINADA;
+}
+
 export async function verificarContrasenaPerfil(contrasena) {
   const usuario = await obtenerUsuarioActual();
   const credenciales = await autenticacionRepositorio.consultarCredencialesPorCorreo(
@@ -75,6 +99,45 @@ export async function verificarContrasenaPerfil(contrasena) {
   return Boolean(
     credenciales && await verificarContrasena(contrasena, credenciales.contrasena_verificador),
   );
+}
+
+export async function actualizarContrasenaPerfil(contrasenaActual, contrasenaNueva) {
+  if (!contrasenaActual) {
+    throw new ErrorPerfil('datos_invalidos', { actual: 'Ingresá tu contraseña actual.' });
+  }
+
+  const erroresContrasena = validarContrasena(contrasenaNueva);
+  if (erroresContrasena.contrasena) {
+    throw new ErrorPerfil('datos_invalidos', { nueva: erroresContrasena.contrasena });
+  }
+  if (contrasenaActual === contrasenaNueva) {
+    throw new ErrorPerfil('datos_invalidos', { nueva: 'Elegí una contraseña distinta de la actual.' });
+  }
+
+  const usuario = await obtenerUsuarioActual();
+  try {
+    const credenciales = await autenticacionRepositorio.consultarCredencialesPorCorreo(
+      usuario.correo_electronico,
+    );
+    if (!credenciales) {
+      throw new ErrorPerfil('contrasena_no_actualizada');
+    }
+    if (!(await verificarContrasena(contrasenaActual, credenciales.contrasena_verificador))) {
+      throw new ErrorPerfil('contrasena_actual_incorrecta', { actual: 'La contraseña actual no coincide.' });
+    }
+
+    const nuevoVerificador = await crearVerificadorContrasena(contrasenaNueva);
+    const actualizado = await autenticacionRepositorio.actualizarVerificadorContrasena(
+      usuario.id,
+      nuevoVerificador,
+    );
+    if (!actualizado) {
+      throw new ErrorPerfil('contrasena_no_actualizada');
+    }
+  } catch (error) {
+    if (error instanceof ErrorPerfil) throw error;
+    throw new ErrorPerfil('contrasena_no_actualizada');
+  }
 }
 
 export async function actualizarPerfil(datos) {

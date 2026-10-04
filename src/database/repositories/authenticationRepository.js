@@ -43,6 +43,19 @@ async function consultarUsuarioActivoPorId(usuarioId) {
   ));
 }
 
+async function actualizarVerificadorContrasena(usuarioId, contrasenaVerificador) {
+  const ahora = new Date().toISOString();
+  return ejecutarConManejoDeErrores('escritura', () => ejecutarConConexion(async (baseDatos) => {
+    const resultado = await baseDatos.runAsync(
+      `UPDATE credenciales_usuario
+      SET contrasena_verificador = ?, fecha_actualizacion = ?
+      WHERE usuario_id = ?;`,
+      [contrasenaVerificador, ahora, usuarioId],
+    );
+    return resultado.changes > 0;
+  }));
+}
+
 async function crearCuenta({ nombre, correo, contrasenaVerificador }) {
   const ahora = new Date().toISOString();
   const usuarioId = generarIdentificador();
@@ -99,4 +112,5 @@ export const autenticacionRepositorio = Object.freeze({
   consultarCredencialesPorCorreo,
   consultarUsuarioActivoPorId,
   crearCuenta,
+  actualizarVerificadorContrasena,
 });

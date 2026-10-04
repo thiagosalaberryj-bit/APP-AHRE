@@ -235,8 +235,10 @@ nombres en mayúsculas.
 Contiene el estado compartido entre pantallas que debe vivir durante la sesión.
 `AppearanceContext.js` coordina la preferencia de apariencia, usa el tema del
 dispositivo en modo del sistema y ofrece los temas claro u oscuro elegidos en el
-Perfil. La preferencia se guarda en SQLite y se recupera después de validar la
-sesión; al cerrar sesión se vuelve temporalmente al modo del sistema.
+Perfil. La preferencia se guarda en SQLite y, si SecureStore conserva el
+identificador recordado, se carga antes de mostrar Inicio sin validar la sesión.
+El deslizador sigue siendo quien valida la sesión; al cerrar sesión se vuelve
+temporalmente al modo del sistema.
 `ToastContext.js` conserva el aviso actual mientras cambian las rutas y lo
 presenta por encima del contenido de la aplicación. El proveedor también envuelve
 la navegación desde `App.js`, así las pantallas usan el mismo `ContextoAvisos`

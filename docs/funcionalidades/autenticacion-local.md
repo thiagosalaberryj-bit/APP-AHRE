@@ -42,6 +42,15 @@ Login valida correo y contraseña antes de acceder a SQLite. Busca una cuenta ac
 
 La contraseña no se escribe en almacenamiento local, logs ni errores. Si la autenticación falla, la persona permanece en Login y no se crea sesión.
 
+## Cambio de contraseña desde Perfil
+
+El formulario valida la contraseña actual contra su verificador y aplica a la
+nueva contraseña las mismas reglas que Registro. Al confirmar, calcula un
+verificador con una sal nueva y actualiza `credenciales_usuario`, incluida su
+fecha de modificación. La contraseña original nunca se guarda. El siguiente
+Login comprueba la nueva contraseña persistida, también después de reiniciar la
+aplicación.
+
 ## Sesión local
 
 `sessionService.js` expone `crearSesion`, `obtenerSesionActual`, `comprobarSesion` y `cerrarSesion`. SecureStore contiene solo el identificador del usuario; no guarda la contraseña ni el verificador. La opción «Recordarme», activa inicialmente en Login, determina si ese identificador se persiste en SecureStore o queda únicamente en memoria hasta cerrar AHRE.

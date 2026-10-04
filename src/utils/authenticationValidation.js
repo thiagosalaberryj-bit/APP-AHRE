@@ -10,6 +10,21 @@ export function normalizarCorreo(correo) {
   return String(correo || '').trim().toLowerCase();
 }
 
+export function validarContrasena(contrasena) {
+  const errores = {};
+  const contrasenaIngresada = String(contrasena || '');
+
+  if (!contrasenaIngresada) {
+    errores.contrasena = 'Ingresá una contraseña.';
+  } else if (!contrasenaIngresada.trim()) {
+    errores.contrasena = 'La contraseña no puede contener solo espacios.';
+  } else if (cantidadCaracteres(contrasenaIngresada) < LONGITUD_MINIMA_CONTRASENA) {
+    errores.contrasena = `La contraseña debe tener al menos ${LONGITUD_MINIMA_CONTRASENA} caracteres.`;
+  }
+
+  return errores;
+}
+
 export function validarRegistro({ nombre, correo, contrasena, confirmacion }) {
   const errores = {};
   const nombreNormalizado = String(nombre || '').trim();
@@ -25,13 +40,7 @@ export function validarRegistro({ nombre, correo, contrasena, confirmacion }) {
   } else if (!EXPRESION_CORREO.test(correoNormalizado)) {
     errores.correo = 'Ingresá un correo electrónico válido.';
   }
-  if (!contrasenaIngresada) {
-    errores.contrasena = 'Ingresá una contraseña.';
-  } else if (!contrasenaIngresada.trim()) {
-    errores.contrasena = 'La contraseña no puede contener solo espacios.';
-  } else if (cantidadCaracteres(contrasenaIngresada) < LONGITUD_MINIMA_CONTRASENA) {
-    errores.contrasena = `La contraseña debe tener al menos ${LONGITUD_MINIMA_CONTRASENA} caracteres.`;
-  }
+  Object.assign(errores, validarContrasena(contrasena));
   if (!confirmacionIngresada) {
     errores.confirmacion = 'Confirmá tu contraseña.';
   } else if (contrasenaIngresada !== confirmacionIngresada) {

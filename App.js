@@ -14,11 +14,14 @@ import * as InterfazSistema from 'expo-system-ui';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { RUTAS } from './src/constants/routes';
+import { APARIENCIA_PREDETERMINADA } from './src/constants/profile';
 import { ContextoApariencia, ProveedorApariencia } from './src/contexts/AppearanceContext';
 import { ProveedorAvisos } from './src/contexts/ToastContext';
 import { inicializarBaseDatos } from './src/database';
 import { ErrorBaseDatos } from './src/database/errors';
 import NavegadorAplicacion from './src/navigation/AppNavigator';
+import { cargarAparienciaSesionGuardada } from './src/profile/profileService';
+import { TEMAS } from './src/styles/colors';
 
 PantallaCarga.preventAutoHideAsync().catch(() => {});
 
@@ -48,7 +51,7 @@ const estilosInicializacion = StyleSheet.create({
 });
 
 function ContenidoAplicacion() {
-  const { tema } = useContext(ContextoApariencia);
+  const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const [estadoInicio, establecerEstadoInicio] = useState('preparando');
   const [mensajeErrorInicio, establecerMensajeErrorInicio] = useState(null);
   const [intentoInicio, establecerIntentoInicio] = useState(0);
@@ -76,6 +79,26 @@ function ContenidoAplicacion() {
       try {
         await inicializarBaseDatos();
 
+        let aparienciaInicial = APARIENCIA_PREDETERMINADA;
+        try {
+          aparienciaInicial = await cargarAparienciaSesionGuardada();
+        } catch (_errorAlCargarApariencia) {
+          // La apariencia no debe bloquear el inicio si no se puede recuperar.
+        }
+
+        if (!componenteActivo) return;
+
+        establecerApariencia(aparienciaInicial);
+        const temaInicial = TEMAS[aparienciaInicial] || tema;
+        try {
+          await InterfazSistema.setBackgroundColorAsync(temaInicial.fondo);
+          if (Platform.OS === 'android') {
+            await BarraNavegacion.setStyle(temaInicial.nombre === 'oscuro' ? 'light' : 'dark');
+          }
+        } catch (_errorAlAplicarApariencia) {
+          // La interfaz usa el tema guardado aunque el sistema no permita actualizar las barras.
+        }
+
         if (componenteActivo) {
           establecerEstadoInicio('lista');
         }
@@ -96,7 +119,7 @@ function ContenidoAplicacion() {
     return () => {
       componenteActivo = false;
     };
-  }, [intentoInicio]);
+  }, [establecerApariencia, intentoInicio]);
 
   return (
     <SafeAreaProvider>

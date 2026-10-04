@@ -17,9 +17,9 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { ErrorAutenticacion } from '../authentication/errors';
 import { obtenerSesionActual } from '../authentication/sessionService';
+import { APARIENCIA_PREDETERMINADA } from '../constants/profile';
 import { RUTAS } from '../constants/routes';
 import { ErrorBaseDatos } from '../database/errors';
-import { cargarPreferenciasActuales } from '../profile/profileService';
 import { COLORES_MARCA } from '../styles/colors';
 import { ESPACIADO } from '../styles/globalStyles';
 import {
@@ -94,17 +94,9 @@ export default function PantallaInicio({ navigation: navegacion }) {
     try {
       const { usuario } = await obtenerSesionActual();
       if (!usuario) {
+        establecerApariencia(APARIENCIA_PREDETERMINADA);
         navegacion.replace(RUTAS.INICIO_SESION);
         return;
-      }
-
-      try {
-        const preferencias = await cargarPreferenciasActuales();
-        establecerApariencia(preferencias.apariencia);
-      } catch {
-        mostrarAviso?.('No se pudo cargar la apariencia guardada. Se usará el modo actual.', {
-          tipo: 'informacion',
-        });
       }
 
       const [hayHardware, hayHuellaConfigurada] = await Promise.all([

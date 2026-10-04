@@ -16,12 +16,15 @@ Perfil → confirmar cierre de sesión → eliminar solo la sesión → Login
 lo consulta desde SQLite. Perfil muestra el nombre, el correo y la fecha de
 creación reales de `usuarios`; ya no utiliza datos de cuenta hardcodeados.
 
-La edición conserva el modal existente. Antes de abrirlo se verifica la
-contraseña local contra el verificador almacenado. El nombre y el correo se
+La edición conserva el modal existente. Antes de abrirlo, la persona puede
+confirmar su identidad con la contraseña local contra el verificador almacenado
+o con la biometría configurada en el dispositivo. La contraseña se envía desde
+el teclado y la acción biométrica aparece debajo del campo. Si no hay biometría
+disponible, la contraseña continúa como alternativa. El nombre y el correo se
 validan con las mismas reglas básicas de Registro, incluidos campos
 obligatorios, formato, longitud y correo único. Guardar actualiza `usuarios` y
-refleja los cambios inmediatamente. Cancelar descarta el borrador y no escribe
-en la base.
+refleja los cambios inmediatamente. Cerrar el editor con la `X` descarta el
+borrador y no escribe en la base.
 
 ## Preferencias
 
@@ -34,9 +37,19 @@ La tabla `preferencias` conserva una fila por usuario y ahora almacena:
 
 Idioma y notificaciones se guardan al elegir o cambiar el control. La selección
 de apariencia también se guarda y actualiza `ContextoApariencia`, por lo que el
-tema se aplica globalmente. Al iniciar AHRE, después de validar la sesión, y al
-completar Login, se recupera la apariencia guardada. `Modo del sistema` sigue
-la configuración del dispositivo.
+tema se aplica globalmente. Al iniciar AHRE, si SecureStore conserva el
+identificador recordado, se recupera la apariencia antes de mostrar Inicio sin
+validar la sesión. El deslizador valida la sesión por separado y conserva el
+tema ya aplicado. Al completar Login también se recupera la apariencia
+guardada. `Modo del sistema` sigue la configuración del dispositivo.
+La fila `Restablecer apariencia`, dentro de `Preferencias`, devuelve la
+selección al tema del dispositivo.
+
+La biometría solo verifica localmente a quien usa el dispositivo al abrir el
+editor; no almacena datos de huella ni reemplaza el verificador de contraseña.
+El cambio de contraseña verifica la contraseña actual, deriva un verificador
+nuevo y actualiza `credenciales_usuario` en SQLite. El cambio queda disponible
+en los siguientes ingresos, incluso después de cerrar y volver a abrir AHRE.
 
 Las traducciones completas no forman parte de este Issue: el idioma queda
 persistido y disponible para los módulos futuros.
@@ -67,6 +80,8 @@ usuario para el próximo inicio de sesión.
 - `src/screens/ProfileScreen.js`: interfaz, modales, estados y navegación;
 - `src/profile/profileService.js`: consultas, validaciones y escrituras del
   perfil y preferencias;
+- `src/database/repositories/authenticationRepository.js`: acceso a los
+  verificadores de contraseña persistidos;
 - `src/database/repositories/usersRepository.js`: usuario local;
 - `src/database/repositories/preferencesRepository.js`: preferencias locales;
 - `src/database/migrations/001_initialSchema.js`: columnas iniciales de idioma
