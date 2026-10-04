@@ -32,6 +32,11 @@ documentación se registran en este archivo.
 - Se conectó el formulario de Ingreso con SQLite local: carga depósitos activos
   y categorías de ingreso, valida los datos y guarda movimientos atómicamente
   con su recurrencia y actualización de saldo. (#24)
+- Perfil consulta y actualiza los datos de la cuenta y guarda las preferencias
+  de idioma, notificaciones y apariencia en SQLite local. (#29)
+- Se agregó el cambio permanente de contraseña: verifica la contraseña actual
+  y guarda en SQLite el nuevo verificador con sal para los siguientes ingresos.
+  (#29)
 
 ### Cambiado
 
@@ -59,6 +64,12 @@ documentación se registran en este archivo.
   los errores al editar los campos y bloquea los controles mientras guarda. El
   Dashboard conserva los datos visibles al actualizarse al recuperar el foco y
   reserva los esqueletos para la carga inicial o un reintento sin datos. (#24)
+- AHRE usa el tema del sistema al primer inicio y recupera la apariencia elegida
+  desde las preferencias locales en los inicios posteriores. (#29)
+- Se unificaron los modales de Perfil: encabezado a la izquierda con icono,
+  título y descripción, botón `X` arriba a la derecha y opciones alineadas. La
+  verificación del perfil permite enviar la contraseña con el teclado o usar
+  la huella debajo del campo. (#29)
 
 ### Documentación
 
@@ -77,6 +88,9 @@ documentación se registran en este archivo.
   obligatoria con depósitos, el saldo, la recurrencia y el funcionamiento sin
   conexión. También se actualizó la documentación del Dashboard y el README
   para describir la actualización sin reemplazo visual de los datos. (#24)
+- Se actualizaron las guías de Perfil, autenticación local, Inicio, arquitectura
+  y sistema visual para describir las preferencias persistentes, el cambio de
+  contraseña y los modales de Perfil. (#29)
 
 ## [v0.3.0] - 2026-09-26 - no estable
 

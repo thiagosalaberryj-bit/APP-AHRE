@@ -17,6 +17,7 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { ErrorAutenticacion } from '../authentication/errors';
 import { obtenerSesionActual } from '../authentication/sessionService';
+import { APARIENCIA_PREDETERMINADA } from '../constants/profile';
 import { RUTAS } from '../constants/routes';
 import { ErrorBaseDatos } from '../database/errors';
 import { COLORES_MARCA } from '../styles/colors';
@@ -35,7 +36,7 @@ const ETAPAS_CARGA = [
 ];
 
 export default function PantallaInicio({ navigation: navegacion }) {
-  const { tema } = useContext(ContextoApariencia);
+  const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const contextoAvisos = useContext(ContextoAvisos);
   const mostrarAviso = contextoAvisos?.mostrarAviso;
   const { width: anchoVentana, height: altoVentana } = useWindowDimensions();
@@ -93,6 +94,7 @@ export default function PantallaInicio({ navigation: navegacion }) {
     try {
       const { usuario } = await obtenerSesionActual();
       if (!usuario) {
+        establecerApariencia(APARIENCIA_PREDETERMINADA);
         navegacion.replace(RUTAS.INICIO_SESION);
         return;
       }
@@ -146,7 +148,7 @@ export default function PantallaInicio({ navigation: navegacion }) {
           : 'No se pudo comprobar la sesión local. Intentá nuevamente.';
       reiniciarDeslizador(mensaje, 'error');
     }
-  }, [mostrarAviso, navegacion, reiniciarDeslizador]);
+  }, [establecerApariencia, mostrarAviso, navegacion, reiniciarDeslizador]);
 
   useEffect(() => {
     if (!cargando) {

@@ -44,7 +44,7 @@ definido en el modelo. Los indicadores utilizan `INTEGER` con valores `0/1`.
 | --- | --- |
 | `usuarios` | `id`, `nombre`, `correo_electronico`, `activo`, `fecha_creacion`, `fecha_actualizacion` |
 | `credenciales_usuario` | `usuario_id`, `contrasena_verificador`, `fecha_creacion`, `fecha_actualizacion` |
-| `preferencias` | `id`, `usuario_id`, `deposito_predeterminado_id`, `notificaciones_activas`, `fecha_creacion`, `fecha_actualizacion` |
+| `preferencias` | `id`, `usuario_id`, `deposito_predeterminado_id`, `notificaciones_activas`, `idioma`, `apariencia`, `fecha_creacion`, `fecha_actualizacion` |
 | `depositos` | `id`, `usuario_id`, `nombre`, `tipo`, `saldo_inicial`, `saldo_actual`, `icono`, `color`, `descripcion`, `activo`, `fecha_creacion`, `fecha_actualizacion` |
 | `historial_saldos_deposito` | `id`, `deposito_id`, `saldo_anterior`, `saldo_informado`, `descripcion`, `fecha_hora` |
 | `movimientos` | `id`, `deposito_id`, `categoria`, `recurrencia_id`, `transferencia_id`, `tipo`, `monto`, `descripcion`, `fecha_hora`, `anulado`, `reversion_de_id`, `fecha_creacion`, `fecha_actualizacion` |
@@ -170,7 +170,8 @@ ni movimientos simulados.
 
 El registro real crea `usuarios`, `credenciales_usuario` y `preferencias` en
 una sola transacción. Si una inserción falla, SQLite revierte las tres filas.
-No crea un depósito predeterminado: las preferencias empiezan sin uno asociado.
+No crea un depósito predeterminado: las preferencias empiezan sin uno asociado,
+con idioma `es`, apariencia `sistema` y notificaciones activas.
 
 ## Eliminación y saldo
 

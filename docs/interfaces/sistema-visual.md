@@ -129,8 +129,10 @@ genera el `StyleSheet` correspondiente.
 Todas las pantallas consumen la preferencia de apariencia compartida por AHRE.
 `Modo del sistema` sigue el modo claro u oscuro del dispositivo; `Modo claro` y
 `Modo oscuro` aplican el tema elegido a fondos, texto, encabezados, controles y
-navegación inferior. La preferencia vive en memoria y vuelve a `Modo del sistema`
-al reiniciar la aplicación. `app.json` declara
+navegación inferior. Si SecureStore conserva el identificador recordado, AHRE
+lee la apariencia de ese usuario desde SQLite antes de mostrar Inicio, sin
+validar la sesión en ese momento. Sin una sesión recordada, se usa el modo del
+dispositivo. `app.json` declara
 `userInterfaceStyle: "automatic"` y define fondos de splash para ambos modos.
 `App.js` actualiza el fondo nativo y el contraste de los controles Android según
 el tema activo. `AppNavigator.js` aplica los mismos colores al tema de React

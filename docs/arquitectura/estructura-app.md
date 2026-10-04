@@ -44,6 +44,7 @@ APP-AHRE/
 │   │   ├── depositos.md
 │   │   ├── dashboard.md
 │   │   ├── inicio.md
+│   │   ├── perfil.md
 │   │   └── notificaciones-toast.md
 │   └── proceso/
 │       └── flujo-issues-prs-changelog.md
@@ -70,6 +71,8 @@ APP-AHRE/
 │   │   └── ToastContext.js
 │   ├── deposits/
 │   │   └── depositService.js
+│   ├── profile/
+│   │   └── profileService.js
 │   ├── database/
 │   │   ├── index.js
 │   │   ├── connectionQueue.js
@@ -206,6 +209,13 @@ Contiene la lógica de dominio de depósitos, como comprobar la sesión local,
 aplicar sus reglas de validación, construir la descripción automática y llamar
 al repositorio de SQLite. Las pantallas no realizan operaciones SQL.
 
+### `src/profile/`
+
+Contiene la lógica de dominio del perfil y sus preferencias locales. El servicio
+consulta y actualiza el usuario, valida el correo único, guarda idioma,
+notificaciones y apariencia, y verifica la contraseña antes de editar el
+perfil. Las pantallas no ejecutan SQL.
+
 ### `src/utils/`
 
 Contiene funciones auxiliares puras que no dependen de una pantalla, como
@@ -225,7 +235,10 @@ nombres en mayúsculas.
 Contiene el estado compartido entre pantallas que debe vivir durante la sesión.
 `AppearanceContext.js` coordina la preferencia de apariencia, usa el tema del
 dispositivo en modo del sistema y ofrece los temas claro u oscuro elegidos en el
-Perfil. La preferencia no se guarda y vuelve al modo del sistema al reiniciar AHRE.
+Perfil. La preferencia se guarda en SQLite y, si SecureStore conserva el
+identificador recordado, se carga antes de mostrar Inicio sin validar la sesión.
+El deslizador sigue siendo quien valida la sesión; al cerrar sesión se vuelve
+temporalmente al modo del sistema.
 `ToastContext.js` conserva el aviso actual mientras cambian las rutas y lo
 presenta por encima del contenido de la aplicación. El proveedor también envuelve
 la navegación desde `App.js`, así las pantallas usan el mismo `ContextoAvisos`

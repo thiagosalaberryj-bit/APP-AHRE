@@ -5,8 +5,8 @@ import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
 export function crearEstilosPerfil(tema) {
   return StyleSheet.create({
     contenido: {
-      gap: ESPACIADO.formulario,
-      padding: ESPACIADO.pantalla,
+      gap: ESPACIADO.medio,
+      padding: ESPACIADO.grande,
       paddingBottom: ESPACIADO.enorme,
       maxWidth: 480,
       width: '100%',
@@ -22,14 +22,18 @@ export function crearEstilosPerfil(tema) {
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     tarjetaUsuario: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: ESPACIADO.medio,
+      alignItems: 'stretch',
+      gap: ESPACIADO.pequeno,
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
       borderRadius: BORDES.radios.tarjeta,
       borderWidth: BORDES.anchos.fino,
       padding: ESPACIADO.grande,
+    },
+    resumenUsuario: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: ESPACIADO.medio,
     },
     columnaAvatar: {
       width: 92,
@@ -148,7 +152,7 @@ export function crearEstilosPerfil(tema) {
       gap: ESPACIADO.medio,
     },
     filaSelector: {
-      minHeight: 72,
+      minHeight: 64,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.medio,
@@ -210,9 +214,11 @@ export function crearEstilosPerfil(tema) {
       fontSize: TIPOGRAFIA.tamanos.cuerpo,
     },
     valorOpcion: {
+      width: '100%',
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
+      textAlign: 'right',
     },
     textoOpcionPeligro: {
       flex: 1,
@@ -232,30 +238,124 @@ export function crearEstilosPerfil(tema) {
       width: '100%',
       maxWidth: 480,
       maxHeight: '90%',
-      gap: ESPACIADO.formulario,
+      alignSelf: 'center',
+      alignItems: 'stretch',
+      gap: ESPACIADO.medio,
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
       borderRadius: BORDES.radios.tarjeta,
       borderWidth: BORDES.anchos.fino,
-      padding: ESPACIADO.extraGrande,
+      padding: ESPACIADO.grande,
       elevation: 8,
       shadowColor: '#000000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25,
       shadowRadius: 8,
     },
-    tituloModal: {
+    encabezadoFormularioModal: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: ESPACIADO.pequeno,
+    },
+    iconoEncabezadoFormularioModal: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tema.fondo,
+      borderRadius: BORDES.radios.circular,
+    },
+    cuerpoEncabezadoFormularioModal: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: 'flex-start',
+      gap: ESPACIADO.minimo,
+      paddingTop: ESPACIADO.minimo,
+    },
+    tituloFormularioModal: {
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.encabezado,
       fontWeight: TIPOGRAFIA.pesos.negrita,
-      textAlign: 'center',
+      textAlign: 'left',
     },
-    descripcionModal: {
+    descripcionFormularioModal: {
+      alignSelf: 'stretch',
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
+      lineHeight: 20,
+      textAlign: 'left',
+    },
+    botonCerrarFormularioModal: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tema.fondo,
+      borderRadius: BORDES.radios.circular,
+    },
+    botonCerrarFormularioModalPresionado: {
+      opacity: 0.65,
+    },
+    desplazamientoModal: {
+      width: '100%',
+      flexShrink: 1,
+    },
+    contenidoScrollModal: {
+      width: '100%',
+      alignItems: 'stretch',
+    },
+    formularioModal: {
+      width: '100%',
+      alignItems: 'stretch',
+      gap: ESPACIADO.medio,
+    },
+    grupoCampoModal: {
+      width: '100%',
+      alignItems: 'stretch',
+      gap: ESPACIADO.minimo,
+    },
+    separadorModal: {
+      width: '100%',
+      height: BORDES.anchos.fino,
+      backgroundColor: tema.borde,
+    },
+    listaOpcionesModal: {
+      width: '100%',
+      alignItems: 'stretch',
+      gap: ESPACIADO.pequeno,
+    },
+    contenedorOpcionModal: {
+      width: '100%',
+      alignSelf: 'stretch',
+    },
+    textoAyudaModal: {
+      width: '100%',
+      lineHeight: 18,
       textAlign: 'center',
+    },
+    botonBiometria: {
+      minHeight: 52,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: ESPACIADO.pequeno,
+      backgroundColor: tema.fondo,
+      borderColor: tema.foco,
+      borderRadius: BORDES.radios.boton,
+      borderWidth: BORDES.anchos.normal,
+      paddingHorizontal: ESPACIADO.grande,
+    },
+    botonBiometriaDeshabilitado: {
+      opacity: 0.65,
+    },
+    textoBotonBiometria: {
+      color: tema.foco,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.boton,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     campoEdicion: {
       minHeight: 52,
@@ -268,6 +368,12 @@ export function crearEstilosPerfil(tema) {
       borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
     },
+    botonVisibilidad: {
+      minWidth: 36,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     entradaEdicion: {
       flex: 1,
       minWidth: 0,
@@ -277,6 +383,7 @@ export function crearEstilosPerfil(tema) {
       paddingVertical: ESPACIADO.pequeno,
     },
     opcionSelector: {
+      width: '100%',
       minHeight: 72,
       flexDirection: 'row',
       alignItems: 'center',
@@ -299,6 +406,9 @@ export function crearEstilosPerfil(tema) {
       justifyContent: 'center',
       backgroundColor: tema.superficie,
       borderRadius: BORDES.radios.circular,
+    },
+    iconoSelectorModalActivo: {
+      backgroundColor: tema.contenedorVerde,
     },
     contenidoOpcionSelector: {
       flex: 1,
