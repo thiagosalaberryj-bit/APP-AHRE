@@ -26,8 +26,12 @@ import EncabezadoSeccion from '../components/SectionHeader';
 import SelectorHora from '../components/TimeSelector';
 import { RUTAS } from '../constants/routes';
 import { ErrorBaseDatos } from '../database/errors';
-import { cargarDatosIngreso, crearIngreso, ErrorIngreso } from '../movements/incomeService';
-import { FRECUENCIAS_MOVIMIENTO, validarDatosIngreso } from '../utils/movementValidation';
+import {
+  cargarDatosMovimiento,
+  crearMovimiento,
+  ErrorMovimiento,
+} from '../movements/movementService';
+import { FRECUENCIAS_MOVIMIENTO, validarDatosMovimiento } from '../utils/movementValidation';
 
 import { crearEstilosEgreso } from '../styles/expenseStyles';
 import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
@@ -44,7 +48,9 @@ const obtenerHoraActual = () => {
   return `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
 };
 
-export default function PantallaIngreso({ navigation: navegacion }) {
+export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' }) {
+  const esEgreso = tipo === 'egreso';
+  const nombreMovimiento = esEgreso ? 'egreso' : 'ingreso';
   const insets = useSafeAreaInsets();
   const { mostrarAviso } = useContext(ContextoAvisos);
   const { tema } = useContext(ContextoApariencia);
@@ -76,7 +82,7 @@ export default function PantallaIngreso({ navigation: navegacion }) {
     recurrente,
     frecuencia,
   };
-  const errores = validarDatosIngreso(datosFormulario);
+  const errores = validarDatosMovimiento(datosFormulario, tipo);
   const mostrandoEstado = cargandoDatos || Boolean(errorCarga) || depositos.length === 0;
 
   const cargarDatos = useCallback(async () => {
@@ -84,7 +90,7 @@ export default function PantallaIngreso({ navigation: navegacion }) {
     establecerErrorCarga(null);
 
     try {
-      const datos = await cargarDatosIngreso();
+      const datos = await cargarDatosMovimiento(tipo);
       establecerDepositos(datos.depositos);
       establecerCategorias(datos.categorias);
       establecerDepositoId((depositoActual) => (
@@ -94,26 +100,26 @@ export default function PantallaIngreso({ navigation: navegacion }) {
       ));
     } catch (error) {
       establecerErrorCarga(
-        error instanceof ErrorIngreso || error instanceof ErrorBaseDatos
+        error instanceof ErrorMovimiento || error instanceof ErrorBaseDatos
           ? error.message
-          : 'No se pudo cargar la información del ingreso. Intentá nuevamente.',
+          : `No se pudo cargar la información del ${nombreMovimiento}. Intentá nuevamente.`,
       );
     } finally {
       establecerCargandoDatos(false);
     }
-  }, []);
+  }, [nombreMovimiento, tipo]);
 
   useFocusEffect(useCallback(() => {
     cargarDatos();
   }, [cargarDatos]));
 
-  const guardarIngreso = async () => {
+  const guardarMovimientoFormulario = async () => {
     if (accionEnCurso.current) return;
 
     establecerIntentoGuardar(true);
 
     if (Object.keys(errores).length > 0) {
-      mostrarAviso('Revisá los campos marcados antes de guardar el ingreso.', { tipo: 'error' });
+      mostrarAviso(`Revisá los campos marcados antes de guardar el ${nombreMovimiento}.`, { tipo: 'error' });
       return;
     }
 
@@ -122,17 +128,17 @@ export default function PantallaIngreso({ navigation: navegacion }) {
     establecerGuardando(true);
 
     try {
-      await crearIngreso(datosFormulario);
-      mostrarAviso('El ingreso se guardó correctamente.', { tipo: 'exito' });
+      await crearMovimiento(datosFormulario, tipo);
+      mostrarAviso(`El ${nombreMovimiento} se guardó correctamente.`, { tipo: 'exito' });
       navegacion.goBack();
     } catch (error) {
-      if (error instanceof ErrorIngreso && error.errores) {
+      if (error instanceof ErrorMovimiento && error.errores) {
         establecerIntentoGuardar(true);
       }
 
-      const mensaje = error instanceof ErrorIngreso || error instanceof ErrorBaseDatos
+      const mensaje = error instanceof ErrorMovimiento || error instanceof ErrorBaseDatos
         ? error.message
-        : 'No se pudo guardar el ingreso. Intentá nuevamente.';
+        : `No se pudo guardar el ${nombreMovimiento}. Intentá nuevamente.`;
       mostrarAviso(mensaje, { tipo: 'error' });
     } finally {
       accionEnCurso.current = false;
@@ -179,7 +185,7 @@ export default function PantallaIngreso({ navigation: navegacion }) {
           <Ionicons color={tema.foco} name="wallet-outline" size={42} />
           <Text style={[estilosGlobales.subtitulo, { textAlign: 'center' }]}>Todavía no tenés depósitos.</Text>
           <Text style={[estilosGlobales.textoSecundario, { textAlign: 'center' }]}>
-            Creá un depósito antes de registrar un ingreso.
+            Creá un depósito antes de registrar un {nombreMovimiento}.
           </Text>
           <Pressable
             accessibilityRole="button"
@@ -233,7 +239,9 @@ export default function PantallaIngreso({ navigation: navegacion }) {
               onBlur={() => establecerDescripcionEnfocada(false)}
               onFocus={() => establecerDescripcionEnfocada(true)}
               onChangeText={establecerDescripcion}
-              placeholder="Ej: Sueldo, Venta, Devolución"
+              placeholder={esEgreso
+                ? 'Ej: Supermercado, Transporte, Cena'
+                : 'Ej: Sueldo, Venta, Devolución'}
               placeholderTextColor={tema.textoSecundario}
               selectionColor={tema.foco}
               style={estilosMovimiento.entradaDescripcion}
@@ -304,7 +312,9 @@ export default function PantallaIngreso({ navigation: navegacion }) {
           <Text style={estilosGlobales.textoAyuda}>
             {recurrente
               ? 'Elegí cada cuánto se repetirá este movimiento.'
-              : 'Sueldo, venta o pago recibido.'}
+              : esEgreso
+                ? 'Alquiler, suscripción o servicio.'
+                : 'Sueldo, venta o pago recibido.'}
           </Text>
         </View>
 
@@ -312,9 +322,9 @@ export default function PantallaIngreso({ navigation: navegacion }) {
           <BotonPrincipal
             estilosAutenticacion={estilosMovimiento}
             estilosGlobales={estilosGlobales}
-            titulo="Guardar ingreso"
+            titulo={`Guardar ${nombreMovimiento}`}
             cargando={guardando}
-            alPresionar={guardarIngreso}
+            alPresionar={guardarMovimientoFormulario}
           />
         </View>
       </View>
@@ -326,8 +336,8 @@ export default function PantallaIngreso({ navigation: navegacion }) {
       <View style={estilosGlobales.pantalla}>
         <EncabezadoSeccion
           tema={tema}
-          titulo="Nuevo ingreso"
-          descripcion="Registra el dinero que recibes."
+          titulo={`Nuevo ${nombreMovimiento}`}
+          descripcion={esEgreso ? 'Registra el dinero que gastas.' : 'Registra el dinero que recibes.'}
           alVolver={volver}
         />
         <KeyboardAvoidingView
@@ -349,4 +359,8 @@ export default function PantallaIngreso({ navigation: navegacion }) {
       </View>
     </SafeAreaView>
   );
+}
+
+export default function PantallaIngreso(propiedades) {
+  return <FormularioMovimiento {...propiedades} tipo="ingreso" />;
 }

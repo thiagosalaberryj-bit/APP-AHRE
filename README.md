@@ -87,9 +87,8 @@ como efectivo, cuentas bancarias o billeteras virtuales.
 Las interfaces permiten recorrer depósitos y movimientos de ejemplo, buscar y
 aplicar filtros, y abrir sus detalles. El formulario de creación de depósitos
 guarda localmente nombre, saldo inicial, tipo, ícono, color y descripción. El
-formulario de ingreso también guarda movimientos en SQLite y actualiza el saldo
-del depósito; la edición y eliminación de depósitos y el formulario de egreso
-continúan simulados.
+formularios de ingreso y egreso guardan movimientos en SQLite y actualizan el
+saldo del depósito; la edición y eliminación de depósitos continúan simuladas.
 
 ### Deudas y gastos compartidos
 
@@ -110,7 +109,8 @@ notificaciones del dispositivo todavía no están implementados.
 
 La interfaz permite abrir la cámara, capturar o elegir una imagen, ajustar el
 encuadre y revisar un resultado simulado editable. El reconocimiento óptico de
-caracteres y el guardado del egreso todavía no están implementados.
+caracteres y la confirmación del egreso desde OCR todavía no están
+implementados.
 
 ### Perfil y funciones sociales
 
@@ -148,10 +148,9 @@ interfaces. Actualmente cuenta con:
 - pantalla de Movimientos con historial agrupado por día, búsqueda y filtros
   locales por tipo, fecha, monto, categoría y depósito, con detalles de
   movimientos;
-- formulario de ingreso conectado a SQLite y formulario de egreso maquetado,
-  ambos con monto, descripción, depósito, categoría, fecha, hora y recurrencia;
-  el ingreso valida y persiste el movimiento, mientras el egreso continúa
-  simulado;
+- formularios de ingreso y egreso conectados a SQLite, con monto, descripción,
+  depósito, categoría, fecha, hora y recurrencia; ambos validan y persisten el
+  movimiento y actualizan el saldo del depósito;
 - formulario de creación de depósitos conectado a SQLite local; el detalle con
   búsqueda, filtros, edición y eliminación sigue simulado;
 - pantalla de Estadísticas con gráficos interactivos por categoría y período,
@@ -185,14 +184,12 @@ recupera la apariencia guardada.
 
 Los depósitos ya se pueden crear y guardar en la base local; el Dashboard lee
 su resumen desde SQLite y conserva los datos visibles mientras actualiza la
-consulta al recuperar el foco. Los movimientos que aparecen en las otras
-pantallas financieras siguen siendo datos de ejemplo. El formulario de ingreso
-valida y persiste sus movimientos; el egreso continúa simulado. El formulario
-de ingreso permite regresar mediante la flecha del encabezado y no tiene una
-acción «Cancelar» en el pie. La versión `0.3.0` es la última publicada
-como versión no estable para evaluación; la `0.4.0` está documentada como no
-publicada en [`docs/CHANGELOG.md`](docs/CHANGELOG.md) y no representa una versión
-comercial.
+consulta al recuperar el foco. La pestaña Movimientos y las Estadísticas aún
+usan datos de ejemplo. Los formularios de ingreso y egreso validan y persisten
+sus movimientos localmente, con su impacto en el saldo. La versión `0.3.0` es
+la última publicada como versión no estable para evaluación; la `0.4.0` está
+documentada como no publicada en [`docs/CHANGELOG.md`](docs/CHANGELOG.md) y no
+representa una versión comercial.
 
 ## Tecnología
 

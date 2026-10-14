@@ -32,6 +32,10 @@ documentación se registran en este archivo.
 - Se conectó el formulario de Ingreso con SQLite local: carga depósitos activos
   y categorías de ingreso, valida los datos y guarda movimientos atómicamente
   con su recurrencia y actualización de saldo. (#24)
+- Se conectó el formulario de Egreso con SQLite local reutilizando el formulario
+  y el servicio de Ingreso. Valida depósitos activos y categorías de egreso, y
+  guarda el movimiento con su recurrencia y actualización atómica del saldo.
+  (#25)
 - Perfil consulta y actualiza los datos de la cuenta y guarda las preferencias
   de idioma, notificaciones y apariencia en SQLite local. (#29)
 - Se agregó el cambio permanente de contraseña: verifica la contraseña actual
@@ -88,6 +92,9 @@ documentación se registran en este archivo.
   obligatoria con depósitos, el saldo, la recurrencia y el funcionamiento sin
   conexión. También se actualizó la documentación del Dashboard y el README
   para describir la actualización sin reemplazo visual de los datos. (#24)
+- Se documentaron el registro local de egresos, la reutilización del formulario
+  y los repositorios de movimientos, la validación, la recurrencia, el impacto
+  en el saldo y el funcionamiento sin conexión. (#25)
 - Se actualizaron las guías de Perfil, autenticación local, Inicio, arquitectura
   y sistema visual para describir las preferencias persistentes, el cambio de
   contraseña y los modales de Perfil. (#29)

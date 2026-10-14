@@ -2,12 +2,11 @@
 
 ## Alcance
 
-Este documento registra los formularios de egreso e ingreso. Ingreso consulta
-SQLite, valida y persiste el movimiento con su impacto en el saldo; Egreso
-continúa siendo una maqueta sin guardado. El ingreso carga depósitos y
-categorías locales, conserva fecha, hora y recurrencia, y muestra un aviso
-general mediante toast cuando hay errores. La ejecución automática de
-recurrencias y la actualización de estadísticas quedan fuera de este alcance.
+Este documento registra los formularios de egreso e ingreso. Ambos reutilizan
+el mismo formulario y sus componentes; consultan depósitos y categorías
+locales, validan y persisten el movimiento junto con su impacto en el saldo.
+La ejecución automática de recurrencias y la actualización de estadísticas
+quedan fuera de este alcance.
 
 ## Estructura del formulario de egreso
 
@@ -31,14 +30,18 @@ Nuevo egreso
 └── Guardar egreso
 ```
 
-El formulario se abre desde `Dashboard → Egreso` o `Nuevo → Egreso`. La flecha
-del encabezado permite volver; al pie queda únicamente la acción «Guardar
-egreso».
+El formulario se abre desde `Dashboard → Egreso` o `Nuevo → Egreso`. Consulta
+SQLite para obtener los depósitos activos del usuario y las categorías de
+egreso del catálogo local. La flecha del encabezado permite volver; al pie
+queda únicamente la acción «Guardar egreso».
+
+Si no hay depósitos activos, muestra el estado para crear uno y oculta el
+formulario. Al regresar de Nuevo depósito, vuelve a consultar los datos locales.
 
 ## Estructura del formulario de ingreso
 
-`src/screens/IncomeScreen.js` presenta «Nuevo ingreso» con la misma
-estructura y componentes compartidos que el egreso:
+`src/screens/IncomeScreen.js` contiene el formulario compartido, configurado
+como «Nuevo ingreso» desde su ruta existente:
 
 ```text
 Nuevo ingreso
@@ -58,13 +61,13 @@ Nuevo ingreso
 El formulario se abre desde `Dashboard → Ingreso` o `Nuevo → Ingreso`.
 La descripción es obligatoria y se marca con `*`. El monto usa teclado
 numérico con prefijo `$` y formato visual. El depósito y la categoría usan
-los mismos selectores compartidos con sus catálogos propios
-(`CATEGORIAS_INGRESO`). La fecha y la hora usan los modales compartidos;
-la recurrencia usa el `Conmutador` con frecuencias diaria, semanal, mensual
-o anual. «Guardar ingreso» valida los campos, comprueba el depósito y la
-categoría y guarda el movimiento local; si se activa la recurrencia, también
-guarda su configuración. El pie no incluye una acción para cancelar; la flecha
-del encabezado permite regresar al flujo anterior.
+los selectores compartidos con los catálogos locales de ingreso o egreso. La
+fecha y la hora usan los modales compartidos; la recurrencia usa el
+`Conmutador` con las frecuencias definidas en el modelo. «Guardar ingreso»
+valida los campos, comprueba el depósito y la categoría y guarda el movimiento
+local; si se activa la recurrencia, también guarda su configuración. El pie no
+incluye una acción para cancelar; la flecha del encabezado permite regresar al
+flujo anterior.
 
 ## Diferencias visuales entre los formularios
 
@@ -88,16 +91,16 @@ son solo visuales.
 
 ### Descripción obligatoria
 
-Campo de texto con ícono, `placeholder` con ejemplos
-(`Supermercado, Transporte, Cena`), contador `0/500` visual y mensaje
-«La descripción es obligatoria» cuando se intenta guardar vacío. No valida
-ni guarda datos.
+Campo de texto con ícono, `placeholder` con ejemplos, contador `0/500` y
+mensaje «La descripción es obligatoria» cuando se intenta guardar vacío. El
+servicio recorta los espacios externos, valida el contenido y guarda la
+descripción con el movimiento.
 
 ### Depósito
 
 `SelectorDeposito` (`src/components/DepositSelector.js`) con tarjeta
-desplegable. Ingreso recibe los depósitos activos desde SQLite; Egreso continúa
-usando los datos simulados de `src/constants/movimientos.js`:
+desplegable. Ambos formularios reciben desde SQLite los depósitos activos del
+usuario y guardan el identificador, no solo el nombre visible:
 
 ```text
 Efectivo
@@ -113,8 +116,9 @@ borde de foco y radio activo.
 
 `SelectorCategoria` (`src/components/CategorySelector.js`) muestra cuatro
 tarjetas compactas y una quinta tarjeta «Más», sin desplazamiento horizontal.
-«Más» abre un modal con las categorías adicionales. Todos los datos son
-constantes locales de `src/constants/movimientos.js`.
+«Más» abre un modal con las categorías adicionales. El servicio de categorías
+entrega el catálogo local de ingreso o egreso definido en
+`src/constants/movimientos.js`.
 
 Categorías de egreso:
 
@@ -157,20 +161,22 @@ Becas / ayudas
 Otros ingresos
 ```
 
-El selector de ingreso conserva la selección mientras la pantalla está abierta;
-la pantalla valida el identificador contra el catálogo local antes de guardar.
+Cada formulario conserva la selección mientras está abierto y valida el
+identificador contra el catálogo correspondiente antes de guardar.
 
 ### Fecha
 
 `SelectorFecha` (`src/components/DateSelector.js`): muestra la fecha actual o
 la fecha elegida. Al presionarla abre un calendario mensual en un modal, permite
-navegar entre meses y seleccionar un día o volver a hoy. No guarda la fecha.
+navegar entre meses y seleccionar un día o volver a hoy. La fecha elegida se
+combina con la hora y se guarda en el movimiento.
 
 ### Hora
 
 `SelectorHora` (`src/components/TimeSelector.js`): muestra la hora actual o la
 elegida. El modal permite ajustar horas y minutos en formato de 24 horas y
-confirmar la selección. No guarda la hora.
+confirmar la selección. La hora elegida se guarda junto con la fecha en
+`fecha_hora` usando el formato ISO 8601 definido para los movimientos.
 
 ### Recurrencia
 
@@ -179,13 +185,13 @@ confirmar la selección. No guarda la hora.
 Inicio de Sesión, con transición animada, tamaño `56 × 32` y valor `No/Sí`. Al
 activarlo, permite seleccionar una frecuencia diaria, semanal, mensual o anual.
 Las opciones ocupan todo el ancho de la tarjeta y aparecen sin animación de
-expansión. La frecuencia solo se conserva en el estado de la pantalla; no
-programa ni genera movimientos.
+expansión. Al guardar un movimiento recurrente se crea su configuración local;
+la ejecución automática de recurrencias queda pendiente.
 
-## Componentes compartidos con Ingreso
+## Formulario y componentes compartidos
 
-Los componentes se crearon como comunes para que Ingreso los reutilice sin
-duplicar implementaciones idénticas:
+`ExpenseScreen.js` configura como egreso el `FormularioMovimiento` definido en
+`IncomeScreen.js`. Ambos usan la misma validación, servicio local y componentes:
 
 ```text
 MoneyInput
@@ -203,8 +209,9 @@ color. En móvil no hay `hover`. Además se reutilizan `SectionHeader`,
 `PrimaryButton` y `ContextoAvisos` sin modificar sus implementaciones. Los
 estilos locales están en
 `src/styles/expenseStyles.js` y consumen tokens de `colors.js` y
-`globalStyles.js`. Los datos simulados están en
-`src/constants/movimientos.js`.
+`globalStyles.js`. Los catálogos están definidos localmente en
+`src/constants/movimientos.js` y se consultan por medio de
+`categoriasRepositorio`.
 
 ## Estados visuales
 
@@ -215,7 +222,8 @@ estilos locales están en
 - **Depósito faltante:** borde y mensaje junto al selector.
 - **Categoría faltante:** mensaje junto a las tarjetas.
 - **Guardando:** `BotonPrincipal` con indicador y «Procesando…» mientras se
-  guarda el ingreso; en Egreso el estado continúa simulado durante 1,5 segundos.
+  guarda el movimiento; la pantalla bloquea los controles y evita envíos
+  repetidos.
 - **Fecha y hora:** los modales reflejan la selección vigente; elegir un día o
   confirmar la hora actualiza el formulario.
 - **Frecuencia recurrente:** las cuatro opciones muestran la frecuencia activa
@@ -224,10 +232,11 @@ estilos locales están en
   errores específicos permanecen junto a los campos; no se muestra un mensaje
   general al pie del formulario.
 
-Los avisos aparecen al presionar «Guardar ingreso» o «Guardar egreso». Ingreso
-comprueba monto, descripción, depósito, categoría, fecha, hora y frecuencia
-cuando corresponde; persiste el movimiento y actualiza el saldo dentro de una
-transacción. Egreso solo comprueba los campos requeridos y no persiste datos.
+Los avisos aparecen al presionar «Guardar ingreso» o «Guardar egreso». Ambos
+formularios comprueban monto, descripción, depósito, categoría, fecha, hora y
+frecuencia cuando corresponde; persisten el movimiento y actualizan el saldo
+dentro de una transacción. El egreso guarda un monto positivo con tipo
+`egreso`, que resta el monto del saldo del depósito asociado.
 
 ## Teclado, scroll y temas
 
