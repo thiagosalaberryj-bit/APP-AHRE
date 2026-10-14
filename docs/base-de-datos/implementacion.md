@@ -128,8 +128,11 @@ Las consultas aceptan filtros por campos permitidos, ordenamiento validado,
 límite y desplazamiento. `depositosRepositorio.consultarSaldoActual()` lee el
 campo `depositos.saldo_actual`. Al crear un depósito, ese campo se inicializa
 con `saldo_inicial`; cada ingreso, egreso, movimiento compensatorio o
-transferencia actualiza el saldo en la misma transacción que guarda el
-movimiento. `saldo_actual` no se modifica directamente mediante el CRUD genérico.
+transferencia cuya fecha y hora sea igual o posterior a la creación del depósito
+actualiza el saldo en la misma transacción que guarda el movimiento. Un
+movimiento anterior se conserva en el historial y no afecta el saldo actual;
+las ediciones y reversiones respetan la fecha original. `saldo_actual` no se
+modifica directamente mediante el CRUD genérico.
 `depositosRepositorio.actualizarSaldoInformado()` permite fijar localmente el
 saldo comunicado por el usuario: guarda el valor anterior y el nuevo en
 `historial_saldos_deposito` y actualiza el depósito dentro de la misma

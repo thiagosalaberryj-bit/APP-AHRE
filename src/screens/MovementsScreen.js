@@ -155,6 +155,9 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
   const [categoriaFiltroIds, establecerCategoriaFiltroIds] = useState([]);
   const [depositoFiltroIds, establecerDepositoFiltroIds] = useState(IDS_DEPOSITOS);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
+  const [mostrarFlechaFecha, establecerMostrarFlechaFecha] = useState(false);
+  const flechaFechaMostrada = useRef(false);
+  const temporizadorFlechaFecha = useRef(null);
   const [seccionesFiltrosAbiertas, establecerSeccionesFiltrosAbiertas] = useState(['tipo', 'fecha']);
   const [cargando, establecerCargando] = useState(true);
   const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
@@ -181,7 +184,32 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
       : [...abiertas, seccion]));
   };
 
+  const ocultarFlechaFecha = useCallback(() => {
+    if (temporizadorFlechaFecha.current !== null) {
+      clearTimeout(temporizadorFlechaFecha.current);
+      temporizadorFlechaFecha.current = null;
+    }
+    establecerMostrarFlechaFecha(false);
+  }, []);
+
+  const abrirFiltros = () => {
+    establecerFiltrosVisibles(true);
+    if (flechaFechaMostrada.current) return;
+
+    flechaFechaMostrada.current = true;
+    establecerMostrarFlechaFecha(true);
+    temporizadorFlechaFecha.current = setTimeout(() => {
+      establecerMostrarFlechaFecha(false);
+      temporizadorFlechaFecha.current = null;
+    }, 2500);
+  };
+
+  useEffect(() => () => {
+    if (temporizadorFlechaFecha.current !== null) clearTimeout(temporizadorFlechaFecha.current);
+  }, []);
+
   const cerrarFiltros = useCallback(() => {
+    ocultarFlechaFecha();
     Animated.parallel([
       Animated.timing(opacidadOverlay, {
         toValue: 0,
@@ -196,7 +224,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
     ]).start(({ finished }) => {
       if (finished) establecerFiltrosVisibles(false);
     });
-  }, [altoVentana, desplazamientoPanel, opacidadOverlay]);
+  }, [altoVentana, desplazamientoPanel, ocultarFlechaFecha, opacidadOverlay]);
 
   const responderManija = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -479,7 +507,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
               <Pressable
                 accessibilityLabel="Filtros"
                 accessibilityRole="button"
-                onPress={() => establecerFiltrosVisibles(true)}
+                onPress={abrirFiltros}
                 style={({ pressed: presionado }) => [
                   estilosGlobales.botonSecundario,
                   estilos.botonFiltros,
@@ -637,7 +665,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                     colorAcento={tema.foco}
                     estilos={estilos}
                   >
-                    <View style={estilos.filaChips}>
+                    <View style={estilos.filaOpcionesTipo}>
                       {OPCIONES_TIPO.map((opcion) => {
                         const activa = tipoFiltro === opcion.id;
                         return (
@@ -646,9 +674,9 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                             accessibilityRole="button"
                             accessibilityState={{ selected: activa }}
                             onPress={() => cambiarTipoFiltro(opcion.id)}
-                            style={[estilos.chip, activa ? estilos.chipActivo : null]}
+                            style={[estilos.chip, estilos.chipTipo, activa ? estilos.chipActivo : null]}
                           >
-                            <Text style={[estilos.textoChip, activa ? estilos.textoChipActivo : null]}>
+                            <Text numberOfLines={1} style={[estilos.textoChip, activa ? estilos.textoChipActivo : null]}>
                               {opcion.nombre}
                             </Text>
                           </Pressable>
@@ -665,23 +693,37 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                     colorAcento={tema.botonPrincipal}
                     estilos={estilos}
                   >
-                    <View style={estilos.filaChips}>
-                      {OPCIONES_FECHA.map((opcion) => {
-                        const activa = fechaFiltro === opcion.id;
-                        return (
-                          <Pressable
-                            key={opcion.id}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: activa }}
-                            onPress={() => cambiarFechaFiltro(opcion.id)}
-                            style={[estilos.chip, estilos.chipFecha, activa ? estilos.chipActivo : null]}
-                          >
-                            <Text style={[estilos.textoChip, activa ? estilos.textoChipActivo : null]}>
-                              {opcion.nombre}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
+                    <View style={estilos.contenedorOpcionesFecha}>
+                      <ScrollView
+                        contentContainerStyle={estilos.filaOpcionesFecha}
+                        horizontal
+                        nestedScrollEnabled
+                        onScrollBeginDrag={ocultarFlechaFecha}
+                        showsHorizontalScrollIndicator={false}
+                        style={estilos.scrollOpcionesFecha}
+                      >
+                        {OPCIONES_FECHA.map((opcion) => {
+                          const activa = fechaFiltro === opcion.id;
+                          return (
+                            <Pressable
+                              key={opcion.id}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: activa }}
+                              onPress={() => cambiarFechaFiltro(opcion.id)}
+                              style={[estilos.chip, estilos.chipFecha, activa ? estilos.chipActivo : null]}
+                            >
+                              <Text style={[estilos.textoChip, activa ? estilos.textoChipActivo : null]}>
+                                {opcion.nombre}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </ScrollView>
+                      {mostrarFlechaFecha ? (
+                        <View pointerEvents="none" style={estilos.flechaPistaFecha}>
+                          <Ionicons color={tema.foco} name="arrow-forward" size={22} />
+                        </View>
+                      ) : null}
                     </View>
                     {fechaFiltro === 'dia' ? (
                       <View style={estilos.grupoCalendarioFiltro}>
@@ -763,27 +805,6 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                   </SeccionFiltro>
 
                   <SeccionFiltro
-                    titulo="Depósitos"
-                    resumen={resumenDepositos}
-                    abierta={seccionesFiltrosAbiertas.includes('depositos')}
-                    alAlternar={() => alternarSeccionFiltro('depositos')}
-                    colorAcento={tema.exito}
-                    estilos={estilos}
-                  >
-                    <SelectorDeposito
-                      tema={tema}
-                      estilosGlobales={estilosGlobales}
-                      estilosMovimiento={estilos}
-                      etiqueta=""
-                      depositos={DEPOSITOS_SIMULADOS}
-                      seleccionMultiple
-                      seleccionadasIds={depositoFiltroIds}
-                      alCambiarMulti={establecerDepositoFiltroIds}
-                      enLinea
-                    />
-                  </SeccionFiltro>
-
-                  <SeccionFiltro
                     titulo="Categorías"
                     resumen={resumenCategorias}
                     abierta={seccionesFiltrosAbiertas.includes('categorias')}
@@ -807,6 +828,27 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                   </SeccionFiltro>
 
                   <SeccionFiltro
+                    titulo="Depósitos"
+                    resumen={resumenDepositos}
+                    abierta={seccionesFiltrosAbiertas.includes('depositos')}
+                    alAlternar={() => alternarSeccionFiltro('depositos')}
+                    colorAcento={tema.exito}
+                    estilos={estilos}
+                  >
+                    <SelectorDeposito
+                      tema={tema}
+                      estilosGlobales={estilosGlobales}
+                      estilosMovimiento={estilos}
+                      etiqueta=""
+                      depositos={DEPOSITOS_SIMULADOS}
+                      seleccionMultiple
+                      seleccionadasIds={depositoFiltroIds}
+                      alCambiarMulti={establecerDepositoFiltroIds}
+                      enLinea
+                    />
+                  </SeccionFiltro>
+
+                  <SeccionFiltro
                     titulo="Monto"
                     resumen={resumenMonto}
                     abierta={seccionesFiltrosAbiertas.includes('monto')}
@@ -815,34 +857,49 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                     estilos={estilos}
                   >
                     <View style={estilos.filaRango}>
-                      <TextInput
-                        accessibilityLabel="Monto mínimo"
-                        keyboardType="numeric"
-                        onChangeText={establecerMontoMinimo}
-                        placeholder="Mínimo"
-                        placeholderTextColor={tema.textoSecundario}
-                        selectionColor={tema.foco}
-                        style={estilos.campoRango}
-                        value={montoMinimo}
-                      />
-                      <TextInput
-                        accessibilityLabel="Monto máximo"
-                        keyboardType="numeric"
-                        onChangeText={establecerMontoMaximo}
-                        placeholder="Máximo"
-                        placeholderTextColor={tema.textoSecundario}
-                        selectionColor={tema.foco}
-                        style={estilos.campoRango}
-                        value={montoMaximo}
-                      />
+                      <View style={estilos.grupoCampoRango}>
+                        <View style={estilos.etiquetaCampoRango}>
+                          <Ionicons color={tema.textoSecundario} name="arrow-down-outline" size={16} />
+                          <Text style={estilos.textoEtiquetaCampoRango}>Mínimo</Text>
+                        </View>
+                        <TextInput
+                          accessibilityLabel="Monto mínimo"
+                          keyboardType="numeric"
+                          onChangeText={establecerMontoMinimo}
+                          placeholder="$ 0"
+                          placeholderTextColor={tema.textoSecundario}
+                          selectionColor={tema.foco}
+                          style={estilos.campoRango}
+                          value={montoMinimo}
+                        />
+                      </View>
+                      <View style={estilos.grupoCampoRango}>
+                        <View style={estilos.etiquetaCampoRango}>
+                          <Ionicons color={tema.textoSecundario} name="arrow-up-outline" size={16} />
+                          <Text style={estilos.textoEtiquetaCampoRango}>Máximo</Text>
+                        </View>
+                        <TextInput
+                          accessibilityLabel="Monto máximo"
+                          keyboardType="numeric"
+                          onChangeText={establecerMontoMaximo}
+                          placeholder="$ 0"
+                          placeholderTextColor={tema.textoSecundario}
+                          selectionColor={tema.foco}
+                          style={estilos.campoRango}
+                          value={montoMaximo}
+                        />
+                      </View>
                     </View>
                   </SeccionFiltro>
-
+                </View>
+              </ScrollView>
+              {cantidadFiltros > 0 ? (
+                <View style={estilos.piePanelFiltros}>
                   <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
                     <Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text>
                   </Pressable>
                 </View>
-              </ScrollView>
+              ) : null}
             </Animated.View>
           </View>
         </Modal>

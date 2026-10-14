@@ -19,6 +19,10 @@ consultados. No se guarda un saldo separado en el Dashboard. Cuando no hay
 depósitos, el resultado es cero. El saldo mostrado por cada fila también procede
 de `saldo_actual`.
 
+La visibilidad de los saldos se guarda por usuario en SecureStore y se comparte
+entre el balance general, los saldos de la lista y el detalle de cada depósito.
+Al ocultarlos, la comparación mensual del detalle también deja de mostrar montos.
+
 ## Movimientos recientes
 
 Se consultan los movimientos asociados a los identificadores de los depósitos

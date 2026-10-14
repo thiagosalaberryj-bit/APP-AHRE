@@ -45,6 +45,10 @@ guardada. `Modo del sistema` sigue la configuración del dispositivo.
 La fila `Restablecer apariencia`, dentro de `Preferencias`, devuelve la
 selección al tema del dispositivo.
 
+La preferencia de visibilidad de saldos se guarda por separado en SecureStore,
+asociada al usuario local. Se comparte entre el balance del Dashboard y el
+detalle de depósitos, y permanece al cerrar la aplicación.
+
 La biometría solo verifica localmente a quien usa el dispositivo al abrir el
 editor; no almacena datos de huella ni reemplaza el verificador de contraseña.
 El cambio de contraseña verifica la contraseña actual, deriva un verificador

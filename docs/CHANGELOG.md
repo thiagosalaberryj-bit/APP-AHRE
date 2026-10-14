@@ -29,6 +29,10 @@ documentación se registran en este archivo.
   SQLite local. Se guardan el nombre, el saldo inicial, el tipo, el ícono, el
   color y la descripción; si esta última queda vacía, se genera a partir del
   nombre y el tipo. (#22)
+- Se conectó el detalle del depósito con SQLite local y la sesión activa. La
+  pantalla consulta sus movimientos, permite buscar y filtrar por tipo, fecha,
+  categoría y monto, editar sus datos y eliminarlo lógicamente sin perder el
+  historial asociado. (#23)
 - Se conectó el formulario de Ingreso con SQLite local: carga depósitos activos
   y categorías de ingreso, valida los datos y guarda movimientos atómicamente
   con su recurrencia y actualización de saldo. (#24)
@@ -51,6 +55,18 @@ documentación se registran en este archivo.
   cada campo y muestran con un toast el aviso general cuando faltan datos. Se
   quitó el mensaje general del pie; en depósitos, los contadores aparecen junto
   al título y la ayuda indica que los decimales se ingresan con coma. (#22)
+- El detalle de depósito presenta el saldo actual de forma compacta y lo compara
+  con el saldo al cierre del mes anterior. La opción para ocultar saldos se
+  guarda por usuario en SecureStore y se comparte entre el Dashboard y el
+  detalle. (#23)
+- Los movimientos y transferencias con fecha y hora anteriores a la creación
+  de un depósito permanecen en su historial, pero no alteran su saldo actual.
+  La regla también se aplica al editar operaciones y a sus reversiones; los
+  formularios de Ingreso y Egreso muestran esta aclaración. (#23)
+- Se alineó la presentación de los filtros de Movimientos con la del detalle de
+  depósito: opciones de tipo y fecha, campos de monto, indicación de
+  desplazamiento y orden de secciones. Se renovó también el modal de opciones
+  del depósito. (#23)
 - Se actualizaron Expo SDK de `57.0.25` a `57.0.26`, `expo-camera` de
   `57.0.5` a `57.0.6`, `expo-constants` de `57.0.19` a `57.0.20` y
   `expo-navigation-bar` de `57.0.2` a `57.0.3`. (#20)
@@ -88,6 +104,10 @@ documentación se registran en este archivo.
   interfaz y el README. (#27)
 - Se actualizaron las guías de creación de depósitos, formularios financieros
   y notificaciones toast para describir la validación y su presentación. (#22)
+- Se documentaron el detalle local del depósito, sus filtros, la edición y
+  eliminación lógica, la comparación mensual y la privacidad compartida de los
+  saldos. También se describió cuándo los movimientos y transferencias afectan
+  el saldo según la fecha de creación del depósito. (#23)
 - Se documentaron la creación local de ingresos, sus validaciones, la relación
   obligatoria con depósitos, el saldo, la recurrencia y el funcionamiento sin
   conexión. También se actualizó la documentación del Dashboard y el README

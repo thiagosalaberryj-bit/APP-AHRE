@@ -78,58 +78,77 @@ oscuro, y el formulario respeta el área segura superior e inferior.
 ## Detalle de un depósito
 
 `src/screens/DepositDetailScreen.js` muestra el depósito seleccionado desde el
-Dashboard. La fila entrega el objeto de depósito a la ruta existente; la
+Dashboard. La fila envía el identificador del depósito a la ruta existente; la
 pantalla reutiliza `SectionHeader` para volver, con el título «Detalle de
 depósito» y la descripción «Consultá el saldo y los movimientos de este
 depósito». Respeta las áreas seguras superior e inferior; la distribución propia
 de esta pantalla vive en `src/styles/DepositDetailScreenStyles.js`.
 
-La tarjeta superior presenta el ícono sobre el color del depósito, nombre,
-tipo, descripción opcional y saldo destacado. El saldo se identifica como
-perteneciente a ese depósito; no es el balance general que aparece en el
-Dashboard. Los ejemplos cubren Efectivo, Billetera virtual y Banco. Banco
-incluye el estado visual sin movimientos.
+La tarjeta superior presenta de forma compacta el ícono y nombre del depósito;
+debajo muestra la descripción y, a continuación, el tipo separado por un punto
+medio en el mismo texto. Si no hay descripción, muestra solo el tipo. Una línea
+separa esos datos del saldo, que aparece en un número grande con un control para
+ocultarlo o mostrarlo y una etiqueta de comparación mensual breve con la fecha
+exacta y el saldo anterior usado como referencia. La visibilidad se comparte con
+el balance general y persiste por usuario al cerrar la aplicación. Cuando los
+saldos están ocultos, también se ocultan los montos de la comparación mensual.
+La comparación indica
+el porcentaje de aumento o disminución, o comunica que todavía no hay una
+referencia comparable. Si el saldo anterior era cero o negativo, la etiqueta
+expresa la variación en pesos y evita un porcentaje engañoso. El saldo se
+identifica como perteneciente a ese depósito; no es el balance general del
+Dashboard. La información y el saldo actual se leen de SQLite local. Un ID que
+no exista, esté inactivo o no pertenezca a la sesión muestra un error y permite
+volver o reintentar. Si el depósito no tiene movimientos, aparece un estado
+vacío.
 
 Debajo del título «Movimientos» aparece una fila con el buscador y el botón
 «Filtros» a su lado. El buscador tiene lupa, placeholder «Buscar» y una acción
 para borrar el texto; solo toma el color de foco mientras está enfocado. Los
 filtros abren una hoja superpuesta con manija y cierre. Las secciones Tipo,
 Fecha, Categorías y Monto se pueden plegar y muestran un
-resumen cuando están cerradas. Tipo ofrece Todos, Ingresos y Egresos. Fecha
-ofrece Todo, Día, Mes y Rango, con calendario en línea para elegir el día o los
-extremos del rango, y una grilla de meses con navegación por año. Categorías
+resumen cuando están cerradas. Tipo ofrece Todos, Ingresos y Egresos en tres
+opciones que comparten el ancho de la fila. Fecha ofrece Todo, Día, Semana, Mes
+y Personalizado en una fila desplazable de opciones de ancho uniforme. La
+primera vez que se abre el panel aparece una flecha sobre la fila como pista; se
+oculta al comenzar a deslizar o a los 2,5 segundos. Incluye un calendario en
+línea para elegir el día o los extremos del rango, y una grilla de meses con
+navegación por año. Categorías
 usa la grilla coloreada y multiselección de Movimientos, limitada a las
 categorías presentes en el depósito y al tipo seleccionado. Monto permite
-indicar mínimo y máximo. El panel se puede cerrar con el botón, tocando fuera
-o arrastrando la manija hacia abajo.
+indicar mínimo y máximo en campos separados, con iconos y rótulos explícitos.
+El panel se puede cerrar con el botón, tocando fuera o arrastrando la manija
+hacia abajo.
 
-Los filtros se aplican localmente a los datos simulados. Los criterios activos
-aparecen debajo del buscador como chips que pueden quitarse; «Limpiar todo»
-restablece la búsqueda y los filtros. El rótulo muestra el número de criterios
-activos y el botón «Filtros» abre la hoja.
+La búsqueda y los filtros se aplican localmente a los movimientos reales del
+depósito. La fecha incluye Todo, Día, Semana (lunes a domingo), Mes y
+Personalizado; los demás filtros cubren tipo, categoría y rango de monto. Los
+criterios activos aparecen debajo del buscador como chips que pueden quitarse;
+«Limpiar todo» restablece la búsqueda y los filtros. El rótulo muestra el
+número de criterios activos y el botón «Filtros» abre la hoja.
 El detalle no muestra un filtro de depósitos porque la lista ya está limitada
-al depósito seleccionado. No se consulta SQLite.
+al depósito seleccionado. Los resultados se agrupan por día y se ordenan por
+fecha y hora descendente.
 
-La lista simulada reutiliza `TarjetaMovimiento` y agrupa los movimientos por
-día, con los rótulos «Hoy», «Ayer» o una fecha anterior. Cada tarjeta presenta
-categoría y descripción, hora y depósito, tipo e importe con signo, como en la
-pestaña Movimientos. Al tocar una fila se abre el detalle existente con la
-descripción del movimiento y sus datos. Los estados incluyen carga, sin
-movimientos, sin resultados de búsqueda y sin resultados por filtros.
+Cada tarjeta presenta categoría y descripción, hora y depósito, tipo e importe
+con signo, como en la pestaña Movimientos. Al tocar una fila se abre el detalle
+existente con la descripción del movimiento y sus datos. Los estados incluyen
+carga, error, sin movimientos, sin resultados de búsqueda y sin resultados por
+filtros.
 
-El botón de opciones del depósito, ubicado arriba a la derecha de la tarjeta,
-abre un modal que presenta directamente las acciones «Editar depósito» y
-«Eliminar depósito», sin repetir el nombre y el tipo del depósito. Editar
-presenta un modal en la misma pantalla que reutiliza la presentación y los
-controles del formulario de creación: nombre, tipo, ícono, color y descripción,
-sin saldo inicial. Los cambios del formulario son un borrador local:
-«Cancelar» los descarta y «Guardar cambios» informa que todavía no se guardan,
-conservando los datos originales.
+El botón de opciones del depósito, ubicado en el encabezado de la tarjeta,
+abre un modal centrado y compacto con título, descripción y cierre. Sus acciones
+se presentan en una lista simple como las opciones de Perfil, con separador:
+«Editar depósito» y «Eliminar depósito». Editar presenta un modal en la misma
+pantalla que reutiliza la presentación y los controles del formulario de
+creación: nombre, tipo, ícono, color y descripción, sin saldo inicial ni saldo
+actual. «Cancelar» descarta el borrador y «Guardar cambios» valida y actualiza
+SQLite; la tarjeta refleja los cambios de inmediato.
 
 Eliminar abre una confirmación con el resumen del depósito, un aviso visual y
-las acciones «Cancelar» y «Eliminar». La confirmación no elimina el depósito y
-comunica que la operación aún no está disponible. No se implementan
-persistencia, consultas, actualización ni eliminación reales.
+las acciones «Cancelar» y «Eliminar». Al confirmar, se marca `activo = 0`, se
+conserva el historial de movimientos y se vuelve al Dashboard. Los depósitos
+inactivos no aparecen en su lista.
 
 La pantalla y sus modales usan el tema activo claro u oscuro, tokens de
 `globalStyles.js` y colores de `colors.js`. No se añade una pantalla separada

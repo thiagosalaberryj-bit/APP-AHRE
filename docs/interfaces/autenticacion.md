@@ -55,7 +55,7 @@ informativos está documentado en
 | `comprobarSesion()` | Devuelve si hay una sesión válida. |
 | `cerrarSesion()` | Elimina la sesión de memoria y SecureStore. |
 
-SecureStore contiene únicamente el identificador del usuario; la contraseña y su verificador no se almacenan allí. Tras deslizar en Inicio, `obtenerSesionActual()` confirma que ese identificador corresponde a un usuario activo. Si no hay sesión o la referencia no corresponde a un usuario activo, se abre Login sin mostrar biometría; una referencia obsoleta se limpia. Si la sesión es válida, se solicita la huella del dispositivo antes de abrir el Dashboard. Los fallos de acceso a SecureStore o SQLite muestran un aviso y permiten volver a deslizar.
+La clave de sesión en SecureStore contiene el identificador del usuario; otra clave conserva la preferencia de visibilidad de saldos. La contraseña y su verificador no se almacenan allí. Tras deslizar en Inicio, `obtenerSesionActual()` confirma que el identificador de sesión corresponde a un usuario activo. Si no hay sesión o la referencia no corresponde a un usuario activo, se abre Login sin mostrar biometría; una referencia obsoleta se limpia. Si la sesión es válida, se solicita la huella del dispositivo antes de abrir el Dashboard. Los fallos de acceso a SecureStore o SQLite muestran un aviso y permiten volver a deslizar.
 
 La operación para cerrar sesión está disponible en el servicio. Conectar el botón existente de Perfil se mantiene para una tarea posterior, según el alcance definido para esta etapa.
 

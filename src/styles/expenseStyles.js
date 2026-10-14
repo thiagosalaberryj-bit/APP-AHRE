@@ -240,6 +240,19 @@ export function crearEstilosEgreso(tema) {
       borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
     },
+    avisoFechaDeposito: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: ESPACIADO.minimo,
+      paddingHorizontal: ESPACIADO.minimo,
+    },
+    textoAvisoFechaDeposito: {
+      flex: 1,
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      lineHeight: 18,
+    },
     filaInformacion: {
       minHeight: 56,
       flexDirection: 'row',

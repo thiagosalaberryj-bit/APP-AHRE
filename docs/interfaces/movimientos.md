@@ -25,7 +25,8 @@ Nuevo egreso
 ├── Información adicional
 │   ├── Fecha
 │   ├── Hora
-│   └── Recurrente
+│   ├── Recurrente
+│   └── Aclaración: los movimientos anteriores a la creación del depósito no afectan el saldo actual
 │
 └── Guardar egreso
 ```
@@ -53,7 +54,8 @@ Nuevo ingreso
 ├── Información adicional
 │   ├── Fecha
 │   ├── Hora
-│   └── Recurrente
+│   ├── Recurrente
+│   └── Aclaración: los movimientos anteriores a la creación del depósito no afectan el saldo actual
 │
 └── Guardar ingreso
 ```
@@ -280,14 +282,17 @@ filtros. Si no hay coincidencias, se muestra `Sin resultados para “…”`.
 El botón «Filtros», de la misma altura que el buscador, abre una hoja modal
 sobre un overlay. El panel tiene un encabezado fijo y una manija que permite
 cerrarlo al deslizar hacia abajo. Las secciones se expanden dentro del panel y
-resumen su selección cuando están cerradas. El orden es Tipo, Fecha, Depósitos,
-Categorías y Monto.
+resumen su selección cuando están cerradas. El orden es Tipo, Fecha, Categorías,
+Depósitos y Monto.
 
-- **Tipo:** Todos, Ingresos o Egresos. Al elegir un tipo, Categorías muestra
-  solo las opciones de ese tipo y quita las selecciones incompatibles.
-- **Fecha:** Todo, Día, Mes o Rango. Día usa un calendario inline; Mes permite
-  elegir mes y año; Rango usa el mismo calendario para elegir inicio y fin, y
-  permanece abierto después de elegir la primera fecha.
+- **Tipo:** Todos, Ingresos o Egresos, repartidos por igual en la fila. Al
+  elegir un tipo, Categorías muestra solo las opciones de ese tipo y quita las
+  selecciones incompatibles.
+- **Fecha:** Todo, Día, Mes o Rango, en una fila desplazable de opciones de
+  ancho uniforme. La primera vez que se abre el panel aparece una flecha como
+  pista; desaparece al deslizar o a los 2,5 segundos. Día usa un calendario
+  inline; Mes permite elegir mes y año; Rango usa el mismo calendario para
+  elegir inicio y fin, y permanece abierto después de elegir la primera fecha.
 - **Depósitos:** aparecen todos seleccionados inicialmente. Si están todos
   seleccionados no se restringen los resultados; al desmarcar alguno, se
   filtran por los que continúan marcados. No se puede quitar el último depósito
@@ -296,14 +301,15 @@ Categorías y Monto.
   columnas, sin desplazamiento horizontal. Los fondos usan el color de acento
   de cada categoría (pastel en claro y más saturado en oscuro); la selección no
   cierra el panel.
-- **Monto:** campos numéricos de mínimo y máximo.
+- **Monto:** campos numéricos separados y espaciados para mínimo y máximo, con
+  etiquetas e íconos que identifican cada límite.
 
 Los íconos de depósito usan la misma paleta, fondos e íconos del Dashboard.
 Cada criterio aplicado aparece como un chip que puede quitarse. Si solo queda
 un depósito seleccionado, su chip muestra el bloqueo hasta que se elija otro.
-«Limpiar filtros» restablece los criterios, incluidos todos los depósitos
-seleccionados. El filtrado es local sobre los datos de muestra; no hay consultas
-a SQLite.
+«Limpiar filtros» aparece en un pie fijo del panel cuando hay criterios activos
+y restablece los criterios, incluidos todos los depósitos seleccionados. El
+filtrado es local sobre los datos de muestra; no hay consultas a SQLite.
 
 ### Detalle
 
