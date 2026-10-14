@@ -10,22 +10,31 @@ import {
 import {
   combinarFechaYHora,
   convertirMontoMovimiento,
-  validarDatosIngreso,
+  validarDatosMovimiento,
 } from '../utils/movementValidation';
 
+const TIPOS_MOVIMIENTO_REGISTRABLES = Object.freeze(['ingreso', 'egreso']);
+
 const MENSAJES_ERROR = Object.freeze({
-  datos_invalidos: 'Revisá los campos marcados antes de guardar el ingreso.',
+  datos_invalidos: 'Revisá los campos marcados antes de guardar el movimiento.',
   sesion_no_disponible: 'No se encontró una sesión local activa. Iniciá sesión e intentá nuevamente.',
   deposito_no_disponible: 'El depósito seleccionado ya no está disponible. Elegí otro depósito.',
   categoria_no_disponible: 'La categoría seleccionada ya no está disponible. Elegí otra categoría.',
+  tipo_no_disponible: 'No se pudo identificar el tipo de movimiento.',
 });
 
-export class ErrorIngreso extends Error {
+export class ErrorMovimiento extends Error {
   constructor(codigo, errores = null) {
     super(MENSAJES_ERROR[codigo] || MENSAJES_ERROR.datos_invalidos);
-    this.name = 'ErrorIngreso';
+    this.name = 'ErrorMovimiento';
     this.codigo = codigo;
     this.errores = errores;
+  }
+}
+
+function validarTipoMovimiento(tipo) {
+  if (!TIPOS_MOVIMIENTO_REGISTRABLES.includes(tipo)) {
+    throw new ErrorMovimiento('tipo_no_disponible');
   }
 }
 
@@ -46,10 +55,11 @@ function prepararDeposito(deposito) {
   };
 }
 
-export async function cargarDatosIngreso() {
+export async function cargarDatosMovimiento(tipo) {
+  validarTipoMovimiento(tipo);
   const { usuario } = await obtenerSesionActual();
   if (!usuario) {
-    throw new ErrorIngreso('sesion_no_disponible');
+    throw new ErrorMovimiento('sesion_no_disponible');
   }
 
   const [depositos, categorias] = await Promise.all([
@@ -57,7 +67,7 @@ export async function cargarDatosIngreso() {
       { usuario_id: usuario.id, activo: 1 },
       { ordenarPor: 'fecha_creacion', direccion: 'ASC' },
     ),
-    Promise.resolve(categoriasRepositorio.consultar('ingreso')),
+    Promise.resolve(categoriasRepositorio.consultar(tipo)),
   ]);
 
   return {
@@ -67,61 +77,66 @@ export async function cargarDatosIngreso() {
   };
 }
 
-async function consultarDepositoDisponible(usuarioId, depositoId) {
-  const deposito = await depositosRepositorio.consultarPorId(depositoId);
+async function consultarDepositoDisponible(usuarioId, depositoId, baseDatos) {
+  const deposito = await depositosRepositorio.consultarPorId(depositoId, baseDatos);
   if (
     !deposito ||
     deposito.usuario_id !== usuarioId ||
     Number(deposito.activo) !== 1
   ) {
-    throw new ErrorIngreso('deposito_no_disponible');
+    throw new ErrorMovimiento('deposito_no_disponible');
   }
 
   return deposito;
 }
 
-function consultarCategoriaDisponible(categoriaId) {
+function consultarCategoriaDisponible(categoriaId, tipo) {
   const categoria = categoriasRepositorio
-    .consultar('ingreso')
+    .consultar(tipo)
     .find((opcion) => opcion.id === categoriaId);
 
   if (!categoria) {
-    throw new ErrorIngreso('categoria_no_disponible');
+    throw new ErrorMovimiento('categoria_no_disponible');
   }
 
   return categoria;
 }
 
-export async function crearIngreso(datos) {
-  const errores = validarDatosIngreso(datos);
+export async function crearMovimiento(datos, tipo) {
+  validarTipoMovimiento(tipo);
+  const errores = validarDatosMovimiento(datos, tipo);
   if (Object.keys(errores).length > 0) {
-    throw new ErrorIngreso('datos_invalidos', errores);
+    throw new ErrorMovimiento('datos_invalidos', errores);
   }
 
   const { usuario } = await obtenerSesionActual();
   if (!usuario) {
-    throw new ErrorIngreso('sesion_no_disponible');
+    throw new ErrorMovimiento('sesion_no_disponible');
   }
 
-  const deposito = await consultarDepositoDisponible(usuario.id, datos.deposito_id);
-  const categoria = consultarCategoriaDisponible(datos.categoria);
   const monto = convertirMontoMovimiento(datos.monto);
   const descripcion = datos.descripcion.trim();
   const fechaHora = combinarFechaYHora(datos.fecha, datos.hora);
 
   if (monto === null || !fechaHora) {
-    throw new ErrorIngreso('datos_invalidos', validarDatosIngreso(datos));
+    throw new ErrorMovimiento('datos_invalidos', validarDatosMovimiento(datos, tipo));
   }
 
   try {
     return await ejecutarTransaccion(async (baseDatos) => {
+      const deposito = await consultarDepositoDisponible(
+        usuario.id,
+        datos.deposito_id,
+        baseDatos,
+      );
+      const categoria = consultarCategoriaDisponible(datos.categoria, tipo);
       let recurrenciaId = null;
 
       if (datos.recurrente) {
         const recurrencia = await recurrenciasRepositorio.crear({
           deposito_id: deposito.id,
           categoria: categoria.id,
-          tipo: 'ingreso',
+          tipo,
           monto,
           descripcion,
           frecuencia: datos.frecuencia,
@@ -138,7 +153,7 @@ export async function crearIngreso(datos) {
         categoria: categoria.id,
         recurrencia_id: recurrenciaId,
         transferencia_id: null,
-        tipo: 'ingreso',
+        tipo,
         monto,
         descripcion,
         fecha_hora: fechaHora,
@@ -147,7 +162,7 @@ export async function crearIngreso(datos) {
       }, baseDatos);
     });
   } catch (error) {
-    if (error instanceof ErrorIngreso) throw error;
+    if (error instanceof ErrorMovimiento) throw error;
     if (error instanceof ErrorBaseDatos) throw error;
     throw new ErrorBaseDatos('transaccion');
   }

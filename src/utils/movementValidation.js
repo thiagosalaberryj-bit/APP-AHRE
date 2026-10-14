@@ -36,10 +36,11 @@ export function combinarFechaYHora(fecha, hora) {
   return fechaMovimiento.toISOString();
 }
 
-export function validarDatosIngreso(datos) {
+export function validarDatosMovimiento(datos, tipo = 'ingreso') {
   const errores = {};
   const valores = datos && typeof datos === 'object' && !Array.isArray(datos) ? datos : {};
   const descripcion = typeof valores.descripcion === 'string' ? valores.descripcion.trim() : '';
+  const tipoLegible = tipo === 'egreso' ? 'egreso' : 'ingreso';
 
   if (convertirMontoMovimiento(valores.monto) === null) {
     errores.monto = 'Ingresá un monto mayor que cero.';
@@ -52,7 +53,7 @@ export function validarDatosIngreso(datos) {
   }
 
   if (!valores.deposito_id) {
-    errores.deposito_id = 'Seleccioná el depósito del ingreso.';
+    errores.deposito_id = `Seleccioná el depósito del ${tipoLegible}.`;
   }
 
   if (!valores.categoria) {
