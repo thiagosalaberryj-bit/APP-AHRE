@@ -53,7 +53,7 @@ aplicación.
 
 ## Sesión local
 
-`sessionService.js` expone `crearSesion`, `obtenerSesionActual`, `comprobarSesion` y `cerrarSesion`. SecureStore contiene solo el identificador del usuario; no guarda la contraseña ni el verificador. La opción «Recordarme», activa inicialmente en Login, determina si ese identificador se persiste en SecureStore o queda únicamente en memoria hasta cerrar AHRE.
+`sessionService.js` expone `crearSesion`, `obtenerSesionActual`, `comprobarSesion` y `cerrarSesion`. La clave de sesión en SecureStore contiene el identificador del usuario; una clave distinta conserva la preferencia de visibilidad de saldos. No guarda la contraseña ni el verificador. La opción «Recordarme», activa inicialmente en Login, determina si el identificador de sesión se persiste en SecureStore o queda únicamente en memoria hasta cerrar AHRE.
 
 Al abrir AHRE, `App.js` prepara SQLite y deja Inicio como ruta inicial; todavía
 no consulta la sesión. Cuando la persona completa el deslizador, Inicio llama a

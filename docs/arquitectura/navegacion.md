@@ -127,10 +127,10 @@ reintentar. La huella cancelada o incorrecta no abre el Dashboard. La función
 Perfil queda para una tarea posterior.
 ## Depósitos
 
-El detalle de depósito utiliza una única pantalla reutilizable. Actualmente se
-puede abrir desde Dashboard como ruta de prueba. Más adelante recibirá el
-identificador del depósito seleccionado y cargará la información de forma
-dinámica.
+El detalle de depósito utiliza una única pantalla reutilizable. Dashboard le
+envía el identificador del depósito seleccionado; el servicio consulta y
+verifica el registro local antes de mostrarlo. No se pasa el registro completo
+como estado de navegación.
 
 La pantalla de creación de depósito se accede desde Dashboard o desde la
 sección Nuevo.

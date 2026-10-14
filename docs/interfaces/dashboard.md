@@ -31,8 +31,9 @@ del monto con un borde fino.
 
 El saldo general se calcula sumando `saldo_actual` de los depósitos consultados.
 No se guarda un balance separado. Si no hay depósitos, el monto es cero. El
-control de ojo solo oculta o muestra el saldo en pantalla y no guarda una
-preferencia.
+control de ojo oculta o muestra el balance y los saldos de las filas de
+depósitos. La preferencia persiste por usuario y también se aplica en Detalle de
+depósito; el balance y el detalle pueden cambiarla desde su propio control.
 
 ## Acciones rápidas
 
@@ -56,9 +57,9 @@ predeterminados visuales si faltan.
 Si no hay depósitos, el estado vacío muestra un icono de billetera, una
 explicación y el botón «Crear depósito», que abre la ruta existente. Cuando hay
 depósitos, «Agregar depósito» aparece en el encabezado de la sección. Al
-seleccionar una fila, se abre Detalle de depósito y se envía el objeto
-consultado, que contiene el identificador del depósito. La lógica interna de
-esa pantalla corresponde a su propio issue.
+seleccionar una fila, se abre Detalle de depósito y se envía el identificador
+del depósito. La pantalla de detalle vuelve a consultar el registro local y sus
+movimientos por ese ID. Solo se listan depósitos activos.
 
 ## Movimientos recientes
 

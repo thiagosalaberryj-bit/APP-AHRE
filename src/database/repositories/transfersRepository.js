@@ -179,13 +179,27 @@ async function eliminar(id) {
   });
 }
 
-function calcularImpactoSaldoMovimiento(movimiento) {
+function calcularImpactoSaldoMovimiento(movimiento, fechaCreacionDeposito) {
   if (Number(movimiento.anulado) === 1) {
     return 0;
   }
+  const marcaTemporalMovimiento = Date.parse(movimiento.fecha_hora);
+  const marcaTemporalCreacionDeposito = Date.parse(fechaCreacionDeposito);
+  const monto = Number(movimiento.monto);
+  if (
+    !Number.isFinite(marcaTemporalMovimiento) ||
+    !Number.isFinite(marcaTemporalCreacionDeposito) ||
+    !Number.isFinite(monto) ||
+    monto <= 0
+  ) {
+    throw new ErrorBaseDatos('integridad');
+  }
+  if (marcaTemporalMovimiento < marcaTemporalCreacionDeposito) {
+    return 0;
+  }
   return movimiento.tipo === 'transferencia_entrada'
-    ? Number(movimiento.monto)
-    : -Number(movimiento.monto);
+    ? monto
+    : -monto;
 }
 
 async function actualizar(id, cambios) {
@@ -257,17 +271,34 @@ async function actualizar(id, cambios) {
       throw new ErrorBaseDatos('integridad');
     }
 
+    const idsDepositos = [...new Set([
+      transferenciaAnterior.deposito_origen_id,
+      transferenciaAnterior.deposito_destino_id,
+      transferenciaActualizada.deposito_origen_id,
+      transferenciaActualizada.deposito_destino_id,
+    ])];
+    const marcasConsulta = idsDepositos.map(() => '?').join(', ');
     const depositos = await transaccion.getAllAsync(
-      `SELECT id, usuario_id, activo
+      `SELECT id, usuario_id, activo, fecha_creacion
        FROM depositos
-       WHERE id IN (?, ?);`,
-      [transferenciaActualizada.deposito_origen_id, transferenciaActualizada.deposito_destino_id],
+       WHERE id IN (${marcasConsulta});`,
+      idsDepositos,
     );
+    const depositosPorId = new Map(depositos.map((deposito) => [deposito.id, deposito]));
+    const idsDepositosNuevos = [
+      transferenciaActualizada.deposito_origen_id,
+      transferenciaActualizada.deposito_destino_id,
+    ];
     if (
-      depositos.length !== 2 ||
-      depositos.some((deposito) =>
-        deposito.usuario_id !== transferenciaActualizada.usuario_id || Number(deposito.activo) !== 1,
-      )
+      depositos.length !== idsDepositos.length ||
+      idsDepositosNuevos.some((depositoId) => {
+        const deposito = depositosPorId.get(depositoId);
+        return (
+          !deposito ||
+          deposito.usuario_id !== transferenciaActualizada.usuario_id ||
+          Number(deposito.activo) !== 1
+        );
+      })
     ) {
       throw new ErrorBaseDatos('integridad');
     }
@@ -308,12 +339,18 @@ async function actualizar(id, cambios) {
       );
       await ajustarSaldoActual(
         movimiento.deposito_id,
-        -calcularImpactoSaldoMovimiento(movimiento),
+        -calcularImpactoSaldoMovimiento(
+          movimiento,
+          depositosPorId.get(movimiento.deposito_id)?.fecha_creacion,
+        ),
         transaccion,
       );
       await ajustarSaldoActual(
         movimientoNuevo.deposito_id,
-        calcularImpactoSaldoMovimiento(movimientoNuevo),
+        calcularImpactoSaldoMovimiento(
+          movimientoNuevo,
+          depositosPorId.get(movimientoNuevo.deposito_id)?.fecha_creacion,
+        ),
         transaccion,
       );
     }

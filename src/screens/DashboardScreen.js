@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
+import { consultarSaldoOculto, guardarSaldoOculto } from '../profile/balanceVisibilityService';
 import EncabezadoPrincipal from '../components/MainHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
@@ -112,6 +113,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDashboard(tema);
   const [saldoVisible, establecerSaldoVisible] = useState(true);
+  const [guardandoVisibilidadSaldo, establecerGuardandoVisibilidadSaldo] = useState(false);
   const [usuario, establecerUsuario] = useState(null);
   const [depositos, establecerDepositos] = useState([]);
   const [movimientos, establecerMovimientos] = useState([]);
@@ -120,7 +122,28 @@ export default function PantallaPanel({ navigation: navegacion }) {
   const [errorCarga, establecerErrorCarga] = useState(null);
   const secuenciaCarga = useRef(0);
   const datosCargados = useRef(false);
+  const guardadoVisibilidadEnCurso = useRef(false);
   const abrirPantalla = (ruta) => navegacion.getParent()?.navigate(ruta);
+
+  const alternarVisibilidadSaldo = async () => {
+    if (!usuario || guardadoVisibilidadEnCurso.current) return;
+
+    const visibleAnterior = saldoVisible;
+    const visibleNuevo = !visibleAnterior;
+    guardadoVisibilidadEnCurso.current = true;
+    establecerGuardandoVisibilidadSaldo(true);
+    establecerSaldoVisible(visibleNuevo);
+
+    try {
+      await guardarSaldoOculto(usuario.id, !visibleNuevo);
+    } catch (_error) {
+      establecerSaldoVisible(visibleAnterior);
+      mostrarAviso?.('No se pudo guardar esta preferencia. Intentá nuevamente.', { tipo: 'error' });
+    } finally {
+      guardadoVisibilidadEnCurso.current = false;
+      establecerGuardandoVisibilidadSaldo(false);
+    }
+  };
 
   const cargarDatos = useCallback(async (forzarCarga = false) => {
     const identificadorCarga = secuenciaCarga.current + 1;
@@ -137,8 +160,17 @@ export default function PantallaPanel({ navigation: navegacion }) {
         throw new Error('usuario_no_disponible');
       }
 
+      let saldoOculto = true;
+      try {
+        saldoOculto = await consultarSaldoOculto(sesion.usuario.id);
+      } catch (_error) {
+        mostrarAviso?.('No se pudo cargar la preferencia de privacidad del saldo.', { tipo: 'error' });
+      }
+      if (identificadorCarga !== secuenciaCarga.current) return;
+      establecerSaldoVisible(!saldoOculto);
+
       const depositosUsuario = await depositosRepositorio.consultar(
-        { usuario_id: sesion.usuario.id },
+        { usuario_id: sesion.usuario.id, activo: 1 },
         { ordenarPor: 'fecha_creacion', direccion: 'ASC' },
       );
       const identificadoresDepositos = depositosUsuario.map(({ id }) => id);
@@ -223,8 +255,9 @@ export default function PantallaPanel({ navigation: navegacion }) {
                       <Pressable
                         accessibilityLabel={saldoVisible ? 'Ocultar saldo' : 'Mostrar saldo'}
                         accessibilityRole="button"
+                        disabled={!usuario || guardandoVisibilidadSaldo}
                         hitSlop={8}
-                        onPress={() => establecerSaldoVisible((visible) => !visible)}
+                        onPress={alternarVisibilidadSaldo}
                         style={estilos.botonVisibilidad}
                       >
                         <Ionicons
@@ -347,7 +380,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                       <Pressable
                         accessibilityRole="button"
                         key={deposito.id}
-                        onPress={() => navegacion.getParent()?.navigate(RUTAS.DETALLE_DEPOSITO, { deposito })}
+                        onPress={() => navegacion.getParent()?.navigate(RUTAS.DETALLE_DEPOSITO, { depositoId: deposito.id })}
                         style={({ pressed }) => [
                           estilos.filaDeposito,
                           pressed && estilos.elementoPresionado,
@@ -368,7 +401,7 @@ export default function PantallaPanel({ navigation: navegacion }) {
                         </View>
                         <View style={estilos.finalDeposito}>
                           <Text style={[estilosGlobales.etiqueta, estilos.saldoDeposito]}>
-                            {formatearMonto(deposito.saldo_actual)}
+                            {saldoVisible ? formatearMonto(deposito.saldo_actual) : '$ •••••••'}
                           </Text>
                           <Ionicons color={tema.textoSecundario} name="chevron-forward" size={17} />
                         </View>

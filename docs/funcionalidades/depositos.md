@@ -1,4 +1,4 @@
-# Creación local de depósitos
+# Gestión local de depósitos
 
 ## Alcance
 
@@ -10,8 +10,9 @@ conexión de red y funciona con el almacenamiento local disponible en modo
 avión.
 
 Al crear el depósito, el formulario se cierra y vuelve a la pantalla anterior.
-La lista de depósitos del Dashboard sigue siendo de ejemplo y su actualización
-desde SQLite queda fuera de este alcance.
+El Dashboard consulta los depósitos activos de la sesión local y abre el detalle
+enviando el identificador del depósito, no su nombre ni una copia permanente
+del registro.
 
 ## Validación y almacenamiento
 
@@ -75,4 +76,64 @@ información. La acción está protegida mientras existe una creación en curso.
   descripción automática.
 - `src/database/repositories/depositsRepository.js`: inserción transaccional,
   valores inicial y actual, UUID y fechas.
+
+## Consulta del detalle y movimientos
+
+`src/screens/DepositDetailScreen.js` solicita el depósito por su ID a
+`src/deposits/depositService.js`. El servicio verifica que pertenezca al usuario
+de la sesión y que continúe activo. Si el ID falta, no existe, pertenece a otra
+cuenta o está inactivo, el detalle muestra un error recuperable y permite volver
+o reintentar; no navega con información ficticia.
+
+El saldo mostrado proviene de `depositos.saldo_actual`, actualizado por las
+operaciones del repositorio de movimientos según la estrategia local de la
+base de datos. Un movimiento con fecha y hora anterior a `depositos.fecha_creacion`
+queda en el historial, pero no afecta ese saldo; la misma regla aplica a sus
+reversiones y a las transferencias. Debajo se compara con el saldo al cierre del
+mes anterior. El servicio reconstruye ese cierre a partir del saldo actual, los
+movimientos no anulados fechados en el mes actual y los ajustes de saldo
+informados durante ese mes. Si el depósito se creó este mes o no existe una
+base positiva para calcular un
+porcentaje, se muestra un mensaje neutral o la variación en pesos, según
+corresponda. El detalle nunca edita el saldo inicial ni el saldo actual: los
+cambios de dinero siguen correspondiendo a operaciones financieras.
+
+Los movimientos se consultan con `deposito_id` del registro seleccionado y
+`anulado = 0`, ordenados por fecha y hora descendente. No se cargan movimientos
+de otros depósitos. Si no hay ninguno, se conserva la tarjeta de saldo y se
+muestra un estado vacío. La información se lee y guarda en SQLite local; no se
+requiere red.
+
+## Búsqueda y filtros del detalle
+
+La búsqueda se aplica sobre la descripción y categoría de los movimientos del
+depósito. Al vaciar el texto vuelve a mostrarse el conjunto que cumpla los
+filtros seleccionados. La búsqueda funciona al mismo tiempo que los filtros.
+
+Los criterios combinables son tipo de movimiento, fecha, monto y categoría.
+Fecha ofrece Día, Semana, Mes y Personalizado. La semana comienza el lunes y
+termina el domingo. El rango personalizado incluye ambas fechas y valida que
+`desde <= hasta`. El monto acepta límites mínimo y máximo con el formato local y
+valida que sean números no negativos y que el mínimo no supere al máximo.
+Categoría ofrece las categorías presentes en el depósito y se puede combinar
+con los demás criterios. Los criterios activos se pueden quitar por separado o
+limpiar junto con la búsqueda.
+
+## Edición
+
+El modal existente carga nombre, tipo, ícono, color y descripción actuales. Se
+validan con las mismas reglas de creación. Guardar actualiza SQLite local y la
+tarjeta de detalle al instante; cancelar cierra el modal y descarta el borrador.
+El saldo inicial y el saldo actual no se muestran como campos editables ni se
+envían al repositorio. Si la descripción queda vacía, el servicio genera una
+descripción con el nombre y tipo guardados.
+
+## Eliminación e integridad histórica
+
+La confirmación aplica la política documentada por DATABASE: eliminación
+lógica mediante `depositos.activo = 0`. Así el depósito deja de aparecer en el
+Dashboard y se preservan las filas de movimientos e historial que lo
+referencian. Al confirmar, el detalle vuelve a la pantalla anterior; al
+cancelar, la base permanece sin cambios. Las pantallas consultan de nuevo los
+datos locales al tomar el foco.
 

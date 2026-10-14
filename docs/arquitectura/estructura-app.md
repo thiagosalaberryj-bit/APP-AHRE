@@ -194,8 +194,8 @@ contrato auxiliar de clave-valor y no reemplaza la base relacional.
 
 Contiene el servicio de registro y login locales, la protección y verificación
 de contraseñas y el ciclo de vida de la sesión. Se comunica con el repositorio
-de autenticación para SQLite y con SecureStore únicamente para recordar el
-identificador de sesión.
+de autenticación para SQLite y con SecureStore para recordar el identificador
+de sesión y guardar por usuario la preferencia de visibilidad de saldos.
 
 ### `src/services/`
 

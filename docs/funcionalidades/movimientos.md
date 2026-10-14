@@ -56,8 +56,11 @@ recurrencias queda fuera de este alcance.
 
 El movimiento y la recurrencia se crean dentro de la misma transacción. El
 repositorio de movimientos suma el monto a `depositos.saldo_actual` dentro de
-esa transacción. Si alguna escritura falla, no queda el movimiento incompleto
-ni se modifica parcialmente el saldo.
+esa transacción, siempre que la fecha y hora del movimiento sean iguales o
+posteriores a `depositos.fecha_creacion`. Si son anteriores, el movimiento se
+conserva en el historial y no modifica el saldo actual. La regla también se
+aplica al editar movimientos y a sus reversiones. Si alguna escritura falla, no
+queda el movimiento incompleto ni se modifica parcialmente el saldo.
 
 ## Estados y navegación
 
@@ -140,11 +143,15 @@ sigue siendo positivo; el tipo determina que se reste del saldo.
 
 El servicio crea, dentro de una única transacción SQLite, la recurrencia cuando
 corresponde y el movimiento. `movimientosRepositorio` resta el monto del
-`saldo_actual` en esa misma transacción. Un error revierte todas las escrituras
-y no deja registros parciales. La pantalla bloquea los controles mientras
-guarda y una referencia interna impide iniciar otro guardado por una pulsación
-repetida. Al terminar correctamente muestra una confirmación y vuelve a la
-pantalla anterior; la flecha permite cancelar sin escribir en la base.
+`saldo_actual` en esa misma transacción si su fecha y hora no son anteriores a
+la creación del depósito. Si el movimiento está fechado antes de
+`depositos.fecha_creacion`, permanece en el historial, pero no cambia el saldo.
+La misma regla se aplica a las transferencias y reversiones. Un error revierte
+todas las escrituras y no deja registros parciales. La pantalla bloquea los
+controles mientras guarda y una referencia interna impide iniciar otro
+guardado por una pulsación repetida. Al terminar correctamente muestra una
+confirmación y vuelve a la pantalla anterior; la flecha permite cancelar sin
+escribir en la base.
 
 ### Archivos reutilizados
 

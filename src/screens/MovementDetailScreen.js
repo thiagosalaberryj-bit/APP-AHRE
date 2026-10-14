@@ -11,8 +11,9 @@ import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleMovimiento } from '../styles/MovementDetailScreenStyles';
 
 function formatearMonto(monto, tipo) {
-  if (typeof monto !== 'number') return '—';
-  const valor = `$ ${Math.round(monto).toLocaleString('es-AR')}`;
+  const importe = Number(monto);
+  if (monto === null || monto === undefined || !Number.isFinite(importe)) return '—';
+  const valor = `$ ${Math.abs(importe).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
   if (tipo === 'ingreso' || tipo === 'transferencia_entrada') return `+ ${valor}`;
   return `− ${valor}`;
@@ -57,7 +58,9 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
       ? coloresGraficos[indiceCategoria % coloresGraficos.length]
       : categoriaRecibida.color || tema.foco,
   };
-  const deposito = DEPOSITOS_SIMULADOS.find((item) => item.id === movimiento.deposito_id);
+  const deposito = ruta.params?.deposito_nombre
+    ? { nombre: ruta.params.deposito_nombre }
+    : DEPOSITOS_SIMULADOS.find((item) => item.id === movimiento.deposito_id);
   const esAnulado = Boolean(movimiento.anulado);
   const esRecurrente = Boolean(movimiento.recurrente);
   const nombresFrecuencia = Object.freeze({ diaria: 'Diaria', semanal: 'Semanal', mensual: 'Mensual', anual: 'Anual' });

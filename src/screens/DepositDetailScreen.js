@@ -1,5 +1,6 @@
 import { useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   KeyboardAvoidingView,
   Modal,
@@ -14,16 +15,20 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
+import { ContextoAvisos } from '../contexts/ToastContext';
 import BotonPrincipal from '../components/PrimaryButton';
 import SelectorCategoria from '../components/CategorySelector';
 import SelectorFecha from '../components/DateSelector';
-import TarjetaMovimiento from '../components/MovementCard';
 import EncabezadoSeccion from '../components/SectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
-import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS } from '../styles/colors';
+import { actualizarDeposito, consultarDetalleDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
+import { consultarSaldoOculto, guardarSaldoOculto } from '../profile/balanceVisibilityService';
+import { convertirSaldoInicial } from '../utils/depositValidation';
+import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS, COLORES_ESTADO } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleDeposito } from '../styles/DepositDetailScreenStyles';
 import { crearEstilosDeposito } from '../styles/DepositScreenStyles';
@@ -57,11 +62,13 @@ const OPCIONES_TIPO = Object.freeze([
 const OPCIONES_FECHA = Object.freeze([
   Object.freeze({ id: 'todos', nombre: 'Todo' }),
   Object.freeze({ id: 'dia', nombre: 'Día' }),
+  Object.freeze({ id: 'semana', nombre: 'Semana' }),
   Object.freeze({ id: 'mes', nombre: 'Mes' }),
-  Object.freeze({ id: 'personalizado', nombre: 'Rango' }),
+  Object.freeze({ id: 'personalizado', nombre: 'Personalizado' }),
 ]);
 const IDS_INGRESO = new Set(CATEGORIAS_INGRESO.map((categoria) => categoria.id));
 const IDS_EGRESO = new Set(CATEGORIAS_EGRESO.map((categoria) => categoria.id));
+const IDS_TRANSFERENCIA = new Set(['transferencias']);
 const MESES = Object.freeze([
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -70,41 +77,8 @@ const CATEGORIAS_FILTRO = Object.freeze([
   ...CATEGORIAS_INGRESO,
   ...CATEGORIAS_EGRESO.filter((categoria) => !IDS_INGRESO.has(categoria.id)),
 ]);
-const ESTA_CARGANDO = false;
-const DEPOSITO_PREDETERMINADO = Object.freeze({
-  id: 'efectivo',
-  nombre: 'Efectivo',
-  tipo: 'Efectivo',
-  descripcion: 'Para gastos diarios',
-  color: COLOR_DEPOSITO_PREDETERMINADO,
-  saldo: '$ 354.000',
-  icono: 'cash-outline',
-});
 
-function crearFechaMuestra(diasAntes, hora) {
-  const fecha = new Date();
-  const [horas, minutos] = hora.split(':').map(Number);
-  fecha.setDate(fecha.getDate() - diasAntes);
-  fecha.setHours(horas, minutos, 0, 0);
-  const dosDigitos = (valor) => String(valor).padStart(2, '0');
-  return `${fecha.getFullYear()}-${dosDigitos(fecha.getMonth() + 1)}-${dosDigitos(fecha.getDate())}T${dosDigitos(horas)}:${dosDigitos(minutos)}:00`;
-}
-
-const MOVIMIENTOS_POR_DEPOSITO = Object.freeze({
-  efectivo: Object.freeze([
-    Object.freeze({ id: 'youtube-music', descripcion: 'YouTube Music', categoria: 'suscripciones', deposito_id: 'efectivo', fecha_hora: crearFechaMuestra(0, '09:40'), tipo: 'egreso', monto: 4130 }),
-    Object.freeze({ id: 'supermercado', descripcion: 'Supermercado', categoria: 'alimentacion', deposito_id: 'efectivo', fecha_hora: crearFechaMuestra(1, '18:20'), tipo: 'egreso', monto: 48500 }),
-    Object.freeze({ id: 'sueldo', descripcion: 'Sueldo', categoria: 'sueldo', deposito_id: 'efectivo', fecha_hora: crearFechaMuestra(4, '08:15'), tipo: 'ingreso', monto: 1250000 }),
-    Object.freeze({ id: 'farmacia', descripcion: 'Farmacia', categoria: 'salud', deposito_id: 'efectivo', fecha_hora: crearFechaMuestra(5, '13:05'), tipo: 'egreso', monto: 7250 }),
-    Object.freeze({ id: 'venta', descripcion: 'Venta de bicicleta', categoria: 'ventas', deposito_id: 'efectivo', fecha_hora: crearFechaMuestra(6, '16:30'), tipo: 'ingreso', monto: 85000 }),
-  ]),
-  'mercado-pago': Object.freeze([
-    Object.freeze({ id: 'streaming', descripcion: 'YouTube Music', categoria: 'suscripciones', deposito_id: 'mercado-pago', fecha_hora: crearFechaMuestra(0, '09:40'), tipo: 'egreso', monto: 4130 }),
-    Object.freeze({ id: 'transferencia', descripcion: 'Transferencia recibida', categoria: 'transferencias_recibidas', deposito_id: 'mercado-pago', fecha_hora: crearFechaMuestra(1, '12:10'), tipo: 'ingreso', monto: 18000 }),
-    Object.freeze({ id: 'viaje', descripcion: 'Viaje', categoria: 'viajes', deposito_id: 'mercado-pago', fecha_hora: crearFechaMuestra(6, '17:40'), tipo: 'egreso', monto: 2800 }),
-  ]),
-  banco: Object.freeze([]),
-});
+const CATEGORIAS_POR_ID = new Map(CATEGORIAS_FILTRO.map((categoria) => [categoria.id, categoria]));
 
 function crearFechaSinHora(fecha) {
   return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
@@ -112,6 +86,101 @@ function crearFechaSinHora(fecha) {
 
 function formatearFechaCorta(fecha) {
   return fecha.toLocaleDateString('es-AR');
+}
+
+function formatearFechaHora(fechaHora) {
+  return new Date(fechaHora).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatearSaldo(monto) {
+  const saldo = Number(monto);
+  if (!Number.isFinite(saldo)) return '—';
+  return `$ ${saldo.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+}
+
+function formatearComparacionMensual(comparacion) {
+  const fechaReferencia = comparacion?.fechaReferencia;
+  if (!comparacion?.disponible) {
+    return comparacion?.motivo === 'sin_cierre_anterior' && fechaReferencia
+      ? `Este depósito no existía el ${fechaReferencia}`
+      : 'No hay saldo anterior para comparar';
+  }
+
+  const diferencia = Number(comparacion.diferencia);
+  if (diferencia === 0) {
+    return `Sin cambios desde el ${fechaReferencia} · saldo anterior: ${formatearSaldo(comparacion.saldoAnterior)}`;
+  }
+
+  if (comparacion.porcentaje === null) {
+    return `${diferencia > 0 ? 'Subió' : 'Bajó'} ${formatearSaldo(Math.abs(diferencia))} desde el ${fechaReferencia} · saldo anterior: ${formatearSaldo(comparacion.saldoAnterior)}`;
+  }
+
+  const porcentaje = Math.abs(Number(comparacion.porcentaje)).toLocaleString('es-AR', {
+    maximumFractionDigits: 1,
+  });
+  return `${porcentaje} % ${diferencia > 0 ? 'más' : 'menos'} que el saldo del ${fechaReferencia} (${formatearSaldo(comparacion.saldoAnterior)})`;
+}
+
+function obtenerRangoSemana(fecha) {
+  const inicio = crearFechaSinHora(fecha);
+  inicio.setDate(inicio.getDate() - ((inicio.getDay() + 6) % 7));
+  const fin = new Date(inicio);
+  fin.setDate(fin.getDate() + 6);
+  fin.setHours(23, 59, 59, 999);
+  return { inicio, fin };
+}
+
+function formatearRangoSemana(fecha) {
+  const { inicio, fin } = obtenerRangoSemana(fecha);
+  return `${formatearFechaCorta(inicio)} – ${formatearFechaCorta(fin)}`;
+}
+
+function esMovimientoDeIngreso(tipo) {
+  return tipo === 'ingreso' || tipo === 'transferencia_entrada';
+}
+
+function obtenerNombreTipoMovimiento(tipo) {
+  if (tipo === 'transferencia_entrada') return 'Transferencia recibida';
+  if (tipo === 'transferencia_salida') return 'Transferencia enviada';
+  return esMovimientoDeIngreso(tipo) ? 'Ingreso' : 'Egreso';
+}
+
+function TarjetaMovimientoDeposito({ tema, estilos, movimiento, alPresionar }) {
+  const categoria = CATEGORIAS_POR_ID.get(movimiento.categoria) || {};
+  const esIngreso = esMovimientoDeIngreso(movimiento.tipo);
+  const monto = Number(movimiento.monto);
+  const textoMonto = Number.isFinite(monto)
+    ? `${esIngreso ? '+' : '−'}$${Math.abs(monto).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`
+    : '—';
+
+  return (
+    <Pressable
+      accessibilityLabel={`${obtenerNombreTipoMovimiento(movimiento.tipo)}: ${movimiento.descripcion || categoria.nombre || 'Movimiento'}`}
+      accessibilityRole="button"
+      onPress={() => alPresionar(movimiento, categoria)}
+      style={({ pressed }) => [estilos.filaMovimiento, pressed ? estilos.filaPresionada : null]}
+    >
+      <View style={[estilos.iconoMovimiento, { backgroundColor: esIngreso ? COLORES_ESTADO.ingreso : COLORES_ESTADO.egreso }]}>
+        <Ionicons color={tema.encabezado} name={categoria.icono || 'swap-horizontal-outline'} size={20} />
+      </View>
+      <View style={estilos.detalleMovimiento}>
+        <View style={estilos.filaCategoriaDescripcion}>
+          <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.categoriaMovimiento}>
+            {categoria.nombre || movimiento.categoria}
+          </Text>
+          <Text style={estilos.separadorMetadatos}>·</Text>
+          <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.categoriaMovimiento, estilos.descripcionEnLinea]}>
+            {movimiento.descripcion || categoria.nombre || 'Movimiento'}
+          </Text>
+        </View>
+        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metaMovimiento}>
+          {formatearFechaHora(movimiento.fecha_hora)} · {movimiento.deposito_nombre}
+        </Text>
+        <Text style={estilos.tipoMovimiento}>{obtenerNombreTipoMovimiento(movimiento.tipo)}</Text>
+      </View>
+      <Text style={estilos.montoMovimiento}>{textoMonto}</Text>
+    </Pressable>
+  );
 }
 
 function formatearFechaDia(fecha) {
@@ -163,18 +232,31 @@ function SeccionFiltro({ titulo, resumen, abierta, alAlternar, colorAcento, esti
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }) {
   const { height: altoVentana, width: anchoVentana } = useWindowDimensions();
   const { tema } = useContext(ContextoApariencia);
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleDeposito(tema, anchoVentana);
   const estilosFormularioDeposito = crearEstilosDeposito(tema);
-  const deposito = ruta?.params?.deposito ?? DEPOSITO_PREDETERMINADO;
-  const movimientos = MOVIMIENTOS_POR_DEPOSITO[deposito.id] ?? MOVIMIENTOS_POR_DEPOSITO.efectivo;
+  const depositoId = ruta?.params?.depositoId;
+  const [deposito, establecerDeposito] = useState(null);
+  const [saldoVisible, establecerSaldoVisible] = useState(true);
+  const [guardandoVisibilidadSaldo, establecerGuardandoVisibilidadSaldo] = useState(false);
+  const [movimientos, establecerMovimientos] = useState([]);
+  const [comparacionMensual, establecerComparacionMensual] = useState(null);
+  const [cargando, establecerCargando] = useState(true);
+  const [errorCarga, establecerErrorCarga] = useState(null);
+  const depositoActual = useRef(deposito);
+  const secuenciaCarga = useRef(0);
 
   const [busqueda, establecerBusqueda] = useState('');
   const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
+  const [mostrarFlechaFecha, establecerMostrarFlechaFecha] = useState(false);
+  const flechaFechaMostrada = useRef(false);
+  const temporizadorFlechaFecha = useRef(null);
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
   const [fechaFiltro, establecerFechaFiltro] = useState('todos');
   const [fechaDia, establecerFechaDia] = useState(null);
+  const [fechaSemana, establecerFechaSemana] = useState(null);
   const [mesSeleccionado, establecerMesSeleccionado] = useState(null);
   const [anioMesVisible, establecerAnioMesVisible] = useState(() => new Date().getFullYear());
   const [fechaInicial, establecerFechaInicial] = useState(null);
@@ -189,11 +271,11 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const [modalEliminacionVisible, establecerModalEliminacionVisible] = useState(false);
   const [nombreEdicionEnfocado, establecerNombreEdicionEnfocado] = useState(false);
   const [descripcionEdicionEnfocada, establecerDescripcionEdicionEnfocada] = useState(false);
-  const [borrador, establecerBorrador] = useState(deposito);
-  const [mensajeEstado, establecerMensajeEstado] = useState('');
-  const tipoSeleccionado = borrador.tipo === 'Cuenta bancaria'
-    ? 'banco'
-    : TIPOS_DEPOSITO.find((opcion) => opcion.id === borrador.tipo || opcion.nombre === borrador.tipo)?.id;
+  const [borrador, establecerBorrador] = useState({});
+  const [erroresEdicion, establecerErroresEdicion] = useState({});
+  const [guardandoEdicion, establecerGuardandoEdicion] = useState(false);
+  const [eliminando, establecerEliminando] = useState(false);
+  const tipoSeleccionado = TIPOS_DEPOSITO.find((opcion) => opcion.id === borrador.tipo)?.id;
   const colorBorrador = borrador.color || COLOR_DEPOSITO_PREDETERMINADO;
   const opcionColorSeleccionado = COLORES_SELECTOR.find((opcion) => opcion.valor === colorBorrador);
   const iconoFueraDeVista = !ICONOS_PRINCIPALES.some((opcion) => opcion.nombre === borrador.icono);
@@ -206,11 +288,83 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   };
   const opacidadOverlay = useRef(new Animated.Value(0)).current;
   const desplazamientoPanel = useRef(new Animated.Value(0)).current;
+  const guardadoVisibilidadEnCurso = useRef(false);
+
+  useEffect(() => {
+    depositoActual.current = deposito;
+  }, [deposito]);
+
+  const cargarDetalle = useCallback(async () => {
+    const secuencia = secuenciaCarga.current + 1;
+    secuenciaCarga.current = secuencia;
+    establecerErrorCarga(null);
+    establecerSaldoVisible(false);
+    if (!depositoActual.current) establecerCargando(true);
+
+    try {
+      const detalle = await consultarDetalleDeposito(depositoId);
+      if (secuencia !== secuenciaCarga.current) return;
+      let saldoOculto = true;
+      try {
+        saldoOculto = await consultarSaldoOculto(detalle.deposito.usuario_id);
+      } catch (_error) {
+        mostrarAviso('No se pudo cargar la preferencia de privacidad del saldo.', { tipo: 'error' });
+      }
+      if (secuencia !== secuenciaCarga.current) return;
+      establecerSaldoVisible(!saldoOculto);
+      establecerDeposito(detalle.deposito);
+      establecerComparacionMensual(detalle.comparacionMensual);
+      establecerMovimientos(detalle.movimientos.map((movimiento) => ({
+        ...movimiento,
+        deposito_nombre: detalle.deposito.nombre,
+      })));
+    } catch (error) {
+      if (secuencia !== secuenciaCarga.current) return;
+      const noEncontrado = error instanceof ErrorDeposito && error.codigo === 'deposito_no_encontrado';
+      const mensaje = error instanceof ErrorDeposito
+        ? error.message
+        : 'No se pudo cargar el depósito. Intentá nuevamente.';
+      establecerDeposito(null);
+      establecerMovimientos([]);
+      establecerComparacionMensual(null);
+      establecerErrorCarga(mensaje);
+      if (!noEncontrado) mostrarAviso(mensaje, { tipo: 'error' });
+    } finally {
+      if (secuencia === secuenciaCarga.current) establecerCargando(false);
+    }
+  }, [depositoId, mostrarAviso]);
+
+  const alternarVisibilidadSaldo = async () => {
+    if (!deposito || guardadoVisibilidadEnCurso.current) return;
+
+    const visibleAnterior = saldoVisible;
+    const visibleNuevo = !visibleAnterior;
+    guardadoVisibilidadEnCurso.current = true;
+    establecerGuardandoVisibilidadSaldo(true);
+    establecerSaldoVisible(visibleNuevo);
+
+    try {
+      await guardarSaldoOculto(deposito.usuario_id, !visibleNuevo);
+    } catch (_error) {
+      establecerSaldoVisible(visibleAnterior);
+      mostrarAviso('No se pudo guardar esta preferencia. Intentá nuevamente.', { tipo: 'error' });
+    } finally {
+      guardadoVisibilidadEnCurso.current = false;
+      establecerGuardandoVisibilidadSaldo(false);
+    }
+  };
+
+  useFocusEffect(useCallback(() => {
+    cargarDetalle();
+    return () => {
+      secuenciaCarga.current += 1;
+    };
+  }, [cargarDetalle]));
 
   const categoriasDisponiblesFiltro = useMemo(() => {
     const idsDisponibles = new Set(movimientos.map((movimiento) => movimiento.categoria));
     const categoriasPorTipo = tipoFiltro === 'ingreso'
-      ? CATEGORIAS_INGRESO
+      ? [...CATEGORIAS_INGRESO, ...CATEGORIAS_EGRESO.filter((categoria) => IDS_TRANSFERENCIA.has(categoria.id))]
       : tipoFiltro === 'egreso'
         ? CATEGORIAS_EGRESO
         : CATEGORIAS_FILTRO;
@@ -220,7 +374,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const cambiarTipoFiltro = (tipo) => {
     establecerTipoFiltro(tipo);
     if (tipo === 'todos') return;
-    const idsPermitidos = tipo === 'ingreso' ? IDS_INGRESO : IDS_EGRESO;
+    const idsPermitidos = tipo === 'ingreso'
+      ? new Set([...IDS_INGRESO, ...IDS_TRANSFERENCIA])
+      : IDS_EGRESO;
     establecerCategoriaFiltroIds((ids) => ids.filter((id) => idsPermitidos.has(id)));
   };
 
@@ -230,7 +386,32 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       : [...abiertas, seccion]));
   };
 
+  const ocultarFlechaFecha = useCallback(() => {
+    if (temporizadorFlechaFecha.current !== null) {
+      clearTimeout(temporizadorFlechaFecha.current);
+      temporizadorFlechaFecha.current = null;
+    }
+    establecerMostrarFlechaFecha(false);
+  }, []);
+
+  const abrirFiltros = () => {
+    establecerFiltrosVisibles(true);
+    if (flechaFechaMostrada.current) return;
+
+    flechaFechaMostrada.current = true;
+    establecerMostrarFlechaFecha(true);
+    temporizadorFlechaFecha.current = setTimeout(() => {
+      establecerMostrarFlechaFecha(false);
+      temporizadorFlechaFecha.current = null;
+    }, 2500);
+  };
+
+  useEffect(() => () => {
+    if (temporizadorFlechaFecha.current !== null) clearTimeout(temporizadorFlechaFecha.current);
+  }, []);
+
   const cerrarFiltros = useCallback(() => {
+    ocultarFlechaFecha();
     Animated.parallel([
       Animated.timing(opacidadOverlay, { toValue: 0, duration: 160, useNativeDriver: true }),
       Animated.timing(desplazamientoPanel, {
@@ -241,7 +422,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     ]).start(({ finished }) => {
       if (finished) establecerFiltrosVisibles(false);
     });
-  }, [altoVentana, desplazamientoPanel, opacidadOverlay]);
+  }, [altoVentana, desplazamientoPanel, ocultarFlechaFecha, opacidadOverlay]);
 
   const responderManija = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -291,10 +472,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const cambiarFechaFiltro = useCallback((modo) => {
     if (modo === fechaFiltro) return;
     establecerFechaFiltro(modo);
-    if (modo === 'dia') establecerFechaDia(null);
+    if (modo === 'dia') establecerFechaDia(new Date());
+    if (modo === 'semana') establecerFechaSemana(new Date());
     if (modo === 'mes') {
-      establecerMesSeleccionado(null);
-      establecerAnioMesVisible(new Date().getFullYear());
+      const ahora = new Date();
+      establecerMesSeleccionado(new Date(ahora.getFullYear(), ahora.getMonth(), 1));
+      establecerAnioMesVisible(ahora.getFullYear());
     }
     if (modo === 'personalizado') {
       establecerFechaInicial(null);
@@ -309,13 +492,25 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       establecerFechaFinal(null);
       return;
     }
-    if (seleccion < fechaInicial) {
-      establecerFechaInicial(seleccion);
-      establecerFechaFinal(fechaInicial);
-    } else {
-      establecerFechaFinal(seleccion);
-    }
+    establecerFechaFinal(seleccion);
   };
+
+  const montoMinimoNumero = montoMinimo.trim() ? convertirSaldoInicial(montoMinimo) : null;
+  const montoMaximoNumero = montoMaximo.trim() ? convertirSaldoInicial(montoMaximo) : null;
+  const errorMontoFiltro = montoMinimo.trim() && montoMinimoNumero === null
+    ? 'Ingresá un monto mínimo válido.'
+    : montoMaximo.trim() && montoMaximoNumero === null
+      ? 'Ingresá un monto máximo válido.'
+      : montoMinimoNumero !== null && montoMaximoNumero !== null && montoMinimoNumero > montoMaximoNumero
+        ? 'El monto mínimo no puede superar al máximo.'
+        : null;
+  const errorFechaFiltro = fechaFiltro === 'personalizado'
+    ? !fechaInicial || !fechaFinal
+      ? 'Elegí una fecha desde y una fecha hasta.'
+      : fechaInicial > fechaFinal
+        ? 'La fecha desde debe ser anterior o igual a la fecha hasta.'
+        : null
+    : null;
 
   const filtrosActivos = useMemo(() => {
     const filtros = [];
@@ -334,16 +529,22 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         etiqueta: `Fecha: ${formatearFechaCorta(fechaDia)}`,
         alQuitar: () => cambiarFechaFiltro('todos'),
       });
+    } else if (fechaFiltro === 'semana' && fechaSemana) {
+      filtros.push({
+        id: 'fecha',
+        etiqueta: `Semana: ${formatearRangoSemana(fechaSemana)}`,
+        alQuitar: () => cambiarFechaFiltro('todos'),
+      });
     } else if (fechaFiltro === 'mes' && mesSeleccionado) {
       filtros.push({
         id: 'fecha',
         etiqueta: `Fecha: ${MESES[mesSeleccionado.getMonth()]} ${mesSeleccionado.getFullYear()}`,
         alQuitar: () => cambiarFechaFiltro('todos'),
       });
-    } else if (fechaFiltro === 'personalizado' && fechaInicial && fechaFinal) {
+    } else if (fechaFiltro === 'personalizado' && (fechaInicial || fechaFinal)) {
       filtros.push({
         id: 'fecha',
-        etiqueta: `Fecha: ${formatearFechaCorta(fechaInicial)} – ${formatearFechaCorta(fechaFinal)}`,
+        etiqueta: `Fecha: ${fechaInicial ? formatearFechaCorta(fechaInicial) : 'Desde'} – ${fechaFinal ? formatearFechaCorta(fechaFinal) : 'Hasta'}`,
         alQuitar: () => cambiarFechaFiltro('todos'),
       });
     }
@@ -371,7 +572,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       });
     });
     return filtros;
-  }, [categoriaFiltroIds, cambiarFechaFiltro, fechaDia, fechaFinal, fechaInicial, fechaFiltro, mesSeleccionado, montoMaximo, montoMinimo, tipoFiltro]);
+  }, [categoriaFiltroIds, cambiarFechaFiltro, fechaDia, fechaFinal, fechaInicial, fechaFiltro, fechaSemana, mesSeleccionado, montoMaximo, montoMinimo, tipoFiltro]);
 
   const cantidadFiltros = filtrosActivos.length;
 
@@ -380,6 +581,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     establecerTipoFiltro('todos');
     establecerFechaFiltro('todos');
     establecerFechaDia(null);
+    establecerFechaSemana(null);
     establecerMesSeleccionado(null);
     establecerAnioMesVisible(new Date().getFullYear());
     establecerFechaInicial(null);
@@ -392,6 +594,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const resumenTipo = OPCIONES_TIPO.find((opcion) => opcion.id === tipoFiltro)?.nombre || 'Todos';
   const resumenFecha = fechaFiltro === 'dia'
     ? (fechaDia ? formatearFechaCorta(fechaDia) : 'Elegí un día')
+    : fechaFiltro === 'semana'
+      ? (fechaSemana ? formatearRangoSemana(fechaSemana) : 'Elegí una semana')
     : fechaFiltro === 'mes'
       ? (mesSeleccionado ? `${MESES[mesSeleccionado.getMonth()]} ${mesSeleccionado.getFullYear()}` : 'Elegí un mes')
       : fechaFiltro === 'personalizado'
@@ -411,45 +615,96 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
   const abrirEdicion = () => {
     establecerBorrador({ ...deposito });
+    establecerErroresEdicion({});
     establecerModalOpcionesVisible(false);
     establecerModalEdicionVisible(true);
     establecerModalIconosEdicionVisible(false);
     establecerNombreEdicionEnfocado(false);
     establecerDescripcionEdicionEnfocada(false);
-    establecerMensajeEstado('');
   };
 
   const cerrarEdicion = () => {
+    if (guardandoEdicion) return;
     establecerModalEdicionVisible(false);
     establecerModalIconosEdicionVisible(false);
     establecerBorrador({ ...deposito });
+    establecerErroresEdicion({});
   };
 
   const actualizarBorrador = (propiedad, valor) => {
     establecerBorrador((actual) => ({ ...actual, [propiedad]: valor }));
+    establecerErroresEdicion((actuales) => ({ ...actuales, [propiedad]: undefined }));
+  };
+
+  const guardarEdicion = async () => {
+    if (guardandoEdicion || !deposito) return;
+    establecerGuardandoEdicion(true);
+    establecerErroresEdicion({});
+    try {
+      const actualizado = await actualizarDeposito(deposito.id, borrador);
+      establecerDeposito(actualizado);
+      establecerBorrador(actualizado);
+      establecerModalEdicionVisible(false);
+      establecerModalIconosEdicionVisible(false);
+      mostrarAviso('Los cambios del depósito se guardaron.', { tipo: 'exito' });
+    } catch (error) {
+      if (error instanceof ErrorDeposito && error.errores) {
+        establecerErroresEdicion(error.errores);
+      }
+      mostrarAviso(error instanceof ErrorDeposito
+        ? error.message
+        : 'No se pudieron guardar los cambios. Intentá nuevamente.', { tipo: 'error' });
+    } finally {
+      establecerGuardandoEdicion(false);
+    }
+  };
+
+  const confirmarEliminacion = async () => {
+    if (eliminando || !deposito) return;
+    establecerEliminando(true);
+    try {
+      await eliminarDeposito(deposito.id);
+      establecerModalEliminacionVisible(false);
+      mostrarAviso('El depósito se desactivó y su historial quedó conservado.', { tipo: 'exito' });
+      navegacion.goBack();
+    } catch (error) {
+      mostrarAviso(error instanceof ErrorDeposito
+        ? error.message
+        : 'No se pudo eliminar el depósito. Intentá nuevamente.', { tipo: 'error' });
+    } finally {
+      establecerEliminando(false);
+    }
   };
 
   const abrirDetalleMovimiento = (movimiento, categoria) => {
-    navegacion.push(RUTAS.DETALLE_MOVIMIENTO, { categoria, movimiento });
+    navegacion.push(RUTAS.DETALLE_MOVIMIENTO, { categoria, movimiento, deposito_nombre: deposito?.nombre });
   };
 
   const movimientosFiltrados = useMemo(() => {
+    if (errorMontoFiltro || errorFechaFiltro) return [];
     const texto = busqueda.trim().toLocaleLowerCase('es-AR');
-    const minimo = Number.parseFloat(montoMinimo);
-    const maximo = Number.parseFloat(montoMaximo);
+    const minimo = montoMinimo.trim() ? montoMinimoNumero : null;
+    const maximo = montoMaximo.trim() ? montoMaximoNumero : null;
 
     return movimientos.filter((movimiento) => {
-      if (tipoFiltro !== 'todos' && movimiento.tipo !== tipoFiltro) return false;
-      if (texto && !movimiento.descripcion.toLocaleLowerCase('es-AR').includes(texto)) return false;
+      if (tipoFiltro === 'ingreso' && !esMovimientoDeIngreso(movimiento.tipo)) return false;
+      if (tipoFiltro === 'egreso' && esMovimientoDeIngreso(movimiento.tipo)) return false;
+      const categoria = CATEGORIAS_POR_ID.get(movimiento.categoria);
+      const textoBuscable = `${movimiento.descripcion || ''} ${categoria?.nombre || ''} ${movimiento.categoria || ''}`.toLocaleLowerCase('es-AR');
+      if (texto && !textoBuscable.includes(texto)) return false;
       if (categoriaFiltroIds.length > 0 && !categoriaFiltroIds.includes(movimiento.categoria)) return false;
-      if (!Number.isNaN(minimo) && montoMinimo.trim() && movimiento.monto < minimo) return false;
-      if (!Number.isNaN(maximo) && montoMaximo.trim() && movimiento.monto > maximo) return false;
+      if (minimo !== null && movimiento.monto < minimo) return false;
+      if (maximo !== null && movimiento.monto > maximo) return false;
 
       const fecha = new Date(movimiento.fecha_hora);
       if (fechaFiltro === 'dia' && fechaDia) {
         if (fecha.getFullYear() !== fechaDia.getFullYear()
           || fecha.getMonth() !== fechaDia.getMonth()
           || fecha.getDate() !== fechaDia.getDate()) return false;
+      }
+      if (fechaFiltro === 'semana' && fechaSemana) {
+        const { inicio, fin } = obtenerRangoSemana(fechaSemana);
+        if (fecha < inicio || fecha > fin) return false;
       }
       if (fechaFiltro === 'mes' && mesSeleccionado) {
         if (fecha.getMonth() !== mesSeleccionado.getMonth()
@@ -462,12 +717,19 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       }
       return true;
     }).slice().sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
-  }, [busqueda, categoriaFiltroIds, fechaDia, fechaFinal, fechaFiltro, fechaInicial, mesSeleccionado, montoMaximo, montoMinimo, movimientos, tipoFiltro]);
+  }, [busqueda, categoriaFiltroIds, errorFechaFiltro, errorMontoFiltro, fechaDia, fechaFinal, fechaFiltro, fechaInicial, fechaSemana, mesSeleccionado, montoMaximo, montoMaximoNumero, montoMinimo, montoMinimoNumero, movimientos, tipoFiltro]);
 
   const gruposMovimientos = useMemo(
     () => agruparMovimientosPorDia(movimientosFiltrados),
     [movimientosFiltrados],
   );
+  const direccionComparacion = comparacionMensual?.disponible
+    ? comparacionMensual.diferencia > 0
+      ? 'positivo'
+      : comparacionMensual.diferencia < 0
+        ? 'negativo'
+        : 'neutral'
+    : 'neutral';
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
@@ -479,36 +741,105 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           alVolver={() => navegacion.goBack()}
         />
         <ScrollView contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {cargando ? (
+            <View style={estilos.estadoVacio}>
+              <ActivityIndicator color={tema.foco} size="large" />
+              <Text style={estilosGlobales.textoSecundario}>Cargando depósito…</Text>
+            </View>
+          ) : errorCarga || !deposito ? (
+            <View style={estilos.estadoVacio}>
+              <Ionicons color={tema.error} name="alert-circle-outline" size={32} />
+              <Text style={estilosGlobales.etiqueta}>{errorCarga || 'No se encontró el depósito.'}</Text>
+              {errorCarga ? (
+                <Pressable accessibilityRole="button" onPress={cargarDetalle} style={estilos.botonLimpiar}>
+                  <Text style={estilos.textoBotonLimpiar}>Intentar nuevamente</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : (
+          <>
           <View style={[estilosGlobales.tarjeta, estilos.tarjetaDeposito]}>
             <View style={estilos.encabezadoDeposito}>
               <View style={[estilos.iconoDeposito, { backgroundColor: deposito.color || COLOR_DEPOSITO_PREDETERMINADO }]}>
                 <Ionicons color={COLOR_ICONO_DEPOSITO} name={deposito.icono || 'wallet-outline'} size={28} />
               </View>
               <View style={estilos.datosDeposito}>
-                <Text style={estilosGlobales.subtitulo}>{deposito.nombre}</Text>
-                <Text style={estilosGlobales.textoSecundario}>{deposito.tipo}</Text>
-                {deposito.descripcion ? <Text style={estilosGlobales.textoAyuda}>{deposito.descripcion}</Text> : null}
+                <Text numberOfLines={1} style={estilos.nombreDeposito}>{deposito.nombre}</Text>
+                <Text ellipsizeMode="tail" numberOfLines={3} style={estilos.descripcionDeposito}>
+                  {deposito.descripcion ? <>
+                    {deposito.descripcion}
+                    <Text style={estilos.tipoDeposito}> · {TIPOS_DEPOSITO.find((tipo) => tipo.id === deposito.tipo)?.nombre || deposito.tipo}</Text>
+                  </> : (
+                    <Text style={estilos.tipoDeposito}>
+                      {TIPOS_DEPOSITO.find((tipo) => tipo.id === deposito.tipo)?.nombre || deposito.tipo}
+                    </Text>
+                  )}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityLabel="Opciones del depósito"
+                accessibilityRole="button"
+                onPress={() => establecerModalOpcionesVisible(true)}
+                style={estilos.botonOpciones}
+              >
+                <Ionicons color={tema.textoSecundario} name="ellipsis-horizontal" size={22} />
+              </Pressable>
+            </View>
+            <View style={estilos.resumenSaldo}>
+              <Text style={estilos.etiquetaSaldo}>Saldo de este depósito</Text>
+              <View style={estilos.filaSaldo}>
+                <Text adjustsFontSizeToFit minimumFontScale={0.78} numberOfLines={1} style={estilos.saldo}>
+                  {saldoVisible ? formatearSaldo(deposito.saldo_actual) : '$ •••••••'}
+                </Text>
+                <Pressable
+                  accessibilityLabel={saldoVisible ? 'Ocultar saldo' : 'Mostrar saldo'}
+                  accessibilityRole="button"
+                  disabled={guardandoVisibilidadSaldo}
+                  hitSlop={8}
+                  onPress={alternarVisibilidadSaldo}
+                  style={estilos.botonVisibilidadSaldo}
+                >
+                  <Ionicons
+                    color={tema.textoSecundario}
+                    name={saldoVisible ? 'eye-outline' : 'eye-off-outline'}
+                    size={20}
+                  />
+                </Pressable>
+              </View>
+              <View style={estilos.comparacionSaldo}>
+                {saldoVisible ? <>
+                  <Ionicons
+                    color={direccionComparacion === 'positivo'
+                      ? tema.exito
+                      : direccionComparacion === 'negativo'
+                        ? tema.error
+                        : tema.textoSecundario}
+                    name={direccionComparacion === 'positivo'
+                      ? 'trending-up-outline'
+                      : direccionComparacion === 'negativo'
+                        ? 'trending-down-outline'
+                        : 'remove-outline'}
+                    size={16}
+                  />
+                  <Text style={[
+                    estilos.textoComparacion,
+                    direccionComparacion === 'positivo'
+                      ? estilos.textoComparacionPositiva
+                      : direccionComparacion === 'negativo'
+                        ? estilos.textoComparacionNegativa
+                        : estilos.textoComparacionNeutral,
+                  ]}>
+                    {formatearComparacionMensual(comparacionMensual)}
+                  </Text>
+                </> : <>
+                  <Ionicons color={tema.textoSecundario} name="eye-off-outline" size={16} />
+                  <Text style={[estilos.textoComparacion, estilos.textoComparacionNeutral]}>
+                    Variación mensual oculta
+                  </Text>
+                </>}
               </View>
             </View>
-            <Pressable
-              accessibilityLabel="Opciones del depósito"
-              accessibilityRole="button"
-              onPress={() => establecerModalOpcionesVisible(true)}
-              style={estilos.botonOpciones}
-            >
-              <Ionicons color={tema.textoPrincipal} name="ellipsis-vertical" size={22} />
-            </Pressable>
-            <View style={estilos.separadorSaldo} />
-            <Text style={estilosGlobales.textoSecundario}>Saldo de este depósito</Text>
-            <Text style={estilos.saldo}>{deposito.saldo}</Text>
           </View>
-
-          {mensajeEstado ? (
-            <View style={estilos.mensajeEstado}>
-              <Ionicons color={tema.foco} name="information-circle-outline" size={20} />
-              <Text style={[estilosGlobales.textoSecundario, estilos.textoMensajeEstado]}>{mensajeEstado}</Text>
-            </View>
-          ) : null}
 
           <View style={estilos.seccionMovimientos}>
             <Text style={estilosGlobales.encabezadoSeccion}>Movimientos</Text>
@@ -545,7 +876,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               <Pressable
                 accessibilityLabel="Filtros"
                 accessibilityRole="button"
-                onPress={() => establecerFiltrosVisibles(true)}
+                onPress={abrirFiltros}
                 style={({ pressed }) => [
                   estilosGlobales.botonSecundario,
                   estilos.botonFiltros,
@@ -590,14 +921,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               ) : null}
             </View>
 
-            {ESTA_CARGANDO ? (
-              <View style={estilos.listaMovimientos}>
-                {[0, 1, 2].map((indice) => <View key={indice} style={estilos.esqueletoMovimiento} />)}
-              </View>
-            ) : movimientos.length === 0 ? (
+            {movimientos.length === 0 ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.textoSecundario} name="receipt-outline" size={32} />
-                <Text style={estilos.textoEstadoVacio}>Este depósito todavía no tiene movimientos.</Text>
+                <Text style={[estilosGlobales.textoSecundario, estilos.textoEstadoVacio]}>
+                  Este depósito todavía no tiene movimientos.
+                </Text>
               </View>
             ) : movimientosFiltrados.length > 0 ? (
               <View style={estilos.listaMovimientos}>
@@ -606,13 +935,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     <Text accessibilityRole="header" style={estilos.tituloDia}>{formatearFechaDia(grupo.fecha)}</Text>
                     <View style={estilos.movimientosDia}>
                       {grupo.movimientos.map((movimiento) => (
-                        <TarjetaMovimiento
+                        <TarjetaMovimientoDeposito
                           key={movimiento.id}
                           tema={tema}
                           estilos={estilos}
                           movimiento={movimiento}
                           alPresionar={abrirDetalleMovimiento}
-                          soloHora
                         />
                       ))}
                     </View>
@@ -633,6 +961,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </View>
             )}
           </View>
+          </>
+          )}
         </ScrollView>
       </View>
 
@@ -674,7 +1004,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   colorAcento={tema.foco}
                   estilos={estilos}
                 >
-                  <View style={estilos.filaChips}>
+                  <View style={estilos.filaOpcionesTipo}>
                     {OPCIONES_TIPO.map((opcion) => {
                       const activa = tipoFiltro === opcion.id;
                       return (
@@ -683,9 +1013,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                           accessibilityRole="button"
                           accessibilityState={{ selected: activa }}
                           onPress={() => cambiarTipoFiltro(opcion.id)}
-                          style={[estilos.chipFiltro, activa ? estilos.chipFiltroActivo : null]}
+                          style={[estilos.chipFiltro, estilos.chipTipo, activa ? estilos.chipFiltroActivo : null]}
                         >
-                          <Text style={[estilos.textoChipFiltro, activa ? estilos.textoChipFiltroActivo : null]}>
+                          <Text numberOfLines={1} style={[estilos.textoChipFiltro, activa ? estilos.textoChipFiltroActivo : null]}>
                             {opcion.nombre}
                           </Text>
                         </Pressable>
@@ -702,23 +1032,37 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   colorAcento={tema.botonPrincipal}
                   estilos={estilos}
                 >
-                  <View style={estilos.filaChips}>
-                    {OPCIONES_FECHA.map((opcion) => {
-                      const activa = fechaFiltro === opcion.id;
-                      return (
-                        <Pressable
-                          key={opcion.id}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: activa }}
-                          onPress={() => cambiarFechaFiltro(opcion.id)}
-                          style={[estilos.chipFiltro, estilos.chipFecha, activa ? estilos.chipFiltroActivo : null]}
-                        >
-                          <Text style={[estilos.textoChipFiltro, activa ? estilos.textoChipFiltroActivo : null]}>
-                            {opcion.nombre}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
+                  <View style={estilos.contenedorOpcionesFecha}>
+                    <ScrollView
+                      contentContainerStyle={estilos.filaOpcionesFecha}
+                      horizontal
+                      nestedScrollEnabled
+                      onScrollBeginDrag={ocultarFlechaFecha}
+                      showsHorizontalScrollIndicator={false}
+                      style={estilos.scrollOpcionesFecha}
+                    >
+                      {OPCIONES_FECHA.map((opcion) => {
+                        const activa = fechaFiltro === opcion.id;
+                        return (
+                          <Pressable
+                            key={opcion.id}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: activa }}
+                            onPress={() => cambiarFechaFiltro(opcion.id)}
+                            style={[estilos.chipFiltro, estilos.chipFecha, activa ? estilos.chipFiltroActivo : null]}
+                          >
+                            <Text style={[estilos.textoChipFiltro, activa ? estilos.textoChipFiltroActivo : null]}>
+                              {opcion.nombre}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </ScrollView>
+                    {mostrarFlechaFecha ? (
+                      <View pointerEvents="none" style={estilos.flechaPistaFecha}>
+                        <Ionicons color={tema.foco} name="arrow-forward" size={22} />
+                      </View>
+                    ) : null}
                   </View>
                   {fechaFiltro === 'dia' ? (
                     <View style={estilos.grupoCalendarioFiltro}>
@@ -795,6 +1139,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                         rangoInicio={fechaInicial}
                         rangoFin={fechaFinal}
                       />
+                      {errorFechaFiltro ? <Text style={estilosGlobales.textoError}>{errorFechaFiltro}</Text> : null}
                     </View>
                   ) : null}
                 </SeccionFiltro>
@@ -831,27 +1176,40 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   estilos={estilos}
                 >
                   <View style={estilos.filaRango}>
-                    <TextInput
-                      accessibilityLabel="Monto mínimo"
-                      keyboardType="decimal-pad"
-                      onChangeText={establecerMontoMinimo}
-                      placeholder="Mínimo"
-                      placeholderTextColor={tema.textoSecundario}
-                      selectionColor={tema.foco}
-                      style={estilos.campoRango}
-                      value={montoMinimo}
-                    />
-                    <TextInput
-                      accessibilityLabel="Monto máximo"
-                      keyboardType="decimal-pad"
-                      onChangeText={establecerMontoMaximo}
-                      placeholder="Máximo"
-                      placeholderTextColor={tema.textoSecundario}
-                      selectionColor={tema.foco}
-                      style={estilos.campoRango}
-                      value={montoMaximo}
-                    />
+                    <View style={estilos.grupoCampoRango}>
+                      <View style={estilos.etiquetaCampoRango}>
+                        <Ionicons color={tema.textoSecundario} name="arrow-down-outline" size={16} />
+                        <Text style={estilos.textoEtiquetaCampoRango}>Mínimo</Text>
+                      </View>
+                      <TextInput
+                        accessibilityLabel="Monto mínimo"
+                        keyboardType="decimal-pad"
+                        onChangeText={establecerMontoMinimo}
+                        placeholder="$ 0"
+                        placeholderTextColor={tema.textoSecundario}
+                        selectionColor={tema.foco}
+                        style={estilos.campoRango}
+                        value={montoMinimo}
+                      />
+                    </View>
+                    <View style={estilos.grupoCampoRango}>
+                      <View style={estilos.etiquetaCampoRango}>
+                        <Ionicons color={tema.textoSecundario} name="arrow-up-outline" size={16} />
+                        <Text style={estilos.textoEtiquetaCampoRango}>Máximo</Text>
+                      </View>
+                      <TextInput
+                        accessibilityLabel="Monto máximo"
+                        keyboardType="decimal-pad"
+                        onChangeText={establecerMontoMaximo}
+                        placeholder="$ 0"
+                        placeholderTextColor={tema.textoSecundario}
+                        selectionColor={tema.foco}
+                        style={estilos.campoRango}
+                        value={montoMaximo}
+                      />
+                    </View>
                   </View>
+                  {errorMontoFiltro ? <Text style={estilosGlobales.textoError}>{errorMontoFiltro}</Text> : null}
                 </SeccionFiltro>
               </View>
             </ScrollView>
@@ -867,15 +1225,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       </Modal>
 
       <Modal animationType="fade" onRequestClose={() => establecerModalOpcionesVisible(false)} transparent visible={modalOpcionesVisible}>
-        <View style={estilos.fondoModal}>
+        <View style={estilos.fondoModalOpciones}>
           <Pressable style={estilos.fondoCierre} onPress={() => establecerModalOpcionesVisible(false)} />
           <View style={estilos.tarjetaOpciones}>
             <View style={estilos.encabezadoOpciones}>
-              <View style={estilos.iconoEncabezadoOpciones}>
-                <Ionicons color={tema.foco} name="wallet-outline" size={22} />
-              </View>
               <View style={estilos.detalleEncabezadoOpciones}>
                 <Text style={estilos.tituloOpciones}>Opciones del depósito</Text>
+                <Text style={estilos.descripcionOpciones}>Elegí qué querés hacer con este depósito.</Text>
               </View>
               <Pressable
                 accessibilityLabel="Cerrar opciones"
@@ -889,41 +1245,34 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             <Pressable
               accessibilityRole="button"
               onPress={abrirEdicion}
-              style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.botonPresionado : null]}
+              style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.opcionPresionada : null]}
             >
               <View style={estilos.iconoOpcionModal}>
                 <Ionicons color={tema.foco} name="create-outline" size={21} />
               </View>
               <View style={estilos.detalleOpcionModal}>
                 <Text style={estilos.tituloOpcionModal}>Editar depósito</Text>
-                <Text style={estilos.subtituloOpcionModal}>Nombre, tipo, ícono, color y descripción</Text>
+                <Text style={estilos.subtituloOpcionModal}>Cambiar nombre, tipo y apariencia</Text>
               </View>
               <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
             </Pressable>
+            <View style={estilos.separadorOpcionModal} />
             <Pressable
               accessibilityRole="button"
               onPress={() => {
                 establecerModalOpcionesVisible(false);
                 establecerModalEliminacionVisible(true);
-                establecerMensajeEstado('');
               }}
-              style={({ pressed }) => [estilos.opcionModal, estilos.opcionEliminar, pressed ? estilos.botonPresionado : null]}
+              style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.opcionPresionada : null]}
             >
               <View style={[estilos.iconoOpcionModal, estilos.iconoOpcionEliminar]}>
                 <Ionicons color={tema.error} name="trash-outline" size={21} />
               </View>
               <View style={estilos.detalleOpcionModal}>
                 <Text style={[estilos.tituloOpcionModal, estilos.textoOpcionEliminar]}>Eliminar depósito</Text>
-                <Text style={estilos.subtituloOpcionModal}>Quitar este depósito del listado</Text>
+                <Text style={estilos.subtituloOpcionModal}>El historial de movimientos se conserva</Text>
               </View>
-              <Ionicons color={tema.error} name="chevron-forward" size={20} />
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => establecerModalOpcionesVisible(false)}
-              style={estilos.botonCancelarModal}
-            >
-              <Text style={estilos.textoCancelarModal}>Cancelar</Text>
+              <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
             </Pressable>
           </View>
         </View>
@@ -959,6 +1308,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   estilosGlobales.campo,
                   estilosFormularioDeposito.filaEntrada,
                   nombreEdicionEnfocado ? estilosGlobales.campoEnfocado : null,
+                  erroresEdicion.nombre ? estilosGlobales.campoError : null,
                 ]}>
                   <Ionicons color={tema.textoSecundario} name="wallet-outline" size={21} />
                   <TextInput
@@ -986,6 +1336,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   ) : null}
                 </View>
                 <Text style={estilosFormularioDeposito.contador}>{`${(borrador.nombre || '').length}/30`}</Text>
+                {erroresEdicion.nombre ? <Text style={estilosGlobales.textoError}>{erroresEdicion.nombre}</Text> : null}
               </View>
 
               <View style={estilosFormularioDeposito.grupo}>
@@ -1026,6 +1377,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     );
                   })}
                 </View>
+                {erroresEdicion.tipo ? <Text style={estilosGlobales.textoError}>{erroresEdicion.tipo}</Text> : null}
               </View>
 
               <View style={estilosFormularioDeposito.grupo}>
@@ -1077,6 +1429,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     Ícono seleccionado: {ICONOS_DEPOSITO.find((opcion) => opcion.nombre === borrador.icono)?.etiqueta}
                   </Text>
                 ) : null}
+                {erroresEdicion.icono ? <Text style={estilosGlobales.textoError}>{erroresEdicion.icono}</Text> : null}
               </View>
 
               <View style={estilosFormularioDeposito.grupo}>
@@ -1150,6 +1503,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                       : 'Color: Azul suave (predeterminado)'}
                   </Text>
                 </View>
+                {erroresEdicion.color ? <Text style={estilosGlobales.textoError}>{erroresEdicion.color}</Text> : null}
               </View>
 
               <View style={estilosFormularioDeposito.grupo}>
@@ -1161,6 +1515,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   estilosGlobales.campo,
                   estilosFormularioDeposito.filaDescripcion,
                   descripcionEdicionEnfocada ? estilosGlobales.campoEnfocado : null,
+                  erroresEdicion.descripcion ? estilosGlobales.campoError : null,
                 ]}>
                   <Ionicons color={tema.textoSecundario} name="document-text-outline" size={20} />
                   <TextInput
@@ -1189,8 +1544,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                 </View>
                 <Text style={estilosFormularioDeposito.contador}>{`${(borrador.descripcion || '').length}/60`}</Text>
                 <Text style={estilosGlobales.textoAyuda}>
-                  Si la dejás vacía, podrá generarse más adelante usando el nombre y el tipo.
+                  Si la dejás vacía, se generará automáticamente con el nombre y el tipo.
                 </Text>
+                {erroresEdicion.descripcion ? <Text style={estilosGlobales.textoError}>{erroresEdicion.descripcion}</Text> : null}
               </View>
             </ScrollView>
             <View style={estilos.accionesEdicion}>
@@ -1201,10 +1557,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                 estilosAutenticacion={estilosFormularioEdicion}
                 estilosGlobales={estilosGlobales}
                 titulo="Guardar cambios"
-                alPresionar={() => {
-                  cerrarEdicion();
-                  establecerMensajeEstado('Los cambios todavía no se guardan. La información original del depósito se conserva.');
-                }}
+                cargando={guardandoEdicion}
+                deshabilitado={guardandoEdicion}
+                alPresionar={guardarEdicion}
               />
             </View>
           </View>
@@ -1261,7 +1616,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         </Pressable>
       </Modal>
 
-      <Modal animationType="fade" onRequestClose={() => establecerModalEliminacionVisible(false)} transparent visible={modalEliminacionVisible}>
+      <Modal animationType="fade" onRequestClose={() => establecerModalEliminacionVisible(false)} transparent visible={modalEliminacionVisible && Boolean(deposito)}>
         <View style={estilos.fondoModal}>
           <Pressable style={estilos.fondoCierre} onPress={() => establecerModalEliminacionVisible(false)} />
           <View style={estilos.tarjetaConfirmacion}>
@@ -1285,18 +1640,20 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </Text>
             </View>
             <View style={estilos.resumenDepositoEliminar}>
-              <View style={[estilos.iconoDepositoEliminar, { backgroundColor: deposito.color || COLOR_DEPOSITO_PREDETERMINADO }]}>
-                <Ionicons color={COLOR_ICONO_DEPOSITO} name={deposito.icono || 'wallet-outline'} size={21} />
+              <View style={[estilos.iconoDepositoEliminar, { backgroundColor: deposito?.color || COLOR_DEPOSITO_PREDETERMINADO }]}>
+                <Ionicons color={COLOR_ICONO_DEPOSITO} name={deposito?.icono || 'wallet-outline'} size={21} />
               </View>
               <View style={estilos.datosDepositoEliminar}>
-                <Text numberOfLines={1} style={estilos.nombreDepositoEliminar}>{deposito.nombre}</Text>
-                <Text style={estilos.tipoDepositoEliminar}>{deposito.tipo}</Text>
+                <Text numberOfLines={1} style={estilos.nombreDepositoEliminar}>{deposito?.nombre}</Text>
+                <Text style={estilos.tipoDepositoEliminar}>
+                  {TIPOS_DEPOSITO.find((tipo) => tipo.id === deposito?.tipo)?.nombre || deposito?.tipo}
+                </Text>
               </View>
             </View>
             <View style={estilos.avisoEliminar}>
               <Ionicons color={tema.error} name="information-circle-outline" size={20} />
               <Text style={estilos.textoAvisoEliminar}>
-                La eliminación todavía no está disponible. El depósito seguirá intacto.
+                El depósito se desactivará y sus movimientos permanecerán en el historial.
               </Text>
             </View>
             <View style={estilos.accionesModal}>
@@ -1305,13 +1662,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => {
-                  establecerModalEliminacionVisible(false);
-                  establecerMensajeEstado('La eliminación todavía no está disponible. El depósito continúa intacto.');
-                }}
+                disabled={eliminando}
+                onPress={confirmarEliminacion}
                 style={estilos.botonEliminar}
               >
-                <Text style={estilos.textoEliminar}>Eliminar</Text>
+                {eliminando
+                  ? <ActivityIndicator color="#FFFFFF" />
+                  : <Text style={estilos.textoEliminar}>Eliminar</Text>}
               </Pressable>
             </View>
           </View>

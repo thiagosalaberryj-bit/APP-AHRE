@@ -22,9 +22,8 @@ export function convertirSaldoInicial(valor) {
   return Math.round((saldoNumerico + Number.EPSILON) * 100) / 100;
 }
 
-export function validarDatosDeposito(datos) {
+function validarCamposEditablesDeposito(valores) {
   const errores = {};
-  const valores = datos && typeof datos === 'object' && !Array.isArray(datos) ? datos : {};
   const nombre = typeof valores.nombre === 'string' ? valores.nombre.trim() : '';
   const descripcion = valores.descripcion;
   const tipoValido = TIPOS_DEPOSITO.some((tipo) => tipo.id === valores.tipo);
@@ -35,10 +34,6 @@ export function validarDatosDeposito(datos) {
     errores.nombre = 'Ingresá el nombre del depósito.';
   } else if (nombre.length > LONGITUD_MAXIMA_NOMBRE) {
     errores.nombre = `El nombre puede tener hasta ${LONGITUD_MAXIMA_NOMBRE} caracteres.`;
-  }
-
-  if (convertirSaldoInicial(valores.saldo_inicial) === null) {
-    errores.saldo_inicial = 'Ingresá un saldo válido igual o mayor a $ 0.';
   }
 
   if (!tipoValido) {
@@ -60,6 +55,22 @@ export function validarDatosDeposito(datos) {
   }
 
   return errores;
+}
+
+export function validarDatosDeposito(datos) {
+  const valores = datos && typeof datos === 'object' && !Array.isArray(datos) ? datos : {};
+  const errores = validarCamposEditablesDeposito(valores);
+
+  if (convertirSaldoInicial(valores.saldo_inicial) === null) {
+    errores.saldo_inicial = 'Ingresá un saldo válido igual o mayor a $ 0.';
+  }
+
+  return errores;
+}
+
+export function validarDatosEdicionDeposito(datos) {
+  const valores = datos && typeof datos === 'object' && !Array.isArray(datos) ? datos : {};
+  return validarCamposEditablesDeposito(valores);
 }
 
 export function resolverColorDeposito(color) {

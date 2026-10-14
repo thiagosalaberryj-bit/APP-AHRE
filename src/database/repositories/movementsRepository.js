@@ -64,7 +64,66 @@ const repositorioBaseMovimientos = crearRepositorio({
   ordenPredeterminado: 'fecha_hora',
 });
 
-function calcularImpactoSaldo(movimiento) {
+function obtenerMarcaTemporal(fecha) {
+  const marcaTemporal = typeof fecha === 'string' ? Date.parse(fecha) : NaN;
+  if (!Number.isFinite(marcaTemporal)) {
+    throw new ErrorBaseDatos('integridad');
+  }
+  return marcaTemporal;
+}
+
+async function consultarFechaCreacionDeposito(depositoId, conexion) {
+  const deposito = await conexion.getFirstAsync(
+    'SELECT fecha_creacion FROM depositos WHERE id = ?;',
+    [depositoId],
+  );
+  if (!deposito) {
+    throw new ErrorBaseDatos('integridad');
+  }
+  obtenerMarcaTemporal(deposito.fecha_creacion);
+  return deposito.fecha_creacion;
+}
+
+async function consultarFechaMovimientoEfectiva(movimiento, conexion) {
+  if (movimiento.reversion_de_id) {
+    const movimientoOriginal = await conexion.getFirstAsync(
+      'SELECT fecha_hora FROM movimientos WHERE id = ?;',
+      [movimiento.reversion_de_id],
+    );
+    if (!movimientoOriginal) {
+      throw new ErrorBaseDatos('integridad');
+    }
+    return movimientoOriginal.fecha_hora;
+  }
+
+  if (movimiento.transferencia_id) {
+    const transferencia = await conexion.getFirstAsync(
+      'SELECT reversion_de_id FROM transferencias WHERE id = ?;',
+      [movimiento.transferencia_id],
+    );
+    if (!transferencia) {
+      throw new ErrorBaseDatos('integridad');
+    }
+    if (transferencia.reversion_de_id) {
+      const transferenciaOriginal = await conexion.getFirstAsync(
+        'SELECT fecha_hora FROM transferencias WHERE id = ?;',
+        [transferencia.reversion_de_id],
+      );
+      if (!transferenciaOriginal) {
+        throw new ErrorBaseDatos('integridad');
+      }
+      return transferenciaOriginal.fecha_hora;
+    }
+  }
+
+  return movimiento.fecha_hora;
+}
+
+function calcularImpactoSaldo(
+  movimiento,
+  fechaCreacionDeposito,
+  fechaMovimientoEfectiva,
+) {
   if (Number(movimiento.anulado) === 1) {
     return 0;
   }
@@ -72,6 +131,13 @@ function calcularImpactoSaldo(movimiento) {
   const monto = Number(movimiento.monto);
   if (!Number.isFinite(monto) || monto <= 0) {
     throw new ErrorBaseDatos('integridad');
+  }
+
+  if (
+    obtenerMarcaTemporal(fechaMovimientoEfectiva) <
+    obtenerMarcaTemporal(fechaCreacionDeposito)
+  ) {
+    return 0;
   }
 
   if (movimiento.tipo === 'ingreso' || movimiento.tipo === 'transferencia_entrada') {
@@ -104,9 +170,17 @@ async function crearEnTransaccion(datos, conexion) {
   }
 
   const movimiento = await repositorioBaseMovimientos.crear({ ...datos, monto }, conexion);
+  const fechaCreacionDeposito = await consultarFechaCreacionDeposito(
+    movimiento.deposito_id,
+    conexion,
+  );
+  const fechaMovimientoEfectiva = await consultarFechaMovimientoEfectiva(
+    movimiento,
+    conexion,
+  );
   await ajustarSaldoActual(
     movimiento.deposito_id,
-    calcularImpactoSaldo(movimiento),
+    calcularImpactoSaldo(movimiento, fechaCreacionDeposito, fechaMovimientoEfectiva),
     conexion,
   );
   return movimiento;
@@ -180,14 +254,31 @@ async function actualizar(id, cambios, conexion = null) {
         return null;
       }
 
+      const fechaCreacionDepositoAnterior = await consultarFechaCreacionDeposito(
+        movimientoAnterior.deposito_id,
+        baseDatos,
+      );
+      const fechaCreacionDepositoActualizado = await consultarFechaCreacionDeposito(
+        movimientoActualizado.deposito_id,
+        baseDatos,
+      );
+
       await ajustarSaldoActual(
         movimientoAnterior.deposito_id,
-        -calcularImpactoSaldo(movimientoAnterior),
+        -calcularImpactoSaldo(
+          movimientoAnterior,
+          fechaCreacionDepositoAnterior,
+          movimientoAnterior.fecha_hora,
+        ),
         baseDatos,
       );
       await ajustarSaldoActual(
         movimientoActualizado.deposito_id,
-        calcularImpactoSaldo(movimientoActualizado),
+        calcularImpactoSaldo(
+          movimientoActualizado,
+          fechaCreacionDepositoActualizado,
+          movimientoActualizado.fecha_hora,
+        ),
         baseDatos,
       );
       return movimientoActualizado;

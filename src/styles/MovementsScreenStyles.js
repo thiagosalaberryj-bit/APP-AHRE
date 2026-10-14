@@ -76,9 +76,30 @@ export function crearEstilosMovimientos(tema, anchoVentana = 390) {
       gap: ESPACIADO.pequeno,
     },
     chipFecha: {
-      flex: 1,
-      minWidth: 58,
-      paddingHorizontal: ESPACIADO.medio,
+      width: 116,
+      flexShrink: 0,
+      paddingHorizontal: ESPACIADO.pequeno,
+    },
+    contenedorOpcionesFecha: {
+      position: 'relative',
+    },
+    scrollOpcionesFecha: {
+      width: '100%',
+      flexGrow: 0,
+    },
+    filaOpcionesFecha: {
+      flexDirection: 'row',
+      gap: ESPACIADO.pequeno,
+      paddingRight: ESPACIADO.pequeno,
+    },
+    flechaPistaFecha: {
+      position: 'absolute',
+      top: 0,
+      right: ESPACIADO.minimo,
+      bottom: 0,
+      width: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     textoAyudaFiltro: {
       color: tema.textoSecundario,
@@ -233,6 +254,8 @@ export function crearEstilosMovimientos(tema, anchoVentana = 390) {
       maxHeight: '92%',
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
+      borderLeftWidth: BORDES.anchos.fino,
+      borderRightWidth: BORDES.anchos.fino,
       borderTopLeftRadius: BORDES.radios.tarjeta,
       borderTopRightRadius: BORDES.radios.tarjeta,
       borderTopWidth: BORDES.anchos.fino,
@@ -254,6 +277,13 @@ export function crearEstilosMovimientos(tema, anchoVentana = 390) {
     },
     scrollFiltros: {
       flexShrink: 1,
+    },
+    piePanelFiltros: {
+      alignItems: 'flex-end',
+      paddingHorizontal: ESPACIADO.pantalla,
+      paddingTop: ESPACIADO.pequeno,
+      borderTopColor: tema.borde,
+      borderTopWidth: BORDES.anchos.fino,
     },
     filaFiltrosAplicados: {
       alignItems: 'center',
@@ -280,10 +310,14 @@ export function crearEstilosMovimientos(tema, anchoVentana = 390) {
       fontSize: TIPOGRAFIA.tamanos.auxiliar,
       fontWeight: TIPOGRAFIA.pesos.medio,
     },
-    filaChips: {
+    filaOpcionesTipo: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       gap: ESPACIADO.pequeno,
+    },
+    chipTipo: {
+      flex: 1,
+      minWidth: 0,
+      paddingHorizontal: ESPACIADO.pequeno,
     },
     chip: {
       minHeight: 40,
@@ -321,10 +355,11 @@ export function crearEstilosMovimientos(tema, anchoVentana = 390) {
     },
     filaRango: {
       flexDirection: 'row',
-      gap: ESPACIADO.pequeno,
+      gap: ESPACIADO.grande,
     },
     campoRango: {
-      flex: 1,
+      alignSelf: 'stretch',
+      width: '100%',
       minWidth: 0,
       minHeight: 52,
       backgroundColor: tema.superficie,
@@ -335,6 +370,23 @@ export function crearEstilosMovimientos(tema, anchoVentana = 390) {
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.cuerpo,
       paddingHorizontal: ESPACIADO.grande,
+    },
+    grupoCampoRango: {
+      flex: 1,
+      minWidth: 0,
+      gap: ESPACIADO.minimo,
+    },
+    etiquetaCampoRango: {
+      minHeight: 22,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.minimo,
+    },
+    textoEtiquetaCampoRango: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     listaMovimientos: {
       gap: ESPACIADO.medio,
