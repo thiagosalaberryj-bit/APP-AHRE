@@ -92,14 +92,17 @@ export function crearEstilosMovimientos(tema, anchoVentana = 390) {
       gap: ESPACIADO.pequeno,
       paddingRight: ESPACIADO.pequeno,
     },
-    flechaPistaFecha: {
+    sombraBordeFecha: {
       position: 'absolute',
       top: 0,
-      right: ESPACIADO.minimo,
       bottom: 0,
-      width: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
+      zIndex: 1,
+    },
+    sombraBordeFechaIzquierda: {
+      left: 0,
+    },
+    sombraBordeFechaDerecha: {
+      right: 0,
     },
     textoAyudaFiltro: {
       color: tema.textoSecundario,
@@ -489,6 +492,24 @@ export function crearEstilosMovimientos(tema, anchoVentana = 390) {
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
       textAlign: 'center',
+    },
+    botonCargarMas: {
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: ESPACIADO.pequeno,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.boton,
+      borderWidth: BORDES.anchos.fino,
+      paddingHorizontal: ESPACIADO.grande,
+    },
+    textoBotonCargarMas: {
+      color: tema.foco,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     lineaCarga: {
       height: 16,

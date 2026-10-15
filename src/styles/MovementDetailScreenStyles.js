@@ -75,5 +75,34 @@ export function crearEstilosDetalleMovimiento(tema) {
       fontSize: TIPOGRAFIA.tamanos.secundario,
       marginTop: ESPACIADO.minimo,
     },
+    estadoHistorial: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: ESPACIADO.medio,
+      paddingHorizontal: ESPACIADO.pantalla,
+      paddingBottom: ESPACIADO.enorme,
+    },
+    textoEstadoHistorial: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.cuerpo,
+      textAlign: 'center',
+    },
+    botonEstadoHistorial: {
+      minWidth: 160,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tema.botonPrincipal,
+      borderRadius: BORDES.radios.boton,
+      paddingHorizontal: ESPACIADO.grande,
+    },
+    textoBotonEstadoHistorial: {
+      color: tema.botonPrincipalTexto,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.boton,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+    },
   });
 }

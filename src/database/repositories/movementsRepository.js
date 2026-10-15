@@ -1,4 +1,5 @@
 import { ejecutarConManejoDeErrores, ErrorBaseDatos } from '../errors';
+import { ejecutarConConexion } from '../connectionQueue';
 import { ejecutarTransaccion } from '../transactions';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../../constants/movimientos';
 import { ajustarSaldoActual } from './depositsRepository';
@@ -63,6 +64,249 @@ const repositorioBaseMovimientos = crearRepositorio({
   camposOrdenables: ['fecha_hora', 'tipo', 'categoria', 'monto', 'fecha_creacion'],
   ordenPredeterminado: 'fecha_hora',
 });
+
+const EXPRESION_HORA_ISO = /^\d{4}-\d{2}-\d{2}T/;
+const LIMITE_HISTORIAL = 50;
+
+function validarListaIdentificadores(valor) {
+  return Array.isArray(valor)
+    && valor.every((identificador) => typeof identificador === 'string' && identificador.length > 0);
+}
+
+function validarMarcaTemporal(valor) {
+  return typeof valor === 'string'
+    && EXPRESION_HORA_ISO.test(valor)
+    && Number.isFinite(Date.parse(valor));
+}
+
+function construirConsultaHistorial(usuarioId, filtros, opciones) {
+  if (
+    typeof usuarioId !== 'string'
+    || !usuarioId
+    || !filtros
+    || typeof filtros !== 'object'
+    || Array.isArray(filtros)
+    || !opciones
+    || typeof opciones !== 'object'
+    || Array.isArray(opciones)
+  ) {
+    throw new ErrorBaseDatos('integridad');
+  }
+
+  const clausulas = [
+    'd.usuario_id = ?',
+    "m.tipo IN ('ingreso', 'egreso')",
+    'm.anulado = 0',
+  ];
+  const parametros = [usuarioId];
+
+  if (filtros.tipo !== undefined && filtros.tipo !== null && filtros.tipo !== 'todos') {
+    if (!['ingreso', 'egreso'].includes(filtros.tipo)) {
+      throw new ErrorBaseDatos('integridad');
+    }
+    clausulas.push('m.tipo = ?');
+    parametros.push(filtros.tipo);
+  }
+
+  if (filtros.categoriaIds !== undefined && filtros.categoriaIds !== null) {
+    if (!validarListaIdentificadores(filtros.categoriaIds)) {
+      throw new ErrorBaseDatos('integridad');
+    }
+    if (filtros.categoriaIds.length === 0) {
+      clausulas.push('0 = 1');
+    } else {
+      clausulas.push(`m.categoria IN (${filtros.categoriaIds.map(() => '?').join(', ')})`);
+      parametros.push(...filtros.categoriaIds);
+    }
+  }
+
+  if (filtros.depositoIds !== undefined && filtros.depositoIds !== null) {
+    if (!validarListaIdentificadores(filtros.depositoIds)) {
+      throw new ErrorBaseDatos('integridad');
+    }
+    if (filtros.depositoIds.length === 0) {
+      clausulas.push('0 = 1');
+    } else {
+      clausulas.push(`m.deposito_id IN (${filtros.depositoIds.map(() => '?').join(', ')})`);
+      parametros.push(...filtros.depositoIds);
+    }
+  }
+
+  if (filtros.desde !== undefined && filtros.desde !== null) {
+    if (!validarMarcaTemporal(filtros.desde)) throw new ErrorBaseDatos('integridad');
+    clausulas.push('m.fecha_hora >= ?');
+    parametros.push(filtros.desde);
+  }
+
+  if (filtros.hasta !== undefined && filtros.hasta !== null) {
+    if (!validarMarcaTemporal(filtros.hasta)) throw new ErrorBaseDatos('integridad');
+    clausulas.push('m.fecha_hora < ?');
+    parametros.push(filtros.hasta);
+  }
+
+  if (
+    filtros.desde !== undefined
+    && filtros.desde !== null
+    && filtros.hasta !== undefined
+    && filtros.hasta !== null
+    && Date.parse(filtros.desde) >= Date.parse(filtros.hasta)
+  ) {
+    throw new ErrorBaseDatos('integridad');
+  }
+
+  if (filtros.montoMinimo !== undefined && filtros.montoMinimo !== null) {
+    const minimo = Number(filtros.montoMinimo);
+    if (!Number.isFinite(minimo) || minimo < 0) throw new ErrorBaseDatos('integridad');
+    clausulas.push('m.monto >= ?');
+    parametros.push(minimo);
+  }
+
+  if (filtros.montoMaximo !== undefined && filtros.montoMaximo !== null) {
+    const maximo = Number(filtros.montoMaximo);
+    if (!Number.isFinite(maximo) || maximo < 0) throw new ErrorBaseDatos('integridad');
+    clausulas.push('m.monto <= ?');
+    parametros.push(maximo);
+  }
+
+  if (
+    filtros.montoMinimo !== undefined
+    && filtros.montoMinimo !== null
+    && filtros.montoMaximo !== undefined
+    && filtros.montoMaximo !== null
+    && Number(filtros.montoMinimo) > Number(filtros.montoMaximo)
+  ) {
+    throw new ErrorBaseDatos('integridad');
+  }
+
+  if (filtros.busqueda !== undefined && filtros.busqueda !== null) {
+    if (typeof filtros.busqueda !== 'string') throw new ErrorBaseDatos('integridad');
+    const termino = filtros.busqueda.trim();
+    if (termino) {
+      clausulas.push("LOWER(m.descripcion) LIKE ? ESCAPE '!'");
+      const terminoEscapado = termino
+        .toLocaleLowerCase()
+        .replace(/!/g, '!!')
+        .replace(/%/g, '!%')
+        .replace(/_/g, '!_');
+      parametros.push(`%${terminoEscapado}%`);
+    }
+  }
+
+  const limite = opciones.limite === undefined ? LIMITE_HISTORIAL : Number(opciones.limite);
+  if (!Number.isInteger(limite) || limite < 1 || limite > 100) {
+    throw new ErrorBaseDatos('consulta');
+  }
+
+  const cursor = opciones.cursor;
+  if (cursor !== undefined && cursor !== null) {
+    if (
+      !cursor
+      || typeof cursor !== 'object'
+      || !validarMarcaTemporal(cursor.fecha_hora)
+      || typeof cursor.id !== 'string'
+      || !cursor.id
+    ) {
+      throw new ErrorBaseDatos('integridad');
+    }
+    clausulas.push('(m.fecha_hora < ? OR (m.fecha_hora = ? AND m.id < ?))');
+    parametros.push(cursor.fecha_hora, cursor.fecha_hora, cursor.id);
+  }
+
+  parametros.push(limite);
+  return {
+    sql: `SELECT m.*, d.nombre AS deposito_nombre, d.tipo AS deposito_tipo,
+                 d.icono AS deposito_icono, d.color AS deposito_color,
+                 r.frecuencia AS frecuencia,
+                 CASE WHEN r.id IS NULL THEN 0 ELSE 1 END AS recurrente
+          FROM movimientos m
+          INNER JOIN depositos d ON d.id = m.deposito_id
+          LEFT JOIN recurrencias r ON r.id = m.recurrencia_id
+          WHERE ${clausulas.join(' AND ')}
+          ORDER BY m.fecha_hora DESC, m.id DESC
+          LIMIT ?;`,
+    parametros,
+  };
+}
+
+async function consultarHistorial(usuarioId, filtros = {}, opciones = {}, conexion = null) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) => {
+    const consulta = construirConsultaHistorial(usuarioId, filtros, opciones);
+    return baseDatos.getAllAsync(consulta.sql, consulta.parametros);
+  }, conexion));
+}
+
+async function consultarOpcionesHistorial(usuarioId, conexion = null) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion(async (baseDatos) => {
+    if (typeof usuarioId !== 'string' || !usuarioId) {
+      throw new ErrorBaseDatos('integridad');
+    }
+
+    const cantidad = await baseDatos.getFirstAsync(
+      `SELECT COUNT(*) AS cantidad
+       FROM movimientos m
+       INNER JOIN depositos d ON d.id = m.deposito_id
+       WHERE d.usuario_id = ?
+         AND m.tipo IN ('ingreso', 'egreso')
+         AND m.anulado = 0;`,
+      [usuarioId],
+    );
+    const categorias = await baseDatos.getAllAsync(
+      `SELECT DISTINCT m.tipo, m.categoria
+       FROM movimientos m
+       INNER JOIN depositos d ON d.id = m.deposito_id
+       WHERE d.usuario_id = ?
+         AND m.tipo IN ('ingreso', 'egreso')
+         AND m.anulado = 0
+       ORDER BY m.tipo ASC, m.categoria ASC;`,
+      [usuarioId],
+    );
+    const depositos = await baseDatos.getAllAsync(
+      `SELECT DISTINCT d.id, d.nombre, d.tipo, d.icono, d.color
+       FROM depositos d
+       INNER JOIN movimientos m ON m.deposito_id = d.id
+       WHERE d.usuario_id = ?
+         AND m.tipo IN ('ingreso', 'egreso')
+         AND m.anulado = 0
+       ORDER BY d.nombre COLLATE NOCASE ASC, d.id ASC;`,
+      [usuarioId],
+    );
+
+    return {
+      cantidad: Number(cantidad?.cantidad || 0),
+      categorias,
+      depositos,
+    };
+  }, conexion));
+}
+
+async function consultarHistorialPorId(usuarioId, movimientoId, conexion = null) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) => {
+    if (
+      typeof usuarioId !== 'string'
+      || !usuarioId
+      || typeof movimientoId !== 'string'
+      || !movimientoId
+    ) {
+      throw new ErrorBaseDatos('integridad');
+    }
+
+    return baseDatos.getFirstAsync(
+      `SELECT m.*, d.nombre AS deposito_nombre, d.tipo AS deposito_tipo,
+              d.icono AS deposito_icono, d.color AS deposito_color,
+              r.frecuencia AS frecuencia,
+              CASE WHEN r.id IS NULL THEN 0 ELSE 1 END AS recurrente
+       FROM movimientos m
+       INNER JOIN depositos d ON d.id = m.deposito_id
+       LEFT JOIN recurrencias r ON r.id = m.recurrencia_id
+       WHERE m.id = ?
+         AND d.usuario_id = ?
+         AND m.tipo IN ('ingreso', 'egreso')
+         AND m.anulado = 0
+       LIMIT 1;`,
+      [movimientoId, usuarioId],
+    );
+  }, conexion));
+}
 
 function obtenerMarcaTemporal(fecha) {
   const marcaTemporal = typeof fecha === 'string' ? Date.parse(fecha) : NaN;
@@ -327,6 +571,9 @@ async function eliminar(id, conexion = null) {
 
 export const movimientosRepositorio = Object.freeze({
   ...repositorioBaseMovimientos,
+  consultarHistorial,
+  consultarOpcionesHistorial,
+  consultarHistorialPorId,
   crear,
   actualizar,
   eliminar,

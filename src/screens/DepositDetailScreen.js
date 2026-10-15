@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -250,9 +251,15 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const [busqueda, establecerBusqueda] = useState('');
   const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
-  const [mostrarFlechaFecha, establecerMostrarFlechaFecha] = useState(false);
-  const flechaFechaMostrada = useRef(false);
-  const temporizadorFlechaFecha = useRef(null);
+  const [bordesDesplazamientoFecha, establecerBordesDesplazamientoFecha] = useState({
+    izquierda: false,
+    derecha: false,
+  });
+  const medidasDesplazamientoFecha = useRef({
+    anchoContenido: 0,
+    anchoVisible: 0,
+    desplazamiento: 0,
+  });
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
   const [fechaFiltro, establecerFechaFiltro] = useState('todos');
   const [fechaDia, establecerFechaDia] = useState(null);
@@ -386,32 +393,29 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       : [...abiertas, seccion]));
   };
 
-  const ocultarFlechaFecha = useCallback(() => {
-    if (temporizadorFlechaFecha.current !== null) {
-      clearTimeout(temporizadorFlechaFecha.current);
-      temporizadorFlechaFecha.current = null;
-    }
-    establecerMostrarFlechaFecha(false);
+  const actualizarBordesDesplazamientoFecha = useCallback((cambios) => {
+    const medidas = { ...medidasDesplazamientoFecha.current, ...cambios };
+    medidasDesplazamientoFecha.current = medidas;
+    const contenidoDesborda = medidas.anchoContenido > medidas.anchoVisible + 1;
+    const nuevosBordes = {
+      izquierda: contenidoDesborda && medidas.desplazamiento > 1,
+      derecha: contenidoDesborda
+        && medidas.desplazamiento + medidas.anchoVisible < medidas.anchoContenido - 1,
+    };
+
+    establecerBordesDesplazamientoFecha((anteriores) => (
+      anteriores.izquierda === nuevosBordes.izquierda
+      && anteriores.derecha === nuevosBordes.derecha
+        ? anteriores
+        : nuevosBordes
+    ));
   }, []);
 
   const abrirFiltros = () => {
     establecerFiltrosVisibles(true);
-    if (flechaFechaMostrada.current) return;
-
-    flechaFechaMostrada.current = true;
-    establecerMostrarFlechaFecha(true);
-    temporizadorFlechaFecha.current = setTimeout(() => {
-      establecerMostrarFlechaFecha(false);
-      temporizadorFlechaFecha.current = null;
-    }, 2500);
   };
 
-  useEffect(() => () => {
-    if (temporizadorFlechaFecha.current !== null) clearTimeout(temporizadorFlechaFecha.current);
-  }, []);
-
   const cerrarFiltros = useCallback(() => {
-    ocultarFlechaFecha();
     Animated.parallel([
       Animated.timing(opacidadOverlay, { toValue: 0, duration: 160, useNativeDriver: true }),
       Animated.timing(desplazamientoPanel, {
@@ -422,7 +426,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     ]).start(({ finished }) => {
       if (finished) establecerFiltrosVisibles(false);
     });
-  }, [altoVentana, desplazamientoPanel, ocultarFlechaFecha, opacidadOverlay]);
+  }, [altoVentana, desplazamientoPanel, opacidadOverlay]);
 
   const responderManija = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -1037,7 +1041,14 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                       contentContainerStyle={estilos.filaOpcionesFecha}
                       horizontal
                       nestedScrollEnabled
-                      onScrollBeginDrag={ocultarFlechaFecha}
+                      onContentSizeChange={(anchoContenido) => actualizarBordesDesplazamientoFecha({ anchoContenido })}
+                      onLayout={(evento) => actualizarBordesDesplazamientoFecha({
+                        anchoVisible: evento.nativeEvent.layout.width,
+                      })}
+                      onScroll={(evento) => actualizarBordesDesplazamientoFecha({
+                        desplazamiento: evento.nativeEvent.contentOffset.x,
+                      })}
+                      scrollEventThrottle={16}
                       showsHorizontalScrollIndicator={false}
                       style={estilos.scrollOpcionesFecha}
                     >
@@ -1058,10 +1069,37 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                         );
                       })}
                     </ScrollView>
-                    {mostrarFlechaFecha ? (
-                      <View pointerEvents="none" style={estilos.flechaPistaFecha}>
-                        <Ionicons color={tema.foco} name="arrow-forward" size={22} />
-                      </View>
+                    {bordesDesplazamientoFecha.izquierda ? (
+                      <Svg
+                        height="100%"
+                        pointerEvents="none"
+                        style={[estilos.sombraBordeFecha, estilos.sombraBordeFechaIzquierda]}
+                        width={36}
+                      >
+                        <Defs>
+                          <LinearGradient id="desvanecidoFechaIzquierda" x1="0%" x2="100%" y1="0%" y2="0%">
+                            <Stop offset="0" stopColor={tema.superficie} stopOpacity="1" />
+                            <Stop offset="1" stopColor={tema.superficie} stopOpacity="0" />
+                          </LinearGradient>
+                        </Defs>
+                        <Rect fill="url(#desvanecidoFechaIzquierda)" height="100%" width="100%" />
+                      </Svg>
+                    ) : null}
+                    {bordesDesplazamientoFecha.derecha ? (
+                      <Svg
+                        height="100%"
+                        pointerEvents="none"
+                        style={[estilos.sombraBordeFecha, estilos.sombraBordeFechaDerecha]}
+                        width={36}
+                      >
+                        <Defs>
+                          <LinearGradient id="desvanecidoFechaDerecha" x1="0%" x2="100%" y1="0%" y2="0%">
+                            <Stop offset="0" stopColor={tema.superficie} stopOpacity="0" />
+                            <Stop offset="1" stopColor={tema.superficie} stopOpacity="1" />
+                          </LinearGradient>
+                        </Defs>
+                        <Rect fill="url(#desvanecidoFechaDerecha)" height="100%" width="100%" />
+                      </Svg>
                     ) : null}
                   </View>
                   {fechaFiltro === 'dia' ? (

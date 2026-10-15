@@ -109,11 +109,11 @@ filtros abren una hoja superpuesta con manija y cierre. Las secciones Tipo,
 Fecha, Categorías y Monto se pueden plegar y muestran un
 resumen cuando están cerradas. Tipo ofrece Todos, Ingresos y Egresos en tres
 opciones que comparten el ancho de la fila. Fecha ofrece Todo, Día, Semana, Mes
-y Personalizado en una fila desplazable de opciones de ancho uniforme. La
-primera vez que se abre el panel aparece una flecha sobre la fila como pista; se
-oculta al comenzar a deslizar o a los 2,5 segundos. Incluye un calendario en
-línea para elegir el día o los extremos del rango, y una grilla de meses con
-navegación por año. Categorías
+y Personalizado en una fila desplazable de opciones de ancho uniforme. Un
+degradado suave en el borde indica si hay opciones fuera del área visible; sigue
+el desplazamiento y desaparece en el extremo correspondiente. Incluye un
+calendario en línea para elegir el día o los extremos del rango, y una grilla de
+meses con navegación por año. Categorías
 usa la grilla coloreada y multiselección de Movimientos, limitada a las
 categorías presentes en el depósito y al tipo seleccionado. Monto permite
 indicar mínimo y máximo en campos separados, con iconos y rótulos explícitos.

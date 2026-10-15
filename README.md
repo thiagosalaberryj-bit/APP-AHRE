@@ -84,11 +84,12 @@ pueden mostrar datos de ejemplo y no guardar cambios.
 Los depósitos representan las distintas ubicaciones del dinero del usuario,
 como efectivo, cuentas bancarias o billeteras virtuales.
 
-Las interfaces permiten recorrer depósitos y movimientos de ejemplo, buscar y
-aplicar filtros, y abrir sus detalles. El formulario de creación de depósitos
-guarda localmente nombre, saldo inicial, tipo, ícono, color y descripción. El
-formularios de ingreso y egreso guardan movimientos en SQLite y actualizan el
-saldo del depósito; la edición y eliminación de depósitos continúan simuladas.
+La pestaña Movimientos consulta en SQLite los ingresos y egresos del usuario,
+permite buscar por descripción, combinar filtros y abrir detalles por ID. El
+formulario de creación de depósitos guarda localmente nombre, saldo inicial,
+tipo, ícono, color y descripción. Los formularios de ingreso y egreso guardan
+movimientos en SQLite y actualizan el saldo del depósito; la edición y
+eliminación de depósitos continúan simuladas.
 
 ### Deudas y gastos compartidos
 
@@ -170,7 +171,7 @@ interfaces. Actualmente cuenta con:
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
 - historial con la versión `0.4.0` en preparación y los cambios no publicados
-  de Perfil y preferencias locales del Issue #29.
+  del historial de Movimientos (#26), Perfil y preferencias locales (#29).
 
 Las funcionalidades completas de AHRE todavía no están implementadas. El
 registro y el Login ya crean y verifican cuentas localmente. Al abrir AHRE, la
@@ -184,9 +185,10 @@ recupera la apariencia guardada.
 
 Los depósitos ya se pueden crear y guardar en la base local; el Dashboard lee
 su resumen desde SQLite y conserva los datos visibles mientras actualiza la
-consulta al recuperar el foco. La pestaña Movimientos y las Estadísticas aún
-usan datos de ejemplo. Los formularios de ingreso y egreso validan y persisten
-sus movimientos localmente, con su impacto en el saldo. La versión `0.3.0` es
+consulta al recuperar el foco. Movimientos consulta el historial local,
+combina búsqueda y filtros y carga el detalle por ID; Estadísticas todavía usa
+datos de ejemplo. Los formularios de ingreso y egreso validan y persisten sus
+movimientos localmente, con su impacto en el saldo. La versión `0.3.0` es
 la última publicada como versión no estable para evaluación; la `0.4.0` está
 documentada como no publicada en [`docs/CHANGELOG.md`](docs/CHANGELOG.md) y no
 representa una versión comercial.

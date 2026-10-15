@@ -77,6 +77,34 @@ export async function cargarDatosMovimiento(tipo) {
   };
 }
 
+async function consultarUsuarioHistorial(usuarioId = null) {
+  const { usuario } = await obtenerSesionActual();
+  if (!usuario || (usuarioId && usuario.id !== usuarioId)) {
+    throw new ErrorMovimiento('sesion_no_disponible');
+  }
+  return usuario;
+}
+
+export async function cargarOpcionesHistorialMovimientos() {
+  const usuario = await consultarUsuarioHistorial();
+  const opciones = await movimientosRepositorio.consultarOpcionesHistorial(usuario.id);
+  return { usuarioId: usuario.id, ...opciones };
+}
+
+export async function cargarPaginaHistorialMovimientos(usuarioId, filtros, cursor = null) {
+  await consultarUsuarioHistorial(usuarioId);
+  return movimientosRepositorio.consultarHistorial(
+    usuarioId,
+    filtros,
+    { limite: 50, cursor },
+  );
+}
+
+export async function consultarDetalleHistorialMovimiento(movimientoId) {
+  const usuario = await consultarUsuarioHistorial();
+  return movimientosRepositorio.consultarHistorialPorId(usuario.id, movimientoId);
+}
+
 async function consultarDepositoDisponible(usuarioId, depositoId, baseDatos) {
   const deposito = await depositosRepositorio.consultarPorId(depositoId, baseDatos);
   if (
