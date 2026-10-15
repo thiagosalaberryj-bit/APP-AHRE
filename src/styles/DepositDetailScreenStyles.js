@@ -585,14 +585,17 @@ export function crearEstilosDetalleDeposito(tema, anchoVentana = 390) {
       gap: ESPACIADO.pequeno,
       paddingRight: ESPACIADO.pequeno,
     },
-    flechaPistaFecha: {
+    sombraBordeFecha: {
       position: 'absolute',
       top: 0,
-      right: ESPACIADO.minimo,
       bottom: 0,
-      width: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
+      zIndex: 1,
+    },
+    sombraBordeFechaIzquierda: {
+      left: 0,
+    },
+    sombraBordeFechaDerecha: {
+      right: 0,
     },
     grupoCalendarioFiltro: {
       gap: ESPACIADO.pequeno,

@@ -254,28 +254,31 @@ botones y modales.
 ## Historial y detalle de movimientos
 
 `src/screens/MovementsScreen.js` es pestaña con `MainHeader` («Movimientos») y
-agrupa los movimientos simulados por día. Los encabezados
-muestran «Hoy», «Ayer» o la fecha para los días anteriores. Cada tarjeta usa
-un ícono de categoría sobre el color del tipo y presenta `categoría ·
-descripción`, `hora · depósito`, «Ingreso» o «Egreso» y el monto con signo.
-La descripción se recorta cuando no entra; el tipo también se indica con texto,
-no solo con color. La misma composición se usa en los movimientos recientes del
-Dashboard. Los estilos locales están en
+consulta SQLite para el usuario de la sesión y agrupa los movimientos vigentes
+por día. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
+`tipo`, no se deduce del monto. Los encabezados muestran «Hoy», «Ayer» o la
+fecha para los días anteriores. Cada tarjeta usa un ícono de categoría y
+presenta `categoría · descripción`, `hora · depósito`, «Ingreso» o «Egreso» y
+el monto con signo. La descripción se recorta cuando no entra; el tipo también
+se indica con texto, no solo con color. Los estilos locales están en
 `src/styles/MovementsScreenStyles.js`.
 
 Las filas reutilizan `TarjetaMovimiento` (`src/components/MovementCard.js`) y
-los datos son `MOVIMIENTOS_SIMULADOS` locales (10 ingresos y egresos de varios
-depósitos, en orden cronológico descendente), sin consultas a SQLite. Al tocar
-una fila se abre el detalle del movimiento.
+reciben el nombre real del depósito relacionado. SQLite ordena por
+`fecha_hora DESC, id DESC`. La pantalla carga 50 filas por página; «Cargar más
+movimientos» solicita la siguiente página usando la fecha, hora e ID de la
+última fila como cursor.
 
 ### Buscador
 
 El buscador comparte la fila con el botón «Filtros». Tiene lupa,
 `placeholder` «Buscar» y botón `X` para limpiar. Su borde es fino y neutro en
 reposo; solo toma el color de foco mientras el campo está enfocado. La búsqueda
-es local sobre los datos simulados. Debajo aparecen los filtros aplicados como
-chips horizontales; cada chip se puede quitar y «Limpiar todo» restablece los
-filtros. Si no hay coincidencias, se muestra `Sin resultados para “…”`.
+se realiza en SQLite, ignora mayúsculas y minúsculas y consulta la descripción.
+Se aplica junto con los filtros. Debajo aparecen los criterios activos como
+chips horizontales; cada chip se puede quitar y «Limpiar todo» restablece la
+búsqueda y los filtros. Si no hay coincidencias, se muestra `Sin resultados
+para “…”` o un mensaje para los filtros seleccionados.
 
 ### Filtros
 
@@ -288,19 +291,22 @@ Depósitos y Monto.
 - **Tipo:** Todos, Ingresos o Egresos, repartidos por igual en la fila. Al
   elegir un tipo, Categorías muestra solo las opciones de ese tipo y quita las
   selecciones incompatibles.
-- **Fecha:** Todo, Día, Mes o Rango, en una fila desplazable de opciones de
-  ancho uniforme. La primera vez que se abre el panel aparece una flecha como
-  pista; desaparece al deslizar o a los 2,5 segundos. Día usa un calendario
-  inline; Mes permite elegir mes y año; Rango usa el mismo calendario para
-  elegir inicio y fin, y permanece abierto después de elegir la primera fecha.
+- **Fecha:** Todo, Día, Semana, Mes o Personalizado, en una fila desplazable de
+  opciones de ancho uniforme. Un degradado suave en el borde indica si hay
+  opciones fuera del área visible; sigue el desplazamiento y desaparece en el
+  extremo correspondiente. Día usa un calendario inline; Semana toma una fecha
+  y usa la semana de lunes a domingo; Mes permite elegir mes y año;
+  Personalizado permite elegir inicio y fin e incluye ambas fechas.
 - **Depósitos:** aparecen todos seleccionados inicialmente. Si están todos
   seleccionados no se restringen los resultados; al desmarcar alguno, se
   filtran por los que continúan marcados. No se puede quitar el último depósito
-  hasta marcar otro. «Todos» vuelve a seleccionar cada depósito.
+  hasta marcar otro. «Todos» vuelve a seleccionar cada depósito. Las opciones
+  son depósitos reales con movimientos del usuario actual.
 - **Categorías:** selección múltiple en una grilla adaptable de tres o cuatro
   columnas, sin desplazamiento horizontal. Los fondos usan el color de acento
-  de cada categoría (pastel en claro y más saturado en oscuro); la selección no
-  cierra el panel.
+  de cada categoría (pastel en claro y más saturado en oscuro); solo aparecen
+  categorías presentes en el historial del usuario y la selección no cierra el
+  panel.
 - **Monto:** campos numéricos separados y espaciados para mínimo y máximo, con
   etiquetas e íconos que identifican cada límite.
 
@@ -309,25 +315,34 @@ Cada criterio aplicado aparece como un chip que puede quitarse. Si solo queda
 un depósito seleccionado, su chip muestra el bloqueo hasta que se elija otro.
 «Limpiar filtros» aparece en un pie fijo del panel cuando hay criterios activos
 y restablece los criterios, incluidos todos los depósitos seleccionados. El
-filtrado es local sobre los datos de muestra; no hay consultas a SQLite.
+tipo, la fecha, el monto, la categoría, el depósito y la búsqueda se envían como
+condiciones combinadas a SQLite. Se aprovechan los índices de depósito, fecha,
+tipo y categoría del esquema inicial.
 
 ### Detalle
 
 Al presionar una tarjeta se navega a `DETALLE_MOVIMIENTO`
-(`src/screens/MovementDetailScreen.js`, ya registrado) con
-`{movimiento, categoria}`. Muestra tipo, monto con signo, descripción,
-categoría, depósito, fecha y hora, estado y la fila `Recurrente: Sí ·
-Frecuencia` solo cuando el movimiento es recurrente. Al volver, los filtros
-se conservan porque el estado queda en la pantalla del historial.
+(`src/screens/MovementDetailScreen.js`, ya registrado) con solo
+`{movimientoId}`. El detalle vuelve a consultar el movimiento y sus relaciones
+por ID y usuario activo. Muestra tipo, monto con signo, descripción, categoría,
+depósito, fecha y hora, estado y la fila `Recurrente: Sí · Frecuencia` solo
+cuando existe recurrencia. Si el registro dejó de estar disponible, muestra un
+error controlado y permite volver; si falla la lectura, ofrece reintentar. Al
+volver, los filtros se conservan y el historial se consulta nuevamente al
+recuperar el foco.
 
 ### Estados vacíos
 
-- **Cargando:** skeleton de 3 líneas durante ~1 segundo simulado.
-- **Sin movimientos:** tarjeta vacía cuando no hay datos base.
-- **Sin resultados de búsqueda:** mensaje con el texto buscado.
-- **Sin resultados por filtros:** mensaje con acción para limpiar.
+- **Cargando:** skeleton mientras SQLite devuelve la página solicitada.
+- **Sin movimientos:** tarjeta vacía cuando la cuenta no tiene ingresos ni
+  egresos vigentes.
+- **Sin resultados:** mensaje para la búsqueda o los filtros, con acción para
+  limpiar.
+- **Error:** aviso controlado y acción de reintento. Un error al pedir una
+  página posterior conserva las filas ya cargadas.
 
 ## Funcionamiento sin conexión
 
-La pantalla solo usa componentes, estilos, íconos y constantes locales. No
-requiere Internet ni invoca servicios externos.
+La pantalla consulta sesión, movimientos, depósitos, categorías y recurrencias
+locales. Búsqueda, filtros, detalle y paginación no requieren Internet ni
+invocan servicios externos.

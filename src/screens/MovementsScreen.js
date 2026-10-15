@@ -1,6 +1,8 @@
 import { useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import {
+  ActivityIndicator,
   Animated,
   Modal,
   PanResponder,
@@ -11,9 +13,11 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
+import { ContextoAvisos } from '../contexts/ToastContext';
 import SelectorCategoria from '../components/CategorySelector';
 import SelectorFecha from '../components/DateSelector';
 import SelectorDeposito from '../components/DepositSelector';
@@ -23,24 +27,16 @@ import { RUTAS } from '../constants/routes';
 import {
   CATEGORIAS_EGRESO,
   CATEGORIAS_INGRESO,
-  DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
+import {
+  cargarOpcionesHistorialMovimientos,
+  cargarPaginaHistorialMovimientos,
+} from '../movements/movementService';
 
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
 
-const MOVIMIENTOS_SIMULADOS = Object.freeze([
-  Object.freeze({ id: 'subte', tipo: 'egreso', descripcion: 'Subte', categoria: 'transporte', deposito_id: 'mercado-pago', fecha_hora: '2026-09-25T07:43:00', monto: 1500, recurrente: false }),
-  Object.freeze({ id: 'youtube-music', tipo: 'egreso', descripcion: 'YouTube Music', categoria: 'suscripciones', deposito_id: 'mercado-pago', fecha_hora: '2026-09-24T09:40:00', monto: 4130, recurrente: true, frecuencia: 'mensual' }),
-  Object.freeze({ id: 'supermercado', tipo: 'egreso', descripcion: 'Supermercado', categoria: 'alimentacion', deposito_id: 'mercado-pago', fecha_hora: '2026-09-24T18:45:00', monto: 48500, recurrente: false }),
-  Object.freeze({ id: 'sueldo', tipo: 'ingreso', descripcion: 'Sueldo', categoria: 'sueldo', deposito_id: 'efectivo', fecha_hora: '2026-09-22T09:00:00', monto: 1250000, recurrente: true, frecuencia: 'mensual' }),
-  Object.freeze({ id: 'farmacia', tipo: 'egreso', descripcion: 'Farmacia', categoria: 'salud', deposito_id: 'cuenta-bancaria', fecha_hora: '2026-09-21T19:15:00', monto: 7250, recurrente: false }),
-  Object.freeze({ id: 'venta-bici', tipo: 'ingreso', descripcion: 'Venta de bicicleta', categoria: 'ventas', deposito_id: 'efectivo', fecha_hora: '2026-09-20T16:30:00', monto: 85000, recurrente: false }),
-  Object.freeze({ id: 'freelance', tipo: 'ingreso', descripcion: 'Trabajo freelance', categoria: 'trabajo_independiente', deposito_id: 'mercado-pago', fecha_hora: '2026-09-18T12:00:00', monto: 120000, recurrente: false }),
-  Object.freeze({ id: 'regalo', tipo: 'ingreso', descripcion: 'Regalo de cumpleaños', categoria: 'regalos', deposito_id: 'efectivo', fecha_hora: '2026-09-15T20:00:00', monto: 20000, recurrente: false }),
-  Object.freeze({ id: 'zapatillas', tipo: 'egreso', descripcion: 'Zapatillas', categoria: 'compras', deposito_id: 'cuenta-bancaria', fecha_hora: '2026-09-12T17:20:00', monto: 45000, recurrente: false }),
-  Object.freeze({ id: 'alquiler', tipo: 'egreso', descripcion: 'Alquiler', categoria: 'hogar', deposito_id: 'cuenta-bancaria', fecha_hora: '2026-09-10T10:00:00', monto: 350000, recurrente: true, frecuencia: 'mensual' }),
-]);
+const TAMANO_PAGINA = 50;
 
 const OPCIONES_TIPO = Object.freeze([
   Object.freeze({ id: 'todos', nombre: 'Todos' }),
@@ -51,17 +47,11 @@ const OPCIONES_TIPO = Object.freeze([
 const OPCIONES_FECHA = Object.freeze([
   Object.freeze({ id: 'todos', nombre: 'Todo' }),
   Object.freeze({ id: 'dia', nombre: 'Día' }),
+  Object.freeze({ id: 'semana', nombre: 'Semana' }),
   Object.freeze({ id: 'mes', nombre: 'Mes' }),
-  Object.freeze({ id: 'personalizado', nombre: 'Rango' }),
+  Object.freeze({ id: 'personalizado', nombre: 'Personalizado' }),
 ]);
 
-const IDS_INGRESO = new Set(CATEGORIAS_INGRESO.map((categoria) => categoria.id));
-const IDS_EGRESO = new Set(CATEGORIAS_EGRESO.map((categoria) => categoria.id));
-const IDS_DEPOSITOS = Object.freeze(DEPOSITOS_SIMULADOS.map((deposito) => deposito.id));
-const CATEGORIAS_FILTRO = Object.freeze([
-  ...CATEGORIAS_INGRESO,
-  ...CATEGORIAS_EGRESO.filter((categoria) => !IDS_INGRESO.has(categoria.id)),
-]);
 const MESES = Object.freeze([
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -87,6 +77,47 @@ function formatearFechaDia(fecha) {
     day: 'numeric',
     month: 'long',
   });
+}
+
+function crearRangoConsultaFecha(fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal) {
+  let inicio = null;
+  let fin = null;
+
+  if (fechaFiltro === 'dia' && fechaDia) {
+    inicio = new Date(fechaDia.getFullYear(), fechaDia.getMonth(), fechaDia.getDate());
+    fin = new Date(fechaDia.getFullYear(), fechaDia.getMonth(), fechaDia.getDate() + 1);
+  } else if (fechaFiltro === 'semana' && fechaDia) {
+    inicio = new Date(fechaDia.getFullYear(), fechaDia.getMonth(), fechaDia.getDate());
+    const diasDesdeLunes = (inicio.getDay() + 6) % 7;
+    inicio.setDate(inicio.getDate() - diasDesdeLunes);
+    fin = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + 7);
+  } else if (fechaFiltro === 'mes' && mesSeleccionado) {
+    inicio = new Date(mesSeleccionado.getFullYear(), mesSeleccionado.getMonth(), 1);
+    fin = new Date(mesSeleccionado.getFullYear(), mesSeleccionado.getMonth() + 1, 1);
+  } else if (fechaFiltro === 'personalizado' && fechaInicial && fechaFinal) {
+    inicio = new Date(fechaInicial.getFullYear(), fechaInicial.getMonth(), fechaInicial.getDate());
+    fin = new Date(fechaFinal.getFullYear(), fechaFinal.getMonth(), fechaFinal.getDate() + 1);
+  }
+
+  return inicio && fin
+    ? { desde: inicio.toISOString(), hasta: fin.toISOString() }
+    : {};
+}
+
+function convertirMontoFiltro(texto) {
+  const valor = texto.trim();
+  if (!valor) return null;
+  const normalizado = valor.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+  if (!/^\d+(?:\.\d{1,2})?$/.test(normalizado)) return null;
+  const monto = Number(normalizado);
+  return Number.isFinite(monto) && monto >= 0 ? monto : null;
+}
+
+function obtenerTextoTipoDeposito(tipo) {
+  if (tipo === 'efectivo') return 'Efectivo';
+  if (tipo === 'banco') return 'Banco';
+  if (tipo === 'billetera_virtual') return 'Billetera virtual';
+  return 'Depósito con movimientos';
 }
 
 function agruparMovimientosPorDia(movimientos) {
@@ -139,10 +170,12 @@ function SeccionFiltro({
 export default function PantallaMovimientos({ navigation: navegacion }) {
   const { height: altoVentana, width: anchoVentana } = useWindowDimensions();
   const { tema } = useContext(ContextoApariencia);
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosMovimientos(tema, anchoVentana);
   const abrirPantallaSecundaria = (ruta, parametros) => navegacion.getParent()?.navigate(ruta, parametros);
   const [busqueda, establecerBusqueda] = useState('');
+  const [busquedaAplicada, establecerBusquedaAplicada] = useState('');
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
   const [fechaFiltro, establecerFechaFiltro] = useState('todos');
   const [fechaDia, establecerFechaDia] = useState(null);
@@ -153,30 +186,117 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
   const [montoMinimo, establecerMontoMinimo] = useState('');
   const [montoMaximo, establecerMontoMaximo] = useState('');
   const [categoriaFiltroIds, establecerCategoriaFiltroIds] = useState([]);
-  const [depositoFiltroIds, establecerDepositoFiltroIds] = useState(IDS_DEPOSITOS);
+  const [depositoFiltroIds, establecerDepositoFiltroIds] = useState([]);
+  const [categoriasHistorial, establecerCategoriasHistorial] = useState([]);
+  const [depositosHistorial, establecerDepositosHistorial] = useState([]);
+  const [usuarioId, establecerUsuarioId] = useState(null);
+  const [cantidadTotal, establecerCantidadTotal] = useState(null);
+  const [movimientosHistorial, establecerMovimientosHistorial] = useState([]);
+  const [errorConsulta, establecerErrorConsulta] = useState(null);
+  const [errorCargaMas, establecerErrorCargaMas] = useState(null);
+  const [cargandoMas, establecerCargandoMas] = useState(false);
+  const [hayMas, establecerHayMas] = useState(false);
+  const [enfocada, establecerEnfocada] = useState(false);
+  const [revisionHistorial, establecerRevisionHistorial] = useState(0);
+  const [intentoCargaOpciones, establecerIntentoCargaOpciones] = useState(0);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
-  const [mostrarFlechaFecha, establecerMostrarFlechaFecha] = useState(false);
-  const flechaFechaMostrada = useRef(false);
-  const temporizadorFlechaFecha = useRef(null);
+  const [bordesDesplazamientoFecha, establecerBordesDesplazamientoFecha] = useState({
+    izquierda: false,
+    derecha: false,
+  });
+  const medidasDesplazamientoFecha = useRef({
+    anchoContenido: 0,
+    anchoVisible: 0,
+    desplazamiento: 0,
+  });
   const [seccionesFiltrosAbiertas, establecerSeccionesFiltrosAbiertas] = useState(['tipo', 'fecha']);
   const [cargando, establecerCargando] = useState(true);
   const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
+  const secuenciaConsulta = useRef(0);
+  const bloqueoCargaMas = useRef(false);
+  const depositosHistorialRef = useRef([]);
+  const depositoFiltroIdsRef = useRef([]);
+  useEffect(() => {
+    depositoFiltroIdsRef.current = depositoFiltroIds;
+  }, [depositoFiltroIds]);
   const filtraPorDepositos = depositoFiltroIds.length > 0
-    && depositoFiltroIds.length < DEPOSITOS_SIMULADOS.length;
+    && depositoFiltroIds.length < depositosHistorial.length;
   const opacidadOverlay = useRef(new Animated.Value(0)).current;
   const desplazamientoPanel = useRef(new Animated.Value(0)).current;
   const categoriasDisponiblesFiltro = tipoFiltro === 'ingreso'
-    ? CATEGORIAS_INGRESO
+    ? categoriasHistorial.filter((categoria) => categoria.tipo === 'ingreso')
     : tipoFiltro === 'egreso'
-      ? CATEGORIAS_EGRESO
-      : CATEGORIAS_FILTRO;
+      ? categoriasHistorial.filter((categoria) => categoria.tipo === 'egreso')
+      : [...new Map(categoriasHistorial.map((categoria) => [categoria.id, categoria])).values()];
+
+  useEffect(() => {
+    const idsDisponibles = new Set(categoriasHistorial.map((categoria) => categoria.id));
+    establecerCategoriaFiltroIds((ids) => ids.filter((id) => idsDisponibles.has(id)));
+  }, [categoriasHistorial]);
 
   const cambiarTipoFiltro = (tipo) => {
     establecerTipoFiltro(tipo);
     if (tipo === 'todos') return;
-    const idsPermitidos = tipo === 'ingreso' ? IDS_INGRESO : IDS_EGRESO;
+    const idsPermitidos = new Set(
+      categoriasHistorial
+        .filter((categoria) => categoria.tipo === tipo)
+        .map((categoria) => categoria.id),
+    );
     establecerCategoriaFiltroIds((ids) => ids.filter((id) => idsPermitidos.has(id)));
   };
+
+  useFocusEffect(useCallback(() => {
+    let vigente = true;
+    establecerEnfocada(true);
+    establecerCargando(true);
+    establecerErrorConsulta(null);
+
+    cargarOpcionesHistorialMovimientos()
+      .then((datos) => {
+        if (!vigente) return;
+        const categoriasPorTipo = datos.categorias.map((elemento) => {
+          const catalogo = elemento.tipo === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
+          const categoria = catalogo.find((opcion) => opcion.id === elemento.categoria);
+          return categoria
+            ? { ...categoria, tipo: elemento.tipo }
+            : {
+              id: elemento.categoria,
+              nombre: elemento.categoria,
+              icono: 'pricetag-outline',
+              tipo: elemento.tipo,
+            };
+        });
+        const depositos = datos.depositos.map((deposito) => ({
+          ...deposito,
+          saldoTexto: obtenerTextoTipoDeposito(deposito.tipo),
+        }));
+        const idsDepositos = depositos.map((deposito) => deposito.id);
+        const idsSeleccionadosAntes = depositoFiltroIdsRef.current;
+        const eranTodosLosDepositos = idsSeleccionadosAntes.length === depositosHistorialRef.current.length;
+
+        establecerUsuarioId(datos.usuarioId);
+        establecerCantidadTotal(datos.cantidad);
+        establecerCategoriasHistorial(categoriasPorTipo);
+        establecerDepositosHistorial(depositos);
+        establecerDepositoFiltroIds(eranTodosLosDepositos
+          ? idsDepositos
+          : idsSeleccionadosAntes.filter((id) => idsDepositos.includes(id)));
+        depositosHistorialRef.current = depositos;
+        establecerRevisionHistorial((revision) => revision + 1);
+      })
+      .catch((error) => {
+        if (!vigente) return;
+        establecerErrorConsulta(error?.message || 'No se pudo cargar el historial. Intentá nuevamente.');
+        establecerCargando(false);
+        mostrarAviso('No se pudo consultar el historial de movimientos.', { tipo: 'error' });
+      });
+
+    return () => {
+      vigente = false;
+      secuenciaConsulta.current += 1;
+      establecerEnfocada(false);
+    };
+  }, [mostrarAviso, intentoCargaOpciones]));
 
   const alternarSeccionFiltro = (seccion) => {
     establecerSeccionesFiltrosAbiertas((abiertas) => (abiertas.includes(seccion)
@@ -184,32 +304,29 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
       : [...abiertas, seccion]));
   };
 
-  const ocultarFlechaFecha = useCallback(() => {
-    if (temporizadorFlechaFecha.current !== null) {
-      clearTimeout(temporizadorFlechaFecha.current);
-      temporizadorFlechaFecha.current = null;
-    }
-    establecerMostrarFlechaFecha(false);
+  const actualizarBordesDesplazamientoFecha = useCallback((cambios) => {
+    const medidas = { ...medidasDesplazamientoFecha.current, ...cambios };
+    medidasDesplazamientoFecha.current = medidas;
+    const contenidoDesborda = medidas.anchoContenido > medidas.anchoVisible + 1;
+    const nuevosBordes = {
+      izquierda: contenidoDesborda && medidas.desplazamiento > 1,
+      derecha: contenidoDesborda
+        && medidas.desplazamiento + medidas.anchoVisible < medidas.anchoContenido - 1,
+    };
+
+    establecerBordesDesplazamientoFecha((anteriores) => (
+      anteriores.izquierda === nuevosBordes.izquierda
+      && anteriores.derecha === nuevosBordes.derecha
+        ? anteriores
+        : nuevosBordes
+    ));
   }, []);
 
   const abrirFiltros = () => {
     establecerFiltrosVisibles(true);
-    if (flechaFechaMostrada.current) return;
-
-    flechaFechaMostrada.current = true;
-    establecerMostrarFlechaFecha(true);
-    temporizadorFlechaFecha.current = setTimeout(() => {
-      establecerMostrarFlechaFecha(false);
-      temporizadorFlechaFecha.current = null;
-    }, 2500);
   };
 
-  useEffect(() => () => {
-    if (temporizadorFlechaFecha.current !== null) clearTimeout(temporizadorFlechaFecha.current);
-  }, []);
-
   const cerrarFiltros = useCallback(() => {
-    ocultarFlechaFecha();
     Animated.parallel([
       Animated.timing(opacidadOverlay, {
         toValue: 0,
@@ -224,7 +341,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
     ]).start(({ finished }) => {
       if (finished) establecerFiltrosVisibles(false);
     });
-  }, [altoVentana, desplazamientoPanel, ocultarFlechaFecha, opacidadOverlay]);
+  }, [altoVentana, desplazamientoPanel, opacidadOverlay]);
 
   const responderManija = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -278,7 +395,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
   const cambiarFechaFiltro = useCallback((modo) => {
     if (modo === fechaFiltro) return;
     establecerFechaFiltro(modo);
-    if (modo === 'dia') establecerFechaDia(null);
+    if (modo === 'dia' || modo === 'semana') establecerFechaDia(new Date());
     if (modo === 'mes') {
       establecerMesSeleccionado(null);
       establecerAnioMesVisible(new Date().getFullYear());
@@ -305,12 +422,96 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
   };
 
   useEffect(() => {
-    const temporizador = setTimeout(() => establecerCargando(false), 1200);
+    establecerCargando(true);
+    const temporizador = setTimeout(() => establecerBusquedaAplicada(busqueda.trim()), 250);
     return () => clearTimeout(temporizador);
-  }, []);
+  }, [busqueda]);
+
+  const montoMinimoNumerico = convertirMontoFiltro(montoMinimo);
+  const montoMaximoNumerico = convertirMontoFiltro(montoMaximo);
+  const errorMontoFiltro = montoMinimo.trim() && montoMinimoNumerico === null
+    ? 'Ingresá un monto mínimo válido, por ejemplo 2.500,50.'
+    : montoMaximo.trim() && montoMaximoNumerico === null
+      ? 'Ingresá un monto máximo válido, por ejemplo 2.500,50.'
+      : montoMinimoNumerico !== null
+        && montoMaximoNumerico !== null
+        && montoMinimoNumerico > montoMaximoNumerico
+        ? 'El monto mínimo no puede superar al máximo.'
+        : null;
+  const rangoFechaConsulta = useMemo(
+    () => crearRangoConsultaFecha(fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal),
+    [fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal],
+  );
+  const filtrosConsulta = useMemo(() => ({
+    busqueda: busquedaAplicada,
+    tipo: tipoFiltro,
+    categoriaIds: categoriaFiltroIds.length ? categoriaFiltroIds : null,
+    depositoIds: filtraPorDepositos ? depositoFiltroIds : null,
+    montoMinimo: montoMinimo.trim() ? montoMinimoNumerico : null,
+    montoMaximo: montoMaximo.trim() ? montoMaximoNumerico : null,
+    ...rangoFechaConsulta,
+  }), [
+    busquedaAplicada,
+    tipoFiltro,
+    categoriaFiltroIds,
+    filtraPorDepositos,
+    depositoFiltroIds,
+    montoMinimo,
+    montoMaximo,
+    montoMinimoNumerico,
+    montoMaximoNumerico,
+    rangoFechaConsulta,
+  ]);
+
+  useEffect(() => {
+    if (!enfocada || !usuarioId || !revisionHistorial) return undefined;
+    const secuencia = ++secuenciaConsulta.current;
+    if (errorMontoFiltro) {
+      establecerMovimientosHistorial([]);
+      establecerCargando(false);
+      establecerHayMas(false);
+      establecerErrorConsulta(null);
+      return undefined;
+    }
+
+    establecerCargando(true);
+    establecerCargandoMas(false);
+    bloqueoCargaMas.current = false;
+    establecerErrorConsulta(null);
+    establecerErrorCargaMas(null);
+
+    cargarPaginaHistorialMovimientos(usuarioId, filtrosConsulta)
+      .then((movimientos) => {
+        if (secuencia !== secuenciaConsulta.current) return;
+        establecerMovimientosHistorial(movimientos);
+        establecerHayMas(movimientos.length === TAMANO_PAGINA);
+      })
+      .catch((error) => {
+        if (secuencia !== secuenciaConsulta.current) return;
+        establecerMovimientosHistorial([]);
+        establecerHayMas(false);
+        establecerErrorConsulta(error?.message || 'No se pudo cargar el historial. Intentá nuevamente.');
+        mostrarAviso('No se pudo consultar el historial de movimientos.', { tipo: 'error' });
+      })
+      .finally(() => {
+        if (secuencia === secuenciaConsulta.current) establecerCargando(false);
+      });
+
+    return () => {
+      if (secuencia === secuenciaConsulta.current) secuenciaConsulta.current += 1;
+    };
+  }, [enfocada, usuarioId, revisionHistorial, filtrosConsulta, errorMontoFiltro, mostrarAviso]);
 
   const filtrosAplicados = useMemo(() => {
     const filtros = [];
+
+    if (busqueda.trim()) {
+      filtros.push({
+        id: 'busqueda',
+        etiqueta: `Búsqueda: ${busqueda.trim()}`,
+        alQuitar: () => establecerBusqueda(''),
+      });
+    }
 
     if (tipoFiltro !== 'todos') {
       const opcionTipo = OPCIONES_TIPO.find((opcion) => opcion.id === tipoFiltro);
@@ -325,6 +526,15 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
       filtros.push({
         id: 'fecha',
         etiqueta: `Fecha: ${formatearFechaCorta(fechaDia)}`,
+        alQuitar: () => cambiarFechaFiltro('todos'),
+      });
+    } else if (fechaFiltro === 'semana' && fechaDia) {
+      const inicioSemana = crearFechaSinHora(fechaDia);
+      inicioSemana.setDate(inicioSemana.getDate() - ((inicioSemana.getDay() + 6) % 7));
+      const finSemana = new Date(inicioSemana.getFullYear(), inicioSemana.getMonth(), inicioSemana.getDate() + 6);
+      filtros.push({
+        id: 'fecha',
+        etiqueta: `Semana: ${formatearFechaCorta(inicioSemana)} – ${formatearFechaCorta(finSemana)}`,
         alQuitar: () => cambiarFechaFiltro('todos'),
       });
     } else if (fechaFiltro === 'mes' && mesSeleccionado) {
@@ -355,7 +565,8 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
     }
 
     categoriaFiltroIds.forEach((idCategoria) => {
-      const categoria = CATEGORIAS_FILTRO.find((elemento) => elemento.id === idCategoria);
+      const categoria = categoriasDisponiblesFiltro.find((elemento) => elemento.id === idCategoria)
+        || categoriasHistorial.find((elemento) => elemento.id === idCategoria);
       if (!categoria) return;
       filtros.push({
         id: `categoria-${idCategoria}`,
@@ -366,7 +577,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
 
     if (filtraPorDepositos) {
       depositoFiltroIds.forEach((idDeposito) => {
-        const deposito = DEPOSITOS_SIMULADOS.find((elemento) => elemento.id === idDeposito);
+        const deposito = depositosHistorial.find((elemento) => elemento.id === idDeposito);
         if (!deposito) return;
         filtros.push({
           id: `deposito-${idDeposito}`,
@@ -380,45 +591,22 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
     }
 
     return filtros;
-  }, [tipoFiltro, fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal, montoMinimo, montoMaximo, categoriaFiltroIds, depositoFiltroIds, filtraPorDepositos, cambiarFechaFiltro]);
+  }, [busqueda, tipoFiltro, fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal, montoMinimo, montoMaximo, categoriaFiltroIds, depositoFiltroIds, categoriasDisponiblesFiltro, categoriasHistorial, depositosHistorial, filtraPorDepositos, cambiarFechaFiltro]);
   const cantidadFiltros = filtrosAplicados.length;
-
-  const movimientosFiltrados = useMemo(() => {
-    const texto = busqueda.trim().toLowerCase();
-    const minimo = Number.parseFloat(montoMinimo);
-    const maximo = Number.parseFloat(montoMaximo);
-    return MOVIMIENTOS_SIMULADOS.filter((movimiento) => {
-      if (tipoFiltro !== 'todos' && movimiento.tipo !== tipoFiltro) return false;
-      if (categoriaFiltroIds.length > 0 && !categoriaFiltroIds.includes(movimiento.categoria)) return false;
-      if (filtraPorDepositos && !depositoFiltroIds.includes(movimiento.deposito_id)) return false;
-      if (texto && !movimiento.descripcion.toLowerCase().includes(texto)) return false;
-      if (!Number.isNaN(minimo) && montoMinimo.trim() && movimiento.monto < minimo) return false;
-      if (!Number.isNaN(maximo) && montoMaximo.trim() && movimiento.monto > maximo) return false;
-      const fecha = new Date(movimiento.fecha_hora);
-      if (fechaFiltro === 'dia' && fechaDia && !(
-        fecha.getFullYear() === fechaDia.getFullYear()
-        && fecha.getMonth() === fechaDia.getMonth()
-        && fecha.getDate() === fechaDia.getDate()
-      )) return false;
-      if (fechaFiltro === 'mes' && mesSeleccionado && (
-        fecha.getMonth() !== mesSeleccionado.getMonth()
-        || fecha.getFullYear() !== mesSeleccionado.getFullYear()
-      )) return false;
-      if (fechaFiltro === 'personalizado' && fechaInicial && fechaFinal) {
-        const inicio = crearFechaSinHora(fechaInicial);
-        const fin = new Date(fechaFinal.getFullYear(), fechaFinal.getMonth(), fechaFinal.getDate(), 23, 59, 59, 999);
-        if (fecha < inicio || fecha > fin) return false;
-      }
-      return true;
-    }).slice().sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
-  }, [busqueda, tipoFiltro, fechaFiltro, fechaDia, mesSeleccionado, montoMinimo, montoMaximo, categoriaFiltroIds, depositoFiltroIds, filtraPorDepositos, fechaInicial, fechaFinal]);
   const gruposMovimientos = useMemo(
-    () => agruparMovimientosPorDia(movimientosFiltrados),
-    [movimientosFiltrados],
+    () => agruparMovimientosPorDia(movimientosHistorial),
+    [movimientosHistorial],
   );
   const resumenTipo = OPCIONES_TIPO.find((opcion) => opcion.id === tipoFiltro)?.nombre || 'Todos';
   const resumenFecha = fechaFiltro === 'dia'
     ? (fechaDia ? formatearFechaCorta(fechaDia) : 'Elegí un día')
+    : fechaFiltro === 'semana'
+      ? (fechaDia ? (() => {
+        const inicio = crearFechaSinHora(fechaDia);
+        inicio.setDate(inicio.getDate() - ((inicio.getDay() + 6) % 7));
+        const fin = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + 6);
+        return `${formatearFechaCorta(inicio)} – ${formatearFechaCorta(fin)}`;
+      })() : 'Elegí una semana')
     : fechaFiltro === 'mes'
       ? (mesSeleccionado ? `${MESES[mesSeleccionado.getMonth()]} ${mesSeleccionado.getFullYear()}` : 'Elegí un mes')
       : fechaFiltro === 'personalizado'
@@ -428,13 +616,13 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
         : 'Todo';
   const resumenDepositos = !filtraPorDepositos
     ? 'Todos'
-    : DEPOSITOS_SIMULADOS
+    : depositosHistorial
       .filter((deposito) => depositoFiltroIds.includes(deposito.id))
       .map((deposito) => deposito.nombre)
       .join(', ');
   const resumenCategorias = categoriaFiltroIds.length === 0
     ? 'Todas'
-    : CATEGORIAS_FILTRO
+    : categoriasDisponiblesFiltro
       .filter((categoria) => categoriaFiltroIds.includes(categoria.id))
       .map((categoria) => categoria.nombre)
       .join(', ');
@@ -454,14 +642,65 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
     establecerMontoMinimo('');
     establecerMontoMaximo('');
     establecerCategoriaFiltroIds([]);
-    establecerDepositoFiltroIds(IDS_DEPOSITOS);
+    establecerDepositoFiltroIds(depositosHistorial.map((deposito) => deposito.id));
   };
 
-  const abrirDetalle = (movimiento, categoria) => {
-    abrirPantallaSecundaria(RUTAS.DETALLE_MOVIMIENTO, { movimiento, categoria });
+  const reintentarHistorial = () => {
+    establecerErrorConsulta(null);
+    establecerCargando(true);
+    establecerIntentoCargaOpciones((intento) => intento + 1);
   };
 
-  const sinResultados = !cargando && MOVIMIENTOS_SIMULADOS.length > 0 && movimientosFiltrados.length === 0;
+  const abrirDetalle = (movimiento) => {
+    abrirPantallaSecundaria(RUTAS.DETALLE_MOVIMIENTO, { movimientoId: movimiento.id });
+  };
+
+  const cargarMasMovimientos = useCallback(async () => {
+    const ultimoMovimiento = movimientosHistorial[movimientosHistorial.length - 1];
+    if (
+      !usuarioId
+      || !enfocada
+      || cargando
+      || cargandoMas
+      || !hayMas
+      || !ultimoMovimiento
+      || bloqueoCargaMas.current
+      || errorMontoFiltro
+    ) return;
+
+    const secuencia = secuenciaConsulta.current;
+    bloqueoCargaMas.current = true;
+    establecerCargandoMas(true);
+    establecerErrorCargaMas(null);
+    try {
+      const nuevosMovimientos = await cargarPaginaHistorialMovimientos(
+        usuarioId,
+        filtrosConsulta,
+        { fecha_hora: ultimoMovimiento.fecha_hora, id: ultimoMovimiento.id },
+      );
+      if (secuencia !== secuenciaConsulta.current) return;
+      establecerMovimientosHistorial((anteriores) => {
+        const idsCargados = new Set(anteriores.map((movimiento) => movimiento.id));
+        return [
+          ...anteriores,
+          ...nuevosMovimientos.filter((movimiento) => !idsCargados.has(movimiento.id)),
+        ];
+      });
+      establecerHayMas(nuevosMovimientos.length === TAMANO_PAGINA);
+    } catch (error) {
+      if (secuencia !== secuenciaConsulta.current) return;
+      establecerErrorCargaMas(error?.message || 'No se pudieron cargar más movimientos. Intentá nuevamente.');
+      mostrarAviso('No se pudieron cargar más movimientos.', { tipo: 'error' });
+    } finally {
+      if (secuencia === secuenciaConsulta.current) {
+        bloqueoCargaMas.current = false;
+        establecerCargandoMas(false);
+      }
+    }
+  }, [movimientosHistorial, usuarioId, enfocada, cargando, cargandoMas, hayMas, errorMontoFiltro, filtrosConsulta, mostrarAviso]);
+
+  const sinMovimientos = !cargando && cantidadTotal === 0;
+  const sinResultados = !cargando && (cantidadTotal || 0) > 0 && movimientosHistorial.length === 0;
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
@@ -572,7 +811,20 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                 <View style={estilos.lineaCarga} />
                 <View style={estilos.lineaCarga} />
               </View>
-            ) : MOVIMIENTOS_SIMULADOS.length === 0 ? (
+            ) : errorConsulta ? (
+              <View style={estilos.estadoVacio}>
+                <Ionicons color={tema.error} name="alert-circle-outline" size={32} />
+                <Text style={estilos.textoEstadoVacio}>{errorConsulta}</Text>
+                <Pressable accessibilityRole="button" onPress={reintentarHistorial} style={estilos.botonLimpiar}>
+                  <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
+                </Pressable>
+              </View>
+            ) : errorMontoFiltro ? (
+              <View style={estilos.estadoVacio}>
+                <Ionicons color={tema.error} name="cash-outline" size={32} />
+                <Text style={estilos.textoEstadoVacio}>{errorMontoFiltro}</Text>
+              </View>
+            ) : sinMovimientos ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.textoSecundario} name="receipt-outline" size={32} />
                 <Text style={estilos.textoEstadoVacio}>Todavía no hay movimientos para mostrar.</Text>
@@ -610,6 +862,26 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                     </View>
                   </View>
                 ))}
+                {errorCargaMas ? (
+                  <View style={estilos.estadoVacio}>
+                    <Text style={estilos.textoEstadoVacio}>{errorCargaMas}</Text>
+                    <Pressable accessibilityRole="button" onPress={cargarMasMovimientos} style={estilos.botonLimpiar}>
+                      <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
+                    </Pressable>
+                  </View>
+                ) : hayMas || cargandoMas ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={cargandoMas}
+                    onPress={cargarMasMovimientos}
+                    style={estilos.botonCargarMas}
+                  >
+                    {cargandoMas ? <ActivityIndicator color={tema.foco} /> : null}
+                    <Text style={estilos.textoBotonCargarMas}>
+                      {cargandoMas ? 'Cargando más movimientos…' : 'Cargar más movimientos'}
+                    </Text>
+                  </Pressable>
+                ) : null}
               </View>
             )}
           </View>
@@ -698,7 +970,14 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                         contentContainerStyle={estilos.filaOpcionesFecha}
                         horizontal
                         nestedScrollEnabled
-                        onScrollBeginDrag={ocultarFlechaFecha}
+                        onContentSizeChange={(anchoContenido) => actualizarBordesDesplazamientoFecha({ anchoContenido })}
+                        onLayout={(evento) => actualizarBordesDesplazamientoFecha({
+                          anchoVisible: evento.nativeEvent.layout.width,
+                        })}
+                        onScroll={(evento) => actualizarBordesDesplazamientoFecha({
+                          desplazamiento: evento.nativeEvent.contentOffset.x,
+                        })}
+                        scrollEventThrottle={16}
                         showsHorizontalScrollIndicator={false}
                         style={estilos.scrollOpcionesFecha}
                       >
@@ -719,10 +998,37 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                           );
                         })}
                       </ScrollView>
-                      {mostrarFlechaFecha ? (
-                        <View pointerEvents="none" style={estilos.flechaPistaFecha}>
-                          <Ionicons color={tema.foco} name="arrow-forward" size={22} />
-                        </View>
+                      {bordesDesplazamientoFecha.izquierda ? (
+                        <Svg
+                          height="100%"
+                          pointerEvents="none"
+                          style={[estilos.sombraBordeFecha, estilos.sombraBordeFechaIzquierda]}
+                          width={36}
+                        >
+                          <Defs>
+                            <LinearGradient id="desvanecidoFechaIzquierda" x1="0%" x2="100%" y1="0%" y2="0%">
+                              <Stop offset="0" stopColor={tema.superficie} stopOpacity="1" />
+                              <Stop offset="1" stopColor={tema.superficie} stopOpacity="0" />
+                            </LinearGradient>
+                          </Defs>
+                          <Rect fill="url(#desvanecidoFechaIzquierda)" height="100%" width="100%" />
+                        </Svg>
+                      ) : null}
+                      {bordesDesplazamientoFecha.derecha ? (
+                        <Svg
+                          height="100%"
+                          pointerEvents="none"
+                          style={[estilos.sombraBordeFecha, estilos.sombraBordeFechaDerecha]}
+                          width={36}
+                        >
+                          <Defs>
+                            <LinearGradient id="desvanecidoFechaDerecha" x1="0%" x2="100%" y1="0%" y2="0%">
+                              <Stop offset="0" stopColor={tema.superficie} stopOpacity="0" />
+                              <Stop offset="1" stopColor={tema.superficie} stopOpacity="1" />
+                            </LinearGradient>
+                          </Defs>
+                          <Rect fill="url(#desvanecidoFechaDerecha)" height="100%" width="100%" />
+                        </Svg>
                       ) : null}
                     </View>
                     {fechaFiltro === 'dia' ? (
@@ -732,6 +1038,19 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                           tema={tema}
                           estilosMovimiento={estilos}
                           etiqueta="Día"
+                          valor={fechaDia || new Date()}
+                          alSeleccionar={establecerFechaDia}
+                          enLinea
+                        />
+                      </View>
+                    ) : null}
+                    {fechaFiltro === 'semana' ? (
+                      <View style={estilos.grupoCalendarioFiltro}>
+                        <Text style={estilos.textoAyudaFiltro}>Elegí una fecha de la semana</Text>
+                        <SelectorFecha
+                          tema={tema}
+                          estilosMovimiento={estilos}
+                          etiqueta="Semana que incluye"
                           valor={fechaDia || new Date()}
                           alSeleccionar={establecerFechaDia}
                           enLinea
@@ -840,7 +1159,7 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                       estilosGlobales={estilosGlobales}
                       estilosMovimiento={estilos}
                       etiqueta=""
-                      depositos={DEPOSITOS_SIMULADOS}
+                      depositos={depositosHistorial}
                       seleccionMultiple
                       seleccionadasIds={depositoFiltroIds}
                       alCambiarMulti={establecerDepositoFiltroIds}
@@ -890,6 +1209,9 @@ export default function PantallaMovimientos({ navigation: navegacion }) {
                         />
                       </View>
                     </View>
+                    {errorMontoFiltro ? (
+                      <Text style={estilosGlobales.textoError}>{errorMontoFiltro}</Text>
+                    ) : null}
                   </SeccionFiltro>
                 </View>
               </ScrollView>

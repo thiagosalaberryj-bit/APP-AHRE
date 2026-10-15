@@ -40,6 +40,9 @@ documentación se registran en este archivo.
   y el servicio de Ingreso. Valida depósitos activos y categorías de egreso, y
   guarda el movimiento con su recurrencia y actualización atómica del saldo.
   (#25)
+- Movimientos consulta en SQLite los ingresos y egresos del usuario, con
+  búsqueda, filtros combinables, paginación y detalle por ID. Funciona sin
+  conexión a Internet. (#26)
 - Perfil consulta y actualiza los datos de la cuenta y guarda las preferencias
   de idioma, notificaciones y apariencia en SQLite local. (#29)
 - Se agregó el cambio permanente de contraseña: verifica la contraseña actual
@@ -67,6 +70,9 @@ documentación se registran en este archivo.
   depósito: opciones de tipo y fecha, campos de monto, indicación de
   desplazamiento y orden de secciones. Se renovó también el modal de opciones
   del depósito. (#23)
+- Los carruseles de fecha de Movimientos y Detalle de depósito muestran un
+  degradado en los bordes para indicar las opciones fuera del área visible; el
+  indicador cambia con el desplazamiento y el tema activo. (#26)
 - Se actualizaron Expo SDK de `57.0.25` a `57.0.26`, `expo-camera` de
   `57.0.5` a `57.0.6`, `expo-constants` de `57.0.19` a `57.0.20` y
   `expo-navigation-bar` de `57.0.2` a `57.0.3`. (#20)
@@ -115,6 +121,10 @@ documentación se registran en este archivo.
 - Se documentaron el registro local de egresos, la reutilización del formulario
   y los repositorios de movimientos, la validación, la recurrencia, el impacto
   en el saldo y el funcionamiento sin conexión. (#25)
+- Se documentaron el historial local de Movimientos, la búsqueda, los filtros,
+  la paginación, el detalle y los estados. Las guías de interfaz describen el
+  degradado que indica el desplazamiento en Movimientos y Detalle de depósito.
+  (#26)
 - Se actualizaron las guías de Perfil, autenticación local, Inicio, arquitectura
   y sistema visual para describir las preferencias persistentes, el cambio de
   contraseña y los modales de Perfil. (#29)

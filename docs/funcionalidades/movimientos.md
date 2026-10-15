@@ -13,6 +13,82 @@ Dashboard → Ingreso o Egreso → cargar depósitos y categorías → validar �
 movimiento → actualizar saldo → volver a la pantalla anterior
 ```
 
+## Historial general, búsqueda y filtros
+
+`src/screens/MovementsScreen.js` consulta el historial local del usuario de la
+sesión. `movimientosRepositorio.consultarHistorial()` relaciona cada movimiento
+con su depósito para limitar la consulta por `depositos.usuario_id`; incluye
+ingresos y egresos vigentes (`anulado = 0`) y obtiene la frecuencia desde la
+recurrencia relacionada cuando existe. El tipo proviene de `movimientos.tipo`,
+no del signo del monto. Los montos persistidos son positivos; el tipo determina
+si la tarjeta muestra ingreso o egreso.
+
+La primera página trae hasta 50 movimientos y las siguientes usan un cursor con
+`fecha_hora` e `id`. SQLite aplica los filtros antes de devolver cada página.
+El orden estable es `fecha_hora DESC, id DESC`, por lo que los registros más
+recientes aparecen primero y los empates mantienen un orden determinista. La
+consulta puede aprovechar los índices existentes para depósito, fecha, tipo y
+categoría; la búsqueda por descripción se ejecuta localmente en SQLite.
+
+La búsqueda ignora mayúsculas y minúsculas y consulta únicamente
+`movimientos.descripcion`. Se combina con los filtros activos y se aplica con
+una breve espera mientras se escribe para evitar una consulta por cada tecla.
+
+Los filtros se envían juntos como condiciones `AND`:
+
+- **Tipo:** Todos, Ingresos o Egresos, usando el valor explícito de `tipo`.
+- **Fecha:** Día, Semana, Mes o Personalizado. La semana comienza el lunes y
+  termina el domingo. El rango personalizado incluye ambas fechas; la consulta
+  usa el inicio del primer día y el inicio del día siguiente al último.
+- **Monto:** mínimo y máximo, con formato local (punto de miles y coma decimal).
+- **Categoría:** multiselección de las categorías presentes en los movimientos
+  vigentes del usuario, con nombres e íconos del catálogo local definido en
+  `src/constants/movimientos.js`.
+- **Depósito:** multiselección de los depósitos que tienen movimientos vigentes
+  en el historial, consultados desde SQLite.
+
+Tipo, fecha, monto, categoría, depósito y búsqueda pueden combinarse. Al quitar
+un criterio se vuelve a consultar con los restantes. «Limpiar todo» borra la
+búsqueda y los criterios, y recupera el historial completo. Los resultados se
+agrupan por día en la pantalla; la agrupación no altera el orden entregado por
+SQLite.
+
+## Detalle e actualización
+
+Al elegir una tarjeta, la navegación envía solamente `movimientoId`. La pantalla
+existente `src/screens/MovementDetailScreen.js` vuelve a consultar SQLite por
+ese ID y por el usuario de la sesión, y obtiene el tipo, monto, descripción,
+depósito, categoría, fecha, hora y frecuencia real. Si el registro dejó de estar
+disponible, muestra un mensaje controlado y permite regresar. Si falla la
+consulta, ofrece reintentar o volver.
+
+Al recuperar el foco después de regresar de otra pantalla, Movimientos vuelve
+a consultar la sesión, las opciones reales de categoría y depósito, el total y
+la primera página. Así se reflejan los ingresos o egresos creados mientras la
+pestaña estaba fuera de foco.
+
+## Estados y rendimiento
+
+- **Cargando:** skeleton mientras consulta SQLite, incluido el reintento.
+- **Sin movimientos:** mensaje cuando el usuario no tiene ingresos ni egresos
+  vigentes.
+- **Sin resultados:** mensaje para una búsqueda o combinación de filtros sin
+  coincidencias, con acción para limpiar los criterios.
+- **Error:** mensaje seguro y acción para volver a consultar. Un error al cargar
+  una página posterior conserva las filas ya obtenidas y permite reintentar.
+
+La lista carga páginas de 50 registros y pide la siguiente solo cuando la
+persona elige «Cargar más movimientos». Los filtros de tipo, fechas, monto,
+categoría y depósito se procesan en la consulta parametrizada de SQLite; la
+pantalla no descarga de una vez todo el historial ni aplica esos filtros a una
+copia completa en memoria.
+
+## Funcionamiento offline del historial
+
+La sesión, los movimientos, los depósitos, las categorías disponibles y las
+recurrencias se consultan localmente. La búsqueda, filtros, detalle y paginación
+no usan red ni dependen de un backend; funcionan en modo avión.
+
 ## Ingreso: depósitos y categorías
 
 Al abrir la pantalla se consulta la sesión local y se cargan únicamente los

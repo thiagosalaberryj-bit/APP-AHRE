@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 
-import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO, DEPOSITOS_SIMULADOS } from '../constants/movimientos';
+import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { COLORES_ESTADO } from '../styles/colors';
 
 function formatearMontoLista(monto, tipo) {
   if (typeof monto !== 'number') return '—';
-  const valor = `$${Math.round(monto).toLocaleString('es-AR')}`;
+  const valor = `$${monto.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
   return tipo === 'ingreso' ? `+${valor}` : `-${valor}`;
 }
 
@@ -28,7 +28,7 @@ export default function TarjetaMovimiento({ tema, estilos, movimiento, alPresion
   const esIngreso = movimiento.tipo === 'ingreso';
   const catalogo = esIngreso ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   const categoria = catalogo.find((item) => item.id === movimiento.categoria) || {};
-  const deposito = DEPOSITOS_SIMULADOS.find((item) => item.id === movimiento.deposito_id) || {};
+  const deposito = { nombre: movimiento.deposito_nombre || '' };
   const colorTipo = esIngreso ? COLORES_ESTADO.ingreso : COLORES_ESTADO.egreso;
   const nombreCategoria = categoria.nombre || movimiento.categoria;
   const fechaMovimiento = formatearFechaLista(movimiento.fecha_hora, soloHora);
