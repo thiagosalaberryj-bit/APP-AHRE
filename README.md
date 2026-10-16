@@ -59,7 +59,6 @@ Aplicación móvil AHRE
    └──────────────► Servicios conectados futuros
                              │
                              ├── Sincronización
-                             ├── OCR
                              ├── Notificaciones
                              └── Funciones sociales
 ```
@@ -109,10 +108,13 @@ todavía no están implementados.
 
 ### OCR
 
-La interfaz permite abrir la cámara, capturar o elegir una imagen, ajustar el
-encuadre y revisar un resultado simulado editable. El reconocimiento óptico de
-caracteres y la confirmación del egreso desde OCR todavía no están
-implementados.
+La pantalla OCR utiliza ML Kit local para Android: permite capturar o elegir
+una imagen, ajustar el encuadre y revisar propuestas de monto, fecha, comercio
+y productos. Los datos se pueden corregir y confirmar como un egreso local,
+reutilizando las validaciones y persistencia normales de Egresos. Requiere un
+APK con el módulo nativo; Expo Go no incluye el motor. La extracción puede
+ser incompleta y requiere revisión manual. El líder confirmó el funcionamiento
+en su dispositivo; los escenarios de regresión se detallan en la guía funcional.
 
 ### Perfil y funciones sociales
 
@@ -159,9 +161,8 @@ interfaces. Actualmente cuenta con:
   filtros y detalles basados en datos de ejemplo;
 - pantalla de Notificaciones con avisos de muestra agrupados por día; no usa
   notificaciones locales o push;
-- flujo OCR con cámara en vivo, captura o selección desde la galería, recorte y
-  revisión editable de un resultado simulado; no reconoce texto ni guarda el
-  egreso;
+- flujo OCR con ML Kit local, captura o selección desde la galería, recorte,
+  revisión editable y confirmación mediante el servicio normal de Egresos;
 - Perfil con datos locales del usuario, foto temporal, edición protegida por la
   contraseña local o huella, cambio persistente de contraseña, preferencias de
   idioma, notificaciones y apariencia, y cierre de sesión local;
@@ -247,6 +248,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Interfaz de Estadísticas](docs/interfaces/estadisticas.md);
 - [Interfaz de Notificaciones](docs/interfaces/notificaciones.md);
 - [Flujo OCR de comprobantes](docs/interfaces/ocr.md);
+- [OCR offline, interpretación y registro de egresos](docs/funcionalidades/ocr.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);
 - [Autenticación local](docs/funcionalidades/autenticacion-local.md);
 - [Lógica de inicio](docs/funcionalidades/inicio.md);

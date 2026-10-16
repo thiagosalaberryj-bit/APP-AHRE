@@ -2,7 +2,7 @@
 
 ## Tecnología y archivo
 
-AHRE utiliza `expo-sqlite` (`~57.0.3`) y una base local llamada `ahre.db`.
+AHRE utiliza `expo-sqlite` (`~57.0.4`) y una base local llamada `ahre.db`.
 SQLite conserva el archivo en el almacenamiento privado de la aplicación y
 las operaciones no requieren Internet, backend ni servicios externos.
 

@@ -10,7 +10,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 
 | Dependencia | Versión | Finalidad | Uso en AHRE |
 | --- | --- | --- | --- |
-| `expo` | `~57.0.26` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
+| `expo` | `~57.0.30` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
 | `expo-status-bar` | `~57.0.1` | Control de la barra de estado. | Ajustes visuales básicos de la aplicación. |
 | `react` | `19.2.3` | Biblioteca para construir la interfaz. | Pantallas y componentes de AHRE. |
 | `react-native` | `0.86.3` | Framework móvil utilizado por Expo. | Desarrollo de la aplicación para Android y otras plataformas compatibles. |
@@ -22,14 +22,14 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | `@expo/vector-icons` | `^15.0.2` | Proporciona un conjunto de íconos compatibles con Expo y React Native. | Navegación, acciones y estados visuales de la interfaz. |
 | `expo-camera` | `~57.0.6` | Muestra una vista previa de cámara dentro de la aplicación y captura fotografías. | Vista en vivo y captura de comprobantes en OCR; el obturador está debajo del visor. |
 | `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes elegidos desde la galería en OCR y documentos. |
-| `expo-image-manipulator` | `~57.0.20` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
-| `expo-crypto` | `~57.0.3` | Genera bytes aleatorios y calcula resúmenes criptográficos con Expo. | `passwordSecurity.js` crea una sal de 16 bytes con `getRandomBytesAsync()` y deriva el verificador con una pasada SHA-256 mediante `digestStringAsync()`. |
-| `expo-constants` | `~57.0.20` | Expone información constante de la aplicación y del entorno de ejecución. | Está declarada, pero el código de AHRE todavía no la importa. |
+| `expo-image-manipulator` | `~57.0.21` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
+| `expo-crypto` | `~57.0.4` | Genera bytes aleatorios y calcula resúmenes criptográficos con Expo. | `passwordSecurity.js` crea una sal de 16 bytes con `getRandomBytesAsync()` y deriva el verificador con una pasada SHA-256 mediante `digestStringAsync()`. |
+| `expo-constants` | `~57.0.22` | Expone información constante de la aplicación y del entorno de ejecución. | Está declarada, pero el código de AHRE todavía no la importa. |
 | `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Está declarada para una posible tipografía personalizada; AHRE todavía usa la fuente del sistema. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Inicio la usa después de comprobar que existe una sesión local válida; la huella autoriza el acceso al Dashboard. |
 | `expo-secure-store` | `~57.0.4` | Guarda valores pequeños de forma segura utilizando mecanismos nativos del dispositivo. | `sessionService.js` guarda el identificador del usuario si «Recordarme» está activo. `balanceVisibilityService.js` conserva por usuario la preferencia para ocultar saldos. No guarda contraseñas ni sus verificadores. |
-| `expo-splash-screen` | `~57.0.9` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Evitar transiciones incorrectas al abrir AHRE y coordinar su inicio. |
-| `expo-sqlite` | `~57.0.3` | Permite utilizar una base de datos SQLite local. | Persistencia offline-first; también guarda las cuentas, sus verificadores y preferencias locales. |
+| `expo-splash-screen` | `~57.0.10` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Logo de AHRE y fondo claro/oscuro configurados explícitamente en el plugin; coordinación del inicio. |
+| `expo-sqlite` | `~57.0.4` | Permite utilizar una base de datos SQLite local. | Persistencia offline-first; también guarda las cuentas, sus verificadores y preferencias locales. |
 | `expo-system-ui` | `~57.0.4` | Permite configurar aspectos de la interfaz nativa del sistema. | Fondo de la ventana según el tema activo y transiciones sin un fondo blanco inesperado. |
 | `expo-navigation-bar` | `~57.0.3` | Permite definir el estilo de los controles de navegación del sistema Android. | Cambiar el contraste de los controles según el tema; una capa de React Native pinta el fondo que corresponde a cada pantalla. |
 | `@react-navigation/native` | `^7.4.1` | Base común para administrar la navegación en React Native. | Organización de los flujos y pantallas de AHRE. |
@@ -141,7 +141,7 @@ Estas capacidades todavía no están implementadas. Algunas dependencias de la t
 
 - notificaciones locales o push y tareas en segundo plano;
 - ubicación y mapas;
-- OCR y procesamiento avanzado de imágenes;
+- procesamiento avanzado de imágenes adicional al OCR local implementado;
 - gráficos;
 - Bluetooth;
 - sincronización de datos y detección de conectividad.
@@ -160,7 +160,7 @@ la tabla.
 
 ## Cambios de versiones registrados
 
-En la actualización actual se cambiaron estas dependencias directas:
+En la actualización previa al Issue 31 se cambiaron estas dependencias directas:
 
 | Paquete | Versión anterior | Versión actual |
 | --- | --- | --- |
@@ -172,6 +172,26 @@ En la actualización actual se cambiaron estas dependencias directas:
 El lockfile también resolvió `expo-modules-core` de `57.0.19` a `57.0.20`
 como dependencia transitiva de Expo; no se agrega directamente a
 `package.json`.
+
+Durante las pruebas del Issue 31, el líder autorizó expresamente resolver en
+esta misma rama los avisos de versiones, el ícono y el splash. Se aplicaron solo
+las versiones correctivas recomendadas por Expo, sin cambiar SDK 57:
+
+| Paquete | Versión anterior | Versión actual |
+| --- | --- | --- |
+| `expo` | `~57.0.26` | `~57.0.30` |
+| `expo-constants` | `~57.0.20` | `~57.0.22` |
+| `expo-crypto` | `~57.0.3` | `~57.0.4` |
+| `expo-image-manipulator` | `~57.0.20` | `~57.0.21` |
+| `expo-splash-screen` | `~57.0.9` | `~57.0.10` |
+| `expo-sqlite` | `~57.0.3` | `~57.0.4` |
+
+El plugin `expo-splash-screen` ahora recibe imagen, ancho de 160 y colores
+claro/oscuro de AHRE. `plugins/withCompleteAdaptiveIcon.js` agrega un inset nativo
+de 22% al primer plano de los íconos adaptativos normal y redondo, conservando
+la imagen original para evitar recortes por la máscara del launcher. Ambos
+cambios requieren un APK nuevo. `eas.json` declara `cli.appVersionSource: local`
+para explicitar el versionado actual sin activar incrementos remotos.
 
 ## Autenticación local y dependencias
 
@@ -190,6 +210,27 @@ La implementación detallada está en
 [`docs/funcionalidades/autenticacion-local.md`](../funcionalidades/autenticacion-local.md).
 
 ## Criterio de incorporación
+
+### OCR offline con ML Kit (#31)
+
+El líder autorizó las dependencias de evaluación y seleccionó ML Kit después
+de comparar lecturas en su dispositivo. Por su indicación se retiraron
+Tesseract, sus dos configuraciones y el modelo español. No se agregaron
+dependencias npm. El módulo local Expo `modules/receipt-ocr/` incorpora:
+
+| Dependencia | Versión | Uso |
+| --- | --- | --- |
+| `com.google.mlkit:text-recognition` | `16.0.1` | Modelo latino incluido; OCR sin descarga inicial. |
+
+Hace falta un APK nuevo; Expo Go no incluye este módulo. Expo Autolinking lo
+detecta en `modules/` y el perfil EAS `ocr-comparison` genera un APK interno.
+La parte nativa está en Kotlin porque invoca el SDK Android; el intérprete y
+la interfaz de AHRE permanecen en JavaScript. El tamaño final y el rendimiento
+deben medirse en dispositivo. La referencia a los términos del SDK está en
+`modules/receipt-ocr/NOTICE.md`; pruebas y límites en
+[`../funcionalidades/ocr.md`](../funcionalidades/ocr.md).
+
+### Regla general
 
 Cada dependencia debe responder a una necesidad concreta, ser compatible con
 la versión de Expo utilizada y tener su estado de uso documentado. Las

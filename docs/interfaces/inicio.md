@@ -15,6 +15,11 @@ Abrir AHRE → Inicio → deslizar
 
 ## Elementos visuales
 
+- La pantalla nativa previa usa `assets/ahre-logo.png`, con ancho de 160 y ajuste
+  `contain`, sobre los fondos claro y oscuro de AHRE. Se configura mediante
+  `expo-splash-screen`. El ícono adaptativo de Android añade un margen del 22 %
+  alrededor del caballo mediante el plugin local `withCompleteAdaptiveIcon`.
+  Estas configuraciones requieren una nueva compilación del APK.
 - Fondo uniforme del tema activo, sin luces ni círculos decorativos (`#F4F4F4`
   en claro y `#081C19` en oscuro).
 - Símbolo de AHRE desde `assets/ahre-mark.png`.
