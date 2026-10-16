@@ -6,7 +6,7 @@ export function crearEstilosEstadisticas(tema) {
   return StyleSheet.create({
     contenidoDesplazable: {
       flexGrow: 1,
-      paddingBottom: ESPACIADO.grande,
+      paddingBottom: ESPACIADO.enorme + ESPACIADO.pantalla,
       paddingHorizontal: ESPACIADO.pantalla,
     },
     desplazamiento: {
@@ -148,6 +148,17 @@ export function crearEstilosEstadisticas(tema) {
       fontSize: TIPOGRAFIA.tamanos.secundario,
       textAlign: 'center',
     },
+    estadoGrafico: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 288,
+      paddingHorizontal: ESPACIADO.medio,
+    },
+    botonReintentar: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: ESPACIADO.medio,
+    },
     detalleSeleccion: {
       alignItems: 'center',
       backgroundColor: tema.superficie,
@@ -201,11 +212,20 @@ export function crearEstilosEstadisticas(tema) {
       height: 12,
       width: 12,
     },
+    nombreCategoriaContenedor: {
+      flex: 1,
+      gap: 2,
+      justifyContent: 'center',
+    },
     nombreCategoria: {
       color: tema.textoPrincipal,
-      flex: 1,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
+    },
+    cantidadMovimientos: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: 10,
     },
     porcentajeCategoria: {
       color: tema.textoSecundario,

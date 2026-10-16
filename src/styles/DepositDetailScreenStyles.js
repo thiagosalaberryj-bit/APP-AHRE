@@ -13,7 +13,7 @@ export function crearEstilosDetalleDeposito(tema, anchoVentana = 390) {
       alignSelf: 'center',
       gap: ESPACIADO.grande,
       padding: ESPACIADO.pantalla,
-      paddingBottom: ESPACIADO.enorme,
+      paddingBottom: ESPACIADO.enorme + ESPACIADO.pantalla,
     },
     encabezadoDeposito: {
       flexDirection: 'row',

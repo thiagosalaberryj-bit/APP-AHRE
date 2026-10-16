@@ -1,5 +1,6 @@
-import { useContext, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useContext, useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,11 +10,11 @@ import { RUTAS } from '../constants/routes';
 import {
   CATEGORIAS_EGRESO,
   CATEGORIAS_INGRESO,
-  DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
 import { obtenerColoresGraficos } from '../styles/colors';
-import { ESPACIADO, crearEstilosGlobales } from '../styles/globalStyles';
+import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleCategoria } from '../styles/CategoryDetailScreenStyles';
+import { cargarDetalleCategoriaEstadistica } from '../statistics/statisticsService';
 
 const MESES = Object.freeze([
   { id: 0, corto: 'Ene', nombre: 'Enero' },
@@ -29,11 +30,11 @@ const MESES = Object.freeze([
   { id: 10, corto: 'Nov', nombre: 'Noviembre' },
   { id: 11, corto: 'Dic', nombre: 'Diciembre' },
 ]);
-const ANCHO_BOTON_MES = 56;
-const DISTANCIA_MESES = ANCHO_BOTON_MES + ESPACIADO.minimo;
 function formatearMonto(monto, tipo) {
-  const valor = `$ ${Math.round(monto).toLocaleString('es-AR')}`;
-  return tipo === 'ingreso' ? `+ ${valor}` : `− ${valor}`;
+  const valor = new Intl.NumberFormat('es-AR', {
+    maximumFractionDigits: 2,
+  }).format(Number(monto) || 0);
+  return tipo === 'ingreso' ? `+$ ${valor}` : `−$ ${valor}`;
 }
 
 function formatearFechaDia(fecha) {
@@ -46,10 +47,6 @@ function formatearFechaDia(fecha) {
 function formatearHora(fechaISO) {
   const fecha = new Date(fechaISO);
   return fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-}
-
-function obtenerNombreDeposito(depositoId) {
-  return DEPOSITOS_SIMULADOS.find((deposito) => deposito.id === depositoId)?.nombre || 'Depósito';
 }
 
 function agruparMovimientosPorDia(movimientos) {
@@ -83,35 +80,66 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
     ...categoriaRecibida,
     color: coloresGraficos[Math.max(0, indiceCategoria) % coloresGraficos.length],
   };
-  const anio = ruta.params?.anio || new Date().getFullYear();
+  const anioRecibido = Number(ruta.params?.anio);
+  const anioActual = new Date().getFullYear();
+  const anioInicial = Number.isInteger(anioRecibido) && anioRecibido >= 1000
+    ? Math.min(anioRecibido, anioActual)
+    : new Date().getFullYear();
+  const [anio, establecerAnio] = useState(anioInicial);
+  const [anioMinimoDisponible, establecerAnioMinimoDisponible] = useState(
+    () => Math.min(anioInicial, anioActual - 1),
+  );
+  const [selectorPeriodo, establecerSelectorPeriodo] = useState(null);
+  const aniosDisponibles = useMemo(() => {
+    if (!Number.isInteger(anioMinimoDisponible) || anioMinimoDisponible > anioActual) return [];
+    return Array.from(
+      { length: anioActual - anioMinimoDisponible + 1 },
+      (_, indice) => anioActual - indice,
+    );
+  }, [anioActual, anioMinimoDisponible]);
+  const mesRecibido = Number(ruta.params?.mes);
+  const mesInicial = Number.isInteger(mesRecibido) && mesRecibido >= 0 && mesRecibido < 12
+    ? mesRecibido
+    : new Date().getMonth();
   const [mesSeleccionado, establecerMesSeleccionado] = useState(
-    () => ruta.params?.mes ?? new Date().getMonth(),
+    () => mesInicial,
   );
-  const selectorMeses = useRef(null);
-  const [anchoSelectorMeses, establecerAnchoSelectorMeses] = useState(0);
-  const paddingSelectorMeses = Math.max(
-    ESPACIADO.minimo,
-    (anchoSelectorMeses - ANCHO_BOTON_MES) / 2,
-  );
-  const movimientos = (Array.isArray(ruta.params?.movimientos) ? ruta.params.movimientos : [])
-    .filter((movimiento) => {
-      const fecha = new Date(movimiento.fecha_hora);
-      return movimiento.categoria === categoria.id
-        && movimiento.tipo === tipoMovimiento
-        && !movimiento.anulado
-        && fecha.getFullYear() === anio
-        && fecha.getMonth() === mesSeleccionado;
-    })
-    .sort((primero, segundo) => segundo.fecha_hora.localeCompare(primero.fecha_hora));
-  const gruposMovimientos = agruparMovimientosPorDia(movimientos);
-  const montoCategoria = movimientos.reduce((suma, movimiento) => suma + movimiento.monto, 0);
+  const [datosDetalle, establecerDatosDetalle] = useState(null);
+  const [estadoCarga, establecerEstadoCarga] = useState('cargando');
+  const [intentoCarga, establecerIntentoCarga] = useState(0);
 
-  const centrarMes = (mes, animado = true) => {
-    selectorMeses.current?.scrollTo({
-      animated: animado,
-      x: mes * DISTANCIA_MESES,
+  useFocusEffect(useCallback(() => {
+    let vigente = true;
+    establecerEstadoCarga('cargando');
+    establecerDatosDetalle(null);
+    cargarDetalleCategoriaEstadistica({
+      categoria: categoria.id,
+      tipo: tipoMovimiento,
+      anio,
+      mes: mesSeleccionado,
+    }).then((resultado) => {
+      if (!vigente) return;
+      establecerAnioMinimoDisponible(resultado.anioMinimoDisponible);
+      if (resultado.anio !== anio) establecerAnio(resultado.anio);
+      establecerDatosDetalle(resultado);
+      establecerEstadoCarga('listo');
+    }).catch(() => {
+      if (vigente) establecerEstadoCarga('error');
     });
-  };
+
+    return () => {
+      vigente = false;
+    };
+  }, [categoria.id, tipoMovimiento, anio, mesSeleccionado, intentoCarga]));
+
+  const movimientos = datosDetalle?.movimientos || [];
+  const gruposMovimientos = agruparMovimientosPorDia(movimientos);
+  const montoCategoria = datosDetalle?.resumenMes.total || 0;
+  const cantidadMovimientos = datosDetalle?.resumenMes.cantidad || 0;
+  const evolucion = datosDetalle?.evolucion || [];
+  const maximoEvolucion = Math.max(0, ...evolucion.map((item) => item.total));
+  const hayMovimientosAnuales = maximoEvolucion > 0;
+  const textoResultado = `${cantidadMovimientos} ${cantidadMovimientos === 1 ? 'movimiento' : 'movimientos'} en ${MESES[mesSeleccionado].nombre.toLowerCase()}`;
 
   const abrirDetalleMovimiento = (movimiento) => {
     navegacion.push(RUTAS.DETALLE_MOVIMIENTO, {
@@ -121,67 +149,107 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   };
 
   return (
-    <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
+    <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
         <EncabezadoSeccion
           alVolver={() => navegacion.goBack()}
-          descripcion="Revisá los movimientos y el total de esta categoría."
+          descripcion="Consultá los movimientos de esta categoría."
           tema={tema}
           titulo="Detalle de categoría"
         />
 
         <ScrollView contentContainerStyle={estilos.contenidoCategoria} showsVerticalScrollIndicator={false}>
-          <View style={estilos.encabezadoCategoria}>
-            <View style={[estilos.iconoCategoriaGrande, { backgroundColor: tema.superficie, borderColor: categoria.color }]}>
-              <Ionicons color={categoria.color} name={categoria.icono} size={48} />
-            </View>
-            <Text style={estilos.nombreCategoriaResumen}>{categoria.nombre}</Text>
-            <Text style={estilos.anioCategoria}>{anio}</Text>
-          </View>
-
-          <ScrollView
-            ref={selectorMeses}
-            contentContainerStyle={[
-              estilos.contenedorMeses,
-              { paddingHorizontal: paddingSelectorMeses },
-            ]}
-            horizontal
-            onLayout={(evento) => {
-              establecerAnchoSelectorMeses(evento.nativeEvent.layout.width);
-              requestAnimationFrame(() => centrarMes(mesSeleccionado, false));
-            }}
-            showsHorizontalScrollIndicator={false}
-            style={estilos.selectorMeses}
-          >
-            {MESES.map((mes) => (
-              <Pressable
-                accessibilityLabel={`${mes.nombre} ${anio}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected: mesSeleccionado === mes.id }}
-                key={mes.id}
-                onPress={() => {
-                  establecerMesSeleccionado(mes.id);
-                  centrarMes(mes.id);
-                }}
-                style={[estilos.botonMes, mesSeleccionado === mes.id && estilos.botonMesActivo]}
-              >
-                <Text style={[estilos.etiquetaMes, mesSeleccionado === mes.id && estilos.etiquetaMesActiva]}>
-                  {mes.corto}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-
           <View style={estilos.resumenCategoria}>
-            <Text style={estilos.etiquetaMontoCategoria}>{MESES[mesSeleccionado].nombre}</Text>
-            <Text accessibilityLiveRegion="polite" style={estilos.montoCategoria}>
-              {formatearMonto(montoCategoria, tipoMovimiento)}
-            </Text>
-          </View>
-          <View style={[estilos.separadorCategoria, { backgroundColor: categoria.color }]} />
+            <View style={estilos.encabezadoCategoria}>
+              <View style={[estilos.iconoCategoriaGrande, { backgroundColor: tema.superficie, borderColor: categoria.color }]}>
+                <Ionicons color={categoria.color} name={categoria.icono} size={40} />
+              </View>
+              <View style={estilos.datosCategoria}>
+                <Text style={estilos.nombreCategoriaResumen}>{categoria.nombre}</Text>
+                <Text style={estilos.descripcionCategoria}>{categoria.descripcion}</Text>
+              </View>
+            </View>
 
-          <View style={estilos.listaMovimientosCategoria}>
-            {gruposMovimientos.length ? gruposMovimientos.map((grupo) => (
+            <View style={estilos.selectoresPeriodo}>
+              <Pressable
+                accessibilityLabel={`Mes ${MESES[mesSeleccionado].nombre}. Cambiar mes`}
+                accessibilityRole="button"
+                onPress={() => establecerSelectorPeriodo('mes')}
+                style={({ pressed }) => [
+                  estilos.selectorPeriodo,
+                  pressed && estilos.selectorPeriodoPresionado,
+                ]}
+              >
+                <Text numberOfLines={1} style={estilos.textoSelectorPeriodo}>{MESES[mesSeleccionado].nombre}</Text>
+                <Ionicons color={tema.textoSecundario} name="chevron-down" size={16} />
+              </Pressable>
+              <Pressable
+                accessibilityLabel={`Año ${anio}. Cambiar año`}
+                accessibilityHint="Elegí un año anterior o el año actual."
+                accessibilityRole="button"
+                onPress={() => establecerSelectorPeriodo('anio')}
+                style={({ pressed }) => [
+                  estilos.selectorPeriodo,
+                  pressed && estilos.selectorPeriodoPresionado,
+                ]}
+              >
+                <Text style={estilos.textoSelectorPeriodo}>{anio}</Text>
+                <Ionicons color={tema.textoSecundario} name="chevron-down" size={16} />
+              </Pressable>
+            </View>
+
+            <View style={estilos.separadorResumen} />
+
+            {estadoCarga === 'cargando' ? (
+              <Text style={estilos.estadoCargaDetalle}>Buscando movimientos locales...</Text>
+            ) : estadoCarga === 'error' ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => establecerIntentoCarga((intento) => intento + 1)}
+              >
+                <Text style={estilos.estadoCargaDetalle}>No se pudieron cargar los datos. Tocá para reintentar.</Text>
+              </Pressable>
+            ) : cantidadMovimientos === 0 ? (
+              <Text style={estilos.estadoCargaDetalle}>No hay movimientos en este período.</Text>
+            ) : (
+              <View accessibilityLiveRegion="polite" style={estilos.resultadoCategoria}>
+                <Text style={[estilos.montoCategoria, tipoMovimiento === 'ingreso' ? estilos.montoIngreso : estilos.montoEgreso]}>
+                  {formatearMonto(montoCategoria, tipoMovimiento)}
+                </Text>
+                <Text style={estilos.cantidadMovimientosCategoria}>{textoResultado}</Text>
+              </View>
+            )}
+          </View>
+
+          {estadoCarga === 'listo' && hayMovimientosAnuales ? (
+            <View style={estilos.evolucionCategoria}>
+              <Text style={estilos.tituloEvolucion}>Evolución anual</Text>
+              {evolucion.map((item) => {
+                const anchoBarra = maximoEvolucion > 0 ? (item.total / maximoEvolucion) * 100 : 0;
+                return (
+                  <View
+                    accessible
+                    accessibilityLabel={`${MESES[item.mes].nombre}: ${formatearMonto(item.total, tipoMovimiento)}`}
+                    key={item.mes}
+                    style={estilos.filaEvolucion}
+                  >
+                    <Text style={estilos.mesEvolucion}>{MESES[item.mes].corto}</Text>
+                    <View style={estilos.fondoBarraEvolucion}>
+                      <View
+                        style={[
+                          estilos.barraEvolucion,
+                          { backgroundColor: categoria.color, width: `${anchoBarra}%` },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ) : null}
+          {estadoCarga === 'listo' && gruposMovimientos.length ? (
+            <View style={estilos.listaMovimientosCategoria}>
+              {gruposMovimientos.map((grupo) => (
               <View key={grupo.clave} style={estilos.grupoDia}>
                 <Text accessibilityRole="header" style={estilos.tituloDia}>
                   {formatearFechaDia(grupo.fecha)}
@@ -189,7 +257,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                 <View style={estilos.movimientosDia}>
                   {grupo.movimientos.map((movimiento) => (
                     <Pressable
-                      accessibilityLabel={`Ver ${movimiento.descripcion}, ${obtenerNombreDeposito(movimiento.deposito_id)}, ${formatearHora(movimiento.fecha_hora)}`}
+                      accessibilityLabel={`Ver ${movimiento.descripcion}, ${movimiento.deposito_nombre || 'Depósito'}, ${formatearHora(movimiento.fecha_hora)}`}
                       accessibilityRole="button"
                       key={movimiento.id}
                       onPress={() => abrirDetalleMovimiento(movimiento)}
@@ -201,21 +269,79 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                       <View style={estilos.detalleFilaMovimiento}>
                         <Text numberOfLines={1} style={estilos.nombreFilaMovimiento}>{movimiento.descripcion}</Text>
                         <Text numberOfLines={1} style={estilos.subtituloFilaMovimiento}>
-                          {obtenerNombreDeposito(movimiento.deposito_id)} · {formatearHora(movimiento.fecha_hora)}
+                          {movimiento.deposito_nombre || 'Depósito'} · {formatearHora(movimiento.fecha_hora)}
                         </Text>
                       </View>
-                      <Text style={estilos.montoFilaMovimiento}>
+                      <Text style={[
+                        estilos.montoFilaMovimiento,
+                        tipoMovimiento === 'ingreso' ? estilos.montoIngreso : estilos.montoEgreso,
+                      ]}>
                         {formatearMonto(movimiento.monto, tipoMovimiento)}
                       </Text>
                     </Pressable>
                   ))}
                 </View>
               </View>
-            )) : (
-              <Text style={estilos.textoSinMovimientos}>No hay movimientos de esta categoría en el período.</Text>
-            )}
-          </View>
+              ))}
+            </View>
+          ) : null}
         </ScrollView>
+
+        <Modal
+          animationType="fade"
+          onRequestClose={() => establecerSelectorPeriodo(null)}
+          transparent
+          visible={selectorPeriodo !== null}
+        >
+          <View style={estilos.fondoModalPeriodo}>
+            <Pressable
+              accessibilityLabel="Cerrar selección del período"
+              onPress={() => establecerSelectorPeriodo(null)}
+              style={StyleSheet.absoluteFill}
+            />
+            <View accessibilityViewIsModal style={[estilos.tarjetaModalPeriodo, { backgroundColor: tema.superficie }]}>
+              <View style={estilos.encabezadoModalPeriodo}>
+                <Text style={estilos.tituloModalPeriodo}>
+                  {selectorPeriodo === 'mes' ? 'Seleccioná un mes' : 'Seleccioná un año'}
+                </Text>
+                <Pressable
+                  accessibilityLabel="Cerrar selección del período"
+                  accessibilityRole="button"
+                  onPress={() => establecerSelectorPeriodo(null)}
+                  style={estilos.botonCerrarModalPeriodo}
+                >
+                  <Ionicons color={tema.textoPrincipal} name="close" size={22} />
+                </Pressable>
+              </View>
+              <ScrollView contentContainerStyle={estilos.opcionesPeriodo} showsVerticalScrollIndicator={false}>
+                {(selectorPeriodo === 'mes'
+                  ? MESES.map((mes) => ({ valor: mes.id, etiqueta: mes.nombre }))
+                  : aniosDisponibles.map((opcionAnio) => ({ valor: opcionAnio, etiqueta: String(opcionAnio) }))
+                ).map((opcion) => {
+                  const seleccionado = selectorPeriodo === 'mes'
+                    ? opcion.valor === mesSeleccionado
+                    : opcion.valor === anio;
+                  return (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: seleccionado }}
+                      key={opcion.valor}
+                      onPress={() => {
+                        if (selectorPeriodo === 'mes') establecerMesSeleccionado(opcion.valor);
+                        else establecerAnio(opcion.valor);
+                        establecerSelectorPeriodo(null);
+                      }}
+                      style={[estilos.opcionPeriodo, seleccionado && estilos.opcionPeriodoActiva]}
+                    >
+                      <Text style={estilos.textoOpcionPeriodo}>{opcion.etiqueta}</Text>
+                      {seleccionado ? <Ionicons color={tema.foco} name="checkmark" size={20} /> : null}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );

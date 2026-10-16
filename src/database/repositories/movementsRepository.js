@@ -308,6 +308,110 @@ async function consultarHistorialPorId(usuarioId, movimientoId, conexion = null)
   }, conexion));
 }
 
+function construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria = null) {
+  if (
+    typeof usuarioId !== 'string'
+    || !usuarioId
+    || !['ingreso', 'egreso'].includes(tipo)
+    || !validarMarcaTemporal(desde)
+    || !validarMarcaTemporal(hasta)
+    || Date.parse(desde) >= Date.parse(hasta)
+    || (categoria !== null && (typeof categoria !== 'string' || !categoria))
+  ) {
+    throw new ErrorBaseDatos('integridad');
+  }
+
+  return {
+    clausula: `d.usuario_id = ? AND m.tipo = ? AND m.anulado = 0
+      AND m.fecha_hora >= ? AND m.fecha_hora < ?${categoria === null ? '' : ' AND m.categoria = ?'}`,
+    parametros: categoria === null
+      ? [usuarioId, tipo, desde, hasta]
+      : [usuarioId, tipo, desde, hasta, categoria],
+  };
+}
+
+async function consultarResumenPorCategoria(usuarioId, tipo, desde, hasta, conexion = null) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) => {
+    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta);
+    return baseDatos.getAllAsync(
+      `SELECT m.categoria AS categoria,
+              ROUND(SUM(m.monto), 2) AS total,
+              COUNT(m.id) AS cantidad
+       FROM movimientos m
+       INNER JOIN depositos d ON d.id = m.deposito_id
+       WHERE ${filtros.clausula}
+       GROUP BY m.categoria
+       ORDER BY total DESC, m.categoria ASC;`,
+      filtros.parametros,
+    );
+  }, conexion));
+}
+
+async function consultarAgrupacionPorPeriodo(
+  usuarioId,
+  tipo,
+  desde,
+  hasta,
+  agrupacion,
+  categoria = null,
+  conexion = null,
+) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) => {
+    if (!['dia', 'mes'].includes(agrupacion)) throw new ErrorBaseDatos('integridad');
+    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria);
+    const expresionPeriodo = agrupacion === 'dia'
+      ? "strftime('%Y-%m-%d', m.fecha_hora, 'localtime')"
+      : "strftime('%Y-%m', m.fecha_hora, 'localtime')";
+
+    return baseDatos.getAllAsync(
+      `SELECT ${expresionPeriodo} AS periodo,
+              m.categoria AS categoria,
+              ROUND(SUM(m.monto), 2) AS total
+       FROM movimientos m
+       INNER JOIN depositos d ON d.id = m.deposito_id
+       WHERE ${filtros.clausula}
+       GROUP BY periodo, m.categoria
+       ORDER BY periodo ASC, m.categoria ASC;`,
+      filtros.parametros,
+    );
+  }, conexion));
+}
+
+async function consultarDetalleMesCategoria(
+  usuarioId,
+  tipo,
+  categoria,
+  desde,
+  hasta,
+  conexion = null,
+) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion(async (baseDatos) => {
+    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria);
+    const resumen = await baseDatos.getFirstAsync(
+      `SELECT ROUND(COALESCE(SUM(m.monto), 0), 2) AS total,
+              COUNT(m.id) AS cantidad
+       FROM movimientos m
+       INNER JOIN depositos d ON d.id = m.deposito_id
+       WHERE ${filtros.clausula};`,
+      filtros.parametros,
+    );
+    const movimientos = await baseDatos.getAllAsync(
+      `SELECT m.*, d.nombre AS deposito_nombre, d.tipo AS deposito_tipo,
+              d.icono AS deposito_icono, d.color AS deposito_color,
+              r.frecuencia AS frecuencia,
+              CASE WHEN r.id IS NULL THEN 0 ELSE 1 END AS recurrente
+       FROM movimientos m
+       INNER JOIN depositos d ON d.id = m.deposito_id
+       LEFT JOIN recurrencias r ON r.id = m.recurrencia_id
+       WHERE ${filtros.clausula}
+       ORDER BY m.fecha_hora DESC, m.id DESC;`,
+      filtros.parametros,
+    );
+
+    return { resumen, movimientos };
+  }, conexion));
+}
+
 function obtenerMarcaTemporal(fecha) {
   const marcaTemporal = typeof fecha === 'string' ? Date.parse(fecha) : NaN;
   if (!Number.isFinite(marcaTemporal)) {
@@ -574,6 +678,9 @@ export const movimientosRepositorio = Object.freeze({
   consultarHistorial,
   consultarOpcionesHistorial,
   consultarHistorialPorId,
+  consultarResumenPorCategoria,
+  consultarAgrupacionPorPeriodo,
+  consultarDetalleMesCategoria,
   crear,
   actualizar,
   eliminar,
