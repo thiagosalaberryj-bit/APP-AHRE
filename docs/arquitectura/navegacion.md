@@ -179,9 +179,11 @@ La navegación de esta aplicación no implementa por sí sola:
 
 - creación y persistencia de movimientos o depósitos;
 - consultas reales para gráficos, filtros o estadísticas;
-- reconocimiento OCR de comprobantes;
 - notificaciones reales;
 - lógica funcional del módulo Social.
 
 El flujo de Inicio sí consulta la sesión local después del deslizador, como se
 describe arriba y en [`docs/funcionalidades/inicio.md`](../funcionalidades/inicio.md).
+La ruta OCR conserva la pantalla existente y delega el reconocimiento en ML Kit
+local y la confirmación del egreso en el servicio de movimientos, sin agregar
+otra ruta ni otro mecanismo de persistencia.

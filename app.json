@@ -22,7 +22,11 @@
       "adaptiveIcon": {
         "backgroundColor": "#024C42",
         "foregroundImage": "./assets/ahre-mark.png"
-      }
+      },
+      "package": "com.thiagosalaberry.APPAHRE",
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,13 +44,34 @@
       ],
       "expo-sqlite",
       "expo-secure-store",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/ahre-logo.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#F4F4F4",
+          "dark": {
+            "image": "./assets/ahre-logo.png",
+            "backgroundColor": "#081C19"
+          }
+        }
+      ],
+      "./plugins/withCompleteAdaptiveIcon",
       [
         "expo-navigation-bar",
         {
           "enforceContrast": false
         }
       ]
-    ]
+    ],
+    "extra": {
+      "expo-navigation-bar": {
+        "enforceContrast": false
+      },
+      "eas": {
+        "projectId": "bb770d78-0970-4c53-9bad-31c73a5c86fd"
+      }
+    }
   }
 }

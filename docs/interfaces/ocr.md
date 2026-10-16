@@ -1,114 +1,70 @@
 # OCR de comprobantes de AHRE
 
-## Alcance
+## Alcance y flujo
 
-Este documento registra el flujo de escaneo y carga de tickets o comprobantes.
-La vista en vivo y la captura se realizan con `expo-camera`; `expo-image-picker`
-permite elegir una imagen de la galería. El URI se conserva en el borrador local
-mientras se revisa el egreso. El reconocimiento y los datos extraídos continúan
-simulados. No se crea el movimiento, no se guarda la imagen de forma permanente,
-no se actualiza el saldo ni se comunica con un backend.
-
-## Flujo
-
-`src/screens/OcrScreen.js` es secundaria (acceso desde la acción rápida del
-Dashboard) con `EncabezadoSeccion` («Escanear comprobante») y estados locales en
-la misma pantalla:
+La pantalla secundaria existente `src/screens/OcrScreen.js` utiliza ML Kit para
+reconocimiento local y permite confirmar exclusivamente egresos. El comparador
+temporal y las opciones Tesseract se retiraron por indicación del líder.
 
 ```text
-Dashboard
-→ OCR
-→ vista en vivo / tomar foto o elegir imagen de la galería
-→ ajustar encuadre (arrastrar y acercar/alejar) / confirmar recorte
-→ procesando
-→ resultado (total, productos, comprobante, categoría, depósito, fecha y hora)
-→ confirmar egreso (visual)
+Dashboard o Nuevo → OCR → cámara / galería → ajustar recorte
+→ reconocer e interpretar → revisar → seleccionar categoría y depósito
+→ confirmar egreso local
 ```
 
-## Pantalla inicial
+## Captura y recorte
 
-El visor muestra la vista previa de la cámara. `Escanear` solicita permiso y
-activa la cámara en ese espacio; el botón `Tomar foto`, ubicado debajo del
-visor, captura la imagen. `Galería` abre el selector del sistema.
-Luego se puede arrastrar la foto y usar los controles de zoom para ajustar el
-encuadre; `Usar este recorte` genera y adjunta ese recorte al borrador. `Volver
-a escanear` regresa al visor. La cámara se pausa al salir de esta pantalla, al
-ajustar el encuadre y al revisar el resultado. La imagen recortada se conserva
-en el borrador mientras se completa el formulario.
+El visor mantiene la cámara en vivo y el obturador debajo. La cámara se monta
+solo cuando la pantalla tiene foco y la captura está activa. Galería utiliza
+el selector del sistema. El permiso rechazado o un error de cámara permiten
+reintentar o regresar, sin bloquear el resto de AHRE.
 
-## Estado procesando
+La imagen se puede arrastrar y ampliar antes de confirmar el recorte. La ayuda
+pide incluir comercio, productos, fecha y total. El recorte generado en caché
+se entrega al módulo nativo; no se sube a un servicio externo.
 
-Tarjeta con indicador, «Analizando comprobante...» y aviso de espera, más
-`Cancelar`. Incluye un link sutil `Simular error de lectura`, solo ayuda de
-verificación para representar el error sin OCR real.
+## Procesamiento y errores
 
-## Error de lectura o acceso
+Se muestra «Analizando comprobante...» y una acción para cancelar. Los envíos
+repetidos se bloquean. Texto vacío, imagen inválida y errores del motor muestran
+un mensaje controlado, reintento, volver a escanear y cancelación. Si existe
+texto pero faltan campos, se abre la revisión para completarlos manualmente.
 
-Tarjeta con ícono y un mensaje acorde al problema: no se pudo leer el ticket,
-abrir la imagen o acceder a la cámara. Incluye una sugerencia de reintento o
-carga manual, `Intentar nuevamente` (repite el procesamiento o vuelve a abrir
-el selector) y `Cancelar`.
+## Revisión del egreso
 
-## Resultado
+`src/ocr/OcrExpenseForm.js` es un formulario dentro de la misma pantalla, con:
 
-Formulario editable con los datos reconocidos (simulados), en este orden:
+- comercio reconocido como referencia;
+- total editable mediante `MoneyInput`;
+- descripción multilínea editable con comercio y posibles productos;
+- categorías y depósitos reales mediante los selectores existentes;
+- fecha y hora editables con los selectores compartidos;
+- foto temporal del comprobante;
+- «Ver texto reconocido», desplegable y seleccionable;
+- «Confirmar egreso» y «Volver a escanear».
 
-- Total del ticket (`EntradaMonto`), corregible con `X` para limpiar;
-- Detalle de productos editable como texto multilínea, un producto por línea
-  con cantidad, precio unitario y subtotal, y contador de 500 caracteres; la
-  altura limitada permite desplazar descripciones extensas dentro del campo;
-- Comprobante adjunto con vista previa de la imagen capturada o elegida y
-  recortada según el encuadre confirmado;
-- Categoría con `SelectorCategoria` (catálogo de egresos), sin selección
-  inicial;
-- Depósito con `SelectorDeposito` (`Efectivo, Mercado Pago, Cuenta bancaria`),
-  sin selección inicial;
-- Fecha y hora con `SelectorFecha` y `SelectorHora` (modales compartidos), al
-  final para revisar o ajustar.
+Si falta monto se deja vacío. Si falta fecha/hora se propone la actual y se
+explica visiblemente. La descripción mantiene el límite financiero de 500
+caracteres: una propuesta extensa se conserva para revisar y resumir, con
+contador y validación, sin truncarla automáticamente.
 
-El usuario completa o confirma categoría, depósito, fecha y hora; no se muestra
-una alerta por datos que el OCR no pueda determinar. Acciones `Confirmar`
-(principal, visual, aún no crea el egreso) y `Volver a escanear`. No se muestra
-la acción `Cancelar` en el resultado.
+Si no existen depósitos se ofrece «Crear depósito» mediante la ruta existente;
+confirmar queda deshabilitado. Al regresar se conservan el resultado y las
+correcciones y se recargan los depósitos. Categoría y depósito no se eligen
+automáticamente. Un error de carga ofrece reintento.
 
-## Estados visuales
+## Guardado y presentación
 
-- **Cámara preparada:** vista previa e instrucciones en el visor, con el
-  obturador debajo.
-- **Vista en vivo:** imagen de la cámara y botón de captura debajo del visor;
-  `Galería` permite elegir otra imagen.
-- **Ajuste de encuadre:** se arrastra la foto y se acerca o aleja con controles;
-  se muestra una guía centrada y se confirma antes de generar el archivo
-  recortado que queda adjunto al formulario.
-- **Procesando:** indicador, mensaje y cancelación.
-- **Resultado:** total, detalle de productos, vista previa del comprobante y
-  selectores editables; los campos no detectables quedan para el usuario sin
-  alertas.
-- **Error de lectura o acceso:** mensaje, reintento y cancelación.
+Se reutilizan `cargarDatosMovimiento('egreso')`, `validarDatosMovimiento` y
+`crearMovimiento(datos, 'egreso')`, sin otro mecanismo de persistencia. Los
+controles y el regreso del encabezado se bloquean mientras se guarda; una
+referencia evita confirmar el mismo resultado nuevamente. Los errores de campo
+se muestran junto al dato y los generales usan el toast de AHRE. Un error de
+guardado conserva el borrador. El éxito informa y regresa a la pantalla anterior.
 
-## Decisiones de diseño
+Se conservan los componentes compartidos sin modificarlos, los estilos locales
+de `OcrScreenStyles.js`, los tokens globales y ambos temas. La foto sirve para
+revisar: no se almacena como adjunto permanente del movimiento.
 
-- Un solo archivo de pantalla con estados, como permite el Issue; sin pantallas
-  nuevas.
-- Reutilización: `MoneyInput, CategorySelector, DepositSelector, DateSelector,
-  TimeSelector, PrimaryButton, SectionHeader` sin modificarlos; los estilos de
-  formulario vienen de `expenseStyles.js` y los estilos propios de esta pantalla
-  de `src/styles/OcrScreenStyles.js`.
-- La imagen se mantiene en el borrador en memoria y se presenta como adjunto al
-  egreso; el archivo recortado se genera en la caché local, mientras que la
-  persistencia permanente del archivo y del movimiento queda pendiente de la
-  implementación funcional.
-- La cámara se monta únicamente en OCR y cuando esa pantalla tiene el foco; se
-  desmonta durante el procesamiento y al revisar el resultado.
-- El formulario se desplaza hasta el final, mantiene espacio para el área segura
-  inferior y evita que el teclado tape la descripción o las acciones.
-- La descripción de productos conserva el tamaño de texto del formulario y usa
-  altura máxima; el texto largo se desplaza dentro del campo para dejar
-  accesibles el resto del formulario y la confirmación.
-- El tema viene de `ContextoApariencia`, como el resto de la app.
-- Sin `hover`: todo por foco, selección y texto.
-
-## Funcionamiento sin conexión
-
-La pantalla solo usa componentes, estilos, íconos y constantes locales. No
-requiere Internet ni invoca servicios externos.
+La evaluación, heurísticas, límites, imágenes, funcionamiento offline y pruebas
+están documentados en [`../funcionalidades/ocr.md`](../funcionalidades/ocr.md).

@@ -4,8 +4,9 @@
 
 Esta estructura organiza AHRE, una aplicación móvil desarrollada con Expo y
 React Native utilizando JavaScript. Login y Registro implementan autenticación
-local y persistencia de sesión. Los flujos completos de finanzas, OCR,
-sincronización y colaboración todavía no están implementados.
+local y persistencia de sesión. Los movimientos y depósitos usan SQLite local;
+el OCR Android reconoce comprobantes y permite confirmar egresos mediante el
+servicio existente. La sincronización y la colaboración siguen pendientes.
 
 El informe del proyecto define AHRE como una aplicación orientada inicialmente
 a Android y con un enfoque offline-first. Por eso la información local es el
@@ -202,6 +203,16 @@ de sesión y guardar por usuario la preferencia de visibilidad de saldos.
 Contiene integraciones que requieran conexión o infraestructura externa, como
 sincronización, autenticación remota, OCR en línea o importaciones. Las
 funciones esenciales deben poder utilizarse sin esta capa.
+
+### `src/ocr/` y `modules/receipt-ocr/`
+
+`src/ocr/` coordina el reconocimiento local con ML Kit, interpreta texto y
+posiciones, prepara un borrador editable y presenta la revisión del egreso
+dentro de la pantalla OCR existente. La confirmación reutiliza el servicio
+normal de movimientos; no mantiene repositorios financieros propios.
+`modules/receipt-ocr/` es el adaptador Expo local Android, escrito en Kotlin para
+invocar el SDK nativo. El modelo latino está incluido para operar sin descargarlo
+al primer uso; esta funcionalidad no depende de `src/services/` ni de un backend.
 
 ### `src/deposits/`
 

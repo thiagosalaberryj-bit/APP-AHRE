@@ -7,6 +7,16 @@ documentación se registran en este archivo.
 
 ### Añadido
 
+- Se integró ML Kit en Android con el modelo latino incluido para reconocer
+  comprobantes sin descargar modelos durante el uso. La cámara, la galería y
+  el recorte existentes permiten preparar una revisión editable de monto,
+  fecha, hora, comercio y productos. (#31)
+- La revisión OCR permite confirmar un egreso con categoría y depósito elegidos
+  manualmente, usando las validaciones, transacciones y actualización de saldo
+  existentes. Si no hay depósitos, permite crear uno y retomar el borrador.
+  Las imágenes son temporales y se bloquean confirmaciones repetidas. (#31)
+- Se agregó el perfil EAS interno `ocr-comparison` para generar el APK con el
+  módulo nativo y se configuró la fuente local de versiones de la app. (#31)
 - Se implementó la capa local de persistencia SQLite con inicialización,
   versionado, esquema relacional y repositorios para las entidades del modelo.
   Las operaciones compuestas usan transacciones y no dependen de Internet ni
@@ -55,6 +65,10 @@ documentación se registran en este archivo.
 
 ### Cambiado
 
+- Se actualizaron los parches de Expo a `~57.0.30`, `expo-constants` a
+  `~57.0.22`, `expo-crypto` a `~57.0.4`, `expo-image-manipulator` a
+  `~57.0.21`, `expo-splash-screen` a `~57.0.10` y `expo-sqlite` a
+  `~57.0.4`, manteniendo el SDK 57. (#31)
 - Se simplificó el cálculo local del verificador de contraseña a SHA-256 con
   sal en una pasada para reducir la espera de Registro y Login en Expo Go.
   (#20)
@@ -104,6 +118,16 @@ documentación se registran en este archivo.
   columnas. El detalle de categoría agrupa sus filtros y resultados en una
   tarjeta, con descripción, conteo mensual e importe. (#28)
 
+### Corregido
+
+- La interpretación OCR reconoce años de dos cifras, separa el contador de
+  artículos del importe total y trata variantes como `TOTALCS$)` como etiquetas,
+  evitando agregarlas como productos. Reúne nombres partidos y conserva el
+  comercio en la descripción; los datos ambiguos requieren revisión. (#31)
+- El ícono adaptativo de Android incorpora un margen para mostrar el caballo
+  completo. La pantalla nativa de carga usa el logo de AHRE con fondos para
+  los temas claro y oscuro. Ambos cambios requieren reconstruir el APK. (#31)
+
 ### Documentación
 
 - Se documentaron el esquema SQLite, las relaciones, las transacciones, el
@@ -138,6 +162,21 @@ documentación se registran en este archivo.
 - Se documentaron las fuentes SQLite, consultas, períodos, agrupaciones,
   porcentajes, estrategia monetaria, detalles y funcionamiento offline de
   Estadísticas. Se actualizaron las guías de interfaz y el README. (#28)
+
+- Se documentaron la evaluación y selección de ML Kit, el flujo OCR hasta el
+  egreso, los permisos, el tratamiento temporal de imágenes, las limitaciones,
+  la compilación EAS y la reutilización de la persistencia de movimientos.
+  Se actualizaron las guías de interfaz, arquitectura y dependencias. (#31)
+
+### Verificación
+
+- Se incorporaron 24 pruebas automatizadas de interpretación, preparación del
+  borrador y persistencia con el esquema y servicio reales sobre SQLite en
+  memoria, incluidos errores y rollback. Se verificaron la exportación Android
+  con Hermes y la generación nativa de splash e íconos. (#31)
+- El líder confirmó el buen funcionamiento en su dispositivo el 16 de octubre
+  de 2026. La guía OCR distingue esta comprobación de los escenarios manuales
+  de aceptación que todavía deben registrarse individualmente. (#31)
 
 ## [v0.3.0] - 2026-09-26 - no estable
 

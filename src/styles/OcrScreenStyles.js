@@ -16,6 +16,31 @@ export function crearEstilosOcr(tema) {
     contenedorDesplazamiento: {
       flexGrow: 1,
     },
+    tarjetaInformacion: {
+      gap: ESPACIADO.medio,
+      padding: ESPACIADO.grande,
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderWidth: BORDES.anchos.fino,
+      borderRadius: BORDES.radios.tarjeta,
+    },
+    formularioResultado: {
+      gap: ESPACIADO.formulario,
+    },
+    imagenComprobante: {
+      width: '100%',
+      height: 240,
+      backgroundColor: tema.superficie,
+      borderRadius: BORDES.radios.tarjeta,
+    },
+    descripcionResultado: {
+      minHeight: 120,
+      maxHeight: 240,
+      padding: ESPACIADO.medio,
+    },
+    textoReconocido: {
+      maxHeight: 280,
+    },
     visor: {
       flex: 1,
       minHeight: 480,

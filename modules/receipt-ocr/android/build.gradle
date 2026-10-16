@@ -1,0 +1,25 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.receiptocr'
+version = '0.1.0'
+
+repositories {
+  google()
+  mavenCentral()
+}
+
+android {
+  namespace 'expo.modules.receiptocr'
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  // Modelo latino incluido: no usar la variante descargable de Play Services.
+  implementation 'com.google.mlkit:text-recognition:16.0.1'
+}

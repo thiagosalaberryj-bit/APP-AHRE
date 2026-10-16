@@ -179,6 +179,12 @@ red y puede utilizarse en modo avión.
 
 ## Registro de egresos
 
+La revisión de OCR también llama a `cargarDatosMovimiento('egreso')`,
+`validarDatosMovimiento` y `crearMovimiento(datos, 'egreso')`. Monto,
+descripción, categoría, depósito, fecha y hora se revisan antes de confirmar;
+se usa la misma transacción e impacto de saldo. El flujo se describe en
+[`ocr.md`](ocr.md). No existe una persistencia paralela para comprobantes.
+
 Egreso reutiliza `FormularioMovimiento` y los mismos selectores, validaciones,
 repositorios y estilos que Ingreso. `ExpenseScreen.js` solo configura el tipo
 `egreso`; no mantiene catálogos de muestra ni una lógica de guardado paralela.

@@ -13,48 +13,18 @@ import {
   Platform,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
-import SelectorCategoria from '../components/CategorySelector';
-import SelectorFecha from '../components/DateSelector';
-import SelectorDeposito from '../components/DepositSelector';
-import EntradaMonto from '../components/MoneyInput';
 import BotonPrincipal from '../components/PrimaryButton';
 import EncabezadoSeccion from '../components/SectionHeader';
-import SelectorHora from '../components/TimeSelector';
-import { CATEGORIAS_EGRESO, DEPOSITOS_SIMULADOS } from '../constants/movimientos';
+import FormularioEgresoOcr from '../ocr/OcrExpenseForm';
+import { eliminarImagenTemporal, OCR_DISPONIBLE, reconocerComprobante } from '../ocr/ocrService';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
 import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
 import { crearEstilosOcr } from '../styles/OcrScreenStyles';
-
-const RESULTADO_ESCANER = Object.freeze({
-  monto: '24580',
-  descripcion: [
-    'Leche — 2 × $ 1.900 = $ 3.800',
-    'Pan lactal — 1 × $ 3.500 = $ 3.500',
-    'Frutas de estación — 1 × $ 8.280 = $ 8.280',
-    'Yogur natural — 2 × $ 4.500 = $ 9.000',
-  ].join('\n'),
-  categoriaId: null,
-  depositoId: null,
-  hora: '18:45',
-});
-
-const RESULTADO_GALERIA = Object.freeze({
-  monto: '12150',
-  descripcion: [
-    'Café molido — 1 × $ 5.150 = $ 5.150',
-    'Galletitas — 2 × $ 2.000 = $ 4.000',
-    'Agua mineral — 3 × $ 1.000 = $ 3.000',
-  ].join('\n'),
-  categoriaId: null,
-  depositoId: null,
-  hora: '12:30',
-});
 
 function calcularMarcoRecorte(imagen, visor) {
   if (!imagen?.width || !imagen?.height || !visor.width || !visor.height) {
@@ -94,14 +64,13 @@ export default function PantallaOCR({ navigation: navegacion }) {
   const [tamanoVisorRecorte, establecerTamanoVisorRecorte] = useState({ width: 0, height: 0 });
   const [escalaRecorte, establecerEscalaRecorte] = useState(1);
   const [desplazamientoRecorte, establecerDesplazamientoRecorte] = useState({ x: 0, y: 0 });
-  const [monto, establecerMonto] = useState('');
-  const [descripcion, establecerDescripcion] = useState('');
-  const [fecha, establecerFecha] = useState(() => new Date());
-  const [hora, establecerHora] = useState('18:45');
-  const [categoriaId, establecerCategoriaId] = useState(null);
-  const [depositoId, establecerDepositoId] = useState(null);
+  const [resultado, establecerResultado] = useState(null);
+  const guardandoEgresoRef = useRef(false);
+  const operacionActual = useRef(0);
+  const operacionEnCurso = useRef(false);
+  const pantallaMontada = useRef(true);
+  const imagenesTemporales = useRef(new Set());
   const [imagenComprobante, establecerImagenComprobante] = useState(null);
-  const [comprobanteAdjunto, establecerComprobanteAdjunto] = useState(false);
   const [mensajeError, establecerMensajeError] = useState('');
   const [tituloError, establecerTituloError] = useState('No pudimos leer correctamente el comprobante.');
   const marcoRecorte = calcularMarcoRecorte(imagenPendiente, tamanoVisorRecorte);
@@ -138,6 +107,21 @@ export default function PantallaOCR({ navigation: navegacion }) {
     }
   }, [enfocada]);
 
+  useEffect(() => {
+    pantallaMontada.current = true;
+    return () => {
+      pantallaMontada.current = false;
+      operacionActual.current += 1;
+      imagenesTemporales.current.forEach((uri) => { eliminarImagenTemporal(uri); });
+      imagenesTemporales.current.clear();
+    };
+  }, []);
+
+  const descartarImagenes = () => {
+    imagenesTemporales.current.forEach((uri) => { eliminarImagenTemporal(uri); });
+    imagenesTemporales.current.clear();
+  };
+
   const prepararAjusteImagen = async (imagen, origenElegido) => {
     let ancho = imagen.width;
     let alto = imagen.height;
@@ -160,6 +144,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
       }
     }
 
+    if (!pantallaMontada.current) return;
     establecerOrigen(origenElegido);
     establecerImagenPendiente({ ...imagen, width: ancho, height: alto });
     establecerTamanoVisorRecorte({ width: 0, height: 0 });
@@ -171,29 +156,29 @@ export default function PantallaOCR({ navigation: navegacion }) {
     establecerEstado('recorte');
   };
 
-  const cargarResultado = (datos, imagen) => {
-    establecerMonto(datos.monto);
-    establecerDescripcion(datos.descripcion);
-    establecerFecha(new Date());
-    establecerHora(datos.hora);
-    establecerCategoriaId(datos.categoriaId);
-    establecerDepositoId(datos.depositoId);
-    establecerImagenComprobante(imagen);
-    establecerComprobanteAdjunto(true);
-  };
-
-  const iniciarProcesamiento = (origenElegido, imagen) => {
+  const iniciarProcesamiento = async (origenElegido, imagen) => {
+    if (operacionEnCurso.current) return;
+    operacionEnCurso.current = true;
+    const operacion = ++operacionActual.current;
     establecerOrigen(origenElegido);
     establecerMensajeError('');
     establecerImagenComprobante(imagen);
-    establecerComprobanteAdjunto(true);
     establecerCamaraActiva(false);
     establecerCamaraLista(false);
     establecerEstado('procesando');
-    setTimeout(() => {
-      cargarResultado(origenElegido === 'galeria' ? RESULTADO_GALERIA : RESULTADO_ESCANER, imagen);
+    try {
+      const resultadoReconocido = await reconocerComprobante(imagen.uri);
+      if (operacionActual.current !== operacion) return;
+      establecerResultado(resultadoReconocido);
       establecerEstado('resultado');
-    }, 2000);
+    } catch (error) {
+      if (operacionActual.current !== operacion) return;
+      establecerTituloError('No pudimos leer el comprobante.');
+      establecerMensajeError(error.message || 'Probá nuevamente con otra imagen.');
+      establecerEstado('error');
+    } finally {
+      operacionEnCurso.current = false;
+    }
   };
 
   const activarCamara = async () => {
@@ -234,7 +219,11 @@ export default function PantallaOCR({ navigation: navegacion }) {
       if (!imagen) {
         return;
       }
-
+      if (!pantallaMontada.current) {
+        await eliminarImagenTemporal(imagen.uri);
+        return;
+      }
+      imagenesTemporales.current.add(imagen.uri);
       await prepararAjusteImagen(imagen, 'escaner');
     } catch {
       establecerCamaraActiva(false);
@@ -257,6 +246,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
         allowsEditing: false,
         quality: 1,
       });
+      if (!pantallaMontada.current) return;
 
       if (resultado.canceled || !resultado.assets?.[0]) {
         establecerCamaraActiva(camaraEstabaActiva);
@@ -283,7 +273,10 @@ export default function PantallaOCR({ navigation: navegacion }) {
   };
 
   const volverAEscanear = () => {
-    establecerComprobanteAdjunto(false);
+    if (operacionEnCurso.current || guardandoEgresoRef.current) return;
+    operacionActual.current += 1;
+    descartarImagenes();
+    establecerResultado(null);
     establecerImagenComprobante(null);
     establecerImagenPendiente(null);
     establecerEstado('camara');
@@ -292,6 +285,8 @@ export default function PantallaOCR({ navigation: navegacion }) {
   };
 
   const cancelarAjusteRecorte = () => {
+    if (operacionEnCurso.current) return;
+    descartarImagenes();
     establecerImagenPendiente(null);
     establecerEstado('camara');
     establecerCamaraLista(false);
@@ -308,10 +303,11 @@ export default function PantallaOCR({ navigation: navegacion }) {
   };
 
   const confirmarRecorte = async () => {
-    if (!imagenPendiente || !marcoRecorte.ancho || !marcoRecorte.alto) {
+    if (operacionEnCurso.current || !imagenPendiente || !marcoRecorte.ancho || !marcoRecorte.alto) {
       return;
     }
-
+    operacionEnCurso.current = true;
+    const operacion = ++operacionActual.current;
     establecerEstado('procesando');
     try {
       const ancho = Math.max(1, Math.floor(imagenPendiente.width / escalaRecorte));
@@ -332,6 +328,11 @@ export default function PantallaOCR({ navigation: navegacion }) {
         compress: 0.9,
         format: ImageManipulator.SaveFormat.JPEG,
       });
+      if (operacionActual.current !== operacion) {
+        await eliminarImagenTemporal(imagenRecortada.uri);
+        return;
+      }
+      imagenesTemporales.current.add(imagenRecortada.uri);
       const imagen = {
         ...imagenPendiente,
         uri: imagenRecortada.uri,
@@ -344,17 +345,14 @@ export default function PantallaOCR({ navigation: navegacion }) {
       };
 
       establecerImagenPendiente(null);
+      establecerResultado(null);
+      operacionEnCurso.current = false;
       iniciarProcesamiento(origen, imagen);
     } catch (error) {
-      const detalleError = error instanceof Error ? error.message : String(error);
-      const requiereReconstruccion = /ExpoImageManipulator|native module|is not a function/i.test(detalleError);
-      console.error('Error al recortar el comprobante:', error);
-      establecerTituloError(requiereReconstruccion
-        ? 'Hay que actualizar la app instalada.'
-        : 'No pudimos recortar esta foto.');
-      establecerMensajeError(requiereReconstruccion
-        ? 'El recortador nativo no está incluido en esta versión instalada. Hace falta generar e instalar una compilación nueva de AHRE.'
-        : `Probá con otra foto. Detalle técnico: ${detalleError}`);
+      operacionEnCurso.current = false;
+      if (operacionActual.current !== operacion) return;
+      establecerTituloError('No pudimos recortar esta foto.');
+      establecerMensajeError('Probá con otra foto y verificá que la app instalada incluya el recortador nativo.');
       establecerEstado('error');
     }
   };
@@ -368,7 +366,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
           tema={tema}
           titulo="Escanear comprobante"
           descripcion="Tomá o elegí una foto del ticket."
-          alVolver={() => navegacion.goBack()}
+          alVolver={() => { if (!guardandoEgresoRef.current) navegacion.goBack(); }}
         />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -383,6 +381,9 @@ export default function PantallaOCR({ navigation: navegacion }) {
             showsVerticalScrollIndicator={false}
           >
           <View style={estilos.contenido}>
+            {estado === 'camara' && !OCR_DISPONIBLE ? (
+              <Text accessibilityRole="alert" style={estilosGlobales.textoError}>Para reconocer comprobantes necesitás el APK Android con ML Kit. Expo Go no incluye el motor.</Text>
+            ) : null}
             {estado === 'camara' ? (
               <>
                 <View style={estilos.visor}>
@@ -469,7 +470,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
             {estado === 'recorte' ? (
               <>
                 <Text style={estilos.instruccionesRecorte}>
-                  Acercá la foto y arrastrala hasta centrar la parte que querés adjuntar.
+                  Incluí el comercio, los productos, la fecha y el total dentro del recorte.
                 </Text>
                 <View
                   onLayout={({ nativeEvent }) => establecerTamanoVisorRecorte({
@@ -548,7 +549,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
                     accessibilityLabel="Usar el recorte y adjuntar la foto"
                     accessibilityRole="button"
                     disabled={!marcoRecorte.ancho}
-                    onPress={confirmarRecorte}
+                    onPress={() => confirmarRecorte()}
                     style={[estilos.botonUsarRecorte, !marcoRecorte.ancho && estilos.botonDeshabilitado]}
                   >
                     <Ionicons color="#FFFFFF" name="checkmark-circle-outline" size={22} />
@@ -563,7 +564,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
                 <ActivityIndicator size="large" color={tema.foco} />
                 <Text style={estilos.tituloEstado}>Analizando comprobante...</Text>
                 <Text style={estilos.textoEstado}>
-                  Esto puede tardar algunos segundos. No cierres la pantalla.
+                  El procesamiento ocurre en este dispositivo.
                 </Text>
                 <Pressable
                   accessibilityRole="button"
@@ -572,134 +573,24 @@ export default function PantallaOCR({ navigation: navegacion }) {
                 >
                   <Text style={estilosGlobales.textoBotonSecundario}>Cancelar</Text>
                 </Pressable>
-                <Pressable
-                  accessibilityLabel="Simular error de lectura"
-                  accessibilityRole="button"
-                  onPress={() => {
-                    establecerTituloError('No pudimos leer correctamente el comprobante.');
-                    establecerMensajeError('Probá con mejor luz o cargá los datos manualmente desde Nuevo egreso.');
-                    establecerEstado('error');
-                  }}
-                  style={estilos.accionSutil}
-                >
-                  <Text style={estilos.textoAccionSutil}>Simular error de lectura</Text>
-                </Pressable>
               </View>
             ) : null}
 
-            {estado === 'resultado' ? (
-              <>
-                <EntradaMonto
-                  tema={tema}
-                  estilosGlobales={estilosGlobales}
-                  estilosMovimiento={estilosMovimiento}
-                  etiqueta="Total del ticket"
-                  valor={monto}
-                  alCambiarTexto={establecerMonto}
-                  alLimpiar={() => establecerMonto('')}
-                />
-                <View style={estilosMovimiento.grupo}>
-                  <View style={estilos.filaEtiqueta}>
-                    <Text style={estilosGlobales.etiqueta}>Detalle de productos</Text>
-                    <Text style={estilosMovimiento.contador}>{descripcion.length}/500</Text>
-                  </View>
-                  <View style={[estilosGlobales.campo, estilosMovimiento.filaDescripcion, estilos.descripcionMultilinea]}>
-                    <TextInput
-                      accessibilityLabel="Detalle de productos del comprobante"
-                      maxLength={500}
-                      multiline
-                      onChangeText={establecerDescripcion}
-                      placeholder="Escribí cada producto en una línea"
-                      placeholderTextColor={tema.textoSecundario}
-                      scrollEnabled
-                      selectionColor={tema.foco}
-                      style={estilosMovimiento.entradaDescripcion}
-                      textAlignVertical="top"
-                      value={descripcion}
-                    />
-                  </View>
-                  <Text style={estilos.textoAyudaDescripcion}>
-                    Cada producto muestra cantidad, precio unitario y subtotal.
-                    Revisá que coincidan con el total.
-                  </Text>
-                </View>
-                {comprobanteAdjunto ? (
-                  <View
-                    accessibilityLabel="Comprobante adjunto al movimiento"
-                    style={estilos.tarjetaComprobante}
-                  >
-                    <Image
-                      accessibilityLabel="Vista previa del comprobante"
-                      resizeMode="contain"
-                      source={{ uri: imagenComprobante.uri }}
-                      style={estilos.vistaPreviaComprobante}
-                    />
-                    <View style={estilos.datosComprobante}>
-                      <Text style={estilos.tituloComprobante}>Comprobante adjunto</Text>
-                      <Text numberOfLines={1} style={estilos.nombreComprobante}>
-                        {imagenComprobante.fileName || 'comprobante.jpg'}
-                      </Text>
-                      <Text style={estilos.textoComprobante}>Adjunto a este movimiento.</Text>
-                    </View>
-                    <Ionicons color={tema.exito} name="checkmark-circle" size={22} />
-                  </View>
-                ) : null}
-                <SelectorCategoria
-                  tema={tema}
-                  estilosGlobales={estilosGlobales}
-                  estilosMovimiento={estilosMovimiento}
-                  categorias={CATEGORIAS_EGRESO}
-                  seleccionadaId={categoriaId}
-                  alSeleccionar={establecerCategoriaId}
-                />
-                <SelectorDeposito
-                  tema={tema}
-                  estilosGlobales={estilosGlobales}
-                  estilosMovimiento={estilosMovimiento}
-                  depositos={DEPOSITOS_SIMULADOS}
-                  seleccionadoId={depositoId}
-                  alSeleccionar={establecerDepositoId}
-                />
-                <View style={estilosMovimiento.grupo}>
-                  <Text style={estilosGlobales.etiqueta}>Fecha y hora</Text>
-                  <View style={estilosMovimiento.tarjetaInformacion}>
-                    <SelectorFecha
-                      tema={tema}
-                      estilosMovimiento={estilosMovimiento}
-                      valor={fecha}
-                      alSeleccionar={establecerFecha}
-                    />
-                    <View style={estilosMovimiento.separadorInformacion} />
-                    <SelectorHora
-                      tema={tema}
-                      estilosMovimiento={estilosMovimiento}
-                      valor={hora}
-                      alSeleccionar={establecerHora}
-                    />
-                  </View>
-                </View>
-                <Text style={estilosGlobales.textoAyuda}>
-                  Revisá los datos y confirmá el egreso. Podés completar lo que el comprobante no informa.
-                </Text>
-                <View style={estilos.accionesEscaner}>
-                  <BotonPrincipal
-                    estilosAutenticacion={estilosMovimiento}
-                    estilosGlobales={estilosGlobales}
-                    titulo="Confirmar"
-                    alPresionar={() => navegacion.goBack()}
-                  />
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={volverAEscanear}
-                    style={estilos.botonGaleria}
-                  >
-                    <Ionicons color={tema.textoPrincipal} name="scan-outline" size={22} />
-                    <Text style={estilos.textoBotonGaleria}>Volver a escanear</Text>
-                  </Pressable>
-                </View>
-              </>
+            {estado === 'resultado' && resultado ? (
+              <FormularioEgresoOcr
+                resultado={resultado}
+                imagen={imagenComprobante}
+                navegacion={navegacion}
+                tema={tema}
+                estilos={estilos}
+                estilosGlobales={estilosGlobales}
+                estilosMovimiento={estilosMovimiento}
+                alVolverAEscanear={volverAEscanear}
+                alCambiarGuardado={(valor) => {
+                  guardandoEgresoRef.current = valor;
+                }}
+              />
             ) : null}
-
             {estado === 'error' ? (
               <View style={estilos.tarjetaEstado}>
                 <Ionicons color={tema.error} name="alert-circle-outline" size={48} />
@@ -721,6 +612,11 @@ export default function PantallaOCR({ navigation: navegacion }) {
                           : seleccionarComprobante()
                   )}
                 />
+                {imagenPendiente || imagenComprobante ? (
+                  <Pressable accessibilityRole="button" onPress={volverAEscanear} style={estilos.botonGaleria}>
+                    <Text style={estilos.textoBotonGaleria}>Volver a escanear</Text>
+                  </Pressable>
+                ) : null}
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => navegacion.goBack()}
