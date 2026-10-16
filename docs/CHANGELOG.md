@@ -43,6 +43,10 @@ documentación se registran en este archivo.
 - Movimientos consulta en SQLite los ingresos y egresos del usuario, con
   búsqueda, filtros combinables, paginación y detalle por ID. Funciona sin
   conexión a Internet. (#26)
+- Estadísticas consulta los movimientos locales para separar ingresos y egresos,
+  calcular distribuciones por categoría y presentar períodos semanales y
+  anuales completos. El detalle incluye evolución y movimientos reales de cada
+  categoría; todo funciona sin conexión. (#28)
 - Perfil consulta y actualiza los datos de la cuenta y guarda las preferencias
   de idioma, notificaciones y apariencia en SQLite local. (#29)
 - Se agregó el cambio permanente de contraseña: verifica la contraseña actual
@@ -96,6 +100,9 @@ documentación se registran en este archivo.
   título y descripción, botón `X` arriba a la derecha y opciones alineadas. La
   verificación del perfil permite enviar la contraseña con el teclado o usar
   la huella debajo del campo. (#29)
+- Estadísticas abre por defecto en Mes para la distribución y en Año para las
+  columnas. El detalle de categoría agrupa sus filtros y resultados en una
+  tarjeta, con descripción, conteo mensual e importe. (#28)
 
 ### Documentación
 
@@ -128,6 +135,9 @@ documentación se registran en este archivo.
 - Se actualizaron las guías de Perfil, autenticación local, Inicio, arquitectura
   y sistema visual para describir las preferencias persistentes, el cambio de
   contraseña y los modales de Perfil. (#29)
+- Se documentaron las fuentes SQLite, consultas, períodos, agrupaciones,
+  porcentajes, estrategia monetaria, detalles y funcionamiento offline de
+  Estadísticas. Se actualizaron las guías de interfaz y el README. (#28)
 
 ## [v0.3.0] - 2026-09-26 - no estable
 

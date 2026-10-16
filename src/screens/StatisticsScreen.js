@@ -1,4 +1,5 @@
 import { useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Modal,
   Pressable,
@@ -16,12 +17,12 @@ import EncabezadoPrincipal from '../components/MainHeader';
 import {
   CATEGORIAS_EGRESO,
   CATEGORIAS_INGRESO,
-  DEPOSITOS_SIMULADOS,
 } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
 import { obtenerColoresGraficos } from '../styles/colors';
 import { crearEstilosGlobales, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
+import { cargarEstadisticas } from '../statistics/statisticsService';
 
 const PERIODOS_RESUMEN = Object.freeze([
   { id: 'dia', nombre: 'Día' },
@@ -134,8 +135,14 @@ function obtenerCategorias(tipoMovimiento, tema) {
 }
 
 function formatearMonto(monto) {
-  const texto = String(Math.round(monto)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `$ ${texto}`;
+  return `$ ${new Intl.NumberFormat('es-AR', {
+    maximumFractionDigits: 2,
+  }).format(Number(monto) || 0)}`;
+}
+
+function formatearPorcentaje(porcentaje) {
+  const valor = Math.round((Number(porcentaje) + Number.EPSILON) * 10) / 10;
+  return `${valor.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`;
 }
 
 function crearRutaSector(inicio, fin, radio = 140) {
@@ -149,55 +156,6 @@ function crearRutaSector(inicio, fin, radio = 140) {
   const arcoGrande = fin - inicio > 180 ? 1 : 0;
 
   return `M ${centro} ${centro} L ${primero.x} ${primero.y} A ${radio} ${radio} 0 ${arcoGrande} 1 ${segundo.x} ${segundo.y} Z`;
-}
-
-function crearMovimientosMuestra(catalogo, tipo, anio) {
-  const movimientos = [];
-
-  catalogo.forEach((categoria, indiceCategoria) => {
-    MESES.forEach((mes) => {
-      const cantidadDias = new Date(anio, mes.id + 1, 0).getDate();
-
-      for (let dia = 1; dia <= cantidadDias; dia += 1) {
-        const fecha = new Date(
-          anio,
-          mes.id,
-          dia,
-          8 + ((indiceCategoria + dia) % 12),
-          (indiceCategoria * 7 + dia * 11) % 60,
-        );
-        const fechaISO = fecha.toISOString();
-        const montoBase = tipo === 'ingreso' ? 5000 : 700;
-        const variacion = (indiceCategoria * 2311) + (mes.id * 1777) + (dia * 421);
-
-        movimientos.push({
-          id: `muestra-${tipo}-${anio}-${mes.id + 1}-${dia}-${categoria.id}`,
-          deposito_id: DEPOSITOS_SIMULADOS[(indiceCategoria + mes.id + dia) % DEPOSITOS_SIMULADOS.length].id,
-          categoria: categoria.id,
-          recurrencia_id: null,
-          transferencia_id: null,
-          tipo,
-          monto: montoBase + (variacion % (tipo === 'ingreso' ? 26000 : 11500)),
-          descripcion: `${categoria.nombre} · Movimiento de muestra`,
-          fecha_hora: fechaISO,
-          anulado: 0,
-          fecha_creacion: fechaISO,
-          fecha_actualizacion: fechaISO,
-        });
-      }
-    });
-  });
-
-  return movimientos;
-}
-
-function crearMovimientosSemanaMuestra(catalogo, tipo, fecha) {
-  const inicio = obtenerInicioSemana(fecha);
-  const fin = new Date(inicio);
-  fin.setDate(fin.getDate() + 6);
-  const anios = new Set([inicio.getFullYear(), fin.getFullYear()]);
-
-  return [...anios].flatMap((anio) => crearMovimientosMuestra(catalogo, tipo, anio));
 }
 
 function obtenerRangoPeriodo(periodo, fechaDia, fechaSemana, mes, anio) {
@@ -219,26 +177,28 @@ function obtenerRangoPeriodo(periodo, fechaDia, fechaSemana, mes, anio) {
   return { inicio: new Date(anio, 0, 1), fin: new Date(anio + 1, 0, 1) };
 }
 
-function sumarMovimientosPorCategoria(categorias, movimientos, inicio, fin) {
-  const idsCategorias = new Set(categorias.map((categoria) => categoria.id));
-  const montos = new Map(categorias.map((categoria) => [categoria.id, 0]));
-
-  movimientos.forEach((movimiento) => {
-    if (movimiento.anulado || !idsCategorias.has(movimiento.categoria)) return;
-    const fechaMovimiento = new Date(movimiento.fecha_hora);
-    if (fechaMovimiento < inicio || fechaMovimiento >= fin) return;
-    montos.set(movimiento.categoria, montos.get(movimiento.categoria) + movimiento.monto);
+function crearDatosResumen(categorias, filas, totalGeneral) {
+  const agregados = new Map(filas.map((fila) => [fila.categoria, fila]));
+  return categorias.flatMap((categoria) => {
+    const fila = agregados.get(categoria.id);
+    if (!fila) return [];
+    return [{
+      ...categoria,
+      monto: Number(fila.total) || 0,
+      cantidad: Number(fila.cantidad) || 0,
+      participacion: totalGeneral > 0 ? (Number(fila.total) / totalGeneral) * 100 : 0,
+    }];
   });
-
-  return categorias.map((categoria) => ({ ...categoria, monto: montos.get(categoria.id) || 0 }));
 }
 
-function crearDatosResumen(categorias, periodo, movimientos, fechaDia, fechaSemana, mes, anio) {
-  const rango = obtenerRangoPeriodo(periodo, fechaDia, fechaSemana, mes, anio);
-  return sumarMovimientosPorCategoria(categorias, movimientos, rango.inicio, rango.fin);
+function formatearClaveDia(fecha) {
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
 }
 
-function crearDatosColumnas(categorias, modo, movimientos, fechaSemana, anio) {
+function crearDatosColumnas(categorias, modo, filas, fechaSemana, anio) {
   const periodos = modo === 'semana'
     ? DIAS_SEMANA.map((etiqueta, indice) => {
       const inicio = obtenerInicioSemana(fechaSemana);
@@ -254,16 +214,32 @@ function crearDatosColumnas(categorias, modo, movimientos, fechaSemana, anio) {
       fin: new Date(anio, mes.id + 1, 1),
     }));
 
-  return periodos.map((periodo) => ({
-    id: periodo.id,
-    etiqueta: periodo.etiqueta,
-    segmentos: sumarMovimientosPorCategoria(
-      categorias,
-      movimientos,
-      periodo.inicio,
-      periodo.fin,
-    ),
-  }));
+  const agrupados = new Map(filas.map((fila) => [
+    `${fila.periodo}:${fila.categoria}`,
+    Number(fila.total) || 0,
+  ]));
+  const totalesGenerales = new Map();
+  filas.forEach((fila) => {
+    totalesGenerales.set(
+      fila.periodo,
+      (totalesGenerales.get(fila.periodo) || 0) + (Number(fila.total) || 0),
+    );
+  });
+
+  return periodos.map((periodo) => {
+    const clavePeriodo = modo === 'semana'
+      ? formatearClaveDia(periodo.inicio)
+      : `${periodo.inicio.getFullYear()}-${String(periodo.inicio.getMonth() + 1).padStart(2, '0')}`;
+    return {
+      id: periodo.id,
+      etiqueta: periodo.etiqueta,
+      totalGeneral: totalesGenerales.get(clavePeriodo) || 0,
+      segmentos: categorias.map((categoria) => ({
+        ...categoria,
+        monto: agrupados.get(`${clavePeriodo}:${categoria.id}`) || 0,
+      })),
+    };
+  });
 }
 
 function ModalSelector({
@@ -507,11 +483,17 @@ function ModalCategorias({
   );
 }
 
-function GraficoCircular({ categorias, tamano, tema, seleccionadaId, alSeleccionar }) {
-  const total = categorias.reduce((suma, categoria) => suma + categoria.monto, 0);
+function GraficoCircular({
+  categorias,
+  totalGeneral,
+  tamano,
+  tema,
+  seleccionadaId,
+  alSeleccionar,
+}) {
   let angulo = -90;
   const sectores = categorias.map((categoria) => {
-    const amplitud = total ? (categoria.monto / total) * 360 : 0;
+    const amplitud = totalGeneral ? (categoria.monto / totalGeneral) * 360 : 0;
     const sector = {
       ...categoria,
       ruta: crearRutaSector(angulo, angulo + amplitud),
@@ -527,9 +509,9 @@ function GraficoCircular({ categorias, tamano, tema, seleccionadaId, alSeleccion
   return (
     <View style={[estilosGraficoCircular.contenedor, { height: tamano, width: tamano }]}>
       <Svg height={tamano} width={tamano} viewBox="0 0 360 360">
-        {sectores.length === 1 ? (
+        {sectores.length === 1 && Math.abs(sectores[0].monto - totalGeneral) < 0.005 ? (
           <Circle
-            accessibilityLabel={`${sectores[0].nombre}, ${formatearMonto(sectores[0].monto)}`}
+            accessibilityLabel={`${sectores[0].nombre}, ${formatearMonto(sectores[0].monto)}, 100%`}
             accessibilityRole="button"
             cx={180}
             cy={180}
@@ -541,7 +523,7 @@ function GraficoCircular({ categorias, tamano, tema, seleccionadaId, alSeleccion
           />
         ) : sectoresDibujados.map((sector) => (
           <Path
-            accessibilityLabel={`${sector.nombre}, ${Math.round((sector.monto / (total || 1)) * 100)}%`}
+            accessibilityLabel={`${sector.nombre}, ${formatearPorcentaje((sector.monto / (totalGeneral || 1)) * 100)}`}
             accessibilityRole="button"
             d={sector.ruta}
             fill={sector.color}
@@ -557,7 +539,7 @@ function GraficoCircular({ categorias, tamano, tema, seleccionadaId, alSeleccion
       <View pointerEvents="none" style={estilosGraficoCircular.centro}>
         <Text style={[estilosGraficoCircular.etiquetaCentro, { color: tema.textoSecundario }]}>Total</Text>
         <Text numberOfLines={1} style={[estilosGraficoCircular.totalCentro, { color: tema.textoPrincipal }]}>
-          {formatearMonto(total)}
+          {formatearMonto(totalGeneral)}
         </Text>
       </View>
     </View>
@@ -696,7 +678,7 @@ function GraficoColumnas({
                 },
               ]}
             >
-              {barra.segmentos.map((segmento) => (
+              {barra.segmentos.filter((segmento) => segmento.monto > 0).map((segmento) => (
                 <View
                   key={`${barra.id}-${segmento.id}`}
                   style={[estilos.segmentoBarra, { backgroundColor: segmento.color, flex: segmento.monto || 0.01 }]}
@@ -724,12 +706,12 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
   const [categoriasSeleccionadas, establecerCategoriasSeleccionadas] = useState(
     CATEGORIAS_EGRESO.map((categoria) => categoria.id),
   );
-  const [periodoResumen, establecerPeriodoResumen] = useState('semana');
+  const [periodoResumen, establecerPeriodoResumen] = useState('mes');
   const [diaResumen, establecerDiaResumen] = useState(() => normalizarFecha(new Date()));
   const [semanaResumen, establecerSemanaResumen] = useState(() => normalizarFecha(new Date()));
   const [mesResumen, establecerMesResumen] = useState(new Date().getMonth());
   const [anioResumen, establecerAnioResumen] = useState(ANIO_ACTUAL);
-  const [modoColumnas, establecerModoColumnas] = useState('semana');
+  const [modoColumnas, establecerModoColumnas] = useState('anio');
   const [semanaColumnas, establecerSemanaColumnas] = useState(() => normalizarFecha(new Date()));
   const [anioColumnas, establecerAnioColumnas] = useState(ANIO_ACTUAL);
   const [selectorActual, establecerSelectorActual] = useState(null);
@@ -737,6 +719,9 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
   const [filtroCategoriasAbierto, establecerFiltroCategoriasAbierto] = useState(false);
   const [categoriaSeleccionada, establecerCategoriaSeleccionada] = useState(null);
   const [indiceColumnaSeleccionada, establecerIndiceColumnaSeleccionada] = useState(0);
+  const [estadisticas, establecerEstadisticas] = useState(null);
+  const [estadoCarga, establecerEstadoCarga] = useState('cargando');
+  const [intentoCarga, establecerIntentoCarga] = useState(0);
 
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   const categorias = useMemo(() => obtenerCategorias(tipoMovimiento, tema), [tipoMovimiento, tema]);
@@ -744,60 +729,76 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
     () => categorias.filter((categoria) => categoriasSeleccionadas.includes(categoria.id)),
     [categorias, categoriasSeleccionadas],
   );
-  const anioDatosResumen = periodoResumen === 'dia'
-    ? diaResumen.getFullYear()
-    : periodoResumen === 'semana'
-      ? semanaResumen.getFullYear()
-      : anioResumen;
-  const movimientosResumenMuestra = useMemo(
-    () => (periodoResumen === 'semana'
-      ? crearMovimientosSemanaMuestra(catalogo, tipoMovimiento, semanaResumen)
-      : crearMovimientosMuestra(catalogo, tipoMovimiento, anioDatosResumen)),
-    [catalogo, tipoMovimiento, anioDatosResumen, periodoResumen, semanaResumen],
-  );
-  const datosResumen = useMemo(
-    () => crearDatosResumen(
-      categoriasVisibles,
+  const rangoResumen = useMemo(
+    () => obtenerRangoPeriodo(
       periodoResumen,
-      movimientosResumenMuestra,
       diaResumen,
       semanaResumen,
       mesResumen,
       anioResumen,
     ),
-    [
-      categoriasVisibles,
-      periodoResumen,
-      movimientosResumenMuestra,
-      diaResumen,
-      semanaResumen,
-      mesResumen,
-      anioResumen,
-    ],
+    [periodoResumen, diaResumen, semanaResumen, mesResumen, anioResumen],
   );
-  const anioDatosColumnas = modoColumnas === 'semana'
-    ? semanaColumnas.getFullYear()
-    : anioColumnas;
-  const movimientosColumnasMuestra = useMemo(
-    () => (modoColumnas === 'semana'
-      ? crearMovimientosSemanaMuestra(catalogo, tipoMovimiento, semanaColumnas)
-      : crearMovimientosMuestra(catalogo, tipoMovimiento, anioDatosColumnas)),
-    [catalogo, tipoMovimiento, anioDatosColumnas, modoColumnas, semanaColumnas],
+  const rangoColumnas = useMemo(
+    () => modoColumnas === 'semana'
+      ? obtenerRangoPeriodo('semana', semanaColumnas, semanaColumnas, 0, anioColumnas)
+      : obtenerRangoPeriodo('anio', semanaColumnas, semanaColumnas, 0, anioColumnas),
+    [modoColumnas, semanaColumnas, anioColumnas],
+  );
+
+  useFocusEffect(useCallback(() => {
+    let vigente = true;
+    establecerEstadoCarga('cargando');
+    establecerEstadisticas(null);
+    cargarEstadisticas({
+      tipo: tipoMovimiento,
+      rangoResumen,
+      rangoColumnas,
+      agrupacionColumnas: modoColumnas === 'semana' ? 'dia' : 'mes',
+    }).then((resultado) => {
+      if (!vigente) return;
+      establecerEstadisticas(resultado);
+      establecerEstadoCarga('listo');
+    }).catch(() => {
+      if (vigente) establecerEstadoCarga('error');
+    });
+
+    return () => {
+      vigente = false;
+    };
+  }, [tipoMovimiento, rangoResumen, rangoColumnas, modoColumnas, intentoCarga]));
+
+  const totalResumen = estadisticas?.resumen.total || 0;
+  const datosResumen = useMemo(
+    () => crearDatosResumen(
+      categoriasVisibles,
+      estadisticas?.resumen.categorias || [],
+      totalResumen,
+    ),
+    [categoriasVisibles, estadisticas, totalResumen],
   );
   const datosColumnas = useMemo(
     () => crearDatosColumnas(
       categoriasVisibles,
       modoColumnas,
-      movimientosColumnasMuestra,
+      estadisticas?.columnas || [],
       semanaColumnas,
       anioColumnas,
     ),
-    [categoriasVisibles, modoColumnas, movimientosColumnasMuestra, semanaColumnas, anioColumnas],
+    [categoriasVisibles, modoColumnas, estadisticas, semanaColumnas, anioColumnas],
   );
   const periodoResumenSeleccionado = PERIODOS_RESUMEN.find((periodo) => periodo.id === periodoResumen);
   const categoriaActiva = datosResumen.find((categoria) => categoria.id === categoriaSeleccionada);
   const barraSeleccionada = datosColumnas[Math.min(indiceColumnaSeleccionada, datosColumnas.length - 1)];
-  const totalBarraSeleccionada = barraSeleccionada?.segmentos.reduce((suma, segmento) => suma + segmento.monto, 0) || 0;
+  const indiceColumnaVisible = Math.min(indiceColumnaSeleccionada, datosColumnas.length - 1);
+  const filasDetalleColumna = barraSeleccionada?.segmentos.filter((segmento) => segmento.monto > 0) || [];
+  const totalBarraSeleccionada = filasDetalleColumna.reduce((suma, segmento) => suma + segmento.monto, 0);
+  const hayMovimientosResumen = Boolean(estadisticas?.resumen.cantidad);
+  const hayDatosResumen = Boolean(hayMovimientosResumen && totalResumen > 0);
+  const hayDatosColumnas = Boolean(estadisticas?.columnas.length);
+  const hayDatosColumnasVisibles = datosColumnas.some((barra) => (
+    barra.segmentos.some((segmento) => segmento.monto > 0)
+  ));
 
   const abrirPantallaRaiz = (ruta, parametros) => {
     const navegadorSuperior = navegacion.getParent();
@@ -830,7 +831,6 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
       tipoMovimiento,
       anio: anioDetalle,
       mes: mesDetalle,
-      movimientos: movimientosResumenMuestra.filter((movimiento) => movimiento.categoria === categoria.id),
     });
   };
 
@@ -873,7 +873,10 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
 
   const aplicarOpcionSelector = (valor) => {
     if (selectorActual === 'periodoResumen') establecerPeriodoResumen(valor);
-    else if (selectorActual === 'modoColumnas') establecerModoColumnas(valor);
+    else if (selectorActual === 'modoColumnas') {
+      establecerModoColumnas(valor);
+      establecerIndiceColumnaSeleccionada(0);
+    }
     else if (selectorActual === 'mesResumen') establecerMesResumen(valor);
     else if (selectorActual === 'anioResumen') establecerAnioResumen(valor);
     else if (selectorActual === 'anioColumnas') establecerAnioColumnas(valor);
@@ -942,8 +945,6 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
       : [{ id: 'anioColumnas', texto: String(anioColumnas), etiqueta: `Año ${anioColumnas}`, calendario: false }]),
   ];
   const selectoresActuales = indiceGrafico === 0 ? selectoresResumen : selectoresColumnas;
-  const filasDetalleColumna = barraSeleccionada?.segmentos || [];
-  const totalResumen = datosResumen.reduce((suma, categoria) => suma + categoria.monto, 0);
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
@@ -1044,13 +1045,28 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
                   <Text style={estilos.subtituloGrafico}>{tituloResumen}</Text>
                 </View>
                 <View style={estilos.contenedorGraficoCircular}>
-                  {datosResumen.length ? (
+                  {estadoCarga === 'cargando' ? (
+                    <Text style={estilos.textoSinCategorias}>Buscando movimientos locales...</Text>
+                  ) : estadoCarga === 'error' ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => establecerIntentoCarga((intento) => intento + 1)}
+                      style={estilos.botonReintentar}
+                    >
+                      <Text style={estilos.textoSinCategorias}>No se pudieron cargar las estadísticas. Tocá para reintentar.</Text>
+                    </Pressable>
+                  ) : !hayMovimientosResumen ? (
+                    <Text style={estilos.textoSinCategorias}>No hay movimientos en este período.</Text>
+                  ) : !hayDatosResumen ? (
+                    <Text style={estilos.textoSinCategorias}>El total del período es cero y no hay importes para distribuir.</Text>
+                  ) : datosResumen.length ? (
                     <GraficoCircular
                       alSeleccionar={establecerCategoriaSeleccionada}
                       categorias={datosResumen}
                       seleccionadaId={categoriaSeleccionada}
                       tamano={tamanoGrafico}
                       tema={tema}
+                      totalGeneral={totalResumen}
                     />
                   ) : (
                     <Text style={estilos.textoSinCategorias}>Seleccioná categorías para ver el resumen.</Text>
@@ -1062,17 +1078,33 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
                   <Text style={estilos.tituloGrafico}>{seccionesGrafico[1].titulo}</Text>
                   <Text style={estilos.subtituloGrafico}>{tituloColumnas}</Text>
                 </View>
-                <GraficoColumnas
-                  alFinalizarSeleccion={() => establecerBarraEnInteraccion(false)}
-                  alIniciarSeleccion={() => establecerBarraEnInteraccion(true)}
-                  alSeleccionar={establecerIndiceColumnaSeleccionada}
-                  barras={datosColumnas}
-                  estilos={estilos}
-                  graficoActivo={indiceGrafico === 1}
-                  indiceSeleccionado={indiceColumnaSeleccionada}
-                  tamano={tamanoGrafico}
-                  tema={tema}
-                />
+                {estadoCarga === 'cargando' ? (
+                  <Text style={estilos.textoSinCategorias}>Buscando movimientos locales...</Text>
+                ) : estadoCarga === 'error' ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => establecerIntentoCarga((intento) => intento + 1)}
+                    style={estilos.estadoGrafico}
+                  >
+                    <Text style={estilos.textoSinCategorias}>No se pudieron cargar las estadísticas. Tocá para reintentar.</Text>
+                  </Pressable>
+                ) : !hayDatosColumnas ? (
+                  <Text style={estilos.textoSinCategorias}>No hay movimientos en este período.</Text>
+                ) : !hayDatosColumnasVisibles ? (
+                  <Text style={estilos.textoSinCategorias}>Seleccioná categorías para ver el gráfico.</Text>
+                ) : (
+                  <GraficoColumnas
+                    alFinalizarSeleccion={() => establecerBarraEnInteraccion(false)}
+                    alIniciarSeleccion={() => establecerBarraEnInteraccion(true)}
+                    alSeleccionar={establecerIndiceColumnaSeleccionada}
+                    barras={datosColumnas}
+                    estilos={estilos}
+                    graficoActivo={indiceGrafico === 1}
+                    indiceSeleccionado={indiceColumnaVisible}
+                    tamano={tamanoGrafico}
+                    tema={tema}
+                  />
+                )}
               </View>
             </ScrollView>
             <View
@@ -1092,14 +1124,22 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
             {indiceGrafico === 0 ? (
               <>
                 <View style={estilos.detalleSeleccion}>
-                  {categoriaActiva ? (
+                  {estadoCarga === 'cargando' ? (
+                    <Text style={estilos.textoDetalleSeleccion}>Buscando movimientos locales...</Text>
+                  ) : estadoCarga === 'error' ? (
+                    <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
+                  ) : !hayMovimientosResumen ? (
+                    <Text style={estilos.textoDetalleSeleccion}>No hay movimientos en el período seleccionado.</Text>
+                  ) : !hayDatosResumen ? (
+                    <Text style={estilos.textoDetalleSeleccion}>El total del período es cero.</Text>
+                  ) : categoriaActiva ? (
                     <>
                       <View style={estilos.filaDetalleSeleccion}>
                         <View style={[estilos.muestraColor, { backgroundColor: categoriaActiva.color }]} />
                         <Text style={estilos.tituloDetalleSeleccion}>{categoriaActiva.nombre}</Text>
                       </View>
                       <Text style={estilos.textoDetalleSeleccion}>
-                        {formatearMonto(categoriaActiva.monto)} · {Math.round((categoriaActiva.monto / (totalResumen || 1)) * 100)}%
+                        {formatearMonto(categoriaActiva.monto)} · {formatearPorcentaje(categoriaActiva.participacion)}
                       </Text>
                     </>
                   ) : (
@@ -1108,12 +1148,12 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
                 </View>
                 <View style={estilos.listaCategorias}>
                   {datosResumen.map((categoria) => {
-                    const porcentaje = Math.round((categoria.monto / (totalResumen || 1)) * 100);
+                    const porcentaje = formatearPorcentaje(categoria.participacion);
                     const activa = categoria.id === categoriaSeleccionada;
 
                     return (
                       <Pressable
-                        accessibilityLabel={`Ver detalle de ${categoria.nombre}, ${formatearMonto(categoria.monto)}, ${porcentaje}%`}
+                        accessibilityLabel={`Ver detalle de ${categoria.nombre}, ${formatearMonto(categoria.monto)}, ${porcentaje}, ${categoria.cantidad} movimientos`}
                         accessibilityRole="button"
                         key={categoria.id}
                         onPress={() => abrirDetalleCategoria(categoria)}
@@ -1121,8 +1161,13 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
                       >
                         <View style={[estilos.muestraColor, { backgroundColor: categoria.color }]} />
                         <Ionicons color={categoria.color} name={categoria.icono} size={20} />
-                        <Text numberOfLines={1} style={estilos.nombreCategoria}>{categoria.nombre}</Text>
-                        <Text style={estilos.porcentajeCategoria}>{porcentaje}%</Text>
+                        <View style={estilos.nombreCategoriaContenedor}>
+                          <Text numberOfLines={1} style={estilos.nombreCategoria}>{categoria.nombre}</Text>
+                          <Text style={estilos.cantidadMovimientos}>
+                            {categoria.cantidad} {categoria.cantidad === 1 ? 'movimiento' : 'movimientos'}
+                          </Text>
+                        </View>
+                        <Text style={estilos.porcentajeCategoria}>{porcentaje}</Text>
                         <Text style={estilos.montoCategoria}>{formatearMonto(categoria.monto)}</Text>
                       </Pressable>
                     );
@@ -1131,7 +1176,15 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
               </>
             ) : (
               <View style={estilos.detalleColumna}>
-                {barraSeleccionada ? (
+                {estadoCarga === 'cargando' ? (
+                  <Text style={estilos.textoDetalleSeleccion}>Buscando movimientos locales...</Text>
+                ) : estadoCarga === 'error' ? (
+                  <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
+                ) : !hayDatosColumnas ? (
+                  <Text style={estilos.textoDetalleSeleccion}>No hay movimientos en el período seleccionado.</Text>
+                ) : !hayDatosColumnasVisibles ? (
+                  <Text style={estilos.textoDetalleSeleccion}>Seleccioná categorías para ver el detalle.</Text>
+                ) : barraSeleccionada ? (
                   <>
                     <View style={estilos.resumenColumna}>
                       <Text style={estilos.tituloDetalleSeleccion}>{barraSeleccionada.etiqueta}</Text>
@@ -1148,7 +1201,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }) {
                         ))}
                       </View>
                     ) : (
-                      <Text style={estilos.textoDetalleSeleccion}>Seleccioná categorías para ver el detalle.</Text>
+                      <Text style={estilos.textoDetalleSeleccion}>
+                        {barraSeleccionada.totalGeneral > 0
+                          ? 'El período tiene movimientos en categorías ocultas.'
+                          : 'Este día o mes no tuvo movimientos.'}
+                      </Text>
                     )}
                   </>
                 ) : (

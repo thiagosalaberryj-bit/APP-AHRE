@@ -101,10 +101,11 @@ personas.
 
 ### Estadísticas y notificaciones
 
-La interfaz de Estadísticas ya muestra gráficos por categoría y período,
-filtros y detalles con datos de ejemplo. Notificaciones muestra avisos
-simulados agrupados por día. Las consultas reales, los recordatorios y las
-notificaciones del dispositivo todavía no están implementados.
+Estadísticas consulta los ingresos y egresos guardados en SQLite para calcular
+totales, porcentajes, agrupaciones semanales y anuales, y detalles por categoría.
+Sus cálculos funcionan sin conexión. Notificaciones muestra avisos simulados
+agrupados por día; los recordatorios y las notificaciones del dispositivo
+todavía no están implementados.
 
 ### OCR
 
