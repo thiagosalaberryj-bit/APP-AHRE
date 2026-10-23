@@ -95,8 +95,9 @@ eliminación de depósitos continúan simuladas.
 La aplicación podrá registrar dinero que el usuario debe o que otras personas
 le deben, incluyendo pagos parciales e historial.
 
-También se prevén funciones para organizar gastos compartidos entre varias
-personas.
+La pestaña Social ya representa salas, participantes, gastos compartidos y
+balances con datos simulados. Crear, unirse y agregar gastos son formularios
+visuales; la colaboración real sigue pendiente.
 
 ### Estadísticas y notificaciones
 
@@ -161,6 +162,8 @@ interfaces. Actualmente cuenta con:
   filtros y detalles basados en datos de ejemplo;
 - pantalla de Notificaciones con avisos de muestra agrupados por día; no usa
   notificaciones locales o push;
+- pestaña Social maquetada con salas, participantes, gastos y balances simulados,
+  estados vacíos y formularios visuales, sin lógica online;
 - flujo OCR con ML Kit local, captura o selección desde la galería, recorte,
   revisión editable y confirmación mediante el servicio normal de Egresos;
 - Perfil con datos locales del usuario, foto temporal, edición protegida por la
@@ -247,6 +250,7 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Interfaces de movimientos](docs/interfaces/movimientos.md);
 - [Interfaz de Estadísticas](docs/interfaces/estadisticas.md);
 - [Interfaz de Notificaciones](docs/interfaces/notificaciones.md);
+- [Interfaz de Social](docs/interfaces/social.md);
 - [Flujo OCR de comprobantes](docs/interfaces/ocr.md);
 - [OCR offline, interpretación y registro de egresos](docs/funcionalidades/ocr.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);

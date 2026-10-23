@@ -90,6 +90,11 @@ Dashboard / Inicio
 └── Social
 ```
 
+Social muestra la lista y el detalle de sala dentro de `SocialScreen.js`. El
+detalle cambia entre Participantes, Gastos y Balances sin crear una ruta nueva;
+Crear sala, Unirse a sala, Agregar gasto y el detalle de gasto usan modales.
+La flecha del detalle vuelve a la lista de salas.
+
 El detalle de categoría y el detalle de movimiento se registran en el Stack
 principal, fuera del navegador de pestañas. Al abrirlos se oculta la barra
 inferior; volver regresa al detalle o a la pestaña de Estadísticas anterior.
