@@ -2,44 +2,44 @@
 
 ## Finalidad y alcance
 
-Social presenta una base visual para organizar gastos entre varias personas. Esta etapa del Issue #18 es un maquetado con datos simulados. Las salas, los gastos y los balances no se guardan ni se comparten con otras personas.
+Social presenta personas, deudas individuales y salas para gastos de una ocasión. Esta etapa del Issue #18 es un maquetado con datos simulados. Nada se guarda ni se comparte con otras personas y ninguna vista necesita Internet.
 
-## Pantalla principal y salas
+## Pantalla principal: personas, deudas y salas
 
-La pestaña **Social** se abre desde la barra inferior, también disponible al estar en Dashboard. Usa el encabezado principal de AHRE y muestra **Mis salas**, la cantidad de salas representadas y tarjetas con nombre, icono, cantidad de participantes y descripción breve. Los ejemplos son **Viaje Bariloche** y **Cena con amigos**. Tocar una tarjeta abre su detalle dentro de `SocialScreen.js`.
+La pestaña **Social** se abre desde la barra inferior, también disponible al estar en Dashboard. La primera sección lista personas registradas de ejemplo e indica con texto si **me deben**, **yo debo** o si estamos al día. **Registrar deuda** muestra un formulario visual que permite elegir una persona y una de las dos direcciones de la deuda, sin asociarla a una sala. **Registrar persona** muestra nombre y correo opcional. Confirmar cualquiera de los formularios informa que el guardado local queda pendiente.
 
-La acción **Ver ejemplo sin salas** permite comprobar el estado vacío sin cambiar ni borrar datos. Allí se muestra «Todavía no participás en ninguna sala» y permanecen visibles **Crear sala** y **Unirse a sala**. **Ver salas de ejemplo** recupera la lista simulada.
+Debajo aparecen **Salas recientes** para encuentros concretos, con nombre, fecha, cantidad de participantes y descripción. Los ejemplos son **Cena del viernes** y **Asado del domingo**. **Historial de salas cerradas** muestra una salida pasada; tocarla permite consultar su detalle sin ofrecer nuevas acciones de registro. **Ver ejemplo sin salas** representa el estado vacío y mantiene las acciones **Crear sala** y **Unirse a sala**.
 
 ## Crear o ingresar a una sala
 
-**Crear sala** abre un modal con nombre, descripción opcional, **Crear** y **Cancelar**. **Unirse a sala** abre otro modal con un campo para un posible código o identificador, **Unirse** y **Cancelar**. El mecanismo de unión todavía no está definido. Los campos son solo visuales: confirmar informa que la acción estará disponible en otra etapa y no agrega ni modifica salas.
+**Crear sala** abre un modal con nombre de la ocasión, fecha, descripción opcional, **Crear** y **Cancelar**. **Unirse a sala** abre otro modal con un campo para un posible código o identificador, **Unirse** y **Cancelar**. El mecanismo de unión todavía no está definido. Esta vista es solo visual y no hace solicitudes de red. Confirmar no agrega ni modifica salas.
 
 ## Detalle de sala
 
-El detalle conserva la pantalla Social existente y cambia a un encabezado secundario con flecha de regreso. Presenta nombre, descripción, cantidad de participantes y gastos, además de **Agregar gasto**. Tres secciones internas permiten recorrer **Participantes**, **Gastos** y **Balances**. La flecha y **Volver a mis salas** regresan a la lista. No se creó una pantalla ni una ruta adicional.
+El detalle reutiliza `SocialScreen.js` en la ruta secundaria `SalaSocial` del Stack principal. Así muestra el encabezado secundario y **no muestra la barra inferior**. Presenta nombre, fecha, estado abierta/cerrada, descripción y cantidad de participantes. Tres secciones internas permiten recorrer **Participantes**, **Gastos** y **Balances**. La flecha y **Volver a Social** regresan a la pestaña. No se creó un archivo de pantalla nuevo ni se alteró la barra de otras rutas.
 
 ### Participantes
 
-Cada fila muestra iniciales como avatar, nombre, resumen individual y una etiqueta textual de balance. Viaje Bariloche representa cuatro personas; Cena con amigos, seis. Las etiquetas **Debe**, **Debe recibir** y **Saldado** acompañan los colores e iconos para que el estado no dependa solo del color.
+Cada fila muestra iniciales como avatar, nombre y un resumen de su situación dentro de la sala, separado de las deudas personales de la pantalla principal. En salas abiertas, **Agregar participantes** abre una lista seleccionable de las personas registradas de ejemplo que todavía no están en esa sala. La selección se refleja durante la visita al detalle, pero no se guarda. Las salas cerradas solo permiten consultar integrantes.
 
 ### Gastos compartidos
 
-Cada gasto muestra descripción, monto, quién pagó, fecha y distribución resumida. Al tocarlo se abre un modal de detalle. Viaje Bariloche tiene dos gastos de ejemplo. Cena con amigos muestra **Todavía no hay gastos**.
+Cada gasto muestra descripción, monto, quién pagó, fecha y distribución resumida. Al tocarlo se abre un modal de detalle. Cena del viernes tiene un gasto de ejemplo. Asado del domingo muestra **Todavía no hay gastos**.
 
 **Agregar gasto** abre un formulario visual con descripción, monto, quién pagó y participantes involucrados. Los dos últimos campos indican el lugar de los selectores futuros. Confirmar informa que la acción estará disponible más adelante. No divide importes ni registra un gasto.
 
 ### Balances y distribución
 
-El resumen de Viaje Bariloche representa una persona que debe, dos que deben recibir y una saldada, con valores simulados. Un bloque **Detalle de distribución** reserva el lugar para explicar posteriormente las relaciones de deuda. Cena con amigos representa **Sin balances pendientes**. Todavía no hay cálculos ni deudas reales.
+El resumen de Cena del viernes representa con texto e iconos una persona que debe, otra que debe recibir y otra saldada. Un bloque **Detalle de distribución** reserva el lugar para explicar posteriormente las relaciones de deuda. Asado del domingo y la sala cerrada representan **Sin balances pendientes**. Todavía no hay cálculos ni deudas reales.
 
 ## Estados y apariencia
 
-La pantalla muestra brevemente **Cargando salas** al entrar. **Ver ejemplo de error** permite mostrar la presentación de error y **Reintentar** vuelve a la lista; los datos simulados no producen errores reales. Se representan los estados vacíos de salas, gastos y balances con textos explícitos. El contenido se desplaza verticalmente, los apartados del detalle pueden desplazarse horizontalmente y los modales tienen altura limitada para adaptarse a pantallas pequeñas y al teclado.
+La pantalla muestra brevemente **Cargando información** al entrar. **Ver ejemplo de error** permite mostrar la presentación de error y **Reintentar** vuelve a la lista; los datos simulados no producen errores reales. Se representan los estados vacíos de salas, gastos y balances con textos explícitos. **Cerrar sala** muestra una explicación visual del cierre; la sala no cambia de estado ni se guarda. El contenido se desplaza verticalmente, los apartados del detalle pueden desplazarse horizontalmente y los modales tienen altura limitada para adaptarse a pantallas pequeñas y al teclado.
 
 Los estilos locales están en `src/styles/SocialScreenStyles.js` y reutilizan los tokens de `src/styles/colors.js` y `src/styles/globalStyles.js`. Los temas claro y oscuro provienen de la preferencia de apariencia común de AHRE.
 
 ## Navegación y trabajo pendiente
 
-El recorrido es **Dashboard → pestaña Social → sala → Participantes / Gastos / Balances**. Desde Social también se abren los modales **Crear sala** y **Unirse a sala**; desde el detalle se abren **Agregar gasto** y el detalle de cada gasto.
+El recorrido es **Dashboard → pestaña Social → personas y deudas / salas recientes / historial → sala → Participantes / Gastos / Balances**. Desde Social se abren los modales **Registrar persona**, **Registrar deuda**, **Crear sala** y **Unirse a sala**; desde el detalle se abren **Agregar participantes**, **Agregar gasto**, **Cerrar sala** y el detalle de cada gasto. Los modales cubren la pantalla principal y no dependen de Internet.
 
-Quedan para otra etapa la creación y unión reales, invitaciones, usuarios online, sincronización, backend, selección funcional de pagador y participantes, división de gastos, cálculo de balances, deudas reales y persistencia.
+Quedan para otro Issue la conexión real con las personas y deudas de SQLite, la creación y cierre persistentes de salas, el registro de gastos, la selección funcional de pagador y participantes, la división y el cálculo de balances. Una eventual unión entre dispositivos, invitaciones, sincronización o backend también queda fuera de esta maqueta offline.

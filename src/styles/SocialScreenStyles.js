@@ -26,6 +26,13 @@ export function crearEstilosSocial(tema, margenInferior = 0) {
       minWidth: 0,
       gap: ESPACIADO.minimo,
     },
+    fila: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: ESPACIADO.medio,
+      minHeight: 72,
+    },
     contador: {
       alignItems: 'center',
       backgroundColor: tema.contenedorVerde,

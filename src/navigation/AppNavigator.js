@@ -140,6 +140,7 @@ export default function NavegadorAplicacion({ rutaInicial }) {
           <PilaNavegacion.Screen name={RUTAS.DETALLE_CATEGORIA} component={PantallaDetalleCategoria} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.DETALLE_MOVIMIENTO} component={PantallaDetalleMovimiento} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.OCR} component={PantallaOCR} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.SALA_SOCIAL} component={PantallaSocial} options={{ headerShown: false }} />
         </PilaNavegacion.Navigator>
       </NavigationContainer>
       {Platform.OS === 'android' && margenesSeguros.bottom > 0 ? (

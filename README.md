@@ -95,9 +95,10 @@ eliminación de depósitos continúan simuladas.
 La aplicación podrá registrar dinero que el usuario debe o que otras personas
 le deben, incluyendo pagos parciales e historial.
 
-La pestaña Social ya representa salas, participantes, gastos compartidos y
-balances con datos simulados. Crear, unirse y agregar gastos son formularios
-visuales; la colaboración real sigue pendiente.
+La pestaña Social maqueta personas y deudas individuales, salas recientes para
+ocasiones concretas, historial de salas cerradas, participantes, gastos y
+balances con datos simulados. Los formularios son visuales; el guardado y la
+colaboración real siguen pendientes.
 
 ### Estadísticas y notificaciones
 
@@ -162,8 +163,9 @@ interfaces. Actualmente cuenta con:
   filtros y detalles basados en datos de ejemplo;
 - pantalla de Notificaciones con avisos de muestra agrupados por día; no usa
   notificaciones locales o push;
-- pestaña Social maquetada con salas, participantes, gastos y balances simulados,
-  estados vacíos y formularios visuales, sin lógica online;
+- pestaña Social maquetada con personas y deudas individuales, salas por ocasión,
+  historial de salas cerradas, participantes, gastos y balances simulados, sin
+  lógica online;
 - flujo OCR con ML Kit local, captura o selección desde la galería, recorte,
   revisión editable y confirmación mediante el servicio normal de Egresos;
 - Perfil con datos locales del usuario, foto temporal, edición protegida por la

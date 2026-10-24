@@ -10,31 +10,42 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosSocial } from '../styles/SocialScreenStyles';
 
+const PERSONAS_SIMULADAS = Object.freeze([
+  { id: 'tomas', nombre: 'Tomás', iniciales: 'TO', tipo: 'me_deben', monto: '$ 8.000' },
+  { id: 'joaquin', nombre: 'Joaquín', iniciales: 'JO', tipo: 'debo', monto: '$ 4.000' },
+  { id: 'lucia', nombre: 'Lucía', iniciales: 'LU', tipo: 'saldado', monto: '' },
+  { id: 'ana', nombre: 'Ana', iniciales: 'AN', tipo: 'saldado', monto: '' },
+  { id: 'federico', nombre: 'Federico', iniciales: 'FE', tipo: 'saldado', monto: '' },
+]);
+
 const SALAS_SIMULADAS = Object.freeze([
   {
-    id: 'bariloche', nombre: 'Viaje Bariloche', descripcion: 'Gastos del viaje entre amigos', icono: 'airplane-outline',
-    participantes: [
-      { id: 'thiago', nombre: 'Thiago', iniciales: 'TH', balance: 'saldado', resumen: 'Está al día' },
-      { id: 'tomas', nombre: 'Tomás', iniciales: 'TO', balance: 'debe', resumen: 'Debe $ 8.000' },
-      { id: 'joaquin', nombre: 'Joaquín', iniciales: 'JO', balance: 'recibe', resumen: 'Debe recibir $ 4.000' },
-      { id: 'lucia', nombre: 'Lucía', iniciales: 'LU', balance: 'recibe', resumen: 'Debe recibir $ 4.000' },
-    ],
+    id: 'cena-viernes', nombre: 'Cena del viernes', fecha: '18 sep 2026',
+    descripcion: 'Una salida a comer entre amigos', icono: 'restaurant-outline',
+    estado: 'abierta', participantes: ['tomas', 'joaquin', 'lucia'],
     gastos: [
-      { id: 'cena', descripcion: 'Cena', monto: '$ 48.000', pago: 'Thiago', fecha: '18 sep 2026', distribucion: 'Entre 4 participantes' },
-      { id: 'combustible', descripcion: 'Combustible', monto: '$ 32.000', pago: 'Joaquín', fecha: '17 sep 2026', distribucion: 'Entre 4 participantes' },
+      { id: 'cena', descripcion: 'Cena', monto: '$ 48.000', pago: 'Tomás', fecha: '18 sep 2026', distribucion: 'Entre 4 personas' },
+    ],
+    balances: [
+      { personaId: 'tomas', tipo: 'debe', resumen: 'Debe $ 8.000' },
+      { personaId: 'joaquin', tipo: 'recibe', resumen: 'Debe recibir $ 4.000' },
+      { personaId: 'lucia', tipo: 'recibe', resumen: 'Debe recibir $ 4.000' },
     ],
   },
   {
-    id: 'cena-amigos', nombre: 'Cena con amigos', descripcion: 'Una sala lista para registrar gastos', icono: 'restaurant-outline',
-    participantes: [
-      { id: 'thiago', nombre: 'Thiago', iniciales: 'TH', balance: 'saldado', resumen: 'Está al día' },
-      { id: 'ana', nombre: 'Ana', iniciales: 'AN', balance: 'saldado', resumen: 'Está al día' },
-      { id: 'fede', nombre: 'Federico', iniciales: 'FE', balance: 'saldado', resumen: 'Está al día' },
-      { id: 'maria', nombre: 'María', iniciales: 'MA', balance: 'saldado', resumen: 'Está al día' },
-      { id: 'juan', nombre: 'Juan', iniciales: 'JU', balance: 'saldado', resumen: 'Está al día' },
-      { id: 'sofia', nombre: 'Sofía', iniciales: 'SO', balance: 'saldado', resumen: 'Está al día' },
+    id: 'asado-domingo', nombre: 'Asado del domingo', fecha: '20 sep 2026',
+    descripcion: 'Compras para el encuentro', icono: 'flame-outline',
+    estado: 'abierta', participantes: ['lucia', 'ana'],
+    gastos: [], balances: [],
+  },
+  {
+    id: 'cine-agosto', nombre: 'Salida al cine', fecha: '15 ago 2026',
+    descripcion: 'Entradas y comida', icono: 'film-outline',
+    estado: 'cerrada', participantes: ['tomas', 'federico'],
+    gastos: [
+      { id: 'entradas', descripcion: 'Entradas', monto: '$ 24.000', pago: 'Thiago', fecha: '15 ago 2026', distribucion: 'Entre 3 personas' },
     ],
-    gastos: [],
+    balances: [],
   },
 ]);
 
@@ -43,217 +54,432 @@ const SECCIONES_SALA = Object.freeze([
   { id: 'gastos', nombre: 'Gastos', icono: 'receipt-outline' },
   { id: 'balances', nombre: 'Balances', icono: 'swap-horizontal-outline' },
 ]);
-const ETIQUETAS_BALANCE = Object.freeze({ debe: 'Debe', recibe: 'Debe recibir', saldado: 'Saldado' });
 
-export default function PantallaSocial({ navigation: navegacion }) {
+function obtenerPersona(id) {
+  return PERSONAS_SIMULADAS.find((persona) => persona.id === id);
+}
+
+function descripcionDeuda(persona) {
+  if (persona.tipo === 'me_deben') return 'Me debe ' + persona.monto;
+  if (persona.tipo === 'debo') return 'Le debo ' + persona.monto;
+  return 'Estamos al día';
+}
+
+export default function PantallaSocial({ navigation: navegacion, route: ruta }) {
   const { tema } = useContext(ContextoApariencia);
   const { bottom: margenInferior } = useSafeAreaInsets();
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosSocial(tema, margenInferior);
+  const sala = SALAS_SIMULADAS.find((item) => item.id === ruta?.params?.salaId);
+  const esDetalle = Boolean(ruta?.params?.salaId);
   const [cargando, establecerCargando] = useState(true);
   const [error, establecerError] = useState(false);
   const [mostrarSalas, establecerMostrarSalas] = useState(true);
-  const [salaSeleccionada, establecerSalaSeleccionada] = useState(null);
   const [seccionSala, establecerSeccionSala] = useState('participantes');
   const [modal, establecerModal] = useState(null);
   const [gastoSeleccionado, establecerGastoSeleccionado] = useState(null);
   const [avisoFormulario, establecerAvisoFormulario] = useState(false);
+  const [personaDeuda, establecerPersonaDeuda] = useState(PERSONAS_SIMULADAS[0].id);
+  const [tipoDeuda, establecerTipoDeuda] = useState('me_deben');
+  const [personasAgregadas, establecerPersonasAgregadas] = useState([]);
+  const [personasMarcadas, establecerPersonasMarcadas] = useState([]);
 
   useEffect(() => {
     const temporizador = setTimeout(() => establecerCargando(false), 650);
     return () => clearTimeout(temporizador);
   }, []);
 
-  const abrirPantallaSecundaria = (ruta) => navegacion.getParent()?.navigate(ruta);
-  const abrirModal = (tipo) => { establecerAvisoFormulario(false); establecerModal(tipo); };
+  const participantesSala = sala
+    ? [...sala.participantes, ...personasAgregadas].map(obtenerPersona).filter(Boolean)
+    : [];
+  const personasDisponibles = sala
+    ? PERSONAS_SIMULADAS.filter((persona) => !participantesSala.some((participante) => participante.id === persona.id))
+    : [];
+
+  const abrirModal = (tipo) => {
+    establecerAvisoFormulario(false);
+    establecerPersonasMarcadas([]);
+    establecerModal(tipo);
+  };
   const cerrarModal = () => {
     establecerModal(null);
     establecerGastoSeleccionado(null);
     establecerAvisoFormulario(false);
   };
-  const abrirSala = (sala) => {
-    establecerSalaSeleccionada(sala);
-    establecerSeccionSala('participantes');
+  const abrirSala = (salaElegida) => {
+    navegacion.getParent()?.navigate(RUTAS.SALA_SOCIAL, { salaId: salaElegida.id });
   };
-  const tituloModal = modal === 'crear' ? 'Crear sala' : modal === 'unirse' ? 'Unirse a una sala' : 'Agregar gasto';
+  const alternarPersonaMarcada = (id) => {
+    establecerPersonasMarcadas((anteriores) => (
+      anteriores.includes(id) ? anteriores.filter((actual) => actual !== id) : [...anteriores, id]
+    ));
+  };
+  const agregarParticipantes = () => {
+    establecerPersonasAgregadas((anteriores) => [...anteriores, ...personasMarcadas]);
+    cerrarModal();
+  };
+  const tituloModal = {
+    persona: 'Registrar persona', deuda: 'Registrar deuda', crear: 'Crear sala',
+    unirse: 'Unirse a sala', gasto: 'Agregar gasto',
+    participantes: 'Agregar participantes', cerrar: 'Cerrar sala',
+    detalleGasto: gastoSeleccionado?.descripcion,
+  }[modal];
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
-        {salaSeleccionada ? (
-          <EncabezadoSeccion tema={tema} titulo={salaSeleccionada.nombre} descripcion="Consultá la actividad de esta sala." alVolver={() => establecerSalaSeleccionada(null)} />
+        {esDetalle ? (
+          <EncabezadoSeccion
+            tema={tema}
+            titulo={sala?.nombre || 'Sala'}
+            descripcion="Gastos de esta ocasión"
+            alVolver={() => navegacion.goBack()}
+          />
         ) : (
-          <EncabezadoPrincipal tema={tema} titulo="Social" descripcion="Organizá gastos compartidos con otras personas."
-            alAbrirNotificaciones={() => abrirPantallaSecundaria(RUTAS.NOTIFICACIONES)}
-            alAbrirPerfil={() => abrirPantallaSecundaria(RUTAS.PERFIL)} />
+          <EncabezadoPrincipal
+            tema={tema}
+            titulo="Social"
+            descripcion="Personas, deudas y gastos compartidos."
+            alAbrirNotificaciones={() => navegacion.getParent()?.navigate(RUTAS.NOTIFICACIONES)}
+            alAbrirPerfil={() => navegacion.getParent()?.navigate(RUTAS.PERFIL)}
+          />
         )}
 
-        <ScrollView key={salaSeleccionada?.id || 'salas'} showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={estilos.contenido}>
             {cargando ? (
-              <View accessibilityLabel="Cargando salas" style={[estilosGlobales.tarjeta, estilos.grupo]}>
-                <Text style={estilosGlobales.textoSecundario}>Cargando salas…</Text>
-                <View style={estilos.lineaCarga} /><View style={estilos.lineaCarga} />
+              <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
+                <Text style={estilosGlobales.textoSecundario}>Cargando información…</Text>
+                <View style={estilos.lineaCarga} />
+                <View style={estilos.lineaCarga} />
               </View>
-            ) : error ? (
-              <View style={[estilosGlobales.tarjeta, estilos.estadoVacio]}>
-                <Ionicons color={tema.error} name="alert-circle-outline" size={36} />
-                <Text style={estilosGlobales.encabezadoSeccion}>No pudimos mostrar las salas</Text>
-                <Text style={estilosGlobales.textoSecundario}>Intentá cargar la información de nuevo.</Text>
-                <Pressable accessibilityRole="button" onPress={() => establecerError(false)} style={estilosGlobales.botonSecundario}>
-                  <Text style={estilosGlobales.textoBotonSecundario}>Reintentar</Text>
-                </Pressable>
-              </View>
-            ) : salaSeleccionada ? (
+            ) : error || (esDetalle && !sala) ? (
+              <EstadoVacio
+                icono="alert-circle-outline"
+                titulo="No pudimos mostrar la información"
+                descripcion="Intentá nuevamente."
+                estilos={estilos} estilosGlobales={estilosGlobales} tema={tema}
+              />
+            ) : esDetalle ? (
               <>
-                <View style={[estilosGlobales.tarjeta, estilos.cabeceraSala]}>
-                  <View style={estilos.iconoSalaGrande}><Ionicons color={tema.botonPrincipal} name={salaSeleccionada.icono} size={30} /></View>
-                  <Text style={estilosGlobales.subtitulo}>{salaSeleccionada.nombre}</Text>
-                  <Text style={estilosGlobales.textoSecundario}>{salaSeleccionada.descripcion}</Text>
-                  <Text style={estilosGlobales.textoAyuda}>{salaSeleccionada.participantes.length} participantes · {salaSeleccionada.gastos.length} gastos</Text>
+                <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
+                  <View style={estilos.fila}>
+                    <View style={estilos.iconoLista}><Ionicons color={tema.botonPrincipal} name={sala.icono} size={24} /></View>
+                    <View style={estilos.textoFlexible}>
+                      <Text style={estilosGlobales.subtitulo}>{sala.nombre}</Text>
+                      <Text style={estilosGlobales.textoSecundario}>{sala.fecha} · {sala.estado === 'cerrada' ? 'Sala cerrada' : 'Sala abierta'}</Text>
+                    </View>
+                  </View>
+                  <Text style={estilosGlobales.textoSecundario}>{sala.descripcion}</Text>
+                  <Text style={estilosGlobales.textoAyuda}>{participantesSala.length + 1} participantes, incluyéndote</Text>
                 </View>
-                <Pressable accessibilityRole="button" onPress={() => abrirModal('gasto')} style={estilosGlobales.botonPrincipal}>
-                  <Text style={estilosGlobales.textoBotonPrincipal}>+ Agregar gasto</Text>
-                </Pressable>
+
+                {sala.estado === 'abierta' ? (
+                  <Pressable accessibilityRole="button" onPress={() => abrirModal('gasto')} style={estilosGlobales.botonPrincipal}>
+                    <Text style={estilosGlobales.textoBotonPrincipal}>Agregar gasto</Text>
+                  </Pressable>
+                ) : null}
+
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.pestanas}>
                   {SECCIONES_SALA.map((seccion) => (
-                    <Pressable key={seccion.id} accessibilityRole="tab" accessibilityState={{ selected: seccionSala === seccion.id }}
-                      onPress={() => establecerSeccionSala(seccion.id)} style={[estilos.pestana, seccionSala === seccion.id && estilos.pestanaActiva]}>
+                    <Pressable
+                      key={seccion.id}
+                      accessibilityRole="tab"
+                      accessibilityState={{ selected: seccionSala === seccion.id }}
+                      onPress={() => establecerSeccionSala(seccion.id)}
+                      style={[estilos.pestana, seccionSala === seccion.id && estilos.pestanaActiva]}
+                    >
                       <Ionicons color={seccionSala === seccion.id ? tema.botonPrincipalTexto : tema.textoSecundario} name={seccion.icono} size={18} />
                       <Text style={[estilos.textoPestana, seccionSala === seccion.id && estilos.textoPestanaActiva]}>{seccion.nombre}</Text>
                     </Pressable>
                   ))}
                 </ScrollView>
+
                 {seccionSala === 'participantes' ? (
                   <View style={estilos.grupo}>
                     <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Participantes</Text>
-                    {salaSeleccionada.participantes.map((persona) => (
-                      <View key={persona.id} style={[estilosGlobales.tarjeta, estilos.filaPersona]}>
-                        <View style={estilos.avatar}><Text style={estilos.textoAvatar}>{persona.iniciales}</Text></View>
-                        <View style={estilos.textoFlexible}><Text style={estilosGlobales.texto}>{persona.nombre}</Text><Text style={estilosGlobales.textoSecundario}>{persona.resumen}</Text></View>
-                        <EtiquetaBalance persona={persona} estilos={estilos} />
-                      </View>
-                    ))}
+                    <FilaPersona persona={{ id: 'actual', nombre: 'Vos', iniciales: 'YO', tipo: 'saldado', monto: '' }} resumen="Participante de esta sala" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                    {participantesSala.map((persona) => {
+                      const balance = sala.balances.find((item) => item.personaId === persona.id);
+                      return (
+                        <FilaPersona key={persona.id} persona={persona}
+                          resumen={balance?.resumen || 'Sin saldo pendiente en esta sala'}
+                          tipoBalance={balance?.tipo || 'saldado'}
+                          tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                      );
+                    })}
+                    {sala.estado === 'abierta' ? (
+                      <Pressable accessibilityRole="button" onPress={() => abrirModal('participantes')} style={estilosGlobales.botonSecundario}>
+                        <Text style={estilosGlobales.textoBotonSecundario}>Agregar participantes</Text>
+                      </Pressable>
+                    ) : null}
                   </View>
                 ) : null}
+
                 {seccionSala === 'gastos' ? (
                   <View style={estilos.grupo}>
-                    <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Gastos compartidos</Text>
-                    {salaSeleccionada.gastos.length === 0 ? (
+                    <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Gastos de la ocasión</Text>
+                    {sala.gastos.length === 0 ? (
                       <EstadoVacio icono="receipt-outline" titulo="Todavía no hay gastos" descripcion="Los gastos de esta sala aparecerán acá." estilos={estilos} estilosGlobales={estilosGlobales} tema={tema} />
-                    ) : salaSeleccionada.gastos.map((gasto) => (
-                      <Pressable key={gasto.id} accessibilityRole="button" onPress={() => establecerGastoSeleccionado(gasto)} style={[estilosGlobales.tarjeta, estilos.filaGasto]}>
+                    ) : sala.gastos.map((gasto) => (
+                      <Pressable
+                        key={gasto.id}
+                        accessibilityRole="button"
+                        onPress={() => { establecerGastoSeleccionado(gasto); abrirModal('detalleGasto'); }}
+                        style={[estilosGlobales.tarjeta, estilos.fila]}
+                      >
                         <View style={estilos.iconoLista}><Ionicons color={tema.botonPrincipal} name="receipt-outline" size={22} /></View>
-                        <View style={estilos.textoFlexible}><Text style={estilosGlobales.texto}>{gasto.descripcion}</Text><Text style={estilosGlobales.textoSecundario}>Pagó: {gasto.pago} · {gasto.fecha}</Text><Text style={estilosGlobales.textoAyuda}>{gasto.distribucion}</Text></View>
+                        <View style={estilos.textoFlexible}>
+                          <Text style={estilosGlobales.texto}>{gasto.descripcion}</Text>
+                          <Text style={estilosGlobales.textoSecundario}>Pagó: {gasto.pago} · {gasto.fecha}</Text>
+                          <Text style={estilosGlobales.textoAyuda}>{gasto.distribucion}</Text>
+                        </View>
                         <Text style={estilos.montoGasto}>{gasto.monto}</Text>
                       </Pressable>
                     ))}
                   </View>
                 ) : null}
+
                 {seccionSala === 'balances' ? (
                   <View style={estilos.grupo}>
-                    <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Balances entre participantes</Text>
-                    <Text style={estilosGlobales.textoSecundario}>Resumen de ejemplo de cómo se distribuirían los saldos de la sala.</Text>
-                    {salaSeleccionada.participantes.every((persona) => persona.balance === 'saldado') ? (
+                    <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Balances de la sala</Text>
+                    {sala.balances.length === 0 ? (
                       <EstadoVacio icono="checkmark-circle-outline" titulo="Sin balances pendientes" descripcion="Todas las personas están al día." estilos={estilos} estilosGlobales={estilosGlobales} tema={tema} />
-                    ) : salaSeleccionada.participantes.map((persona) => (
-                      <View key={persona.id} style={[estilosGlobales.tarjeta, estilos.filaBalance]}>
-                        <Ionicons color={persona.balance === 'debe' ? tema.error : persona.balance === 'recibe' ? tema.exito : tema.textoSecundario}
-                          name={persona.balance === 'debe' ? 'arrow-up-circle-outline' : persona.balance === 'recibe' ? 'arrow-down-circle-outline' : 'checkmark-circle-outline'} size={26} />
-                        <View style={estilos.textoFlexible}><Text style={estilosGlobales.texto}>{persona.nombre}</Text><Text style={estilosGlobales.textoSecundario}>{persona.resumen}</Text></View>
-                        <EtiquetaBalance persona={persona} estilos={estilos} />
+                    ) : sala.balances.map((balance) => (
+                      <View key={balance.personaId} style={[estilosGlobales.tarjeta, estilos.fila]}>
+                        <Ionicons color={balance.tipo === 'debe' ? tema.error : tema.exito} name={balance.tipo === 'debe' ? 'arrow-up-circle-outline' : 'arrow-down-circle-outline'} size={26} />
+                        <View style={estilos.textoFlexible}>
+                          <Text style={estilosGlobales.texto}>{obtenerPersona(balance.personaId)?.nombre}</Text>
+                          <Text style={estilosGlobales.textoSecundario}>{balance.resumen}</Text>
+                        </View>
+                        <Text style={estilosGlobales.textoAyuda}>{balance.tipo === 'debe' ? 'Debe' : 'Debe recibir'}</Text>
                       </View>
                     ))}
+                    {sala.balances.length > 0 ? (
+                      <View style={[estilosGlobales.tarjeta, estilos.fila]}>
+                        <Ionicons color={tema.exito} name="checkmark-circle-outline" size={26} />
+                        <View style={estilos.textoFlexible}>
+                          <Text style={estilosGlobales.texto}>Vos</Text>
+                          <Text style={estilosGlobales.textoSecundario}>Estás al día</Text>
+                        </View>
+                        <Text style={estilosGlobales.textoAyuda}>Saldado</Text>
+                      </View>
+                    ) : null}
                     <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
                       <Text style={estilosGlobales.etiqueta}>Detalle de distribución</Text>
-                      <Text style={estilosGlobales.textoSecundario}>La relación entre quién pagó y quién debe se mostrará acá cuando se incorpore el cálculo de balances.</Text>
+                      <Text style={estilosGlobales.textoSecundario}>Acá se verá quién le debe a quién cuando se implemente el cálculo.</Text>
                     </View>
                   </View>
                 ) : null}
-                <Pressable accessibilityRole="button" onPress={() => establecerSalaSeleccionada(null)} style={estilosGlobales.botonTexto}>
-                  <Text style={estilosGlobales.textoBotonTexto}>Volver a mis salas</Text>
+
+                {sala.estado === 'abierta' ? (
+                  <Pressable accessibilityRole="button" onPress={() => abrirModal('cerrar')} style={estilosGlobales.botonTexto}>
+                    <Text style={estilosGlobales.textoBotonTexto}>Cerrar sala</Text>
+                  </Pressable>
+                ) : null}
+                <Pressable accessibilityRole="button" onPress={() => navegacion.goBack()} style={estilosGlobales.botonTexto}>
+                  <Text style={estilosGlobales.textoBotonTexto}>Volver a Social</Text>
                 </Pressable>
               </>
             ) : (
               <>
-                <View style={estilos.filaTitulo}>
-                  <View style={estilos.textoFlexible}><Text accessibilityRole="header" style={estilosGlobales.subtitulo}>Mis salas</Text><Text style={estilosGlobales.textoSecundario}>Compartí los gastos de cada grupo.</Text></View>
-                  <View style={estilos.contador}><Text style={estilos.textoContador}>{mostrarSalas ? SALAS_SIMULADAS.length : 0}</Text></View>
-                </View>
-                {mostrarSalas ? (
-                  <View style={estilos.grupo}>
-                    {SALAS_SIMULADAS.map((sala) => (
-                      <Pressable key={sala.id} accessibilityRole="button" onPress={() => abrirSala(sala)} style={[estilosGlobales.tarjeta, estilos.tarjetaSala]}>
-                        <View style={estilos.iconoLista}><Ionicons color={tema.botonPrincipal} name={sala.icono} size={24} /></View>
-                        <View style={estilos.textoFlexible}><Text style={estilosGlobales.encabezadoSeccion}>{sala.nombre}</Text><Text style={estilosGlobales.textoSecundario}>{sala.participantes.length} participantes</Text><Text style={estilosGlobales.textoAyuda}>{sala.descripcion}</Text></View>
-                        <Ionicons color={tema.textoSecundario} name="chevron-forward" size={22} />
-                      </Pressable>
-                    ))}
-                  </View>
-                ) : (
-                  <EstadoVacio icono="people-outline" titulo="Todavía no participás en ninguna sala" descripcion="Creá una sala o unite a una para organizar gastos compartidos." estilos={estilos} estilosGlobales={estilosGlobales} tema={tema} />
-                )}
                 <View style={estilos.grupo}>
-                  <Pressable accessibilityRole="button" onPress={() => abrirModal('crear')} style={estilosGlobales.botonPrincipal}><Text style={estilosGlobales.textoBotonPrincipal}>Crear sala</Text></Pressable>
-                  <Pressable accessibilityRole="button" onPress={() => abrirModal('unirse')} style={estilosGlobales.botonSecundario}><Text style={estilosGlobales.textoBotonSecundario}>Unirse a sala</Text></Pressable>
+                  <Text accessibilityRole="header" style={estilosGlobales.subtitulo}>Personas y deudas</Text>
+                  <Text style={estilosGlobales.textoSecundario}>Consultá lo que debés o te deben, sin necesidad de una sala.</Text>
+                  {PERSONAS_SIMULADAS.map((persona) => (
+                    <FilaPersona key={persona.id} persona={persona} tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                  ))}
+                  <Pressable accessibilityRole="button" onPress={() => abrirModal('deuda')} style={estilosGlobales.botonPrincipal}>
+                    <Text style={estilosGlobales.textoBotonPrincipal}>Registrar deuda</Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" onPress={() => abrirModal('persona')} style={estilosGlobales.botonSecundario}>
+                    <Text style={estilosGlobales.textoBotonSecundario}>Registrar persona</Text>
+                  </Pressable>
                 </View>
+
                 <View style={estilos.grupo}>
+                  <Text accessibilityRole="header" style={estilosGlobales.subtitulo}>Salas recientes</Text>
+                  <Text style={estilosGlobales.textoSecundario}>Una sala para cada salida o encuentro.</Text>
+                  {mostrarSalas ? SALAS_SIMULADAS.filter((item) => item.estado === 'abierta').map((item) => (
+                    <TarjetaSala key={item.id} sala={item} alAbrir={() => abrirSala(item)} tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                  )) : (
+                    <EstadoVacio icono="people-outline" titulo="Todavía no participás en ninguna sala" descripcion="Creá una sala para una ocasión concreta." estilos={estilos} estilosGlobales={estilosGlobales} tema={tema} />
+                  )}
+                  <Pressable accessibilityRole="button" onPress={() => abrirModal('crear')} style={estilosGlobales.botonPrincipal}>
+                    <Text style={estilosGlobales.textoBotonPrincipal}>Crear sala</Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" onPress={() => abrirModal('unirse')} style={estilosGlobales.botonSecundario}>
+                    <Text style={estilosGlobales.textoBotonSecundario}>Unirse a sala</Text>
+                  </Pressable>
                   <Pressable accessibilityRole="button" onPress={() => establecerMostrarSalas((anterior) => !anterior)} style={estilosGlobales.botonTexto}>
                     <Text style={estilosGlobales.textoBotonTexto}>{mostrarSalas ? 'Ver ejemplo sin salas' : 'Ver salas de ejemplo'}</Text>
                   </Pressable>
-                  <Pressable accessibilityRole="button" onPress={() => establecerError(true)} style={estilosGlobales.botonTexto}>
-                    <Text style={estilosGlobales.textoBotonTexto}>Ver ejemplo de error</Text>
-                  </Pressable>
                 </View>
+
+                <View style={estilos.grupo}>
+                  <Text accessibilityRole="header" style={estilosGlobales.subtitulo}>Historial de salas cerradas</Text>
+                  {SALAS_SIMULADAS.filter((item) => item.estado === 'cerrada').map((item) => (
+                    <TarjetaSala key={item.id} sala={item} alAbrir={() => abrirSala(item)} tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                  ))}
+                </View>
+
+                <Pressable accessibilityRole="button" onPress={() => establecerError(true)} style={estilosGlobales.botonTexto}>
+                  <Text style={estilosGlobales.textoBotonTexto}>Ver ejemplo de error</Text>
+                </Pressable>
               </>
             )}
+            {error ? (
+              <Pressable accessibilityRole="button" onPress={() => establecerError(false)} style={estilosGlobales.botonSecundario}>
+                <Text style={estilosGlobales.textoBotonSecundario}>Reintentar</Text>
+              </Pressable>
+            ) : null}
           </View>
         </ScrollView>
       </View>
 
-      <Modal animationType="fade" onRequestClose={cerrarModal} transparent visible={modal !== null || gastoSeleccionado !== null}>
+      <Modal animationType="fade" onRequestClose={cerrarModal} transparent visible={modal !== null}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
           <Pressable accessibilityLabel="Cerrar" accessibilityRole="button" onPress={cerrarModal} style={estilos.cierreFondo} />
           <View accessibilityViewIsModal style={estilos.tarjetaModal}>
             <View style={estilos.filaModal}>
-              <Text style={estilosGlobales.encabezadoSeccion}>{gastoSeleccionado ? gastoSeleccionado.descripcion : tituloModal}</Text>
-              <Pressable accessibilityLabel="Cerrar" accessibilityRole="button" onPress={cerrarModal} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={22} /></Pressable>
+              <Text style={estilosGlobales.encabezadoSeccion}>{tituloModal}</Text>
+              <Pressable accessibilityLabel="Cerrar" accessibilityRole="button" onPress={cerrarModal} style={estilos.botonCerrar}>
+                <Ionicons color={tema.textoPrincipal} name="close" size={22} />
+              </Pressable>
             </View>
-            {gastoSeleccionado ? (
+            <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal}>
               <View style={estilos.grupo}>
-                <Text style={estilosGlobales.monto}>{gastoSeleccionado.monto}</Text>
-                <Text style={estilosGlobales.texto}>Pagó: {gastoSeleccionado.pago}</Text>
-                <Text style={estilosGlobales.texto}>Fecha: {gastoSeleccionado.fecha}</Text>
-                <Text style={estilosGlobales.textoSecundario}>{gastoSeleccionado.distribucion}</Text>
-                <Pressable accessibilityRole="button" onPress={cerrarModal} style={estilosGlobales.botonSecundario}><Text style={estilosGlobales.textoBotonSecundario}>Volver a gastos</Text></Pressable>
+                {modal === 'participantes' ? (
+                  <>
+                    <Text style={estilosGlobales.textoSecundario}>Elegí entre tus personas registradas.</Text>
+                    {personasDisponibles.length === 0 ? (
+                      <Text style={estilosGlobales.textoSecundario}>Ya agregaste a todas las personas registradas.</Text>
+                    ) : personasDisponibles.map((persona) => (
+                      <Pressable key={persona.id} accessibilityRole="checkbox" accessibilityState={{ checked: personasMarcadas.includes(persona.id) }}
+                        onPress={() => alternarPersonaMarcada(persona.id)} style={[estilosGlobales.tarjeta, estilos.fila]}>
+                        <View style={estilos.avatar}><Text style={estilos.textoAvatar}>{persona.iniciales}</Text></View>
+                        <Text style={[estilosGlobales.texto, estilos.textoFlexible]}>{persona.nombre}</Text>
+                        <Ionicons color={tema.foco} name={personasMarcadas.includes(persona.id) ? 'checkbox' : 'square-outline'} size={24} />
+                      </Pressable>
+                    ))}
+                    <Pressable accessibilityRole="button" onPress={agregarParticipantes} style={estilosGlobales.botonPrincipal}>
+                      <Text style={estilosGlobales.textoBotonPrincipal}>Agregar seleccionadas</Text>
+                    </Pressable>
+                  </>
+                ) : modal === 'detalleGasto' ? (
+                  <>
+                    <Text style={estilosGlobales.monto}>{gastoSeleccionado?.monto}</Text>
+                    <Text style={estilosGlobales.texto}>Pagó: {gastoSeleccionado?.pago}</Text>
+                    <Text style={estilosGlobales.texto}>Fecha: {gastoSeleccionado?.fecha}</Text>
+                    <Text style={estilosGlobales.textoSecundario}>{gastoSeleccionado?.distribucion}</Text>
+                  </>
+                ) : modal === 'cerrar' ? (
+                  <>
+                    <Text style={estilosGlobales.textoSecundario}>Al cerrar una sala de una ocasión, aparecerá en el historial de salas cerradas.</Text>
+                    <Text style={estilosGlobales.textoAyuda}>El cierre real estará disponible cuando se implemente el almacenamiento local.</Text>
+                  </>
+                ) : (
+                  <>
+                    {modal === 'deuda' ? (
+                      <>
+                        <Text style={estilosGlobales.etiqueta}>Persona registrada</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.pestanas}>
+                          {PERSONAS_SIMULADAS.map((persona) => (
+                            <Pressable key={persona.id} accessibilityRole="radio" accessibilityState={{ selected: personaDeuda === persona.id }}
+                              onPress={() => establecerPersonaDeuda(persona.id)} style={[estilos.pestana, personaDeuda === persona.id && estilos.pestanaActiva]}>
+                              <Text style={[estilos.textoPestana, personaDeuda === persona.id && estilos.textoPestanaActiva]}>{persona.nombre}</Text>
+                            </Pressable>
+                          ))}
+                        </ScrollView>
+                        <Text style={estilosGlobales.etiqueta}>Tipo de deuda</Text>
+                        <View style={estilos.fila}>
+                          {['me_deben', 'debo'].map((tipo) => (
+                            <Pressable key={tipo} accessibilityRole="radio" accessibilityState={{ selected: tipoDeuda === tipo }}
+                              onPress={() => establecerTipoDeuda(tipo)} style={[estilos.pestana, estilos.textoFlexible, tipoDeuda === tipo && estilos.pestanaActiva]}>
+                              <Text style={[estilos.textoPestana, tipoDeuda === tipo && estilos.textoPestanaActiva]}>{tipo === 'debo' ? 'Yo debo' : 'Me deben'}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                        <CampoFormulario etiqueta="Monto" teclado="decimal-pad" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                        <CampoFormulario etiqueta="Descripción" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                      </>
+                    ) : null}
+                    {modal === 'persona' ? (
+                      <>
+                        <CampoFormulario etiqueta="Nombre" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                        <CampoFormulario etiqueta="Correo electrónico (opcional)" teclado="email-address" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                      </>
+                    ) : null}
+                    {modal === 'crear' ? (
+                      <>
+                        <Text style={estilosGlobales.textoSecundario}>Pensá la sala para una salida o encuentro concreto.</Text>
+                        <CampoFormulario etiqueta="Nombre de la ocasión" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                        <CampoFormulario etiqueta="Fecha de la ocasión" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                        <CampoFormulario etiqueta="Descripción (opcional)" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                      </>
+                    ) : null}
+                    {modal === 'unirse' ? (
+                      <>
+                        <Text style={estilosGlobales.textoSecundario}>El mecanismo para compartir una sala se definirá en otra etapa. Esta vista no requiere conexión.</Text>
+                        <CampoFormulario etiqueta="Código de la sala" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                      </>
+                    ) : null}
+                    {modal === 'gasto' ? (
+                      <>
+                        <CampoFormulario etiqueta="Descripción" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                        <CampoFormulario etiqueta="Monto" teclado="decimal-pad" tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} />
+                        <Text style={estilosGlobales.etiqueta}>Quién pagó</Text>
+                        <View style={estilos.campoInformativo}><Text style={estilosGlobales.textoSecundario}>Seleccionar participante</Text></View>
+                        <Text style={estilosGlobales.etiqueta}>Participantes involucrados</Text>
+                        <View style={estilos.campoInformativo}><Text style={estilosGlobales.textoSecundario}>Seleccionar participantes</Text></View>
+                      </>
+                    ) : null}
+                    {avisoFormulario ? (
+                      <Text accessibilityRole="alert" style={estilosGlobales.textoAyuda}>Esta acción estará disponible cuando se implemente el registro local.</Text>
+                    ) : null}
+                    <Pressable accessibilityRole="button" onPress={() => establecerAvisoFormulario(true)} style={estilosGlobales.botonPrincipal}>
+                      <Text style={estilosGlobales.textoBotonPrincipal}>{modal === 'crear' ? 'Crear' : modal === 'unirse' ? 'Unirse' : modal === 'gasto' ? 'Agregar gasto' : 'Registrar'}</Text>
+                    </Pressable>
+                  </>
+                )}
+                <Pressable accessibilityRole="button" onPress={cerrarModal} style={estilosGlobales.botonTexto}>
+                  <Text style={estilosGlobales.textoBotonTexto}>{modal === 'detalleGasto' ? 'Volver' : 'Cancelar'}</Text>
+                </Pressable>
               </View>
-            ) : (
-              <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal}>
-                <View style={estilos.grupo}>
-                  <Text style={estilosGlobales.textoSecundario}>{modal === 'crear' ? 'Poné un nombre para identificar los gastos del grupo.' : modal === 'unirse' ? 'Ingresá el código de una sala cuando esté disponible.' : 'Representá un gasto del grupo. La división se definirá más adelante.'}</Text>
-                  <CampoFormulario etiqueta={modal === 'crear' ? 'Nombre de la sala' : modal === 'unirse' ? 'Código de la sala' : 'Descripción'} estilos={estilos} estilosGlobales={estilosGlobales} tema={tema} />
-                  {modal === 'crear' ? <CampoFormulario etiqueta="Descripción (opcional)" estilos={estilos} estilosGlobales={estilosGlobales} tema={tema} /> : null}
-                  {modal === 'gasto' ? (
-                    <>
-                      <CampoFormulario etiqueta="Monto" teclado="decimal-pad" estilos={estilos} estilosGlobales={estilosGlobales} tema={tema} />
-                      <Text style={estilosGlobales.etiqueta}>Quién pagó</Text>
-                      <View style={estilos.campoInformativo}><Text style={estilosGlobales.textoSecundario}>Seleccionar participante</Text><Ionicons color={tema.textoSecundario} name="chevron-down" size={20} /></View>
-                      <Text style={estilosGlobales.etiqueta}>Participantes involucrados</Text>
-                      <View style={estilos.campoInformativo}><Text style={estilosGlobales.textoSecundario}>Seleccionar participantes</Text><Ionicons color={tema.textoSecundario} name="chevron-down" size={20} /></View>
-                    </>
-                  ) : null}
-                  {avisoFormulario ? <Text accessibilityRole="alert" style={estilosGlobales.textoAyuda}>Esta acción estará disponible en una próxima etapa.</Text> : null}
-                  <Pressable accessibilityRole="button" onPress={() => establecerAvisoFormulario(true)} style={estilosGlobales.botonPrincipal}>
-                    <Text style={estilosGlobales.textoBotonPrincipal}>{modal === 'crear' ? 'Crear' : modal === 'unirse' ? 'Unirse' : 'Agregar gasto'}</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" onPress={cerrarModal} style={estilosGlobales.botonTexto}><Text style={estilosGlobales.textoBotonTexto}>Cancelar</Text></Pressable>
-                </View>
-              </ScrollView>
-            )}
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+function FilaPersona({ persona, resumen, tipoBalance, tema, estilos, estilosGlobales }) {
+  const tipo = tipoBalance || persona.tipo;
+  return (
+    <View style={[estilosGlobales.tarjeta, estilos.fila]}>
+      <View style={estilos.avatar}><Text style={estilos.textoAvatar}>{persona.iniciales}</Text></View>
+      <View style={estilos.textoFlexible}>
+        <Text style={estilosGlobales.texto}>{persona.nombre}</Text>
+        <Text style={estilosGlobales.textoSecundario}>{resumen || descripcionDeuda(persona)}</Text>
+      </View>
+      <Ionicons color={tipo === 'saldado' ? tema.exito : tipo === 'debo' ? tema.error : tema.foco}
+        name={tipo === 'saldado' ? 'checkmark-circle-outline' : 'swap-horizontal-outline'} size={22} />
+    </View>
+  );
+}
+
+function TarjetaSala({ sala, alAbrir, tema, estilos, estilosGlobales }) {
+  return (
+    <Pressable accessibilityRole="button" onPress={alAbrir} style={[estilosGlobales.tarjeta, estilos.fila]}>
+      <View style={estilos.iconoLista}><Ionicons color={tema.botonPrincipal} name={sala.icono} size={24} /></View>
+      <View style={estilos.textoFlexible}>
+        <Text style={estilosGlobales.encabezadoSeccion}>{sala.nombre}</Text>
+        <Text style={estilosGlobales.textoSecundario}>{sala.fecha} · {sala.participantes.length + 1} participantes</Text>
+        <Text style={estilosGlobales.textoAyuda}>{sala.estado === 'cerrada' ? 'Cerrada' : sala.descripcion}</Text>
+      </View>
+      <Ionicons color={tema.textoSecundario} name="chevron-forward" size={22} />
+    </Pressable>
   );
 }
 
@@ -267,15 +493,12 @@ function EstadoVacio({ icono, titulo, descripcion, estilos, estilosGlobales, tem
   );
 }
 
-function EtiquetaBalance({ persona, estilos }) {
-  return <Text style={[estilos.etiquetaBalance, persona.balance === 'debe' && estilos.balanceDebe, persona.balance === 'recibe' && estilos.balanceRecibe]}>{ETIQUETAS_BALANCE[persona.balance]}</Text>;
-}
-
 function CampoFormulario({ etiqueta, teclado = 'default', estilos, estilosGlobales, tema }) {
   return (
     <View style={estilos.grupoCampo}>
       <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text>
-      <TextInput accessibilityLabel={etiqueta} keyboardType={teclado} placeholder={etiqueta} placeholderTextColor={tema.textoSecundario} style={estilosGlobales.campo} />
+      <TextInput accessibilityLabel={etiqueta} keyboardType={teclado} placeholder={etiqueta}
+        placeholderTextColor={tema.textoSecundario} style={estilosGlobales.campo} />
     </View>
   );
 }

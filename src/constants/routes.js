@@ -8,6 +8,7 @@ export const RUTAS = Object.freeze({
   NUEVO: 'Nuevo',
   ESTADISTICAS: 'Estadisticas',
   SOCIAL: 'Social',
+  SALA_SOCIAL: 'SalaSocial',
   PERFIL: 'Perfil',
   NOTIFICACIONES: 'Notificaciones',
   INGRESO: 'Ingreso',
