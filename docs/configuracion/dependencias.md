@@ -10,7 +10,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 
 | Dependencia | Versión | Finalidad | Uso en AHRE |
 | --- | --- | --- | --- |
-| `expo` | `~57.0.30` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
+| `expo` | `~57.0.31` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
 | `expo-status-bar` | `~57.0.1` | Control de la barra de estado. | Ajustes visuales básicos de la aplicación. |
 | `react` | `19.2.3` | Biblioteca para construir la interfaz. | Pantallas y componentes de AHRE. |
 | `react-native` | `0.86.3` | Framework móvil utilizado por Expo. | Desarrollo de la aplicación para Android y otras plataformas compatibles. |
@@ -42,7 +42,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | `react-native-worklets` | `0.10.1` | Proporciona la ejecución de funciones de Reanimated en contextos de trabajo. | Soporte requerido por la versión instalada de Reanimated. |
 | `react-native-svg` | `15.15.4` | Permite renderizar y manipular gráficos SVG. | Íconos, gráficos y recursos vectoriales de la interfaz. |
 | `react-hook-form` | `^7.88.0` | Base para administrar estado, valores, envío y estado de formularios. | Disponible para futuros formularios; Login y Registro mantienen el estado local de sus campos. |
-| `zod` | `^4.6.5` | Permite definir esquemas para validar formatos y reglas de datos. | Disponible para formularios futuros; Login y Registro usan reglas locales en `authenticationValidation.js`. |
+| `zod` | `^4.6.7` | Permite definir esquemas para validar formatos y reglas de datos. | Disponible para formularios futuros; Login y Registro usan reglas locales en `authenticationValidation.js`. |
 | `@hookform/resolvers` | `^5.9.1` | Conecta `react-hook-form` con librerías de validación como `zod`. | Integración futura de validaciones dentro de los formularios. |
 | `date-fns` | `^4.4.0` | Proporciona funciones para analizar, comparar, ordenar y formatear fechas. | Movimientos, depósitos, estadísticas, filtros y reportes. |
 
@@ -210,6 +210,61 @@ La implementación detallada está en
 [`docs/funcionalidades/autenticacion-local.md`](../funcionalidades/autenticacion-local.md).
 
 ## Criterio de incorporación
+
+### Auditoría de seguridad npm del 28 de octubre de 2026
+
+El líder autorizó en la conversación las correcciones de dependencias sin
+Issue. Esta revisión mantiene Expo SDK 57 y React Native 0.86.3. El estado
+inicial de esta instalación tenía 13 paquetes afectados: 5 bajos, 3 moderados,
+4 altos y 1 crítico.
+
+Se actualizaron los siguientes paquetes dentro de los rangos de sus padres,
+además del parche Expo recomendado por su comprobación oficial:
+
+| Paquete | Antes | Después |
+| --- | --- | --- |
+| `shell-quote` | `1.10.0` | `1.12.0` |
+| `@expo/config-plugins` | `57.0.10` | `57.0.11` |
+| `xcode` | `3.0.1` | `4.0.0` |
+| `node-forge` | `1.4.0` | `1.4.2` |
+| `zod` directo de AHRE | `4.6.5` | `4.6.7` |
+| `expo` | `57.0.30` | `57.0.31` |
+
+`xcode@4.0.0` elimina la dependencia de `uuid@7.0.3` y su aviso de
+obsolescencia. Expo también actualiza sus dependencias transitivas asociadas.
+`package.json` exige ahora `zod@^4.6.7`; la copia interna de Expo CLI sigue
+siendo `3.25.76`, porque su rango es `^3.25.76`.
+
+Comandos aplicados, sin ejecutar scripts de instalación:
+
+```powershell
+npm update shell-quote @expo/config-plugins node-forge zod --ignore-scripts
+npm install expo@~57.0.31 --ignore-scripts
+npm install zod@^4.6.7 --ignore-scripts
+```
+
+Resultado: **8 paquetes afectados: 5 bajos y 3 altos**, sin críticos ni
+moderados. Las alertas restantes provienen de:
+
+- `zod@3.25.76`, instalado por `@expo/cli`, más las alertas propagadas a
+  `@expo/cli` y `expo`. El aviso marca versiones menores que `4.6.6`; no se
+  fuerza una versión mayor sobre el rango que declara la CLI.
+  [Aviso de Zod](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+- `deepmerge@4.3.1`, instalado por `@expo/config`, y sus cuatro alertas
+  bajas propagadas a paquetes de configuración de Expo. En la fecha de esta
+  revisión, `4.3.1` sigue siendo la última versión publicada y el aviso no
+  identifica una versión corregida.
+  [Aviso de deepmerge](https://github.com/advisories/GHSA-gcqx-w48m-w2h4).
+
+No se evaluó la explotabilidad de esos fallos en cada uso de las herramientas.
+No ejecutar `npm audit fix --force` como arreglo automático: el informe
+propone retroceder a Expo `51.0.39`, fuera de la base actual de SDK 57.
+No se ocultaron alertas ni se agregaron overrides.
+
+Se conserva `package-lock.json` con las resoluciones corregidas; debe revisarse
+y versionarse junto con `package.json` para reproducirlas. Pasaron las 24
+pruebas existentes de OCR y persistencia y la exportación Android con Hermes.
+Esta exportación no sustituye probar un APK nuevo en dispositivo.
 
 ### OCR offline con ML Kit (#31)
 
