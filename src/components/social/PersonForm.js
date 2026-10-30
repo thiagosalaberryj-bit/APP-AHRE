@@ -1,6 +1,7 @@
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
 import AccionesFormulario from './SocialFormActions';
+import RequisitoCreacionSocial from './SocialCreationGate';
 import { guardarPersona, cambiarActividadPersona } from '../../social/socialService';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { View, Text } from 'react-native';
@@ -37,7 +38,7 @@ export default function FormularioPersona(propiedades) {
   const cambiar = establecer => valor => {
     establecer(valor);
   };
-  return <View style={estilos.grupo}>
+  return <RequisitoCreacionSocial aplicar={!personaInicial} {...aspecto}><View style={estilos.grupo}>
       <CampoFormulario etiqueta="Nombre" ejemplo="Ej.: Ana" valor={nombre} alCambiar={cambiar(establecerNombre)} {...aspecto} />
       <CampoFormulario etiqueta="Apellido" ejemplo="Ej.: Pérez" valor={apellido} alCambiar={cambiar(establecerApellido)} {...aspecto} />
       <CampoFormulario etiqueta="Apodo" ejemplo="Ej.: Ani" valor={apodo} limite={20} alCambiar={valor => cambiar(establecerApodo)(valor.slice(0, 20))} {...aspecto} />
@@ -56,5 +57,5 @@ export default function FormularioPersona(propiedades) {
         recargarAntesDeCerrar alGuardar={() => cambiarActividadPersona(personaInicial.id, !personaInicial.activa)}
         alExito={persona => { alCerrar(); if (!persona.activa) irAgenda(); }} {...aspecto} /> : null}
       {!personaInicial ? <BotonSocial texto="Cancelar" simple alPresionar={alCerrar} {...aspecto} /> : null}
-    </View>;
+    </View></RequisitoCreacionSocial>;
 }

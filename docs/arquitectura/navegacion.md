@@ -121,8 +121,10 @@ serializables; un nuevo ítem puede recibir `personasIds` para reflejar la
 selección temporal de participantes de la sala.
 
 Social recarga datos locales al recuperar el foco y navega por identificadores
-persistidos. Su OCR de ejemplo no abre la ruta OCR funcional; sus líneas se
-confirman con el formulario normal de ítems. Ver [Interfaz de Social](../interfaces/social.md).
+persistidos. Escanear ticket abre OCR con destino social y salaId; el resultado
+regresa a RegistroSocial con modo lista y ticketSocial serializable. Este destino
+no guarda un egreso; el OCR iniciado desde el panel mantiene su formulario normal.
+Ver [Interfaz de Social](../interfaces/social.md).
 
 El detalle de categoría y el detalle de movimiento se registran en el Stack
 principal, fuera del navegador de pestañas. Al abrirlos se oculta la barra

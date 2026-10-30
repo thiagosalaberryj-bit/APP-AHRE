@@ -8,7 +8,8 @@ actual. Se mantuvo la identidad visual de la maqueta del Issue #18; el usuario
 autorizó integrar la lógica en esa misma rama sin abrir otro Issue.
 
 No hay invitaciones, sincronización ni comunicación entre cuentas. El OCR de
-Social continúa como ticket de ejemplo para Expo Go. La preparación temporal
+Social reutiliza el reconocimiento existente; ML Kit no está disponible en Expo Go.
+La lista manual sí funciona en Expo Go. La preparación temporal
 de Inicio solo carga depósitos y movimientos; Social comienza vacío.
 
 Los [diagramas](../diagramas/social/README.md) explican los recorridos, la
@@ -36,6 +37,12 @@ pantallas no ejecutan SQL y las operaciones compuestas utilizan la conexión
 recibida de la transacción, sin abrir otra cola dentro de ella.
 
 ## Personas y pertenencias
+
+Crear contactos, salas, deudas, ítems, pertenencias o pagos exige al menos un
+depósito propio activo con saldo actual positivo. Saldo cero, negativo o dinero
+en otra cuenta no habilitan las altas. La comprobación se repite en los servicios;
+el cierre con gastos también exige ese requisito antes de confirmar movimientos.
+La consulta, edición de registros existentes y bajas siguen disponibles.
 
 Cada cuenta tiene una representación interna única del usuario actual. Se crea
 al acceder a Social; su identificador real se conserva en SQLite. La interfaz
@@ -91,6 +98,27 @@ no puede reservarse en otro gasto ni usarse para otro pago de Social.
 Las salas cerradas no permiten editar ítems.
 
 ## Dinero y movimientos
+
+### Carga múltiple
+
+La pestaña Gastos de una sala abierta ofrece Edición rápida para cargar los ítems
+existentes en la misma lista. Conserva identificadores, versión y asociaciones
+financieras; permite aplicar opciones seleccionadas a todos y guardar cambios
+atómicamente, sin duplicar ítems. No está disponible después del cierre. Retirar
+una fila existente de esta edición no se ofrece como acción de borrado.
+
+Registrar lista guarda entre 1 y 100 ítems, cada uno con identificador estable,
+pagador y reparto propios. La interfaz aplica valores comunes y permite cambiar
+los de cada fila. La previsualización valida toda la lista; guardar utiliza una
+única transacción y revierte todos los ítems si falla uno. Reintentar conserva
+los identificadores y no duplica las filas confirmadas. Los saldos solo cambian
+al cerrar la sala.
+
+Escanear ticket comparte OcrScreen, ocrService y receiptParser con el OCR general.
+El resultado social devuelve ítems editables, sin invocar el servicio de egresos.
+El parser conserva productos y total existentes y agrega items con descripción y
+un importe candidato por línea. Los campos dudosos permanecen revisables; no se
+reparte el total automáticamente ni se inventan importes faltantes.
 
 | Operación | Efecto en tus depósitos |
 | --- | --- |
@@ -221,6 +249,6 @@ node --experimental-vm-modules --test tests/socialSchema.test.js tests/socialSer
 ```
 
 Quedan para revisión en Expo Go: tamaño de texto, teclado, navegación de regreso,
-crear depósito y volver, modo avión, reinicio y cambio de cuenta. No se habilitó
-OCR nativo ni se preparó un APK. El esquema inicial requiere una base de desarrollo
+crear depósito y volver, modo avión, reinicio y cambio de cuenta. Se conectó el
+OCR existente, sin preparar un APK ni validar captura nativa. El esquema inicial requiere una base de desarrollo
 compatible; no convierte ni borra automáticamente bases anteriores.

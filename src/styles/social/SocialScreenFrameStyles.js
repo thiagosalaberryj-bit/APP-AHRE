@@ -7,7 +7,7 @@ export default function crearEstilosMarco(tema, margenInferior = 0) {
     },
     contenidoPanel: {
       paddingHorizontal: ESPACIADO.grande,
-      gap: ESPACIADO.enorme
+      gap: ESPACIADO.minimo
     },
     contenido: {
       alignSelf: 'center',

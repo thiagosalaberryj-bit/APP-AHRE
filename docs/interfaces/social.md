@@ -9,7 +9,8 @@ el usuario autorizó continuar con su funcionamiento en la misma rama sin otro I
 
 Se mantienen las pantallas, tarjetas, fuentes, colores y distribución aprobados.
 Los datos de ejemplo fueron retirados de las vistas principales. El ticket de
-OCR sigue siendo un ejemplo identificado, compatible con las pruebas en Expo Go.
+OCR reutiliza la pantalla y reconocimiento existentes. La lista manual funciona
+en Expo Go; la lectura nativa requiere el módulo ML Kit del proyecto.
 Nombres, descripciones e importes largos se truncan con puntos suspensivos en
 una línea. Los resúmenes mantienen sus columnas y tamaños de fuente; los campos
 editables conservan el contenido completo.
@@ -24,7 +25,8 @@ La [lógica funcional](../funcionalidades/social.md), el
   perfiles, detalles, formularios y confirmaciones.
 - `src/components/social/`: componentes visuales y formularios independientes.
 - `src/styles/social/`: estilos existentes, con reglas comunes en SharedStyles.js.
-- `src/social/socialConstants.js`: opciones de interfaz y ticket de ejemplo.
+- `src/social/socialConstants.js`: opciones de interfaz.
+- `ExpenseListForm.js`: lista editable, reparto común y ajustes por ítem.
 - `src/social/socialService.js`: entrada pública a los servicios de personas,
   salas, ítems, deudas, pagos y consultas.
 - `src/social/useSocialScreen.js`: carga al recuperar el foco, navegación y apariencia.
@@ -37,6 +39,11 @@ los datos a sus descendientes y ofrece Reintentar si falla la consulta. Las
 pantallas no ejecutan SQL. Las vistas secundarias mantienen su navegación de Stack.
 
 ## Panel e historiales
+
+Sin un depósito propio activo con saldo positivo, el panel muestra el requisito
+y un acceso a Depósitos. Las altas quedan deshabilitadas o muestran ese mismo
+aviso al abrir su ruta o modal directamente. Consultar y editar registros previos
+sigue disponible; los depósitos de otra cuenta no habilitan Social.
 
 La tarjeta Tus pendientes muestra Te deben y Debés sin compensar direcciones,
 con los accesos Nueva deuda, Personas y Nueva sala. Los importes se calculan
@@ -102,6 +109,11 @@ la cantidad de gastos se muestra debajo de esa fila.
 La lista de Gastos usa tarjetas compactas como Balances: icono pequeño,
 descripción, pagador y reparto en una misma línea, e importe en el bloque
 lateral con flecha. La fecha se conserva en el detalle, no en estas tarjetas.
+En salas abiertas con ítems aparece Edición rápida: abre los gastos actuales
+en la lista editable, con sus repartos y asociaciones. Guardar cambios actualiza
+los registros existentes y verifica sus versiones. Los nuevos ítems se pueden
+agregar si se cumple el requisito del depósito; los existentes no se borran al
+editar la lista. Las salas cerradas conservan su historial de solo lectura.
 Total gastado y los importes de Balances reutilizan SocialAmountSummary,
 el mismo contenedor de fondo suave usado en Tus pendientes del panel.
 
@@ -133,9 +145,32 @@ admite en salas abiertas y verifica la versión del registro. Permite corregir
 importe, personas, pagador, reparto y pagos marcados mientras son borradores.
 Actualiza las asociaciones sin afectar el saldo ni crear compensaciones.
 
-Escanear ticket mantiene el recorrido de ejemplo: elegir una línea carga nombre
-e importe y reinicia el reparto y las marcas del borrador, sin cámara ni egreso
-anticipado. Guardar confirma el borrador; el cierre confirma sus movimientos.
+Un ítem conserva el formulario rápido. El modo se elige con el mismo selector
+segmentado de Egresos/Ingresos de Estadísticas. Escanear ticket aparece únicamente
+en la barra superior de Registrar lista. Registrar lista permite hasta 100 filas
+con descripción e importe, agregar/quitar filas y ajustar reparto y depósito
+por ítem en modal. El reparto y depósito comunes se aplican a las filas sin
+ajustes propios. Las filas compactas alinean nombre y precio, muestran pagador,
+reparto, personas y depósito en un resumen truncado, y tienen iconos de editar
+en verde y borrar en rojo arriba, cada uno sobre su propio fondo.
+Nombre e importe usan borde gris fino en reposo y verde al recibir el foco.
+Agregar, Opciones y Escanear quedan juntos en una barra compacta encima de las
+filas. No se repite Escanear debajo del selector cuando se está en modo lista.
+Opciones rápidas abre un modal con campos seleccionables: pagador, personas,
+reparto, depósito y pagos. Solo se despliegan los controles marcados y Aplicar
+a todos modifica únicamente esos campos, conservando los demás ajustes de cada
+ítem y sus nombres e importes. Aplicar queda deshabilitado hasta elegir un cambio.
+El formulario de reparto ya no se muestra permanentemente debajo de la lista.
+Cambiar de modo conserva el borrador de ambos formularios.
+Guardar lista confirma todos los borradores en una transacción: un error revierte
+la lista completa y no modifica saldos.
+
+Escanear ticket abre OcrScreen con destino social y salaId, reutilizando cámara,
+galería, recorte, servicio y parser. OcrSocialResult devuelve las líneas mediante
+popTo a RegistroSocial; no utiliza OcrExpenseForm ni crea un egreso. Las líneas se
+agregan a la lista existente una sola vez por lectura. Importes ausentes o inválidos
+se completan manualmente; el total no se copia como importe de cada producto.
+El ticket simulado fue retirado. El cierre sigue siendo quien aplica los movimientos.
 
 ## Deudas y confirmación de movimientos
 
@@ -202,4 +237,5 @@ No son un motor de layout ni sustituyen revisar las pantallas en Expo Go.
 
 En el dispositivo deben revisarse navegación Atrás, teclado, texto ampliado,
 creación de depósito y regreso, reinicio de la app, cambio de cuenta, modo avión
-y los diálogos nativos. No se habilitó OCR real ni se preparó un APK en esta etapa.
+y los diálogos nativos. La lectura real requiere ML Kit, no disponible en Expo Go.
+No se preparó un APK ni se verificó la captura nativa en esta etapa.

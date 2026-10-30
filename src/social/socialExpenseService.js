@@ -1,5 +1,5 @@
 import { gastosCompartidosRepositorio, participantesGastoRepositorio } from '../database/repositories';
-import { conSocial, registroPropio, salaAbierta, idPersistente, leerSocial } from './socialStore';
+import { conSocial, registroPropio, salaAbierta, idPersistente, leerSocial, exigirDepositoConDinero } from './socialStore';
 import { exigir, repartirGasto, textoSocial } from './socialValidation';
 import { validarFinanciacion } from './socialPaymentService';
 import { leerPlanGasto, operacionesGasto } from './socialRoomDraft';
@@ -7,6 +7,7 @@ import { leerPlanGasto, operacionesGasto } from './socialRoomDraft';
 async function prepararGasto(datos, contexto) {
   const sala = await salaAbierta(datos.salaId, contexto), registros = await leerSocial(contexto);
   const previo = datos.gastoId ? await registroPropio(gastosCompartidosRepositorio, datos.gastoId, contexto) : null;
+  if (!previo) await exigirDepositoConDinero(contexto);
   exigir(!previo || previo.sala_id === sala.id && previo.estado === 'vigente', 'El gasto no pertenece a esta sala o fue cancelado.');
   exigir(!previo || previo.version === datos.version, 'El gasto cambió desde que lo abriste. Volvé a abrirlo antes de editar.');
   const anteriores = registros.partes.filter(p => p.gasto_compartido_id === previo?.id);
@@ -34,11 +35,14 @@ export function previsualizarGasto(datos) {
 }
 
 export function guardarGasto(datos, financiaciones = {}) {
-  return conSocial(async contexto => {
+  return conSocial(contexto => guardarGastoEnContexto(datos, financiaciones, contexto));
+}
+
+async function guardarGastoEnContexto(datos, financiaciones, contexto) {
     exigir(typeof datos.claveOperacion === 'string' && datos.claveOperacion.trim(), 'No se pudo identificar el envío. Volvé a abrir el formulario.');
     if (!datos.gastoId && datos.id) {
       const existente = await gastosCompartidosRepositorio.consultarPorId(datos.id, contexto.conexion);
-      if (existente) { exigir(existente.usuario_id === contexto.usuario.id, 'Identificador de gasto no disponible.'); return existente; }
+      if (existente) { exigir(existente.usuario_id === contexto.usuario.id && existente.sala_id === datos.salaId, 'Identificador de gasto no disponible para esta sala.'); return existente; }
     }
     const plan = await prepararGasto(datos, contexto);
     const { previo, anteriores, reparto, pagaron, gasto: valores, sala } = plan;
@@ -63,5 +67,27 @@ export function guardarGasto(datos, financiaciones = {}) {
       if (!anterior) await participantesGastoRepositorio.crear({ usuario_id: contexto.usuario.id, gasto_compartido_id: gasto.id, persona_id: parte.personaId, monto_correspondiente: parte.centavos / 100, orden: parte.orden }, contexto.conexion);
     }
     return gasto;
+}
+
+export function previsualizarListaGastos(lista) {
+  return conSocial(async contexto => {
+    exigir(Array.isArray(lista) && lista.length > 0 && lista.length <= 100, 'Agregá entre 1 y 100 ítems.');
+    exigir(new Set(lista.map(g => g.id)).size === lista.length && lista.every(g => g.id && (!g.gastoId || g.gastoId === g.id) && g.salaId === lista[0].salaId), 'Revisá los identificadores y la sala de la lista.');
+    const operaciones = [];
+    for (let indice = 0; indice < lista.length; indice++) {
+      const plan = await prepararGasto(lista[indice], contexto);
+      operaciones.push(...plan.operaciones.filter(o => o.tipoMovimiento).map(o => ({ indice, clave: o.clave, tipo: o.tipoMovimiento, monto: o.monto })));
+    }
+    return { operaciones };
+  });
+}
+
+export function guardarListaGastos(lista, financiaciones = []) {
+  return conSocial(async contexto => {
+    exigir(Array.isArray(lista) && lista.length > 0 && lista.length <= 100, 'Agregá entre 1 y 100 ítems.');
+    exigir(new Set(lista.map(g => g.id)).size === lista.length && lista.every(g => g.id && (!g.gastoId || g.gastoId === g.id) && g.salaId === lista[0].salaId), 'Revisá los identificadores y la sala de la lista.');
+    const resultados = [];
+    for (let i = 0; i < lista.length; i++) resultados.push(await guardarGastoEnContexto(lista[i], financiaciones[i] || {}, contexto));
+    return resultados;
   });
 }

@@ -1,5 +1,5 @@
 import { deudasRepositorio, pagosSocialesRepositorio, movimientosRepositorio, depositosRepositorio, personasRepositorio, participantesGastoRepositorio, gastosCompartidosRepositorio, salasRepositorio } from '../database/repositories';
-import { conSocial, registroPropio } from './socialStore';
+import { conSocial, registroPropio, exigirDepositoConDinero } from './socialStore';
 import { centavos, unidades, sumaPagos, exigir, textoSocial } from './socialValidation';
 import { movimientosReservados } from './socialRoomDraft';
 
@@ -59,6 +59,7 @@ export async function guardarOperacion(contexto, operacion, financiacion) {
 async function prepararDeudaPersonal(datos, contexto) {
   const persona = await registroPropio(personasRepositorio, datos.personaId, contexto);
   exigir(persona.activa && !persona.es_usuario_actual, 'Elegí una persona activa de tu agenda.');
+  await exigirDepositoConDinero(contexto);
   exigir(['debo', 'me_deben'].includes(datos.direccion), 'Elegí la dirección de la deuda.');
   const descripcion = textoSocial(datos.descripcion), monto = centavos(datos.monto) / 100;
   exigir(descripcion && descripcion.length <= 500, 'Ingresá una descripción de hasta 500 caracteres.');
@@ -110,6 +111,7 @@ export function registrarPagoDeuda(datos, financiacion) {
       return { ...existentes[0], saldada: deuda.estado === 'pagada' };
     }
     exigir(deuda.estado !== 'cancelada', 'La deuda está cancelada.');
+    await exigirDepositoConDinero(contexto);
     const pagos = await pagosSocialesRepositorio.consultar({ usuario_id: contexto.usuario.id, deuda_id: deuda.id }, {}, contexto.conexion);
     const monto = centavos(datos.monto), restante = unidades(deuda.monto) - sumaPagos(pagos);
     exigir(monto <= restante && restante > 0, 'El pago supera el pendiente o la deuda ya está saldada.');

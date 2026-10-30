@@ -165,8 +165,8 @@ movimiento, y `SocialRecordUnavailable.js` para registros no disponibles.
 `src/social/` contiene servicios por responsabilidad, consultas, validaciones,
 constantes y contexto. `useSocialScreen.js` recarga por foco; el marco
 `SocialScreenFrame.js` comparte encabezado, teclado, desplazamiento y proveedor
-de datos. No hay colecciones simuladas de personas, salas o deudas; únicamente
-se conserva el ticket de ejemplo del OCR social.
+de datos. No hay colecciones simuladas de personas, salas o deudas.
+El reconocimiento se comparte con el OCR general mediante OcrScreen y su parser.
 `RoomExpenseCard.js` dibuja las tarjetas compactas de Gastos con los estilos
 comunes de Balances. `SocialAmountSummary.js` comparte los contenedores de
 importe entre panel, resumen de sala, Balances y confirmación de cierre;

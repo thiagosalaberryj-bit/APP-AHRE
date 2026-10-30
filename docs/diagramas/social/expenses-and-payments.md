@@ -6,10 +6,10 @@
 flowchart TD
   A[Agregar ítem a sala abierta] --> B{Carga}
   B -->|Manual| C[Descripción e importe]
-  B -->|OCR futuro| D[Captura, recorte y reconocimiento local]
+  B -->|OCR compartido| D[Captura, recorte y reconocimiento local existentes]
   D --> E{Resultado revisable}
   E -->|Cancelar o error| C
-  E -->|Elegir una línea| C
+  E -->|Revisar lista editable| C
   C --> F[Elegir pagador y personas involucradas]
   F --> G{Reparto}
   G -->|Iguales| H[Dividir en centavos y distribuir resto por orden estable]
@@ -26,7 +26,8 @@ flowchart TD
 
 El pagador puede estar fuera del reparto; si participa, su parte está cubierta
 por la compra y no provoca otro pago. Un ítem tiene un solo pagador. La lectura
-OCR no crea por adelantado un egreso; su conexión real queda para otra etapa.
+OCR no crea por adelantado un egreso. Devuelve la lista al registro de Social;
+la carga manual y la reconocida comparten validación y guardado atómico.
 Guardar un ítem tampoco crea el egreso: los movimientos nuevos y pagos se
 confirman al cerrar la sala. El borrador reserva los movimientos ya existentes
 para impedir que se vuelvan a usar en otro gasto o pago social.

@@ -2,8 +2,9 @@
 
 Estos diagramas describen la integración personal offline implementada sobre
 SQLite mediante los servicios de `src/social/` y las pantallas existentes.
-El OCR social conserva un ticket de ejemplo; el reconocimiento real y la
-validación de los flujos en Expo Go en dispositivo siguen pendientes.
+El OCR social comparte el reconocimiento existente y devuelve una lista editable.
+La lista manual funciona en Expo Go; ML Kit requiere el módulo nativo Android.
+La validación de captura en dispositivo sigue pendiente.
 
 | Escenarios | Diagrama |
 | --- | --- |

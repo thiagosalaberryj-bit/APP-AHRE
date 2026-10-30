@@ -42,3 +42,8 @@ export async function salaAbierta(id, contexto) {
   exigir(sala.estado === 'abierta', 'La sala está cerrada y su reparto es de solo lectura.');
   return sala;
 }
+
+export async function exigirDepositoConDinero(contexto) {
+  const deposito = await contexto.conexion.getFirstAsync('SELECT id FROM depositos WHERE usuario_id = ? AND activo = 1 AND saldo_actual > 0 LIMIT 1;', [contexto.usuario.id]);
+  exigir(deposito, 'Para crear registros en Social necesitás un depósito activo con dinero.');
+}

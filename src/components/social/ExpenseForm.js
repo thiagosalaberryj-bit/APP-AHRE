@@ -3,8 +3,6 @@ import { useEffect, useState } from 'react';
 import { montoParaEntrada } from '../../social/socialHelpers';
 import { View, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { TICKET_SOCIAL_SIMULADO } from "../../social/socialConstants";
-import BotonSocial from './SocialButton';
 import MontoSocial from './SocialAmountInput';
 import CampoFormulario from './SocialTextField';
 import SelectorPersonas from './PeopleSelector';
@@ -19,6 +17,8 @@ export default function FormularioGasto(propiedades) {
   const {
     participantes,
     gastoInicial,
+    borradorInicial,
+    soloReparto = false,
     alCambiar,
     ...aspecto
   } = {
@@ -33,32 +33,21 @@ export default function FormularioGasto(propiedades) {
     estilosGlobales,
     tema
   } = aspecto;
-  const [monto, establecerMonto] = useState(gastoInicial ? montoParaEntrada(gastoInicial.montoNumero) : '');
-  const [descripcion, establecerDescripcion] = useState(gastoInicial?.descripcion || '');
-  const [pagadorId, establecerPagadorId] = useState(gastoInicial?.pagadorId || 'vos');
-  const [reparto, establecerReparto] = useState(gastoInicial?.distribucion.startsWith('Montos manuales') ? 'manual' : 'iguales');
-  const [involucradas, establecerInvolucradas] = useState(gastoInicial ? gastoInicial.partes.map(parte => parte.personaId) : participantes.map(persona => persona.id));
-  const [pagaron, establecerPagaron] = useState(gastoInicial?.partes.filter(parte => parte.tipo === 'saldado').map(parte => parte.personaId) || []);
-  const [montosManuales, establecerMontosManuales] = useState(() => Object.fromEntries((gastoInicial?.partes || []).map(parte => [parte.personaId, montoParaEntrada(parte.montoNumero)])));
+  const [monto, establecerMonto] = useState(borradorInicial?.monto || (gastoInicial ? montoParaEntrada(gastoInicial.montoNumero) : ''));
+  const [descripcion, establecerDescripcion] = useState(borradorInicial?.descripcion || gastoInicial?.descripcion || '');
+  const [pagadorId, establecerPagadorId] = useState(borradorInicial?.pagadorId || gastoInicial?.pagadorId || 'vos');
+  const [reparto, establecerReparto] = useState(borradorInicial?.reparto || (gastoInicial?.distribucion.startsWith('Montos manuales') ? 'manual' : 'iguales'));
+  const [involucradas, establecerInvolucradas] = useState(borradorInicial?.involucradas || (gastoInicial ? gastoInicial.partes.map(parte => parte.personaId) : participantes.map(persona => persona.id)));
+  const [pagaron, establecerPagaron] = useState(borradorInicial?.pagaron || gastoInicial?.partes.filter(parte => parte.tipo === 'saldado').map(parte => parte.personaId) || []);
+  const [montosManuales, establecerMontosManuales] = useState(() => borradorInicial?.montosManuales || Object.fromEntries((gastoInicial?.partes || []).map(parte => [parte.personaId, montoParaEntrada(parte.montoNumero)])));
   useEffect(() => { alCambiar({ monto, descripcion, pagadorId, reparto, involucradas, pagaron, montosManuales }); },
     [alCambiar, monto, descripcion, pagadorId, reparto, involucradas, pagaron, montosManuales]);
   const [mostrarPagos, establecerMostrarPagos] = useState(false);
-  const [mostrarTicket, establecerMostrarTicket] = useState(false);
-  const [ticketUsado, establecerTicketUsado] = useState(false);
   const personasGasto = participantes.filter(persona => involucradas.includes(persona.id));
   const pagador = obtenerPersona(pagadorId);
   const partesPagadas = personasGasto.filter(persona => persona.id === pagadorId || pagaron.includes(persona.id)).length;
   const todasPagaron = personasGasto.length > 0 && partesPagadas === personasGasto.length;
   const alternar = (lista, id) => lista.includes(id) ? lista.filter(actual => actual !== id) : [...lista, id];
-  const usarItemTicket = producto => {
-    establecerMonto(producto.importe);
-    establecerDescripcion(producto.nombre);
-    establecerReparto('iguales');
-    establecerMontosManuales({});
-    establecerPagaron([]);
-    establecerTicketUsado(true);
-    establecerMostrarTicket(false);
-  };
   const estadoPago = persona => {
     if (persona.id === pagadorId) return 'Su parte ya está pagada';
     if (pagaron.includes(persona.id)) return pagadorId === 'vos' ? 'Ya te dio su parte' : `Ya le dio su parte a ${pagador.nombre}`;
@@ -66,30 +55,10 @@ export default function FormularioGasto(propiedades) {
     return persona.id === 'vos' ? `Le debés tu parte a ${pagador.nombre}` : `Debe su parte a ${pagador.nombre}`;
   };
   return <View style={estilos.grupo}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Escanear ticket de ejemplo" onPress={() => establecerMostrarTicket(true)} style={estilos.accionTicket}>
-        <Ionicons color={tema.foco} name="scan-outline" size={24} />
-        <View style={estilos.textoFlexible}>
-          <Text style={estilosGlobales.etiqueta}>Escanear ticket</Text>
-          <Text style={estilosGlobales.textoAyuda}>OCR · Ticket de ejemplo</Text>
-        </View>
-        <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
-      </Pressable>
-      {mostrarTicket ? <View style={estilos.ticket}>
-          <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Ticket de ejemplo</Text>
-          <Text style={estilosGlobales.textoAyuda}>Cada línea es un ítem independiente. Elegí cuál cargar y definí su pagador y reparto.</Text>
-          {TICKET_SOCIAL_SIMULADO.productos.map(producto => <Pressable key={producto.nombre} accessibilityRole="button" accessibilityLabel={`Cargar ${producto.nombre} del ticket`} onPress={() => usarItemTicket(producto)} style={estilos.itemTicketSeleccionable}>
-              <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.textoFlexible]}>{producto.nombre}</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.importeTicket}>{producto.importeTexto}</Text><Ionicons color={tema.foco} name="chevron-forward" size={20} />
-            </Pressable>)}
-          <View style={estilos.filaTactil}>
-            <Text style={[estilosGlobales.etiqueta, estilos.textoFlexible]}>Total</Text>
-            <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.importeTicket}>{TICKET_SOCIAL_SIMULADO.montoTexto}</Text>
-          </View>
-          <Text style={estilosGlobales.textoAyuda}>Elegir una línea reemplaza el nombre e importe del borrador y reinicia su reparto y pagos. El resto del ticket no se agrega a este ítem.</Text>
-          <BotonSocial texto="Cancelar ticket" simple alPresionar={() => establecerMostrarTicket(false)} {...aspecto} />
-        </View> : null}
-      {ticketUsado ? <Text accessibilityLiveRegion="polite" style={estilosGlobales.textoAyuda}>Ítem cargado del ticket. Revisá quién lo pagó, quiénes participan y sus pagos.</Text> : null}
+      {!soloReparto ? <>
       <MontoSocial etiqueta="Importe del ítem" valor={monto} alCambiar={establecerMonto} {...aspecto} />
       <CampoFormulario etiqueta="Qué se pagó" ejemplo="Ej.: Pizzas, bebidas, taxi" valor={descripcion} alCambiar={establecerDescripcion} {...aspecto} />
+      </> : null}
       <View style={estilos.filaCampos}>
         <SelectorPersonas etiqueta="Quién pagó" etiquetaCorta="Pagó" compacto personas={participantes} seleccionadas={[pagadorId]} alCambiar={ids => {
         establecerPagadorId(ids[0]);

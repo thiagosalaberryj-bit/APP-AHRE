@@ -1,5 +1,5 @@
 import { salasRepositorio, personasSalaRepositorio, personasRepositorio, pagosSocialesRepositorio, deudasRepositorio } from '../database/repositories';
-import { conSocial, registroPropio, idPersistente, salaAbierta, leerSocial } from './socialStore';
+import { conSocial, registroPropio, idPersistente, salaAbierta, leerSocial, exigirDepositoConDinero } from './socialStore';
 import { exigir, textoSocial, unidades, sumaPagos } from './socialValidation';
 import { ICONOS_SALA, LIMITE_SALAS_ACTIVAS } from './socialConstants';
 import { COLORES_DEPOSITOS } from '../styles/colors';
@@ -13,6 +13,7 @@ export function crearSala(datos) {
       const previa = await salasRepositorio.consultarPorId(datos.id, contexto.conexion);
       if (previa) { exigir(previa.usuario_id === contexto.usuario.id, 'Identificador de sala no disponible.'); return previa; }
     }
+    await exigirDepositoConDinero(contexto);
     const nombre = textoSocial(datos.nombre);
     exigir(nombre && nombre.length <= 100 && textoSocial(datos.descripcion).length <= 500, 'Completá un nombre válido y una descripción de hasta 500 caracteres.');
     exigir(CATEGORIAS_EGRESO.some(c => c.id === datos.categoriaId) && ICONOS_SALA.some(c => c.id === datos.icono) && COLORES_DEPOSITOS.includes(datos.color), 'Elegí categoría, icono y color de la sala.');
@@ -34,6 +35,7 @@ export function cambiarPersonasSala(salaId, personasIds) {
     await salaAbierta(salaId, contexto);
     const ids = new Set([contexto.propia.id, ...personasIds.map(id => idPersistente(id, contexto))]);
     const previas = await personasSalaRepositorio.consultar({ usuario_id: contexto.usuario.id, sala_id: salaId }, {}, contexto.conexion);
+    if ([...ids].some(id => !previas.some(p => p.persona_id === id && p.activa))) await exigirDepositoConDinero(contexto);
     for (const id of ids) {
       const previa = previas.find(p => p.persona_id === id);
       if (previa?.activa) continue; // Una identidad histórica inactiva no se elimina al guardar otra selección.
@@ -52,6 +54,7 @@ export function cerrarSala(salaId) {
     const sala = await registroPropio(salasRepositorio, salaId, contexto);
     if (sala.estado === 'cerrada') return sala;
     let datos = await leerSocial(contexto);
+    if (datos.gastos.some(g => g.sala_id === salaId && g.estado === 'vigente')) await exigirDepositoConDinero(contexto);
     for (const gasto of datos.gastos.filter(g => g.sala_id === salaId && g.estado === 'vigente')) {
       const partes = datos.partes.filter(p => p.gasto_compartido_id === gasto.id), plan = leerPlanGasto(gasto);
       exigir(partes.length && partes.reduce((s, p) => s + unidades(p.monto_correspondiente), 0) === unidades(gasto.monto_total), 'Revisá el reparto antes de cerrar la sala.');

@@ -6,13 +6,15 @@ import TituloSeccionSocial from './SocialSectionTitle';
 import TarjetaResumenDeuda from './DebtSummaryCard';
 import TarjetaResumenSala from './RoomSummaryCard';
 import ResumenImporteSocial from './SocialAmountSummary';
+import RequisitoCreacionSocial from './SocialCreationGate';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/SocialPanelStyles';
 export default function PanelSocial(propiedades) {
   const {
     salas: salasSociales,
     deudas: deudasSociales,
-    totales
+    totales,
+    habilitadoParaCrear
   } = useDatosSociales();
   const {
     alVerSalas,
@@ -37,6 +39,7 @@ export default function PanelSocial(propiedades) {
   const pendientes = deudasSociales.filter(deuda => !deuda.saldada);
   const recientes = [...pendientes].sort((a, b) => b.fechaISO.localeCompare(a.fechaISO) || b.id.localeCompare(a.id)).slice(0, 5);
   return <>
+      {!habilitadoParaCrear ? <RequisitoCreacionSocial {...aspecto} /> : null}
       <View style={estilos.resumenPrincipal}>
         <View style={estilos.filaCampos}>
           <Ionicons color={tema.foco} name="swap-horizontal-outline" size={20} />
@@ -63,8 +66,8 @@ export default function PanelSocial(propiedades) {
           etiqueta: 'Crear sala',
           icono: 'people-outline'
         }].map(accion => {
-          const bloqueada = accion.tipo === 'crear' && activas.length >= LIMITE_SALAS_ACTIVAS;
-          return <Pressable key={accion.tipo} accessibilityRole="button" accessibilityLabel={accion.etiqueta} accessibilityHint={bloqueada ? 'Ya tenés tres salas activas. Cerrá una para crear otra.' : undefined} accessibilityState={{
+          const bloqueada = accion.tipo !== 'personas' && !habilitadoParaCrear || accion.tipo === 'crear' && activas.length >= LIMITE_SALAS_ACTIVAS;
+          return <Pressable key={accion.tipo} accessibilityRole="button" accessibilityLabel={accion.etiqueta} accessibilityHint={bloqueada ? !habilitadoParaCrear ? 'Primero necesitás un depósito activo con dinero.' : 'Ya tenés tres salas activas. Cerrá una para crear otra.' : undefined} accessibilityState={{
             disabled: bloqueada
           }} disabled={bloqueada} onPress={() => accion.tipo === 'personas' ? alVerAgenda() : abrirRegistro(accion.tipo)} style={[estilos.accionPanel, bloqueada && estilos.accionPanelDeshabilitada]}>
               <Ionicons color={tema.botonPrincipalTexto} name={accion.icono} size={24} />

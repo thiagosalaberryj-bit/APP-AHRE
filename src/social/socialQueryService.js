@@ -60,7 +60,7 @@ export function cargarSocial() {
         });
         return { id: gasto.id, descripcion: gasto.descripcion, monto: formatearMontoSocial(gasto.monto_total), montoNumero: gasto.monto_total,
           fecha: fechaCorta(gasto.fecha), fechaISO: gasto.fecha, pagadorId: visibles(gasto.pagador_id), reparto: gasto.reparto, version: gasto.version,
-          distribucion: gasto.reparto === 'manual' ? 'Montos manuales' : 'Partes iguales', partes,
+          distribucion: gasto.reparto === 'manual' ? 'Montos manuales' : 'Partes iguales', partes, asociaciones: plan.financiaciones,
           depositosAsociados: [...new Set(Object.values(plan.financiaciones).map(f => f.depositoNombre).filter(Boolean))].join(' · ') };
       });
       return { id: sala.id, nombre: sala.nombre, descripcion: sala.descripcion, categoriaId: sala.categoria, icono: sala.icono, color: sala.color,
@@ -70,6 +70,7 @@ export function cargarSocial() {
         porCobrar: formatearMontoSocial(cobrar / 100), porPagar: formatearMontoSocial(pagar / 100) };
     });
     return { usuarioId: contexto.usuario.id, personas, personaActual, salas, deudas,
+      habilitadoParaCrear: datos.depositos.some(d => d.saldo_actual > 0),
       depositos: datos.depositos.map(d => ({ ...d, saldoTexto: `Saldo actual: ${formatearMontoSocial(d.saldo_actual)}` })),
       totales: { porCobrar: formatearMontoSocial(deudas.filter(d => d.tipo === 'me_deben').reduce((s, d) => s + unidades(d.pendienteNumero), 0) / 100),
         porPagar: formatearMontoSocial(deudas.filter(d => d.tipo === 'debo').reduce((s, d) => s + unidades(d.pendienteNumero), 0) / 100) },

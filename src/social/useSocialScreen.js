@@ -64,6 +64,7 @@ export default function usePantallaSocial({
     irInicioSocial: () => navegacion.popTo(RUTAS.PRINCIPAL, { screen: RUTAS.SOCIAL }),
     irAgenda: () => navegacion.popTo(RUTAS.PERSONAS_SOCIAL, { todas: true }),
     abrirDeposito: () => navegacion.push(RUTAS.DEPOSITO),
+    abrirOcrSala: salaId => navegacion.push(RUTAS.OCR, { destino: 'social', salaId }),
     alCrearSala: salaCreada => navegacion.replace(RUTAS.SALA_SOCIAL, { salaId: salaCreada.id }),
   } : null;
   const sala = registros?.salas.find(elemento => elemento.id === parametros.salaId);
@@ -91,7 +92,7 @@ export default function usePantallaSocial({
     crear: ['Crear sala', 'Una ocasión para compartir gastos.'],
     persona: ['Registrar persona', 'Agregá una persona a tu listado personal.'],
     deuda: ['Registrar deuda', 'Indicá quién debe y cuánto queda pendiente.'],
-    gasto: [parametros.gastoId ? 'Editar gasto' : 'Agregar gasto', 'Elegí quién pagó y cómo se reparte.'],
+    gasto: [parametros.edicionLista ? 'Edición rápida' : parametros.gastoId ? 'Editar gasto' : 'Agregar gasto', 'Elegí quién pagó y cómo se reparte.'],
     eliminarDeuda: ['Eliminar deuda', 'Revisá la deuda antes de confirmar.'],
     detalleDeuda: ['Detalle de deuda', 'Información y acciones de esta deuda.'],
     pago: ['Registrar pago', 'Registrá dinero entregado o recibido.'],

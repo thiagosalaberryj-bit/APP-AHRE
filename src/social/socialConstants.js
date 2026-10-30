@@ -38,15 +38,3 @@ export const SECCIONES_SALA = Object.freeze([{
   nombre: 'Personas',
   icono: 'people-outline'
 }]);
-export const TICKET_SOCIAL_SIMULADO = Object.freeze({
-  montoTexto: '$ 48.000',
-  productos: [{
-    nombre: 'Pizzas',
-    importe: '32000',
-    importeTexto: '$ 32.000'
-  }, {
-    nombre: 'Bebidas',
-    importe: '16000',
-    importeTexto: '$ 16.000'
-  }]
-});

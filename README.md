@@ -117,7 +117,9 @@ fecha de creación; el listado permite buscar y filtrar activas/cerradas. Crear
 sala ofrece categorías de egreso, icono, color y fecha actual seleccionable.
 
 Cada ítem tiene pagador, personas involucradas, reparto igual o manual y pagos
-propios. El OCR de ejemplo carga una línea por vez, sin cámara. Al guardar se
+propios. Registrar lista permite cargar varios ítems con ajustes comunes o
+individuales. Escanear ticket reutiliza el OCR existente y devuelve líneas
+editables sin guardar un egreso; la captura nativa no funciona en Expo Go. Al guardar se
 elige un depósito para los pagos o cobros propios, o un movimiento ya registrado
 para evitar duplicados. Guardar o editar un ítem conserva el borrador sin cambiar
 saldos. El cierre aplica los movimientos a los depósitos asociados y crea solo
@@ -206,7 +208,7 @@ interfaces. Actualmente cuenta con:
   con búsqueda y filtros, reparto por ítem y cierre de sala en solo lectura;
   personas, ítems, deudas y pagos persistidos en SQLite, con movimientos propios
   coordinados y sin duplicación al vincular uno existente; el OCR social sigue
-  usando un ticket de ejemplo;
+  reutilizando el OCR existente para preparar una lista editable de ítems;
 - flujo OCR con ML Kit local, captura o selección desde la galería, recorte,
   revisión editable y confirmación mediante el servicio normal de Egresos;
 - Perfil con datos locales del usuario, foto temporal, edición protegida por la

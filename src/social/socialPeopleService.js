@@ -1,5 +1,5 @@
 import { personasRepositorio } from '../database/repositories';
-import { conSocial, registroPropio } from './socialStore';
+import { conSocial, registroPropio, exigirDepositoConDinero } from './socialStore';
 import { exigir, validarPersona } from './socialValidation';
 
 export function guardarPersona(datos, id = null) {
@@ -14,6 +14,7 @@ export function guardarPersona(datos, id = null) {
       exigir(!persona.es_usuario_actual, 'La identidad del usuario se modifica desde Perfil.');
       return personasRepositorio.actualizar(id, valores, contexto.conexion);
     }
+    await exigirDepositoConDinero(contexto);
     return personasRepositorio.crear({ ...valores, usuario_id: contexto.usuario.id, activa: 1, es_usuario_actual: 0 }, contexto.conexion);
   });
 }

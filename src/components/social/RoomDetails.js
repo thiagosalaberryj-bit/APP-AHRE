@@ -11,6 +11,7 @@ import PersonasSala from './RoomPeople';
 import EstadoVacio from './SocialEmptyState';
 import TarjetaGastoSala from './RoomExpenseCard';
 import ResumenImporteSocial from './SocialAmountSummary';
+import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/RoomDetailsStyles';
 export default function DetalleSala(propiedades) {
@@ -63,6 +64,7 @@ export default function DetalleSala(propiedades) {
       }} onPress={() => establecerSeccion(opcion.id)} style={[estilos.seccionSala, seccion === opcion.id && estilos.pestanaActiva]}><Ionicons color={seccion === opcion.id ? tema.botonPrincipalTexto : tema.textoSecundario} name={opcion.icono} size={22} /><Text ellipsizeMode="tail" numberOfLines={2} style={[estilos.textoPestana, estilos.nombreSeccionSala, seccion === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
       </View>
       {seccion === 'balances' ? <BalancesSala sala={sala} alAbrirGasto={alAbrirGasto} {...aspecto} /> : seccion === 'participantes' ? <PersonasSala personasSala={personasSala} gastos={sala.gastos} alCambiar={async ids => { await cambiarPersonasSala(sala.id, ids); await recargar(); }} cerrada={cerrada} alCrearPersona={() => abrirRegistro('persona')} {...aspecto} /> : <View style={estilos.grupo}>
+          {!cerrada && sala.gastos.length > 0 ? <BotonSocial texto="Edición rápida" secundario alPresionar={() => abrirRegistro('gasto', { salaId: sala.id, edicionLista: true })} {...aspecto} /> : null}
           {sala.gastos.length ? sala.gastos.map(gasto => <TarjetaGastoSala key={gasto.id} gasto={gasto} alAbrir={() => alAbrirGasto(gasto.id)} {...aspecto} />) : <EstadoVacio icono="receipt-outline" titulo="Todavía no hay gastos" descripcion="Registrá quién pagó y cómo se reparten las partes." {...aspecto} />}
         </View>}
       {!cerrada ? <View style={estilos.grupoCampo}>

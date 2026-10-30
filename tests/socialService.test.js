@@ -20,6 +20,23 @@ async function escenario(prueba) {
   return { ...entorno, usuario, deposito, lucia, tomas, nuevaSala, gasto, saldo, movimientos };
 }
 
+test('lista de gastos guarda todo o nada, respeta reintentos y no mueve dinero hasta cerrar', async prueba => {
+  const e = await escenario(prueba);
+  const lista = [e.gasto({ id: 'lista-1', monto: '600', descripcion: 'Comida' }), e.gasto({ id: 'lista-2', monto: '', descripcion: 'Bebida' })];
+  const fondos = lista.map(() => ({ compra: { depositoId: e.deposito.id } }));
+  await assert.rejects(e.guardarListaGastos(lista, fondos));
+  assert.equal(e.base.prepare('SELECT COUNT(*) AS n FROM gastos_compartidos').get().n, 0);
+  lista[1].monto = '300';
+  const plan = await e.previsualizarListaGastos(lista);
+  assert.equal(plan.operaciones.length, 2);
+  await e.guardarListaGastos(lista, fondos); await e.guardarListaGastos(lista, fondos);
+  assert.equal((await e.cargarSocial()).salas[0].gastos.length, 2);
+  assert.equal(e.saldo(), 100000); assert.equal(e.movimientos(), 0);
+  await e.cerrarSala('s');
+  assert.equal(e.saldo(), 99100); assert.equal(e.movimientos(), 2);
+  await assert.rejects(e.guardarListaGastos([lista[0], lista[0]], fondos), /identificadores/);
+});
+
 test('personas normalizadas, duplicados, baja lógica y reactivación conservan su identidad', async prueba => {
   const e = await escenario(prueba);
   await assert.rejects(e.guardarPersona({ nombre: ' lucia ', apellido: 'GÓMEZ', apodo: 'Otro' }), /Ya existe/);
@@ -300,7 +317,7 @@ test('no guarda deudas a cobrar sin depósito, con depósito ajeno o desactivado
   const ajeno = await e.depositosRepositorio.crear({ usuario_id: usuario.id, nombre: 'Ajeno', tipo: 'efectivo', saldo_inicial: 0, icono: 'cash-outline' });
   await assert.rejects(e.crearDeudaPersonal(datos, { depositoId: ajeno.id }), /esta cuenta/);
   await e.depositosRepositorio.actualizar(e.deposito.id, { activo: 0 });
-  await assert.rejects(e.crearDeudaPersonal(datos, { depositoId: e.deposito.id }), /desactivado/);
+  await assert.rejects(e.crearDeudaPersonal(datos, { depositoId: e.deposito.id }), /depósito activo con dinero/);
   await e.depositosRepositorio.actualizar(e.deposito.id, { activo: 1 });
   const inverso = await e.movimientosRepositorio.crear({ deposito_id: e.deposito.id, tipo: 'ingreso', monto: 500, categoria: 'otros_ingresos', descripcion: 'Inverso', fecha_hora: new Date().toISOString() });
   await assert.rejects(e.crearDeudaPersonal(datos, { movimientoId: inverso.id }), /dirección/);
@@ -342,7 +359,7 @@ test('la asociación persiste y el cierre valida nuevamente depósitos sin dejar
   const guardado = JSON.parse(e.base.prepare("SELECT plan_pagos FROM gastos_compartidos WHERE id = 'g'").get().plan_pagos);
   assert.equal(guardado.financiaciones.compra.depositoId, e.deposito.id);
   await e.depositosRepositorio.actualizar(e.deposito.id, { activo: 0 });
-  await assert.rejects(e.cerrarSala('s'), /desactivado/);
+  await assert.rejects(e.cerrarSala('s'), /depósito activo con dinero/);
   assert.equal(e.saldo(), 100000); assert.equal(e.movimientos(), 0);
   assert.equal((await e.cargarSocial()).salas[0].estado, 'abierta');
   await e.depositosRepositorio.actualizar(e.deposito.id, { activo: 1 });
@@ -362,4 +379,33 @@ test('un movimiento asociado queda reservado y al cerrar se vincula sin duplicar
   await e.cerrarSala('s');
   assert.equal(e.saldo(), 88000); assert.equal(e.movimientos(), 1);
   assert.equal(e.base.prepare("SELECT movimiento_id FROM pagos_sociales WHERE clase = 'compra'").get().movimiento_id, movimiento.id);
+});
+
+test('sin depósito propio activo con dinero no se permiten altas de Social', async prueba => {
+  const e = await escenario(prueba);
+  e.base.prepare('UPDATE depositos SET saldo_actual = 0 WHERE id = ?').run(e.deposito.id);
+  const otro = await e.registrarUsuario({ nombre: 'Otra cuenta', correo: 'fondos@example.test', contrasena: 'Clave12345', confirmacion: 'Clave12345' });
+  await e.depositosRepositorio.crear({ usuario_id: otro.id, nombre: 'Ajeno', tipo: 'efectivo', saldo_inicial: 1000, icono: 'cash-outline' });
+  await assert.rejects(e.guardarPersona({ nombre: 'Nueva', apellido: 'Persona', apodo: 'Nueva' }), /depósito activo con dinero/);
+  await assert.rejects(e.nuevaSala('bloqueada'), /depósito activo con dinero/);
+  await assert.rejects(e.crearDeudaPersonal({ personaId: e.lucia.id, direccion: 'debo', monto: '20', descripcion: 'Nueva' }), /depósito activo con dinero/);
+  await assert.rejects(e.guardarGasto(e.gasto(), { compra: { depositoId: e.deposito.id } }), /depósito activo con dinero/);
+  assert.equal((await e.cargarSocial()).habilitadoParaCrear, false);
+  e.base.prepare('UPDATE depositos SET saldo_actual = -1 WHERE id = ?').run(e.deposito.id);
+  await assert.rejects(e.nuevaSala('negativo'), /depósito activo con dinero/);
+  e.base.prepare('UPDATE depositos SET saldo_actual = 1 WHERE id = ?').run(e.deposito.id);
+  assert.equal((await e.cargarSocial()).habilitadoParaCrear, true);
+  await e.guardarPersona({ nombre: 'Nueva', apellido: 'Persona', apodo: 'Nueva' });
+});
+
+test('la edición rápida actualiza todos los gastos sin duplicarlos y conserva sus asociaciones', async prueba => {
+  const e = await escenario(prueba);
+  await e.guardarGasto(e.gasto(), { compra: { depositoId: e.deposito.id } });
+  const lista = [e.gasto({ gastoId: 'g', version: 1, descripcion: 'Actualizado', monto: '15000' })];
+  await e.previsualizarListaGastos(lista); await e.guardarListaGastos(lista);
+  const gastos = (await e.cargarSocial()).salas[0].gastos;
+  assert.equal(gastos.length, 1); assert.equal(gastos[0].descripcion, 'Actualizado'); assert.equal(gastos[0].montoNumero, 15000);
+  assert.equal(gastos[0].asociaciones.compra.depositoId, e.deposito.id);
+  assert.equal(e.movimientos(), 0); assert.equal(e.saldo(), 100000);
+  await assert.rejects(e.guardarListaGastos(lista), /cambió/);
 });

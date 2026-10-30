@@ -3,6 +3,73 @@ import test from 'node:test';
 import { preparar } from './helpers/localDatabase.js';
 import { interfazSocial } from './helpers/socialInterface.js';
 
+test('Gastos permite abrir edición rápida y guardar cambios sin volver a crear los ítems', async prueba => {
+  const e = await preparar(prueba); await e.prepararDatosPrueba();
+  const sala = await e.crearSala({ nombre: 'Edición', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
+  const deposito = (await e.cargarSocial()).depositos[0];
+  await e.guardarGasto({ id: 'original', claveOperacion: 'original', salaId: sala.id, descripcion: 'Cena', monto: '100', reparto: 'iguales', pagadorId: 'vos', involucradas: ['vos'], pagaron: [] }, { compra: { depositoId: deposito.id } });
+  const vista = interfazSocial(e, 'claro');
+  await vista.abrir(vista.rutas.SALA_SOCIAL, { salaId: sala.id }); await vista.pulsar('Gastos'); await vista.pulsar('Edición rápida');
+  assert.deepEqual(vista.destinos.at(-1), [vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id, edicionLista: true }]);
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id, edicionLista: true });
+  await vista.llenar('Ítem 1', 'Cena corregida'); await vista.llenar('Importe 1', '200'); await vista.pulsar('Guardar cambios');
+  const gastos = (await e.cargarSocial()).salas[0].gastos;
+  assert.equal(gastos.length, 1); assert.equal(gastos[0].descripcion, 'Cena corregida'); assert.equal(gastos[0].montoNumero, 200);
+});
+
+test('el panel y las rutas de alta muestran el requisito de depósito con fondos', async prueba => {
+  const e = await preparar(prueba); await e.prepararDatosPrueba();
+  e.base.exec('UPDATE depositos SET saldo_actual = 0');
+  const vista = interfazSocial(e, 'oscuro'); await vista.abrir();
+  assert.ok(vista.texto().includes('Primero, un depósito con dinero'));
+  assert.equal(vista.buscarBoton('Registrar deuda').props.disabled, true);
+  assert.equal(vista.buscarBoton('Crear sala').props.disabled, true);
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'persona' });
+  assert.ok(vista.texto().includes('Ir a Depósitos'));
+  assert.ok(!vista.todos().some(n => n.type === 'TextInput' && n.props.accessibilityLabel === 'Nombre'));
+});
+
+test('lista manual conserva filas, permite ajustes y guarda borradores con un depósito común', async prueba => {
+  const e = await preparar(prueba); await e.prepararDatosPrueba();
+  const sala = await e.crearSala({ nombre: 'Lista', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
+  const vista = interfazSocial(e, 'claro');
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id });
+  await vista.pulsar('Registrar lista');
+  await vista.llenar('Ítem 1', 'Comida'); await vista.llenar('Importe 1', '600');
+  await vista.pulsar('Agregar otro ítem'); await vista.llenar('Ítem 2', 'Bebida'); await vista.llenar('Importe 2', '200');
+  await vista.pulsar('Un ítem'); await vista.pulsar('Registrar lista');
+  assert.equal(vista.todos().find(n => n.type === 'TextInput' && n.props.accessibilityLabel === 'Ítem 2').props.value, 'Bebida');
+  await vista.pulsar('Ajustar ítem 2'); await vista.llenar('Importe del ítem', '300'); await vista.pulsar('Aplicar al ítem');
+  await vista.pulsar('Opciones rápidas · Aplicar a todos');
+  await vista.pulsar('Aplicar depósito a todos');
+  await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Aplicar a todos');
+  await vista.pulsar('Guardar lista');
+  const gastos = (await e.cargarSocial()).salas[0].gastos;
+  assert.equal(gastos.length, 2); assert.equal(gastos.find(g => g.descripcion === 'Bebida').montoNumero, 300);
+  assert.equal(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get().n, 6);
+});
+
+test('Social abre el OCR existente y recibe sus ítems en una lista editable sin egresos', async prueba => {
+  const e = await preparar(prueba); await e.prepararDatosPrueba();
+  const sala = await e.crearSala({ nombre: 'Ticket', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
+  const vista = interfazSocial(e, 'oscuro');
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id });
+  assert.ok(!vista.texto().includes('Escanear'));
+  await vista.pulsar('Registrar lista');
+  await vista.pulsar('Escanear ticket');
+  assert.deepEqual(vista.destinos.at(-1), [vista.rutas.OCR, { destino: 'social', salaId: sala.id }]);
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id, modo: 'lista', ticketSocial: { id: 'lectura-1', items: [{ descripcion: 'Pan', monto: 300 }, { descripcion: 'Bebida', monto: null }] } });
+  assert.equal(vista.todos().find(n => n.type === 'TextInput' && n.props.accessibilityLabel === 'Ítem 1').props.value, 'Pan');
+  await vista.pulsar('Guardar lista');
+  assert.equal((await e.cargarSocial()).salas[0].gastos.length, 0);
+  await vista.llenar('Importe 2', '200'); await vista.pulsar('Opciones rápidas · Aplicar a todos');
+  await vista.pulsar('Aplicar depósito a todos');
+  await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Aplicar a todos');
+  await vista.pulsar('Guardar lista');
+  assert.equal((await e.cargarSocial()).salas[0].gastos.length, 2);
+  assert.equal(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get().n, 6);
+});
+
 for (const tema of ['claro', 'oscuro']) test(`interfaces principales guardan y consultan datos reales en ${tema}`, async prueba => {
   const servicios = await preparar(prueba);
   await servicios.prepararDatosPrueba();
