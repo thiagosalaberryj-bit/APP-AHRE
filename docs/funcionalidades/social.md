@@ -101,11 +101,10 @@ Las salas cerradas no permiten editar ítems.
 
 ### Carga múltiple
 
-La pestaña Gastos de una sala abierta ofrece Edición rápida para cargar los ítems
-existentes en la misma lista. Conserva identificadores, versión y asociaciones
-financieras; permite aplicar opciones seleccionadas a todos y guardar cambios
-atómicamente, sin duplicar ítems. No está disponible después del cierre. Retirar
-una fila existente de esta edición no se ofrece como acción de borrado.
+La carga múltiple se abre desde Agregar gasto → Registrar lista y conserva sus
+opciones rápidas para aplicar cambios comunes a los ítems que se están cargando.
+La pestaña Gastos de la sala muestra los registros sin el acceso Edición rápida;
+los gastos existentes se pueden abrir y editar individualmente antes del cierre.
 
 Registrar lista guarda entre 1 y 100 ítems, cada uno con identificador estable,
 pagador y reparto propios. La interfaz aplica valores comunes y permite cambiar

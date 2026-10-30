@@ -3,16 +3,21 @@ import test from 'node:test';
 import { preparar } from './helpers/localDatabase.js';
 import { interfazSocial } from './helpers/socialInterface.js';
 
-test('Gastos permite abrir edición rápida y guardar cambios sin volver a crear los ítems', async prueba => {
+test('Gastos omite el acceso de edición rápida y conserva la edición individual sin duplicar ítems', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba();
   const sala = await e.crearSala({ nombre: 'Edición', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
   const deposito = (await e.cargarSocial()).depositos[0];
   await e.guardarGasto({ id: 'original', claveOperacion: 'original', salaId: sala.id, descripcion: 'Cena', monto: '100', reparto: 'iguales', pagadorId: 'vos', involucradas: ['vos'], pagaron: [] }, { compra: { depositoId: deposito.id } });
   const vista = interfazSocial(e, 'claro');
-  await vista.abrir(vista.rutas.SALA_SOCIAL, { salaId: sala.id }); await vista.pulsar('Gastos'); await vista.pulsar('Edición rápida');
-  assert.deepEqual(vista.destinos.at(-1), [vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id, edicionLista: true }]);
-  await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id, edicionLista: true });
-  await vista.llenar('Ítem 1', 'Cena corregida'); await vista.llenar('Importe 1', '200'); await vista.pulsar('Guardar cambios');
+  await vista.abrir(vista.rutas.SALA_SOCIAL, { salaId: sala.id }); await vista.pulsar('Gastos');
+  assert.ok(!vista.texto().includes('Edición rápida'));
+  assert.ok(vista.texto().includes('Cena'));
+  await vista.abrir(vista.rutas.GASTO_SOCIAL, { salaId: sala.id, gastoId: 'original' }); await vista.pulsar('Editar gasto');
+  assert.deepEqual(vista.destinos.at(-1), [vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id, gastoId: 'original' }]);
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id, gastoId: 'original' });
+  await vista.llenar('Qué se pagó', 'Cena corregida'); await vista.llenar('Importe del ítem', '200'); await vista.pulsar('Guardar cambios');
+  await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true);
+  await vista.pulsar('Confirmar y guardar');
   const gastos = (await e.cargarSocial()).salas[0].gastos;
   assert.equal(gastos.length, 1); assert.equal(gastos[0].descripcion, 'Cena corregida'); assert.equal(gastos[0].montoNumero, 200);
 });

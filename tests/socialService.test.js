@@ -398,7 +398,26 @@ test('sin depósito propio activo con dinero no se permiten altas de Social', as
   await e.guardarPersona({ nombre: 'Nueva', apellido: 'Persona', apodo: 'Nueva' });
 });
 
-test('la edición rápida actualiza todos los gastos sin duplicarlos y conserva sus asociaciones', async prueba => {
+test('previsualizar y guardar listas rechazan los mismos tamaños e identificadores inválidos', async prueba => {
+  const e = await escenario(prueba);
+  const repetido = e.gasto({ id: 'repetido' });
+  const casos = [
+    [null, /entre 1 y 100/],
+    [[], /entre 1 y 100/],
+    [Array.from({ length: 101 }, (_, i) => e.gasto({ id: `item-${i}` })), /entre 1 y 100/],
+    [[repetido, repetido], /identificadores/],
+    [[e.gasto({ id: 'uno' }), e.gasto({ id: 'dos', salaId: 'otra' })], /identificadores/],
+    [[e.gasto({ id: 'uno', gastoId: 'otro' })], /identificadores/],
+  ];
+  for (const [lista, mensaje] of casos) {
+    await assert.rejects(e.previsualizarListaGastos(lista), mensaje);
+    await assert.rejects(e.guardarListaGastos(lista), mensaje);
+  }
+  assert.equal(e.base.prepare('SELECT COUNT(*) AS n FROM gastos_compartidos').get().n, 0);
+  assert.equal(e.movimientos(), 0); assert.equal(e.saldo(), 100000);
+});
+
+test('el guardado por lote conserva versiones y asociaciones al reutilizar la edición de gastos', async prueba => {
   const e = await escenario(prueba);
   await e.guardarGasto(e.gasto(), { compra: { depositoId: e.deposito.id } });
   const lista = [e.gasto({ gastoId: 'g', version: 1, descripcion: 'Actualizado', monto: '15000' })];

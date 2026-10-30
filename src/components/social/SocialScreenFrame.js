@@ -27,7 +27,7 @@ export default function MarcoSocial({
     estilos,
     estilosGlobales
   } = aspecto;
-  const requiereDeposito = esRegistro && ['crear', 'persona', 'deuda', 'gasto', 'pago'].includes(parametros.tipo) && !parametros.gastoId && !parametros.edicionLista;
+  const requiereDeposito = esRegistro && ['crear', 'persona', 'deuda', 'gasto', 'pago'].includes(parametros.tipo) && !parametros.gastoId;
   return <ContextoDatosSociales.Provider value={contexto.social}><SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
         {esSecundaria ? <EncabezadoSeccion tema={tema} titulo={titulo} descripcion={descripcion} alVolver={() => navegacion.goBack()} /> : <EncabezadoPrincipal tema={tema} titulo="Social" descripcion="Tus deudas y gastos compartidos." alAbrirNotificaciones={() => navegacion.getParent()?.navigate(RUTAS.NOTIFICACIONES)} alAbrirPerfil={() => navegacion.getParent()?.navigate(RUTAS.PERFIL)} />}

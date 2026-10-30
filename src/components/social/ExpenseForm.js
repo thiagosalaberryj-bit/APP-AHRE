@@ -18,7 +18,6 @@ export default function FormularioGasto(propiedades) {
     participantes,
     gastoInicial,
     borradorInicial,
-    soloReparto = false,
     alCambiar,
     ...aspecto
   } = {
@@ -36,7 +35,7 @@ export default function FormularioGasto(propiedades) {
   const [monto, establecerMonto] = useState(borradorInicial?.monto || (gastoInicial ? montoParaEntrada(gastoInicial.montoNumero) : ''));
   const [descripcion, establecerDescripcion] = useState(borradorInicial?.descripcion || gastoInicial?.descripcion || '');
   const [pagadorId, establecerPagadorId] = useState(borradorInicial?.pagadorId || gastoInicial?.pagadorId || 'vos');
-  const [reparto, establecerReparto] = useState(borradorInicial?.reparto || (gastoInicial?.distribucion.startsWith('Montos manuales') ? 'manual' : 'iguales'));
+  const [reparto, establecerReparto] = useState(borradorInicial?.reparto || gastoInicial?.reparto || 'iguales');
   const [involucradas, establecerInvolucradas] = useState(borradorInicial?.involucradas || (gastoInicial ? gastoInicial.partes.map(parte => parte.personaId) : participantes.map(persona => persona.id)));
   const [pagaron, establecerPagaron] = useState(borradorInicial?.pagaron || gastoInicial?.partes.filter(parte => parte.tipo === 'saldado').map(parte => parte.personaId) || []);
   const [montosManuales, establecerMontosManuales] = useState(() => borradorInicial?.montosManuales || Object.fromEntries((gastoInicial?.partes || []).map(parte => [parte.personaId, montoParaEntrada(parte.montoNumero)])));
@@ -55,10 +54,8 @@ export default function FormularioGasto(propiedades) {
     return persona.id === 'vos' ? `Le debés tu parte a ${pagador.nombre}` : `Debe su parte a ${pagador.nombre}`;
   };
   return <View style={estilos.grupo}>
-      {!soloReparto ? <>
       <MontoSocial etiqueta="Importe del ítem" valor={monto} alCambiar={establecerMonto} {...aspecto} />
       <CampoFormulario etiqueta="Qué se pagó" ejemplo="Ej.: Pizzas, bebidas, taxi" valor={descripcion} alCambiar={establecerDescripcion} {...aspecto} />
-      </> : null}
       <View style={estilos.filaCampos}>
         <SelectorPersonas etiqueta="Quién pagó" etiquetaCorta="Pagó" compacto personas={participantes} seleccionadas={[pagadorId]} alCambiar={ids => {
         establecerPagadorId(ids[0]);

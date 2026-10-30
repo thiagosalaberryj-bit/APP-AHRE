@@ -2,7 +2,7 @@ import { normalizarNombrePersona } from './socialHelpers';
 import { convertirMontoMovimiento } from '../utils/movementValidation';
 import { ErrorBaseDatos } from '../database/errors';
 
-export class ErrorSocial extends ErrorBaseDatos {
+class ErrorSocial extends ErrorBaseDatos {
   constructor(mensaje) { super('integridad'); this.message = mensaje; this.name = 'ErrorSocial'; }
 }
 

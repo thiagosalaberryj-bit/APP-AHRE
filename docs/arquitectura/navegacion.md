@@ -117,8 +117,8 @@ sala, confirmar que se quita una, elegir icono y usar los selectores también
 se resuelven en modales. Crear una persona desde un selector abre la ruta de
 registro con la agenda y su modal de alta. Atrás vuelve a la vista anterior
 sin perder su borrador. Las rutas reciben identificadores y opciones
-serializables; un nuevo ítem puede recibir `personasIds` para reflejar la
-selección temporal de participantes de la sala.
+serializables; el formulario de gasto obtiene los participantes de la sala
+desde los datos locales.
 
 Social recarga datos locales al recuperar el foco y navega por identificadores
 persistidos. Escanear ticket abre OCR con destino social y salaId; el resultado

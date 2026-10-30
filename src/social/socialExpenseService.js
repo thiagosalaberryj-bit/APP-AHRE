@@ -69,10 +69,14 @@ async function guardarGastoEnContexto(datos, financiaciones, contexto) {
     return gasto;
 }
 
+function validarListaGastos(lista) {
+  exigir(Array.isArray(lista) && lista.length > 0 && lista.length <= 100, 'Agregá entre 1 y 100 ítems.');
+  exigir(new Set(lista.map(g => g.id)).size === lista.length && lista.every(g => g.id && (!g.gastoId || g.gastoId === g.id) && g.salaId === lista[0].salaId), 'Revisá los identificadores y la sala de la lista.');
+}
+
 export function previsualizarListaGastos(lista) {
   return conSocial(async contexto => {
-    exigir(Array.isArray(lista) && lista.length > 0 && lista.length <= 100, 'Agregá entre 1 y 100 ítems.');
-    exigir(new Set(lista.map(g => g.id)).size === lista.length && lista.every(g => g.id && (!g.gastoId || g.gastoId === g.id) && g.salaId === lista[0].salaId), 'Revisá los identificadores y la sala de la lista.');
+    validarListaGastos(lista);
     const operaciones = [];
     for (let indice = 0; indice < lista.length; indice++) {
       const plan = await prepararGasto(lista[indice], contexto);
@@ -84,8 +88,7 @@ export function previsualizarListaGastos(lista) {
 
 export function guardarListaGastos(lista, financiaciones = []) {
   return conSocial(async contexto => {
-    exigir(Array.isArray(lista) && lista.length > 0 && lista.length <= 100, 'Agregá entre 1 y 100 ítems.');
-    exigir(new Set(lista.map(g => g.id)).size === lista.length && lista.every(g => g.id && (!g.gastoId || g.gastoId === g.id) && g.salaId === lista[0].salaId), 'Revisá los identificadores y la sala de la lista.');
+    validarListaGastos(lista);
     const resultados = [];
     for (let i = 0; i < lista.length; i++) resultados.push(await guardarGastoEnContexto(lista[i], financiaciones[i] || {}, contexto));
     return resultados;

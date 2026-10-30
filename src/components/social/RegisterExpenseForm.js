@@ -36,10 +36,8 @@ export default function FormularioRegistrarGasto(propiedades) {
   const etiqueta = parametros.gastoId ? 'Guardar cambios' : 'Agregar gasto';
   if (!sala || sala.estado === 'cerrada' || parametros.gastoId && !gastoInicial) return <RegistroNoDisponible {...aspecto} />;
   return <>
-      {!parametros.gastoId && !parametros.edicionLista ? <>
-        <SelectorModoGasto modo={modo} alElegir={establecerModo} tema={aspecto.tema} />
-      </> : null}
-      {(modo === 'lista' || parametros.edicionLista) && !parametros.gastoId ? <FormularioListaGastos editarExistentes={parametros.edicionLista} borrador={listaBorrador} sala={sala} participantes={participantes} ticket={parametros.ticketSocial} {...aspecto} /> : <>
+      {!parametros.gastoId ? <SelectorModoGasto modo={modo} alElegir={establecerModo} tema={aspecto.tema} /> : null}
+      {modo === 'lista' && !parametros.gastoId ? <FormularioListaGastos borrador={listaBorrador} sala={sala} participantes={participantes} ticket={parametros.ticketSocial} {...aspecto} /> : <>
       <FormularioGasto borradorInicial={borrador.current} participantes={participantes} gastoInicial={gastoInicial} alCambiar={alCambiar} {...aspecto} />
       <AccionesFormulario texto={etiqueta} preparar={() => {
         solicitud.current = { ...borrador.current, id: id.current, claveOperacion: clave.current, salaId: sala.id, gastoId: gastoInicial?.id, version: version.current };

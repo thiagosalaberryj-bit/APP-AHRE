@@ -4,7 +4,7 @@ import { personasRepositorio, salasRepositorio, gastosCompartidosRepositorio, pa
 import { exigir } from './socialValidation';
 import { normalizarNombrePersona } from './socialHelpers';
 
-export const repositoriosSociales = { personas: personasRepositorio, salas: salasRepositorio, gastos: gastosCompartidosRepositorio,
+const repositoriosSociales = { personas: personasRepositorio, salas: salasRepositorio, gastos: gastosCompartidosRepositorio,
   partes: participantesGastoRepositorio, pagos: pagosSocialesRepositorio, deudas: deudasRepositorio, integrantes: personasSalaRepositorio };
 
 export async function conSocial(operacion) {

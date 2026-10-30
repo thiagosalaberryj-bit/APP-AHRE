@@ -21,7 +21,7 @@ export function crearSala(datos) {
     exigir(typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha) && !Number.isNaN(Date.parse(fecha)), 'Elegí una fecha válida.');
     const abiertas = await salasRepositorio.consultar({ usuario_id: contexto.usuario.id, estado: 'abierta' }, {}, contexto.conexion);
     exigir(abiertas.length < LIMITE_SALAS_ACTIVAS, 'Ya tenés tres salas abiertas. Cerrá una para crear otra.');
-    const ids = [contexto.propia.id, ...new Set((datos.personasIds || []).map(id => idPersistente(id, contexto)))].filter((id, i, lista) => lista.indexOf(id) === i);
+    const ids = [...new Set([contexto.propia.id, ...(datos.personasIds || []).map(id => idPersistente(id, contexto))])];
     for (const id of ids) exigir((await registroPropio(personasRepositorio, id, contexto)).activa, 'Una persona seleccionada está desactivada.');
     const sala = await salasRepositorio.crear({ id: datos.id, usuario_id: contexto.usuario.id, nombre, descripcion: textoSocial(datos.descripcion),
       categoria: datos.categoriaId, icono: datos.icono, color: datos.color, fecha, estado: 'abierta' }, contexto.conexion);

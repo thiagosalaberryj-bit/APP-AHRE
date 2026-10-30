@@ -109,11 +109,11 @@ la cantidad de gastos se muestra debajo de esa fila.
 La lista de Gastos usa tarjetas compactas como Balances: icono pequeño,
 descripción, pagador y reparto en una misma línea, e importe en el bloque
 lateral con flecha. La fecha se conserva en el detalle, no en estas tarjetas.
-En salas abiertas con ítems aparece Edición rápida: abre los gastos actuales
-en la lista editable, con sus repartos y asociaciones. Guardar cambios actualiza
-los registros existentes y verifica sus versiones. Los nuevos ítems se pueden
-agregar si se cumple el requisito del depósito; los existentes no se borran al
-editar la lista. Las salas cerradas conservan su historial de solo lectura.
+La sección Gastos muestra los ítems sin el acceso Edición rápida. Las opciones
+rápidas se mantienen en Agregar gasto → Registrar lista. Cada gasto se puede
+abrir desde su tarjeta y editar individualmente mientras la sala esté abierta.
+Las salas cerradas conservan su historial de solo lectura. El formulario no
+mantiene un modo separado para editar los gastos de la sala en bloque.
 Total gastado y los importes de Balances reutilizan SocialAmountSummary,
 el mismo contenedor de fondo suave usado en Tus pendientes del panel.
 

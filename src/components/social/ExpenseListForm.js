@@ -16,11 +16,9 @@ import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 
 const nuevaFila = (descripcion = '', monto = '') => ({ id: generarIdentificador(), claveOperacion: generarIdentificador(), descripcion, monto });
 
-export default function FormularioListaGastos({ sala, participantes, ticket, borrador, editarExistentes = false, ...aspecto }) {
+export default function FormularioListaGastos({ sala, participantes, ticket, borrador, ...aspecto }) {
   const social = useDatosSociales(), estilos = crearEstilosCompartidos(aspecto.tema);
-  const [filas, establecerFilas] = useState(() => borrador.current?.filas || (editarExistentes ? sala.gastos.map(g => ({ ...nuevaFila(g.descripcion, montoParaEntrada(g.montoNumero)), id: g.id, gastoId: g.id, version: g.version, financiaciones: g.asociaciones,
-    ajustes: { pagadorId: g.pagadorId, reparto: g.reparto, involucradas: g.partes.map(p => p.personaId), pagaron: g.partes.filter(p => p.tipo === 'saldado').map(p => p.personaId), montosManuales: Object.fromEntries(g.partes.map(p => [p.personaId, montoParaEntrada(p.montoNumero)])) },
-  })) : [nuevaFila()]));
+  const [filas, establecerFilas] = useState(() => borrador.current?.filas || [nuevaFila()]);
   const [depositoId, establecerDepositoId] = useState(borrador.current?.depositoId || null);
   const [editando, establecerEditando] = useState(null);
   const [opciones, establecerOpciones] = useState(false);
@@ -33,26 +31,25 @@ export default function FormularioListaGastos({ sala, participantes, ticket, bor
   }, [ticket]);
   const cambiar = (id, cambios) => establecerFilas(actuales => actuales.map(f => f.id === id ? { ...f, ...cambios } : f));
   return <>
-    <BarraListaGastos llena={filas.length >= 100 || !social.habilitadoParaCrear} alAgregar={() => establecerFilas(actuales => [...actuales, nuevaFila()])} alOpciones={() => establecerOpciones(true)} alEscanear={editarExistentes ? null : () => social.abrirOcrSala(sala.id)} tema={aspecto.tema} />
+    <BarraListaGastos llena={filas.length >= 100 || !social.habilitadoParaCrear} alAgregar={() => establecerFilas(actuales => [...actuales, nuevaFila()])} alOpciones={() => establecerOpciones(true)} alEscanear={() => social.abrirOcrSala(sala.id)} tema={aspecto.tema} />
     {filas.map((fila, indice) => {
       const ajustes = { ...comun.current, ...fila.ajustes };
       const pagador = social.obtenerPersona(ajustes.pagadorId);
       const deposito = social.depositos.find(d => d.id === (fila.depositoId || depositoId));
-      const nombreDeposito = deposito?.nombre || [...new Set(Object.values(fila.financiaciones || {}).map(f => f.depositoNombre).filter(Boolean))].join(', ') || 'Sin depósito';
+      const nombreDeposito = deposito?.nombre || 'Sin depósito';
       const resumen = `Pagó ${pagador?.nombre || 'Vos'} · ${ajustes.reparto === 'manual' ? 'Manual' : 'Iguales'} · ${ajustes.involucradas?.length || 0} personas · ${nombreDeposito}`;
       return <FilaListaGastos key={fila.id} fila={fila} indice={indice} resumen={resumen}
         alCambiar={cambios => cambiar(fila.id, cambios)}
         alEditar={() => { individual.current = { ...ajustes, monto: fila.monto, descripcion: fila.descripcion }; establecerEditando(fila); }}
-        alQuitar={fila.gastoId ? null : () => establecerFilas(actuales => actuales.filter(f => f.id !== fila.id))} {...aspecto} />;
+        alQuitar={() => establecerFilas(actuales => actuales.filter(f => f.id !== fila.id))} {...aspecto} />;
     })}
-    <AccionesFormulario texto={editarExistentes ? 'Guardar cambios' : 'Guardar lista'} preparar={async () => {
-      const lista = filas.map(f => ({ ...comun.current, ...f.ajustes, id: f.id, gastoId: f.gastoId, version: f.version, claveOperacion: f.claveOperacion, monto: f.monto, descripcion: f.descripcion, salaId: sala.id }));
+    <AccionesFormulario texto="Guardar lista" preparar={async () => {
+      const lista = filas.map(f => ({ ...comun.current, ...f.ajustes, id: f.id, claveOperacion: f.claveOperacion, monto: f.monto, descripcion: f.descripcion, salaId: sala.id }));
       const plan = await previsualizarListaGastos(lista), fondos = lista.map(() => ({}));
       for (const operacion of plan.operaciones) {
         const deposito = filas[operacion.indice].depositoId || depositoId;
-        const previa = filas[operacion.indice].financiaciones?.[operacion.clave];
-        exigir(deposito || previa, `Elegí un depósito para el ítem ${operacion.indice + 1}.`);
-        fondos[operacion.indice][operacion.clave] = deposito ? { depositoId: deposito, fecha: new Date().toISOString() } : previa;
+        exigir(deposito, `Elegí un depósito para el ítem ${operacion.indice + 1}.`);
+        fondos[operacion.indice][operacion.clave] = { depositoId: deposito, fecha: new Date().toISOString() };
       }
       solicitud.current = { lista, fondos };
       return { operaciones: [] };
