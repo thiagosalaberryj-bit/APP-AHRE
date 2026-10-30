@@ -235,6 +235,11 @@ Cubren los recorridos principales en claro y oscuro, el modal de movimientos,
 los pagos decimales, integrantes, baja/reactivación, cierre y cancelación.
 No son un motor de layout ni sustituyen revisar las pantallas en Expo Go.
 
+La auditoría del 30 de octubre de 2026 dejó 92 pruebas automatizadas aprobadas
+en el conjunto del proyecto y una exportación Android con Hermes correcta.
+Incluye la edición individual desde el detalle del gasto y las opciones rápidas
+de Registrar lista, tras retirar el modo separado de edición masiva.
+
 En el dispositivo deben revisarse navegación Atrás, teclado, texto ampliado,
 creación de depósito y regreso, reinicio de la app, cambio de cuenta, modo avión
 y los diálogos nativos. La lectura real requiere ML Kit, no disponible en Expo Go.

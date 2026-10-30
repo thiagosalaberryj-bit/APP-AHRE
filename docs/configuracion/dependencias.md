@@ -193,6 +193,22 @@ la imagen original para evitar recortes por la máscara del launcher. Ambos
 cambios requieren un APK nuevo. `eas.json` declara `cli.appVersionSource: local`
 para explicitar el versionado actual sin activar incrementos remotos.
 
+## Versión de la aplicación y APK interno
+
+La configuración actual usa `expo.version: 0.4.0` y `android.versionCode: 2` en
+`app.json`. `package.json` y las dos versiones de la raíz de `package-lock.json`
+también indican `0.4.0`; las versiones de dependencias no cambian.
+EAS conserva `cli.appVersionSource: local` y el perfil `ocr-comparison` genera
+un APK de distribución interna. Hace falta reconstruir e instalar el APK para
+ver la nueva versión en Android:
+
+```powershell
+eas build --platform android --profile ocr-comparison --no-wait
+```
+
+La versión instalada de esta rama es independiente de la prerelease histórica
+`v0.4.0` de GitHub, que conserva su commit y sus metadatos anteriores a Social.
+
 ## Autenticación local y dependencias
 
 `expo-crypto` se usa en `src/authentication/passwordSecurity.js`: el servicio

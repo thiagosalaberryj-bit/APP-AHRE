@@ -79,8 +79,8 @@ La interfaz actual presenta un resumen visual de la situación financiera, con
 saldo, depósitos, movimientos recientes y accesos a las operaciones frecuentes.
 El Dashboard consulta el usuario de la sesión local, los depósitos y los
 movimientos en SQLite; calcula el balance desde `saldo_actual` y actualiza la
-información cuando vuelve a tomar el foco. Las demás pantallas financieras aún
-pueden mostrar datos de ejemplo y no guardar cambios.
+información cuando vuelve a tomar el foco. Depósitos, movimientos y estadísticas
+también consultan los datos locales de la cuenta.
 
 ### Depósitos y movimientos
 
@@ -91,8 +91,8 @@ La pestaña Movimientos consulta en SQLite los ingresos y egresos del usuario,
 permite buscar por descripción, combinar filtros y abrir detalles por ID. El
 formulario de creación de depósitos guarda localmente nombre, saldo inicial,
 tipo, ícono, color y descripción. Los formularios de ingreso y egreso guardan
-movimientos en SQLite y actualizan el saldo del depósito; la edición y
-eliminación de depósitos continúan simuladas.
+movimientos en SQLite y actualizan el saldo del depósito. La edición de depósitos
+guarda sus datos y su eliminación lógica conserva el historial financiero.
 
 ### Deudas y gastos compartidos
 
@@ -118,7 +118,9 @@ sala ofrece categorías de egreso, icono, color y fecha actual seleccionable.
 
 Cada ítem tiene pagador, personas involucradas, reparto igual o manual y pagos
 propios. Registrar lista permite cargar varios ítems con ajustes comunes o
-individuales. Escanear ticket reutiliza el OCR existente y devuelve líneas
+individuales desde Agregar gasto → Registrar lista. La sección Gastos de la sala
+permite abrir cada ítem y editarlo individualmente, sin acceso de Edición rápida.
+Escanear ticket reutiliza el OCR existente y devuelve líneas
 editables sin guardar un egreso; la captura nativa no funciona en Expo Go. Al guardar se
 elige un depósito para los pagos o cobros propios, o un movimiento ya registrado
 para evitar duplicados. Guardar o editar un ítem conserva el borrador sin cambiar
@@ -170,8 +172,8 @@ contraseña local o la huella configurada en el dispositivo.
 
 ## Estado actual
 
-El proyecto ofrece un prototipo visual no estable de sus principales
-interfaces. Actualmente cuenta con:
+El proyecto está en desarrollo, con funciones locales y una versión no estable
+para evaluación. Actualmente cuenta con:
 
 - proyecto inicial configurado con Expo;
 - entrada principal compatible con Expo y React Native;
@@ -198,10 +200,10 @@ interfaces. Actualmente cuenta con:
 - formularios de ingreso y egreso conectados a SQLite, con monto, descripción,
   depósito, categoría, fecha, hora y recurrencia; ambos validan y persisten el
   movimiento y actualizan el saldo del depósito;
-- formulario de creación de depósitos conectado a SQLite local; el detalle con
-  búsqueda, filtros, edición y eliminación sigue simulado;
+- creación y detalle de depósitos conectados a SQLite local, con búsqueda,
+  filtros, edición y eliminación lógica;
 - pantalla de Estadísticas con gráficos interactivos por categoría y período,
-  filtros y detalles basados en datos de ejemplo;
+  filtros y detalles basados en movimientos locales;
 - pantalla de Notificaciones con avisos de muestra agrupados por día; no usa
   notificaciones locales o push;
 - pestaña Social con resumen, deudas recientes, agenda y salas; historiales
@@ -220,8 +222,9 @@ interfaces. Actualmente cuenta con:
   conectarse a lógica futura;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
-- historial con la versión `0.5.0` no publicada para la nueva maqueta de Social
-  (#18), y la `0.4.0` publicada como prerelease no estable sin ese módulo.
+- cambios de Social (#18) registrados en Sin publicar y compilaciones internas
+  configuradas con versión instalada `0.4.0` y código Android `2`;
+- prerelease histórica `v0.4.0` de código fuente, anterior a Social.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. El
 registro y el Login ya crean y verifican cuentas localmente. Al abrir AHRE, la
@@ -236,14 +239,16 @@ recupera la apariencia guardada.
 Los depósitos ya se pueden crear y guardar en la base local; el Dashboard lee
 su resumen desde SQLite y conserva los datos visibles mientras actualiza la
 consulta al recuperar el foco. Movimientos consulta el historial local,
-combina búsqueda y filtros y carga el detalle por ID; Estadísticas todavía usa
-datos de ejemplo. Los formularios de ingreso y egreso validan y persisten sus
-movimientos localmente, con su impacto en el saldo. La versión `0.4.0` es
-la última publicada como versión no estable para evaluación; la `0.5.0` está
-documentada como no publicada en [`docs/CHANGELOG.md`](docs/CHANGELOG.md) y no
-representa una versión comercial. La prerelease `v0.4.0` publica el código fuente
-anterior a Social, sin APK adjunto. La versión interna de Expo y del paquete
-se conserva en `0.3.0`, como en el commit etiquetado.
+combina búsqueda y filtros y carga el detalle por ID; Estadísticas calcula sus
+resultados desde esos movimientos. Los formularios de ingreso y egreso validan y
+persisten sus movimientos localmente, con su impacto en el saldo.
+
+La versión instalada de la próxima compilación es `0.4.0`, definida en
+`app.json` y sincronizada con `package.json` y la raíz de `package-lock.json`.
+Android usa `versionCode: 2`. Los cambios de esta rama, incluido Social, están
+documentados en Sin publicar en [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+La prerelease histórica `v0.4.0` conserva el código fuente anterior a Social, sin
+APK adjunto y con los metadatos internos `0.3.0` de su commit etiquetado.
 
 ## Tecnología
 
@@ -314,6 +319,16 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Flujo de Issues, Pull Requests e historial de cambios](docs/proceso/flujo-issues-prs-changelog.md).
 
 ## Cómo iniciar el proyecto
+
+Para generar el APK interno de Android desde esta rama con EAS CLI:
+
+```powershell
+eas build --platform android --profile ocr-comparison --no-wait
+```
+
+El comando sube el código local a Expo y devuelve el enlace de seguimiento;
+cuando finaliza, permite descargar el APK e instalarlo. La versión `0.4.0`
+se verá al instalar esa nueva compilación. Este comando no publica en Google Play.
 
 Instalar las dependencias:
 

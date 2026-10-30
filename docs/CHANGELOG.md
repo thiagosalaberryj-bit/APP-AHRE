@@ -3,7 +3,23 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [v0.5.0] - 2026-10-30 - no publicada
+## [Sin publicar]
+
+Estado de la rama del Issue #18 al 30 de octubre de 2026. Los nuevos APK internos
+usan la versión instalada `0.4.0` y `android.versionCode: 2`. Esto no modifica la
+prerelease histórica `v0.4.0` ni publica una nueva entrega en GitHub.
+
+### Añadido
+
+- Social guarda personas, salas, ítems, repartos, deudas y pagos personales en
+  SQLite local, sin comunicación entre dispositivos. El cierre confirma los
+  movimientos preparados y crea únicamente deudas que involucran al usuario. (#18)
+- Registrar lista permite cargar hasta 100 ítems con opciones rápidas comunes,
+  ajustes individuales y guardado atómico. Escanear ticket reutiliza el OCR
+  existente y devuelve líneas editables sin registrar un egreso anticipado. (#18)
+- Las deudas personales a cobrar registran el egreso del adelanto; las deudas
+  a pagar no alteran depósitos hasta registrar el pago. Vincular un movimiento
+  existente conserva el saldo y evita duplicarlo. (#18)
 
 ### Cambiado
 
@@ -13,12 +29,29 @@ documentación se registran en este archivo.
 - Las salas representan ocasiones con hasta tres activas e ítems independientes,
   cada uno con pagador, personas, reparto y estado de pago propios. Se prepararon
   edición mientras están abiertas, revisión de cierre e historial de solo lectura;
-  los pendientes se representan como deudas después del cierre. (#18)
+  los pendientes propios pasan al registro de deudas después del cierre. (#18)
 - Se unificaron las tarjetas y formularios, con confirmación de eliminación de
-  deudas, registro de pagos y ticket OCR de ejemplo. Todos los importes y acciones
-  siguen simulados, sin cálculos financieros, persistencia ni OCR real. (#18)
+  deudas, registro de pagos y estados derivados de los datos locales. Se retiró
+  el ticket OCR simulado y se conectó el reconocimiento existente. (#18)
 - Se separaron las pantallas, los componentes reutilizables, los estilos y los
   datos de Social en archivos independientes, y se actualizó su documentación. (#18)
+- Se retiró Edición rápida de Gastos y su modo de formulario sin acceso desde la
+  interfaz. Las opciones rápidas permanecen en Agregar gasto → Registrar lista;
+  los gastos existentes conservan la edición individual. (#18)
+- Se eliminaron opciones y parámetros sin consumidores, se unificó la validación
+  de listas y se simplificó la selección de participantes sin duplicados. (#18)
+- Se sincronizó la versión de Expo, del paquete y de la raíz del lockfile en
+  `0.4.0`, con código Android `2` para la próxima compilación interna. No se
+  cambiaron dependencias. (#18)
+
+### Verificación
+
+- Pasaron las 92 pruebas automatizadas de Social, esquema, servicios, interfaz,
+  datos de desarrollo y OCR. La exportación Android con Hermes terminó
+  correctamente después de la limpieza de código. (#18)
+- La revisión estática no detectó imports rotos ni archivos o exports huérfanos
+  de Social. La validación visual y la captura OCR social en un dispositivo
+  siguen pendientes; la exportación no equivale a un APK instalado. (#18)
 
 ## [v0.4.0] - 2026-10-30 - no estable
 

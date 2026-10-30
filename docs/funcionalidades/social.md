@@ -243,6 +243,12 @@ reintentos, cierres, movimientos vinculados, compensaciones, sobrepagos y rollba
 Las pruebas de interfaces ejecutan callbacks reales sobre esos servicios con
 un adaptador de React/native en claro y oscuro; no comprueban layout nativo.
 
+En la auditoría del 30 de octubre de 2026 pasaron las 92 pruebas del conjunto
+del proyecto. Se comprobó también la exportación Android con Hermes. La
+previsualización y el guardado de listas comparten la validación de tamaño,
+identificadores únicos y sala; las pruebas verifican los mismos rechazos en
+ambas operaciones sin dejar gastos ni movimientos parciales.
+
 ```powershell
 node --experimental-vm-modules --test tests/socialSchema.test.js tests/socialService.test.js tests/socialInterface.test.js tests/developmentData.test.js tests/receiptParser.test.js tests/ocrExpenseDraft.test.js tests/ocrExpensePersistence.test.js
 ```
