@@ -152,7 +152,8 @@ superior; debajo quedan el pendiente y el dinero pagado o recibido lado a lado,
 seguidos por fecha y origen. Reutiliza los
 contenedores de importe y las acciones de pago/eliminación. Ver persona y
 Ver sala de origen quedan fuera del resumen, como accesos secundarios con
-icono destacado y flecha del mismo color de foco. El acceso a la sala también
+icono destacado y flecha del verde claro del texto del botón secundario, con
+contraste sobre su fondo verde en ambos temas. El acceso a la sala también
 queda fuera de las tarjetas del perfil.
 Registrar pago conserva la tarjeta de
 consulta, Saldar todo/Otro importe y el monto editable. Los pagos parciales y
