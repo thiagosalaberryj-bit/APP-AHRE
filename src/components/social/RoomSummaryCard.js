@@ -35,7 +35,7 @@ export default function TarjetaResumenSala(propiedades) {
           <View style={estilos.filaCampos}><Text style={[estilos.estadoHistorialDeuda, estilos.textoFlexible, {
             color: tema.textoSecundario
           }]}>Gastado</Text><Ionicons color={tema.textoSecundario} name="chevron-forward" size={16} /></View>
-          <Text style={estilosGlobales.encabezadoSeccion}>{sala.totalGastado}</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.encabezadoSeccion}>{sala.totalGastado}</Text>
         </View>
       </View>
     </Pressable>;

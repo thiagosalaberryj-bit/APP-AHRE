@@ -9,24 +9,6 @@ export default function crearEstilosPropios(tema) {
       borderTopColor: tema.borde,
       paddingTop: ESPACIADO.grande
     },
-    accionPanel: {
-      flex: 1,
-      minWidth: 0,
-      minHeight: 78,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: ESPACIADO.minimo,
-      paddingVertical: ESPACIADO.medio,
-      paddingHorizontal: ESPACIADO.minimo,
-      borderRadius: BORDES.radios.boton,
-      backgroundColor: tema.botonPrincipal
-    },
-    textoAccionPanel: {
-      color: tema.botonPrincipalTexto,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      textAlign: 'center'
-    },
     detalleAccionPanel: {
       color: tema.botonPrincipalTexto,
       fontSize: TIPOGRAFIA.tamanos.auxiliar,
@@ -43,10 +25,5 @@ export default function crearEstilosPropios(tema) {
       backgroundColor: tema.superficie,
       borderRadius: BORDES.radios.tarjeta
     },
-    importePrincipalPanel: {
-      backgroundColor: tema.fondo,
-      borderRadius: BORDES.radios.campo,
-      padding: ESPACIADO.medio
-    }
   });
 }

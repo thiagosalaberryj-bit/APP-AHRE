@@ -18,6 +18,6 @@ export default function OpcionesSeleccion(propiedades) {
   return <View style={enLinea ? estilos.repartoEnLinea : estilos.opciones}>
       {opciones.map(opcion => <Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{
       checked: elegida === opcion.id
-    }} onPress={() => alElegir(opcion.id)} style={[enLinea ? estilos.opcionReparto : estilos.pestana, elegida === opcion.id && estilos.pestanaActiva]}><Text style={[estilos.textoPestana, elegida === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
+    }} onPress={() => alElegir(opcion.id)} style={[enLinea ? estilos.opcionReparto : estilos.pestana, elegida === opcion.id && estilos.pestanaActiva]}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, elegida === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
     </View>;
 }

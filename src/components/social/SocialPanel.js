@@ -1,19 +1,25 @@
-import { SALAS_SIMULADAS, LIMITE_SALAS_ACTIVAS, DEUDAS_SIMULADAS } from '../../social/socialMockData';
+import { useDatosSociales } from '../../social/SocialDataContext';
+import { LIMITE_SALAS_ACTIVAS } from "../../social/socialConstants";
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import TituloSeccionSocial from './SocialSectionTitle';
 import TarjetaResumenDeuda from './DebtSummaryCard';
 import TarjetaResumenSala from './RoomSummaryCard';
+import ResumenImporteSocial from './SocialAmountSummary';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/SocialPanelStyles';
 export default function PanelSocial(propiedades) {
+  const {
+    salas: salasSociales,
+    deudas: deudasSociales,
+    totales
+  } = useDatosSociales();
   const {
     alVerSalas,
     alVerPersonas,
     alVerAgenda,
     abrirSala,
     abrirRegistro,
-    sinDeudas = false,
     ...aspecto
   } = {
     ...propiedades,
@@ -27,9 +33,9 @@ export default function PanelSocial(propiedades) {
     estilos,
     estilosGlobales
   } = aspecto;
-  const activas = SALAS_SIMULADAS.filter(sala => sala.estado === 'abierta').sort((a, b) => b.creadaEl.localeCompare(a.creadaEl)).slice(0, LIMITE_SALAS_ACTIVAS);
-  const pendientes = sinDeudas ? [] : DEUDAS_SIMULADAS.filter(deuda => !deuda.saldada);
-  const recientes = [...pendientes].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 5);
+  const activas = salasSociales.filter(sala => sala.estado === 'abierta').sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion) || b.id.localeCompare(a.id)).slice(0, LIMITE_SALAS_ACTIVAS);
+  const pendientes = deudasSociales.filter(deuda => !deuda.saldada);
+  const recientes = [...pendientes].sort((a, b) => b.fechaISO.localeCompare(a.fechaISO) || b.id.localeCompare(a.id)).slice(0, 5);
   return <>
       <View style={estilos.resumenPrincipal}>
         <View style={estilos.filaCampos}>
@@ -37,8 +43,8 @@ export default function PanelSocial(propiedades) {
           <Text style={estilosGlobales.etiqueta}>Tus pendientes</Text>
         </View>
         <View style={estilos.totalesPanel}>
-          <View style={[estilos.totalPanel, estilos.importePrincipalPanel]}><View style={estilos.etiquetaImportePersona}><Ionicons color={tema.foco} name="arrow-up-outline" size={20} /><Text style={estilosGlobales.etiqueta}>Te deben</Text></View><Text style={[estilosGlobales.monto, estilos.montoResumen]}>{sinDeudas ? '$ 0' : '$ 7.500'}</Text></View>
-          <View style={[estilos.totalPanel, estilos.importePrincipalPanel]}><View style={estilos.etiquetaImportePersona}><Ionicons color={tema.error} name="arrow-down-outline" size={20} /><Text style={estilosGlobales.etiqueta}>Debés</Text></View><Text style={[estilosGlobales.monto, estilos.montoResumen]}>{sinDeudas ? '$ 0' : '$ 9.000'}</Text></View>
+          <ResumenImporteSocial etiqueta="Te deben" valor={totales.porCobrar} icono="arrow-up-outline" color={tema.foco} estiloValor={[estilosGlobales.monto, estilos.montoResumen]} {...aspecto} />
+          <ResumenImporteSocial etiqueta="Debés" valor={totales.porPagar} icono="arrow-down-outline" color={tema.error} estiloValor={[estilosGlobales.monto, estilos.montoResumen]} {...aspecto} />
         </View>
       <View style={estilos.accionesPanel}>
         {[{

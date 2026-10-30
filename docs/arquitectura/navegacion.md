@@ -106,6 +106,12 @@ los nombres de ruta y eligen el destino según sus parámetros:
 - `GastoSocial`: detalle de un ítem y sus pagos, con acceso al formulario
   precargado de edición solo mientras la sala esté abierta.
 
+Al saldar una deuda, RegistroSocial confirma el resultado y navega a Principal
+con la pestaña Social seleccionada. Los pagos parciales regresan a la vista
+anterior. El detalle de una deuda saldada no ofrece eliminarla.
+Eliminar una persona desde su perfil regresa a PersonasSocial con todas: true;
+la edición de datos y la reactivación conservan su pantalla actual.
+
 La agenda abre alta y edición de personas en modal. Agregar personas a una
 sala, confirmar que se quita una, elegir icono y usar los selectores también
 se resuelven en modales. Crear una persona desde un selector abre la ruta de
@@ -114,8 +120,9 @@ sin perder su borrador. Las rutas reciben identificadores y opciones
 serializables; un nuevo ítem puede recibir `personasIds` para reflejar la
 selección temporal de participantes de la sala.
 
-Los datos de Social siguen simulados. Su OCR de ejemplo no abre la ruta OCR
-funcional ni crea movimientos. Ver [Interfaz de Social](../interfaces/social.md).
+Social recarga datos locales al recuperar el foco y navega por identificadores
+persistidos. Su OCR de ejemplo no abre la ruta OCR funcional; sus líneas se
+confirman con el formulario normal de ítems. Ver [Interfaz de Social](../interfaces/social.md).
 
 El detalle de categoría y el detalle de movimiento se registran en el Stack
 principal, fuera del navegador de pestañas. Al abrirlos se oculta la barra

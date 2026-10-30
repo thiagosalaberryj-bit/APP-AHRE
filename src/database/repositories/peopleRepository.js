@@ -2,18 +2,8 @@ import { crearRepositorio } from './repositoryFactory';
 
 export const personasRepositorio = crearRepositorio({
   tabla: 'personas',
-  campos: [
-    'usuario_id',
-    'nombre',
-    'correo_electronico',
-    'es_usuario_actual',
-    'activa',
-    'fecha_creacion',
-    'fecha_actualizacion',
-  ],
-  camposBusqueda: ['nombre', 'correo_electronico'],
-  camposFiltrables: ['usuario_id', 'es_usuario_actual', 'activa'],
-  camposOrdenables: ['nombre', 'fecha_creacion', 'fecha_actualizacion'],
-  ordenPredeterminado: 'nombre',
-  eliminacion: { campo: 'activa', valor: 0 },
+  campos: ["usuario_id","nombre","apellido","apodo","nombre_normalizado","apellido_normalizado","apodo_normalizado","correo_electronico","es_usuario_actual","activa","fecha_creacion","fecha_actualizacion"],
+  camposFiltrables: ["usuario_id","activa","es_usuario_actual"],
+  ordenPredeterminado: 'id',
+  eliminacion: {"campo":"activa","valor":0},
 });

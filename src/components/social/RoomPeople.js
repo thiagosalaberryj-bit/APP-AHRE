@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { normalizarNombrePersona, obtenerPersona, nombreCompletoPersona } from '../../social/socialHelpers';
-import { PERSONA_ACTUAL } from '../../social/socialMockData';
+import { useDatosSociales } from '../../social/SocialDataContext';
+import { useContext, useRef, useState } from 'react';
+import { ContextoAvisos } from '../../contexts/ToastContext';
+import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { View, TextInput, Pressable, Text, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ModalAgregarPersonasSala from './AddRoomPeopleModal';
@@ -9,6 +10,10 @@ import { COLORES_NEUTROS } from '../../styles/colors';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/RoomPeopleStyles';
 export default function PersonasSala(propiedades) {
+  const {
+    obtenerPersona,
+    personaActual
+  } = useDatosSociales();
   const {
     personasSala,
     gastos,
@@ -29,6 +34,16 @@ export default function PersonasSala(propiedades) {
     estilosMovimiento,
     tema
   } = aspecto;
+  const { mostrarAviso } = useContext(ContextoAvisos);
+  const [guardando, establecerGuardando] = useState(false);
+  const enCurso = useRef(false);
+  const cambiar = async (ids, alTerminar) => {
+    if (enCurso.current) return;
+    enCurso.current = true; establecerGuardando(true);
+    try { await alCambiar(ids); alTerminar(); }
+    catch (error) { mostrarAviso(error.message || 'No se pudo actualizar la sala.', { tipo: 'error' }); }
+    finally { enCurso.current = false; establecerGuardando(false); }
+  };
   const [busqueda, establecerBusqueda] = useState('');
   const [agregando, establecerAgregando] = useState(false);
   const [personaAQuitar, establecerPersonaAQuitar] = useState(null);
@@ -36,7 +51,7 @@ export default function PersonasSala(propiedades) {
   const gastosVinculados = personaAQuitar ? gastos.filter(gasto => gasto.pagadorId === personaAQuitar.id || gasto.partes.some(parte => parte.personaId === personaAQuitar.id)) : [];
   const tienePendientes = gastosVinculados.some(gasto => gasto.partes.some(parte => parte.tipo !== 'saldado' && (parte.personaId === personaAQuitar.id || gasto.pagadorId === personaAQuitar.id)));
   const consulta = normalizarNombrePersona(busqueda);
-  const personas = [PERSONA_ACTUAL, ...personasSala.map(obtenerPersona)].filter(persona => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo || ''}`).includes(consulta));
+  const personas = [personaActual, ...personasSala.map(obtenerPersona)].filter(persona => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo || ''}`).includes(consulta));
   return <View style={estilos.grupo}>
       <View style={estilos.filaCampos}>
         <View style={[estilosMovimiento.botonDeposito, estilos.columnaCampo, estilos.busquedaAgenda]}>
@@ -52,20 +67,18 @@ export default function PersonasSala(propiedades) {
       <View style={estilos.agenda}>
         {personas.length ? personas.map(persona => <View key={persona.id} style={estilos.personaAgenda}>
             <View style={estilos.avatarAgenda}><Text style={estilos.textoAvatar}>{persona.iniciales}</Text></View>
-            <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{nombreCompletoPersona(persona)}</Text>{persona.apodo ? <Text numberOfLines={1} style={estilosGlobales.textoSecundario}>{persona.apodo}</Text> : null}</View>
+            <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{nombreCompletoPersona(persona)}</Text>{persona.apodo ? <Text ellipsizeMode="tail" numberOfLines={1} style={estilosGlobales.textoSecundario}>{persona.apodo}</Text> : null}</View>
             {!cerrada && persona.id !== 'vos' ? <Pressable accessibilityRole="button" accessibilityLabel={`Quitar a ${nombreCompletoPersona(persona)} de la sala`} onPress={() => establecerPersonaAQuitar(persona)} style={estilos.accionIcono}><Ionicons color={tema.error} name="remove-circle-outline" size={24} /></Pressable> : null}
           </View>) : <Text style={estilosGlobales.textoSecundario}>No encontramos personas con esos datos.</Text>}
       </View>
-      {agregando ? <ModalAgregarPersonasSala personasSala={personasSala} alAgregar={ids => {
-      alCambiar([...personasSala, ...ids]);
-      establecerPersonaQuitada(null);
-      establecerAgregando(false);
-    }} alCerrar={() => establecerAgregando(false)} alCrear={() => {
+      {agregando ? <ModalAgregarPersonasSala personasSala={personasSala} guardando={guardando} alAgregar={ids => cambiar([...personasSala, ...ids], () => {
+      establecerPersonaQuitada(null); establecerAgregando(false);
+    })} alCerrar={() => { if (!guardando) establecerAgregando(false); }} alCrear={() => {
       establecerAgregando(false);
       alCrearPersona();
     }} {...aspecto} /> : null}
-      {personaQuitada ? <Text accessibilityLiveRegion="polite" style={estilosGlobales.textoAyuda}>{nombreCompletoPersona(personaQuitada)} ya no figura en las personas de la sala. Su agenda, gastos y pagos se conservaron en este ejemplo.</Text> : null}
-      {!cerrada ? <Text style={estilosGlobales.textoAyuda}>Cambios de ejemplo, sin guardado. Los gastos y las deudas conservan sus datos simulados.</Text> : null}
+      {personaQuitada ? <Text numberOfLines={1} ellipsizeMode="tail" accessibilityLiveRegion="polite" style={estilosGlobales.textoAyuda}>{nombreCompletoPersona(personaQuitada)} ya no figura en las personas de la sala. Su agenda, gastos y pagos se conservaron.</Text> : null}
+      {!cerrada ? <Text style={estilosGlobales.textoAyuda}>Los cambios se guardan en este dispositivo. Los gastos y pagos anteriores se conservan.</Text> : null}
       <Modal transparent animationType="fade" visible={Boolean(personaAQuitar)} onRequestClose={() => establecerPersonaAQuitar(null)}>
         <View style={estilos.fondoModal}>
           <Pressable accessibilityRole="button" accessibilityLabel="Cancelar eliminación de persona" onPress={() => establecerPersonaAQuitar(null)} style={estilos.cierreFondo} />
@@ -77,7 +90,7 @@ export default function PersonasSala(propiedades) {
             <ScrollView style={estilos.desplazamientoModal}>
               <View style={estilos.grupo}>
                 <View style={estilos.grupoCampo}><Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Quitar persona de la sala</Text><Text style={estilosGlobales.textoSecundario}>¿Querés quitar a esta persona?</Text></View>
-                {personaAQuitar ? <View style={estilos.resumenPersonaEliminar}><AvatarPersona persona={personaAQuitar} estilos={estilos} /><View style={estilos.textoFlexible}><Text style={estilosGlobales.etiqueta}>{nombreCompletoPersona(personaAQuitar)}</Text><Text style={estilosGlobales.textoSecundario}>{personaAQuitar.apodo}</Text></View></View> : null}
+                {personaAQuitar ? <View style={estilos.resumenPersonaEliminar}><AvatarPersona persona={personaAQuitar} estilos={estilos} /><View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.etiqueta}>{nombreCompletoPersona(personaAQuitar)}</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{personaAQuitar.apodo}</Text></View></View> : null}
                 <Text style={estilosGlobales.textoSecundario}>{gastosVinculados.length ? `Participa en ${gastosVinculados.length} ítems de esta sala. Su nombre, importes y pagos seguirán en esos registros.` : 'No tiene gastos registrados en esta sala. Seguirá en tu agenda y podrás volver a agregarla.'}</Text>
                 {gastosVinculados.length ? <View style={estilos.avisoPersonaEliminar}><Ionicons color={tema.error} name="information-circle-outline" size={20} /><Text style={[estilosGlobales.textoSecundario, estilos.textoFlexible, {
                   color: tema.error
@@ -87,11 +100,9 @@ export default function PersonasSala(propiedades) {
             </ScrollView>
             <View style={estilos.filaCampos}>
               <Pressable accessibilityRole="button" onPress={() => establecerPersonaAQuitar(null)} style={estilos.cancelarQuitarPersona}><Text style={estilosGlobales.etiqueta}>Cancelar</Text></Pressable>
-              <Pressable accessibilityRole="button" onPress={() => {
-              alCambiar(personasSala.filter(id => id !== personaAQuitar.id));
-              establecerPersonaQuitada(personaAQuitar);
-              establecerPersonaAQuitar(null);
-            }} style={estilos.confirmarQuitarPersona}><Text style={[estilosGlobales.etiqueta, {
+              <Pressable accessibilityRole="button" disabled={guardando} onPress={() => cambiar(personasSala.filter(id => id !== personaAQuitar.id), () => {
+              establecerPersonaQuitada(personaAQuitar); establecerPersonaAQuitar(null);
+            })} style={estilos.confirmarQuitarPersona}><Text style={[estilosGlobales.etiqueta, {
                 color: COLORES_NEUTROS.superficie
               }]}>Quitar de la sala</Text></Pressable>
             </View>

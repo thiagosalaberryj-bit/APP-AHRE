@@ -1,11 +1,17 @@
+import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
+import AccionesFormulario from './SocialFormActions';
+import { guardarPersona, cambiarActividadPersona } from '../../social/socialService';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
-import { PERSONAS_SIMULADAS } from '../../social/socialMockData';
 import { View, Text } from 'react-native';
 import CampoFormulario from './SocialTextField';
 import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function FormularioPersona(propiedades) {
+  const {
+    personas: personasSociales,
+    irAgenda
+  } = useDatosSociales();
   const {
     abrirPersona,
     alCerrar,
@@ -24,14 +30,12 @@ export default function FormularioPersona(propiedades) {
   const [nombre, establecerNombre] = useState(personaInicial?.nombre || '');
   const [apellido, establecerApellido] = useState(personaInicial?.apellido || '');
   const [apodo, establecerApodo] = useState(personaInicial?.apodo || '');
-  const [aviso, establecerAviso] = useState(false);
   const nombreNormalizado = normalizarNombrePersona(nombre);
   const apellidoNormalizado = normalizarNombrePersona(apellido);
   const apodoNormalizado = normalizarNombrePersona(apodo);
-  const existente = PERSONAS_SIMULADAS.find(persona => persona.id !== personaInicial?.id && (nombreNormalizado && apellidoNormalizado && normalizarNombrePersona(persona.nombre) === nombreNormalizado && normalizarNombrePersona(persona.apellido) === apellidoNormalizado || apodoNormalizado && normalizarNombrePersona(persona.apodo || '') === apodoNormalizado));
+  const existente = personasSociales.find(persona => persona.id !== personaInicial?.id && (nombreNormalizado && apellidoNormalizado && normalizarNombrePersona(persona.nombre) === nombreNormalizado && normalizarNombrePersona(persona.apellido) === apellidoNormalizado || apodoNormalizado && normalizarNombrePersona(persona.apodo || '') === apodoNormalizado));
   const cambiar = establecer => valor => {
     establecer(valor);
-    establecerAviso(false);
   };
   return <View style={estilos.grupo}>
       <CampoFormulario etiqueta="Nombre" ejemplo="Ej.: Ana" valor={nombre} alCambiar={cambiar(establecerNombre)} {...aspecto} />
@@ -40,12 +44,17 @@ export default function FormularioPersona(propiedades) {
       <Text style={estilosGlobales.textoAyuda}>{apodo.length}/20 caracteres</Text>
       <Text style={estilosGlobales.textoAyuda}>Nombre, apellido y apodo son obligatorios.</Text>
       {existente ? <View style={estilos.grupo}>
-          <Text accessibilityLiveRegion="polite" style={estilosGlobales.texto}>Estos datos coinciden con {nombreCompletoPersona(existente)}{existente.apodo ? ` (${existente.apodo})` : ''}, que ya está en tu listado.</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" accessibilityLiveRegion="polite" style={estilosGlobales.texto}>Estos datos coinciden con {nombreCompletoPersona(existente)}{existente.apodo ? ` (${existente.apodo})` : ''}, que ya está en tu listado.</Text>
           <BotonSocial texto="Ver persona existente" secundario alPresionar={() => abrirPersona(existente.id)} {...aspecto} />
           <Text style={estilosGlobales.textoAyuda}>Revisá su ficha antes de intentar registrarla nuevamente.</Text>
         </View> : null}
-      <BotonSocial texto={personaInicial ? "Guardar cambios" : "Registrar persona"} deshabilitado={!nombreNormalizado || !apellidoNormalizado || !apodoNormalizado || Boolean(existente)} alPresionar={() => establecerAviso(true)} {...aspecto} />
-      {aviso ? <Text accessibilityRole="alert" style={estilosGlobales.textoAyuda}>Vista de ejemplo: no se guardaron cambios. El listado sigue usando datos simulados.</Text> : null}
+      <AccionesFormulario texto={personaInicial ? "Guardar cambios" : "Registrar persona"} mostrarNota={false}
+        deshabilitado={!nombreNormalizado || !apellidoNormalizado || !apodoNormalizado || Boolean(existente)}
+        recargarAntesDeCerrar alGuardar={() => guardarPersona({ nombre, apellido, apodo }, personaInicial?.id)} alExito={alCerrar} {...aspecto} />
+      {personaInicial ? <AccionesFormulario texto={personaInicial.activa ? 'Eliminar persona' : 'Reactivar persona'} peligro={personaInicial.activa} mostrarNota={false}
+        confirmacion={personaInicial.activa ? { titulo: '¿Eliminar esta persona?', descripcion: 'Se desactivará su ficha. Sus salas, pagos y deudas anteriores se conservarán y podrán saldarse.', textoConfirmar: 'Sí, eliminar persona' } : undefined}
+        recargarAntesDeCerrar alGuardar={() => cambiarActividadPersona(personaInicial.id, !personaInicial.activa)}
+        alExito={persona => { alCerrar(); if (!persona.activa) irAgenda(); }} {...aspecto} /> : null}
       {!personaInicial ? <BotonSocial texto="Cancelar" simple alPresionar={alCerrar} {...aspecto} /> : null}
     </View>;
 }

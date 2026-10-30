@@ -37,6 +37,8 @@ APP-AHRE/
 │   │   └── implementacion.md
 │   ├── configuracion/
 │   │   └── dependencias.md
+│   ├── diagramas/
+│   │   └── social/                 # Recorridos y relaciones de Social
 │   ├── interfaces/
 │   │   ├── autenticacion.md
 │   │   └── sistema-visual.md
@@ -88,7 +90,9 @@ APP-AHRE/
 │   │       ├── authenticationRepository.js
 │   │       ├── categoriesRepository.js
 │   │       ├── depositsRepository.js
-│   │       ├── debtPaymentsRepository.js
+│   │       ├── roomsRepository.js
+│   │       ├── roomPeopleRepository.js
+│   │       ├── socialPaymentsRepository.js
 │   │       ├── debtsRepository.js
 │   │       ├── movementsRepository.js
 │   │       ├── peopleRepository.js
@@ -155,10 +159,21 @@ Ingresos, Egresos, OCR y Social.
 Social tiene pantallas independientes para panel, salas, personas, deudas,
 ítems y registros. Componen módulos de `src/components/social/`, con estilos
 propios en `src/styles/social/` y reglas compartidas en `SharedStyles.js`.
-Los formularios comparten `SocialFormActions.js` para la confirmación y el
-aviso de maqueta, y `SocialRecordUnavailable.js` para registros no disponibles.
-Los datos de ejemplo y las utilidades están en `src/social/`; el marco
-`SocialScreenFrame.js` comparte encabezado, teclado y desplazamiento.
+Los formularios comparten `SocialFormActions.js` para validación, guardado y
+confirmación, `SocialMovementModal.js` para elegir depósito o vincular un
+movimiento, y `SocialRecordUnavailable.js` para registros no disponibles.
+`src/social/` contiene servicios por responsabilidad, consultas, validaciones,
+constantes y contexto. `useSocialScreen.js` recarga por foco; el marco
+`SocialScreenFrame.js` comparte encabezado, teclado, desplazamiento y proveedor
+de datos. No hay colecciones simuladas de personas, salas o deudas; únicamente
+se conserva el ticket de ejemplo del OCR social.
+`RoomExpenseCard.js` dibuja las tarjetas compactas de Gastos con los estilos
+comunes de Balances. `SocialAmountSummary.js` comparte los contenedores de
+importe entre panel, resumen de sala, Balances y confirmación de cierre;
+su estilo común vive en `SharedStyles.js`.
+`DebtActions.js` comparte los botones de pago y eliminación entre tarjetas y
+detalle. `SocialRelatedLink.js` dibuja los accesos externos a persona y sala,
+reutilizando los estilos secundarios existentes.
 Ver [organización de Social](../interfaces/social.md#organización-del-código).
 
 ### `src/components/`
@@ -193,6 +208,12 @@ correspondiente detrás de los controles inferiores del sistema. Esa decisión
 solo modifica la presentación.
 
 ### `src/database/`
+
+El esquema inicial reúne las entidades financieras y sociales en
+`migrations/001_initialSchema.js`, sin agregar una migración de transición.
+Sus restricciones y repositorios están en [Social en SQLite](../base-de-datos/social.md).
+`socialMovementReversal.js` coordina la reversión de movimientos vinculados con
+el pago y la deuda social en la misma transacción financiera.
 
 Contiene la inicialización de SQLite, las migraciones, la serialización de
 operaciones, el manejo de errores y los repositorios de cada entidad.

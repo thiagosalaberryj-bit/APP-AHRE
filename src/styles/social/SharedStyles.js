@@ -63,7 +63,7 @@ export default function crearEstilosCompartidos(tema) {
     },
     resumenImportesPersona: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexWrap: 'nowrap',
       gap: ESPACIADO.medio,
       paddingVertical: ESPACIADO.pequeno,
       borderTopWidth: BORDES.anchos.fino,
@@ -72,7 +72,7 @@ export default function crearEstilosCompartidos(tema) {
     },
     importePersona: {
       flex: 1,
-      minWidth: 100,
+      minWidth: 0,
       gap: ESPACIADO.minimo
     },
     etiquetaImportePersona: {
@@ -108,16 +108,39 @@ export default function crearEstilosCompartidos(tema) {
     accionPanelDeshabilitada: {
       opacity: 0.5
     },
+    accionPanel: {
+      flex: 1,
+      minWidth: 0,
+      minHeight: 78,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: ESPACIADO.minimo,
+      paddingVertical: ESPACIADO.medio,
+      paddingHorizontal: ESPACIADO.minimo,
+      borderRadius: BORDES.radios.boton,
+      backgroundColor: tema.botonPrincipal
+    },
+    textoAccionPanel: {
+      color: tema.botonPrincipalTexto,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+      textAlign: 'center'
+    },
     totalesPanel: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexWrap: 'nowrap',
       gap: ESPACIADO.pequeno,
       paddingBottom: ESPACIADO.pequeno
     },
     totalPanel: {
       flex: 1,
-      minWidth: 110,
+      minWidth: 0,
       gap: ESPACIADO.minimo
+    },
+    importeResumen: {
+      backgroundColor: tema.fondo,
+      borderRadius: BORDES.radios.campo,
+      padding: ESPACIADO.medio
     },
     columnaCampo: {
       flex: 1,

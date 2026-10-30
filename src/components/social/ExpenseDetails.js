@@ -1,9 +1,13 @@
+import { useDatosSociales } from '../../social/SocialDataContext';
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { nombreCompletoPersona, obtenerPersona } from '../../social/socialHelpers';
+import { nombreCompletoPersona } from '../../social/socialHelpers';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/ExpenseDetailsStyles';
 export default function DetalleGasto(propiedades) {
+  const {
+    obtenerPersona
+  } = useDatosSociales();
   const {
     gasto,
     sala,
@@ -32,21 +36,22 @@ export default function DetalleGasto(propiedades) {
         })} style={estilos.editarPersona}><Ionicons color={tema.foco} name="create-outline" size={24} /></Pressable> : <Text style={estilosGlobales.textoSecundario}>Solo lectura</Text>}
         </View>
         <View style={estilos.resumenImportesPersona}>
-          <View style={estilos.importePersona}><Text style={estilosGlobales.textoSecundario}>Importe</Text><Text style={estilosGlobales.titulo}>{gasto.monto}</Text></View>
-          <View style={estilos.importePersona}><Text style={estilosGlobales.textoSecundario}>Pagó</Text><Text style={estilosGlobales.encabezadoSeccion}>{nombreCompletoPersona(obtenerPersona(gasto.pagadorId))}</Text></View>
+          <View style={estilos.importePersona}><Text style={estilosGlobales.textoSecundario}>Importe</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.titulo}>{gasto.monto}</Text></View>
+          <View style={estilos.importePersona}><Text style={estilosGlobales.textoSecundario}>Pagó</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.encabezadoSeccion}>{nombreCompletoPersona(obtenerPersona(gasto.pagadorId))}</Text></View>
         </View>
         <Text style={estilosGlobales.etiqueta}>{gasto.distribucion}</Text>
-        {sala.estado === 'abierta' ? <Text style={estilosGlobales.textoAyuda}>Reparto provisional · Editable hasta cerrar la sala</Text> : null}
+        {gasto.depositosAsociados ? <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>Depósitos asociados: {gasto.depositosAsociados}</Text> : null}
+        {sala.estado === 'abierta' ? <Text style={estilosGlobales.textoAyuda}>Reparto provisional · Los movimientos se aplican al cerrar</Text> : null}
       </View>
       <View style={estilos.ticket}>
         <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Partes y pagos</Text>
         {gasto.partes.map(parte => <View key={parte.personaId} style={estilos.lineaDetalleGasto}>
           <View style={estilos.filaCampos}>
             <Ionicons color={parte.tipo === 'saldado' ? tema.exito : tema.error} name={parte.tipo === 'saldado' ? 'checkmark-circle-outline' : 'time-outline'} size={20} />
-            <Text style={[estilosGlobales.texto, estilos.textoFlexible]}>{nombreCompletoPersona(obtenerPersona(parte.personaId))}</Text>
-            <Text style={estilosGlobales.etiqueta}>{parte.monto}</Text>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.textoFlexible]}>{nombreCompletoPersona(obtenerPersona(parte.personaId))}</Text>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.etiqueta}>{parte.monto}</Text>
           </View>
-          <Text style={estilosGlobales.textoSecundario}>{parte.resumen}</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{parte.resumen}</Text>
         </View>)}
       </View>
     </>;

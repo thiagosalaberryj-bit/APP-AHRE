@@ -1,6 +1,7 @@
+import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
-import { normalizarNombrePersona, obtenerPersona, nombreCompletoPersona } from '../../social/socialHelpers';
-import { SALAS_SIMULADAS, LIMITE_SALAS_ACTIVAS } from '../../social/socialMockData';
+import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
+import { LIMITE_SALAS_ACTIVAS } from "../../social/socialConstants";
 import { CATEGORIAS_EGRESO } from '../../constants/movimientos';
 import { View, TextInput, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +10,10 @@ import EstadoVacio from './SocialEmptyState';
 import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function ListaSalas(propiedades) {
+  const {
+    obtenerPersona,
+    salas: salasSociales
+  } = useDatosSociales();
   const {
     abrirSala,
     abrirRegistro,
@@ -28,15 +33,15 @@ export default function ListaSalas(propiedades) {
   const [busqueda, establecerBusqueda] = useState('');
   const [estado, establecerEstado] = useState('todas');
   const consulta = normalizarNombrePersona(busqueda);
-  const activas = SALAS_SIMULADAS.filter(sala => sala.estado === 'abierta');
-  const salas = SALAS_SIMULADAS.filter(sala => {
+  const activas = salasSociales.filter(sala => sala.estado === 'abierta');
+  const salas = salasSociales.filter(sala => {
     const categoria = CATEGORIAS_EGRESO.find(elemento => elemento.id === sala.categoriaId);
     const personas = sala.participantes.map(id => {
       const persona = obtenerPersona(id);
       return `${nombreCompletoPersona(persona)} ${persona.apodo}`;
     }).join(' ');
     return (estado === 'todas' || sala.estado === estado) && normalizarNombrePersona(`${sala.nombre} ${categoria?.nombre} ${personas} ${sala.creadaEl} ${sala.creadaEl.split('-').reverse().join('/')}`).includes(consulta);
-  }).sort((a, b) => b.creadaEl.localeCompare(a.creadaEl));
+  }).sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion) || b.id.localeCompare(a.id));
   const limpiar = () => {
     establecerBusqueda('');
     establecerEstado('todas');
@@ -65,9 +70,9 @@ export default function ListaSalas(propiedades) {
           nombre: 'Cerradas'
         }].map(opcion => <Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={`Salas ${opcion.nombre.toLocaleLowerCase('es')}`} accessibilityState={{
           checked: estado === opcion.id
-        }} onPress={() => establecerEstado(opcion.id)} style={[estilos.opcionReparto, estado === opcion.id && estilos.pestanaActiva]}><Text style={[estilos.textoPestana, estado === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
+        }} onPress={() => establecerEstado(opcion.id)} style={[estilos.opcionReparto, estado === opcion.id && estilos.pestanaActiva]}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, estado === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
         </View>
-        <View style={estilos.filaTitulo}><Text accessibilityLiveRegion="polite" style={estilosGlobales.textoSecundario}>{salas.length} de {SALAS_SIMULADAS.length} salas</Text><Text style={estilosGlobales.textoSecundario}>{activas.length}/{LIMITE_SALAS_ACTIVAS} activas</Text></View>
+        <View style={estilos.filaTitulo}><Text accessibilityLiveRegion="polite" style={estilosGlobales.textoSecundario}>{salas.length} de {salasSociales.length} salas</Text><Text style={estilosGlobales.textoSecundario}>{activas.length}/{LIMITE_SALAS_ACTIVAS} activas</Text></View>
       </View>
       {salas.length ? [{
       id: 'abierta',
@@ -77,7 +82,7 @@ export default function ListaSalas(propiedades) {
       nombre: 'Cerradas · Solo lectura'
     }].map(grupo => {
       const integrantes = salas.filter(sala => sala.estado === grupo.id);
-      return integrantes.length ? <View key={grupo.id} style={estilos.grupo}><Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>{grupo.nombre} · {integrantes.length}</Text>{integrantes.map(sala => <TarjetaResumenSala key={sala.id} sala={sala} alAbrir={() => abrirSala(sala.id)} {...aspecto} />)}</View> : null;
+      return integrantes.length ? <View key={grupo.id} style={estilos.grupo}><Text numberOfLines={1} ellipsizeMode="tail" accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>{grupo.nombre} · {integrantes.length}</Text>{integrantes.map(sala => <TarjetaResumenSala key={sala.id} sala={sala} alAbrir={() => abrirSala(sala.id)} {...aspecto} />)}</View> : null;
     }) : <EstadoVacio icono="search-outline" titulo="No encontramos salas" descripcion="Probá con otro nombre, categoría o persona, o cambiá el filtro de estado." {...aspecto} />}
       {consulta || estado !== 'todas' ? <BotonSocial texto="Limpiar búsqueda y filtros" simple alPresionar={limpiar} {...aspecto} /> : null}
     </>;

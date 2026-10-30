@@ -1,4 +1,5 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { crearEstilosGlobales } from '../styles/globalStyles';
@@ -6,8 +7,7 @@ import crearEstilosCompartidos from '../styles/social/SharedStyles';
 import crearEstilosMarco from '../styles/social/SocialScreenFrameStyles';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
 import { RUTAS } from '../constants/routes';
-import { SALAS_SIMULADAS } from './socialMockData';
-import { obtenerPersona } from './socialHelpers';
+import { cargarSocial } from './socialService';
 export default function usePantallaSocial({
   navigation: navegacion,
   route: ruta
@@ -38,14 +38,37 @@ export default function usePantallaSocial({
   const esListaSalas = ruta?.name === RUTAS.SALA_SOCIAL && !parametros.salaId;
   const esSala = Boolean(parametros.salaId) && !esRegistro && !esGasto;
   const esSecundaria = esRegistro || esPersona || esListado || esGasto || esSala || esListaSalas;
-  const sala = SALAS_SIMULADAS.find(elemento => elemento.id === parametros.salaId);
-  const persona = obtenerPersona(parametros.personaId);
-  const gasto = sala?.gastos.find(elemento => elemento.id === parametros.gastoId);
+  const [registros, establecerRegistros] = useState(null);
+  const [error, establecerError] = useState(null);
   const [cargando, establecerCargando] = useState(true);
-  useEffect(() => {
-    const temporizador = setTimeout(() => establecerCargando(false), 350);
-    return () => clearTimeout(temporizador);
+  const montado = useRef(true);
+  const solicitud = useRef(0);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; solicitud.current++; }; }, []);
+  const recargar = useCallback(async () => {
+    const numero = ++solicitud.current;
+    try {
+      const datos = await cargarSocial();
+      if (montado.current && numero === solicitud.current) { establecerRegistros(datos); establecerError(null); }
+    } catch (fallo) {
+      if (montado.current && numero === solicitud.current) { establecerRegistros(null); establecerError(fallo.message || 'No se pudo cargar Social.'); }
+    } finally {
+      if (montado.current && numero === solicitud.current) establecerCargando(false);
+    }
   }, []);
+  useFocusEffect(useCallback(() => { recargar(); }, [recargar]));
+  const social = registros ? {
+    ...registros, recargar,
+    personasActivas: registros.personas.filter(p => p.activa),
+    obtenerPersona: id => id === 'vos' ? registros.personaActual : registros.personas.find(p => p.id === id),
+    volver: () => navegacion.goBack(),
+    irInicioSocial: () => navegacion.popTo(RUTAS.PRINCIPAL, { screen: RUTAS.SOCIAL }),
+    irAgenda: () => navegacion.popTo(RUTAS.PERSONAS_SOCIAL, { todas: true }),
+    abrirDeposito: () => navegacion.push(RUTAS.DEPOSITO),
+    alCrearSala: salaCreada => navegacion.replace(RUTAS.SALA_SOCIAL, { salaId: salaCreada.id }),
+  } : null;
+  const sala = registros?.salas.find(elemento => elemento.id === parametros.salaId);
+  const persona = social?.obtenerPersona(parametros.personaId);
+  const gasto = sala?.gastos.find(elemento => elemento.id === parametros.gastoId);
   const irA = (destino, datos = {}) => {
     if (esSecundaria) navegacion.push(destino, datos);else navegacion.getParent()?.navigate(destino, datos);
   };
@@ -75,7 +98,7 @@ export default function usePantallaSocial({
     cerrar: ['Cerrar sala', 'Revisá el reparto antes de finalizar la ocasión.']
   };
   const [titulo, descripcion] = esRegistro ? titulosRegistro[parametros.tipo] || ['Social', 'Registro no disponible.'] : esPersona ? ['Persona', 'Sus datos, deudas y pagos.'] : esListado ? parametros.todas ? ['Personas', 'Tu agenda personal, ordenada por nombre.'] : ['Historial de deudas', 'Consultá tus deudas pendientes y saldadas.'] : esListaSalas ? ['Salas', 'Tus ocasiones activas y cerradas.'] : esGasto ? [gasto?.descripcion || 'Gasto', 'Reparto y pagos de esta ocasión.'] : [sala?.nombre || 'Sala', 'Gastos de esta ocasión.'];
-  const noDisponible = (esSala || esGasto) && !sala || esGasto && !gasto || esPersona && !persona;
+  const noDisponible = Boolean(error) || !registros || (esSala || esGasto) && !sala || esGasto && !gasto || esPersona && !persona;
   return {
     aspecto,
     navegacion,
@@ -85,6 +108,9 @@ export default function usePantallaSocial({
     titulo,
     descripcion,
     cargando,
+    social,
+    error,
+    recargar,
     noDisponible,
     datos: {
       ...acciones,
@@ -100,7 +126,6 @@ export default function usePantallaSocial({
         salaId: sala.id,
         gastoId
       }),
-      sinDeudas: parametros.sinDeudas === true,
       alVerSalas: () => irA(RUTAS.SALA_SOCIAL),
       alVerPersonas: () => irA(RUTAS.PERSONAS_SOCIAL),
       alVerAgenda: () => irA(RUTAS.PERSONAS_SOCIAL, {

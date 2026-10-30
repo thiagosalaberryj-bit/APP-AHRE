@@ -4,6 +4,7 @@ import { ejecutarTransaccion } from '../transactions';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../../constants/movimientos';
 import { ajustarSaldoActual } from './depositsRepository';
 import { crearRepositorio } from './repositoryFactory';
+import { prepararReversionSocial } from '../socialMovementReversal';
 
 const TIPOS_MOVIMIENTO = Object.freeze([
   'ingreso',
@@ -652,6 +653,8 @@ async function eliminar(id, conexion = null) {
       if (reversoExistente) {
         return false;
       }
+
+      await prepararReversionSocial(id, baseDatos);
 
       const tipoInverso = TIPOS_INVERSOS[movimiento.tipo];
       if (!tipoInverso) {

@@ -1,5 +1,5 @@
+import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
-import { PERSONAS_SIMULADAS } from '../../social/socialMockData';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { View, Text, TextInput, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,9 @@ import ModalPersona from './PersonModal';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/PeopleAgendaStyles';
 export default function AgendaPersonas(propiedades) {
+  const {
+    personasActivas: personasSociales
+  } = useDatosSociales();
   const {
     abrirPersona,
     abrirAltaInicial = false,
@@ -27,12 +30,12 @@ export default function AgendaPersonas(propiedades) {
   } = aspecto;
   const [busqueda, establecerBusqueda] = useState('');
   const [mostrarFormulario, establecerMostrarFormulario] = useState(abrirAltaInicial);
-  const personas = [...PERSONAS_SIMULADAS].filter(persona => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo || ''}`).includes(normalizarNombrePersona(busqueda))).sort((a, b) => nombreCompletoPersona(a).localeCompare(nombreCompletoPersona(b), 'es'));
-  const cerrarFormulario = () => establecerMostrarFormulario(false);
+  const personas = [...personasSociales].filter(persona => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo || ''}`).includes(normalizarNombrePersona(busqueda))).sort((a, b) => nombreCompletoPersona(a).localeCompare(nombreCompletoPersona(b), 'es'));
+  const cerrarFormulario = persona => { if (persona?.id) establecerBusqueda(''); establecerMostrarFormulario(false); };
   return <>
       <View style={estilos.filaTitulo}>
         <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Personas registradas</Text>
-        <Text style={estilosGlobales.textoAyuda}>{personas.length} de {PERSONAS_SIMULADAS.length}</Text>
+        <Text style={estilosGlobales.textoAyuda}>{personas.length} de {personasSociales.length}</Text>
       </View>
       <View style={estilos.filaCampos}>
         <View style={[estilosMovimiento.botonDeposito, estilos.columnaCampo, estilos.busquedaAgenda]}>

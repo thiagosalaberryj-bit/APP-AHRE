@@ -1,5 +1,5 @@
+import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
-import { PERSONAS_SIMULADAS } from '../../social/socialMockData';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,11 @@ import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function ModalAgregarPersonasSala(propiedades) {
   const {
+    personasActivas: personasSociales
+  } = useDatosSociales();
+  const {
     personasSala,
+    guardando,
     alAgregar,
     alCerrar,
     alCrear,
@@ -26,7 +30,7 @@ export default function ModalAgregarPersonasSala(propiedades) {
   } = aspecto;
   const [busqueda, establecerBusqueda] = useState('');
   const [seleccionadas, establecerSeleccionadas] = useState([]);
-  const disponibles = PERSONAS_SIMULADAS.filter(persona => !personasSala.includes(persona.id));
+  const disponibles = personasSociales.filter(persona => !personasSala.includes(persona.id));
   const consulta = normalizarNombrePersona(busqueda);
   const personas = disponibles.filter(persona => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo}`).includes(consulta));
   return <Modal transparent animationType="fade" visible onRequestClose={alCerrar}>
@@ -47,11 +51,11 @@ export default function ModalAgregarPersonasSala(propiedades) {
             checked: seleccionadas.includes(persona.id)
           }} onPress={() => establecerSeleccionadas(anteriores => anteriores.includes(persona.id) ? anteriores.filter(id => id !== persona.id) : [...anteriores, persona.id])} style={estilos.personaAgenda}>
                 <Ionicons color={tema.foco} name={seleccionadas.includes(persona.id) ? 'checkbox' : 'square-outline'} size={24} />
-                <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{nombreCompletoPersona(persona)}</Text><Text numberOfLines={1} style={estilosGlobales.textoSecundario}>{persona.apodo}</Text></View>
+                <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{nombreCompletoPersona(persona)}</Text><Text ellipsizeMode="tail" numberOfLines={1} style={estilosGlobales.textoSecundario}>{persona.apodo}</Text></View>
               </Pressable>) : <Text style={estilosGlobales.textoSecundario}>{disponibles.length ? 'No encontramos personas con esos datos.' : 'Todas las personas registradas ya están en la sala.'}</Text>}
           </ScrollView>
-          <BotonSocial texto="Agregar seleccionadas" deshabilitado={!seleccionadas.length} alPresionar={() => alAgregar(seleccionadas)} {...aspecto} />
-          <BotonSocial texto="Crear una persona" simple alPresionar={alCrear} {...aspecto} />
+          <BotonSocial texto="Agregar seleccionadas" deshabilitado={!seleccionadas.length || guardando} alPresionar={() => alAgregar(seleccionadas)} {...aspecto} />
+          <BotonSocial texto="Crear una persona" deshabilitado={guardando} simple alPresionar={alCrear} {...aspecto} />
         </View>
       </KeyboardAvoidingView>
     </Modal>;

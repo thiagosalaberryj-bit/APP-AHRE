@@ -17,5 +17,5 @@ export default function FilaMontoManual(propiedades) {
     estilos,
     estilosGlobales
   } = aspecto;
-  return <View style={estilos.filaTactil}><Text style={[estilosGlobales.texto, estilos.textoFlexible]}>{persona.nombre}</Text><ImporteTicket etiqueta={`Parte de ${persona.nombre}`} valor={valor} alCambiar={alCambiar} {...aspecto} /></View>;
+  return <View style={estilos.filaTactil}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.textoFlexible]}>{persona.nombre}</Text><ImporteTicket etiqueta={`Parte de ${persona.nombre}`} valor={valor} alCambiar={alCambiar} {...aspecto} /></View>;
 }

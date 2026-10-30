@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { obtenerPersona } from '../../social/socialHelpers';
+import { useDatosSociales } from '../../social/SocialDataContext';
+import { useEffect, useState } from 'react';
+import { montoParaEntrada } from '../../social/socialHelpers';
 import { View, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { TICKET_SOCIAL_SIMULADO } from '../../social/socialMockData';
+import { TICKET_SOCIAL_SIMULADO } from "../../social/socialConstants";
 import BotonSocial from './SocialButton';
 import MontoSocial from './SocialAmountInput';
 import CampoFormulario from './SocialTextField';
@@ -13,8 +14,12 @@ import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/ExpenseFormStyles';
 export default function FormularioGasto(propiedades) {
   const {
+    obtenerPersona
+  } = useDatosSociales();
+  const {
     participantes,
     gastoInicial,
+    alCambiar,
     ...aspecto
   } = {
     ...propiedades,
@@ -28,13 +33,15 @@ export default function FormularioGasto(propiedades) {
     estilosGlobales,
     tema
   } = aspecto;
-  const [monto, establecerMonto] = useState(gastoInicial?.monto.replace(/\D/g, '') || '');
+  const [monto, establecerMonto] = useState(gastoInicial ? montoParaEntrada(gastoInicial.montoNumero) : '');
   const [descripcion, establecerDescripcion] = useState(gastoInicial?.descripcion || '');
   const [pagadorId, establecerPagadorId] = useState(gastoInicial?.pagadorId || 'vos');
   const [reparto, establecerReparto] = useState(gastoInicial?.distribucion.startsWith('Montos manuales') ? 'manual' : 'iguales');
   const [involucradas, establecerInvolucradas] = useState(gastoInicial ? gastoInicial.partes.map(parte => parte.personaId) : participantes.map(persona => persona.id));
   const [pagaron, establecerPagaron] = useState(gastoInicial?.partes.filter(parte => parte.tipo === 'saldado').map(parte => parte.personaId) || []);
-  const [montosManuales, establecerMontosManuales] = useState(() => Object.fromEntries((gastoInicial?.partes || []).map(parte => [parte.personaId, parte.monto.replace(/\D/g, '')])));
+  const [montosManuales, establecerMontosManuales] = useState(() => Object.fromEntries((gastoInicial?.partes || []).map(parte => [parte.personaId, montoParaEntrada(parte.montoNumero)])));
+  useEffect(() => { alCambiar({ monto, descripcion, pagadorId, reparto, involucradas, pagaron, montosManuales }); },
+    [alCambiar, monto, descripcion, pagadorId, reparto, involucradas, pagaron, montosManuales]);
   const [mostrarPagos, establecerMostrarPagos] = useState(false);
   const [mostrarTicket, establecerMostrarTicket] = useState(false);
   const [ticketUsado, establecerTicketUsado] = useState(false);
@@ -71,11 +78,11 @@ export default function FormularioGasto(propiedades) {
           <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Ticket de ejemplo</Text>
           <Text style={estilosGlobales.textoAyuda}>Cada línea es un ítem independiente. Elegí cuál cargar y definí su pagador y reparto.</Text>
           {TICKET_SOCIAL_SIMULADO.productos.map(producto => <Pressable key={producto.nombre} accessibilityRole="button" accessibilityLabel={`Cargar ${producto.nombre} del ticket`} onPress={() => usarItemTicket(producto)} style={estilos.itemTicketSeleccionable}>
-              <Text style={[estilosGlobales.texto, estilos.textoFlexible]}>{producto.nombre}</Text><Text style={estilos.importeTicket}>{producto.importeTexto}</Text><Ionicons color={tema.foco} name="chevron-forward" size={20} />
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.textoFlexible]}>{producto.nombre}</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.importeTicket}>{producto.importeTexto}</Text><Ionicons color={tema.foco} name="chevron-forward" size={20} />
             </Pressable>)}
           <View style={estilos.filaTactil}>
             <Text style={[estilosGlobales.etiqueta, estilos.textoFlexible]}>Total</Text>
-            <Text style={estilos.importeTicket}>{TICKET_SOCIAL_SIMULADO.montoTexto}</Text>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.importeTicket}>{TICKET_SOCIAL_SIMULADO.montoTexto}</Text>
           </View>
           <Text style={estilosGlobales.textoAyuda}>Elegir una línea reemplaza el nombre e importe del borrador y reinicia su reparto y pagos. El resto del ticket no se agrega a este ítem.</Text>
           <BotonSocial texto="Cancelar ticket" simple alPresionar={() => establecerMostrarTicket(false)} {...aspecto} />
@@ -104,7 +111,7 @@ export default function FormularioGasto(propiedades) {
         }].map(opcion => <Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.etiqueta} accessibilityState={{
           checked: reparto === opcion.id
         }} onPress={() => establecerReparto(opcion.id)} style={[estilos.opcionReparto, reparto === opcion.id && estilos.pestanaActiva]}>
-              <Text style={[estilos.textoPestana, estilos.textoCentrado, reparto === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, estilos.textoCentrado, reparto === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text>
             </Pressable>)}
         </View>
       </View>
@@ -120,11 +127,11 @@ export default function FormularioGasto(propiedades) {
         <Pressable accessibilityRole="button" accessibilityLabel={mostrarPagos ? 'Ocultar pagos' : 'Ver pagos'} accessibilityState={{
         expanded: mostrarPagos
       }} onPress={() => establecerMostrarPagos(!mostrarPagos)} style={estilos.filaTactil}>
-          <View style={estilos.textoFlexible}><Text style={estilosGlobales.etiqueta}>Pagos y pendientes</Text><Text style={estilosGlobales.textoAyuda}>{partesPagadas} de {personasGasto.length} partes pagadas · {pagadorId === 'vos' ? 'Cobrás vos' : `Cobra ${pagador.nombre}`}</Text></View>
+          <View style={estilos.textoFlexible}><Text style={estilosGlobales.etiqueta}>Pagos y pendientes</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoAyuda}>{partesPagadas} de {personasGasto.length} partes pagadas · {pagadorId === 'vos' ? 'Cobrás vos' : `Cobra ${pagador.nombre}`}</Text></View>
           <Ionicons color={tema.textoSecundario} name={mostrarPagos ? 'chevron-up' : 'chevron-down'} size={20} />
         </Pressable>
         {mostrarPagos ? <>
-            <Text style={estilosGlobales.textoAyuda}>{pagadorId === 'vos' ? '¿Quién ya te dio su parte?' : `¿Quién ya le dio su parte a ${pagador.nombre}?`}</Text>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoAyuda}>{pagadorId === 'vos' ? '¿Quién ya te dio su parte?' : `¿Quién ya le dio su parte a ${pagador.nombre}?`}</Text>
             <Pressable accessibilityRole="checkbox" accessibilityState={{
           checked: todasPagaron
         }} onPress={() => establecerPagaron(todasPagaron ? [] : personasGasto.map(persona => persona.id))} style={estilos.opcionPersona}>

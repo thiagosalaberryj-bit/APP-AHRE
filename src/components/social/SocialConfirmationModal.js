@@ -14,7 +14,7 @@ export default function ModalConfirmacionSocial({ titulo, descripcion, textoConf
           <Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>{titulo}</Text>
           <Pressable accessibilityRole="button" accessibilityLabel="Cerrar confirmación" onPress={alCerrar} style={estilos.botonCerrar}><Ionicons color={tema.textoSecundario} name="close" size={24} /></Pressable>
         </View>
-        <Text style={estilosGlobales.texto}>{descripcion}</Text>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{descripcion}</Text>
         <BotonSocial texto={textoConfirmar} peligro={peligro} alPresionar={alConfirmar} {...aspecto} />
       </View>
     </View>

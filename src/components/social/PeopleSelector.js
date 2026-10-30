@@ -59,7 +59,7 @@ export default function SelectorPersonas(propiedades) {
               checked: seleccionadas.includes(persona.id)
             }} onPress={() => elegir(persona.id)} style={estilos.opcionPersona}>
                   <Ionicons color={tema.foco} name={multiple ? seleccionadas.includes(persona.id) ? 'checkbox' : 'square-outline' : seleccionadas.includes(persona.id) ? 'radio-button-on' : 'radio-button-off'} size={24} />
-                  <Text style={[estilosGlobales.texto, estilos.textoFlexible]}>{persona.nombre}</Text>
+                  <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.textoFlexible]}>{persona.nombre}</Text>
                 </Pressable>) : <Text style={estilosGlobales.textoSecundario}>No hay más personas disponibles en este listado.</Text>}
             </ScrollView>
             {alRegistrar ? <BotonSocial texto="Registrar una persona" secundario alPresionar={() => {

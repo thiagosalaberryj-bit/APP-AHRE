@@ -86,6 +86,51 @@ El registro sigue regresando a Login y el Login exitoso sigue abriendo el
 Dashboard según el flujo de autenticación local existente. La conexión del
 botón Cerrar sesión de Perfil pertenece a otro issue.
 
+## Datos temporales para Expo Go
+
+Por indicación del usuario se agregó un acceso temporal en Inicio, solo para
+desarrollo con Expo Go. `DevelopmentDataButton.js` llama a
+`src/development/seedDevelopmentData.js`, protegido por `__DEV__`, y abre el
+Dashboard cuando termina. No se modificaron perfiles EAS, configuración nativa
+ni preparación de APK. El acceso no solicita huella porque inicia sesión con
+las credenciales ficticias de una cuenta de pruebas separada.
+
+La cuenta local usa correo `pruebas@ahre.test` y contraseña pública de pruebas
+`AhrePruebas2026!`. Se crea mediante el registro normal y se autentica mediante
+el Login local, sin guardar una contraseña en texto plano en SQLite. Si el correo
+ya existe con otra contraseña o está desactivado, no se modifica esa cuenta.
+
+| Depósito ficticio | Saldo inicial | Saldo tras los movimientos de ejemplo |
+| --- | ---: | ---: |
+| Efectivo de prueba | $120.000 | $106.800 |
+| Banco de prueba | $350.000 | $650.000 |
+| Billetera de prueba | $80.000 | $116.000 |
+
+Los seis movimientos representan sueldo, trabajo independiente, comida,
+transporte, farmacia y suscripción. Se fechan dentro de los últimos seis días;
+los depósitos se crean con una fecha anterior para que sus movimientos afecten
+el saldo según las reglas financieras existentes. Se reutilizan los repositorios
+de depósitos y movimientos dentro de una misma transacción.
+
+Cada ejemplo tiene un identificador estable asociado a la cuenta de pruebas.
+Volver a pulsar no duplica registros, no restaura nombres o saldos cambiados,
+no reactiva depósitos ni vuelve a insertar movimientos anulados. Las pulsaciones
+simultáneas comparten una sola preparación. Si falla la carga financiera, se
+revierte completa y se puede reintentar; la cuenta creada previamente puede
+permanecer vacía hasta completar el reintento.
+
+No se agregan ejemplos a la cuenta habitual ni se borran datos. El botón cambia
+a la cuenta de pruebas y la sesión no queda recordada en SecureStore; para volver
+a otra cuenta se usa el cierre de sesión y el Login normal. Este acceso no carga
+personas, salas ni deudas: Social comienza vacío y conserva los registros reales
+que se creen durante las pruebas.
+
+Para retirar el acceso temporal se eliminan el botón de HomeScreen.js, su estado
+de bloqueo del deslizador, el componente, su archivo de estilos, src/development/
+y tests/developmentData.test.js. No requiere cambios de esquema. Las pruebas
+automatizadas verifican la carga con autenticación y repositorios reales,
+reentrada, aislamiento, rollback y bloqueo fuera de desarrollo.
+
 ## Verificación manual en Expo Go
 
 1. Abrir AHRE con y sin sesión y confirmar que ambas veces permanece en Inicio

@@ -9,8 +9,7 @@ export default function PantallaSocial(propiedades) {
     abrirRegistro: contexto.datos.abrirRegistro,
     alVerSalas: contexto.datos.alVerSalas,
     alVerPersonas: contexto.datos.alVerPersonas,
-    alVerAgenda: contexto.datos.alVerAgenda,
-    sinDeudas: contexto.datos.sinDeudas
+    alVerAgenda: contexto.datos.alVerAgenda
   };
   return <MarcoSocial contexto={contexto}>{!contexto.cargando && !contexto.noDisponible ? <PanelSocial {...contenido} /> : null}</MarcoSocial>;
 }

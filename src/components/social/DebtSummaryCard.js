@@ -1,9 +1,13 @@
-import { obtenerPersona, nombreCompletoPersona } from '../../social/socialHelpers';
+import { useDatosSociales } from '../../social/SocialDataContext';
+import { nombreCompletoPersona } from '../../social/socialHelpers';
 import { Pressable, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/DebtSummaryCardStyles';
 export default function TarjetaResumenDeuda(propiedades) {
+  const {
+    obtenerPersona
+  } = useDatosSociales();
   const {
     deuda,
     alAbrir,
@@ -44,7 +48,7 @@ export default function TarjetaResumenDeuda(propiedades) {
           }]}>{deuda.saldada ? 'Saldada' : deuda.tipo === 'debo' ? 'Le debés' : 'Te debe'}</Text>
           {!soloLectura ? <Ionicons color={tema.textoSecundario} name="chevron-forward" size={16} /> : null}
         </View>
-        <Text style={estilosGlobales.encabezadoSeccion}>{deuda.saldada ? deuda.monto : deuda.pendiente}</Text>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.encabezadoSeccion}>{deuda.saldada ? deuda.monto : deuda.pendiente}</Text>
       </View>
     </View>
   </Contenedor>;

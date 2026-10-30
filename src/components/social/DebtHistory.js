@@ -1,6 +1,6 @@
+import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
-import { normalizarNombrePersona, obtenerPersona, nombreCompletoPersona } from '../../social/socialHelpers';
-import { DEUDAS_SIMULADAS } from '../../social/socialMockData';
+import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { View, TextInput, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import TarjetaResumenDeuda from './DebtSummaryCard';
@@ -9,6 +9,10 @@ import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/DebtHistoryStyles';
 export default function HistorialDeudas(propiedades) {
+  const {
+    obtenerPersona,
+    deudas: deudasSociales
+  } = useDatosSociales();
   const {
     abrirRegistro,
     ...aspecto
@@ -37,11 +41,11 @@ export default function HistorialDeudas(propiedades) {
     establecerMesesCerrados([]);
   };
   const consulta = normalizarNombrePersona(busqueda);
-  const deudas = DEUDAS_SIMULADAS.filter(deuda => {
+  const deudas = deudasSociales.filter(deuda => {
     const persona = obtenerPersona(deuda.personaId);
     const coincideEstado = estado === 'todas' || (estado === 'saldadas' ? deuda.saldada : !deuda.saldada);
     return coincideEstado && normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo} ${deuda.descripcion} ${deuda.origen}`).includes(consulta);
-  }).sort((a, b) => b.fecha.localeCompare(a.fecha));
+  }).sort((a, b) => b.fechaISO.localeCompare(a.fechaISO) || b.id.localeCompare(a.id));
   const grupos = [];
   deudas.forEach(deuda => {
     const clave = deuda.fecha.slice(0, 7);
@@ -78,10 +82,10 @@ export default function HistorialDeudas(propiedades) {
         }].map(opcion => <Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{
           checked: estado === opcion.id
         }} onPress={() => cambiarEstado(opcion.id)} style={[estilos.opcionReparto, estado === opcion.id && estilos.pestanaActiva]}>
-              <Text style={[estilos.textoPestana, estado === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, estado === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text>
             </Pressable>)}
         </View>
-        <Text accessibilityLiveRegion="polite" style={estilosGlobales.textoSecundario}>{deudas.length} de {DEUDAS_SIMULADAS.length} deudas</Text>
+        <Text accessibilityLiveRegion="polite" style={estilosGlobales.textoSecundario}>{deudas.length} de {deudasSociales.length} deudas</Text>
       </View>
       <View style={estilos.grupo}>
         {deudas.length ? grupos.map(grupo => {

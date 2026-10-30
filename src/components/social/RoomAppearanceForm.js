@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { COLORES_DEPOSITOS, COLOR_ICONO_DEPOSITO } from '../../styles/colors';
 import { View, Text, Pressable, Modal, ScrollView } from 'react-native';
 import SelectorCategoria from '../CategorySelector';
 import { CATEGORIAS_EGRESO } from '../../constants/movimientos';
-import { ICONOS_SALA, NOMBRES_COLORES_SALA } from '../../social/socialMockData';
+import { ICONOS_SALA, NOMBRES_COLORES_SALA } from "../../social/socialConstants";
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/RoomAppearanceFormStyles';
 export default function PersonalizacionSala(propiedades) {
   const {
+    alCambiar,
     ...aspecto
   } = {
     ...propiedades,
@@ -27,6 +28,7 @@ export default function PersonalizacionSala(propiedades) {
   const [icono, establecerIcono] = useState('restaurant-outline');
   const [color, establecerColor] = useState(COLORES_DEPOSITOS[0]);
   const [mostrarIconos, establecerMostrarIconos] = useState(false);
+  useEffect(() => { alCambiar?.({ categoriaId, icono, color }); }, [alCambiar, categoriaId, icono, color]);
   return <View style={estilos.grupo}>
       <SelectorCategoria categorias={CATEGORIAS_EGRESO} seleccionadaId={categoriaId} alSeleccionar={establecerCategoriaId} {...aspecto} />
       <View style={estilos.grupoCampo}>
@@ -39,7 +41,7 @@ export default function PersonalizacionSala(propiedades) {
           <View style={[estilos.iconoLista, {
           backgroundColor: color
         }]}><Ionicons color={COLOR_ICONO_DEPOSITO} name={icono} size={24} /></View>
-          <Text style={[estilosGlobales.texto, estilos.textoFlexible]}>{ICONOS_SALA.find(opcion => opcion.id === icono).nombre}</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.textoFlexible]}>{ICONOS_SALA.find(opcion => opcion.id === icono).nombre}</Text>
           <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
         </Pressable>
       </View>
@@ -65,7 +67,7 @@ export default function PersonalizacionSala(propiedades) {
             }} onPress={() => {
               establecerIcono(opcion.id);
               establecerMostrarIconos(false);
-            }} style={[estilos.opcionIconoSala, icono === opcion.id && estilos.iconoSalaSeleccionado]}><Ionicons color={tema.foco} name={opcion.id} size={24} /><Text style={[estilosGlobales.textoSecundario, estilos.textoCentrado]}>{opcion.nombre}</Text></Pressable>)}
+            }} style={[estilos.opcionIconoSala, icono === opcion.id && estilos.iconoSalaSeleccionado]}><Ionicons color={tema.foco} name={opcion.id} size={24} /><Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.textoSecundario, estilos.textoCentrado]}>{opcion.nombre}</Text></Pressable>)}
             </ScrollView>
           </View>
         </View>

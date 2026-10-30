@@ -17,5 +17,5 @@ export default function EstadoVacio(propiedades) {
       ...crearEstilosPropios(propiedades.tema)
     }
   };
-  return <View style={[estilosGlobales.tarjeta, estilos.estadoVacio]}><Ionicons color={tema.foco} name={icono} size={34} /><Text style={[estilosGlobales.encabezadoSeccion, estilos.textoCentrado]}>{titulo}</Text><Text style={[estilosGlobales.textoSecundario, estilos.textoCentrado]}>{descripcion}</Text></View>;
+  return <View style={[estilosGlobales.tarjeta, estilos.estadoVacio]}><Ionicons color={tema.foco} name={icono} size={34} /><Text style={[estilosGlobales.encabezadoSeccion, estilos.textoCentrado]}>{titulo}</Text><Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.textoSecundario, estilos.textoCentrado]}>{descripcion}</Text></View>;
 }

@@ -22,6 +22,6 @@ export default function OpcionPersona(propiedades) {
     disabled: Boolean(deshabilitada)
   }} disabled={deshabilitada} onPress={alPresionar} style={estilos.opcionPersona}>
       <Ionicons color={tema.foco} name={marcada ? 'checkbox' : 'square-outline'} size={24} />
-      <View style={estilos.textoFlexible}><Text style={estilosGlobales.texto}>{persona.nombre}</Text>{detalle ? <Text style={estilosGlobales.textoAyuda}>{detalle}</Text> : null}</View>
+      <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{persona.nombre}</Text>{detalle ? <Text style={estilosGlobales.textoAyuda}>{detalle}</Text> : null}</View>
     </Pressable>;
 }

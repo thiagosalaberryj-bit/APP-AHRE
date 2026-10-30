@@ -71,6 +71,10 @@ dependencia obligatoria para las funciones esenciales.
 
 ### Inicio y dashboard
 
+En Expo Go, Inicio incluye temporalmente Entrar con datos de prueba: prepara
+una cuenta independiente con tres depósitos y seis movimientos locales. El
+acceso está limitado a desarrollo y no duplica los ejemplos al volver a entrar.
+
 La interfaz actual presenta un resumen visual de la situación financiera, con
 saldo, depósitos, movimientos recientes y accesos a las operaciones frecuentes.
 El Dashboard consulta el usuario de la sesión local, los depósitos y los
@@ -92,9 +96,11 @@ eliminación de depósitos continúan simuladas.
 
 ### Deudas y gastos compartidos
 
-Social es una maqueta personal offline del Issue #18. No guarda personas,
-salas, gastos, pagos ni deudas, y no calcula importes ni se comunica con otros
-dispositivos.
+Social funciona de forma personal y sin conexión sobre SQLite. Guarda personas,
+salas, ítems, repartos, deudas y pagos del usuario actual. Conserva la presentación
+del Issue #18 y no se comunica con otros dispositivos. Los recorridos y las
+reglas están en [Funcionamiento de Social](docs/funcionalidades/social.md), y
+el contrato de persistencia en [Social en SQLite](docs/base-de-datos/social.md).
 
 El panel reúne Te deben y Debés en bloques de fondo suave con iconos, junto a
 Nueva deuda, Personas y Nueva sala. Debajo muestra hasta cinco deudas
@@ -103,24 +109,34 @@ completas. Las deudas abren su detalle individual. Su historial permite buscar,
 filtrar pendientes/saldadas y expandir o cerrar los grupos mensuales.
 
 La agenda usa tarjetas compactas con nombre, apodo y acceso al perfil. El alta
-y la edición se representan en modal con nombre, apellido y apodo obligatorio
-(máximo 20 caracteres), y comprobación visual de duplicados sobre los ejemplos.
+y la edición se hacen en modal con nombre, apellido y apodo obligatorio
+(máximo 20 caracteres), y comprobación de duplicados incluidos contactos inactivos.
+Eliminar una persona la desactiva y conserva sus registros anteriores.
 Las salas comparten tarjetas en panel y listado, con total gastado, personas y
 fecha de creación; el listado permite buscar y filtrar activas/cerradas. Crear
 sala ofrece categorías de egreso, icono, color y fecha actual seleccionable.
 
 Cada ítem tiene pagador, personas involucradas, reparto igual o manual y pagos
-propios. El OCR de ejemplo carga una línea por vez, sin cámara ni egresos
-reales. Mientras la sala está abierta, el reparto es provisional y los gastos
-se pueden editar en un borrador. El cierre representa las deudas pendientes
-y deja el historial en solo lectura, sin crear registros reales. Quitar una
-persona pide confirmación y conserva sus gastos y pagos anteriores.
+propios. El OCR de ejemplo carga una línea por vez, sin cámara. Al guardar se
+elige un depósito para los pagos o cobros propios, o un movimiento ya registrado
+para evitar duplicados. Guardar o editar un ítem conserva el borrador sin cambiar
+saldos. El cierre aplica los movimientos a los depósitos asociados y crea solo
+deudas pendientes que te involucran; luego deja el historial en solo lectura.
+Las obligaciones entre terceros permanecen en la sala. Quitar una persona pide
+confirmación y conserva sus gastos y pagos anteriores.
+
+Una deuda manual a cobrar registra también el egreso del adelanto. En Le debo
+solo se guarda la obligación, sin ingreso ni cambios en depósitos. Al pagarla
+se elige el depósito y se registra el egreso. El adelanto de una deuda a cobrar
+queda vinculado a ella y no se cuenta como devolución.
+Su categoría es Deudas, sin selector. Al saldar se muestra la confirmación y se
+vuelve al inicio de Social; las deudas saldadas se conservan sin opción de eliminarlas.
 
 Las pantallas, componentes y estilos de Social están separados en archivos
-propios; los datos de ejemplo viven en src/social/. Las rutas conservan
-sus nombres y parámetros.
+propios. Los servicios, consultas y contexto de datos viven en `src/social/`.
+Las rutas conservan sus nombres y los identificadores de registro.
 
-El detalle de la maqueta y su recorrido de verificación están en
+El detalle de las pantallas y su recorrido de verificación están en
 [Interfaz de Social](docs/interfaces/social.md).
 
 ### Estadísticas y notificaciones
@@ -188,7 +204,9 @@ interfaces. Actualmente cuenta con:
   notificaciones locales o push;
 - pestaña Social con resumen, deudas recientes, agenda y salas; historiales
   con búsqueda y filtros, reparto por ítem y cierre de sala en solo lectura;
-  todo con datos simulados y sin persistencia;
+  personas, ítems, deudas y pagos persistidos en SQLite, con movimientos propios
+  coordinados y sin duplicación al vincular uno existente; el OCR social sigue
+  usando un ticket de ejemplo;
 - flujo OCR con ML Kit local, captura o selección desde la galería, recorte,
   revisión editable y confirmación mediante el servicio normal de Egresos;
 - Perfil con datos locales del usuario, foto temporal, edición protegida por la
@@ -278,6 +296,9 @@ La carpeta `docs/` contiene la documentación que acompaña al proyecto:
 - [Interfaz de Estadísticas](docs/interfaces/estadisticas.md);
 - [Interfaz de Notificaciones](docs/interfaces/notificaciones.md);
 - [Interfaz de Social](docs/interfaces/social.md);
+- [Propuesta funcional de Social y su integración con SQLite](docs/funcionalidades/social.md);
+- [Diagramas de escenarios de Social](docs/diagramas/social/README.md);
+- [Esquema local de Social](docs/base-de-datos/social.md);
 - [Flujo OCR de comprobantes](docs/interfaces/ocr.md);
 - [OCR offline, interpretación y registro de egresos](docs/funcionalidades/ocr.md);
 - [Interfaces de autenticación](docs/interfaces/autenticacion.md);

@@ -2,6 +2,15 @@ import { StyleSheet } from 'react-native';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../globalStyles';
 export default function crearEstilosPropios(tema) {
   return StyleSheet.create({
+    filaTituloDeuda: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: ESPACIADO.medio
+    },
+    importeDeuda: {
+      maxWidth: '46%',
+      flexShrink: 1
+    },
     accionesDeuda: {
       flexDirection: 'row',
       flexWrap: 'wrap',

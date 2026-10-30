@@ -4,22 +4,12 @@ export default function crearEstilosPropios(tema) {
   return StyleSheet.create({
     resumenGastosSala: {
       flexDirection: 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
+      alignItems: 'stretch',
+      flexWrap: 'nowrap',
       gap: ESPACIADO.medio,
       paddingTop: ESPACIADO.medio,
       borderTopWidth: BORDES.anchos.fino,
       borderTopColor: tema.borde
-    },
-    agregarGastoSala: {
-      minHeight: 48,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: ESPACIADO.pequeno,
-      padding: ESPACIADO.medio,
-      borderRadius: BORDES.radios.boton,
-      backgroundColor: tema.botonPrincipal
     },
     seccionSala: {
       flex: 1,

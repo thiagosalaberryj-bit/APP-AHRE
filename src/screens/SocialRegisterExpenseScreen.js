@@ -5,7 +5,6 @@ export default function PantallaRegistrarGasto(propiedades) {
   const contexto = usePantallaSocial(propiedades);
   const contenido = {
     ...contexto.aspecto,
-    tipo: contexto.datos.tipo,
     parametros: contexto.datos.parametros,
     sala: contexto.datos.sala
   };

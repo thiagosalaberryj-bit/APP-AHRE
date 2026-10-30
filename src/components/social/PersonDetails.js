@@ -1,5 +1,5 @@
+import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
-import { DEUDAS_SIMULADAS } from '../../social/socialMockData';
 import { View, Text, Pressable } from 'react-native';
 import AvatarPersona from './PersonAvatar';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
@@ -9,6 +9,9 @@ import TarjetaDeuda from './DebtCard';
 import ModalPersona from './PersonModal';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function DetallePersona(propiedades) {
+  const {
+    deudas: deudasSociales
+  } = useDatosSociales();
   const {
     persona,
     abrirSala,
@@ -27,7 +30,7 @@ export default function DetallePersona(propiedades) {
     estilosGlobales
   } = aspecto;
   const [editando, establecerEditando] = useState(false);
-  const deudas = DEUDAS_SIMULADAS.filter(deuda => deuda.personaId === persona.id);
+  const deudas = deudasSociales.filter(deuda => deuda.personaId === persona.id);
   return <>
       <View style={[estilos.resumenPrincipal, estilos.perfilCompacto]}>
         <View style={estilos.filaCampos}>
@@ -41,10 +44,10 @@ export default function DetallePersona(propiedades) {
           </Pressable>
         </View>
         <View style={estilos.resumenImportesPersona}>
-          <View style={estilos.importePersona}><View style={estilos.etiquetaImportePersona}><Ionicons color={tema.exito} name="arrow-up-circle-outline" size={20} /><Text style={estilosGlobales.textoSecundario}>Te debe</Text></View><Text style={estilosGlobales.monto}>{persona.porCobrar}</Text></View>
-          <View style={estilos.importePersona}><View style={estilos.etiquetaImportePersona}><Ionicons color={tema.error} name="arrow-down-circle-outline" size={20} /><Text style={estilosGlobales.textoSecundario}>Le debés</Text></View><Text style={estilosGlobales.monto}>{persona.porPagar}</Text></View>
+          <View style={estilos.importePersona}><View style={estilos.etiquetaImportePersona}><Ionicons color={tema.exito} name="arrow-up-circle-outline" size={20} /><Text style={estilosGlobales.textoSecundario}>Te debe</Text></View><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.monto}>{persona.porCobrar}</Text></View>
+          <View style={estilos.importePersona}><View style={estilos.etiquetaImportePersona}><Ionicons color={tema.error} name="arrow-down-circle-outline" size={20} /><Text style={estilosGlobales.textoSecundario}>Le debés</Text></View><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.monto}>{persona.porPagar}</Text></View>
         </View>
-        <BotonSocial texto="Registrar deuda" alPresionar={() => abrirRegistro('deuda', {
+        <BotonSocial texto="Registrar deuda" deshabilitado={!persona.activa} alPresionar={() => abrirRegistro('deuda', {
         personaId: persona.id
       })} {...aspecto} />
       </View>
