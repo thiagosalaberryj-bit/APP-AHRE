@@ -1,32 +1,15 @@
-import { useContext } from 'react';
-import { Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { ContextoApariencia } from '../contexts/AppearanceContext';
-import { RUTAS } from '../constants/routes';
-
-import { crearEstilosGlobales } from '../styles/globalStyles';
-import EncabezadoPrincipal from '../components/MainHeader';
-
-export default function PantallaSocial({ navigation: navegacion }) {
-  const { tema } = useContext(ContextoApariencia);
-  const estilos = crearEstilosGlobales(tema);
-  const abrirPantallaSecundaria = (ruta) => navegacion.getParent()?.navigate(ruta);
-
-  return (
-    <SafeAreaView edges={['top']} style={estilos.areaSegura}>
-      <View style={estilos.pantalla}>
-      <EncabezadoPrincipal
-        tema={tema}
-        titulo="Social"
-        descripcion="Comparte y consulta actividades con tu entorno."
-        alAbrirNotificaciones={() => abrirPantallaSecundaria(RUTAS.NOTIFICACIONES)}
-        alAbrirPerfil={() => abrirPantallaSecundaria(RUTAS.PERFIL)}
-      />
-      <View style={estilos.contenido}>
-        <Text style={estilos.textoSecundario}>El módulo social se definirá posteriormente.</Text>
-      </View>
-      </View>
-    </SafeAreaView>
-  );
+import usePantallaSocial from '../social/useSocialScreen';
+import MarcoSocial from '../components/social/SocialScreenFrame';
+import PanelSocial from '../components/social/SocialPanel';
+export default function PantallaSocial(propiedades) {
+  const contexto = usePantallaSocial(propiedades);
+  const contenido = {
+    ...contexto.aspecto,
+    abrirSala: contexto.datos.abrirSala,
+    abrirRegistro: contexto.datos.abrirRegistro,
+    alVerSalas: contexto.datos.alVerSalas,
+    alVerPersonas: contexto.datos.alVerPersonas,
+    alVerAgenda: contexto.datos.alVerAgenda
+  };
+  return <MarcoSocial contexto={contexto}>{!contexto.cargando && !contexto.noDisponible ? <PanelSocial {...contenido} /> : null}</MarcoSocial>;
 }

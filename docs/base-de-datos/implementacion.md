@@ -22,7 +22,8 @@ el esquema.
 
 La versión se guarda en `PRAGMA user_version`. La migración inicial está en
 `src/database/migrations/001_initialSchema.js` y establece la versión `1`.
-La aplicación la ejecuta dentro de una transacción; una falla revierte el
+El mismo archivo contiene también las tablas de Social. La aplicación lo
+ejecuta dentro de una transacción; una falla revierte el
 cambio y permite volver a intentar la inicialización. Una base con una versión
 superior a la que conoce esta versión de AHRE genera un error controlado y se
 conserva intacta.
@@ -50,11 +51,7 @@ definido en el modelo. Los indicadores utilizan `INTEGER` con valores `0/1`.
 | `movimientos` | `id`, `deposito_id`, `categoria`, `recurrencia_id`, `transferencia_id`, `tipo`, `monto`, `descripcion`, `fecha_hora`, `anulado`, `reversion_de_id`, `fecha_creacion`, `fecha_actualizacion` |
 | `transferencias` | `id`, `usuario_id`, `deposito_origen_id`, `deposito_destino_id`, `monto`, `fecha_hora`, `descripcion`, `anulada`, `reversion_de_id`, `fecha_creacion`, `fecha_actualizacion` |
 | `recurrencias` | `id`, `deposito_id`, `categoria`, `tipo`, `monto`, `descripcion`, `frecuencia`, `fecha_inicio`, `fecha_fin`, `proxima_ejecucion`, `activa`, `fecha_creacion`, `fecha_actualizacion` |
-| `personas` | `id`, `usuario_id`, `nombre`, `correo_electronico`, `es_usuario_actual`, `activa`, `fecha_creacion`, `fecha_actualizacion` |
-| `gastos_compartidos` | `id`, `usuario_id`, `movimiento_id`, `descripcion`, `monto_total`, `fecha`, `estado`, `fecha_creacion`, `fecha_actualizacion` |
-| `participantes_gasto` | `id`, `gasto_compartido_id`, `persona_id`, `monto_correspondiente`, `deuda_id` |
-| `deudas` | `id`, `usuario_id`, `persona_id`, `gasto_compartido_id`, `tipo`, `monto`, `descripcion`, `fecha`, `fecha_vencimiento`, `estado`, `movimiento_id`, `fecha_creacion`, `fecha_actualizacion` |
-| `pagos_deuda` | `id`, `deuda_id`, `monto`, `fecha`, `movimiento_id`, `descripcion` |
+| Social | Siete tablas: personas, salas, personas_sala, gastos_compartidos, participantes_gasto, deudas y pagos_sociales. Campos completos en el [contrato de Social](social.md). |
 
 Las categorías **no son una tabla** en el modelo acordado. `movimientos.categoria`
 guarda el identificador constante de `CATEGORIAS_INGRESO` o
@@ -81,13 +78,16 @@ SQLite ni se insertan de nuevo al iniciar.
   depósito y monto, con el tipo opuesto y una referencia única al movimiento
   original. Los movimientos que pertenecen a una transferencia solo se revierten
   anulando la transferencia completa.
-- Un gasto compartido requiere un movimiento de egreso existente del mismo
-  usuario. Sus deudas, personas, participantes y pagos mantienen claves
-  foráneas para impedir relaciones huérfanas.
-- Cada pago de deuda debe apuntar a un movimiento del mismo usuario, con tipo
-  `egreso` para `debo` o `ingreso` para `me_deben`.
-- `deudas.usuario_id` y `persona_id` deben corresponder a la misma cuenta. Una
-  deuda asociada a un gasto compartido debe corresponder al mismo usuario.
+- Social relaciona salas, integrantes e ítems con pagador propio. Las claves
+  compuestas no admiten datos de cuentas distintas; una sala cerrada es de solo
+  lectura y no se permiten más de tres abiertas por cuenta.
+- Las deudas involucran al usuario actual. Los pendientes entre terceros se
+  conservan en las partes de la sala, fuera del registro personal.
+- El registro común de pagos exige un movimiento único y compatible para dinero
+  propio, y ningún movimiento propio para operaciones entre terceros. Su tabla
+  reemplaza pagos_deuda. No copia entregas al vincularlas a una deuda al cierre.
+- El contrato detallado distingue las restricciones SQL de las validaciones y
+  transacciones que ejecutan los servicios de Social en `src/social/`.
 - Los tipos, estados, frecuencias e indicadores documentados se controlan con
   restricciones `CHECK`. La categoría se conserva como texto para que el
   catálogo siga en las constantes del proyecto.
@@ -117,9 +117,14 @@ transferencia.
 
 ## Repositorios y operaciones
 
-`src/database/repositories/` contiene un repositorio por entidad: usuarios,
+**Social:** sus siete repositorios usan el contrato actual. Los formularios
+acceden a ellos mediante `socialService.js`, que coordina sesión, validaciones,
+transacciones y movimientos. `pagosSocialesRepositorio` reemplaza al antiguo
+repositorio de pagos de deuda; se agregan salas y pertenencias.
+
+`src/database/repositories/` contiene los repositorios existentes: usuarios,
 preferencias, depósitos, movimientos, transferencias, recurrencias, personas,
-gastos compartidos, participantes, deudas y pagos. Cada repositorio expone
+salas, pertenencias, gastos compartidos, participantes, deudas y pagos. Cada repositorio expone
 `crear`, `consultar`, `consultarPorId`, `buscar`, `filtrar`, `actualizar` y
 `eliminar`. Los nombres de tablas y campos provienen de definiciones internas;
 los valores se envían como parámetros de SQLite.
@@ -145,8 +150,9 @@ crea una transferencia inversa con dos movimientos nuevos. Los movimientos
 originales se conservan y ambos lados de la reversión actualizan sus respectivos
 saldos. La eliminación de un movimiento de ingreso o egreso crea un movimiento
 opuesto enlazado mediante `reversion_de_id`, sin borrar el original. La
-eliminación de un gasto compartido o pago de deuda usa esa misma reversión dentro
-de su transacción compuesta.
+integración con `socialMovementReversal.js` conserva el pago anulado y actualiza
+la deuda, sin borrar registros ni duplicar movimientos. Impide revertir compras
+de salas cerradas o compras abiertas con entregas todavía vigentes.
 
 El catálogo `categoriasRepositorio` ofrece lectura, búsqueda y filtro sobre
 las constantes. No ofrece escritura porque el modelo no guarda categorías en
@@ -186,13 +192,16 @@ con idioma `es`, apariencia `sistema` y notificaciones activas.
   dos movimientos compensatorios.
 - Recurrencia: `activa = 0`; los movimientos generados permanecen.
 - Persona: `activa = 0`.
-- Deuda: estado `cancelada`.
-- Gasto compartido: estado `cancelado`, deudas asociadas canceladas y egreso
-  relacionado compensado por un movimiento inverso.
+- Deuda pendiente: estado `cancelada`. Una deuda saldada conserva su historial
+  y no permite cancelación desde el servicio ni desde SQLite.
+- Gasto compartido: estado `cancelado`; requiere revisar previamente sus pagos
+  y compras. No ejecuta compensaciones por cambiar el estado.
 - Preferencias: eliminación física, protegida por sus referencias.
-- Participantes: eliminación física solo si aún no tienen una deuda relacionada.
-- Pagos: al eliminarlos, una transacción crea la reversión del movimiento
-  asociado, quita el pago y recalcula el estado de la deuda.
+- Participantes de ítems: no se borran si tienen pagos, deuda o pertenecen a
+  una sala cerrada.
+- Pagos sociales: se conservan con estado `anulado`; la reversión financiera
+  coordina la compensación del movimiento y el estado de la deuda.
+- Salas y pertenencias: no se borran; cierre o baja lógica según corresponda.
 - Historial de saldo: las conciliaciones se agregan; no se editan ni eliminan.
 
 El campo del saldo vigente se actualiza en la misma transacción que el cambio
@@ -212,7 +221,7 @@ técnico, no los valores de la operación.
 
 Para los cambios de persistencia se comprobó el análisis sintáctico de los
 repositorios modificados y se ejecutó el esquema inicial en SQLite en memoria.
-Se verificó la creación de las trece tablas, las claves foráneas y la aceptación
+La primera etapa verificó trece tablas, las claves foráneas y la aceptación
 de ejemplos de transferencia y reversión de movimiento. Para autenticación
 también se verificó el índice único normalizado del correo, la tabla de
 credenciales y las preferencias iniciales. Las comprobaciones de credenciales
@@ -226,3 +235,13 @@ adaptador de repositorios de `expo-sqlite` dentro de Expo, ni se probó el flujo
 completo de Registro, Login y cierre/reapertura en un dispositivo Android o en
 modo avión. Esas comprobaciones manuales siguen pendientes. El código de
 autenticación no invoca interfaces de red.
+
+### Esquema de Social
+
+El esquema inicial ampliado contiene quince tablas en total. Las pruebas de
+Social ejecutan el SQL completo sobre SQLite en memoria, incluidas claves
+foráneas, restricciones, triggers, relaciones por cuenta y rollback. Los flujos
+y limitaciones de esta etapa se describen en [social.md](social.md). La
+validación en un dispositivo con Expo SQLite sigue pendiente. Los servicios y
+formularios ya están conectados y cubiertos por pruebas automatizadas; ver los
+alcances y comandos en [social.md](social.md).

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
+import BotonDatosPrueba from '../components/DevelopmentDataButton';
 import { ErrorAutenticacion } from '../authentication/errors';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { APARIENCIA_PREDETERMINADA } from '../constants/profile';
@@ -63,6 +64,7 @@ export default function PantallaInicio({ navigation: navegacion }) {
   const progresoActual = useRef(0);
   const inicioArrastre = useRef(0);
   const [iniciando, establecerInicio] = useState(false);
+  const [preparandoPruebas, establecerPreparandoPruebas] = useState(false);
   const [cargando, establecerCarga] = useState(false);
   const [progresoCarga, establecerProgresoCarga] = useState(0);
   const [anchoBarraCarga, establecerAnchoBarraCarga] = useState(0);
@@ -189,9 +191,9 @@ export default function PantallaInicio({ navigation: navegacion }) {
   const gestorDeGestos = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => !iniciando,
+        onStartShouldSetPanResponder: () => !iniciando && !preparandoPruebas,
         onMoveShouldSetPanResponder: (_eventoNativo, movimiento) =>
-          !iniciando && Math.abs(movimiento.dx) > 3,
+          !iniciando && !preparandoPruebas && Math.abs(movimiento.dx) > 3,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           progreso.stopAnimation((valor) => {
@@ -200,6 +202,7 @@ export default function PantallaInicio({ navigation: navegacion }) {
           });
         },
         onPanResponderMove: (_eventoNativo, movimiento) => {
+          if (iniciando || preparandoPruebas) return;
           const siguiente = Math.max(
             0,
             Math.min(1, inicioArrastre.current + movimiento.dx / recorridoDeslizador),
@@ -208,6 +211,7 @@ export default function PantallaInicio({ navigation: navegacion }) {
           progreso.setValue(siguiente);
         },
         onPanResponderRelease: () => {
+          if (iniciando || preparandoPruebas) return;
           if (progresoActual.current >= UMBRAL_INICIO) {
             establecerInicio(true);
             Animated.timing(progreso, {
@@ -234,7 +238,7 @@ export default function PantallaInicio({ navigation: navegacion }) {
           Animated.spring(progreso, { toValue: 0, useNativeDriver: false }).start();
         },
       }),
-    [iniciando, procesarInicio, progreso, recorridoDeslizador],
+    [iniciando, preparandoPruebas, procesarInicio, progreso, recorridoDeslizador],
   );
 
   const desplazamientoControl = progreso.interpolate({
@@ -310,6 +314,12 @@ export default function PantallaInicio({ navigation: navegacion }) {
               </View>
             </View>
 
+            {__DEV__ ? <BotonDatosPrueba
+              deshabilitado={iniciando}
+              alCambiarCarga={establecerPreparandoPruebas}
+              alEntrar={() => navegacion.reset({ index: 0, routes: [{ name: RUTAS.PRINCIPAL }] })}
+            /> : null}
+
             <View style={estilos.deslizador}>
               <Animated.View style={[estilos.colaRellenoDeslizador, { width: anchoCola }]} />
               <Animated.View
@@ -325,7 +335,7 @@ export default function PantallaInicio({ navigation: navegacion }) {
                 pointerEvents="none"
                 style={[estilos.textoDeslizador, iniciando && estilos.textoIniciando]}
               >
-                {iniciando ? 'Verificando sesión…' : 'Desliza para iniciar'}
+                {preparandoPruebas ? 'Preparando datos de prueba…' : iniciando ? 'Verificando sesión…' : 'Desliza para iniciar'}
               </Text>
               <Animated.View
                 {...gestorDeGestos.panHandlers}
@@ -333,7 +343,7 @@ export default function PantallaInicio({ navigation: navegacion }) {
                 accessibilityHint="Desliza hacia la derecha para continuar con AHRE"
                 accessibilityLabel="Deslizar para iniciar AHRE"
                 accessibilityRole="adjustable"
-                accessibilityState={{ disabled: iniciando }}
+                accessibilityState={{ disabled: iniciando || preparandoPruebas }}
                 style={[
                   estilos.controlDeslizador,
                   { transform: [{ translateX: desplazamientoControl }] },

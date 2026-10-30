@@ -21,6 +21,7 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import BotonPrincipal from '../components/PrimaryButton';
 import EncabezadoSeccion from '../components/SectionHeader';
 import FormularioEgresoOcr from '../ocr/OcrExpenseForm';
+import ResultadoOcrSocial from '../ocr/OcrSocialResult';
 import { eliminarImagenTemporal, OCR_DISPONIBLE, reconocerComprobante } from '../ocr/ocrService';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
 import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
@@ -47,7 +48,7 @@ function limitarDesplazamiento(valor, limite) {
   return Math.max(-limite, Math.min(limite, valor));
 }
 
-export default function PantallaOCR({ navigation: navegacion }) {
+export default function PantallaOCR({ navigation: navegacion, route: ruta }) {
   const insets = useSafeAreaInsets();
   const enfocada = useIsFocused();
   const referenciaCamara = useRef(null);
@@ -577,7 +578,7 @@ export default function PantallaOCR({ navigation: navegacion }) {
             ) : null}
 
             {estado === 'resultado' && resultado ? (
-              <FormularioEgresoOcr
+              ruta?.params?.destino === 'social' ? <ResultadoOcrSocial resultado={resultado} salaId={ruta.params.salaId} navegacion={navegacion} tema={tema} estilosGlobales={estilosGlobales} /> : <FormularioEgresoOcr
                 resultado={resultado}
                 imagen={imagenComprobante}
                 navegacion={navegacion}

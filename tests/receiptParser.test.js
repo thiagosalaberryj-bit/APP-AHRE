@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { interpretarComprobante, interpretarImporteOcr, reconstruirLineasOcr } from '../src/ocr/receiptParser.js';
+import { interpretarComprobante, interpretarImporteOcr, reconstruirLineasOcr, prepararItemsComprobante } from '../src/ocr/receiptParser.js';
+
+test('prepara ítems editables por línea sin usar el total como importe de cada producto', () => {
+  assert.deepEqual(prepararItemsComprobante(['Pizzas 2 x 100,00 200,00', 'Bebida $ 1.500,50', 'Producto sin importe']), [
+    { descripcion: 'Pizzas 2 x 100,00', monto: 200 }, { descripcion: 'Bebida', monto: 1500.5 }, { descripcion: 'Producto sin importe', monto: null },
+  ]);
+});
 
 const TICKET_BALANZA = `BALANZAS ELECTRONI CAS KRETZ SA
 RUTA NAC NRO 9 kn 276 PUEBLO ESTHER - SANTA FE

@@ -143,6 +143,17 @@ function detectarProductos(lineas, comercio) {
   return productos;
 }
 
+export function prepararItemsComprobante(productos) {
+  return productos.map(linea => {
+    const importes = [...linea.matchAll(/\$?\s*-?\d+(?:[.,]\d{3})*(?:[.,]\d{1,2})?/g)];
+    const ultimo = importes.at(-1);
+    const terminaEnImporte = ultimo && !linea.slice(ultimo.index + ultimo[0].length).replace(/[$Ss\s]/g, '');
+    const monto = terminaEnImporte ? interpretarImporteOcr(ultimo[0].replace(/[$\s]/g, '')) : null;
+    const descripcion = monto ? linea.slice(0, ultimo.index).replace(/[\s—x×$]+$/, '').trim() : linea.trim();
+    return { descripcion: descripcion || linea.trim(), monto };
+  });
+}
+
 export function interpretarComprobante(resultado) {
   const lineas = reconstruirLineasOcr(resultado);
   const lineasOriginales = (resultado.texto || '').split(/\r?\n/).map((linea) => linea.trim()).filter(Boolean);
@@ -165,6 +176,7 @@ export function interpretarComprobante(resultado) {
     hora: detectarHora([...lineas, ...lineasOriginales]),
     comercio,
     productos,
+    items: prepararItemsComprobante(productos),
     descripcion: [comercio, ...productos].filter(Boolean).join('\n'),
     candidatosMonto: candidatos,
     lineas,

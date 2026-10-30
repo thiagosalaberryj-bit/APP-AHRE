@@ -293,242 +293,44 @@ En este Issue no se implementa la ejecución automática de recurrencias.
 
 ## Entidades sociales y deudas
 
-La primera funcionalidad social de AHRE estará relacionada con gastos compartidos y personas que deben dinero. No se modelan todavía publicaciones, comentarios, amistades o grupos sociales.
+El esquema inicial ya admite el modelo personal offline de Social: personas con
+nombre, apellido y apodo, salas, pertenencias, ítems con su propio pagador,
+participaciones, deudas propias y un registro común de pagos.
 
-En esta primera versión, un gasto compartido solamente se registra cuando el
-usuario actual es quien paga el gasto completo.
+| Tabla | Finalidad |
+| --- | --- |
+| personas | Agenda por usuario; eliminar desactiva sin borrar identidad ni historial. |
+| salas | Ocasiones abiertas o cerradas, con máximo de tres abiertas por cuenta. |
+| personas_sala | Pertenencias actuales e históricas; retirar no cambia repartos anteriores. |
+| gastos_compartidos | Ítems independientes con pagador propio y reparto igual o manual. |
+| participantes_gasto | Parte asignada y orden estable por persona e ítem. |
+| deudas | Obligaciones con Vos como deudor o acreedor; una por participación pendiente al cierre. |
+| pagos_sociales | Compras, entregas de partes y pagos de deudas manuales, sin copiar filas al cerrar. |
 
-### `personas`
+El [contrato de Social](social.md) detalla campos, índices, restricciones y
+responsabilidades de los servicios. Los [diagramas exclusivos de Social](../diagramas/social/README.md)
+explican los recorridos y las relaciones de estas tablas.
 
-Guarda las personas relacionadas con deudas o gastos compartidos.
+Una compra pagada por Vos exige un egreso completo. Una compra pagada por otra
+persona no utiliza tus depósitos. Las entregas propias generan o vinculan un
+movimiento en la dirección correspondiente; entre terceros quedan solo en la
+sala. El movimiento es único en todo el registro social de pagos.
 
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `id` | `TEXT` | Identificador local. |
-| `usuario_id` | `TEXT` | Usuario que guarda a la persona. |
-| `nombre` | `TEXT` | Nombre de la persona. |
-| `correo_electronico` | `TEXT` | Correo opcional. |
-| `es_usuario_actual` | `INTEGER` | Indica si representa al usuario actual. |
-| `activa` | `INTEGER` | Indica si puede utilizarse en nuevos registros. |
-| `fecha_creacion` | `TEXT` | Fecha de creación. |
-| `fecha_actualizacion` | `TEXT` | Última modificación. |
+Las deudas entre terceros no se insertan en tu registro personal: se conservan
+como partes y pagos de la sala. Desactivar un contacto no cancela sus deudas ni
+impide saldar registros anteriores. Los ítems abiertos conservan su plan de pagos
+y asociaciones en plan_pagos sin modificar saldos. El cierre crea compras,
+entregas y movimientos nuevos, vincula los existentes sin duplicarlos y genera
+solo obligaciones pendientes que te involucran, en una única transacción.
 
-La persona del usuario actual también tendrá un registro para poder identificar quién pagó un gasto compartido.
+La deuda manual a cobrar guarda el egreso del adelanto. El vínculo único
+`pagos_sociales.clase = origen_deuda` identifica el movimiento sin contarlo como
+devolución. Le debo no crea ingresos ni modifica depósitos al registrarse; su
+pago genera el egreso. Se puede vincular un movimiento previo para no duplicarlo.
 
-### `gastos_compartidos`
-
-Representa un gasto que el usuario actual pagó desde uno de sus depósitos y
-que luego se divide entre sus participantes.
-
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `id` | `TEXT` | Identificador local. |
-| `usuario_id` | `TEXT` | Usuario que registra el gasto. |
-| `movimiento_id` | `TEXT` | Movimiento de egreso generado desde el depósito seleccionado. |
-| `descripcion` | `TEXT` | Descripción del gasto. |
-| `monto_total` | `REAL` | Monto total del gasto. |
-| `fecha` | `TEXT` | Fecha del gasto. |
-| `estado` | `TEXT` | `pendiente`, `parcial`, `saldado` o `cancelado`. |
-| `fecha_creacion` | `TEXT` | Fecha de creación. |
-| `fecha_actualizacion` | `TEXT` | Última modificación. |
-
-El depósito utilizado se obtiene desde el movimiento relacionado mediante
-`movimiento_id` y `movimientos.deposito_id`. Al crear el gasto compartido, la
-interfaz debe solicitar obligatoriamente el depósito desde el que se paga.
-
-El movimiento debe ser un egreso y debe existir antes de confirmar el gasto
-compartido. No se contempla registrar un gasto compartido pagado por otra
-persona en esta etapa.
-
-La creación del movimiento, el gasto compartido, sus participantes y las
-deudas relacionadas debe ejecutarse dentro de una única transacción de SQLite.
-Así se evita guardar solamente una parte de la operación si ocurre un error.
-
-### `participantes_gasto`
-
-Indica cuánto le corresponde pagar a cada persona.
-
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `id` | `TEXT` | Identificador local. |
-| `gasto_compartido_id` | `TEXT` | Gasto compartido al que pertenece. |
-| `persona_id` | `TEXT` | Persona participante. |
-| `monto_correspondiente` | `REAL` | Parte que le corresponde pagar. |
-| `deuda_id` | `TEXT` | Deuda generada para esa persona, si no es el usuario actual. |
-
-No se guarda `monto_pagado` en esta tabla. El monto pagado se obtiene a partir
-de los pagos registrados en la deuda correspondiente.
-
-Para saber quién ya pagó y quién todavía falta, se calcula:
-
-```text
-monto_pagado = suma de pagos_deuda relacionados con la deuda
-monto_pendiente = monto_correspondiente - monto_pagado
-```
-
-### `deudas`
-
-Representa una obligación económica entre el usuario y otra persona.
-
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `id` | `TEXT` | Identificador local. |
-| `usuario_id` | `TEXT` | Usuario propietario de la deuda. |
-| `persona_id` | `TEXT` | Persona relacionada. |
-| `gasto_compartido_id` | `TEXT` | Gasto compartido que originó la deuda, si corresponde. |
-| `tipo` | `TEXT` | `debo` o `me_deben`. |
-| `monto` | `REAL` | Monto total de la deuda. |
-| `descripcion` | `TEXT` | Descripción de la deuda. |
-| `fecha` | `TEXT` | Fecha en que se registró. |
-| `fecha_vencimiento` | `TEXT` | Fecha límite opcional. |
-| `estado` | `TEXT` | `pendiente`, `parcial`, `pagada` o `cancelada`. |
-| `movimiento_id` | `TEXT` | Movimiento que originó la deuda, si corresponde. |
-| `fecha_creacion` | `TEXT` | Fecha de creación. |
-| `fecha_actualizacion` | `TEXT` | Última modificación. |
-
-El monto pendiente se calcula de la siguiente forma:
-
-```text
-monto de la deuda - suma de sus pagos
-```
-
-### `pagos_deuda`
-
-Registra los pagos parciales o completos de una deuda.
-
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `id` | `TEXT` | Identificador local. |
-| `deuda_id` | `TEXT` | Deuda que se está pagando. |
-| `monto` | `REAL` | Monto pagado. |
-| `fecha` | `TEXT` | Fecha del pago. |
-| `movimiento_id` | `TEXT` | Movimiento generado por el pago y depósito utilizado. |
-| `descripcion` | `TEXT` | Descripción opcional. |
-
-Todo pago de deuda debe estar relacionado con un movimiento:
-
-- una deuda `debo` genera un egreso desde el depósito seleccionado;
-- una deuda `me_deben` genera un ingreso en el depósito seleccionado.
-
-## Relaciones
-
-```mermaid
-erDiagram
-    USUARIOS ||--|| PREFERENCIAS : tiene
-    USUARIOS ||--o{ DEPOSITOS : posee
-    USUARIOS ||--o{ PERSONAS : guarda
-    USUARIOS ||--o{ DEUDAS : registra
-    USUARIOS ||--o{ RECURRENCIAS : configura
-
-    DEPOSITOS ||--o{ MOVIMIENTOS : contiene
-    DEPOSITOS ||--o{ TRANSFERENCIAS : origen
-    DEPOSITOS ||--o{ TRANSFERENCIAS : destino
-    RECURRENCIAS ||--o{ MOVIMIENTOS : genera
-    TRANSFERENCIAS ||--|{ MOVIMIENTOS : genera
-
-    MOVIMIENTOS o|--o| GASTOS_COMPARTIDOS : representa
-    GASTOS_COMPARTIDOS ||--o{ PARTICIPANTES_GASTO : divide
-    PERSONAS ||--o{ PARTICIPANTES_GASTO : participa
-    GASTOS_COMPARTIDOS ||--o{ DEUDAS : origina
-    PERSONAS ||--o{ DEUDAS : relaciona
-    MOVIMIENTOS o|--o{ DEUDAS : origina
-    PARTICIPANTES_GASTO o|--o| DEUDAS : genera
-    DEUDAS ||--o{ PAGOS_DEUDA : recibe
-    MOVIMIENTOS o|--o| PAGOS_DEUDA : registra
-```
-
-## Registro manual de una deuda
-
-Una deuda puede registrarse sin crear un movimiento inmediatamente.
-
-Si la deuda representa dinero que ya salió o entró en un depósito, se puede
-relacionar con el movimiento de origen mediante `movimiento_id` y el usuario
-debe seleccionar el depósito correspondiente. Si solamente se registra una
-obligación pendiente, no se modifica ningún saldo hasta que se realice un pago.
-
-### Deuda `debo`
-
-```text
-se registra la persona
-→ se registra el monto
-→ se selecciona "debo"
-→ la deuda queda pendiente
-→ al pagarla se selecciona el depósito de origen
-→ se crea un egreso
-→ se registra el pago de la deuda
-```
-
-### Deuda `me_deben`
-
-```text
-se registra la persona
-→ se registra el monto
-→ se selecciona "me deben"
-→ la deuda queda pendiente
-→ al recibir el dinero se selecciona el depósito de destino
-→ se crea un ingreso
-→ se registra el pago de la deuda
-```
-
-## Ejemplo: usuario paga por otras personas
-
-Supongamos un gasto total de $300 dividido entre tres personas.
-
-```text
-1. Se crea un movimiento de egreso por $300.
-2. El movimiento se asocia al depósito utilizado.
-3. Se crea un gasto compartido por $300.
-4. Se registran tres participantes con $100 cada uno.
-5. La parte del usuario no genera deuda.
-6. Las partes de las otras personas generan deudas tipo "me deben".
-```
-
-```text
-Usuario paga $300
-        ↓
-Movimiento de egreso
-        ↓
-Gasto compartido
-        ↓
-Participantes
-        ├── Usuario: $100
-        ├── Persona A: $100 → deuda "me deben"
-        └── Persona B: $100 → deuda "me deben"
-```
-
-Cuando una persona devuelve su parte, el usuario selecciona el depósito en el
-que recibe el dinero:
-
-```text
-seleccionar depósito de destino
-→ crear ingreso en ese depósito
-→ pago_deuda
-→ actualizar deuda de la persona
-→ actualizar estado del gasto compartido
-```
-
-Si varias personas pagan en momentos distintos, cada pago se registra como un
-ingreso independiente en el depósito de destino y se relaciona con la deuda de
-la persona correspondiente.
-
-El gasto compartido muestra para cada participante:
-
-- monto correspondiente;
-- monto pagado;
-- monto pendiente;
-- estado del pago.
-
-El gasto compartido queda:
-
-```text
-pendiente → si nadie completó su parte
-parcial   → si algunas personas pagaron
-saldado   → si todas las deudas fueron pagadas
-cancelado → si se anula el gasto
-```
-
-No se contempla todavía registrar un gasto compartido en el que otra persona
-sea la pagadora principal.
+La [especificación funcional](../funcionalidades/social.md) describe la integración
+actual. Las pantallas consultan los servicios de `src/social/`, que escriben en
+los repositorios adaptados y coordinan pagos y movimientos en una transacción.
 
 ## Ejemplo: transferencia entre depósitos
 
@@ -611,8 +413,9 @@ Se conservan y se cambia su estado a `cancelada` cuando corresponda.
 
 ### Gastos compartidos
 
-Se cambia su estado a `cancelado`, se cancelan las deudas relacionadas y se
-revierte el movimiento de egreso asociado sin eliminarlo del historial.
+El ítem se conserva con estado `cancelado`. Antes de cancelarlo deben corregirse
+sus compras y entregas mediante operaciones coordinadas. No se borran pagos ni
+se compensan movimientos automáticamente por cambiar ese estado.
 
 ## Acceso a la base de datos
 
@@ -626,29 +429,34 @@ pantalla
 → actualización de la interfaz
 ```
 
-La estructura prevista dentro de `src/database/` es:
+La estructura actual separa el esquema y sus repositorios:
 
 ```text
 src/database/
-├── index.js
+├── initialization.js
+├── transactions.js
 ├── migrations/
-│   └── 001_esquema_inicial.js
-└── repositorios/
-    ├── usuariosRepositorio.js
-    ├── depositosRepositorio.js
-    ├── transferenciasRepositorio.js
-    ├── movimientosRepositorio.js
-    ├── recurrenciasRepositorio.js
-    ├── personasRepositorio.js
-    ├── gastosCompartidosRepositorio.js
-    └── deudasRepositorio.js
+│   └── 001_initialSchema.js
+└── repositories/
+    ├── peopleRepository.js
+    ├── sharedExpensesRepository.js
+    ├── sharedExpenseParticipantsRepository.js
+    ├── debtsRepository.js
+    ├── roomsRepository.js
+    ├── roomPeopleRepository.js
+    ├── socialPaymentsRepository.js
+    └── ... repositorios financieros existentes
 ```
+
+Los repositorios sociales usan el esquema actual. Los servicios coordinan
+validaciones y transacciones, sin SQL dentro de las pantallas.
 
 Las categorías predefinidas se mantendrán en `src/constants/` porque no son
 datos almacenados en una tabla.
 
-La estructura inicial de repositorios se implementa en este Issue; los flujos
-completos de cada módulo se incorporarán con sus funcionalidades CRUD.
+Los repositorios financieros conservan sus reglas de saldo. Social los utiliza
+para crear o vincular movimientos; las reversiones mantienen el pago y la deuda
+coherentes mediante `socialMovementReversal.js`.
 
 ## Implementación
 
