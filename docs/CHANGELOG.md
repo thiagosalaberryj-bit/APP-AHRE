@@ -3,7 +3,7 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [v0.5.0] - no publicada
+## [v0.5.0] - 2026-10-30 - no publicada
 
 ### Cambiado
 
@@ -20,7 +20,13 @@ documentación se registran en este archivo.
 - Se separaron las pantallas, los componentes reutilizables, los estilos y los
   datos de Social en archivos independientes, y se actualizó su documentación. (#18)
 
-## [v0.4.0] - 2026-09-29 - no publicada
+## [v0.4.0] - 2026-10-30 - no estable
+
+Publicada como prerelease en [GitHub](https://github.com/thiagosalaberryj-bit/APP-AHRE/releases/tag/v0.4.0)
+sobre el commit `8906702b48281f1efe1303a3975b49e397f32063`, anterior al módulo
+Social del Issue #18. Incluye las correcciones de dependencias del PR #64.
+La entrega contiene código fuente, sin APK adjunto, y conserva los metadatos
+internos de versión `0.3.0` del commit etiquetado.
 
 ### Añadido
 

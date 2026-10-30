@@ -6,7 +6,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/Estado-No%20estable-F97316?style=flat-square" alt="Estado: no estable" />
-  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.3.0-2563EB?style=flat-square" alt="Versión 0.3.0" />
+  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.4.0-2563EB?style=flat-square" alt="Versión 0.4.0" />
   <img src="https://img.shields.io/badge/Plataforma-Android-green?style=flat-square&logo=android&logoColor=green" alt="Plataforma Android" />
   <img src="https://img.shields.io/badge/Expo-SDK%2057-white?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
   <img src="https://img.shields.io/badge/React%20Native-0.86.3-61DAFB?style=flat-square&logo=react&logoColor=61DAFB" alt="React Native 0.86.3" />
@@ -201,7 +201,7 @@ interfaces. Actualmente cuenta con:
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
 - historial con la versión `0.5.0` no publicada para la nueva maqueta de Social
-  (#18), además de los cambios de la `0.4.0`, también no publicada.
+  (#18), y la `0.4.0` publicada como prerelease no estable sin ese módulo.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. El
 registro y el Login ya crean y verifican cuentas localmente. Al abrir AHRE, la
@@ -218,11 +218,12 @@ su resumen desde SQLite y conserva los datos visibles mientras actualiza la
 consulta al recuperar el foco. Movimientos consulta el historial local,
 combina búsqueda y filtros y carga el detalle por ID; Estadísticas todavía usa
 datos de ejemplo. Los formularios de ingreso y egreso validan y persisten sus
-movimientos localmente, con su impacto en el saldo. La versión `0.3.0` es
+movimientos localmente, con su impacto en el saldo. La versión `0.4.0` es
 la última publicada como versión no estable para evaluación; la `0.5.0` está
 documentada como no publicada en [`docs/CHANGELOG.md`](docs/CHANGELOG.md) y no
-representa una versión comercial. La versión de Expo y del paquete se mantiene
-en `0.3.0` hasta preparar una publicación.
+representa una versión comercial. La prerelease `v0.4.0` publica el código fuente
+anterior a Social, sin APK adjunto. La versión interna de Expo y del paquete
+se conserva en `0.3.0`, como en el commit etiquetado.
 
 ## Tecnología
 
