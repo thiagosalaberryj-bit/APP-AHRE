@@ -90,12 +90,32 @@ Dashboard / Inicio
 └── Social
 ```
 
-Social muestra personas, deudas simuladas, salas recientes e historial de salas
-cerradas en la pestaña. El detalle de sala reutiliza `SocialScreen.js` mediante
-la ruta secundaria `SalaSocial` del Stack principal, fuera de las pestañas;
-por eso no muestra la barra inferior. El detalle cambia entre Participantes,
-Gastos y Balances. Los formularios y detalles breves usan modales. La flecha
-vuelve a la pestaña Social.
+Social muestra el resumen y sus acciones arriba, hasta cinco deudas recientes
+y después las salas activas. SocialScreen.js contiene el panel; las vistas
+secundarias tienen archivos de pantalla propios y se registran en el Stack
+principal, sin barra inferior. Los adaptadores de socialRoutes.js conservan
+los nombres de ruta y eligen el destino según sus parámetros:
+
+- `SalaSocial`: sin `salaId` muestra el listado con búsqueda y filtros;
+  con identificador muestra Balances, Gastos y Personas de la sala.
+- `PersonasSocial`: `todas: true` abre la agenda; sin esa opción abre
+  el historial de deudas, disponible aunque haya menos de cinco pendientes.
+- `PersonaSocial`: datos, resumen y deudas de la persona seleccionada.
+- `RegistroSocial`: formularios y confirmaciones según `tipo`, incluido
+  `detalleDeuda` para consultar la deuda elegida desde una tarjeta.
+- `GastoSocial`: detalle de un ítem y sus pagos, con acceso al formulario
+  precargado de edición solo mientras la sala esté abierta.
+
+La agenda abre alta y edición de personas en modal. Agregar personas a una
+sala, confirmar que se quita una, elegir icono y usar los selectores también
+se resuelven en modales. Crear una persona desde un selector abre la ruta de
+registro con la agenda y su modal de alta. Atrás vuelve a la vista anterior
+sin perder su borrador. Las rutas reciben identificadores y opciones
+serializables; un nuevo ítem puede recibir `personasIds` para reflejar la
+selección temporal de participantes de la sala.
+
+Los datos de Social siguen simulados. Su OCR de ejemplo no abre la ruta OCR
+funcional ni crea movimientos. Ver [Interfaz de Social](../interfaces/social.md).
 
 El detalle de categoría y el detalle de movimiento se registran en el Stack
 principal, fuera del navegador de pestañas. Al abrirlos se oculta la barra

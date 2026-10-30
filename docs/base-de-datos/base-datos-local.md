@@ -295,8 +295,15 @@ En este Issue no se implementa la ejecución automática de recurrencias.
 
 La primera funcionalidad social de AHRE estará relacionada con gastos compartidos y personas que deben dinero. No se modelan todavía publicaciones, comentarios, amistades o grupos sociales.
 
-En esta primera versión, un gasto compartido solamente se registra cuando el
-usuario actual es quien paga el gasto completo.
+Esta sección describe el esquema de SQLite existente. El modelo documentado
+para la primera versión contempla que el usuario actual paga el gasto
+compartido completo.
+
+La [maqueta de Social del Issue #18](../interfaces/social.md) no utiliza
+estos repositorios ni guarda datos: representa salas, nombre/apellido/apodo
+y otro pagador por ítem mediante ejemplos en memoria. Su interfaz no implica
+que el esquema actual ya soporte ese flujo. La integración y los ajustes del
+modelo persistente corresponden a otro Issue.
 
 ### `personas`
 

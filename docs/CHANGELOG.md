@@ -3,6 +3,23 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [v0.5.0] - no publicada
+
+### Cambiado
+
+- Se reorganizó la maqueta de Social como un registro personal offline, con
+  resumen de pendientes, deudas recientes, agenda e historiales de deudas y
+  salas con búsqueda y filtros. No incluye invitaciones ni unión a salas. (#18)
+- Las salas representan ocasiones con hasta tres activas e ítems independientes,
+  cada uno con pagador, personas, reparto y estado de pago propios. Se prepararon
+  edición mientras están abiertas, revisión de cierre e historial de solo lectura;
+  los pendientes se representan como deudas después del cierre. (#18)
+- Se unificaron las tarjetas y formularios, con confirmación de eliminación de
+  deudas, registro de pagos y ticket OCR de ejemplo. Todos los importes y acciones
+  siguen simulados, sin cálculos financieros, persistencia ni OCR real. (#18)
+- Se separaron las pantallas, los componentes reutilizables, los estilos y los
+  datos de Social en archivos independientes, y se actualizó su documentación. (#18)
+
 ## [v0.4.0] - 2026-09-29 - no publicada
 
 ### Añadido

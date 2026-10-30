@@ -92,13 +92,36 @@ eliminación de depósitos continúan simuladas.
 
 ### Deudas y gastos compartidos
 
-La aplicación podrá registrar dinero que el usuario debe o que otras personas
-le deben, incluyendo pagos parciales e historial.
+Social es una maqueta personal offline del Issue #18. No guarda personas,
+salas, gastos, pagos ni deudas, y no calcula importes ni se comunica con otros
+dispositivos.
 
-La pestaña Social maqueta personas y deudas individuales, salas recientes para
-ocasiones concretas, historial de salas cerradas, participantes, gastos y
-balances con datos simulados. Los formularios son visuales; el guardado y la
-colaboración real siguen pendientes.
+El panel reúne Te deben y Debés en bloques de fondo suave con iconos, junto a
+Nueva deuda, Personas y Nueva sala. Debajo muestra hasta cinco deudas
+pendientes recientes y hasta tres salas activas, con flechas a las listas
+completas. Las deudas abren su detalle individual. Su historial permite buscar,
+filtrar pendientes/saldadas y expandir o cerrar los grupos mensuales.
+
+La agenda usa tarjetas compactas con nombre, apodo y acceso al perfil. El alta
+y la edición se representan en modal con nombre, apellido y apodo obligatorio
+(máximo 20 caracteres), y comprobación visual de duplicados sobre los ejemplos.
+Las salas comparten tarjetas en panel y listado, con total gastado, personas y
+fecha de creación; el listado permite buscar y filtrar activas/cerradas. Crear
+sala ofrece categorías de egreso, icono, color y fecha actual seleccionable.
+
+Cada ítem tiene pagador, personas involucradas, reparto igual o manual y pagos
+propios. El OCR de ejemplo carga una línea por vez, sin cámara ni egresos
+reales. Mientras la sala está abierta, el reparto es provisional y los gastos
+se pueden editar en un borrador. El cierre representa las deudas pendientes
+y deja el historial en solo lectura, sin crear registros reales. Quitar una
+persona pide confirmación y conserva sus gastos y pagos anteriores.
+
+Las pantallas, componentes y estilos de Social están separados en archivos
+propios; los datos de ejemplo viven en src/social/. Las rutas conservan
+sus nombres y parámetros.
+
+El detalle de la maqueta y su recorrido de verificación están en
+[Interfaz de Social](docs/interfaces/social.md).
 
 ### Estadísticas y notificaciones
 
@@ -163,9 +186,9 @@ interfaces. Actualmente cuenta con:
   filtros y detalles basados en datos de ejemplo;
 - pantalla de Notificaciones con avisos de muestra agrupados por día; no usa
   notificaciones locales o push;
-- pestaña Social maquetada con personas y deudas individuales, salas por ocasión,
-  historial de salas cerradas, participantes, gastos y balances simulados, sin
-  lógica online;
+- pestaña Social con resumen, deudas recientes, agenda y salas; historiales
+  con búsqueda y filtros, reparto por ítem y cierre de sala en solo lectura;
+  todo con datos simulados y sin persistencia;
 - flujo OCR con ML Kit local, captura o selección desde la galería, recorte,
   revisión editable y confirmación mediante el servicio normal de Egresos;
 - Perfil con datos locales del usuario, foto temporal, edición protegida por la
@@ -177,8 +200,8 @@ interfaces. Actualmente cuenta con:
   conectarse a lógica futura;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
-- historial con la versión `0.4.0` en preparación y los cambios no publicados
-  del historial de Movimientos (#26), Perfil y preferencias locales (#29).
+- historial con la versión `0.5.0` no publicada para la nueva maqueta de Social
+  (#18), además de los cambios de la `0.4.0`, también no publicada.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. El
 registro y el Login ya crean y verifican cuentas localmente. Al abrir AHRE, la
@@ -196,9 +219,10 @@ consulta al recuperar el foco. Movimientos consulta el historial local,
 combina búsqueda y filtros y carga el detalle por ID; Estadísticas todavía usa
 datos de ejemplo. Los formularios de ingreso y egreso validan y persisten sus
 movimientos localmente, con su impacto en el saldo. La versión `0.3.0` es
-la última publicada como versión no estable para evaluación; la `0.4.0` está
+la última publicada como versión no estable para evaluación; la `0.5.0` está
 documentada como no publicada en [`docs/CHANGELOG.md`](docs/CHANGELOG.md) y no
-representa una versión comercial.
+representa una versión comercial. La versión de Expo y del paquete se mantiene
+en `0.3.0` hasta preparar una publicación.
 
 ## Tecnología
 

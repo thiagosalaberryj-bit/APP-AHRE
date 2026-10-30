@@ -25,6 +25,9 @@ import PantallaOCR from '../screens/OcrScreen';
 import PantallaPerfil from '../screens/ProfileScreen';
 import PantallaRegistro from '../screens/RegistrationScreen';
 import PantallaSocial from '../screens/SocialScreen';
+import PantallaPersonaSocial from '../screens/SocialPersonScreen';
+import PantallaGastoSocial from '../screens/SocialExpenseScreen';
+import { RutaSalas, RutaPersonas, RutaRegistro } from './socialRoutes';
 import PantallaNuevo from '../screens/CreateScreen';
 import PantallaEstadisticas from '../screens/StatisticsScreen';
 
@@ -140,7 +143,11 @@ export default function NavegadorAplicacion({ rutaInicial }) {
           <PilaNavegacion.Screen name={RUTAS.DETALLE_CATEGORIA} component={PantallaDetalleCategoria} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.DETALLE_MOVIMIENTO} component={PantallaDetalleMovimiento} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.OCR} component={PantallaOCR} options={{ headerShown: false }} />
-          <PilaNavegacion.Screen name={RUTAS.SALA_SOCIAL} component={PantallaSocial} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.SALA_SOCIAL} component={RutaSalas} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.PERSONA_SOCIAL} component={PantallaPersonaSocial} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.PERSONAS_SOCIAL} component={RutaPersonas} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.REGISTRO_SOCIAL} component={RutaRegistro} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.GASTO_SOCIAL} component={PantallaGastoSocial} options={{ headerShown: false }} />
         </PilaNavegacion.Navigator>
       </NavigationContainer>
       {Platform.OS === 'android' && margenesSeguros.bottom > 0 ? (

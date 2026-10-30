@@ -152,6 +152,15 @@ Las áreas previstas de AHRE podrán incorporarse aquí: Inicio, Login y registr
 Dashboard, Notificaciones, Movimientos, Perfil, Estadísticas, Depósitos,
 Ingresos, Egresos, OCR y Social.
 
+Social tiene pantallas independientes para panel, salas, personas, deudas,
+ítems y registros. Componen módulos de `src/components/social/`, con estilos
+propios en `src/styles/social/` y reglas compartidas en `SharedStyles.js`.
+Los formularios comparten `SocialFormActions.js` para la confirmación y el
+aviso de maqueta, y `SocialRecordUnavailable.js` para registros no disponibles.
+Los datos de ejemplo y las utilidades están en `src/social/`; el marco
+`SocialScreenFrame.js` comparte encabezado, teclado y desplazamiento.
+Ver [organización de Social](../interfaces/social.md#organización-del-código).
+
 ### `src/components/`
 
 Contiene componentes visuales reutilizables entre dos o más pantallas. Los
