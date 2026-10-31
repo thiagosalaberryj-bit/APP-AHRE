@@ -156,3 +156,12 @@ Para una regresión manual completa deben registrarse individualmente:
 permisos rechazados/aceptados, seis tipos de ticket del Issue,
 correcciones, crear depósito y regresar, guardar un único egreso, historial,
 saldo, cancelar, errores y flujo completo en modo avión desde el primer uso.
+
+## Uso desde Social
+
+Social abre la misma pantalla OCR con destino social y salaId. Cámara, galería,
+recorte y reconocimiento permanecen compartidos. En ese destino, el resultado
+devuelve items editables a la lista de gastos de la sala y no ejecuta crearMovimiento.
+El destino general conserva OcrExpenseForm y su confirmación de egreso.
+La lista funciona manualmente en Expo Go; reconocer imágenes requiere el módulo
+nativo ML Kit ya existente. No se incorporó un segundo motor ni dependencias.

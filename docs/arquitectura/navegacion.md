@@ -90,6 +90,42 @@ Dashboard / Inicio
 └── Social
 ```
 
+Social muestra el resumen y sus acciones arriba, hasta cinco deudas recientes
+y después las salas activas. SocialScreen.js contiene el panel; las vistas
+secundarias tienen archivos de pantalla propios y se registran en el Stack
+principal, sin barra inferior. Los adaptadores de socialRoutes.js conservan
+los nombres de ruta y eligen el destino según sus parámetros:
+
+- `SalaSocial`: sin `salaId` muestra el listado con búsqueda y filtros;
+  con identificador muestra Balances, Gastos y Personas de la sala.
+- `PersonasSocial`: `todas: true` abre la agenda; sin esa opción abre
+  el historial de deudas, disponible aunque haya menos de cinco pendientes.
+- `PersonaSocial`: datos, resumen y deudas de la persona seleccionada.
+- `RegistroSocial`: formularios y confirmaciones según `tipo`, incluido
+  `detalleDeuda` para consultar la deuda elegida desde una tarjeta.
+- `GastoSocial`: detalle de un ítem y sus pagos, con acceso al formulario
+  precargado de edición solo mientras la sala esté abierta.
+
+Al saldar una deuda, RegistroSocial confirma el resultado y navega a Principal
+con la pestaña Social seleccionada. Los pagos parciales regresan a la vista
+anterior. El detalle de una deuda saldada no ofrece eliminarla.
+Eliminar una persona desde su perfil regresa a PersonasSocial con todas: true;
+la edición de datos y la reactivación conservan su pantalla actual.
+
+La agenda abre alta y edición de personas en modal. Agregar personas a una
+sala, confirmar que se quita una, elegir icono y usar los selectores también
+se resuelven en modales. Crear una persona desde un selector abre la ruta de
+registro con la agenda y su modal de alta. Atrás vuelve a la vista anterior
+sin perder su borrador. Las rutas reciben identificadores y opciones
+serializables; el formulario de gasto obtiene los participantes de la sala
+desde los datos locales.
+
+Social recarga datos locales al recuperar el foco y navega por identificadores
+persistidos. Escanear ticket abre OCR con destino social y salaId; el resultado
+regresa a RegistroSocial con modo lista y ticketSocial serializable. Este destino
+no guarda un egreso; el OCR iniciado desde el panel mantiene su formulario normal.
+Ver [Interfaz de Social](../interfaces/social.md).
+
 El detalle de categoría y el detalle de movimiento se registran en el Stack
 principal, fuera del navegador de pestañas. Al abrirlos se oculta la barra
 inferior; volver regresa al detalle o a la pestaña de Estadísticas anterior.
