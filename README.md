@@ -72,7 +72,8 @@ dependencia obligatoria para las funciones esenciales.
 ### Inicio y dashboard
 
 En Expo Go, Inicio incluye temporalmente Entrar con datos de prueba: prepara
-una cuenta independiente con tres depósitos y seis movimientos locales. El
+una cuenta independiente con tres depósitos, seis movimientos, tres contactos,
+una sala con cuatro gastos y una deuda personal pendiente. El
 acceso está limitado a desarrollo y no duplica los ejemplos al volver a entrar.
 
 La interfaz actual presenta un resumen visual de la situación financiera, con
@@ -255,7 +256,7 @@ APK adjunto y con los metadatos internos `0.3.0` de su commit etiquetado.
 - Expo SDK 57;
 - React Native 0.86.3;
 - React 19.2.3;
-- JavaScript únicamente;
+- TypeScript (comprobación estricta de la app y las pruebas);
 - plataforma inicial Android;
 - arquitectura offline-first.
 
@@ -276,15 +277,18 @@ APP-AHRE/
 │   ├── services/           # Servicios e integraciones futuras
 │   ├── styles/             # Estilos globales de React Native
 │   └── utils/              # Funciones auxiliares
-├── App.js                  # Composición raíz de la aplicación
+├── App.tsx                 # Composición raíz de la aplicación
 ├── app.json                # Configuración de Expo
 ├── docs/CHANGELOG.md       # Historial de cambios
-├── index.js                # Registro de la aplicación en Expo
+├── index.ts                # Registro de la aplicación en Expo
 └── README.md               # Descripción y alcance del repositorio
 ```
 
 La descripción detallada de cada carpeta se encuentra en
 [`docs/arquitectura/estructura-app.md`](docs/arquitectura/estructura-app.md).
+
+La configuración de TypeScript, las versiones verificadas y los límites del tipado
+se describen en [TypeScript](docs/configuracion/typescript.md).
 
 ## Documentación
 
@@ -348,6 +352,8 @@ También se encuentran disponibles los comandos:
 npm run android
 npm run ios
 npm run web
+npm run typecheck
+npm test
 ```
 
 ## Alcance del README

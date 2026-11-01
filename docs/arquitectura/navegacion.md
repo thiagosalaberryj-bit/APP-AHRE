@@ -4,7 +4,7 @@
 
 Este documento define las rutas y los navegadores de AHRE. Login y Registro
 implementan la autenticación local y el acceso sin conexión. Al abrir AHRE,
-`App.js` prepara SQLite y monta la navegación con Inicio como ruta inicial. La
+`App.tsx` prepara SQLite y monta la navegación con Inicio como ruta inicial. La
 sesión se consulta cuando la persona completa el deslizador.
 ## Navegadores utilizados
 
@@ -12,7 +12,7 @@ sesión se consulta cuando la persona completa el deslizador.
   secundarias.
 - `Bottom Tabs`: permite cambiar entre las áreas principales de AHRE.
 
-La barra inferior se implementa en `src/navigation/BottomTabBar.js`. Utiliza la
+La barra inferior se implementa en `src/navigation/BottomTabBar.tsx`. Utiliza la
 paleta global, muestra íconos, identifica la pestaña activa y reserva el área
 segura inferior del dispositivo. El botón central «Nuevo» usa una sombra
 neutra y discreta. Solo aparece dentro de las cinco secciones principales
@@ -20,9 +20,9 @@ posteriores al dashboard.
 
 Las pantallas de inicio, login y registro no muestran el encabezado verde ni la
 barra inferior. El Dashboard, Movimientos, Nuevo, Estadísticas y Social
-utilizan `src/components/MainHeader.js`, con el logo de AHRE, título,
+utilizan `src/components/MainHeader.tsx`, con el logo de AHRE, título,
 descripción y accesos a notificaciones y perfil. Las pantallas secundarias
-utilizan `src/components/SectionHeader.js`, con el título junto a la flecha de
+utilizan `src/components/SectionHeader.tsx`, con el título junto a la flecha de
 regreso y una descripción alineada a la izquierda y centrada verticalmente
 debajo. Ambos encabezados tienen una altura compacta de `120` puntos. Como las
 pantallas secundarias se apilan fuera del navegador de pestañas, tampoco
@@ -38,23 +38,23 @@ Inicio | Movimientos | Nuevo | Estadísticas | Social
 
 | Pantalla | Archivo | Acceso inicial |
 | --- | --- | --- |
-| Inicio | `src/screens/HomeScreen.js` | Pantalla inicial |
-| Login | `src/screens/LoginScreen.js` | Inicio |
-| Registro | `src/screens/RegistrationScreen.js` | Login |
-| Dashboard | `src/screens/DashboardScreen.js` | Pestaña Inicio |
-| Movimientos | `src/screens/MovementsScreen.js` | Pestaña Movimientos |
-| Nuevo | `src/screens/CreateScreen.js` | Pestaña Nuevo |
-| Estadísticas | `src/screens/StatisticsScreen.js` | Pestaña Estadísticas |
-| Detalle de categoría | `src/screens/CategoryDetailScreen.js` | Estadísticas |
-| Detalle de movimiento | `src/screens/MovementDetailScreen.js` | Detalle de categoría |
-| Social | `src/screens/SocialScreen.js` | Pestaña Social |
-| Perfil | `src/screens/ProfileScreen.js` | Dashboard |
-| Notificaciones | `src/screens/NotificationsScreen.js` | Dashboard |
-| Ingreso | `src/screens/IncomeScreen.js` | Dashboard o Nuevo |
-| Egreso | `src/screens/ExpenseScreen.js` | Dashboard o Nuevo |
-| Nuevo depósito | `src/screens/DepositScreen.js` | Dashboard o Nuevo |
-| Detalle de depósito | `src/screens/DepositDetailScreen.js` | Dashboard |
-| OCR | `src/screens/OcrScreen.js` | Dashboard |
+| Inicio | `src/screens/HomeScreen.tsx` | Pantalla inicial |
+| Login | `src/screens/LoginScreen.tsx` | Inicio |
+| Registro | `src/screens/RegistrationScreen.tsx` | Login |
+| Dashboard | `src/screens/DashboardScreen.tsx` | Pestaña Inicio |
+| Movimientos | `src/screens/MovementsScreen.tsx` | Pestaña Movimientos |
+| Nuevo | `src/screens/CreateScreen.tsx` | Pestaña Nuevo |
+| Estadísticas | `src/screens/StatisticsScreen.tsx` | Pestaña Estadísticas |
+| Detalle de categoría | `src/screens/CategoryDetailScreen.tsx` | Estadísticas |
+| Detalle de movimiento | `src/screens/MovementDetailScreen.tsx` | Detalle de categoría |
+| Social | `src/screens/SocialScreen.tsx` | Pestaña Social |
+| Perfil | `src/screens/ProfileScreen.tsx` | Dashboard |
+| Notificaciones | `src/screens/NotificationsScreen.tsx` | Dashboard |
+| Ingreso | `src/screens/IncomeScreen.tsx` | Dashboard o Nuevo |
+| Egreso | `src/screens/ExpenseScreen.tsx` | Dashboard o Nuevo |
+| Nuevo depósito | `src/screens/DepositScreen.tsx` | Dashboard o Nuevo |
+| Detalle de depósito | `src/screens/DepositDetailScreen.tsx` | Dashboard |
+| OCR | `src/screens/OcrScreen.tsx` | Dashboard |
 
 ## Flujo general
 
@@ -91,9 +91,9 @@ Dashboard / Inicio
 ```
 
 Social muestra el resumen y sus acciones arriba, hasta cinco deudas recientes
-y después las salas activas. SocialScreen.js contiene el panel; las vistas
+y después las salas activas. SocialScreen.tsx contiene el panel; las vistas
 secundarias tienen archivos de pantalla propios y se registran en el Stack
-principal, sin barra inferior. Los adaptadores de socialRoutes.js conservan
+principal, sin barra inferior. Los adaptadores de socialRoutes.tsx conservan
 los nombres de ruta y eligen el destino según sus parámetros:
 
 - `SalaSocial`: sin `salaId` muestra el listado con búsqueda y filtros;
@@ -132,7 +132,7 @@ inferior; volver regresa al detalle o a la pestaña de Estadísticas anterior.
 
 ## Flujo de inicio y autenticación local
 
-Mientras se prepara SQLite, `App.js` mantiene la pantalla nativa de carga.
+Mientras se prepara SQLite, `App.tsx` mantiene la pantalla nativa de carga.
 Cuando la base está lista, Inicio aparece con el deslizador habilitado y queda
 como ruta inicial hasta que la persona completa el gesto. Si no hay sesión,
 Inicio se reemplaza por Login. Si la sesión es válida, se solicita la huella y,
@@ -180,16 +180,16 @@ cambian directamente desde la barra inferior.
 
 ## Controles de navegación del sistema
 
-`App.js` establece el fondo nativo con el color de fondo del tema y actualiza el
+`App.tsx` establece el fondo nativo con el color de fondo del tema y actualiza el
 contraste de los botones del sistema en Android según la apariencia activa.
 `app.json` activa `userInterfaceStyle: "automatic"` y configura
 `expo-navigation-bar` con `enforceContrast: false`.
 
-`AppNavigator.js` observa los cambios de ruta del `NavigationContainer`. Cuando
+`AppNavigator.tsx` observa los cambios de ruta del `NavigationContainer`. Cuando
 la ruta superior es `PRINCIPAL`, dibuja una capa visual no interactiva en el
 inset inferior de Android con `tema.superficie`, a juego con la barra de
 pestañas. En Inicio, Login, Registro y las rutas secundarias usa `tema.fondo`.
-`BottomTabBar.js` prolonga su superficie por el inset y deja visible el fondo
+`BottomTabBar.tsx` prolonga su superficie por el inset y deja visible el fondo
 de pantalla en las esquinas superiores redondeadas.
 
 Esta capa solo resuelve presentación y áreas seguras; no modifica el flujo de
@@ -198,7 +198,7 @@ navegación ni implementa lógica de autenticación.
 ### Contraste de la barra del sistema
 
 La preferencia local de apariencia puede diferir del tema del dispositivo.
-`App.js` ajusta el color de los botones de navegación de Android junto con el
+`App.tsx` ajusta el color de los botones de navegación de Android junto con el
 tema de AHRE; `enforceContrast: false` permite que la aplicación pinte el fondo
 de esa zona.
 

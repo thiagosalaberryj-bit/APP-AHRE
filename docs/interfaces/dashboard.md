@@ -23,7 +23,7 @@ No se muestra una sección de deudas en el Dashboard.
 
 ## Encabezado y balance
 
-El encabezado reutiliza `MainHeader.js` y muestra el nombre devuelto por la
+El encabezado reutiliza `MainHeader.tsx` y muestra el nombre devuelto por la
 sesión local junto con los accesos a Notificaciones y Perfil. La tarjeta de
 balance se superpone al borde inferior del encabezado verde y mantiene sus
 cuatro esquinas redondeadas. Su franja superior centra «Balance» y la separa
@@ -98,9 +98,9 @@ menú.
 
 ## Estilos y componentes
 
-`DashboardScreen.js` reutiliza `MainHeader.js`, las paletas de `colors.js` y los
+`DashboardScreen.tsx` reutiliza `MainHeader.tsx`, las paletas de `colors.ts` y los
 estilos globales. Las reglas propias de layout se encuentran en
-`src/styles/DashboardScreenStyles.js`. Las filas y acciones que solo se usan en
+`src/styles/DashboardScreenStyles.ts`. Las filas y acciones que solo se usan en
 esta pantalla se mantienen locales para no ampliar componentes compartidos.
 
 La lógica de consultas, límites, datos vacíos, actualización y pruebas manuales

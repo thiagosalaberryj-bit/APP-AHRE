@@ -2,9 +2,9 @@
 
 ## Finalidad y alcance
 
-`src/screens/DepositScreen.js` presenta el formulario para crear un depósito,
+`src/screens/DepositScreen.tsx` presenta el formulario para crear un depósito,
 es decir, una fuente donde el usuario organiza su dinero. Se abre desde «Nuevo
-depósito» en el Dashboard y usa la ruta ya registrada en `AppNavigator.js`.
+depósito» en el Dashboard y usa la ruta ya registrada en `AppNavigator.tsx`.
 Al crear, valida los campos y guarda el depósito en SQLite local a través de la
 lógica de depósitos y el repositorio; no requiere conexión a Internet. Si se
 completa correctamente, vuelve a la pantalla anterior. La flecha y «Cancelar»
@@ -70,19 +70,19 @@ pantallas angostas mediante tarjetas que pueden ocupar más de una fila.
 
 El encabezado reutiliza `SectionHeader`; los campos y las acciones utilizan los
 estilos globales. Los estilos propios de distribución están en
-`src/styles/DepositScreenStyles.js` y consumen `TEMAS`,
+`src/styles/DepositScreenStyles.ts` y consumen `TEMAS`,
 `COLOR_DEPOSITO_PREDETERMINADO`, `COLORES_GRAFICOS` y los tokens de
-`globalStyles.js`. La paleta se mantiene legible en modo claro y
+`globalStyles.ts`. La paleta se mantiene legible en modo claro y
 oscuro, y el formulario respeta el área segura superior e inferior.
 
 ## Detalle de un depósito
 
-`src/screens/DepositDetailScreen.js` muestra el depósito seleccionado desde el
+`src/screens/DepositDetailScreen.tsx` muestra el depósito seleccionado desde el
 Dashboard. La fila envía el identificador del depósito a la ruta existente; la
 pantalla reutiliza `SectionHeader` para volver, con el título «Detalle de
 depósito» y la descripción «Consultá el saldo y los movimientos de este
 depósito». Respeta las áreas seguras superior e inferior; la distribución propia
-de esta pantalla vive en `src/styles/DepositDetailScreenStyles.js`.
+de esta pantalla vive en `src/styles/DepositDetailScreenStyles.ts`.
 
 La tarjeta superior presenta de forma compacta el ícono y nombre del depósito;
 debajo muestra la descripción y, a continuación, el tipo separado por un punto
@@ -151,5 +151,5 @@ conserva el historial de movimientos y se vuelve al Dashboard. Los depósitos
 inactivos no aparecen en su lista.
 
 La pantalla y sus modales usan el tema activo claro u oscuro, tokens de
-`globalStyles.js` y colores de `colors.js`. No se añade una pantalla separada
+`globalStyles.ts` y colores de `colors.ts`. No se añade una pantalla separada
 para edición ni se modifica la navegación existente.

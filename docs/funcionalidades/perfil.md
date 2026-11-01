@@ -12,7 +12,7 @@ Perfil → confirmar cierre de sesión → eliminar solo la sesión → Login
 
 ## Usuario actual
 
-`src/profile/profileService.js` obtiene el usuario mediante la sesión local y
+`src/profile/profileService.ts` obtiene el usuario mediante la sesión local y
 lo consulta desde SQLite. Perfil muestra el nombre, el correo y la fecha de
 creación reales de `usuarios`; ya no utiliza datos de cuenta hardcodeados.
 
@@ -81,17 +81,17 @@ usuario para el próximo inicio de sesión.
 
 ## Archivos involucrados
 
-- `src/screens/ProfileScreen.js`: interfaz, modales, estados y navegación;
-- `src/profile/profileService.js`: consultas, validaciones y escrituras del
+- `src/screens/ProfileScreen.tsx`: interfaz, modales, estados y navegación;
+- `src/profile/profileService.ts`: consultas, validaciones y escrituras del
   perfil y preferencias;
-- `src/database/repositories/authenticationRepository.js`: acceso a los
+- `src/database/repositories/authenticationRepository.ts`: acceso a los
   verificadores de contraseña persistidos;
-- `src/database/repositories/usersRepository.js`: usuario local;
-- `src/database/repositories/preferencesRepository.js`: preferencias locales;
-- `src/database/migrations/001_initialSchema.js`: columnas iniciales de idioma
+- `src/database/repositories/usersRepository.ts`: usuario local;
+- `src/database/repositories/preferencesRepository.ts`: preferencias locales;
+- `src/database/migrations/001_initialSchema.ts`: columnas iniciales de idioma
   y apariencia;
-- `src/contexts/AppearanceContext.js`: tema global durante la sesión;
-- `src/authentication/sessionService.js`: creación, consulta y cierre de la
+- `src/contexts/AppearanceContext.tsx`: tema global durante la sesión;
+- `src/authentication/sessionService.ts`: creación, consulta y cierre de la
   sesión local.
 
 ## Funcionamiento offline

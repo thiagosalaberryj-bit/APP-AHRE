@@ -32,7 +32,7 @@ Las cuentas de desarrollo creadas con un formato de verificador anterior no se c
 
 ## Datos locales y preferencias
 
-`authenticationRepository.js` inserta el usuario en `usuarios`, el verificador en `credenciales_usuario` y las preferencias en `preferencias` dentro de una transacción. Si cualquiera de esas escrituras falla, la transacción revierte todo.
+`authenticationRepository.ts` inserta el usuario en `usuarios`, el verificador en `credenciales_usuario` y las preferencias en `preferencias` dentro de una transacción. Si cualquiera de esas escrituras falla, la transacción revierte todo.
 
 Las preferencias nuevas usan las opciones acordadas: `deposito_predeterminado_id` empieza en `NULL` y `notificaciones_activas` en `1`. El registro no crea un depósito ni altera saldos financieros.
 
@@ -53,9 +53,9 @@ aplicación.
 
 ## Sesión local
 
-`sessionService.js` expone `crearSesion`, `obtenerSesionActual`, `comprobarSesion` y `cerrarSesion`. La clave de sesión en SecureStore contiene el identificador del usuario; una clave distinta conserva la preferencia de visibilidad de saldos. No guarda la contraseña ni el verificador. La opción «Recordarme», activa inicialmente en Login, determina si el identificador de sesión se persiste en SecureStore o queda únicamente en memoria hasta cerrar AHRE.
+`sessionService.ts` expone `crearSesion`, `obtenerSesionActual`, `comprobarSesion` y `cerrarSesion`. La clave de sesión en SecureStore contiene el identificador del usuario; una clave distinta conserva la preferencia de visibilidad de saldos. No guarda la contraseña ni el verificador. La opción «Recordarme», activa inicialmente en Login, determina si el identificador de sesión se persiste en SecureStore o queda únicamente en memoria hasta cerrar AHRE.
 
-Al abrir AHRE, `App.js` prepara SQLite y deja Inicio como ruta inicial; todavía
+Al abrir AHRE, `App.tsx` prepara SQLite y deja Inicio como ruta inicial; todavía
 no consulta la sesión. Cuando la persona completa el deslizador, Inicio llama a
 `obtenerSesionActual()`. Si SecureStore conserva el identificador guardado con
 «Recordarme» y el usuario existe y está activo, se solicita la huella local.

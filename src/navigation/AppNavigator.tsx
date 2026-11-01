@@ -1,0 +1,168 @@
+import { useContext, useState } from 'react';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import { Platform, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ContextoApariencia } from '../contexts/AppearanceContext';
+import { RUTAS } from '../constants/routes';
+import BarraPestanasInferior from './BottomTabBar';
+
+import PantallaPanel from '../screens/DashboardScreen';
+import PantallaDeposito from '../screens/DepositScreen';
+import PantallaDetalleDeposito from '../screens/DepositDetailScreen';
+import PantallaDetalleCategoria from '../screens/CategoryDetailScreen';
+import PantallaDetalleMovimiento from '../screens/MovementDetailScreen';
+import PantallaEgreso from '../screens/ExpenseScreen';
+import PantallaIngreso from '../screens/IncomeScreen';
+import PantallaInicio from '../screens/HomeScreen';
+import PantallaInicioSesion from '../screens/LoginScreen';
+import PantallaMovimientos from '../screens/MovementsScreen';
+import PantallaNotificaciones from '../screens/NotificationsScreen';
+import PantallaOCR from '../screens/OcrScreen';
+import PantallaPerfil from '../screens/ProfileScreen';
+import PantallaRegistro from '../screens/RegistrationScreen';
+import PantallaSocial from '../screens/SocialScreen';
+import PantallaPersonaSocial from '../screens/SocialPersonScreen';
+import PantallaGastoSocial from '../screens/SocialExpenseScreen';
+import { RutaSalas, RutaPersonas, RutaRegistro } from './socialRoutes';
+import PantallaNuevo from '../screens/CreateScreen';
+import PantallaEstadisticas from '../screens/StatisticsScreen';
+
+const PilaNavegacion = createNativeStackNavigator<import("./types").ParametrosNavegacion>();
+const PestanasNavegacion = createBottomTabNavigator<import("./types").ParametrosNavegacion>();
+
+function PestanasPrincipales() {
+  return (
+    <PestanasNavegacion.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+      tabBar={(propiedades) => <BarraPestanasInferior {...propiedades} />}
+    >
+      <PestanasNavegacion.Screen
+        name={RUTAS.PANEL}
+        component={PantallaPanel}
+        options={{
+          title: 'Inicio',
+          tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
+            <Ionicons name={seleccionada ? 'home' : 'home-outline'} color={colorIcono} size={tamano} />
+          ),
+        }}
+      />
+      <PestanasNavegacion.Screen
+        name={RUTAS.MOVIMIENTOS}
+        component={PantallaMovimientos}
+        options={{
+          title: 'Movimientos',
+          tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
+            <Ionicons name={seleccionada ? 'list' : 'list-outline'} color={colorIcono} size={tamano} />
+          ),
+        }}
+      />
+      <PestanasNavegacion.Screen
+        name={RUTAS.NUEVO}
+        component={PantallaNuevo}
+        options={{
+          title: 'Nuevo',
+          tabBarIcon: ({ color: colorIcono, size: tamano }) => <Ionicons name="add" color={colorIcono} size={tamano} />,
+        }}
+      />
+      <PestanasNavegacion.Screen
+        name={RUTAS.ESTADISTICAS}
+        component={PantallaEstadisticas}
+        options={{
+          title: 'Estadísticas',
+          tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
+            <Ionicons name={seleccionada ? 'bar-chart' : 'bar-chart-outline'} color={colorIcono} size={tamano} />
+          ),
+        }}
+      />
+      <PestanasNavegacion.Screen
+        name={RUTAS.SOCIAL}
+        component={PantallaSocial}
+        options={{
+          title: 'Social',
+          tabBarIcon: ({ color: colorIcono, size: tamano, focused: seleccionada }) => (
+            <Ionicons name={seleccionada ? 'people' : 'people-outline'} color={colorIcono} size={tamano} />
+          ),
+        }}
+      />
+    </PestanasNavegacion.Navigator>
+  );
+}
+
+export default function NavegadorAplicacion({ rutaInicial }: {rutaInicial: import('./types').NombreRuta}) {
+  const { tema } = useContext(ContextoApariencia);
+  const margenesSeguros = useSafeAreaInsets();
+  const [tieneBarraInferior, establecerBarraInferior] = useState(rutaInicial === RUTAS.PRINCIPAL);
+  const colorZonaNavegacion = tieneBarraInferior ? tema.superficie : tema.fondo;
+  const temaNavegacionBase = tema.nombre === 'oscuro' ? DarkTheme : DefaultTheme;
+  const temaNavegacion = {
+    ...temaNavegacionBase,
+    colors: {
+      ...temaNavegacionBase.colors,
+      primary: tema.foco,
+      background: tema.fondo,
+      card: tema.superficie,
+      text: tema.textoPrincipal,
+      border: tema.borde,
+      notification: tema.error,
+    },
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: tema.fondo }}>
+      <NavigationContainer
+        theme={temaNavegacion}
+        onStateChange={(estadoNavegacion) => {
+          establecerBarraInferior(estadoNavegacion?.routes?.[estadoNavegacion.index]?.name === RUTAS.PRINCIPAL);
+        }}
+      >
+        <PilaNavegacion.Navigator
+          initialRouteName={rutaInicial}
+          screenOptions={{
+            contentStyle: { backgroundColor: tema.fondo },
+            headerStyle: { backgroundColor: tema.encabezado },
+            headerTintColor: tema.encabezadoTexto,
+            headerTitleStyle: { fontWeight: '700' },
+          }}
+        >
+          <PilaNavegacion.Screen name={RUTAS.INICIO} component={PantallaInicio} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.INICIO_SESION} component={PantallaInicioSesion} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.REGISTRO} component={PantallaRegistro} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.PRINCIPAL} component={PestanasPrincipales} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.PERFIL} component={PantallaPerfil} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.NOTIFICACIONES} component={PantallaNotificaciones} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.INGRESO} component={PantallaIngreso} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.EGRESO} component={PantallaEgreso} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.DEPOSITO} component={PantallaDeposito} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.DETALLE_DEPOSITO} component={PantallaDetalleDeposito} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.DETALLE_CATEGORIA} component={PantallaDetalleCategoria} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.DETALLE_MOVIMIENTO} component={PantallaDetalleMovimiento} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.OCR} component={PantallaOCR} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.SALA_SOCIAL} component={RutaSalas} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.PERSONA_SOCIAL} component={PantallaPersonaSocial} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.PERSONAS_SOCIAL} component={RutaPersonas} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.REGISTRO_SOCIAL} component={RutaRegistro} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.GASTO_SOCIAL} component={PantallaGastoSocial} options={{ headerShown: false }} />
+        </PilaNavegacion.Navigator>
+      </NavigationContainer>
+      {Platform.OS === 'android' && margenesSeguros.bottom > 0 ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            left: 0,
+            height: margenesSeguros.bottom,
+            backgroundColor: colorZonaNavegacion,
+          }}
+        />
+      ) : null}
+    </View>
+  );
+}

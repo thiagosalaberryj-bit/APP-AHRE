@@ -21,18 +21,18 @@ La [lógica funcional](../funcionalidades/social.md), el
 
 ## Organización del código
 
-- `src/screens/Social*Screen.js`: pantallas independientes para panel, listas,
+- `src/screens/Social*Screen.tsx`: pantallas independientes para panel, listas,
   perfiles, detalles, formularios y confirmaciones.
 - `src/components/social/`: componentes visuales y formularios independientes.
-- `src/styles/social/`: estilos existentes, con reglas comunes en SharedStyles.js.
-- `src/social/socialConstants.js`: opciones de interfaz.
-- `ExpenseListForm.js`: lista editable, reparto común y ajustes por ítem.
-- `src/social/socialService.js`: entrada pública a los servicios de personas,
+- `src/styles/social/`: estilos existentes, con reglas comunes en SharedStyles.ts.
+- `src/social/socialConstants.ts`: opciones de interfaz.
+- `ExpenseListForm.tsx`: lista editable, reparto común y ajustes por ítem.
+- `src/social/socialService.ts`: entrada pública a los servicios de personas,
   salas, ítems, deudas, pagos y consultas.
-- `src/social/useSocialScreen.js`: carga al recuperar el foco, navegación y apariencia.
-- `src/social/SocialDataContext.js`: datos del usuario para los componentes de
+- `src/social/useSocialScreen.tsx`: carga al recuperar el foco, navegación y apariencia.
+- `src/social/SocialDataContext.ts`: datos del usuario para los componentes de
   cada pantalla, sin un registro global mutable ni fixtures de producción.
-- `src/navigation/socialRoutes.js`: adapta las rutas existentes a cada pantalla.
+- `src/navigation/socialRoutes.tsx`: adapta las rutas existentes a cada pantalla.
 
 SocialScreenFrame conserva encabezados, teclado, desplazamiento y carga. Provee
 los datos a sus descendientes y ofrece Reintentar si falla la consulta. Las

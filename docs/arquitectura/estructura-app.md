@@ -3,7 +3,7 @@
 ## Alcance
 
 Esta estructura organiza AHRE, una aplicación móvil desarrollada con Expo y
-React Native utilizando JavaScript. Login y Registro implementan autenticación
+React Native utilizando TypeScript. Login y Registro implementan autenticación
 local y persistencia de sesión. Los movimientos y depósitos usan SQLite local;
 el OCR Android reconoce comprobantes y permite confirmar egresos mediante el
 servicio existente. La sincronización y la colaboración siguen pendientes.
@@ -16,8 +16,8 @@ núcleo de la aplicación y los servicios conectados son extensiones opcionales.
 
 ```text
 APP-AHRE/
-├── App.js
-├── index.js
+├── App.tsx
+├── index.ts
 ├── app.json
 ├── README.md
 ├── assets/
@@ -53,92 +53,92 @@ APP-AHRE/
 │       └── flujo-issues-prs-changelog.md
 ├── src/
 │   ├── authentication/
-│   │   ├── authenticationService.js
-│   │   ├── errors.js
-│   │   ├── passwordSecurity.js
-│   │   └── sessionService.js
+│   │   ├── authenticationService.ts
+│   │   ├── errors.ts
+│   │   ├── passwordSecurity.ts
+│   │   └── sessionService.ts
 │   ├── components/
-│   │   ├── AuthContainer.js
-│   │   ├── AuthInput.js
-│   │   ├── ErrorMessage.js
-│   │   ├── MainHeader.js
-│   │   ├── PasswordInput.js
-│   │   ├── PrimaryButton.js
-│   │   ├── SectionHeader.js
-│   │   └── ToastNotification.js
+│   │   ├── AuthContainer.tsx
+│   │   ├── AuthInput.tsx
+│   │   ├── ErrorMessage.tsx
+│   │   ├── MainHeader.tsx
+│   │   ├── PasswordInput.tsx
+│   │   ├── PrimaryButton.tsx
+│   │   ├── SectionHeader.tsx
+│   │   └── ToastNotification.tsx
 │   ├── constants/
-│   │   ├── deposits.js
-│   │   └── routes.js
+│   │   ├── deposits.ts
+│   │   └── routes.ts
 │   ├── contexts/
-│   │   ├── AppearanceContext.js
-│   │   └── ToastContext.js
+│   │   ├── AppearanceContext.tsx
+│   │   └── ToastContext.tsx
 │   ├── deposits/
-│   │   └── depositService.js
+│   │   └── depositService.ts
 │   ├── profile/
-│   │   └── profileService.js
+│   │   └── profileService.ts
 │   ├── database/
-│   │   ├── index.js
-│   │   ├── connectionQueue.js
-│   │   ├── errors.js
-│   │   ├── identifiers.js
-│   │   ├── initialization.js
-│   │   ├── storageAdapter.js
-│   │   ├── transactions.js
+│   │   ├── index.ts
+│   │   ├── connectionQueue.ts
+│   │   ├── errors.ts
+│   │   ├── identifiers.ts
+│   │   ├── initialization.ts
+│   │   ├── storageAdapter.ts
+│   │   ├── transactions.ts
 │   │   ├── migrations/
-│   │   │   └── 001_initialSchema.js
+│   │   │   └── 001_initialSchema.ts
 │   │   └── repositories/
-│   │       ├── authenticationRepository.js
-│   │       ├── categoriesRepository.js
-│   │       ├── depositsRepository.js
-│   │       ├── roomsRepository.js
-│   │       ├── roomPeopleRepository.js
-│   │       ├── socialPaymentsRepository.js
-│   │       ├── debtsRepository.js
-│   │       ├── movementsRepository.js
-│   │       ├── peopleRepository.js
-│   │       ├── preferencesRepository.js
-│   │       ├── recurrencesRepository.js
-│   │       ├── repositoryFactory.js
-│   │       ├── sharedExpenseParticipantsRepository.js
-│   │       ├── sharedExpensesRepository.js
-│   │       ├── transfersRepository.js
-│   │       ├── usersRepository.js
-│   │       └── index.js
+│   │       ├── authenticationRepository.ts
+│   │       ├── categoriesRepository.ts
+│   │       ├── depositsRepository.ts
+│   │       ├── roomsRepository.ts
+│   │       ├── roomPeopleRepository.ts
+│   │       ├── socialPaymentsRepository.ts
+│   │       ├── debtsRepository.ts
+│   │       ├── movementsRepository.ts
+│   │       ├── peopleRepository.ts
+│   │       ├── preferencesRepository.ts
+│   │       ├── recurrencesRepository.ts
+│   │       ├── repositoryFactory.ts
+│   │       ├── sharedExpenseParticipantsRepository.ts
+│   │       ├── sharedExpensesRepository.ts
+│   │       ├── transfersRepository.ts
+│   │       ├── usersRepository.ts
+│   │       └── index.ts
 │   ├── navigation/
-│   │   ├── AppNavigator.js
-│   │   └── BottomTabBar.js
+│   │   ├── AppNavigator.tsx
+│   │   └── BottomTabBar.tsx
 │   ├── screens/
-│   │   ├── DashboardScreen.js
-│   │   ├── DepositScreen.js
-│   │   ├── DepositDetailScreen.js
-│   │   ├── ExpenseScreen.js
-│   │   ├── StatisticsScreen.js
-│   │   ├── IncomeScreen.js
-│   │   ├── HomeScreen.js
-│   │   ├── LoginScreen.js
-│   │   ├── MovementsScreen.js
-│   │   ├── NotificationsScreen.js
-│   │   ├── CreateScreen.js
-│   │   ├── OcrScreen.js
-│   │   ├── ProfileScreen.js
-│   │   ├── RegistrationScreen.js
-│   │   └── SocialScreen.js
+│   │   ├── DashboardScreen.tsx
+│   │   ├── DepositScreen.tsx
+│   │   ├── DepositDetailScreen.tsx
+│   │   ├── ExpenseScreen.tsx
+│   │   ├── StatisticsScreen.tsx
+│   │   ├── IncomeScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── LoginScreen.tsx
+│   │   ├── MovementsScreen.tsx
+│   │   ├── NotificationsScreen.tsx
+│   │   ├── CreateScreen.tsx
+│   │   ├── OcrScreen.tsx
+│   │   ├── ProfileScreen.tsx
+│   │   ├── RegistrationScreen.tsx
+│   │   └── SocialScreen.tsx
 │   ├── services/
-│   │   └── index.js
+│   │   └── index.ts
 │   ├── styles/
-│   │   ├── HomeScreenStyles.js
-│   │   ├── authStyles.js
-│   │   ├── colors.js
-│   │   ├── globalStyles.js
-│   │   └── toastNotificationStyles.js
+│   │   ├── HomeScreenStyles.ts
+│   │   ├── authStyles.ts
+│   │   ├── colors.ts
+│   │   ├── globalStyles.ts
+│   │   └── toastNotificationStyles.ts
 │   └── utils/
-│       ├── depositValidation.js
-│       └── structureSmokeTest.js
+│       ├── depositValidation.ts
+│       └── structureSmokeTest.ts
 ├── package.json
 └── package-lock.json
 ```
 
-Los archivos de entrada y configuración de Expo (`App.js`, `index.js`,
+Los archivos de entrada y configuración de Expo (`App.tsx`, `index.ts`,
 `app.json` y `assets/`) se mantienen en sus ubicaciones originales. La
 configuración de Expo no se duplica dentro de `src/`; `app.json` continúa siendo
 su única fuente de configuración.
@@ -148,8 +148,8 @@ su única fuente de configuración.
 ### `src/screens/`
 
 Contiene las pantallas completas. Los archivos de pantalla utilizan PascalCase
-y el sufijo `Screen`, por ejemplo `DashboardScreen.js` o
-`MovementsScreen.js`. Las pantallas coordinan la vista, pero delegan la lógica
+y el sufijo `Screen`, por ejemplo `DashboardScreen.tsx` o
+`MovementsScreen.tsx`. Las pantallas coordinan la vista, pero delegan la lógica
 reutilizable a componentes, módulos de base de datos, servicios y utilidades.
 
 Las áreas previstas de AHRE podrán incorporarse aquí: Inicio, Login y registro,
@@ -158,21 +158,21 @@ Ingresos, Egresos, OCR y Social.
 
 Social tiene pantallas independientes para panel, salas, personas, deudas,
 ítems y registros. Componen módulos de `src/components/social/`, con estilos
-propios en `src/styles/social/` y reglas compartidas en `SharedStyles.js`.
-Los formularios comparten `SocialFormActions.js` para validación, guardado y
-confirmación, `SocialMovementModal.js` para elegir depósito o vincular un
-movimiento, y `SocialRecordUnavailable.js` para registros no disponibles.
+propios en `src/styles/social/` y reglas compartidas en `SharedStyles.ts`.
+Los formularios comparten `SocialFormActions.tsx` para validación, guardado y
+confirmación, `SocialMovementModal.tsx` para elegir depósito o vincular un
+movimiento, y `SocialRecordUnavailable.tsx` para registros no disponibles.
 `src/social/` contiene servicios por responsabilidad, consultas, validaciones,
-constantes y contexto. `useSocialScreen.js` recarga por foco; el marco
-`SocialScreenFrame.js` comparte encabezado, teclado, desplazamiento y proveedor
+constantes y contexto. `useSocialScreen.tsx` recarga por foco; el marco
+`SocialScreenFrame.tsx` comparte encabezado, teclado, desplazamiento y proveedor
 de datos. No hay colecciones simuladas de personas, salas o deudas.
 El reconocimiento se comparte con el OCR general mediante OcrScreen y su parser.
-`RoomExpenseCard.js` dibuja las tarjetas compactas de Gastos con los estilos
-comunes de Balances. `SocialAmountSummary.js` comparte los contenedores de
+`RoomExpenseCard.tsx` dibuja las tarjetas compactas de Gastos con los estilos
+comunes de Balances. `SocialAmountSummary.tsx` comparte los contenedores de
 importe entre panel, resumen de sala, Balances y confirmación de cierre;
-su estilo común vive en `SharedStyles.js`.
-`DebtActions.js` comparte los botones de pago y eliminación entre tarjetas y
-detalle. `SocialRelatedLink.js` dibuja los accesos externos a persona y sala,
+su estilo común vive en `SharedStyles.ts`.
+`DebtActions.tsx` comparte los botones de pago y eliminación entre tarjetas y
+detalle. `SocialRelatedLink.tsx` dibuja los accesos externos a persona y sala,
 reutilizando los estilos secundarios existentes.
 Ver [organización de Social](../interfaces/social.md#organización-del-código).
 
@@ -180,27 +180,27 @@ Ver [organización de Social](../interfaces/social.md#organización-del-código)
 
 Contiene componentes visuales reutilizables entre dos o más pantallas. Los
 componentes utilizan PascalCase y un nombre relacionado con su responsabilidad,
-como `AmountInput.js` o `MovementCard.js`. Muchas pantallas financieras todavía
+como `MoneyInput.tsx` o `MovementCard.tsx`. Muchas pantallas financieras todavía
 esperan sus componentes funcionales. Login y Registro reutilizan
-`ContenedorAutenticacion` (`AuthContainer.js`), `CampoAutenticacion`
-(`AuthInput.js`), `CampoContrasena` (`PasswordInput.js`), `BotonPrincipal`
-(`PrimaryButton.js`) y `MensajeError` (`ErrorMessage.js`); sus estilos de
-distribución están en `src/styles/authStyles.js`.
-`MainHeader.js` define el encabezado de las secciones principales, con el logo
+`ContenedorAutenticacion` (`AuthContainer.tsx`), `CampoAutenticacion`
+(`AuthInput.tsx`), `CampoContrasena` (`PasswordInput.tsx`), `BotonPrincipal`
+(`PrimaryButton.tsx`) y `MensajeError` (`ErrorMessage.tsx`); sus estilos de
+distribución están en `src/styles/authStyles.ts`.
+`MainHeader.tsx` define el encabezado de las secciones principales, con el logo
 de AHRE, título, descripción y accesos a notificaciones y perfil.
-`SectionHeader.js` define el encabezado reutilizable de las pantallas
+`SectionHeader.tsx` define el encabezado reutilizable de las pantallas
 secundarias, con el título junto a la flecha de regreso y una descripción
 alineada a la izquierda y centrada verticalmente debajo.
-`ToastNotification.js` dibuja avisos superiores con una barra de tiempo, cierre
+`ToastNotification.tsx` dibuja avisos superiores con una barra de tiempo, cierre
 manual y gesto horizontal. El estado compartido entre pantallas vive en
-`src/contexts/ToastContext.js`. Las pantallas usan `mostrarAviso` para errores
+`src/contexts/ToastContext.tsx`. Las pantallas usan `mostrarAviso` para errores
 generales, confirmaciones y avisos breves; las validaciones específicas siguen
 junto al campo. El uso y los tipos disponibles están documentados en
 [`docs/funcionalidades/notificaciones-toast.md`](../funcionalidades/notificaciones-toast.md).
 
 ### `src/navigation/`
 
-Contiene la composición de rutas y navegadores. `AppNavigator.js` combina un
+Contiene la composición de rutas y navegadores. `AppNavigator.tsx` combina un
 `Native Stack` para el flujo de acceso y las pantallas secundarias con un
 `Bottom Tab Navigator` para Inicio, Movimientos, Nuevo, Estadísticas y Social.
 También determina si la ruta raíz muestra las pestañas y dibuja el fondo
@@ -210,15 +210,15 @@ solo modifica la presentación.
 ### `src/database/`
 
 El esquema inicial reúne las entidades financieras y sociales en
-`migrations/001_initialSchema.js`, sin agregar una migración de transición.
+`migrations/001_initialSchema.ts`, sin agregar una migración de transición.
 Sus restricciones y repositorios están en [Social en SQLite](../base-de-datos/social.md).
-`socialMovementReversal.js` coordina la reversión de movimientos vinculados con
+`socialMovementReversal.ts` coordina la reversión de movimientos vinculados con
 el pago y la deuda social en la misma transacción financiera.
 
 Contiene la inicialización de SQLite, las migraciones, la serialización de
 operaciones, el manejo de errores y los repositorios de cada entidad.
 `expo-sqlite` es el almacenamiento principal de datos relacionados. Las
-pantallas no ejecutan SQL directamente. `storageAdapter.js` conserva un
+pantallas no ejecutan SQL directamente. `storageAdapter.ts` conserva un
 contrato auxiliar de clave-valor y no reemplaza la base relacional.
 
 ### `src/authentication/`
@@ -261,7 +261,7 @@ perfil. Las pantallas no ejecutan SQL.
 
 Contiene funciones auxiliares puras que no dependen de una pantalla, como
 formateo de montos, fechas, validaciones y cálculos.
-`structureSmokeTest.js` es una prueba de humo mínima que confirma que las rutas
+`structureSmokeTest.ts` es una prueba de humo mínima que confirma que las rutas
 base pueden importarse juntas.
 
 ### `src/constants/`
@@ -269,29 +269,29 @@ base pueden importarse juntas.
 Contiene valores estáticos compartidos, como nombres de rutas, tipos de
 movimientos y categorías predeterminadas. Las constantes compartidas utilizan
 nombres en mayúsculas.
-`deposits.js` centraliza los tipos e íconos permitidos para crear depósitos.
+`deposits.ts` centraliza los tipos e íconos permitidos para crear depósitos.
 
 ### `src/contexts/`
 
 Contiene el estado compartido entre pantallas que debe vivir durante la sesión.
-`AppearanceContext.js` coordina la preferencia de apariencia, usa el tema del
+`AppearanceContext.tsx` coordina la preferencia de apariencia, usa el tema del
 dispositivo en modo del sistema y ofrece los temas claro u oscuro elegidos en el
 Perfil. La preferencia se guarda en SQLite y, si SecureStore conserva el
 identificador recordado, se carga antes de mostrar Inicio sin validar la sesión.
 El deslizador sigue siendo quien valida la sesión; al cerrar sesión se vuelve
 temporalmente al modo del sistema.
-`ToastContext.js` conserva el aviso actual mientras cambian las rutas y lo
+`ToastContext.tsx` conserva el aviso actual mientras cambian las rutas y lo
 presenta por encima del contenido de la aplicación. El proveedor también envuelve
-la navegación desde `App.js`, así las pantallas usan el mismo `ContextoAvisos`
+la navegación desde `App.tsx`, así las pantallas usan el mismo `ContextoAvisos`
 sin duplicar componentes de aviso.
 
 ### `src/styles/`
 
 Contiene los estilos globales y tokens visuales reutilizables de React Native.
-`colors.js` define la paleta y los temas claro/oscuro, mientras que
-`globalStyles.js` concentra el `StyleSheet`, el espaciado, la tipografía y los
-bordes. `authStyles.js` define layouts y detalles de autenticación basados en
-el tema global; `HomeScreenStyles.js` contiene estilos propios de la pantalla
+`colors.ts` define la paleta y los temas claro/oscuro, mientras que
+`globalStyles.ts` concentra el `StyleSheet`, el espaciado, la tipografía y los
+bordes. `authStyles.ts` define layouts y detalles de autenticación basados en
+el tema global; `HomeScreenStyles.ts` contiene estilos propios de la pantalla
 de inicio. No contiene CSS web ni componentes completos.
 
 ### `assets/`
@@ -307,9 +307,17 @@ guardan en `docs/arquitectura/`, el sistema visual en `docs/interfaces/`, la
 configuración técnica en `docs/configuracion/` y los procesos de trabajo en
 `docs/proceso/`.
 
+## TypeScript
+
+La configuración hereda `expo/tsconfig.base`, no admite fuentes JavaScript
+y comprueba la app separada de las herramientas Node. Ambas usan `strict: true`;
+incluyen contratos de SQLite, servicios, navegación, formularios, componentes,
+apariencia, avisos, OCR y adaptadores de pruebas.
+Ver [configuración y verificación](../configuracion/typescript.md).
+
 ## Convenciones
 
-- Solo JavaScript: todos los archivos de código utilizan `.js`.
+- TypeScript: usa `.ts` para lógica, `.tsx` cuando haya JSX y `.cts` para plugins CommonJS de Expo. El módulo Android conserva Kotlin.
 - Los archivos fuente y sus rutas usan nombres en inglés.
 - Los identificadores propios de AHRE (variables, funciones, componentes y
   propiedades internas) usan nombres en español directamente. Las APIs de
@@ -324,9 +332,9 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
 
 ## Decisiones y límites del Issue
 
-- `App.js` continúa siendo el archivo raíz de composición y `index.js` continúa
+- `App.tsx` continúa siendo el archivo raíz de composición y `index.ts` continúa
   siendo el punto de registro de Expo.
-- `App.js` muestra Inicio mientras prepara SQLite y la mantiene como ruta
+- `App.tsx` muestra Inicio mientras prepara SQLite y la mantiene como ruta
   inicial. El deslizador consulta la sesión: sin sesión reemplaza Inicio por
   Login; con sesión válida solicita biometría y luego abre el Dashboard. Inicio
   no queda en el historial después de ese destino.
@@ -338,7 +346,7 @@ configuración técnica en `docs/configuracion/` y los procesos de trabajo en
   de sus respectivos Issues.
 - No se crean carpetas vacías para funcionalidades futuras. Las nuevas áreas se
   incorporarán cuando tengan pantallas, componentes o lógica real.
-- `structureSmokeTest.js` contiene una función auxiliar que comprueba que las
+- `structureSmokeTest.ts` contiene una función auxiliar que comprueba que las
   rutas base estén definidas. Actualmente no está conectada a una pantalla; cuando
   se incorpore un test runner, esta comprobación deberá trasladarse a pruebas
   automatizadas.

@@ -38,7 +38,7 @@ flowchart TD
   I --> J[COMMIT o ROLLBACK completo]
 ```
 
-El repositorio de movimientos ejecuta este flujo con `socialMovementReversal.js`.
+El repositorio de movimientos ejecuta este flujo con `socialMovementReversal.ts`.
 Una compra abierta con entregas vigentes exige corregirlas antes; al revertir
 una compra abierta se cancela su ítem. Un pago confirmado no cambia de importe,
 fecha, origen o movimiento: se anula y se registra otro. Una compensación ni

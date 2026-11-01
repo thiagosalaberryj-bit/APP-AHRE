@@ -2,7 +2,7 @@
 
 ## Alcance y flujo
 
-La pantalla secundaria existente `src/screens/OcrScreen.js` utiliza ML Kit para
+La pantalla secundaria existente `src/screens/OcrScreen.tsx` utiliza ML Kit para
 reconocimiento local y permite confirmar exclusivamente egresos. El comparador
 temporal y las opciones Tesseract se retiraron por indicación del líder.
 
@@ -32,7 +32,7 @@ texto pero faltan campos, se abre la revisión para completarlos manualmente.
 
 ## Revisión del egreso
 
-`src/ocr/OcrExpenseForm.js` es un formulario dentro de la misma pantalla, con:
+`src/ocr/OcrExpenseForm.tsx` es un formulario dentro de la misma pantalla, con:
 
 - comercio reconocido como referencia;
 - total editable mediante `MoneyInput`;
@@ -63,7 +63,7 @@ se muestran junto al dato y los generales usan el toast de AHRE. Un error de
 guardado conserva el borrador. El éxito informa y regresa a la pantalla anterior.
 
 Se conservan los componentes compartidos sin modificarlos, los estilos locales
-de `OcrScreenStyles.js`, los tokens globales y ambos temas. La foto sirve para
+de `OcrScreenStyles.ts`, los tokens globales y ambos temas. La foto sirve para
 revisar: no se almacena como adjunto permanente del movimiento.
 
 La evaluación, heurísticas, límites, imágenes, funcionamiento offline y pruebas

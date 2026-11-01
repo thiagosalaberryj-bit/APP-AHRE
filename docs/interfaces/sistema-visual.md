@@ -3,26 +3,26 @@
 ## Objetivo
 
 Este documento registra los tokens visuales y temas compartidos de AHRE. La
-aplicación está preparada para Expo y React Native utilizando JavaScript y
+aplicación está preparada para Expo y React Native utilizando TypeScript y
 `StyleSheet`.
 
 React Native no utiliza archivos CSS web. Por eso los estilos se organizan en
-archivos `.js` dentro de `src/styles/`. Las pantallas podrán combinar estos
+archivos `.ts` dentro de `src/styles/`. Las pantallas podrán combinar estos
 estilos globales con estilos locales de layout cuando sea necesario.
 
 Los estilos globales se combinan con layouts locales cuando una interfaz lo
 necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
-`src/styles/authStyles.js` para sus distribuciones particulares.
+`src/styles/authStyles.ts` para sus distribuciones particulares.
 
 ## Organización
 
 ```text
 src/
 └── styles/
-    ├── HomeScreenStyles.js # Estilos propios de la pantalla de inicio
-    ├── authStyles.js    # Layout y detalles visuales de Login y Registro
-    ├── colors.js        # Paleta, estados y temas
-    └── globalStyles.js  # StyleSheet, tipografía, espaciado y bordes
+    ├── HomeScreenStyles.ts # Estilos propios de la pantalla de inicio
+    ├── authStyles.ts    # Layout y detalles visuales de Login y Registro
+    ├── colors.ts        # Paleta, estados y temas
+    └── globalStyles.ts  # StyleSheet, tipografía, espaciado y bordes
 ```
 
 Las constantes de rutas y otras constantes de dominio continúan en
@@ -79,7 +79,7 @@ se comunica con un icono distinto.
 
 El texto, el botón de cierre y el progreso usan blanco; la base de la barra usa
 blanco con `22%` de opacidad. El componente no define colores aparte: consume
-los tokens de `src/styles/colors.js`.
+los tokens de `src/styles/colors.ts`.
 La API y los casos de uso compartidos se describen en
 [`docs/funcionalidades/notificaciones-toast.md`](../funcionalidades/notificaciones-toast.md).
 
@@ -122,7 +122,7 @@ debajo de la fila del título.
 
 ## Tema claro y oscuro
 
-Los dos temas están definidos en `src/styles/colors.js` dentro de `TEMAS.claro`
+Los dos temas están definidos en `src/styles/colors.ts` dentro de `TEMAS.claro`
 y `TEMAS.oscuro`. `crearEstilosGlobales(tema)` recibe uno de estos objetos y
 genera el `StyleSheet` correspondiente.
 
@@ -134,14 +134,14 @@ lee la apariencia de ese usuario desde SQLite antes de mostrar Inicio, sin
 validar la sesión en ese momento. Sin una sesión recordada, se usa el modo del
 dispositivo. `app.json` declara
 `userInterfaceStyle: "automatic"` y define fondos de splash para ambos modos.
-`App.js` actualiza el fondo nativo y el contraste de los controles Android según
-el tema activo. `AppNavigator.js` aplica los mismos colores al tema de React
+`App.tsx` actualiza el fondo nativo y el contraste de los controles Android según
+el tema activo. `AppNavigator.tsx` aplica los mismos colores al tema de React
 Navigation. El Native Stack comparte el fondo del tema para evitar destellos
 blancos durante las transiciones.
 
-En las rutas que muestran la barra inferior, `BottomTabBar.js` usa el fondo de
+En las rutas que muestran la barra inferior, `BottomTabBar.tsx` usa el fondo de
 pantalla en el exterior de las esquinas superiores redondeadas y la superficie
-del tema dentro de la barra y en su inset inferior. `AppNavigator.js` reconoce
+del tema dentro de la barra y en su inset inferior. `AppNavigator.tsx` reconoce
 la ruta superior `PRINCIPAL` y dibuja una capa no interactiva en el área segura
 inferior de Android: usa la superficie cuando están las pestañas y el fondo
 general en Inicio, Login, Registro y pantallas secundarias. El tamaño de esta
@@ -179,7 +179,7 @@ Se utiliza la fuente del sistema del dispositivo. No se carga una fuente
 externa por ahora, aunque `expo-font` queda disponible para una decisión futura
 si el diseño lo requiere.
 
-Los valores tipográficos están definidos dentro de `src/styles/globalStyles.js`:
+Los valores tipográficos están definidos dentro de `src/styles/globalStyles.ts`:
 
 | Uso | Tamaño |
 | --- | ---: |
@@ -195,7 +195,7 @@ Los valores tipográficos están definidos dentro de `src/styles/globalStyles.js
 
 ## Espaciado
 
-Los valores están centralizados dentro de `src/styles/globalStyles.js`:
+Los valores están centralizados dentro de `src/styles/globalStyles.ts`:
 
 | Nombre | Valor |
 | --- | ---: |
@@ -211,7 +211,7 @@ Los valores están centralizados dentro de `src/styles/globalStyles.js`:
 
 ## Bordes
 
-Los radios y anchos están definidos dentro de `src/styles/globalStyles.js`:
+Los radios y anchos están definidos dentro de `src/styles/globalStyles.ts`:
 
 | Elemento | Valor |
 | --- | ---: |
@@ -226,7 +226,7 @@ Los radios y anchos están definidos dentro de `src/styles/globalStyles.js`:
 
 ## Estilos globales disponibles
 
-`src/styles/globalStyles.js` contiene estilos reutilizables para:
+`src/styles/globalStyles.ts` contiene estilos reutilizables para:
 
 - pantallas y contenido;
 - encabezados;
@@ -240,7 +240,7 @@ Los radios y anchos están definidos dentro de `src/styles/globalStyles.js`:
 - navegación inferior y sección activa.
 
 Los estilos globales son consumidos por las pantallas y componentes existentes.
-Las reglas exclusivas de Login y Registro permanecen en `authStyles.js` para no
+Las reglas exclusivas de Login y Registro permanecen en `authStyles.ts` para no
 duplicar tokens globales ni mezclar sus layouts con los de otras pantallas.
 
 ## Criterios de accesibilidad
@@ -263,4 +263,4 @@ duplicar tokens globales ni mezclar sus layouts con los de otras pantallas.
 - La pantalla inicial importa los estilos globales para comprobar que pueden
   reutilizarse desde una pantalla de Expo.
 - Expo compila el bundle Android sin errores de importación.
-- No se agregan archivos `.css`, `.ts` ni `.tsx`.
+- Los estilos permanecen en archivos `.ts` y los componentes con JSX en `.tsx`; no se usa CSS web.

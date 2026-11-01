@@ -25,7 +25,7 @@ texto fijo en el centro.
 
 ## Comprobación al deslizar
 
-`src/screens/HomeScreen.js` llama a `obtenerSesionActual()` al terminar el
+`src/screens/HomeScreen.tsx` llama a `obtenerSesionActual()` al terminar el
 deslizamiento. El servicio recupera el identificador desde la memoria o
 `expo-secure-store` y confirma en SQLite que corresponda a un usuario activo.
 Si la sesión es válida, Inicio conserva la apariencia ya cargada durante el
@@ -65,7 +65,7 @@ identificador del usuario.
 
 ## Arranque y errores de base de datos
 
-`App.js` mantiene la pantalla nativa de carga mientras inicializa SQLite. Al
+`App.tsx` mantiene la pantalla nativa de carga mientras inicializa SQLite. Al
 terminar, monta Inicio con el deslizador habilitado; no muestra un texto de
 preparación antes de «Desliza para iniciar». Si falla la inicialización, oculta
 la pantalla nativa para presentar un error persistente con la acción
@@ -89,8 +89,8 @@ botón Cerrar sesión de Perfil pertenece a otro issue.
 ## Datos temporales para Expo Go
 
 Por indicación del usuario se agregó un acceso temporal en Inicio, solo para
-desarrollo con Expo Go. `DevelopmentDataButton.js` llama a
-`src/development/seedDevelopmentData.js`, protegido por `__DEV__`, y abre el
+desarrollo con Expo Go. `DevelopmentDataButton.tsx` llama a
+`src/development/seedDevelopmentData.ts`, protegido por `__DEV__`, y abre el
 Dashboard cuando termina. No se modificaron perfiles EAS, configuración nativa
 ni preparación de APK. El acceso no solicita huella porque inicia sesión con
 las credenciales ficticias de una cuenta de pruebas separada.
@@ -112,10 +112,24 @@ los depósitos se crean con una fecha anterior para que sus movimientos afecten
 el saldo según las reglas financieras existentes. Se reutilizan los repositorios
 de depósitos y movimientos dentro de una misma transacción.
 
+La misma transacción prepara tres contactos (Ana García, Bruno Pérez y Carla
+López) y la sala abierta **Encuentro de prueba**, con cuatro personas contando
+a «Vos». Incluye cena ($12.000), taxi ($6.000), compras con reparto manual
+($10.000) y café ($1.500). Hay pagos propios y de terceros, partes ya pagadas
+y pendientes. Las asociaciones a depósitos se guardan como borradores: los
+seis movimientos de ejemplo y el saldo total de $872.800 no cambian hasta
+confirmar el cierre o registrar pagos.
+
+También se prepara una deuda manual de $1.800 por una entrada adelantada por
+Ana, que permite probar pagos parciales y completos sin cerrar la sala. El cierre
+de la sala confirma seis movimientos nuevos y deja $9.500 por cobrar y $3.800
+por pagar, incluida esa deuda manual, si no se modificaron los ejemplos.
+
 Cada ejemplo tiene un identificador estable asociado a la cuenta de pruebas.
 Volver a pulsar no duplica registros, no restaura nombres o saldos cambiados,
-no reactiva depósitos ni vuelve a insertar movimientos anulados. Las pulsaciones
-simultáneas comparten una sola preparación. Si falla la carga financiera, se
+no reactiva depósitos ni vuelve a insertar movimientos anulados. Tampoco
+restablece personas, gastos, deudas ni una sala ya cerrada. Las pulsaciones
+simultáneas comparten una sola preparación. Si falla cualquier parte de la carga, se
 revierte completa y se puede reintentar; la cuenta creada previamente puede
 permanecer vacía hasta completar el reintento.
 
@@ -125,9 +139,9 @@ a otra cuenta se usa el cierre de sesión y el Login normal. Este acceso no carg
 personas, salas ni deudas: Social comienza vacío y conserva los registros reales
 que se creen durante las pruebas.
 
-Para retirar el acceso temporal se eliminan el botón de HomeScreen.js, su estado
+Para retirar el acceso temporal se eliminan el botón de HomeScreen.tsx, su estado
 de bloqueo del deslizador, el componente, su archivo de estilos, src/development/
-y tests/developmentData.test.js. No requiere cambios de esquema. Las pruebas
+y tests/developmentData.test.ts. No requiere cambios de esquema. Las pruebas
 automatizadas verifican la carga con autenticación y repositorios reales,
 reentrada, aislamiento, rollback y bloqueo fuera de desarrollo.
 

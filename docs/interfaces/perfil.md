@@ -10,7 +10,7 @@ queda fuera de este Issue.
 
 ## Estructura de la pantalla
 
-`src/screens/ProfileScreen.js` es secundaria con `EncabezadoSeccion`
+`src/screens/ProfileScreen.tsx` es secundaria con `EncabezadoSeccion`
 («Perfil») y contenido desplazable con `KeyboardAvoidingView`:
 
 ```text
@@ -40,8 +40,8 @@ Perfil
 
 Se abre desde el botón de Perfil del Dashboard. La flecha del encabezado
 vuelve atrás. Los estilos locales están en
-`src/styles/ProfileScreenStyles.js` con tokens de `colors.js` y
-`globalStyles.js`; el contenido limita su ancho a 480 puntos y acompaña los
+`src/styles/ProfileScreenStyles.ts` con tokens de `colors.ts` y
+`globalStyles.ts`; el contenido limita su ancho a 480 puntos y acompaña los
 temas claro y oscuro, incluidos modales y controles.
 
 ## Información del usuario
@@ -92,7 +92,7 @@ preferencias locales y lo recupera al volver a abrir AHRE.
 
 ## Configuración de notificaciones
 
-Fila con `Conmutador` (`src/components/Toggle.js`, mismo patrón visual de
+Fila con `Conmutador` (`src/components/Toggle.tsx`, mismo patrón visual de
 Inicio de Sesión) y texto `Activadas/Desactivadas`. El estado se guarda como
 `notificaciones_activas`; todavía no solicita permisos ni programa avisos.
 

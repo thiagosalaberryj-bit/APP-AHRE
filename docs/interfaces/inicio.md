@@ -54,13 +54,14 @@ En Expo Go, Inicio muestra Entrar con datos de prueba encima del deslizador,
 con la aclaración Solo desarrollo · Cuenta independiente. Está condicionado
 por `__DEV__`; no se habilitó ningún perfil ni APK para este acceso.
 
-El botón prepara tres depósitos y seis movimientos en una cuenta local de
-pruebas y abre el Dashboard. Muestra Preparando datos… y bloquea el deslizador
+El botón prepara tres depósitos, seis movimientos, tres contactos, una sala
+con cuatro gastos y una deuda pendiente en una cuenta local de pruebas; luego
+abre el Dashboard. Muestra Preparando datos… y bloquea el deslizador
 mientras trabaja. Un error conserva Inicio y se comunica con el toast existente.
 El flujo normal del deslizador sigue disponible cuando termina.
 
-El componente y sus estilos están separados en DevelopmentDataButton.js y
-DevelopmentDataButtonStyles.js. La preparación está en src/development/ y se
+El componente y sus estilos están separados en DevelopmentDataButton.tsx y
+DevelopmentDataButtonStyles.ts. La preparación está en src/development/ y se
 describe en la [lógica de Inicio](../funcionalidades/inicio.md#datos-temporales-para-expo-go).
 
 ## Tema, áreas seguras y conectividad

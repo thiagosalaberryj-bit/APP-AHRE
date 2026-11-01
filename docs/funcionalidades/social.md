@@ -20,16 +20,16 @@ Los [diagramas](../diagramas/social/README.md) explican los recorridos, la
 
 | Módulo de src/social | Responsabilidad |
 | --- | --- |
-| socialService.js | Entrada pública para las interfaces y pruebas. |
-| socialStore.js | Sesión, propiedad, transacción y representación interna de Vos. |
-| socialValidation.js | Errores legibles, importes, normalización y reparto. |
-| socialPeopleService.js | Alta, edición, desactivación y reactivación de personas. |
-| socialRoomService.js | Crear salas, cambiar pertenencias y cerrar sin duplicados. |
-| socialExpenseService.js | Revisar y guardar ítems, partes y asociaciones de depósito sin mover dinero. |
-| socialRoomDraft.js | Leer planes de pago, preparar operaciones y reservar movimientos existentes. |
-| socialPaymentService.js | Deuda manual, pago, cancelación y vinculación de movimientos. |
-| socialQueryService.js | Datos de presentación y totales derivados de registros vigentes. |
-| useSocialScreen.js y SocialDataContext.js | Carga al recuperar el foco y provisión de datos por pantalla. |
+| socialService.ts | Entrada pública para las interfaces y pruebas. |
+| socialStore.ts | Sesión, propiedad, transacción y representación interna de Vos. |
+| socialValidation.ts | Errores legibles, importes, normalización y reparto. |
+| socialPeopleService.ts | Alta, edición, desactivación y reactivación de personas. |
+| socialRoomService.ts | Crear salas, cambiar pertenencias y cerrar sin duplicados. |
+| socialExpenseService.ts | Revisar y guardar ítems, partes y asociaciones de depósito sin mover dinero. |
+| socialRoomDraft.ts | Leer planes de pago, preparar operaciones y reservar movimientos existentes. |
+| socialPaymentService.ts | Deuda manual, pago, cancelación y vinculación de movimientos. |
+| socialQueryService.ts | Datos de presentación y totales derivados de registros vigentes. |
+| useSocialScreen.tsx y SocialDataContext.ts | Carga al recuperar el foco y provisión de datos por pantalla. |
 
 Los repositorios sociales están adaptados a las siete tablas del esquema. El
 servicio comprueba propiedad de cada referencia antes de utilizarla. Las
@@ -250,7 +250,7 @@ identificadores únicos y sala; las pruebas verifican los mismos rechazos en
 ambas operaciones sin dejar gastos ni movimientos parciales.
 
 ```powershell
-node --experimental-vm-modules --test tests/socialSchema.test.js tests/socialService.test.js tests/socialInterface.test.js tests/developmentData.test.js tests/receiptParser.test.js tests/ocrExpenseDraft.test.js tests/ocrExpensePersistence.test.js
+node --experimental-vm-modules --test tests/socialSchema.test.ts tests/socialService.test.ts tests/socialInterface.test.ts tests/developmentData.test.ts tests/receiptParser.test.ts tests/ocrExpenseDraft.test.ts tests/ocrExpensePersistence.test.ts
 ```
 
 Quedan para revisión en Expo Go: tamaño de texto, teclado, navegación de regreso,

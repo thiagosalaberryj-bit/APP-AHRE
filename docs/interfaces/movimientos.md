@@ -10,7 +10,7 @@ quedan fuera de este alcance.
 
 ## Estructura del formulario de egreso
 
-`src/screens/ExpenseScreen.js` presenta «Nuevo egreso» con
+`src/screens/ExpenseScreen.tsx` presenta «Nuevo egreso» con
 `EncabezadoSeccion` y un formulario desplazable compatible con el teclado:
 
 ```text
@@ -41,7 +41,7 @@ formulario. Al regresar de Nuevo depósito, vuelve a consultar los datos locales
 
 ## Estructura del formulario de ingreso
 
-`src/screens/IncomeScreen.js` contiene el formulario compartido, configurado
+`src/screens/IncomeScreen.tsx` contiene el formulario compartido, configurado
 como «Nuevo ingreso» desde su ruta existente:
 
 ```text
@@ -85,7 +85,7 @@ flujo anterior.
 
 ### Monto
 
-`EntradaMonto` (`src/components/MoneyInput.js`) con teclado numérico,
+`EntradaMonto` (`src/components/MoneyInput.tsx`) con teclado numérico,
 prefijo `$`, formato visual `12.500` y un campo destacado de `76` puntos con
 tipografía de `32` puntos. Incluye estado enfocado con `tema.foco`, estado
 inválido con `campoError` y botón `X` para limpiar. El contador y la limpieza
@@ -100,7 +100,7 @@ descripción con el movimiento.
 
 ### Depósito
 
-`SelectorDeposito` (`src/components/DepositSelector.js`) con tarjeta
+`SelectorDeposito` (`src/components/DepositSelector.tsx`) con tarjeta
 desplegable. Ambos formularios reciben desde SQLite los depósitos activos del
 usuario y guardan el identificador, no solo el nombre visible:
 
@@ -116,11 +116,11 @@ borde de foco y radio activo.
 
 ### Categoría
 
-`SelectorCategoria` (`src/components/CategorySelector.js`) muestra cuatro
+`SelectorCategoria` (`src/components/CategorySelector.tsx`) muestra cuatro
 tarjetas compactas y una quinta tarjeta «Más», sin desplazamiento horizontal.
 «Más» abre un modal con las categorías adicionales. El servicio de categorías
 entrega el catálogo local de ingreso o egreso definido en
-`src/constants/movimientos.js`.
+`src/constants/movimientos.ts`.
 
 Categorías de egreso:
 
@@ -168,22 +168,22 @@ identificador contra el catálogo correspondiente antes de guardar.
 
 ### Fecha
 
-`SelectorFecha` (`src/components/DateSelector.js`): muestra la fecha actual o
+`SelectorFecha` (`src/components/DateSelector.tsx`): muestra la fecha actual o
 la fecha elegida. Al presionarla abre un calendario mensual en un modal, permite
 navegar entre meses y seleccionar un día o volver a hoy. La fecha elegida se
 combina con la hora y se guarda en el movimiento.
 
 ### Hora
 
-`SelectorHora` (`src/components/TimeSelector.js`): muestra la hora actual o la
+`SelectorHora` (`src/components/TimeSelector.tsx`): muestra la hora actual o la
 elegida. El modal permite ajustar horas y minutos en formato de 24 horas y
 confirmar la selección. La hora elegida se guarda junto con la fecha en
 `fecha_hora` usando el formato ISO 8601 definido para los movimientos.
 
 ### Recurrencia
 
-`ControlRecurrencia` (`src/components/RecurrenceControl.js`): fila con
-`Conmutador` (`src/components/Toggle.js`) reutilizado del patrón visual de
+`ControlRecurrencia` (`src/components/RecurrenceControl.tsx`): fila con
+`Conmutador` (`src/components/Toggle.tsx`) reutilizado del patrón visual de
 Inicio de Sesión, con transición animada, tamaño `56 × 32` y valor `No/Sí`. Al
 activarlo, permite seleccionar una frecuencia diaria, semanal, mensual o anual.
 Las opciones ocupan todo el ancho de la tarjeta y aparecen sin animación de
@@ -192,8 +192,8 @@ la ejecución automática de recurrencias queda pendiente.
 
 ## Formulario y componentes compartidos
 
-`ExpenseScreen.js` configura como egreso el `FormularioMovimiento` definido en
-`IncomeScreen.js`. Ambos usan la misma validación, servicio local y componentes:
+`ExpenseScreen.tsx` configura como egreso el `FormularioMovimiento` definido en
+`IncomeScreen.tsx`. Ambos usan la misma validación, servicio local y componentes:
 
 ```text
 MoneyInput
@@ -210,9 +210,9 @@ solo en enfocado o seleccionado; las categorías usan sus propios acentos de
 color. En móvil no hay `hover`. Además se reutilizan `SectionHeader`,
 `PrimaryButton` y `ContextoAvisos` sin modificar sus implementaciones. Los
 estilos locales están en
-`src/styles/expenseStyles.js` y consumen tokens de `colors.js` y
-`globalStyles.js`. Los catálogos están definidos localmente en
-`src/constants/movimientos.js` y se consultan por medio de
+`src/styles/expenseStyles.ts` y consumen tokens de `colors.ts` y
+`globalStyles.ts`. Los catálogos están definidos localmente en
+`src/constants/movimientos.ts` y se consultan por medio de
 `categoriasRepositorio`.
 
 ## Estados visuales
@@ -253,7 +253,7 @@ botones y modales.
 
 ## Historial y detalle de movimientos
 
-`src/screens/MovementsScreen.js` es pestaña con `MainHeader` («Movimientos») y
+`src/screens/MovementsScreen.tsx` es pestaña con `MainHeader` («Movimientos») y
 consulta SQLite para el usuario de la sesión y agrupa los movimientos vigentes
 por día. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
 `tipo`, no se deduce del monto. Los encabezados muestran «Hoy», «Ayer» o la
@@ -261,9 +261,9 @@ fecha para los días anteriores. Cada tarjeta usa un ícono de categoría y
 presenta `categoría · descripción`, `hora · depósito`, «Ingreso» o «Egreso» y
 el monto con signo. La descripción se recorta cuando no entra; el tipo también
 se indica con texto, no solo con color. Los estilos locales están en
-`src/styles/MovementsScreenStyles.js`.
+`src/styles/MovementsScreenStyles.ts`.
 
-Las filas reutilizan `TarjetaMovimiento` (`src/components/MovementCard.js`) y
+Las filas reutilizan `TarjetaMovimiento` (`src/components/MovementCard.tsx`) y
 reciben el nombre real del depósito relacionado. SQLite ordena por
 `fecha_hora DESC, id DESC`. La pantalla carga 50 filas por página; «Cargar más
 movimientos» solicita la siguiente página usando la fecha, hora e ID de la
@@ -322,7 +322,7 @@ tipo y categoría del esquema inicial.
 ### Detalle
 
 Al presionar una tarjeta se navega a `DETALLE_MOVIMIENTO`
-(`src/screens/MovementDetailScreen.js`, ya registrado) con solo
+(`src/screens/MovementDetailScreen.tsx`, ya registrado) con solo
 `{movimientoId}`. El detalle vuelve a consultar el movimiento y sus relaciones
 por ID y usuario activo. Muestra tipo, monto con signo, descripción, categoría,
 depósito, fecha y hora, estado y la fila `Recurrente: Sí · Frecuencia` solo

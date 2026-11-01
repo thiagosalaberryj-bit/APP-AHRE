@@ -73,9 +73,9 @@ Estadísticas.
 El detalle de categoría y el de movimiento son rutas secundarias del Stack
 principal, fuera de las pestañas. Al abrirlos se oculta la barra inferior y la
 flecha vuelve a la pantalla anterior. Los archivos de la pantalla de
-estadísticas son `src/screens/StatisticsScreen.js` y
-`src/styles/StatisticsScreenStyles.js`. Las pantallas de detalle y sus estilos
-son `src/screens/CategoryDetailScreen.js`,
-`src/styles/CategoryDetailScreenStyles.js`,
-`src/screens/MovementDetailScreen.js` y
-`src/styles/MovementDetailScreenStyles.js`.
+estadísticas son `src/screens/StatisticsScreen.tsx` y
+`src/styles/StatisticsScreenStyles.ts`. Las pantallas de detalle y sus estilos
+son `src/screens/CategoryDetailScreen.tsx`,
+`src/styles/CategoryDetailScreenStyles.ts`,
+`src/screens/MovementDetailScreen.tsx` y
+`src/styles/MovementDetailScreenStyles.ts`.
