@@ -48,7 +48,7 @@ export async function ajustarSaldoActual(depositoId: string, variacion: number, 
 
   const resultado = await conexion.runAsync(
     `UPDATE depositos
-     SET saldo_actual = saldo_actual + ?, fecha_actualizacion = ?
+     SET saldo_actual = ROUND(saldo_actual + ?, 2), fecha_actualizacion = ?
      WHERE id = ?;`,
     [variacionNumerica, new Date().toISOString(), depositoId],
   );

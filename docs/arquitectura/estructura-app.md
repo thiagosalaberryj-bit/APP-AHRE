@@ -4,9 +4,14 @@
 
 Esta estructura organiza AHRE, una aplicación móvil desarrollada con Expo y
 React Native utilizando TypeScript. Login y Registro implementan autenticación
-local y persistencia de sesión. Los movimientos y depósitos usan SQLite local;
+remota para la primera autorización y persistencia de sesión. Los movimientos
+y depósitos usan SQLite local;
 el OCR Android reconoce comprobantes y permite confirmar egresos mediante el
-servicio existente. La sincronización y la colaboración siguen pendientes.
+servicio existente. La sincronización envía lotes ordenados al backend MySQL,
+que recalcula saldos y valida las operaciones financieras y de Social antes de
+confirmarlas. La instalación autorizada conserva su funcionamiento offline;
+Social continúa trabajando con personas y salas de la cuenta, sin colaboración
+web entre cuentas en esta etapa.
 
 El informe del proyecto define AHRE como una aplicación orientada inicialmente
 a Android y con un enfoque offline-first. Por eso la información local es el

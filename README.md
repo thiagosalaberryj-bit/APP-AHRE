@@ -292,6 +292,22 @@ solo se admite con una autorización local previa. Otra instalación necesita
 confirmar el reemplazo, con advertencia sobre los datos que no llegaron al servidor.
 El perfil permite sincronizar y desvincular la instalación actual antes del cambio.
 
+El backend recalcula los saldos con centavos enteros y valida cada lote completo:
+depósitos, ingresos, egresos, ajustes, transferencias y Social. Comprueba las dos
+partes de las transferencias, los repartos, las compras, las deudas y los pagos,
+incluidas sus reversiones. Un rechazo de negocio conserva los pendientes locales
+y no confirma cambios parciales en MySQL. La app mantiene SQLite y el envío FIFO;
+crear un depósito offline y luego un movimiento conserva ese orden al reconectar.
+Las variaciones del saldo local se redondean a dos decimales en la transacción.
+
+Las pruebas de integración usan cuentas sintéticas y bases MySQL temporales.
+Para incluirlas en `npm test`, el backend debe estar compilado y deben definirse
+`AHRE_SERVER_SOURCE` con la ruta de SERVER-AHRE, `AHRE_MYSQL_TEST=1` y las variables
+`DB_HOST`, `DB_PORT`, `DB_USER` y `DB_PASSWORD` de un MySQL de pruebas. Sin esas
+variables, estos casos se omiten explícitamente. Cubren edición, desactivación,
+conciliación, cierre de salas, pagos parciales, reversiones, lotes manipulados,
+confirmaciones perdidas e importación de historial en otra instalación.
+
 Cada lote queda asociado a la generación de autorización con la que se creó.
 El servidor comprueba la autorización dentro de la transacción que aplica el lote.
 Al detectar una revocación, la app vuelve a Login y bloquea nuevas escrituras de

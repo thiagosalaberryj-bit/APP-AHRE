@@ -5,9 +5,183 @@ import {join} from 'node:path';
 import type {Server} from 'node:http';
 import {randomUUID} from 'node:crypto';
 import {preparar} from './helpers/localDatabase.ts';
+import type {CambioSync,LoteSync} from '../src/sync/protocol.ts';
+import {TABLAS_SYNC} from '../src/sync/protocol.ts';
 const rutaServidor=process.env.AHRE_SERVER_SOURCE;
 type Fila=Record<string,string|number|null>;
 interface BaseRemota {get:(sql:string,parametros?:(string|number|null)[])=>Promise<Fila|undefined>;close:()=>Promise<void>;}
+
+async function escenarioNegocio(t:import('node:test').TestContext){
+  const cargar=createRequire(join(rutaServidor!,'backend/package.json'));
+  const mysql=cargar('mysql2/promise') as {createConnection:(opciones:object)=>Promise<{query:(sql:string)=>Promise<unknown>;end:()=>Promise<void>}>};
+  const {prepararAplicacion}=cargar('./dist/app.js') as {prepararAplicacion:(opciones:object)=>Promise<{app:{listen:(puerto:number,host:string)=>Server};db:BaseRemota}>};
+  const configuracion={host:process.env.DB_HOST||'127.0.0.1',port:Number(process.env.DB_PORT)||3306,user:process.env.DB_USER||'root',password:process.env.DB_PASSWORD||''};
+  const admin=await mysql.createConnection(configuracion),nombre='ahre_test_'+randomUUID().replaceAll('-','');
+  await admin.query('CREATE DATABASE '+nombre);
+  t.after(async()=>{assert.match(nombre,/^ahre_test_[a-f0-9]{32}$/);await admin.query('DROP DATABASE '+nombre);await admin.end();});
+  const {app,db}=await prepararAplicacion({...configuracion,database:nombre}),servidor=app.listen(0,'127.0.0.1');
+  await new Promise<void>(r=>servidor.once('listening',r));
+  t.after(async()=>{servidor.closeAllConnections();await new Promise<void>(r=>servidor.close(()=>r()));await db.close();});
+  const direccion=servidor.address();assert.ok(direccion&&typeof direccion!=='string');
+  let offline=false,perderRespuesta=false;
+  const url=`http://127.0.0.1:${direccion.port}/api/v1`;
+  const transporte:typeof fetch=async(...args)=>{
+    if(offline)throw new Error('sin red');
+    const respuesta=await fetch(...args);
+    if(perderRespuesta&&args[0]===url+'/sync'&&args[1]?.method==='POST'&&respuesta.ok){perderRespuesta=false;throw new Error('se perdió la confirmación');}
+    return respuesta;
+  };
+  const e=await preparar(t,true,{url,fetch:transporte});
+  const usuario=await e.registrarUsuario({nombre:'Negocio',correo:'negocio@example.test',contrasena:'NegocioPrueba123!',confirmacion:'NegocioPrueba123!'});
+  await e.crearSesion(usuario.id,false);
+  let estado={estado:''};const dejar=e.observarSincronizacion(v=>{estado=v;});t.after(dejar);
+  async function comprobar(){
+    offline=false;await e.sincronizarCuenta(usuario.id);
+    assert.equal(estado.estado,'online',JSON.stringify(estado));
+    assert.equal(e.base.prepare('SELECT COUNT(*) n FROM sync_outbox').get()!.n,0);
+    for(const d of e.base.prepare('SELECT id,saldo_actual FROM depositos').all())assert.equal((await db.get('SELECT saldo_actual FROM depositos WHERE id=?',[String(d.id)]))!.saldo_actual,d.saldo_actual);
+    for(const tabla of ['movimientos','transferencias','personas','salas','gastos_compartidos','participantes_gasto','deudas','pagos_sociales']){
+      assert.equal((await db.get(`SELECT COUNT(*) n FROM ${tabla}`))!.n,e.base.prepare(`SELECT COUNT(*) n FROM ${tabla}`).get()!.n,tabla);
+    }
+    offline=true;
+  }
+  return {...e,usuario,db,url,comprobar,conectar:()=>{offline=false;},desconectar:()=>{offline=true;},perderConfirmacion:()=>{perderRespuesta=true;}};
+}
+
+test('negocio MySQL: depósitos, ingresos, egresos, ajustes y transferencias se reconcilian offline sin duplicarse',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+  const e=await escenarioNegocio(t);e.desconectar();
+  const datos={usuario_id:e.usuario.id,tipo:'efectivo' as const,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'};
+  const a=await e.depositosRepositorio.crear({...datos,nombre:'Principal',saldo_inicial:1000.01});
+  const b=await e.depositosRepositorio.crear({...datos,nombre:'Reserva',saldo_inicial:500});
+  const ingreso=await e.movimientosRepositorio.crear({deposito_id:a.id,tipo:'ingreso',categoria:'sueldo',monto:250.25,descripcion:'Ingreso',fecha_hora:'2026-01-01T12:00:00.000Z'});
+  const egreso=await e.movimientosRepositorio.crear({deposito_id:a.id,tipo:'egreso',categoria:'alimentacion',monto:100.11,descripcion:'Compra',fecha_hora:'2026-01-02T12:00:00.000Z'});
+  await e.comprobar();
+  await e.depositosRepositorio.actualizar(a.id,{nombre:'Principal editado',saldo_inicial:1200.02});
+  await e.movimientosRepositorio.actualizar(ingreso.id,{monto:300.33});
+  await e.movimientosRepositorio.actualizar(egreso.id,{deposito_id:b.id,monto:150.15});
+  await e.depositosRepositorio.actualizarSaldoInformado(a.id,1300.13,'Ajuste comprobado');
+  await e.comprobar();
+  const {transferencia}=await e.transferenciasRepositorio.crearConMovimientos({usuario_id:e.usuario.id,deposito_origen_id:a.id,deposito_destino_id:b.id,monto:200.21,fecha_hora:'2026-01-03T12:00:00.000Z'});
+  await e.comprobar();
+  await e.transferenciasRepositorio.actualizar(transferencia.id,{monto:300.31,descripcion:'Corregida'});
+  await e.comprobar();
+  await e.transferenciasRepositorio.eliminar(transferencia.id);
+  await e.movimientosRepositorio.eliminar(egreso.id);
+  await e.movimientosRepositorio.crear({deposito_id:a.id,tipo:'egreso',categoria:'transporte',monto:9999.99,descripcion:'Saldo negativo permitido',fecha_hora:'2026-01-04T12:00:00.000Z'});
+  await e.comprobar();
+  await e.depositosRepositorio.eliminar(b.id);
+  e.conectar();e.perderConfirmacion();await e.sincronizarCuenta(e.usuario.id);
+  assert.ok(Number(e.base.prepare('SELECT COUNT(*) n FROM sync_outbox').get()!.n)>0);
+  await e.comprobar();
+  assert.equal((await e.db.get('SELECT COUNT(*) n FROM transferencias'))!.n,2);
+  assert.equal((await e.db.get('SELECT activo FROM depositos WHERE id=?',[b.id]))!.activo,0);
+});
+
+test('negocio MySQL: Social conserva borradores, cierres, repartos, deudas, pagos parciales y reversiones offline',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+  const e=await escenarioNegocio(t);e.desconectar();
+  const deposito=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Social',tipo:'efectivo',saldo_inicial:100000,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'});
+  const lucia=(await e.guardarPersona({nombre:'Lucía',apellido:'Prueba',apodo:'Lu'}))!;
+  const tomas=(await e.guardarPersona({nombre:'Tomás',apellido:'Prueba',apodo:'Tom'}))!;
+  await e.crearSala({id:'sala-real',nombre:'Cena',descripcion:'Prueba completa',fecha:'2026-11-02',categoriaId:'alimentacion',icono:'restaurant-outline',color:'#BED5C8',personasIds:[lucia.id,tomas.id]});
+  const gasto={id:'gasto-real',claveOperacion:'gasto-real',salaId:'sala-real',descripcion:'Cena '+ 'A'.repeat(495),monto:'1000,01',reparto:'iguales' as const,pagadorId:'vos',involucradas:['vos',lucia.id,tomas.id],pagaron:[lucia.id],montosManuales:{}};
+  const plan=await e.previsualizarGasto(gasto),fondos=Object.fromEntries(plan.operaciones.map(o=>[o.clave,{depositoId:deposito.id}]));
+  await e.guardarGasto(gasto,fondos);await e.comprobar();
+  const editado={...gasto,gastoId:gasto.id,version:1,monto:'1200,01'};
+  await e.guardarGasto(editado,fondos);await e.comprobar();
+  await e.cambiarActividadPersona(tomas.id,false);await e.comprobar();
+  await e.cerrarSala('sala-real');await e.cerrarSala('sala-real');await e.comprobar();
+  const deuda=(await e.cargarSocial()).deudas.find(d=>d.personaId===tomas.id)!;assert.ok(deuda);
+  const pago=await e.registrarPagoDeuda({deudaId:deuda.id,monto:'100,01',claveOperacion:'pago-parcial'},{depositoId:deposito.id});
+  await e.comprobar();
+  await e.movimientosRepositorio.eliminar(pago.movimiento_id!);await e.comprobar();
+  await e.registrarPagoDeuda({deudaId:deuda.id,monto:'400',claveOperacion:'pago-total'},{depositoId:deposito.id});await e.comprobar();
+  const manual=await e.crearDeudaPersonal({personaId:lucia.id,direccion:'me_deben',monto:'500,05',descripcion:'A'.repeat(500)},{depositoId:deposito.id});
+  await e.comprobar();
+  const reintegro=await e.registrarPagoDeuda({deudaId:manual.id,monto:'200,02',claveOperacion:'reintegro'},{depositoId:deposito.id});await e.comprobar();
+  await e.movimientosRepositorio.eliminar(reintegro.movimiento_id!);await e.comprobar();
+  const origen=e.base.prepare("SELECT movimiento_id FROM pagos_sociales WHERE deuda_id=? AND clase='origen_deuda'").get(manual.id)!;
+  await e.movimientosRepositorio.eliminar(String(origen.movimiento_id));await e.comprobar();
+  assert.equal((await e.db.get('SELECT estado FROM deudas WHERE id=?',[manual.id]))!.estado,'cancelada');
+  const debida=await e.crearDeudaPersonal({personaId:lucia.id,direccion:'debo',monto:'800,08',descripcion:'Debo'});await e.comprobar();
+  await e.registrarPagoDeuda({deudaId:debida.id,monto:'300,03',claveOperacion:'debida-parcial'},{depositoId:deposito.id});await e.comprobar();
+  await e.cancelarDeuda(debida.id);await e.comprobar();
+  assert.deepEqual(e.base.prepare('PRAGMA foreign_key_check').all(),[]);
+});
+
+test('negocio MySQL: lotes manipulados se rechazan completos y la cola válida puede reintentarse',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+  const e=await escenarioNegocio(t);await e.comprobar();
+  async function rechazar(transformar:(cambios:CambioSync[])=>CambioSync[],mensaje:RegExp){
+    e.conectar();
+    const remota=(await e.obtenerSesionRemota(e.usuario.id))!;
+    const primero=e.base.prepare('SELECT lote FROM sync_outbox ORDER BY secuencia LIMIT 1').get()!;assert.ok(primero);
+    const cambios=e.base.prepare('SELECT cambio FROM sync_outbox WHERE lote=? ORDER BY secuencia').all(primero.lote).map(f=>JSON.parse(String(f.cambio)) as CambioSync);
+    const revision=Number((await e.db.get('SELECT revision FROM versiones WHERE usuario_id=?',[e.usuario.id]))!.revision);
+    const lote:LoteSync={id:String(primero.lote),base:revision,generacion:remota.generacion,cambios:transformar(cambios)};
+    const cola=JSON.stringify(e.base.prepare('SELECT * FROM sync_outbox ORDER BY secuencia').all());
+    await assert.rejects(e.solicitarRemoto('/sync',lote,remota.token),error=>{
+      assert.equal((error as {estado:number}).estado,422);assert.match((error as Error).message,mensaje);return true;
+    });
+    assert.equal((await e.db.get('SELECT revision FROM versiones WHERE usuario_id=?',[e.usuario.id]))!.revision,revision);
+    assert.equal(await e.db.get('SELECT id FROM lotes WHERE id=?',[lote.id]),undefined);
+    assert.equal(JSON.stringify(e.base.prepare('SELECT * FROM sync_outbox ORDER BY secuencia').all()),cola);
+    e.desconectar();
+  }
+  const a=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Principal',tipo:'efectivo',saldo_inicial:10000,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'});
+  await rechazar(c=>c.map(x=>({...x,datos:{...x.datos,saldo_actual:99999}})),/saldo/);
+  assert.equal(await e.db.get('SELECT id FROM depositos WHERE id=?',[a.id]),undefined);
+  await e.comprobar();
+  const b=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Reserva',tipo:'efectivo',saldo_inicial:0,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'});await e.comprobar();
+  await e.transferenciasRepositorio.crearConMovimientos({usuario_id:e.usuario.id,deposito_origen_id:a.id,deposito_destino_id:b.id,monto:100});
+  await rechazar(c=>c.filter(x=>!(x.tabla==='movimientos'&&x.datos.tipo==='transferencia_entrada')).map(x=>x.tabla==='depositos'&&x.datos.id===b.id?{...x,datos:{...x.datos,saldo_actual:0}}:x),/dos movimientos/);
+  assert.equal((await e.db.get('SELECT COUNT(*) n FROM transferencias'))!.n,0);await e.comprobar();
+  const persona=(await e.guardarPersona({nombre:'Contacto',apellido:'Prueba',apodo:'C'}))!;await e.comprobar();
+  await e.crearSala({id:'sala-invalidos',nombre:'Sala',descripcion:'',fecha:'2026-11-02',categoriaId:'alimentacion',icono:'restaurant-outline',color:'#BED5C8',personasIds:[persona.id]});await e.comprobar();
+  const gasto={id:'gasto-invalido',claveOperacion:'gasto-invalido',salaId:'sala-invalidos',descripcion:'Partes exactas',monto:'100',reparto:'iguales' as const,pagadorId:'vos',involucradas:['vos',persona.id],pagaron:[],montosManuales:{}};
+  await e.guardarGasto(gasto,{compra:{depositoId:a.id}});
+  await rechazar(c=>c.map(x=>x.tabla==='participantes_gasto'?{...x,datos:{...x.datos,monto_correspondiente:49.99}}:x),/sumar/);
+  assert.equal((await e.db.get('SELECT COUNT(*) n FROM gastos_compartidos'))!.n,0);await e.comprobar();
+  await e.cerrarSala('sala-invalidos');
+  await rechazar(c=>c.filter(x=>x.tabla!=='deudas'),/deuda/);await e.comprobar();
+  const deuda=(await e.cargarSocial()).deudas[0];assert.ok(deuda);
+  await e.registrarPagoDeuda({deudaId:deuda.id,monto:'10',claveOperacion:'pago-invalido'},{depositoId:a.id});
+  await rechazar(c=>c.map(x=>x.tabla==='deudas'?{...x,datos:{...x.datos,estado:'pagada'}}:x),/estado de la deuda/);await e.comprobar();
+  const confirmado=e.base.prepare('SELECT * FROM salas WHERE id=?').get('sala-invalidos')!;
+  e.conectar();const remota=(await e.obtenerSesionRemota(e.usuario.id))!;
+  const revision=Number((await e.db.get('SELECT revision FROM versiones WHERE usuario_id=?',[e.usuario.id]))!.revision);
+  await assert.rejects(e.solicitarRemoto('/sync',{id:'editar-cerrada',base:revision,generacion:remota.generacion,cambios:[{tabla:'salas',accion:'guardar',datos:{...confirmado,nombre:'Reescrito'}}]},remota.token),/solo lectura/);
+});
+
+test('negocio MySQL: importar historial completo reconstruye saldos y otra instalación recupera Social',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+  const e=await escenarioNegocio(t);e.desconectar();
+  const a=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Historial',tipo:'efectivo',saldo_inicial:10000,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'});
+  const b=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Destino',tipo:'efectivo',saldo_inicial:100,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'});
+  const movimiento=await e.movimientosRepositorio.crear({deposito_id:a.id,tipo:'ingreso',categoria:'sueldo',monto:250.25,descripcion:'Anterior al ajuste',fecha_hora:'2026-01-01T00:00:00.000Z'});
+  await e.depositosRepositorio.actualizarSaldoInformado(a.id,11000.11);
+  await e.movimientosRepositorio.actualizar(movimiento.id,{monto:300.33});
+  const {transferencia}=await e.transferenciasRepositorio.crearConMovimientos({usuario_id:e.usuario.id,deposito_origen_id:a.id,deposito_destino_id:b.id,monto:100.01});
+  await e.transferenciasRepositorio.eliminar(transferencia.id);
+  const persona=(await e.guardarPersona({nombre:'Histórica',apellido:'Prueba',apodo:'H'}))!;
+  await e.crearSala({id:'historial-sala',nombre:'Historial cerrado',descripcion:'',fecha:'2026-11-02',categoriaId:'alimentacion',icono:'restaurant-outline',color:'#BED5C8',personasIds:[persona.id]});
+  const gasto={id:'historial-gasto',claveOperacion:'historial-gasto',salaId:'historial-sala',descripcion:'Manual',monto:'300,03',reparto:'manual' as const,pagadorId:persona.id,involucradas:['vos',persona.id],pagaron:['vos'],montosManuales:{vos:'100,01',[persona.id]:'200,02'}};
+  const plan=await e.previsualizarGasto(gasto);
+  const existente=await e.movimientosRepositorio.crear({deposito_id:a.id,tipo:'egreso',categoria:'alimentacion',monto:100.01,descripcion:'Parte ya registrada',fecha_hora:'2026-11-01T00:00:00.000Z'});
+  await e.guardarGasto(gasto,{[plan.operaciones[0].clave]:{movimientoId:existente.id}});
+  await e.cerrarSala('historial-sala');
+  const cambios=TABLAS_SYNC.flatMap(tabla=>e.base.prepare(`SELECT * FROM ${tabla}`).all().map(datos=>({tabla,accion:'guardar' as const,datos:datos as Fila})));
+  e.conectar();const remota=(await e.obtenerSesionRemota(e.usuario.id))!;
+  const lote:LoteSync={id:`inicial:${e.usuario.id}`,base:0,generacion:remota.generacion,cambios};
+  const alterado={...lote,cambios:cambios.map(c=>c.tabla==='depositos'?{...c,datos:{...c.datos,saldo_actual:Number(c.datos.saldo_actual)+0.01}}:c)};
+  await assert.rejects(e.solicitarRemoto('/sync',alterado,remota.token),/saldo/);
+  assert.equal((await e.db.get('SELECT COUNT(*) n FROM depositos'))!.n,0);
+  assert.equal((await e.solicitarRemoto<{revision:number}>('/sync',lote,remota.token)).revision,1);
+  assert.equal((await e.solicitarRemoto<{revision:number}>('/sync',lote,remota.token)).revision,1);
+  const otra=await preparar(t,true,{url:e.url,fetch});
+  await otra.iniciarSesion({correo:'negocio@example.test',contrasena:'NegocioPrueba123!',recordar:false,reemplazarDispositivo:true});
+  for(const tabla of TABLAS_SYNC)assert.equal(otra.base.prepare(`SELECT COUNT(*) n FROM ${tabla}`).get()!.n,e.base.prepare(`SELECT COUNT(*) n FROM ${tabla}`).get()!.n,tabla);
+  assert.equal(otra.base.prepare('SELECT saldo_actual FROM depositos WHERE id=?').get(a.id)!.saldo_actual,e.base.prepare('SELECT saldo_actual FROM depositos WHERE id=?').get(a.id)!.saldo_actual);
+  assert.equal((await otra.cargarSocial()).salas[0].estado,'cerrada');
+  assert.deepEqual(otra.base.prepare('PRAGMA foreign_key_check').all(),[]);
+});
 test('integración real MySQL: offline, reemplazo confirmado, revocación, pendientes y desvinculación normal',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
   const cargarServidor=createRequire(join(rutaServidor!,'backend/package.json'));
   const mysql=cargarServidor('mysql2/promise') as {createConnection:(opciones:object)=>Promise<{query:(sql:string)=>Promise<unknown>;end:()=>Promise<void>}>};

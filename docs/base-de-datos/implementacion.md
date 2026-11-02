@@ -210,6 +210,16 @@ parte del último `saldo_informado` y suma las variaciones posteriores. Al
 registrar otro saldo informado, ese valor se convierte en la nueva base vigente;
 las consultas leen el saldo guardado sin recorrer todos los movimientos.
 
+Las variaciones se guardan con `ROUND(saldo_actual + variacion, 2)` para evitar
+residuos de coma flotante en SQLite. El backend utiliza centavos enteros para
+reproducir el lote desde el estado confirmado y comprobar el saldo final. Una
+conciliación debe partir del saldo calculado, y su historial es inmutable.
+Los lotes se confirman completos junto con su revisión y su diario canónico;
+un error de negocio revierte la transacción MySQL y conserva la cola local.
+Las transferencias requieren sus dos movimientos y las reversiones compensan
+la operación original. En Social se validan repartos, financiación, cierres,
+deudas, pagos y conservación del historial.
+
 ## Errores
 
 `ErrorBaseDatos` ofrece mensajes seguros para inicialización, migraciones,

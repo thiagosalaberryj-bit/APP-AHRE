@@ -3,7 +3,11 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [Sin publicar]
+## [Sin publicar] - 2026-11-02
+
+Primera versión de sincronización con SERVER-AHRE `0.1.0`, en desarrollo.
+La aplicación mantiene `0.5.0`. Esta sección se actualiza por solicitud explícita
+del líder. Los cambios se presentan para revisión en la rama de sincronización.
 
 ### Añadido
 
@@ -17,6 +21,15 @@ documentación se registran en este archivo.
 - Indicador de servidor disponible, sincronización, falta de conexión, sesión
   remota pendiente y conflicto. Los avisos de conexión se muestran al cambiar
   de estado, sin repetirse por cada operación.
+- Una instalación autorizada por cuenta, con identificador persistente,
+  reemplazo confirmado, revocación y desvinculación después de sincronizar.
+  Registro y primer acceso requieren conexión; el acceso offline posterior
+  conserva la autorización previa. Los pendientes revocados no se reenvían
+  con otra generación y siguen guardados localmente.
+- Icono de conexión en los encabezados, con arcos de wifi progresivos, loader,
+  tick y error; contador en la esquina sin cambiar el tamaño del botón y
+  `...` al superar tres dígitos. Al tocarlo se abre la lista de pendientes.
+  La sonda detecta pérdida y recuperación de conexión sin crear movimientos.
 
 ### Cambiado
 
@@ -27,13 +40,29 @@ documentación se registran en este archivo.
   está configurado, para evitar contraseñas divergentes. Las credenciales y los
   tokens no se incluyen en el diario de datos; los tokens se guardan en
   SecureStore solo cuando se recuerda la sesión.
+- Los cambios locales disparan el envío automático y los recibidos durante
+  un envío se atienden al terminar. El diario incluye desactivaciones de
+  depósitos, cancelaciones de deudas, cierres y entidades de Social.
+- El backend valida depósitos, ingresos, egresos, ajustes, transferencias y
+  Social mediante módulos separados. Recalcula saldos en centavos y confirma
+  el lote completo o lo rechaza, conservando los pendientes locales.
+- Los ajustes locales de saldo usan redondeo a dos decimales para coincidir
+  con MySQL. Se corrigió la visibilidad del saldo al volver del detalle de
+  un movimiento al depósito, respetando la selección de privacidad.
+- Se documentan la estructura, responsabilidades y flujo de datos. La
+  documentación de SERVER-AHRE describe el despliegue manual desde Windows y
+  Ubuntu, sin automatización al cambiar `main`.
 
 ### Verificación y límites
 
-- Comprobación estricta y pruebas de la app, incluida la continuidad del registro
-  e ingreso local con el servidor sin desplegar o en mantenimiento. La integración local
-  con la API y MySQL reales cubrió creación sin conexión, subida ordenada, recuperación
-  en otro dispositivo y cierre de una sala con sus deudas.
+- Tipado estricto y 138 pruebas de la app aprobados, incluidos cinco escenarios
+  de integración con API y MySQL locales. Cubren creación y edición offline,
+  saldos, transferencias y reversiones, salas con repartos, pagos parciales,
+  deudas, lotes manipulados, rollback, confirmaciones perdidas e importación
+  de historial en otra instalación simulada. El backend pasa 36 pruebas.
+- Exportación Android/Hermes local aprobada. La prueba del APK nuevo en un
+  teléfono sigue pendiente; no se generó una build de Expo ni se subieron
+  estos cambios. Los ejemplos de desarrollo de Expo Go siguen siendo locales.
 - Los conflictos con una revisión más nueva del servidor conservan los lotes
   locales y detienen el envío. La selección o fusión manual entre versiones
   queda pendiente; no se sobrescriben datos silenciosamente. Una cuenta remota
