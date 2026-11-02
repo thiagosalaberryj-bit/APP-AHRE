@@ -202,9 +202,10 @@ para explicitar el versionado actual sin activar incrementos remotos.
 
 ## Versión de la aplicación y APK interno
 
-La configuración actual usa `expo.version: 0.4.0` y `android.versionCode: 2` en
+La versión `0.5.0` se preparó el 1 de noviembre de 2026. La configuración actual
+usa `expo.version: 0.5.0` y `android.versionCode: 3` en
 `app.json`. `package.json` y las dos versiones de la raíz de `package-lock.json`
-también indican `0.4.0`; las versiones de dependencias no cambian.
+también indican `0.5.0`; las versiones de dependencias no cambian.
 EAS conserva `cli.appVersionSource: local` y el perfil `ocr-comparison` genera
 un APK de distribución interna. Hace falta reconstruir e instalar el APK para
 ver la nueva versión en Android:
@@ -213,7 +214,11 @@ ver la nueva versión en Android:
 eas build --platform android --profile ocr-comparison --no-wait
 ```
 
-La versión instalada de esta rama es independiente de la prerelease histórica
+El APK del commit `8d106b3`, que el líder ya probó, conserva la versión `0.4.0`
+y el código Android `2`. La nueva numeración requiere otra compilación; su
+registro de validación está en [TypeScript](typescript.md#build-android-y-validación-en-dispositivo).
+
+La versión preparada en esta rama es independiente de la prerelease histórica
 `v0.4.0` de GitHub, que conserva su commit y sus metadatos anteriores a Social.
 
 ## Autenticación local y dependencias

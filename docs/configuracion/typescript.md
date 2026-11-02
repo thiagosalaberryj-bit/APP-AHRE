@@ -87,8 +87,9 @@ Además de las extensiones y la configuración estricta, incluye:
   y una deuda personal. Los repartos, estados de pago y saldos esperados se
   describen en [datos de prueba de Inicio](../funcionalidades/inicio.md#datos-temporales-para-expo-go).
 
-Se conserva Expo SDK 57, las versiones de las dependencias de ejecución y la
-versión instalada `0.4.0` con código Android `2`. El esquema SQLite conserva su
+Se conservan Expo SDK 57 y las versiones de las dependencias de ejecución.
+El 1 de noviembre de 2026 se preparó la versión `0.5.0`, con código Android `3`,
+sincronizada en Expo, el paquete y el lockfile. El esquema SQLite conserva su
 versión; la conversión a TypeScript no requiere una migración de datos.
 
 ## Verificación reproducible
@@ -125,9 +126,13 @@ El 1 de noviembre de 2026 finalizó correctamente la
 | Commit de código probado | `8d106b3736f5dca4f691884b7cb6a03f1e614ed4` |
 | Perfil EAS | `ocr-comparison` |
 | Distribución y formato | Interna, APK |
-| Versión instalada | `0.4.0`, código Android `2` |
+| Versión del APK probado | `0.4.0`, código Android `2` |
 | Prueba manual | El líder confirmó que probó el APK y funciona. |
 
 Esta confirmación corresponde a una prueba funcional general en dispositivo.
 Complementa las 110 pruebas automatizadas, el chequeo estricto y la exportación
 con Hermes; no se informó un desglose de escenarios manuales por pantalla.
+
+La versión `0.5.0` con código Android `3` se preparó después de esta build.
+La numeración nueva corresponde a la próxima compilación; la build enlazada
+conserva la versión y el commit con los que fue probada.

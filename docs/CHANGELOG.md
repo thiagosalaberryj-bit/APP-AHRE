@@ -5,11 +5,14 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
-Cambios sin publicar al 1 de noviembre de 2026: Social del Issue #18 y migración
-a TypeScript del [PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65),
-solicitada por el líder sin Issue asociado. Los APK internos usan la versión
-instalada `0.4.0` y `android.versionCode: 2`. Esto no modifica la prerelease
-histórica `v0.4.0` ni publica una nueva entrega en GitHub.
+## [v0.5.0] - 2026-11-01 - no estable
+
+Versión preparada para revisión en el
+[PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65), pendiente de
+publicación. Incluye Social del Issue #18 y la migración a TypeScript,
+solicitada por el líder sin Issue asociado. La configuración usa `0.5.0` y
+`android.versionCode: 3` para la próxima compilación. La prerelease histórica
+`v0.4.0` conserva su código y sus metadatos.
 
 ### Añadido
 
@@ -36,6 +39,10 @@ histórica `v0.4.0` ni publica una nueva entrega en GitHub.
 
 ### Cambiado
 
+- Se preparó la versión `0.5.0` con fecha 1 de noviembre de 2026, sincronizando
+  `app.json`, `package.json` y las dos versiones de la raíz del lockfile.
+  Android pasa al código `3` para la próxima build; las dependencias mantienen
+  sus versiones. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
 - Se migraron todas las fuentes JavaScript propias a `.ts`, `.tsx` o `.cts` y
   se activó `strict: true` para la app y las herramientas. Se tiparon SQLite,
   repositorios, servicios, navegación, formularios, componentes, estados,
@@ -62,9 +69,9 @@ histórica `v0.4.0` ni publica una nueva entrega en GitHub.
   los gastos existentes conservan la edición individual. (#18)
 - Se eliminaron opciones y parámetros sin consumidores, se unificó la validación
   de listas y se simplificó la selección de participantes sin duplicados. (#18)
-- Se sincronizó la versión de Expo, del paquete y de la raíz del lockfile en
-  `0.4.0`, con código Android `2` para la próxima compilación interna. No se
-  cambiaron dependencias. (#18)
+- En la compilación anterior de Social se sincronizó la versión de Expo, del
+  paquete y de la raíz del lockfile en `0.4.0`, con código Android `2`. No se
+  cambiaron dependencias en esa actualización. (#18)
 
 ### Corregido
 
@@ -81,7 +88,8 @@ histórica `v0.4.0` ni publica una nueva entrega en GitHub.
 - El 1 de noviembre de 2026 pasaron `npm run typecheck`, las 110 pruebas de
   `npm test` y la exportación Android con Hermes. La
   [build EAS de Android](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/02dec8dd-ef34-4968-9a5c-66cdec47537c)
-  del commit `8d106b3`, perfil interno `ocr-comparison` (APK), finalizó
+  del commit `8d106b3`, versión `0.4.0` y código Android `2`, perfil interno
+  `ocr-comparison` (APK), finalizó
   correctamente. El líder confirmó que probó ese APK y funciona; se registra
   como una validación funcional general en dispositivo. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
 - En la auditoría del 30 de octubre de 2026 pasaron las 92 pruebas de Social,

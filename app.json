@@ -2,7 +2,7 @@
   "expo": {
     "name": "AHRE",
     "slug": "APP-AHRE",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "orientation": "portrait",
     "icon": "./assets/ahre-mark.png",
     "userInterfaceStyle": "automatic",
@@ -19,7 +19,7 @@
       "supportsTablet": true
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#024C42",
         "foregroundImage": "./assets/ahre-mark.png"
