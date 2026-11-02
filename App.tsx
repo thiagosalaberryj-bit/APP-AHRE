@@ -20,7 +20,7 @@ import { ProveedorAvisos } from './src/contexts/ToastContext';
 import { inicializarBaseDatos } from './src/database';
 import { ErrorBaseDatos } from './src/database/errors';
 import NavegadorAplicacion from './src/navigation/AppNavigator';
-import EstadoSincronizacion from './src/components/SyncStatus';
+import {ControladorSincronizacion} from './src/components/SyncStatus';
 import { cargarAparienciaSesionGuardada } from './src/profile/profileService';
 import { TEMAS } from './src/styles/colors';
 
@@ -57,6 +57,8 @@ function ContenidoAplicacion() {
   const [mensajeErrorInicio, establecerMensajeErrorInicio] = useState<string|null>(null);
   const [intentoInicio, establecerIntentoInicio] = useState(0);
   const pantallaCargaOculta = useRef(false);
+  const [revisionAcceso,establecerRevisionAcceso]=useState(0);
+  const alRevocar=useCallback(()=>establecerRevisionAcceso(v=>v+1),[]);
   const ocultarPantallaCarga = useCallback(() => {
     if (pantallaCargaOculta.current) return;
     pantallaCargaOculta.current = true;
@@ -144,7 +146,7 @@ function ContenidoAplicacion() {
         ) : (
           <View onLayout={ocultarPantallaCarga} style={{ flex: 1 }}>
             {estadoInicio === 'lista' ? (
-              <View style={{flex:1}}><NavegadorAplicacion rutaInicial={RUTAS.INICIO} /><EstadoSincronizacion /></View>
+              <View style={{flex:1}}><NavegadorAplicacion key={revisionAcceso} rutaInicial={revisionAcceso?RUTAS.INICIO_SESION:RUTAS.INICIO} /><ControladorSincronizacion alRevocar={alRevocar} /></View>
             ) : (
               <View style={[estilosInicializacion.contenedor, { backgroundColor: tema.fondo }]}>
                 <Text

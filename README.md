@@ -63,9 +63,9 @@ Aplicación móvil AHRE
                              └── Funciones sociales
 ```
 
-El almacenamiento local representa el núcleo de la aplicación. Los servicios
-conectados se incorporarán como extensiones y no deben convertirse en una
-dependencia obligatoria para las funciones esenciales.
+El almacenamiento local representa el núcleo de la aplicación. El registro y
+la primera autorización de cada instalación requieren conexión; las operaciones
+cotidianas continúan offline en la instalación previamente autorizada.
 
 ## Áreas funcionales actuales y previstas
 
@@ -75,6 +75,7 @@ En Expo Go, Inicio incluye temporalmente Entrar con datos de prueba: prepara
 una cuenta independiente con tres depósitos, seis movimientos, tres contactos,
 una sala con cuatro gastos y una deuda personal pendiente. El
 acceso está limitado a desarrollo y no duplica los ejemplos al volver a entrar.
+El botón prepara una cuenta local aislada y no llama a la API pública.
 
 La interfaz actual presenta un resumen visual de la situación financiera, con
 saldo, depósitos, movimientos recientes y accesos a las operaciones frecuentes.
@@ -184,10 +185,10 @@ para evaluación. Actualmente cuenta con:
   servicios y utilidades;
 - pantalla de Inicio visible después de preparar SQLite; la sesión local se
   comprueba al completar el deslizador;
-- registro de usuarios locales con validación, correo único y verificador de
-  contraseña protegido;
-- Login local y sesión persistente opcional mediante SecureStore, sin conexión
-  a Internet;
+- registro con conexión y autorización de una instalación por cuenta, con
+  verificador local protegido para los ingresos offline posteriores;
+- sesión persistente opcional mediante SecureStore y cambio de instalación
+  confirmado; el dispositivo anterior deja de poder sincronizar;
 - avisos toast reutilizables para errores, confirmaciones e información, con
   tiempo visible, cierre manual y gesto para descartarlos;
 - inicio con preparación local de SQLite, consulta de sesión al deslizar y
@@ -230,7 +231,8 @@ para evaluación. Actualmente cuenta con:
 - prerelease histórica `v0.4.0` de código fuente, anterior a Social.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. El
-registro y el Login ya crean y verifican cuentas localmente. Al abrir AHRE, la
+registro y el primer ingreso necesitan autorización del servidor. Los ingresos
+offline posteriores usan el verificador y la autorización locales. Al abrir AHRE, la
 pantalla de Inicio permanece visible hasta que la persona desliza. Entonces,
 sin sesión conduce a Login; con sesión válida solicita la huella y muestra una
 carga animada antes de abrir el Dashboard. El cambio de contraseña actualiza
@@ -262,8 +264,45 @@ los envía al servidor en lotes ordenados, con reintentos sin duplicados. El
 indicador distingue conexión, pendientes, sesión remota y conflictos. La URL
 HTTPS se configura con `EXPO_PUBLIC_API_URL`; el valor de referencia está en
 `.env.example`. El envío se activa con la app abierta o al recuperar el foco.
-Los conflictos conservan los cambios pendientes y requieren revisión; el
-changelog describe el alcance de esta primera integración.
+El estado se muestra como un icono de conexión en los encabezados, sin barra
+inferior. Al tocarlo se abre Sincronización, con los registros pendientes de
+la cuenta y una acción para reintentar. Los cambios repetidos del mismo registro
+se agrupan solamente para mostrarlos; el envío conserva todos sus eventos y orden.
+El contador se superpone en una esquina sin aumentar el tamaño del botón;
+admite tres dígitos y muestra `...` a partir de 1000 pendientes. El wifi llena
+sus arcos en orden al comprobar la conexión, muestra un loader mientras envía
+y un tick solo al estar sincronizado sin pendientes. Respeta movimiento reducido.
+Las comprobaciones de sesión en reposo se hacen de forma silenciosa cada minuto;
+los cambios locales disparan el envío y los fallos de conexión usan reintentos
+progresivos hasta 30 segundos, solo mientras la app está activa.
+Una sonda ligera a `/health` cada cinco segundos detecta también la pérdida
+de conexión sin crear registros ni abrir pantallas; no descarga lotes ni anima
+el icono cuando la conexión sigue disponible. Su espera máxima es de 2,5 segundos.
+Al recuperar acceso al servidor se solicita la sincronización; la sonda sola
+no muestra el tick. No se ejecuta sin sesión ni para los ejemplos locales.
+Los avisos de cambios recibidos durante un envío se atienden al terminar, sin
+depender de abrir la pantalla de pendientes. También se inicia el seguimiento
+al ingresar offline con una autorización anterior. La lista distingue
+desactivaciones, cancelaciones, anulaciones y cierres; al confirmarlos salen
+de pendientes. El diario incluye las entidades del perfil, preferencias,
+depósitos, movimientos, recurrencias, transferencias y Social.
+La instalación tiene un identificador aleatorio persistido en SecureStore.
+Registro e ingreso inicial requieren conexión; el ingreso offline posterior
+solo se admite con una autorización local previa. Otra instalación necesita
+confirmar el reemplazo, con advertencia sobre los datos que no llegaron al servidor.
+El perfil permite sincronizar y desvincular la instalación actual antes del cambio.
+
+Cada lote queda asociado a la generación de autorización con la que se creó.
+El servidor comprueba la autorización dentro de la transacción que aplica el lote.
+Al detectar una revocación, la app vuelve a Login y bloquea nuevas escrituras de
+esa cuenta. Los pendientes anteriores quedan en SQLite y bloquean la vinculación
+automática con una nueva generación: su recuperación o conciliación manual aún
+no tiene una interfaz. No se borran ni se reetiquetan para reenviarlos.
+
+El contrato de autorización requiere el protocolo 2 del backend y un APK nuevo;
+no se actualiza la app instalada por publicar el servidor. Las cuentas y los datos
+del servidor anterior se conservan; deben volver a autenticarse para autorizar
+una instalación. La eliminación lógica de depósitos y deudas se mantiene.
 
 - Expo SDK 57;
 - React Native 0.86.3;

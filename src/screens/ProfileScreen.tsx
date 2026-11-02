@@ -32,6 +32,7 @@ import {
   verificarContrasenaPerfil,
 } from '../profile/profileService';
 import { cerrarSesion } from '../authentication/sessionService';
+import {prepararCambioDispositivo} from '../authentication/authenticationService';
 import { validarDatosPerfil } from '../utils/authenticationValidation';
 
 import { crearEstilosGlobales } from '../styles/globalStyles';
@@ -437,6 +438,17 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
     } finally {
       establecerCerrandoSesion(false);
     }
+  };
+
+  const cambiarDispositivoLocal=async()=>{
+    if(cerrandoSesion)return;
+    establecerCerrandoSesion(true);
+    try{
+      await prepararCambioDispositivo();
+      establecerApariencia('sistema');
+      navegacion.reset({index:0,routes:[{name:RUTAS.INICIO_SESION}]});
+    }catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudo preparar el cambio de dispositivo.',{tipo:'error'});}
+    finally{establecerCerrandoSesion(false);}
   };
 
   return (
@@ -1149,13 +1161,21 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
               <EncabezadoModalPerfil
                 alCerrar={() => establecerModalCierre(false)}
                 colorIcono={tema.error}
-                descripcion="¿Seguro que querés cerrar tu sesión en este dispositivo?"
+                descripcion="Podés cerrar la sesión aquí o sincronizar los pendientes y desvincular esta instalación para usar otra. La desvinculación requiere conexión."
                 etiquetaCerrar="Cerrar confirmación de cierre de sesión"
                 estilos={estilos}
                 icono="log-out-outline"
                 tema={tema}
                 titulo="Cerrar sesión"
               />
+              <Pressable
+                accessibilityRole="button"
+                disabled={cerrandoSesion}
+                onPress={cambiarDispositivoLocal}
+                style={estilos.botonPeligro}
+              >
+                <Text style={estilos.textoBotonPeligro}>{cerrandoSesion?'Preparando…':'Sincronizar y desvincular'}</Text>
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 disabled={cerrandoSesion}

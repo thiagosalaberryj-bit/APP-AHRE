@@ -3,9 +3,24 @@
 ## Objetivo
 
 Este documento define las rutas y los navegadores de AHRE. Login y Registro
-implementan la autenticación local y el acceso sin conexión. Al abrir AHRE,
+implementan la autorización inicial con conexión y el acceso offline posterior
+en una instalación previamente autorizada. Al abrir AHRE,
 `App.tsx` prepara SQLite y monta la navegación con Inicio como ruta inicial. La
 sesión se consulta cuando la persona completa el deslizador.
+
+Cuando la sincronización detecta que otra instalación reemplazó a la actual,
+el controlador sin interfaz de `SyncStatus` notifica a `App.tsx`, que vuelve a
+montar el navegador en Login.
+La autorización revocada persiste en SQLite y bloquea las escrituras de esa
+cuenta. Los pendientes no se borran. Login muestra la confirmación de cambio
+de instalación; Perfil ofrece sincronizar y desvincular antes de trasladarla.
+
+`MainHeader` y `SectionHeader` incorporan el icono de conexión, su estado y el
+contador compacto de registros pendientes. El icono abre la ruta secundaria
+`Sincronizacion` (`SyncScreen.tsx`), que reutiliza `SectionHeader` y
+`NotificationCard` para consultar pendientes locales paginados. Su propio
+encabezado no repite el acceso a la misma ruta. El controlador global no ocupa
+espacio en el diseño y las consultas en reposo no activan el indicador de carga.
 ## Navegadores utilizados
 
 - `Native Stack`: controla el inicio, login, registro y las pantallas

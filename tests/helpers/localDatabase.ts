@@ -16,9 +16,9 @@ type ServiciosPrueba =
   & typeof import('../../src/database/repositories/index.ts')
   & typeof import('../../src/database/initialization.ts')
   & typeof import('../../src/social/socialService.ts');
-type ServiciosSync = typeof import('../../src/sync/syncService.ts') & typeof import('../../src/sync/remote.ts');
+type ServiciosSync = typeof import('../../src/sync/syncService.ts') & typeof import('../../src/sync/remote.ts') & typeof import('../../src/sync/deviceAuthorization.ts') & typeof import('../../src/sync/pendingService.ts') & Pick<typeof import('../../src/sync/journal.ts'),'observarCambiosLocales'>;
 
-export async function preparar(prueba: import('node:test').TestContext, desarrollo = true, remoto?:{url:string;fetch:typeof fetch}) {
+export async function preparar(prueba: import('node:test').TestContext, desarrollo = true, remoto?:{url:string;fetch:typeof fetch;almacenamiento?:Map<string,string>}) {
   const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
   const base = new DatabaseSync(':memory:');
   prueba.after(() => base.close());
@@ -35,7 +35,7 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
       catch (error) { base.exec('ROLLBACK'); throw error; }
     },
   };
-  const almacenamiento = new Map<string, string>();
+  const almacenamiento = remoto?.almacenamiento||new Map<string, string>();
   const contexto = createContext({ console, crypto: globalThis.crypto, __DEV__: desarrollo, URL, AbortController, setTimeout, clearTimeout, ...(remoto?{process:{env:{EXPO_PUBLIC_API_URL:remoto.url}},fetch:remoto.fetch}:{}) });
   const modulos = new Map<string, Module | Promise<Module>>();
   const sintetico = (nombre: string, valores: Record<string,unknown>) => new SyntheticModule(Object.keys(valores), function inicializar() {
@@ -69,6 +69,9 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     export * from './src/social/socialService.ts';
     export * from './src/sync/syncService.ts';
     export * from './src/sync/remote.ts';
+    export * from './src/sync/deviceAuthorization.ts';
+    export * from './src/sync/pendingService.ts';
+    export {observarCambiosLocales} from './src/sync/journal.ts';
   `, { context: contexto, identifier: path.join(raiz, 'prueba-desarrollo-virtual.ts') });
   await entrada.link(async (nombre, origen) => {
     if (modulos.has(nombre)) return modulos.get(nombre)!;

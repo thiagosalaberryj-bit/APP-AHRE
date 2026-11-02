@@ -17,10 +17,19 @@ export async function prepararDiario(conexion: Conexion) {
     CREATE TABLE IF NOT EXISTS sync_state (usuario_id TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 0, preparada INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS sync_outbox (secuencia INTEGER PRIMARY KEY AUTOINCREMENT, lote TEXT NOT NULL, usuario_id TEXT NOT NULL, cambio TEXT NOT NULL);
     CREATE INDEX IF NOT EXISTS sync_outbox_usuario ON sync_outbox(usuario_id,secuencia);
+    CREATE TABLE IF NOT EXISTS sync_authorization (usuario_id TEXT PRIMARY KEY, dispositivo_id TEXT NOT NULL, generacion INTEGER NOT NULL, revocada INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS sync_batch_authorization (lote TEXT PRIMARY KEY, usuario_id TEXT NOT NULL, generacion INTEGER NOT NULL);
+    CREATE TRIGGER IF NOT EXISTS sync_autorizacion_lote AFTER INSERT ON sync_outbox
+    BEGIN INSERT OR IGNORE INTO sync_batch_authorization(lote,usuario_id,generacion)
+      SELECT NEW.lote,NEW.usuario_id,generacion FROM sync_authorization WHERE usuario_id=NEW.usuario_id; END;
   `);
   for (const tabla of TABLAS_SYNC) {
     const columnas = await conexion.getAllAsync<{name:string}>(`PRAGMA table_info(${tabla});`);
     for (const [accion, evento, alias] of [['guardar','INSERT','NEW'], ['guardar','UPDATE','NEW'], ['eliminar','DELETE','OLD']] as const) {
+      const propietario=propietarioSql(tabla,evento==='INSERT'?'NEW':'OLD');
+      await conexion.execAsync(`CREATE TRIGGER IF NOT EXISTS autorizacion_${tabla}_${evento} BEFORE ${evento} ON ${tabla}
+        WHEN (SELECT importando FROM sync_context WHERE id=1)=0 AND (SELECT revocada FROM sync_authorization WHERE usuario_id=${propietario})=1
+        BEGIN SELECT RAISE(ABORT,'dispositivo_revocado'); END;`);
       const objeto = `json_object(${columnas.map(c => `'${c.name}',${alias}."${c.name}"`).join(',')})`;
       await conexion.execAsync(`CREATE TRIGGER IF NOT EXISTS sync_${tabla}_${evento} AFTER ${evento} ON ${tabla}
         WHEN (SELECT importando FROM sync_context WHERE id=1)=0

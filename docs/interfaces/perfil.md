@@ -157,5 +157,10 @@ será otro Issue.
 
 ## Funcionamiento sin conexión
 
-La pantalla solo usa componentes, estilos, íconos y constantes locales. No
-requiere Internet ni invoca servicios externos.
+La edición local del perfil y las preferencias continúa sin conexión y genera
+pendientes de sincronización. El cambio de contraseña requiere autenticación
+remota y conexión. Cerrar sesión es local; el modal también ofrece
+`Sincronizar y desvincular`, que requiere conexión, confirma todos los pendientes
+y libera la autorización de la instalación antes de cambiar de teléfono.
+Si falla la conexión después de pedir la desvinculación, se conserva el bloqueo
+local hasta volver a autenticarse: no se asume que el servidor rechazó la petición.

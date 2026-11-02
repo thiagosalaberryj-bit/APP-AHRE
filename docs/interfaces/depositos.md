@@ -92,6 +92,10 @@ ocultarlo o mostrarlo y una etiqueta de comparación mensual breve con la fecha
 exacta y el saldo anterior usado como referencia. La visibilidad se comparte con
 el balance general y persiste por usuario al cerrar la aplicación. Cuando los
 saldos están ocultos, también se ocultan los montos de la comparación mensual.
+Al volver desde el detalle de un movimiento se actualizan los datos sin ocultar
+temporalmente un saldo que ya era visible. La carga inicial permanece oculta
+hasta leer la preferencia; una lectura atrasada no sobrescribe una elección de
+visibilidad hecha mientras se actualizaban los datos.
 La comparación indica
 el porcentaje de aumento o disminución, o comunica que todavía no hay una
 referencia comparable. Si el saldo anterior era cero o negativo, la etiqueta

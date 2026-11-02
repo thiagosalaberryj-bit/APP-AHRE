@@ -2,8 +2,8 @@ import type { Deposito, Movimiento, Recurrencia } from '../database/types';
 
 export type CamposValidables = Record<string, unknown>;
 export type ImporteEntrada = string | number;
-export interface DatosRegistro { nombre: string; correo: string; contrasena: string; confirmacion: string; }
-export type DatosIngreso = Pick<DatosRegistro, 'correo' | 'contrasena'> & { recordar?: boolean };
+export interface DatosRegistro { nombre: string; correo: string; contrasena: string; confirmacion: string; localPruebas?:boolean; }
+export type DatosIngreso = Pick<DatosRegistro, 'correo' | 'contrasena'> & { recordar?: boolean; reemplazarDispositivo?:boolean; localPruebas?:boolean; };
 export type DatosPerfil = Pick<DatosRegistro, 'nombre' | 'correo'>;
 export type DatosDeposito = {nombre:string;tipo:string | null;icono:string} & {
   saldo_inicial?: ImporteEntrada; descripcion?: string | null; color?: string | null;

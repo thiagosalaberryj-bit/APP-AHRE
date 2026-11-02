@@ -3,5 +3,5 @@ export const TABLAS_SYNC = ['usuarios', 'depositos', 'historial_saldos_deposito'
 export type TablaSync = typeof TABLAS_SYNC[number];
 export type FilaSync = Record<string, string | number | null>;
 export interface CambioSync { tabla: TablaSync; accion: 'guardar' | 'eliminar'; datos: FilaSync; }
-export interface LoteSync { id: string; base: number; cambios: CambioSync[]; }
+export interface LoteSync { id: string; base: number; generacion:number; cambios: CambioSync[]; }
 export interface VersionSync { revision: number; lote: LoteSync; }

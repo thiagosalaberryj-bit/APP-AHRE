@@ -14,10 +14,11 @@ export default function TarjetaNotificacion({
   nueva,
   expandida,
   alPresionar,
-}: {tema:import('../styles/colors').Tema;estilos:ReturnType<typeof import('../styles/NotificationsScreenStyles').crearEstilosNotificaciones>;notificacion:{id:string;titulo:string;mensaje:string;fechaHora:string;icono:import('../constants/movimientos').NombreIcono};nueva:boolean;expandida:boolean;alPresionar:()=>void}) {
+  etiquetaAccesibilidad,
+}: {tema:import('../styles/colors').Tema;estilos:ReturnType<typeof import('../styles/NotificationsScreenStyles').crearEstilosNotificaciones>;notificacion:{id:string;titulo:string;mensaje:string;fechaHora:string;icono:import('../constants/movimientos').NombreIcono};nueva:boolean;expandida:boolean;alPresionar:()=>void;etiquetaAccesibilidad?:string}) {
   return (
     <Pressable
-      accessibilityLabel={`${nueva ? 'Nueva notificación' : 'Notificación'}: ${notificacion.titulo}`}
+      accessibilityLabel={etiquetaAccesibilidad||`${nueva ? 'Nueva notificación' : 'Notificación'}: ${notificacion.titulo}`}
       accessibilityRole="button"
       accessibilityState={{ expanded: expandida }}
       onPress={alPresionar}

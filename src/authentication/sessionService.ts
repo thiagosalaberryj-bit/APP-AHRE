@@ -2,7 +2,8 @@ import * as SecureStore from 'expo-secure-store';
 
 import { autenticacionRepositorio } from '../database/repositories/authenticationRepository';
 import { ErrorAutenticacion } from './errors';
-import { quitarSesionRemota } from '../sync/remote';
+import { quitarSesionRemota,URL_SERVIDOR } from '../sync/remote';
+import {consultarAutorizacion,autorizacionVigenteLocal} from '../sync/deviceAuthorization';
 
 const CLAVE_SESION = 'ahre.sesion.usuario_id';
 let usuarioIdEnMemoria: string | null = null;
@@ -20,6 +21,10 @@ export async function crearSesion(usuarioId: string, recordar = true) {
   const usuario = await autenticacionRepositorio.consultarUsuarioActivoPorId(usuarioId);
   if (!usuario) {
     throw new ErrorAutenticacion('credenciales_invalidas');
+  }
+  if(URL_SERVIDOR){
+    const autorizacion=await consultarAutorizacion(usuario.id);
+    if(!await autorizacionVigenteLocal(autorizacion,usuario.correo_electronico))throw new ErrorAutenticacion('conexion_requerida');
   }
 
   try {
@@ -58,6 +63,12 @@ export async function obtenerSesionActual() {
   }
 
   const usuario = await autenticacionRepositorio.consultarUsuarioActivoPorId(usuarioId);
+  if(usuario&&URL_SERVIDOR){
+    const autorizacion=await consultarAutorizacion(usuario.id);
+    if(!await autorizacionVigenteLocal(autorizacion,usuario.correo_electronico)){
+      usuarioIdEnMemoria=null;await limpiarAlmacenamientoSeguro();return {usuario:null,inconsistente:false};
+    }
+  }
   if (!usuario) {
     usuarioIdEnMemoria = null;
     const sesionLimpiada = await limpiarAlmacenamientoSeguro();
@@ -78,7 +89,7 @@ export async function comprobarSesion() {
 }
 
 export async function cerrarSesion() {
-  const anterior=usuarioIdEnMemoria;
+  const anterior=usuarioIdEnMemoria||await obtenerIdentificadorSesionGuardado();
   usuarioIdEnMemoria = null;
   try {
     await SecureStore.deleteItemAsync(CLAVE_SESION);
