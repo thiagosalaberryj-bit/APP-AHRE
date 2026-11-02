@@ -7,8 +7,8 @@ SQLite conserva el archivo en el almacenamiento privado de la aplicación y
 las operaciones no requieren Internet, backend ni servicios externos.
 
 La inicialización se expone mediante `inicializarBaseDatos()` en
-`src/database/initialization.js`. Mantiene una única conexión preparada y
-comparte la promesa inicial entre llamadas simultáneas. `App.js` la ejecuta
+`src/database/initialization.ts`. Mantiene una única conexión preparada y
+comparte la promesa inicial entre llamadas simultáneas. `App.tsx` la ejecuta
 antes de mostrar la navegación. Inicio queda como ruta inicial una vez lista la
 base; la sesión se consulta recién cuando la persona completa el deslizador. Si
 ocurre un error al preparar SQLite, se muestra el mensaje controlado y se puede
@@ -21,7 +21,7 @@ el esquema.
 ## Versionado y migraciones
 
 La versión se guarda en `PRAGMA user_version`. La migración inicial está en
-`src/database/migrations/001_initialSchema.js` y establece la versión `1`.
+`src/database/migrations/001_initialSchema.ts` y establece la versión `1`.
 El mismo archivo contiene también las tablas de Social. La aplicación lo
 ejecuta dentro de una transacción; una falla revierte el
 cambio y permite volver a intentar la inicialización. Una base con una versión
@@ -29,7 +29,7 @@ superior a la que conoce esta versión de AHRE genera un error controlado y se
 conserva intacta.
 
 Mientras AHRE siga en desarrollo y no haya una versión final publicada, los
-cambios al esquema se incorporan directamente en `001_initialSchema.js`; no se
+cambios al esquema se incorporan directamente en `001_initialSchema.ts`; no se
 agregan migraciones para convertir bases locales de versiones anteriores de
 desarrollo. No se borra una base existente automáticamente. Cuando el esquema
 se estabilice para una versión publicada, los cambios posteriores usarán
@@ -55,7 +55,7 @@ definido en el modelo. Los indicadores utilizan `INTEGER` con valores `0/1`.
 
 Las categorías **no son una tabla** en el modelo acordado. `movimientos.categoria`
 guarda el identificador constante de `CATEGORIAS_INGRESO` o
-`CATEGORIAS_EGRESO` en `src/constants/movimientos.js`; por eso no se copian a
+`CATEGORIAS_EGRESO` en `src/constants/movimientos.ts`; por eso no se copian a
 SQLite ni se insertan de nuevo al iniciar.
 
 ## Claves, relaciones y restricciones
@@ -118,7 +118,7 @@ transferencia.
 ## Repositorios y operaciones
 
 **Social:** sus siete repositorios usan el contrato actual. Los formularios
-acceden a ellos mediante `socialService.js`, que coordina sesión, validaciones,
+acceden a ellos mediante `socialService.ts`, que coordina sesión, validaciones,
 transacciones y movimientos. `pagosSocialesRepositorio` reemplaza al antiguo
 repositorio de pagos de deuda; se agregan salas y pertenencias.
 
@@ -150,7 +150,7 @@ crea una transferencia inversa con dos movimientos nuevos. Los movimientos
 originales se conservan y ambos lados de la reversión actualizan sus respectivos
 saldos. La eliminación de un movimiento de ingreso o egreso crea un movimiento
 opuesto enlazado mediante `reversion_de_id`, sin borrar el original. La
-integración con `socialMovementReversal.js` conserva el pago anulado y actualiza
+integración con `socialMovementReversal.ts` conserva el pago anulado y actualiza
 la deuda, sin borrar registros ni duplicar movimientos. Impide revertir compras
 de salas cerradas o compras abiertas con entregas todavía vigentes.
 

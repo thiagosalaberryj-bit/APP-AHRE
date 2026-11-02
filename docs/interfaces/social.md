@@ -21,18 +21,18 @@ La [lógica funcional](../funcionalidades/social.md), el
 
 ## Organización del código
 
-- `src/screens/Social*Screen.js`: pantallas independientes para panel, listas,
+- `src/screens/Social*Screen.tsx`: pantallas independientes para panel, listas,
   perfiles, detalles, formularios y confirmaciones.
 - `src/components/social/`: componentes visuales y formularios independientes.
-- `src/styles/social/`: estilos existentes, con reglas comunes en SharedStyles.js.
-- `src/social/socialConstants.js`: opciones de interfaz.
-- `ExpenseListForm.js`: lista editable, reparto común y ajustes por ítem.
-- `src/social/socialService.js`: entrada pública a los servicios de personas,
+- `src/styles/social/`: estilos existentes, con reglas comunes en SharedStyles.ts.
+- `src/social/socialConstants.ts`: opciones de interfaz.
+- `ExpenseListForm.tsx`: lista editable, reparto común y ajustes por ítem.
+- `src/social/socialService.ts`: entrada pública a los servicios de personas,
   salas, ítems, deudas, pagos y consultas.
-- `src/social/useSocialScreen.js`: carga al recuperar el foco, navegación y apariencia.
-- `src/social/SocialDataContext.js`: datos del usuario para los componentes de
+- `src/social/useSocialScreen.tsx`: carga al recuperar el foco, navegación y apariencia.
+- `src/social/SocialDataContext.ts`: datos del usuario para los componentes de
   cada pantalla, sin un registro global mutable ni fixtures de producción.
-- `src/navigation/socialRoutes.js`: adapta las rutas existentes a cada pantalla.
+- `src/navigation/socialRoutes.tsx`: adapta las rutas existentes a cada pantalla.
 
 SocialScreenFrame conserva encabezados, teclado, desplazamiento y carga. Provee
 los datos a sus descendientes y ofrece Reintentar si falla la consulta. Las
@@ -240,7 +240,13 @@ en el conjunto del proyecto y una exportación Android con Hermes correcta.
 Incluye la edición individual desde el detalle del gasto y las opciones rápidas
 de Registrar lista, tras retirar el modo separado de edición masiva.
 
-En el dispositivo deben revisarse navegación Atrás, teclado, texto ampliado,
-creación de depósito y regreso, reinicio de la app, cambio de cuenta, modo avión
-y los diálogos nativos. La lectura real requiere ML Kit, no disponible en Expo Go.
-No se preparó un APK ni se verificó la captura nativa en esta etapa.
+La migración a TypeScript del PR #65 amplió el conjunto a 110 pruebas aprobadas,
+incluida la consulta de los gastos y participantes precargados en claro y oscuro.
+El APK interno de esa migración se compiló en EAS y el líder confirmó su
+funcionamiento en dispositivo. La confirmación manual es general; el registro
+de la build está en la [guía de TypeScript](../configuracion/typescript.md#build-android-y-validación-en-dispositivo).
+
+Los recorridos de revisión visual incluyen navegación Atrás, teclado, texto
+ampliado, creación de depósito y regreso, reinicio, cambio de cuenta, modo avión
+y diálogos nativos. La lectura real requiere ML Kit, incluido en el APK y no
+disponible en Expo Go.

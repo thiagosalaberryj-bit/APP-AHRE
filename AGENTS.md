@@ -46,16 +46,16 @@ implementar.
   globales si eso modifica pantallas ajenas al alcance del Issue. Si una
   modificación compartida es indispensable, explica qué pantallas afecta y
   solicita autorización antes de aplicarla.
-- Conserva las convenciones documentadas de arquitectura, nombres y JavaScript.
+- Conserva las convenciones documentadas de arquitectura, nombres y TypeScript.
 
 ## Cambios en el esquema de la base de datos
 
 - Mientras AHRE no tenga una versión final publicada y el esquema siga en
   desarrollo, aplica los cambios estructurales al esquema o migración inicial
-  (`001_initialSchema.js`). No agregues migraciones de transición para
+  (`001_initialSchema.ts`). No agregues migraciones de transición para
   convertir bases locales creadas por versiones anteriores de desarrollo.
 - Durante esta etapa, los datos locales de Expo usados para desarrollo y
-  pruebas se consideran descartables. Si un cambio en `001_initialSchema.js`
+  pruebas se consideran descartables. Si un cambio en `001_initialSchema.ts`
   requiere una base limpia, puedes borrar los datos locales de la app o
   reinstalarla para recrear la base; no hace falta agregar una migración ni
   pedir confirmación para descartar esos datos de desarrollo.

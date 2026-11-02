@@ -9,7 +9,7 @@ dispositivo ni navegación contextual. Todo es simulado y solo en pantalla.
 
 ## Estructura de la pantalla
 
-`src/screens/NotificationsScreen.js` es secundaria con `EncabezadoSeccion`
+`src/screens/NotificationsScreen.tsx` es secundaria con `EncabezadoSeccion`
 («Notificaciones») y lista desplazable. Se abre desde el botón de
 notificaciones del Dashboard; la flecha del encabezado regresa. El contenido
 limita su ancho a 480 puntos y acompaña los temas claro y oscuro, incluidos
@@ -21,7 +21,7 @@ Encima de la lista hay una fila con el conteo visual (`2 nuevas sin leer`,
 
 ## Información mostrada por notificación
 
-`TarjetaNotificacion` (`src/components/NotificationCard.js`), coherente en
+`TarjetaNotificacion` (`src/components/NotificationCard.tsx`), coherente en
 toda la lista:
 
 - ícono AHRE a la izquierda en contenedor verde;
@@ -75,6 +75,6 @@ compartido).
 ## Componentes utilizados
 
 `SectionHeader`, `NotificationCard` (nuevo común), `Toggle` (reutilizado) y
-tokens de `colors.js`/`globalStyles.js`. Estilos locales en
-`src/styles/NotificationsScreenStyles.js`. Sin Internet ni servicios
+tokens de `colors.ts`/`globalStyles.ts`. Estilos locales en
+`src/styles/NotificationsScreenStyles.ts`. Sin Internet ni servicios
 externos.

@@ -3,7 +3,7 @@
 ## Estado de esta etapa
 
 El esquema inicial ya define las siete tablas de Social y sus restricciones.
-`001_initialSchema.js` contiene tanto las entidades financieras como las sociales,
+`001_initialSchema.ts` contiene tanto las entidades financieras como las sociales,
 en una única definición inicial con versión `1`. No hay una segunda migración,
 conversión de bases anteriores ni inserción automática de ejemplos.
 
@@ -181,8 +181,8 @@ impide cambiar los datos económicos de un movimiento que ya tenga un vínculo
 social. No se calculan ni actualizan saldos mediante los triggers de Social.
 
 Crear un movimiento, usar uno existente y verificar un depósito activo se
-coordinan en `socialPaymentService.js`. Vincular un movimiento no vuelve a mover
-el saldo. `socialMovementReversal.js` integra la compensación financiera con la
+coordinan en `socialPaymentService.ts`. Vincular un movimiento no vuelve a mover
+el saldo. `socialMovementReversal.ts` integra la compensación financiera con la
 anulación del pago y el estado de su deuda en la misma transacción. Una compra
 cerrada no se revierte; una compra abierta con entregas exige corregirlas antes.
 Las pantallas recargan sus consultas al recuperar el foco.
@@ -203,13 +203,13 @@ o una limpieza explícita de datos descartables de desarrollo. No se cambió la
 inicialización ni se borró o convirtió una base existente. Las bases con datos
 reales deben conservarse; la migración de esas bases no forma parte de esta etapa.
 
-`tests/socialSchema.test.js` ejecuta el esquema inicial completo sobre SQLite en
+`tests/socialSchema.test.ts` ejecuta el esquema inicial completo sobre SQLite en
 memoria, con claves foráneas activas. Cubre personas inactivas, cupo, referencias
 por usuario, importes, repartos, pagos propios y de terceros, vinculación al cierre,
 unicidad de movimientos, sobrepagos, cancelaciones, historial y rollback.
 
 ```powershell
-node --experimental-vm-modules --test tests/socialSchema.test.js tests/socialService.test.js tests/socialInterface.test.js tests/developmentData.test.js tests/receiptParser.test.js tests/ocrExpenseDraft.test.js tests/ocrExpensePersistence.test.js
+node --experimental-vm-modules --test tests/socialSchema.test.ts tests/socialService.test.ts tests/socialInterface.test.ts tests/developmentData.test.ts tests/receiptParser.test.ts tests/ocrExpenseDraft.test.ts tests/ocrExpensePersistence.test.ts
 ```
 
 Las pruebas de servicios ejecutan repositorios, sesión y transacciones reales

@@ -2,7 +2,7 @@
 
 Este documento registra las dependencias directas utilizadas por AHRE, su finalidad y el motivo de su incorporación.
 
-El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias administradas por Expo se instalan con `npx expo install` para conservar la compatibilidad con la versión de SDK utilizada.
+El proyecto utiliza Expo SDK 57, React Native y TypeScript. Las dependencias administradas por Expo se instalan con `npx expo install` para conservar la compatibilidad con la versión de SDK utilizada.
 
 ## Dependencias de ejecución
 
@@ -23,11 +23,11 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | `expo-camera` | `~57.0.6` | Muestra una vista previa de cámara dentro de la aplicación y captura fotografías. | Vista en vivo y captura de comprobantes en OCR; el obturador está debajo del visor. |
 | `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes elegidos desde la galería en OCR y documentos. |
 | `expo-image-manipulator` | `~57.0.21` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
-| `expo-crypto` | `~57.0.4` | Genera bytes aleatorios y calcula resúmenes criptográficos con Expo. | `passwordSecurity.js` crea una sal de 16 bytes con `getRandomBytesAsync()` y deriva el verificador con una pasada SHA-256 mediante `digestStringAsync()`. |
+| `expo-crypto` | `~57.0.4` | Genera bytes aleatorios y calcula resúmenes criptográficos con Expo. | `passwordSecurity.ts` crea una sal de 16 bytes con `getRandomBytesAsync()` y deriva el verificador con una pasada SHA-256 mediante `digestStringAsync()`. |
 | `expo-constants` | `~57.0.22` | Expone información constante de la aplicación y del entorno de ejecución. | Está declarada, pero el código de AHRE todavía no la importa. |
 | `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Está declarada para una posible tipografía personalizada; AHRE todavía usa la fuente del sistema. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Inicio la usa después de comprobar que existe una sesión local válida; la huella autoriza el acceso al Dashboard. |
-| `expo-secure-store` | `~57.0.4` | Guarda valores pequeños de forma segura utilizando mecanismos nativos del dispositivo. | `sessionService.js` guarda el identificador del usuario si «Recordarme» está activo. `balanceVisibilityService.js` conserva por usuario la preferencia para ocultar saldos. No guarda contraseñas ni sus verificadores. |
+| `expo-secure-store` | `~57.0.4` | Guarda valores pequeños de forma segura utilizando mecanismos nativos del dispositivo. | `sessionService.ts` guarda el identificador del usuario si «Recordarme» está activo. `balanceVisibilityService.ts` conserva por usuario la preferencia para ocultar saldos. No guarda contraseñas ni sus verificadores. |
 | `expo-splash-screen` | `~57.0.10` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Logo de AHRE y fondo claro/oscuro configurados explícitamente en el plugin; coordinación del inicio. |
 | `expo-sqlite` | `~57.0.4` | Permite utilizar una base de datos SQLite local. | Persistencia offline-first; también guarda las cuentas, sus verificadores y preferencias locales. |
 | `expo-system-ui` | `~57.0.4` | Permite configurar aspectos de la interfaz nativa del sistema. | Fondo de la ventana según el tema activo y transiciones sin un fondo blanco inesperado. |
@@ -42,7 +42,7 @@ El proyecto utiliza Expo SDK 57, React Native y JavaScript. Las dependencias adm
 | `react-native-worklets` | `0.10.1` | Proporciona la ejecución de funciones de Reanimated en contextos de trabajo. | Soporte requerido por la versión instalada de Reanimated. |
 | `react-native-svg` | `15.15.4` | Permite renderizar y manipular gráficos SVG. | Íconos, gráficos y recursos vectoriales de la interfaz. |
 | `react-hook-form` | `^7.88.0` | Base para administrar estado, valores, envío y estado de formularios. | Disponible para futuros formularios; Login y Registro mantienen el estado local de sus campos. |
-| `zod` | `^4.6.7` | Permite definir esquemas para validar formatos y reglas de datos. | Disponible para formularios futuros; Login y Registro usan reglas locales en `authenticationValidation.js`. |
+| `zod` | `^4.6.7` | Permite definir esquemas para validar formatos y reglas de datos. | Disponible para formularios futuros; Login y Registro usan reglas locales en `authenticationValidation.ts`. |
 | `@hookform/resolvers` | `^5.9.1` | Conecta `react-hook-form` con librerías de validación como `zod`. | Integración futura de validaciones dentro de los formularios. |
 | `date-fns` | `^4.4.0` | Proporciona funciones para analizar, comparar, ordenar y formatear fechas. | Movimientos, depósitos, estadísticas, filtros y reportes. |
 
@@ -112,9 +112,9 @@ No reemplaza la configuración de `app.json`. Su función es permitir que el có
 `expo-navigation-bar` ajusta el contraste de los controles del sistema en
 Android. En `app.json`, `enforceContrast: false` permite que React Native dibuje
 el contenido hasta esa zona sin que Android agregue su propio velo de contraste.
-`AppNavigator.js` pinta el inset inferior con la superficie de las pestañas
+`AppNavigator.tsx` pinta el inset inferior con la superficie de las pestañas
 dentro de `PRINCIPAL` y con el fondo general en las otras pantallas;
-`BottomTabBar.js` extiende su propia superficie hasta el mismo inset.
+`BottomTabBar.tsx` extiende su propia superficie hasta el mismo inset.
 
 `enforceContrast` es configuración nativa del plugin. Si cambia, hay que
 regenerar o reconstruir la app Android para que se aplique; recargar JavaScript
@@ -132,8 +132,15 @@ Estas dependencias no requieren cambios adicionales en `app.json`. La validació
 
 ## Dependencias de desarrollo
 
-No hay dependencias de desarrollo específicas agregadas para AHRE. Se conserva
-la configuración proporcionada por Expo.
+| Dependencia | Versión exacta | Finalidad |
+| --- | --- | --- |
+| `typescript` | `6.0.3` | Compilador y comprobación de tipos, según la plantilla de Expo SDK 57. |
+| `@types/react` | `19.2.4` | Tipos para React 19.2 y JSX, parche recomendado por Expo CLI. |
+| `@types/node` | `24.19.2` | Tipos para las pruebas y el plugin ejecutados con Node 24. |
+
+El líder autorizó estos cambios e instalación en la conversación de migración
+sin Issue. No se actualizaron las dependencias de ejecución.
+Ver [compatibilidad y configuración de TypeScript](typescript.md).
 
 ## Dependencias previstas para módulos futuros
 
@@ -187,7 +194,7 @@ las versiones correctivas recomendadas por Expo, sin cambiar SDK 57:
 | `expo-sqlite` | `~57.0.3` | `~57.0.4` |
 
 El plugin `expo-splash-screen` ahora recibe imagen, ancho de 160 y colores
-claro/oscuro de AHRE. `plugins/withCompleteAdaptiveIcon.js` agrega un inset nativo
+claro/oscuro de AHRE. `plugins/withCompleteAdaptiveIcon.cts` agrega un inset nativo
 de 22% al primer plano de los íconos adaptativos normal y redondo, conservando
 la imagen original para evitar recortes por la máscara del launcher. Ambos
 cambios requieren un APK nuevo. `eas.json` declara `cli.appVersionSource: local`
@@ -195,9 +202,10 @@ para explicitar el versionado actual sin activar incrementos remotos.
 
 ## Versión de la aplicación y APK interno
 
-La configuración actual usa `expo.version: 0.4.0` y `android.versionCode: 2` en
+La versión `0.5.0` se preparó el 1 de noviembre de 2026. La configuración actual
+usa `expo.version: 0.5.0` y `android.versionCode: 3` en
 `app.json`. `package.json` y las dos versiones de la raíz de `package-lock.json`
-también indican `0.4.0`; las versiones de dependencias no cambian.
+también indican `0.5.0`; las versiones de dependencias no cambian.
 EAS conserva `cli.appVersionSource: local` y el perfil `ocr-comparison` genera
 un APK de distribución interna. Hace falta reconstruir e instalar el APK para
 ver la nueva versión en Android:
@@ -206,12 +214,16 @@ ver la nueva versión en Android:
 eas build --platform android --profile ocr-comparison --no-wait
 ```
 
-La versión instalada de esta rama es independiente de la prerelease histórica
+El APK del commit `8d106b3`, que el líder ya probó, conserva la versión `0.4.0`
+y el código Android `2`. La nueva numeración requiere otra compilación; su
+registro de validación está en [TypeScript](typescript.md#build-android-y-validación-en-dispositivo).
+
+La versión preparada en esta rama es independiente de la prerelease histórica
 `v0.4.0` de GitHub, que conserva su commit y sus metadatos anteriores a Social.
 
 ## Autenticación local y dependencias
 
-`expo-crypto` se usa en `src/authentication/passwordSecurity.js`: el servicio
+`expo-crypto` se usa en `src/authentication/passwordSecurity.ts`: el servicio
 genera una sal aleatoria de 16 bytes y calcula un SHA-256 con esa sal en una
 sola pasada. No usa PBKDF2 ni una función deliberadamente lenta para derivar
 contraseñas. El hash rápido reduce la espera en Expo Go, pero permite probar
@@ -296,7 +308,7 @@ dependencias npm. El módulo local Expo `modules/receipt-ocr/` incorpora:
 Hace falta un APK nuevo; Expo Go no incluye este módulo. Expo Autolinking lo
 detecta en `modules/` y el perfil EAS `ocr-comparison` genera un APK interno.
 La parte nativa está en Kotlin porque invoca el SDK Android; el intérprete y
-la interfaz de AHRE permanecen en JavaScript. El tamaño final y el rendimiento
+la interfaz de AHRE permanecen en TypeScript. El tamaño final y el rendimiento
 deben medirse en dispositivo. La referencia a los términos del SDK está en
 `modules/receipt-ocr/NOTICE.md`; pruebas y límites en
 [`../funcionalidades/ocr.md`](../funcionalidades/ocr.md).

@@ -2,9 +2,9 @@
 
 ## Alcance
 
-El formulario existente de `src/screens/DepositScreen.js` crea depósitos en la
+El formulario existente de `src/screens/DepositScreen.tsx` crea depósitos en la
 base SQLite local. La pantalla recoge y valida los campos, `src/deposits/`
-aplica las reglas del dominio y `src/database/repositories/depositsRepository.js`
+aplica las reglas del dominio y `src/database/repositories/depositsRepository.ts`
 realiza la inserción. La pantalla no ejecuta SQL. El flujo no depende de una
 conexión de red y funciona con el almacenamiento local disponible en modo
 avión.
@@ -34,7 +34,7 @@ del registro.
   uno, se usa `COLOR_DEPOSITO_PREDETERMINADO` (`#C3D1E3`).
 - **Descripción:** opcional, se recortan los espacios y admite hasta 60
   caracteres. Si queda vacía, una regla centralizada en
-  `src/deposits/depositService.js` genera `Fuente «{nombre}» · {tipo}` con el
+  `src/deposits/depositService.ts` genera `Fuente «{nombre}» · {tipo}` con el
   nombre y el tipo legible del depósito.
 
 La validación se ejecuta en el formulario para mostrar errores junto a los
@@ -67,20 +67,20 @@ información. La acción está protegida mientras existe una creación en curso.
 
 ## Componentes relacionados
 
-- `src/screens/DepositScreen.js`: formulario, estados visuales y coordinación
+- `src/screens/DepositScreen.tsx`: formulario, estados visuales y coordinación
   de navegación.
-- `src/constants/deposits.js`: tipos e íconos permitidos.
-- `src/utils/depositValidation.js`: normalización monetaria y validaciones
+- `src/constants/deposits.ts`: tipos e íconos permitidos.
+- `src/utils/depositValidation.ts`: normalización monetaria y validaciones
   reutilizables.
-- `src/deposits/depositService.js`: reglas del dominio, sesión local y
+- `src/deposits/depositService.ts`: reglas del dominio, sesión local y
   descripción automática.
-- `src/database/repositories/depositsRepository.js`: inserción transaccional,
+- `src/database/repositories/depositsRepository.ts`: inserción transaccional,
   valores inicial y actual, UUID y fechas.
 
 ## Consulta del detalle y movimientos
 
-`src/screens/DepositDetailScreen.js` solicita el depósito por su ID a
-`src/deposits/depositService.js`. El servicio verifica que pertenezca al usuario
+`src/screens/DepositDetailScreen.tsx` solicita el depósito por su ID a
+`src/deposits/depositService.ts`. El servicio verifica que pertenezca al usuario
 de la sesión y que continúe activo. Si el ID falta, no existe, pertenece a otra
 cuenta o está inactivo, el detalle muestra un error recuperable y permite volver
 o reintentar; no navega con información ficticia.

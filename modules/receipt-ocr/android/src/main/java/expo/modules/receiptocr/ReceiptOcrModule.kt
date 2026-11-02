@@ -12,7 +12,7 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.io.File
 
-// Reconocimiento local con ML Kit. La interpretación permanece en JavaScript.
+// Reconocimiento local con ML Kit. La interpretación permanece en TypeScript.
 class ModuloOcrComprobantes : Module() {
   private val bloqueo = Any()
 

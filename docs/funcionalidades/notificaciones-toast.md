@@ -4,7 +4,7 @@
 
 AHRE usa el componente toast compartido para comunicar resultados breves de una
 acción: errores al guardar o consultar información, confirmaciones de éxito y
-avisos informativos. El proveedor está en `App.js`, por encima de la navegación,
+avisos informativos. El proveedor está en `App.tsx`, por encima de la navegación,
 por lo que las pantallas pueden mostrar avisos aunque la ruta cambie.
 
 El toast usa `Animated` y `PanResponder` de React Native y el contexto de áreas
@@ -78,7 +78,7 @@ mostrarAviso('La sincronización sigue en curso.', {
 La notificación también se puede cerrar con la X o deslizando hacia un costado.
 Si se muestra otro aviso, reemplaza al que estaba visible. El color del icono
 depende del tipo; los colores compartidos están en
-`src/styles/colors.js` (`COLORES_NOTIFICACIONES`).
+`src/styles/colors.ts` (`COLORES_NOTIFICACIONES`).
 
 ## Uso actual
 

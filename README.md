@@ -6,7 +6,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/Estado-No%20estable-F97316?style=flat-square" alt="Estado: no estable" />
-  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.4.0-2563EB?style=flat-square" alt="Versión 0.4.0" />
+  <img src="https://img.shields.io/badge/Versi%C3%B3n-0.5.0-2563EB?style=flat-square" alt="Versión 0.5.0" />
   <img src="https://img.shields.io/badge/Plataforma-Android-green?style=flat-square&logo=android&logoColor=green" alt="Plataforma Android" />
   <img src="https://img.shields.io/badge/Expo-SDK%2057-white?style=flat-square&logo=expo&logoColor=white" alt="Expo SDK 57" />
   <img src="https://img.shields.io/badge/React%20Native-0.86.3-61DAFB?style=flat-square&logo=react&logoColor=61DAFB" alt="React Native 0.86.3" />
@@ -72,7 +72,8 @@ dependencia obligatoria para las funciones esenciales.
 ### Inicio y dashboard
 
 En Expo Go, Inicio incluye temporalmente Entrar con datos de prueba: prepara
-una cuenta independiente con tres depósitos y seis movimientos locales. El
+una cuenta independiente con tres depósitos, seis movimientos, tres contactos,
+una sala con cuatro gastos y una deuda personal pendiente. El
 acceso está limitado a desarrollo y no duplica los ejemplos al volver a entrar.
 
 La interfaz actual presenta un resumen visual de la situación financiera, con
@@ -222,8 +223,8 @@ para evaluación. Actualmente cuenta con:
   conectarse a lógica futura;
 - documentación de arquitectura;
 - documentación del flujo de trabajo con Issues, ramas y Pull Requests;
-- cambios de Social (#18) registrados en Sin publicar y compilaciones internas
-  configuradas con versión instalada `0.4.0` y código Android `2`;
+- versión `0.5.0` preparada con fecha 1 de noviembre de 2026, incluyendo Social
+  (#18) y la migración a TypeScript estricto (#65), con código Android `3`;
 - prerelease histórica `v0.4.0` de código fuente, anterior a Social.
 
 Las funcionalidades completas de AHRE todavía no están implementadas. El
@@ -243,10 +244,12 @@ combina búsqueda y filtros y carga el detalle por ID; Estadísticas calcula sus
 resultados desde esos movimientos. Los formularios de ingreso y egreso validan y
 persisten sus movimientos localmente, con su impacto en el saldo.
 
-La versión instalada de la próxima compilación es `0.4.0`, definida en
+La versión preparada para la próxima compilación es `0.5.0`, definida en
 `app.json` y sincronizada con `package.json` y la raíz de `package-lock.json`.
-Android usa `versionCode: 2`. Los cambios de esta rama, incluido Social, están
-documentados en Sin publicar en [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+Android usa `versionCode: 3`. Los cambios de esta rama, incluido Social, están
+documentados bajo `v0.5.0`, con fecha `2026-11-01`, en
+[`docs/CHANGELOG.md`](docs/CHANGELOG.md). El APK validado previamente se generó
+como `0.4.0`, código Android `2`; el cambio de versión se aplica al reconstruirlo.
 La prerelease histórica `v0.4.0` conserva el código fuente anterior a Social, sin
 APK adjunto y con los metadatos internos `0.3.0` de su commit etiquetado.
 
@@ -255,7 +258,7 @@ APK adjunto y con los metadatos internos `0.3.0` de su commit etiquetado.
 - Expo SDK 57;
 - React Native 0.86.3;
 - React 19.2.3;
-- JavaScript únicamente;
+- TypeScript (comprobación estricta de la app y las pruebas);
 - plataforma inicial Android;
 - arquitectura offline-first.
 
@@ -276,15 +279,25 @@ APP-AHRE/
 │   ├── services/           # Servicios e integraciones futuras
 │   ├── styles/             # Estilos globales de React Native
 │   └── utils/              # Funciones auxiliares
-├── App.js                  # Composición raíz de la aplicación
+├── App.tsx                 # Composición raíz de la aplicación
 ├── app.json                # Configuración de Expo
 ├── docs/CHANGELOG.md       # Historial de cambios
-├── index.js                # Registro de la aplicación en Expo
+├── index.ts                # Registro de la aplicación en Expo
 └── README.md               # Descripción y alcance del repositorio
 ```
 
 La descripción detallada de cada carpeta se encuentra en
 [`docs/arquitectura/estructura-app.md`](docs/arquitectura/estructura-app.md).
+
+La configuración de TypeScript, las versiones verificadas y los límites del tipado
+se describen en [TypeScript](docs/configuracion/typescript.md).
+
+La migración del [PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65)
+activa `strict: true` en la app y las herramientas, optimiza las consultas
+sociales y amplía los ejemplos de desarrollo. Pasaron el chequeo de tipos,
+110 pruebas y la exportación con Hermes. La build interna de Android finalizó
+y el líder confirmó que probó el APK y funciona. El registro de la build y
+la validación está en la [guía de TypeScript](docs/configuracion/typescript.md#build-android-y-validación-en-dispositivo).
 
 ## Documentación
 
@@ -327,7 +340,7 @@ eas build --platform android --profile ocr-comparison --no-wait
 ```
 
 El comando sube el código local a Expo y devuelve el enlace de seguimiento;
-cuando finaliza, permite descargar el APK e instalarlo. La versión `0.4.0`
+cuando finaliza, permite descargar el APK e instalarlo. La versión `0.5.0`
 se verá al instalar esa nueva compilación. Este comando no publica en Google Play.
 
 Instalar las dependencias:
@@ -348,6 +361,8 @@ También se encuentran disponibles los comandos:
 npm run android
 npm run ios
 npm run web
+npm run typecheck
+npm test
 ```
 
 ## Alcance del README

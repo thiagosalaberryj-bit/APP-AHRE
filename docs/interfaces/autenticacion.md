@@ -6,7 +6,7 @@ Login y Registro crean y validan cuentas en SQLite local. No consultan un backen
 
 ## Login
 
-`src/screens/LoginScreen.js` solicita correo electrónico y contraseña. Antes de consultar SQLite comprueba que ambos estén completos y que el correo tenga un formato válido. El correo se recorta y normaliza a minúsculas. Las credenciales inválidas muestran el mismo mensaje para un usuario inexistente o una contraseña incorrecta.
+`src/screens/LoginScreen.tsx` solicita correo electrónico y contraseña. Antes de consultar SQLite comprueba que ambos estén completos y que el correo tenga un formato válido. El correo se recorta y normaliza a minúsculas. Las credenciales inválidas muestran el mismo mensaje para un usuario inexistente o una contraseña incorrecta.
 
 El botón «Recordarme» está activo inicialmente. Al activarlo, el identificador de usuario de la sesión se guarda con `expo-secure-store`. Si se desactiva, la sesión se conserva solo mientras la aplicación está abierta. Después de inicializar SQLite, AHRE permanece en Inicio; la sesión se consulta al completar el deslizador. «¿Olvidaste tu contraseña?» permanece sin un flujo asociado; la recuperación remota no forma parte de esta funcionalidad.
 
@@ -14,7 +14,7 @@ El botón de Login muestra carga durante la verificación, impide pulsaciones re
 
 ## Registro
 
-`src/screens/RegistrationScreen.js` solicita nombre, correo, contraseña y confirmación. La pantalla valida los campos antes de llamar al servicio; el servicio vuelve a validar antes de cualquier operación de persistencia.
+`src/screens/RegistrationScreen.tsx` solicita nombre, correo, contraseña y confirmación. La pantalla valida los campos antes de llamar al servicio; el servicio vuelve a validar antes de cualquier operación de persistencia.
 
 Reglas actuales:
 
@@ -32,13 +32,13 @@ El servicio usa `expo-crypto` para generar una sal aleatoria de 16 bytes y calcu
 
 ## Persistencia local
 
-`src/database/repositories/authenticationRepository.js` crea el usuario, el verificador y su fila de preferencias en una transacción SQLite. Si la transacción falla, no queda una cuenta parcial. El correo se normaliza a minúsculas antes de guardarse y SQLite mantiene un índice único normalizado. Las preferencias comienzan con notificaciones activas y sin depósito predeterminado.
+`src/database/repositories/authenticationRepository.ts` crea el usuario, el verificador y su fila de preferencias en una transacción SQLite. Si la transacción falla, no queda una cuenta parcial. El correo se normaliza a minúsculas antes de guardarse y SQLite mantiene un índice único normalizado. Las preferencias comienzan con notificaciones activas y sin depósito predeterminado.
 
 Después de crear la cuenta, Registro reemplaza la pantalla actual por Login y muestra una notificación emergente de éxito. La persona inicia sesión manualmente.
 
 ## Notificaciones emergentes
 
-`src/components/ToastNotification.js` presenta los avisos generales de Login y Registro encima de la pantalla. El mensaje se cierra automáticamente y una barra blanca indica el tiempo restante. La persona también puede cerrarlo con la X o deslizarlo horizontalmente. `src/contexts/ToastContext.js` mantiene el aviso visible mientras Registro navega a Login y permite reutilizar el componente desde otras pantallas.
+`src/components/ToastNotification.tsx` presenta los avisos generales de Login y Registro encima de la pantalla. El mensaje se cierra automáticamente y una barra blanca indica el tiempo restante. La persona también puede cerrarlo con la X o deslizarlo horizontalmente. `src/contexts/ToastContext.tsx` mantiene el aviso visible mientras Registro navega a Login y permite reutilizar el componente desde otras pantallas.
 
 El patrón compartido para mostrar errores de operación, confirmaciones y avisos
 informativos está documentado en
@@ -46,7 +46,7 @@ informativos está documentado en
 
 ## Sesión local
 
-`src/authentication/sessionService.js` expone:
+`src/authentication/sessionService.ts` expone:
 
 | Función | Responsabilidad |
 | --- | --- |
@@ -62,14 +62,14 @@ La operación para cerrar sesión está disponible en el servicio. Conectar el b
 ## Separación de responsabilidades
 
 - `src/screens/`: campos, estados visuales y navegación.
-- `src/components/ToastNotification.js`: presentación y cierre de los avisos emergentes.
-- `src/contexts/ToastContext.js`: estado compartido y acceso a las notificaciones de texto.
-- `src/utils/authenticationValidation.js`: reglas de correo, contraseña y campos requeridos.
-- `src/authentication/authenticationService.js`: registro y autenticación local.
-- `src/authentication/passwordSecurity.js`: creación y verificación del hash rápido con sal.
-- `src/authentication/sessionService.js`: persistencia y recuperación local de sesión.
-- `src/database/repositories/authenticationRepository.js`: consultas de cuenta y transacción de registro.
-- `src/database/migrations/001_initialSchema.js`: tablas e índice único del esquema mientras AHRE siga en desarrollo.
+- `src/components/ToastNotification.tsx`: presentación y cierre de los avisos emergentes.
+- `src/contexts/ToastContext.tsx`: estado compartido y acceso a las notificaciones de texto.
+- `src/utils/authenticationValidation.ts`: reglas de correo, contraseña y campos requeridos.
+- `src/authentication/authenticationService.ts`: registro y autenticación local.
+- `src/authentication/passwordSecurity.ts`: creación y verificación del hash rápido con sal.
+- `src/authentication/sessionService.ts`: persistencia y recuperación local de sesión.
+- `src/database/repositories/authenticationRepository.ts`: consultas de cuenta y transacción de registro.
+- `src/database/migrations/001_initialSchema.ts`: tablas e índice único del esquema mientras AHRE siga en desarrollo.
 
 ## Navegación y conectividad
 

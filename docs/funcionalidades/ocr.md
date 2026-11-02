@@ -41,12 +41,12 @@ Dashboard o Nuevo → OCR → cámara o galería → recorte → ML Kit local
 → crearMovimiento(datos, 'egreso') → SQLite → regreso
 ```
 
-`OcrScreen.js` conserva la captura y el recorte dentro de la pantalla existente.
-`src/ocr/ocrService.js` invoca exclusivamente ML Kit; `receiptParser.js` interpreta
-texto y posiciones. `OcrExpenseForm.js` presenta la revisión y usa los mismos
-selectores de los formularios financieros. `ocrExpenseDraft.js` prepara valores
+`OcrScreen.tsx` conserva la captura y el recorte dentro de la pantalla existente.
+`src/ocr/ocrService.ts` invoca exclusivamente ML Kit; `receiptParser.ts` interpreta
+texto y posiciones. `OcrExpenseForm.tsx` presenta la revisión y usa los mismos
+selectores de los formularios financieros. `ocrExpenseDraft.ts` prepara valores
 editables sin guardar nada. El módulo Expo local `modules/receipt-ocr/` contiene
-el adaptador Android Kotlin; el resto de la lógica permanece en JavaScript.
+el adaptador Android Kotlin; el resto de la lógica permanece en TypeScript.
 
 Expo Autolinking descubre el módulo. El modelo latino viene en
 `com.google.mlkit:text-recognition:16.0.1`; no se usa la variante descargable por
@@ -146,7 +146,7 @@ comprueba creación de egreso, descuento de saldo, depósitos ajenos/inactivos,
 categoría inválida y rollback ante fallo de actualización de saldo.
 
 ```powershell
-node --experimental-vm-modules --test tests/receiptParser.test.js tests/ocrExpenseDraft.test.js tests/ocrExpensePersistence.test.js
+node --experimental-vm-modules --test tests/receiptParser.test.ts tests/ocrExpenseDraft.test.ts tests/ocrExpensePersistence.test.ts
 ```
 
 Las 24 pruebas pasan y se verificó la exportación Android con Hermes. El líder

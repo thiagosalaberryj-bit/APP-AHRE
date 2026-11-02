@@ -193,7 +193,7 @@ es cero. La compensación usa `devoluciones` para un egreso revertido y
 No se elimina físicamente el movimiento original.
 
 Las categorías no son una tabla. Son valores predefinidos por AHRE y se
-definen en `src/constants/movimientos.js` como `CATEGORIAS_INGRESO` y
+definen en `src/constants/movimientos.ts` como `CATEGORIAS_INGRESO` y
 `CATEGORIAS_EGRESO`.
 
 Categorías iniciales para ingresos:
@@ -433,18 +433,18 @@ La estructura actual separa el esquema y sus repositorios:
 
 ```text
 src/database/
-├── initialization.js
-├── transactions.js
+├── initialization.ts
+├── transactions.ts
 ├── migrations/
-│   └── 001_initialSchema.js
+│   └── 001_initialSchema.ts
 └── repositories/
-    ├── peopleRepository.js
-    ├── sharedExpensesRepository.js
-    ├── sharedExpenseParticipantsRepository.js
-    ├── debtsRepository.js
-    ├── roomsRepository.js
-    ├── roomPeopleRepository.js
-    ├── socialPaymentsRepository.js
+    ├── peopleRepository.ts
+    ├── sharedExpensesRepository.ts
+    ├── sharedExpenseParticipantsRepository.ts
+    ├── debtsRepository.ts
+    ├── roomsRepository.ts
+    ├── roomPeopleRepository.ts
+    ├── socialPaymentsRepository.ts
     └── ... repositorios financieros existentes
 ```
 
@@ -456,7 +456,7 @@ datos almacenados en una tabla.
 
 Los repositorios financieros conservan sus reglas de saldo. Social los utiliza
 para crear o vincular movimientos; las reversiones mantienen el pago y la deuda
-coherentes mediante `socialMovementReversal.js`.
+coherentes mediante `socialMovementReversal.ts`.
 
 ## Implementación
 

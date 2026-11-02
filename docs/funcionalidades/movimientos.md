@@ -15,7 +15,7 @@ movimiento → actualizar saldo → volver a la pantalla anterior
 
 ## Historial general, búsqueda y filtros
 
-`src/screens/MovementsScreen.js` consulta el historial local del usuario de la
+`src/screens/MovementsScreen.tsx` consulta el historial local del usuario de la
 sesión. `movimientosRepositorio.consultarHistorial()` relaciona cada movimiento
 con su depósito para limitar la consulta por `depositos.usuario_id`; incluye
 ingresos y egresos vigentes (`anulado = 0`) y obtiene la frecuencia desde la
@@ -43,7 +43,7 @@ Los filtros se envían juntos como condiciones `AND`:
 - **Monto:** mínimo y máximo, con formato local (punto de miles y coma decimal).
 - **Categoría:** multiselección de las categorías presentes en los movimientos
   vigentes del usuario, con nombres e íconos del catálogo local definido en
-  `src/constants/movimientos.js`.
+  `src/constants/movimientos.ts`.
 - **Depósito:** multiselección de los depósitos que tienen movimientos vigentes
   en el historial, consultados desde SQLite.
 
@@ -56,7 +56,7 @@ SQLite.
 ## Detalle e actualización
 
 Al elegir una tarjeta, la navegación envía solamente `movimientoId`. La pantalla
-existente `src/screens/MovementDetailScreen.js` vuelve a consultar SQLite por
+existente `src/screens/MovementDetailScreen.tsx` vuelve a consultar SQLite por
 ese ID y por el usuario de la sesión, y obtiene el tipo, monto, descripción,
 depósito, categoría, fecha, hora y frecuencia real. Si el registro dejó de estar
 disponible, muestra un mensaje controlado y permite regresar. Si falla la
@@ -158,17 +158,17 @@ servicio ni escribe en SQLite.
 
 ## Archivos involucrados
 
-- `src/screens/IncomeScreen.js`: formulario compartido, estados visuales,
+- `src/screens/IncomeScreen.tsx`: formulario compartido, estados visuales,
   navegación y coordinación del guardado;
-- `src/movements/movementService.js`: carga de datos, comprobación de sesión y
+- `src/movements/movementService.ts`: carga de datos, comprobación de sesión y
   creación atómica del ingreso o egreso;
-- `src/utils/movementValidation.js`: normalización de montos, fecha/hora y
+- `src/utils/movementValidation.ts`: normalización de montos, fecha/hora y
   validaciones reutilizables;
-- `src/database/repositories/movementsRepository.js`: movimiento, impacto del
+- `src/database/repositories/movementsRepository.ts`: movimiento, impacto del
   saldo y reglas de categorías;
-- `src/database/repositories/depositsRepository.js`: depósitos y saldo actual;
-- `src/database/repositories/recurrencesRepository.js`: recurrencias locales;
-- `src/database/repositories/categoriesRepository.js`: catálogos locales de
+- `src/database/repositories/depositsRepository.ts`: depósitos y saldo actual;
+- `src/database/repositories/recurrencesRepository.ts`: recurrencias locales;
+- `src/database/repositories/categoriesRepository.ts`: catálogos locales de
   categorías de ingreso y egreso.
 
 ## Funcionamiento offline
@@ -186,7 +186,7 @@ se usa la misma transacción e impacto de saldo. El flujo se describe en
 [`ocr.md`](ocr.md). No existe una persistencia paralela para comprobantes.
 
 Egreso reutiliza `FormularioMovimiento` y los mismos selectores, validaciones,
-repositorios y estilos que Ingreso. `ExpenseScreen.js` solo configura el tipo
+repositorios y estilos que Ingreso. `ExpenseScreen.tsx` solo configura el tipo
 `egreso`; no mantiene catálogos de muestra ni una lógica de guardado paralela.
 
 Al abrirse, el servicio consulta la sesión local y carga los depósitos activos
@@ -237,19 +237,19 @@ escribir en la base.
 
 ### Archivos reutilizados
 
-- `src/screens/IncomeScreen.js`: contiene `FormularioMovimiento`, compartido por
+- `src/screens/IncomeScreen.tsx`: contiene `FormularioMovimiento`, compartido por
   Ingreso y Egreso;
-- `src/screens/ExpenseScreen.js`: configura el formulario existente como
+- `src/screens/ExpenseScreen.tsx`: configura el formulario existente como
   egreso;
-- `src/movements/movementService.js`: consulta depósitos y categorías locales,
+- `src/movements/movementService.ts`: consulta depósitos y categorías locales,
   valida sus relaciones y crea el movimiento y la recurrencia;
-- `src/utils/movementValidation.js`: valida el monto, la descripción, el
+- `src/utils/movementValidation.ts`: valida el monto, la descripción, el
   depósito, la categoría, la fecha, la hora y la frecuencia;
-- `src/database/repositories/movementsRepository.js`: persiste el movimiento y
+- `src/database/repositories/movementsRepository.ts`: persiste el movimiento y
   actualiza el saldo dentro de la transacción;
-- `src/database/repositories/depositsRepository.js`,
-  `src/database/repositories/categoriesRepository.js` y
-  `src/database/repositories/recurrencesRepository.js`: consultan los datos
+- `src/database/repositories/depositsRepository.ts`,
+  `src/database/repositories/categoriesRepository.ts` y
+  `src/database/repositories/recurrencesRepository.ts`: consultan los datos
   locales relacionados.
 
 El formulario solo usa SQLite, la sesión local, catálogos internos y
