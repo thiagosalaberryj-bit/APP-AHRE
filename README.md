@@ -99,7 +99,9 @@ guarda sus datos y su eliminación lógica conserva el historial financiero.
 
 Social funciona de forma personal y sin conexión sobre SQLite. Guarda personas,
 salas, ítems, repartos, deudas y pagos del usuario actual. Conserva la presentación
-del Issue #18 y no se comunica con otros dispositivos. Los recorridos y las
+del Issue #18. La integración inicial con SERVER-AHRE replica los datos propios
+entre dispositivos autenticados; la colaboración por enlaces web sigue prevista.
+Los recorridos y las
 reglas están en [Funcionamiento de Social](docs/funcionalidades/social.md), y
 el contrato de persistencia en [Social en SQLite](docs/base-de-datos/social.md).
 
@@ -254,6 +256,14 @@ La prerelease histórica `v0.4.0` conserva el código fuente anterior a Social, 
 APK adjunto y con los metadatos internos `0.3.0` de su commit etiquetado.
 
 ## Tecnología
+
+En la rama de sincronización, la app conserva los cambios primero en SQLite y
+los envía al servidor en lotes ordenados, con reintentos sin duplicados. El
+indicador distingue conexión, pendientes, sesión remota y conflictos. La URL
+HTTPS se configura con `EXPO_PUBLIC_API_URL`; el valor de referencia está en
+`.env.example`. El envío se activa con la app abierta o al recuperar el foco.
+Los conflictos conservan los cambios pendientes y requieren revisión; el
+changelog describe el alcance de esta primera integración.
 
 - Expo SDK 57;
 - React Native 0.86.3;

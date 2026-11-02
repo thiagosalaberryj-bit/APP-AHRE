@@ -16,8 +16,9 @@ type ServiciosPrueba =
   & typeof import('../../src/database/repositories/index.ts')
   & typeof import('../../src/database/initialization.ts')
   & typeof import('../../src/social/socialService.ts');
+type ServiciosSync = typeof import('../../src/sync/syncService.ts') & typeof import('../../src/sync/remote.ts');
 
-export async function preparar(prueba: import('node:test').TestContext, desarrollo = true) {
+export async function preparar(prueba: import('node:test').TestContext, desarrollo = true, remoto?:{url:string;fetch:typeof fetch}) {
   const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
   const base = new DatabaseSync(':memory:');
   prueba.after(() => base.close());
@@ -35,7 +36,7 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     },
   };
   const almacenamiento = new Map<string, string>();
-  const contexto = createContext({ console, crypto: globalThis.crypto, __DEV__: desarrollo });
+  const contexto = createContext({ console, crypto: globalThis.crypto, __DEV__: desarrollo, URL, AbortController, setTimeout, clearTimeout, ...(remoto?{process:{env:{EXPO_PUBLIC_API_URL:remoto.url}},fetch:remoto.fetch}:{}) });
   const modulos = new Map<string, Module | Promise<Module>>();
   const sintetico = (nombre: string, valores: Record<string,unknown>) => new SyntheticModule(Object.keys(valores), function inicializar() {
     for (const [clave, valor] of Object.entries(valores)) this.setExport(clave, valor);
@@ -66,6 +67,8 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     export * from './src/database/repositories/index.ts';
     export * from './src/database/initialization.ts';
     export * from './src/social/socialService.ts';
+    export * from './src/sync/syncService.ts';
+    export * from './src/sync/remote.ts';
   `, { context: contexto, identifier: path.join(raiz, 'prueba-desarrollo-virtual.ts') });
   await entrada.link(async (nombre, origen) => {
     if (modulos.has(nombre)) return modulos.get(nombre)!;
@@ -73,5 +76,5 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     return cargar(resolverFuente(ruta));
   });
   await entrada.evaluate();
-  return { base, almacenamiento, ...(entrada.namespace as unknown as ServiciosPrueba) };
+  return { base, almacenamiento, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync) };
 }

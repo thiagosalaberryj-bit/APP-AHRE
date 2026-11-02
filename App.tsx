@@ -20,6 +20,7 @@ import { ProveedorAvisos } from './src/contexts/ToastContext';
 import { inicializarBaseDatos } from './src/database';
 import { ErrorBaseDatos } from './src/database/errors';
 import NavegadorAplicacion from './src/navigation/AppNavigator';
+import EstadoSincronizacion from './src/components/SyncStatus';
 import { cargarAparienciaSesionGuardada } from './src/profile/profileService';
 import { TEMAS } from './src/styles/colors';
 
@@ -143,7 +144,7 @@ function ContenidoAplicacion() {
         ) : (
           <View onLayout={ocultarPantallaCarga} style={{ flex: 1 }}>
             {estadoInicio === 'lista' ? (
-              <NavegadorAplicacion rutaInicial={RUTAS.INICIO} />
+              <View style={{flex:1}}><NavegadorAplicacion rutaInicial={RUTAS.INICIO} /><EstadoSincronizacion /></View>
             ) : (
               <View style={[estilosInicializacion.contenedor, { backgroundColor: tema.fondo }]}>
                 <Text

@@ -57,12 +57,13 @@ async function actualizarVerificadorContrasena(usuarioId: string, contrasenaVeri
   }));
 }
 
-async function crearCuenta({ nombre, correo, contrasenaVerificador }: { nombre: string; correo: string; contrasenaVerificador: string }) {
+async function crearCuenta({ nombre, correo, contrasenaVerificador, id, omitirPreferencias = false }: { nombre: string; correo: string; contrasenaVerificador: string; id?:string; omitirPreferencias?:boolean }) {
   const ahora = new Date().toISOString();
-  const usuarioId = generarIdentificador();
+  const usuarioId = id || generarIdentificador();
 
   try {
     return await ejecutarTransaccion(async (baseDatos) => {
+      if(omitirPreferencias)await baseDatos.runAsync('UPDATE sync_context SET importando=1 WHERE id=1');
       const existente = await baseDatos.getFirstAsync<Pick<Tablas['usuarios'], 'id'>>(
         'SELECT id FROM usuarios WHERE LOWER(correo_electronico) = ? LIMIT 1;',
         [normalizarCorreo(correo)],
@@ -83,13 +84,17 @@ async function crearCuenta({ nombre, correo, contrasenaVerificador }: { nombre: 
         VALUES (?, ?, ?, ?);`,
         [usuarioId, contrasenaVerificador, ahora, ahora],
       );
-      await baseDatos.runAsync(
+      if (!omitirPreferencias) await baseDatos.runAsync(
         `INSERT INTO preferencias
           (id, usuario_id, deposito_predeterminado_id, notificaciones_activas, idioma, apariencia, fecha_creacion, fecha_actualizacion)
         VALUES (?, ?, NULL, 1, 'es', 'sistema', ?, ?);`,
         [generarIdentificador(), usuarioId, ahora, ahora],
       );
 
+      // La cuenta nació con el diario activo: conservar cada evento original,
+      // incluso si estuvo offline antes del primer intento de sincronización.
+      await baseDatos.runAsync('INSERT OR IGNORE INTO sync_state(usuario_id,preparada) VALUES(?,1)',[usuarioId]);
+      if(omitirPreferencias)await baseDatos.runAsync('UPDATE sync_context SET importando=0 WHERE id=1');
       return {
         id: usuarioId,
         nombre: nombre.trim(),

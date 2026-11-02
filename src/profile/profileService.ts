@@ -8,6 +8,7 @@ import {
 } from '../authentication/passwordSecurity';
 import { autenticacionRepositorio, preferenciasRepositorio, usuariosRepositorio } from '../database/repositories';
 import { ErrorBaseDatos } from '../database/errors';
+import { URL_SERVIDOR, obtenerSesionRemota, solicitarRemoto } from '../sync/remote';
 import {
   APARIENCIA_PREDETERMINADA,
   APARIENCIAS_PERMITIDAS,
@@ -26,6 +27,7 @@ const MENSAJES_ERROR: Readonly<Record<string, string>> = Object.freeze({
   correo_duplicado: 'Ya existe una cuenta con ese correo electrónico.',
   contrasena_actual_incorrecta: 'La contraseña actual no coincide.',
   contrasena_no_actualizada: 'No se pudo actualizar la contraseña. Intentá nuevamente.',
+  conexion_requerida: 'Conectate al servidor e iniciá sesión para cambiar la contraseña de la cuenta.',
   preferencia_invalida: 'La preferencia seleccionada no es válida.',
   operacion_no_disponible: 'No se pudo actualizar el perfil. Intentá nuevamente.',
 });
@@ -132,6 +134,12 @@ export async function actualizarContrasenaPerfil(contrasenaActual: string, contr
       throw new ErrorPerfil('contrasena_actual_incorrecta', { actual: 'La contraseña actual no coincide.' });
     }
 
+    if(URL_SERVIDOR) {
+      const remota=await obtenerSesionRemota(usuario.id);
+      if(!remota)throw new ErrorPerfil('conexion_requerida');
+      try{await solicitarRemoto('/auth/password',{actual:contrasenaActual,nueva:contrasenaNueva},remota.token);}
+      catch{throw new ErrorPerfil('conexion_requerida');}
+    }
     const nuevoVerificador = await crearVerificadorContrasena(contrasenaNueva);
     const actualizado = await autenticacionRepositorio.actualizarVerificadorContrasena(
       usuario.id,

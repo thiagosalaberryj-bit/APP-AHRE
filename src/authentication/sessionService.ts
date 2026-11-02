@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { autenticacionRepositorio } from '../database/repositories/authenticationRepository';
 import { ErrorAutenticacion } from './errors';
+import { quitarSesionRemota } from '../sync/remote';
 
 const CLAVE_SESION = 'ahre.sesion.usuario_id';
 let usuarioIdEnMemoria: string | null = null;
@@ -77,9 +78,11 @@ export async function comprobarSesion() {
 }
 
 export async function cerrarSesion() {
+  const anterior=usuarioIdEnMemoria;
   usuarioIdEnMemoria = null;
   try {
     await SecureStore.deleteItemAsync(CLAVE_SESION);
+    if(anterior)await quitarSesionRemota(anterior);
   } catch (_error) {
     throw new ErrorAutenticacion('sesion_no_disponible');
   }

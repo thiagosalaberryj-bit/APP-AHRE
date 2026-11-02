@@ -5,6 +5,41 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+### Añadido
+
+- Primera integración con SERVER-AHRE y su base MySQL: autenticación remota y recuperación de
+  datos en otro dispositivo, manteniendo el ingreso y los registros locales
+  cuando el servidor no está disponible. Trabajo autorizado por el líder sin Issue.
+- Diario SQLite de cambios por cuenta, con secuencia persistente y lotes por
+  operación local. Los envíos son FIFO: un depósito se envía antes de sus
+  movimientos; un fallo detiene los lotes siguientes y los reintentos conservan
+  el identificador para evitar duplicados.
+- Indicador de servidor disponible, sincronización, falta de conexión, sesión
+  remota pendiente y conflicto. Los avisos de conexión se muestran al cambiar
+  de estado, sin repetirse por cada operación.
+
+### Cambiado
+
+- Las transacciones financieras sincronizan juntos sus registros y saldos.
+  Los datos recibidos se aplican sin generar nuevos envíos. Las cuentas locales
+  previas se incorporan mediante una carga inicial ordenada por dependencias.
+- El cambio de contraseña requiere sesión y conexión con el servidor cuando
+  está configurado, para evitar contraseñas divergentes. Las credenciales y los
+  tokens no se incluyen en el diario de datos; los tokens se guardan en
+  SecureStore solo cuando se recuerda la sesión.
+
+### Verificación y límites
+
+- Comprobación estricta y pruebas de la app, incluida la continuidad del registro
+  e ingreso local con el servidor sin desplegar o en mantenimiento. La integración local
+  con la API y MySQL reales cubrió creación sin conexión, subida ordenada, recuperación
+  en otro dispositivo y cierre de una sala con sus deudas.
+- Los conflictos con una revisión más nueva del servidor conservan los lotes
+  locales y detienen el envío. La selección o fusión manual entre versiones
+  queda pendiente; no se sobrescriben datos silenciosamente. Una cuenta remota
+  y una local con el mismo correo pero distintos identificadores requieren
+  reconciliación antes de vincular sus datos.
+
 ## [v0.5.0] - 2026-11-01 - no estable
 
 Versión preparada para revisión en el
