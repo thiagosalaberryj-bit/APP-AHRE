@@ -135,15 +135,23 @@ permanecer vacía hasta completar el reintento.
 
 No se agregan ejemplos a la cuenta habitual ni se borran datos. El botón cambia
 a la cuenta de pruebas y la sesión no queda recordada en SecureStore; para volver
-a otra cuenta se usa el cierre de sesión y el Login normal. Este acceso no carga
-personas, salas ni deudas: Social comienza vacío y conserva los registros reales
-que se creen durante las pruebas.
+a otra cuenta se usa el cierre de sesión y el Login normal. Este acceso prepara
+los contactos, la sala y la deuda descritos arriba solamente en la cuenta
+ficticia. Social conserva los registros que se creen o modifiquen durante
+las pruebas.
 
-Para retirar el acceso temporal se eliminan el botón de HomeScreen.tsx, su estado
-de bloqueo del deslizador, el componente, su archivo de estilos, src/development/
-y tests/developmentData.test.ts. No requiere cambios de esquema. Las pruebas
-automatizadas verifican la carga con autenticación y repositorios reales,
-reentrada, aislamiento, rollback y bloqueo fuera de desarrollo.
+Para retirar el acceso temporal de Inicio se eliminan el botón de HomeScreen.tsx,
+su estado de bloqueo del deslizador, el componente y su archivo de estilos.
+Los generadores de src/development/ también se utilizan en el adaptador
+tests/helpers/localDatabase.ts y en las pruebas de datos de desarrollo;
+se conservan mientras esos escenarios dependan de ellos. No requiere cambios
+de esquema. Las pruebas automatizadas verifican la carga con autenticación y repositorios reales,
+reentrada, aislamiento, rollback y bloqueo fuera de desarrollo. La suite social
+también comprueba cierre, pagos parciales, un lote de 100 gastos y borradores
+persistidos inválidos. El acceso está protegido por `__DEV__`: estos ejemplos
+se cargan desde Inicio en desarrollo. El perfil `ocr-comparison` genera un APK
+de distribución interna y mantiene ese acceso deshabilitado en su compilación
+de distribución.
 
 ## Verificación manual en Expo Go
 

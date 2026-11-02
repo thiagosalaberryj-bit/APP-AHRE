@@ -244,7 +244,7 @@ combina búsqueda y filtros y carga el detalle por ID; Estadísticas calcula sus
 resultados desde esos movimientos. Los formularios de ingreso y egreso validan y
 persisten sus movimientos localmente, con su impacto en el saldo.
 
-La versión instalada de la próxima compilación es `0.4.0`, definida en
+La versión instalada del APK interno es `0.4.0`, definida en
 `app.json` y sincronizada con `package.json` y la raíz de `package-lock.json`.
 Android usa `versionCode: 2`. Los cambios de esta rama, incluido Social, están
 documentados en Sin publicar en [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
@@ -289,6 +289,13 @@ La descripción detallada de cada carpeta se encuentra en
 
 La configuración de TypeScript, las versiones verificadas y los límites del tipado
 se describen en [TypeScript](docs/configuracion/typescript.md).
+
+La migración del [PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65)
+activa `strict: true` en la app y las herramientas, optimiza las consultas
+sociales y amplía los ejemplos de desarrollo. Pasaron el chequeo de tipos,
+110 pruebas y la exportación con Hermes. La build interna de Android finalizó
+y el líder confirmó que probó el APK y funciona. El registro de la build y
+la validación está en la [guía de TypeScript](docs/configuracion/typescript.md#build-android-y-validación-en-dispositivo).
 
 ## Documentación
 

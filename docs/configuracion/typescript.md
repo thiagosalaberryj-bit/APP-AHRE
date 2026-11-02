@@ -67,6 +67,30 @@ comprobación estricta de nulos para su inferencia.
 Metro transpila TypeScript; `tsc` comprueba tipos por separado. Una exportación
 correcta por sí sola no sustituye `npm run typecheck`.
 
+## Cambios incluidos en la migración
+
+La migración se revisa en el [PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65).
+Además de las extensiones y la configuración estricta, incluye:
+
+- contratos compartidos en `src/database/types.ts`, `src/navigation/types.ts`,
+  `src/social/types.ts` y `src/types/` para evitar copiar estructuras entre
+  servicios, pantallas y componentes;
+- tipos de consultas SQLite que representan sus columnas reales, incluidos
+  los alias del historial y los resultados agregados; la consulta del usuario
+  activo incorpora `fecha_actualizacion` y la reversión de transferencias
+  consulta el campo `anulado` que comprueba;
+- validación de los borradores sociales persistidos antes de convertir el JSON
+  en un plan de pagos, con rechazo de estructuras o campos inválidos;
+- agrupación de pagos, partes, integrantes y gastos por sus identificadores
+  para evitar búsquedas completas repetidas durante la carga de Social;
+- ampliación de la cuenta temporal con tres contactos, una sala, cuatro gastos
+  y una deuda personal. Los repartos, estados de pago y saldos esperados se
+  describen en [datos de prueba de Inicio](../funcionalidades/inicio.md#datos-temporales-para-expo-go).
+
+Se conserva Expo SDK 57, las versiones de las dependencias de ejecución y la
+versión instalada `0.4.0` con código Android `2`. El esquema SQLite conserva su
+versión; la conversión a TypeScript no requiere una migración de datos.
+
 ## Verificación reproducible
 
 ```powershell
@@ -90,3 +114,20 @@ La verificación de tipos incluye todo el código propio, pero `skipLibCheck`
 omite la revisión interna de declaraciones de terceros, como establece Expo.
 Las pruebas de interfaz no verifican layout nativo. La exportación Android no
 genera un APK ni comprueba cámara, OCR nativo o interacción en dispositivo.
+
+## Build Android y validación en dispositivo
+
+El 1 de noviembre de 2026 finalizó correctamente la
+[build EAS de Android de la migración](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/02dec8dd-ef34-4968-9a5c-66cdec47537c):
+
+| Dato | Valor |
+| --- | --- |
+| Commit de código probado | `8d106b3736f5dca4f691884b7cb6a03f1e614ed4` |
+| Perfil EAS | `ocr-comparison` |
+| Distribución y formato | Interna, APK |
+| Versión instalada | `0.4.0`, código Android `2` |
+| Prueba manual | El líder confirmó que probó el APK y funciona. |
+
+Esta confirmación corresponde a una prueba funcional general en dispositivo.
+Complementa las 110 pruebas automatizadas, el chequeo estricto y la exportación
+con Hermes; no se informó un desglose de escenarios manuales por pantalla.

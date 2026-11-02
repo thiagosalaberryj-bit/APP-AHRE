@@ -5,12 +5,25 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
-Estado de la rama del Issue #18 al 30 de octubre de 2026. Los nuevos APK internos
-usan la versión instalada `0.4.0` y `android.versionCode: 2`. Esto no modifica la
-prerelease histórica `v0.4.0` ni publica una nueva entrega en GitHub.
+Cambios sin publicar al 1 de noviembre de 2026: Social del Issue #18 y migración
+a TypeScript del [PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65),
+solicitada por el líder sin Issue asociado. Los APK internos usan la versión
+instalada `0.4.0` y `android.versionCode: 2`. Esto no modifica la prerelease
+histórica `v0.4.0` ni publica una nueva entrega en GitHub.
 
 ### Añadido
 
+- Se agregó la comprobación de tipos de la app, el plugin de Expo y las pruebas
+  mediante `npm run typecheck`, con configuraciones separadas para React Native
+  y Node. Se incorporaron TypeScript `6.0.3`, `@types/react` `19.2.4` y
+  `@types/node` `24.19.2` como dependencias de desarrollo. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
+- La cuenta de desarrollo incorpora tres contactos, una sala con cuatro gastos
+  de reparto igual y manual, partes pagadas y pendientes y una deuda personal
+  de $1.800. La carga comparte la transacción de los ejemplos financieros y
+  conserva los registros editados, desactivados o cerrados al reingresar. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
+- Se agregaron 18 escenarios automatizados sobre ejemplos sociales, cierre,
+  pagos parciales, reintentos, rollback, lote de 100 gastos, borradores inválidos
+  y transferencias; el conjunto pasa de 92 a 110 pruebas. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
 - Social guarda personas, salas, ítems, repartos, deudas y pagos personales en
   SQLite local, sin comunicación entre dispositivos. El cierre confirma los
   movimientos preparados y crea únicamente deudas que involucran al usuario. (#18)
@@ -23,6 +36,15 @@ prerelease histórica `v0.4.0` ni publica una nueva entrega en GitHub.
 
 ### Cambiado
 
+- Se migraron todas las fuentes JavaScript propias a `.ts`, `.tsx` o `.cts` y
+  se activó `strict: true` para la app y las herramientas. Se tiparon SQLite,
+  repositorios, servicios, navegación, formularios, componentes, estados,
+  referencias, errores externos y OCR. El módulo Android conserva Kotlin y
+  las dependencias de ejecución mantienen sus versiones. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
+- La consulta social agrupa pagos, partes, integrantes y gastos una vez por
+  carga para evitar búsquedas completas repetidas por cada registro. Se
+  actualizaron las entradas de Expo y las referencias documentales a las
+  fuentes migradas. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
 - Se reorganizó la maqueta de Social como un registro personal offline, con
   resumen de pendientes, deudas recientes, agenda e historiales de deudas y
   salas con búsqueda y filtros. No incluye invitaciones ni unión a salas. (#18)
@@ -44,14 +66,31 @@ prerelease histórica `v0.4.0` ni publica una nueva entrega en GitHub.
   `0.4.0`, con código Android `2` para la próxima compilación interna. No se
   cambiaron dependencias. (#18)
 
+### Corregido
+
+- Los borradores sociales se leen desde `unknown` y validan la estructura de
+  personas pagadas y asociaciones antes de usarse. Se rechazan JSON incompletos
+  y campos de tipos inválidos con un error de dominio. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
+- Se ajustaron los contratos de las proyecciones SQLite a los campos que
+  consultan. La reversión de transferencias consulta `anulado`, usado por su
+  validación, y la consulta del usuario activo incluye `fecha_actualizacion`.
+  ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
+
 ### Verificación
 
-- Pasaron las 92 pruebas automatizadas de Social, esquema, servicios, interfaz,
-  datos de desarrollo y OCR. La exportación Android con Hermes terminó
+- El 1 de noviembre de 2026 pasaron `npm run typecheck`, las 110 pruebas de
+  `npm test` y la exportación Android con Hermes. La
+  [build EAS de Android](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/02dec8dd-ef34-4968-9a5c-66cdec47537c)
+  del commit `8d106b3`, perfil interno `ocr-comparison` (APK), finalizó
+  correctamente. El líder confirmó que probó ese APK y funciona; se registra
+  como una validación funcional general en dispositivo. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
+- En la auditoría del 30 de octubre de 2026 pasaron las 92 pruebas de Social,
+  esquema, servicios, interfaz, datos de desarrollo y OCR. La exportación Android con Hermes terminó
   correctamente después de la limpieza de código. (#18)
-- La revisión estática no detectó imports rotos ni archivos o exports huérfanos
-  de Social. La validación visual y la captura OCR social en un dispositivo
-  siguen pendientes; la exportación no equivale a un APK instalado. (#18)
+- Esa revisión estática no detectó imports rotos ni archivos o exports huérfanos
+  de Social. La auditoría del Issue #18 no incluyó validación visual ni captura
+  OCR social en dispositivo; la confirmación posterior del APK se registra en
+  la verificación del PR #65. (#18)
 
 ## [v0.4.0] - 2026-10-30 - no estable
 

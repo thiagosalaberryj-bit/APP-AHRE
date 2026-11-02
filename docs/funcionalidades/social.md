@@ -232,7 +232,15 @@ los resúmenes mantienen sus columnas y el tamaño de fuente.
 Los errores de carga ofrecen Reintentar;
 los de validación y guardado se comunican mediante toast. Se bloquean envíos
 repetidos y se evita navegar dos veces cuando una pantalla deja de estar montada.
-No se insertan personas, salas o deudas ficticias al arrancar.
+El arranque normal no inserta personas, salas o deudas ficticias. El acceso
+explícito de Inicio a la cuenta de desarrollo sí prepara los
+[ejemplos sociales](inicio.md#datos-temporales-para-expo-go), conservados al reingresar.
+
+La consulta agrupa pagos por deuda y parte, partes por gasto e integrantes y
+gastos por sala antes de construir la vista. Así evita recorrer todas las
+filas repetidamente por cada registro. Los borradores de gastos se leen como
+`unknown` y comprueban las listas de personas pagadas y las asociaciones a
+depósitos o movimientos antes de utilizarlas.
 
 ## Verificación y límites
 
@@ -250,10 +258,20 @@ identificadores únicos y sala; las pruebas verifican los mismos rechazos en
 ambas operaciones sin dejar gastos ni movimientos parciales.
 
 ```powershell
-node --experimental-vm-modules --test tests/socialSchema.test.ts tests/socialService.test.ts tests/socialInterface.test.ts tests/developmentData.test.ts tests/receiptParser.test.ts tests/ocrExpenseDraft.test.ts tests/ocrExpensePersistence.test.ts
+npm run typecheck
+npm test
 ```
 
-Quedan para revisión en Expo Go: tamaño de texto, teclado, navegación de regreso,
-crear depósito y volver, modo avión, reinicio y cambio de cuenta. Se conectó el
-OCR existente, sin preparar un APK ni validar captura nativa. El esquema inicial requiere una base de desarrollo
-compatible; no convierte ni borra automáticamente bases anteriores.
+El 1 de noviembre de 2026, la migración del PR #65 llevó el conjunto del proyecto
+a 110 pruebas aprobadas, con ejemplos de sala y deuda, pagos parciales, reentrada,
+rollback, un lote válido de 100 gastos, borradores inválidos y transferencias.
+También pasó la comprobación estricta de tipos y la exportación con Hermes.
+La build interna de Android finalizó y el líder confirmó que probó el APK y
+funciona; el reporte corresponde a una validación funcional general. La build
+y el commit probado están en la [guía de TypeScript](../configuracion/typescript.md#build-android-y-validación-en-dispositivo).
+
+Los recorridos manuales de referencia incluyen tamaño de texto, teclado,
+navegación de regreso, crear depósito y volver, modo avión, reinicio y cambio
+de cuenta. La captura OCR necesita el módulo nativo incluido en el APK.
+El esquema inicial requiere una base de desarrollo compatible; no convierte
+ni borra automáticamente bases anteriores.
