@@ -3,7 +3,60 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
-## [Sin publicar] - 2026-11-02
+## [Sin publicar] - 2026-11-03
+
+Actualización posterior a la integración inicial, revisada y registrada por
+solicitud explícita del líder. La app conserva 0.5.0, código Android 3 y Expo
+57.0.31. Esta entrada no implica publicación de un APK ni merge en main.
+
+### Añadido
+
+- Recuperación guiada del correo rechazado: detección del lote de perfil,
+  respaldo de eventos originales, vista previa y confirmación explícita.
+  Se verifican identidad, revisión y generación sin alterar eventos financieros.
+- Pruebas de recuperación de cuenta, cola, consultas Social y saldo del primer
+  movimiento de depósitos nuevos; guías de entorno, publicación y revisión final.
+
+### Corregido
+
+- El ingreso remoto recupera la cuenta local por su ID estable después de un
+  cambio de correo offline, conservando datos, preferencias y pendientes.
+- Ingresos y egresos del mismo minuto de creación del depósito impactan el
+  saldo usando su instante de creación. Los movimientos anteriores conservan
+  su condición histórica; no se recalculan automáticamente registros viejos.
+- Acerca de AHRE obtiene la versión de la configuración Expo en lugar del
+  literal 1.0.0; actualmente muestra 0.5.0.
+
+### Cambiado
+
+- Lecturas SQLite serializadas sin preparar lotes de escritura, índice de
+  pendientes por cuenta/lote y recuentos limitados durante ráfagas de envío.
+- Consultas Social sin escrituras después de preparar la identidad; adelantos
+  agrupados y formateadores de fecha e importe reutilizados.
+- README breve, índice documental y guías operativas coordinadas con SERVER-AHRE.
+
+### Eliminado
+
+- Archivos e imports sin consumidores, y dependencias directas de formularios
+  `react-hook-form`, `@hookform/resolvers` y `zod`, con autorización del líder.
+  Se conserva la copia de Zod requerida internamente por Expo.
+- Material gráfico de procesos y referencias, por decisión del líder.
+
+### Verificación y límites
+
+- Tipos de app/herramientas y comprobación de imports/parámetros sin uso correctos.
+- 158 pruebas de la app y 45 del backend aprobadas, cero fallos y cero omisiones,
+  con MySQL 8.4.13 temporal aislado. Proceso apagado y datos de prueba retirados.
+- Exportación Android/Hermes actual aprobada; no genera un APK. El líder confirmó
+  recorridos funcionales anteriores en Expo Go; la captura OCR y biometría nativas
+  requieren comprobación en un APK antes de distribuirlo.
+- Expo 57 se conserva por decisión del líder. Permanecen 14 paquetes afectados
+  por cuatro avisos (3 altos, 9 moderados y 2 bajos). No se encontraron parches
+  corregidos dentro de los rangos actuales; no se aplican actualizaciones forzadas.
+- Social y los lotes financieros conservan cargas completas. Los pendientes
+  revocados siguen sin recuperación general y la sincronización requiere app activa.
+
+## Integración inicial - 2026-11-02
 
 Primera versión de sincronización con SERVER-AHRE `0.1.0`, en desarrollo.
 La aplicación mantiene `0.5.0`. Esta sección se actualiza por solicitud explícita
