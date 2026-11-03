@@ -617,3 +617,30 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
     }
   }
 }
+
+// Definición aditiva del diario, también utilizada al abrir bases de desarrollo existentes.
+export async function prepararEsquemaSincronizacion(conexion: Pick<Conexion, 'execAsync'>) {
+  await conexion.execAsync(`
+    CREATE TABLE IF NOT EXISTS sync_context (id INTEGER PRIMARY KEY CHECK(id=1), lote TEXT, importando INTEGER NOT NULL DEFAULT 0);
+    INSERT OR IGNORE INTO sync_context(id) VALUES(1);
+    CREATE TABLE IF NOT EXISTS sync_state (usuario_id TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 0, preparada INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS sync_outbox (secuencia INTEGER PRIMARY KEY AUTOINCREMENT, lote TEXT NOT NULL, usuario_id TEXT NOT NULL, cambio TEXT NOT NULL);
+    CREATE INDEX IF NOT EXISTS sync_outbox_usuario ON sync_outbox(usuario_id,secuencia);
+    CREATE INDEX IF NOT EXISTS sync_outbox_usuario_lote ON sync_outbox(usuario_id,lote,secuencia);
+    CREATE TABLE IF NOT EXISTS sync_authorization (usuario_id TEXT PRIMARY KEY, dispositivo_id TEXT NOT NULL, generacion INTEGER NOT NULL, revocada INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS sync_batch_authorization (lote TEXT PRIMARY KEY, usuario_id TEXT NOT NULL, generacion INTEGER NOT NULL);
+    CREATE TRIGGER IF NOT EXISTS sync_autorizacion_lote AFTER INSERT ON sync_outbox
+    BEGIN INSERT OR IGNORE INTO sync_batch_authorization(lote,usuario_id,generacion)
+      SELECT NEW.lote,NEW.usuario_id,generacion FROM sync_authorization WHERE usuario_id=NEW.usuario_id; END;
+  `);
+  await conexion.execAsync(`
+    CREATE TABLE IF NOT EXISTS sync_profile_rejection (
+      usuario_id TEXT PRIMARY KEY, lote TEXT NOT NULL, base INTEGER NOT NULL,
+      generacion INTEGER NOT NULL, contenido TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS sync_profile_backup (
+      usuario_id TEXT NOT NULL, secuencia INTEGER NOT NULL, lote TEXT NOT NULL,
+      cambio TEXT NOT NULL, PRIMARY KEY(usuario_id,secuencia)
+    );
+  `);
+}

@@ -210,6 +210,16 @@ parte del último `saldo_informado` y suma las variaciones posteriores. Al
 registrar otro saldo informado, ese valor se convierte en la nueva base vigente;
 las consultas leen el saldo guardado sin recorrer todos los movimientos.
 
+Las variaciones se guardan con `ROUND(saldo_actual + variacion, 2)` para evitar
+residuos de coma flotante en SQLite. El backend utiliza centavos enteros para
+reproducir el lote desde el estado confirmado y comprobar el saldo final. Una
+conciliación debe partir del saldo calculado, y su historial es inmutable.
+Los lotes se confirman completos junto con su revisión y su diario canónico;
+un error de negocio revierte la transacción MySQL y conserva la cola local.
+Las transferencias requieren sus dos movimientos y las reversiones compensan
+la operación original. En Social se validan repartos, financiación, cierres,
+deudas, pagos y conservación del historial.
+
 ## Errores
 
 `ErrorBaseDatos` ofrece mensajes seguros para inicialización, migraciones,
@@ -219,29 +229,107 @@ técnico, no los valores de la operación.
 
 ## Verificación
 
-Para los cambios de persistencia se comprobó el análisis sintáctico de los
-repositorios modificados y se ejecutó el esquema inicial en SQLite en memoria.
-La primera etapa verificó trece tablas, las claves foráneas y la aceptación
-de ejemplos de transferencia y reversión de movimiento. Para autenticación
-también se verificó el índice único normalizado del correo, la tabla de
-credenciales y las preferencias iniciales. Las comprobaciones de credenciales
-correspondieron a una revisión anterior. El formato actual usa SHA-256 con sal;
-esta modificación no se probó en un dispositivo. Como los datos son locales de
-desarrollo, las cuentas creadas con el formato anterior se descartan y se
-registran de nuevo. `git diff --check` no reportó errores.
+La verificación más reciente de la etapa 7 aprobó tipos, 158 pruebas de la app
+junto con las 45 del backend, sin fallos ni omisiones, usando MySQL 8.4.13
+local aislado. Las pruebas de la app ejecutan el SQL y los servicios reales con
+un adaptador SQLite en memoria; no son el adaptador nativo de Expo. El líder
+confirmó los recorridos de registro, acceso, modo offline, reconexión, saldos y
+Social en Expo Go. El alcance está en [Estado y validación](../estado-y-validacion.md).
 
-Este entorno no tiene un script de pruebas del proyecto. No se ejecutó el
-adaptador de repositorios de `expo-sqlite` dentro de Expo, ni se probó el flujo
-completo de Registro, Login y cierre/reapertura en un dispositivo Android o en
-modo avión. Esas comprobaciones manuales siguen pendientes. El código de
-autenticación no invoca interfaces de red.
+El esquema contiene quince tablas de datos locales (catorce sincronizadas y
+credenciales) y siete auxiliares del diario. La definición de origen es
+`001_initialSchema.ts`. El esquema Social, sus restricciones y los recorridos
+se detallan en [social.md](social.md). Las pruebas cubren FK, CHECK, triggers,
+rollback y relaciones por cuenta; el guardado local de credenciales usa un
+verificador SHA-256 con sal y la autorización remota usa SERVER-AHRE.
 
-### Esquema de Social
+## Diario y reparación de perfil
 
-El esquema inicial ampliado contiene quince tablas en total. Las pruebas de
-Social ejecutan el SQL completo sobre SQLite en memoria, incluidas claves
-foráneas, restricciones, triggers, relaciones por cuenta y rollback. Los flujos
-y limitaciones de esta etapa se describen en [social.md](social.md). La
-validación en un dispositivo con Expo SQLite sigue pendiente. Los servicios y
-formularios ya están conectados y cubiertos por pruebas automatizadas; ver los
-alcances y comandos en [social.md](social.md).
+El DDL de sincronización se define en `001_initialSchema.ts`, en `prepararEsquemaSincronizacion`, y se prepara de forma aditiva al abrir SQLite. No se agregan migraciones de transición ni se borran datos existentes. `journal.ts` conserva la generación de triggers y la gestión de eventos.
+
+`sync_profile_rejection` conserva usuario, lote, base, generación y contenido exacto rechazado. `sync_profile_backup` conserva los eventos originales por usuario y secuencia, incluso tras su confirmación, como respaldo local no sincronizado. No incluye credenciales. La reparación comprueba la vista previa y guarda respaldo y cambios en una transacción. Solo cambia correos de eventos de usuarios; la cola financiera conserva contenido y orden.
+
+Ante `lote_confirmado_otro_contenido`, se restauran los originales todavía pendientes, sin recrear registros ya confirmados, y se reintenta el reconocimiento idempotente. Si no existe un original diferente que restaurar, se conserva el conflicto.
+
+La etapa 3 pasó tipos en ambos proyectos, 145 pruebas de la app y 36 del backend con MySQL 8.4.13 aislado, sin fallos ni omisiones. Se verificaron corrección de correo duplicado, persistencia al reiniciar, vista previa obsoleta, pérdida de confirmación, respaldo, restauración del lote original y bloqueo por revocación. El líder confirmó después el recorrido principal de corrección en Expo Go con el backend actualizado.
+
+
+## Optimización de consultas locales (etapa 4)
+
+`connectionQueue.ts` comparte una única cola serial entre lecturas y escrituras.
+`ejecutarLecturaConConexion` ejecuta consultas sin preparar un lote ni consultar
+los máximos del diario: elimina las dos consultas `MAX(secuencia)` y los dos
+`UPDATE sync_context` que acompañaban a cada lectura. Se usa en las consultas
+del repositorio genérico, autenticación, depósitos, movimientos, autorización,
+pendientes y sincronización. Las escrituras siguen usando `ejecutarConConexion`
+y conservan el lote común y la notificación al agregar eventos.
+
+Ambas variantes aceptan la conexión de una transacción en curso para no volver
+a encolarla. Las lecturas externas esperan su confirmación o rollback. El total
+y la página de pendientes se leen dentro de una misma operación encolada para
+que un ACK o una edición local no se intercalen entre ambas consultas.
+
+`prepararEsquemaSincronizacion`, en `001_initialSchema.ts`, agrega el índice
+`sync_outbox_usuario_lote(usuario_id,lote,secuencia)`. Se mantiene
+`sync_outbox_usuario(usuario_id,secuencia)` para obtener el primer evento FIFO.
+El índice nuevo cubre la selección ordenada y la eliminación de un lote sin
+recorrer los demás lotes del usuario. Se crea al abrir la base, también si ya
+existe; no cambia `user_version` ni requiere borrar datos de desarrollo.
+
+El envío calcula los registros pendientes al inicio y al terminar. Durante el
+envío actualiza el contador y publica el progreso como máximo una vez cada
+250 ms entre confirmaciones, en lugar de reagrupar todo el JSON por cada ACK.
+Si falla, vuelve a consultar el total antes de publicar el error o revocación.
+No almacena una caché persistente de cantidades ni compacta o reordena eventos.
+La consulta explícita de pendientes continúa mostrando el total actual.
+
+### Verificación de la etapa 4
+
+Pasaron `npm run typecheck` y 151 pruebas de la app, junto con las 36 pruebas
+del backend sobre MySQL 8.4.13 local aislado, sin fallos ni omisiones. Se agregaron
+seis casos que comprueban lecturas sin escrituras ni avisos, espera de lecturas
+con commit y rollback, continuidad de la cola, uso del índice mediante
+`EXPLAIN QUERY PLAN`, preparación del índice al reabrir una base existente y
+recuentos correctos al finalizar o detener un envío.
+
+En una ráfaga controlada de 21 lotes dentro del mismo intervalo se hicieron dos
+recuentos completos (inicio y final), frente a los 23 que ejecutaba el flujo
+anterior (inicio, cada ACK y final). Este resultado mide consultas del escenario
+de prueba, no tiempos de rendimiento en un teléfono. La suite mantiene las
+pruebas de FIFO, pérdida de respuesta, rechazo, revocación y recuperación de
+correo de la etapa 3.
+
+Para la revisión manual, reiniciar el proyecto actualizado en Expo Go, ingresar
+con una cuenta de prueba del servidor y esperar cero pendientes. Con el proyecto
+ya cargado y sin recargarlo mientras no hay red, cortar la conexión, crear un
+depósito y varios ingresos/egresos y editar el depósito. Consultar pendientes:
+los cambios del mismo registro deben agruparse solo para mostrarlos. Reconectar
+y comprobar pendientes en cero, saldos correctos y ausencia de duplicados,
+también tras cerrar y reabrir la app. El líder confirmó posteriormente este recorrido de la etapa 4 en Expo Go. No requiere otro despliegue del backend si ya está publicada la etapa 3.
+
+
+## Corrección del primer movimiento de un depósito
+
+Se reprodujo un fallo al crear un depósito y registrar un ingreso o egreso en
+el mismo minuto desde el formulario: `combinarFechaYHora` fija segundos y
+milisegundos en cero, de modo que la fecha resultante parecía anterior a la
+creación del depósito. SQLite y el servidor conservaban correctamente el mismo
+saldo según esa fecha, aunque la intención del formulario era un movimiento
+actual. Sincronizar o volver a ingresar no podía cambiar esa clasificación.
+
+`movementService.ts` normaliza únicamente ese minuto coincidente al instante
+de creación del depósito, dentro de la transacción y antes de crear el movimiento
+y su recurrencia. Las comparaciones precisas del repositorio y del servidor
+siguen vigentes. No requiere migraciones, cambios de dependencias o despliegue
+del backend. Los datos que ya se guardaron conservan su fecha y saldo anteriores.
+
+La regresión se cubre en `tests/movementBalance.test.ts` con ingreso, egreso,
+recurrencia, reversión e historial del minuto anterior (incluido cambio de día).
+`tests/syncIntegration.test.ts` agrega el envío de los movimientos del formulario
+a MySQL y la recuperación del saldo y sus dos movimientos en una base SQLite
+vacía de la misma instalación después de volver a iniciar sesión.
+
+La corrección pasó tipos, 155 pruebas de la app y 36 del backend con MySQL
+8.4.13 local aislado, sin fallos ni omisiones. Las dos regresiones del mismo
+minuto fallaban antes del cambio y pasaron después. El líder confirmó la comprobación manual
+en Expo Go con un depósito nuevo.

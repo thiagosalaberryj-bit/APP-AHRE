@@ -2,9 +2,7 @@
 
 ## Alcance
 
-Este documento registra la interfaz y el alcance local de la pantalla de
-Perfil. El usuario, el idioma, la apariencia, las notificaciones y el cierre de
-sesión se administran con SQLite y SecureStore, sin comunicación con backend.
+Este documento registra la interfaz de Perfil. El usuario y las preferencias se guardan primero en SQLite y se sincronizan con SERVER-AHRE. La sesión local usa SecureStore; cambiar la contraseña y desvincular la instalación requieren conexión.
 La selección de una foto continúa siendo temporal porque el avatar persistente
 queda fuera de este Issue.
 
@@ -13,30 +11,7 @@ queda fuera de este Issue.
 `src/screens/ProfileScreen.tsx` es secundaria con `EncabezadoSeccion`
 («Perfil») y contenido desplazable con `KeyboardAvoidingView`:
 
-```text
-Perfil
-│
-├── Usuario
-│   ├── Foto a la izquierda; nombre completo, correo y registro a su lado
-│   ├── Cambiar foto / Quitar foto → selector o avatar con iniciales
-│   └── Editar perfil → verificar con huella o contraseña → modal
-│
-├── Preferencias
-│   ├── Idioma → modal
-│   ├── Notificaciones → switch
-│   ├── Apariencia → opciones
-│   └── Restablecer apariencia → tema del dispositivo
-│
-├── Cuenta
-│   └── Cambiar contraseña → modal
-│
-├── Ajustes avanzados
-│   ├── Cuenta fantasma / Seguridad / Registro → próximamente
-│   └── Acerca de AHRE → modal
-
-└── Sesión
-    └── Cerrar sesión → confirmación, al final de la pantalla
-```
+Perfil reúne Usuario, Preferencias, Cuenta, Ajustes avanzados y Sesión. Usuario presenta la foto junto al nombre, correo y registro; permite cambiar o quitar la foto y verificar la identidad antes de editar el perfil. Preferencias ofrece idioma, notificaciones, apariencia y restablecimiento al tema del dispositivo. Cuenta permite cambiar la contraseña. Ajustes avanzados muestra las opciones futuras y Acerca de AHRE. Cerrar sesión abre una confirmación al final de la pantalla.
 
 Se abre desde el botón de Perfil del Dashboard. La flecha del encabezado
 vuelve atrás. Los estilos locales están en
@@ -70,6 +45,9 @@ almacenamiento. Al abrir la pantalla se muestra un skeleton de carga simulado
 (~1 segundo).
 
 ## Modal de edición
+
+La descripción y el aviso posterior a cambiar el correo indican que se use el correo anterior para ingresar con conexión hasta sincronizarlo. Guardar nombre y correo conserva el ID de cuenta. El ingreso por ese ID recupera los datos locales sin duplicar usuarios ni preferencias; las credenciales incorrectas o una identidad remota diferente no habilitan acceso.
+
 
 `Editar perfil` abre primero un modal para confirmar la identidad. El campo de
 contraseña envía la verificación con `Listo` del teclado; debajo aparece la
@@ -129,7 +107,7 @@ avanzar con el teclado; los errores se marcan junto al campo correspondiente.
 Grupo `Ajustes avanzados` con los apartados `Cuenta fantasma`, `Seguridad` y
 `Registro` desactivados con la etiqueta `Próximamente`, y `Acerca de AHRE`,
 que abre un modal estático con el encabezado común, una descripción de las
-funciones de AHRE, la versión (`1.0.0`) alineada a la derecha y una `X` para
+funciones de AHRE, la versión de `Constants.expoConfig.version` (actualmente `0.5.0`) alineada a la derecha y una `X` para
 cerrar. No incluye exportar ni borrar datos: cualquier acción avanzada real
 será otro Issue.
 
@@ -146,7 +124,7 @@ será otro Issue.
 
 ## Decisiones de diseño
 
-- Se reutilizan `SectionHeader`, `Toggle`, `PrimaryButton` y `ErrorMessage`
+- Se reutilizan `SectionHeader`, `Toggle` y `PrimaryButton`
   sin modificarlos.
 - Los modales usan overlay con backdrop para cerrar y tarjeta con sombra,
   como el resto de la app. Sus encabezados mantienen el icono, título y
@@ -157,5 +135,20 @@ será otro Issue.
 
 ## Funcionamiento sin conexión
 
-La pantalla solo usa componentes, estilos, íconos y constantes locales. No
-requiere Internet ni invoca servicios externos.
+La edición local del perfil y las preferencias continúa sin conexión y genera
+pendientes de sincronización. El cambio de contraseña requiere autenticación
+remota y conexión. Cerrar sesión es local; el modal también ofrece
+`Sincronizar y desvincular`, que requiere conexión, confirma todos los pendientes
+y libera la autorización de la instalación antes de cambiar de teléfono.
+Si falla la conexión después de pedir la desvinculación, se conserva el bloqueo
+local hasta volver a autenticarse: no se asume que el servidor rechazó la petición.
+
+## Recuperación guiada de correo rechazado (etapa 3)
+
+Ante `perfil_correo_duplicado`, Sincronización ofrece Corregir en Perfil y luego Aplicar correo corregido. La confirmación muestra el correo rechazado y el actual. Cancelar conserva la cola. La reparación requiere conexión, misma cuenta, generación y revisión, y una vista previa vigente. Si la cola cambió, debe confirmarse otra vez.
+
+Solo se modifica el correo en eventos de perfil no confirmados. Se conservan nombres, IDs, secuencias y eventos financieros, y se respaldan los originales. Los rechazos financieros, las revocaciones y los timeouts sin rechazo definitivo no habilitan esta acción. Una respuesta perdida se reintenta con el mismo contenido.
+
+La versión fija de «Acerca de AHRE» no coincide con 0.5.0 de los manifiestos.
+Se registra como limitación en [Estado y validación](../estado-y-validacion.md);
+la etapa de documentación no modifica esa pantalla.

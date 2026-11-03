@@ -4,6 +4,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { TEMAS } from '../styles/colors';
+import EstadoSincronizacion from './SyncStatus';
 
 export default function EncabezadoPrincipal({
   titulo = 'Bienvenido',
@@ -37,6 +38,7 @@ export default function EncabezadoPrincipal({
           {titulo}
         </Text>
         <View style={estilos.acciones}>
+          <EstadoSincronizacion />
           <Pressable
             accessibilityLabel="Notificaciones"
             accessibilityRole="button"

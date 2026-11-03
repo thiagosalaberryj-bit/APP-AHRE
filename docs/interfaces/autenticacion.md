@@ -2,7 +2,7 @@
 
 ## Alcance
 
-Login y Registro crean y validan cuentas en SQLite local. No consultan un backend, no requieren Internet y no realizan solicitudes de red. Al abrir AHRE, Inicio permanece visible hasta que la persona completa el deslizador. Sin sesión, abre Login; con sesión válida, solicita la huella y luego abre el Dashboard.
+Registro y primer ingreso consultan SERVER-AHRE y necesitan conexión para autorizar la instalación. SQLite permite ingresos offline posteriores en la instalación previamente autorizada. Al abrir AHRE, Inicio permanece visible hasta que la persona completa el deslizador. Sin sesión, abre Login; con sesión válida, solicita la huella y luego abre el Dashboard.
 
 ## Login
 
@@ -57,7 +57,7 @@ informativos está documentado en
 
 La clave de sesión en SecureStore contiene el identificador del usuario; otra clave conserva la preferencia de visibilidad de saldos. La contraseña y su verificador no se almacenan allí. Tras deslizar en Inicio, `obtenerSesionActual()` confirma que el identificador de sesión corresponde a un usuario activo. Si no hay sesión o la referencia no corresponde a un usuario activo, se abre Login sin mostrar biometría; una referencia obsoleta se limpia. Si la sesión es válida, se solicita la huella del dispositivo antes de abrir el Dashboard. Los fallos de acceso a SecureStore o SQLite muestran un aviso y permiten volver a deslizar.
 
-La operación para cerrar sesión está disponible en el servicio. Conectar el botón existente de Perfil se mantiene para una tarea posterior, según el alcance definido para esta etapa.
+Perfil permite cerrar la sesión local o sincronizar y desvincular la instalación con conexión.
 
 ## Separación de responsabilidades
 
@@ -73,9 +73,6 @@ La operación para cerrar sesión está disponible en el servicio. Conectar el b
 
 ## Navegación y conectividad
 
-```text
-Inicio → deslizar → sin sesión → Login → Registro → Login → Dashboard
-Inicio → deslizar → sesión válida → huella → carga animada → Dashboard
-```
+Al deslizar en Inicio sin sesión se abre Login, que permite acceder a Registro y regresar antes de entrar a Dashboard. Con sesión válida se solicita huella y se muestra la carga animada antes de Dashboard.
 
-Registro y Login usan SQLite, SecureStore, generación aleatoria y cálculo local de SHA-256 con sal. No utilizan `fetch`, APIs remotas ni conectividad, por lo que el flujo puede usarse en modo avión.
+Registro y primer ingreso usan la API remota y requieren conexión. Los ingresos offline posteriores comprueban el verificador local y la autorización de la instalación. Si se cambia el correo offline, Perfil avisa que se use el anterior para ingresar con conexión hasta confirmar el cambio. El ingreso remoto recupera la cuenta local por ID y conserva sus pendientes; no crea otra cuenta por la diferencia de correo. Una identidad remota distinta produce un aviso y no vincula los datos. El correo nuevo funciona remotamente después de sincronizar.

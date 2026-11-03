@@ -2,7 +2,7 @@ import type { Tablas, Conexion, Filtros, OpcionesConsulta } from '../types';
 import type { SQLiteBindValue } from 'expo-sqlite';
 import { ejecutarConManejoDeErrores, ErrorBaseDatos } from '../errors';
 import { generarIdentificador } from '../identifiers';
-import { ejecutarConConexion } from '../connectionQueue';
+import { ejecutarConConexion, ejecutarLecturaConConexion } from '../connectionQueue';
 
 type ConfiguracionRepositorio<Nombre extends keyof Tablas> = {
   tabla: Nombre;
@@ -152,7 +152,7 @@ export function crearRepositorio<Nombre extends keyof Tablas>({
 
   async function consultarPorId(id: string, conexion: Conexion | null = null) {
     return ejecutarConManejoDeErrores('consulta', () =>
-      ejecutarConConexion((baseDatos) =>
+      ejecutarLecturaConConexion((baseDatos) =>
         baseDatos.getFirstAsync<Tablas[Nombre]>(
           `SELECT * FROM ${nombreTabla} WHERE "id" = ?;`,
           [normalizarValor(id)],
@@ -167,7 +167,7 @@ export function crearRepositorio<Nombre extends keyof Tablas>({
         throw new ErrorBaseDatos('consulta');
       }
 
-      return ejecutarConConexion((baseDatos) => {
+      return ejecutarLecturaConConexion((baseDatos) => {
         const { sql, parametros } = construirConsulta(
           filtros,
           filtrosPermitidos,
@@ -226,7 +226,7 @@ export function crearRepositorio<Nombre extends keyof Tablas>({
         parametros.push(desplazamiento);
       }
 
-      return ejecutarConConexion(
+      return ejecutarLecturaConConexion(
         (baseDatos) => baseDatos.getAllAsync<Tablas[Nombre]>(`SELECT * FROM ${nombreTabla}${sql};`, parametros),
         conexion,
       );

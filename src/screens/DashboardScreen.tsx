@@ -21,7 +21,6 @@ import { depositosRepositorio, movimientosRepositorio } from '../database/reposi
 import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_ESTADO } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDashboard } from '../styles/DashboardScreenStyles';
-import { Movimiento,Deposito } from '../database/types';
 
 const CANTIDAD_MOVIMIENTOS_RECIENTES = 5;
 const CATEGORIAS_POR_ID = new Map(

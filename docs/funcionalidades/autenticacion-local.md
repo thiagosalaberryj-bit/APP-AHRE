@@ -2,16 +2,13 @@
 
 ## Alcance
 
-AHRE crea cuentas y autentica a las personas localmente. El flujo funciona sin conexión y no usa backend, verificación de correo, OAuth, recuperación remota ni tokens de servidor.
+AHRE registra y autentica cuentas mediante SERVER-AHRE y conserva en SQLite un verificador para ingresos offline posteriores. El registro y la primera autorización necesitan conexión. Solo una instalación por cuenta puede sincronizar. No incluye verificación de correo, OAuth ni recuperación de contraseña.
 
-```text
-Registro → validar → crear cuenta local → Login
-Login → validar credenciales locales → crear sesión → Dashboard
-```
+El registro valida los datos, registra y autoriza la cuenta en el servidor y crea la cuenta local antes de volver a Login. El acceso autentica con el servidor o valida el acceso offline autorizado; después crea la sesión y abre Dashboard.
 
 ## Registro y validación
 
-Registro usa el correo electrónico como identificador único porque ese es el campo disponible en la pantalla. El correo se recorta y normaliza a minúsculas antes de buscarlo o guardarlo; un índice único sobre `LOWER(correo_electronico)` protege también las escrituras concurrentes.
+El correo electrónico identifica el acceso y debe ser único, pero la identidad estable de la cuenta es su ID. El correo se recorta y normaliza a minúsculas antes de buscarlo o guardarlo; un índice único sobre `LOWER(correo_electronico)` protege también las escrituras concurrentes.
 
 Las reglas implementadas son nombre obligatorio, correo obligatorio y válido, contraseña de al menos 8 caracteres Unicode que no consista solo en espacios, confirmación obligatoria y coincidencia exacta. La contraseña se mantiene sin recortar para que Login verifique exactamente lo que ingresó la persona. La validación de pantalla y servicio ocurre antes de consultar SQLite; los formularios inválidos no generan operaciones de base de datos.
 
@@ -28,7 +25,7 @@ el hash, nunca la contraseña ni su confirmación. El uso de esta dependencia y
 de SecureStore está detallado en
 [`docs/configuracion/dependencias.md`](../configuracion/dependencias.md).
 
-Las cuentas de desarrollo creadas con un formato de verificador anterior no se convierten y no pueden autenticarse con este formato. Antes de probar esta versión, se descartan los datos locales de desarrollo y se crea la cuenta nuevamente. No se agrega código de transición para conservar esos verificadores.
+Las cuentas de desarrollo creadas con un formato de verificador anterior no se convierten y no pueden autenticarse con este formato. Si se necesita probar un cambio de ese formato, solo pueden descartarse datos sintéticos locales de desarrollo; las etapas actuales no requieren borrar datos. No se agrega código de transición para conservar esos verificadores.
 
 ## Datos locales y preferencias
 
@@ -38,13 +35,15 @@ Las preferencias nuevas usan las opciones acordadas: `deposito_predeterminado_id
 
 ## Login
 
-Login valida correo y contraseña antes de acceder a SQLite. Busca una cuenta activa por correo normalizado y compara la contraseña con el verificador persistido. Una cuenta inexistente y una contraseña incorrecta producen el mismo mensaje para no revelar si ese correo está registrado.
+Login valida el formulario y autentica con el servidor cuando está disponible. Después busca la cuenta local por el ID remoto antes de intentar crearla. Si el correo local cambió offline, reutiliza esa cuenta y conserva su perfil y pendientes. No une cuentas con IDs distintos aunque coincida el correo. Una respuesta remota de credenciales incorrectas no habilita un ingreso offline alternativo.
+
+Hasta confirmar un cambio de correo, el ingreso remoto utiliza el correo anterior. Después de sincronizar, utiliza el nuevo. El ingreso offline autorizado valida el correo y verificador locales. Si una autorización revocada conserva pendientes, tampoco puede vincularse entrando con el correo anterior.
 
 La contraseña no se escribe en almacenamiento local, logs ni errores. Si la autenticación falla, la persona permanece en Login y no se crea sesión.
 
 ## Cambio de contraseña desde Perfil
 
-El formulario valida la contraseña actual contra su verificador y aplica a la
+El cambio requiere conexión y sesión remota: primero actualiza la contraseña del servidor. El formulario valida la contraseña actual contra su verificador y aplica a la
 nueva contraseña las mismas reglas que Registro. Al confirmar, calcula un
 verificador con una sal nueva y actualiza `credenciales_usuario`, incluida su
 fecha de modificación. La contraseña original nunca se guarda. El siguiente
@@ -64,7 +63,7 @@ el Dashboard. Si no hay sesión, reemplaza Inicio por Login sin solicitar
 biometría. Si el dispositivo no tiene biometría configurada, ofrece Login con
 contraseña. Inicio no queda en la pila después del destino.
 
-El servicio de cierre elimina la sesión de memoria y SecureStore. La conexión del botón de Perfil queda fuera de este issue y se realizará en un trabajo posterior.
+El botón de Perfil elimina la sesión local y el token guardado, sin borrar la cuenta ni los pendientes. También ofrece sincronizar y desvincular, que necesita conexión y confirmar todos los pendientes.
 
 ## Navegación
 
@@ -82,4 +81,15 @@ Registro y Login muestran carga durante las operaciones y bloquean nuevos envío
 
 ## Trabajo sin conexión
 
-La función usa SQLite, SecureStore y cómputo criptográfico local. No realiza llamadas de red. El registro y el login pueden ejecutarse en modo avión.
+El registro requiere conexión. El ingreso en modo avión solo se permite con credenciales locales válidas y una autorización previa vigente para esta instalación. Los ejemplos de desarrollo permanecen locales. Los tokens remotos se guardan en SecureStore únicamente al recordar la sesión. La revocación se detecta al reconectar; no permite reenviar pendientes de otra autorización.
+
+## Verificación de recuperación por ID (etapa 2)
+
+El 2 de noviembre de 2026 pasaron el chequeo de tipos y las 143 pruebas de la
+app, incluidas seis integraciones con MySQL 8.4.13 local; el backend mantuvo
+sus 36 pruebas aprobadas, sin omisiones. Los nuevos casos usan el servicio
+real de Perfil y cubren correo offline, reinicio, ambas opciones de Recordarme,
+contraseña incorrecta, identidad incompatible y pendientes revocados. Comprueban
+que no se duplican usuarios ni preferencias y que los saldos se conservan.
+La prueba visual del aviso en un APK queda pendiente. Esta etapa no repara
+lotes rechazados: esa recuperación corresponde a la etapa 3.

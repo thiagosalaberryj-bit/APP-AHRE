@@ -4,8 +4,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 import { TEMAS } from '../styles/colors';
+import EstadoSincronizacion from './SyncStatus';
 
-export default function EncabezadoSeccion({ titulo, descripcion, alVolver, tema = TEMAS.claro as Tema }: import('../types/ui').EncabezadoProps) {
+export default function EncabezadoSeccion({ titulo, descripcion, alVolver,mostrarSincronizacion=true, tema = TEMAS.claro as Tema }: import('../types/ui').EncabezadoProps) {
   return (
     <View style={[estilos.contenedor, { backgroundColor: tema.encabezado }]}>
       <View style={estilos.filaSuperior}>
@@ -18,6 +19,7 @@ export default function EncabezadoSeccion({ titulo, descripcion, alVolver, tema 
           <Ionicons name="chevron-back" size={30} color={tema.botonPrincipal} />
         </Pressable>
         <Text numberOfLines={1} style={[estilos.titulo, { color: tema.encabezadoTexto }]}>{titulo}</Text>
+        {mostrarSincronizacion?<View style={{marginLeft:'auto'}}><EstadoSincronizacion /></View>:null}
       </View>
       {descripcion ? (
         <View style={estilos.contenedorDescripcion}>

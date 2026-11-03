@@ -1,5 +1,5 @@
-import type { Conexion, Tablas } from '../types';
-import { ejecutarConConexion } from '../connectionQueue';
+import type { Tablas } from '../types';
+import { ejecutarConConexion, ejecutarLecturaConConexion } from '../connectionQueue';
 import { ErrorBaseDatos, ejecutarConManejoDeErrores } from '../errors';
 import { generarIdentificador } from '../identifiers';
 import { ejecutarTransaccion } from '../transactions';
@@ -9,7 +9,7 @@ function normalizarCorreo(correo: string) {
 }
 
 async function existeCorreoRegistrado(correo: string) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion(async (baseDatos) => {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async (baseDatos) => {
     const cuenta = await baseDatos.getFirstAsync<Pick<Tablas['usuarios'], 'id'>>(
       'SELECT id FROM usuarios WHERE LOWER(correo_electronico) = ? LIMIT 1;',
       [normalizarCorreo(correo)],
@@ -19,7 +19,7 @@ async function existeCorreoRegistrado(correo: string) {
 }
 
 async function consultarCredencialesPorCorreo(correo: string) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) =>
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) =>
     baseDatos.getFirstAsync<Pick<Tablas['usuarios'], 'id' | 'nombre' | 'correo_electronico' | 'activo'> & { contrasena_verificador: string }>(
       `SELECT usuarios.id, usuarios.nombre, usuarios.correo_electronico, usuarios.activo,
         credenciales_usuario.contrasena_verificador
@@ -33,12 +33,25 @@ async function consultarCredencialesPorCorreo(correo: string) {
 }
 
 async function consultarUsuarioActivoPorId(usuarioId: string) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) =>
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) =>
     baseDatos.getFirstAsync<Tablas['usuarios']>(
       `SELECT id, nombre, correo_electronico, activo, fecha_creacion, fecha_actualizacion
       FROM usuarios
       WHERE id = ? AND activo = 1
       LIMIT 1;`,
+      [usuarioId],
+    ),
+  ));
+}
+
+async function consultarCredencialesPorId(usuarioId: string) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) =>
+    baseDatos.getFirstAsync<NonNullable<Awaited<ReturnType<typeof consultarCredencialesPorCorreo>>>>(
+      `SELECT usuarios.id, usuarios.nombre, usuarios.correo_electronico, usuarios.activo,
+        credenciales_usuario.contrasena_verificador
+       FROM usuarios
+       INNER JOIN credenciales_usuario ON credenciales_usuario.usuario_id = usuarios.id
+       WHERE usuarios.id = ? LIMIT 1;`,
       [usuarioId],
     ),
   ));
@@ -57,12 +70,13 @@ async function actualizarVerificadorContrasena(usuarioId: string, contrasenaVeri
   }));
 }
 
-async function crearCuenta({ nombre, correo, contrasenaVerificador }: { nombre: string; correo: string; contrasenaVerificador: string }) {
+async function crearCuenta({ nombre, correo, contrasenaVerificador, id, omitirPreferencias = false }: { nombre: string; correo: string; contrasenaVerificador: string; id?:string; omitirPreferencias?:boolean }) {
   const ahora = new Date().toISOString();
-  const usuarioId = generarIdentificador();
+  const usuarioId = id || generarIdentificador();
 
   try {
     return await ejecutarTransaccion(async (baseDatos) => {
+      if(omitirPreferencias)await baseDatos.runAsync('UPDATE sync_context SET importando=1 WHERE id=1');
       const existente = await baseDatos.getFirstAsync<Pick<Tablas['usuarios'], 'id'>>(
         'SELECT id FROM usuarios WHERE LOWER(correo_electronico) = ? LIMIT 1;',
         [normalizarCorreo(correo)],
@@ -83,13 +97,17 @@ async function crearCuenta({ nombre, correo, contrasenaVerificador }: { nombre: 
         VALUES (?, ?, ?, ?);`,
         [usuarioId, contrasenaVerificador, ahora, ahora],
       );
-      await baseDatos.runAsync(
+      if (!omitirPreferencias) await baseDatos.runAsync(
         `INSERT INTO preferencias
           (id, usuario_id, deposito_predeterminado_id, notificaciones_activas, idioma, apariencia, fecha_creacion, fecha_actualizacion)
         VALUES (?, ?, NULL, 1, 'es', 'sistema', ?, ?);`,
         [generarIdentificador(), usuarioId, ahora, ahora],
       );
 
+      // La cuenta nació con el diario activo: conservar cada evento original,
+      // incluso si estuvo offline antes del primer intento de sincronización.
+      await baseDatos.runAsync('INSERT OR IGNORE INTO sync_state(usuario_id,preparada) VALUES(?,1)',[usuarioId]);
+      if(omitirPreferencias)await baseDatos.runAsync('UPDATE sync_context SET importando=0 WHERE id=1');
       return {
         id: usuarioId,
         nombre: nombre.trim(),
@@ -111,6 +129,7 @@ async function crearCuenta({ nombre, correo, contrasenaVerificador }: { nombre: 
 export const autenticacionRepositorio = Object.freeze({
   existeCorreoRegistrado,
   consultarCredencialesPorCorreo,
+  consultarCredencialesPorId,
   consultarUsuarioActivoPorId,
   crearCuenta,
   actualizarVerificadorContrasena,

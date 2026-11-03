@@ -1,4 +1,3 @@
-import type { ContextoSocial } from './socialStore';
 import { personasRepositorio } from '../database/repositories';
 import { conSocial, registroPropio, exigirDepositoConDinero } from './socialStore';
 import { exigir, validarPersona } from './socialValidation';

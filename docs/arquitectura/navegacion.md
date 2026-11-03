@@ -3,9 +3,24 @@
 ## Objetivo
 
 Este documento define las rutas y los navegadores de AHRE. Login y Registro
-implementan la autenticación local y el acceso sin conexión. Al abrir AHRE,
+implementan la autorización inicial con conexión y el acceso offline posterior
+en una instalación previamente autorizada. Al abrir AHRE,
 `App.tsx` prepara SQLite y monta la navegación con Inicio como ruta inicial. La
 sesión se consulta cuando la persona completa el deslizador.
+
+Cuando la sincronización detecta que otra instalación reemplazó a la actual,
+el controlador sin interfaz de `SyncStatus` notifica a `App.tsx`, que vuelve a
+montar el navegador en Login.
+La autorización revocada persiste en SQLite y bloquea las escrituras de esa
+cuenta. Los pendientes no se borran. Login muestra la confirmación de cambio
+de instalación; Perfil ofrece sincronizar y desvincular antes de trasladarla.
+
+`MainHeader` y `SectionHeader` incorporan el icono de conexión, su estado y el
+contador compacto de registros pendientes. El icono abre la ruta secundaria
+`Sincronizacion` (`SyncScreen.tsx`), que reutiliza `SectionHeader` y
+`NotificationCard` para consultar pendientes locales paginados. Su propio
+encabezado no repite el acceso a la misma ruta. El controlador global no ocupa
+espacio en el diseño y las consultas en reposo no activan el indicador de carga.
 ## Navegadores utilizados
 
 - `Native Stack`: controla el inicio, login, registro y las pantallas
@@ -49,6 +64,7 @@ Inicio | Movimientos | Nuevo | Estadísticas | Social
 | Detalle de movimiento | `src/screens/MovementDetailScreen.tsx` | Detalle de categoría |
 | Social | `src/screens/SocialScreen.tsx` | Pestaña Social |
 | Perfil | `src/screens/ProfileScreen.tsx` | Dashboard |
+| Sincronización | `src/screens/SyncScreen.tsx` | Icono de conexión de los encabezados |
 | Notificaciones | `src/screens/NotificationsScreen.tsx` | Dashboard |
 | Ingreso | `src/screens/IncomeScreen.tsx` | Dashboard o Nuevo |
 | Egreso | `src/screens/ExpenseScreen.tsx` | Dashboard o Nuevo |
@@ -58,37 +74,12 @@ Inicio | Movimientos | Nuevo | Estadísticas | Social
 
 ## Flujo general
 
-```text
-Inicio
-└── Login
-    ├── Registro
-    │   └── volver a Login
-    │
-    └── Dashboard (después de autenticarse)
-        ├── Perfil
-        ├── Notificaciones
-        ├── Ingreso
-        ├── Egreso
-        ├── Nuevo depósito
-        ├── Detalle de depósito
-        └── OCR
-```
+Desde Inicio se accede a Login. Login permite abrir Registro y volver para autenticarse. Tras el acceso, Dashboard permite abrir Perfil, Notificaciones, Ingreso, Egreso, Nuevo depósito, Detalle de depósito y OCR.
 
 Desde Dashboard también se puede acceder a las áreas principales mediante la
 barra inferior:
 
-```text
-Dashboard / Inicio
-├── Movimientos
-├── Nuevo
-│   ├── Ingreso
-│   ├── Egreso
-│   └── Nuevo depósito
-├── Estadísticas
-│   └── Detalle de categoría
-│       └── Detalle de movimiento
-└── Social
-```
+Dashboard reúne Movimientos, Nuevo, Estadísticas y Social. Nuevo ofrece Ingreso, Egreso y Nuevo depósito. Estadísticas permite abrir el detalle de categoría y luego el detalle de movimiento.
 
 Social muestra el resumen y sus acciones arriba, hasta cinco deudas recientes
 y después las salas activas. SocialScreen.tsx contiene el panel; las vistas
@@ -140,27 +131,23 @@ tras autenticar, Inicio muestra una pantalla de carga con barra de progreso
 durante 1,5 segundos antes de reemplazarse por Dashboard. Inicio no queda en la
 pila después de cualquiera de esos destinos.
 
-```text
-Arranque → Inicio (preparando SQLite)
-        → Inicio (espera el deslizador)
-        ├── deslizar → sin sesión → Login
-        └── deslizar → sesión válida → huella → carga animada → Dashboard
+Al arrancar se prepara SQLite y se espera el deslizador de Inicio. Sin sesión se abre Login; con sesión válida se solicita huella y se muestra la carga animada antes de Dashboard. El registro vuelve a Login antes de acceder a Dashboard.
 
-Login → Registro → Login → Dashboard
-```
-
-Registro valida los datos y guarda la cuenta local antes de volver a Login.
-Login valida la contraseña y, si es correcta, restablece la pila en Dashboard
-para que el botón de regreso no muestre Login. Registro y Login no usan
-servicios remotos ni requieren conexión.
+Registro valida, registra y autoriza la cuenta en SERVER-AHRE y crea su copia
+local antes de volver a Login. El primer ingreso de una instalación requiere
+conexión; los posteriores pueden usar el verificador y la autorización locales
+si no hay transporte. Un rechazo remoto de credenciales no habilita ese acceso
+alternativo. El ingreso correcto restablece la pila en Dashboard.
 
 Al consultar una sesión guardada después del gesto, el servicio confirma que el
 usuario local exista y esté activo. Si la referencia apunta a un usuario
 inexistente, se limpia y se abre Login. Si falla el almacenamiento o la
 consulta local, se muestra un aviso y el deslizador queda disponible para
 reintentar. La huella cancelada o incorrecta no abre el Dashboard. La función
-`cerrarSesion()` ya está disponible en el servicio; conectar el botón actual de
-Perfil queda para una tarea posterior.
+`cerrarSesion()` está conectado al botón de Perfil y limpia la sesión local.
+La acción distinta de sincronizar y desvincular confirma pendientes antes de
+liberar la instalación remota.
+
 ## Depósitos
 
 El detalle de depósito utiliza una única pantalla reutilizable. Dashboard le

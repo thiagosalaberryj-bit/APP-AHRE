@@ -22,4 +22,5 @@ export const RUTAS = Object.freeze({
   DETALLE_CATEGORIA: 'DetalleCategoria',
   DETALLE_MOVIMIENTO: 'DetalleMovimiento',
   OCR: 'OCR',
+  SINCRONIZACION:'Sincronizacion',
 });

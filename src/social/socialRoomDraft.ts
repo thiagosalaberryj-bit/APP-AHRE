@@ -1,6 +1,6 @@
 import type { PlanGasto, OperacionSocial, Financiacion } from './types';
 import type { ContextoSocial } from './socialStore';
-import type { GastoCompartido, Tablas } from '../database/types';
+import type { Tablas } from '../database/types';
 import { exigir } from './socialValidation';
 
 function esObjeto(valor: unknown): valor is Record<string, unknown> {

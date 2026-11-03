@@ -1,5 +1,6 @@
 import type { Conexion } from './types';
 import * as SQLite from 'expo-sqlite';
+import { prepararDiario } from '../sync/journal';
 
 import { ejecutarConManejoDeErrores, ErrorBaseDatos, manejarErrorBaseDatos } from './errors';
 import {
@@ -52,6 +53,7 @@ async function abrirYPrepararBaseDatos() {
       versionActual = migracion.version;
     }
 
+    await prepararDiario(baseDatos);
     return baseDatos;
   } catch (error) {
     if (baseDatos) {

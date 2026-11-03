@@ -3,15 +3,12 @@
 ## Alcance
 
 Las pantallas existentes de Ingreso y Egreso usan el formulario compartido para
-crear movimientos en la base SQLite local. El flujo no utiliza Internet ni un
-backend y conserva la separación entre pantalla, lógica de dominio y
-repositorios. La pantalla define el tipo (`ingreso` o `egreso`), y el servicio
+crear movimientos primero en SQLite, sin necesitar conexión para el guardado.
+La misma transacción genera los eventos que después se envían a SERVER-AHRE.
+Se conserva la separación entre pantalla, lógica de dominio y repositorios. La pantalla define el tipo (`ingreso` o `egreso`), y el servicio
 común carga el catálogo correspondiente y guarda el movimiento.
 
-```text
-Dashboard → Ingreso o Egreso → cargar depósitos y categorías → validar → guardar
-movimiento → actualizar saldo → volver a la pantalla anterior
-```
+Desde Dashboard se abre Ingreso o Egreso, se cargan depósitos y categorías y se validan los datos. Guardar crea el movimiento, actualiza el saldo y vuelve a la pantalla anterior.
 
 ## Historial general, búsqueda y filtros
 
@@ -105,6 +102,24 @@ activo.
 Las categorías de ingreso se obtienen mediante `categoriasRepositorio`, que
 centraliza el catálogo local predefinido de AHRE. La pantalla no declara un
 catálogo propio. La categoría se valida otra vez al crear el movimiento.
+
+
+### Precisión de la hora al crear un movimiento
+
+El formulario selecciona horas y minutos, mientras que el depósito conserva
+segundos y milisegundos en `fecha_creacion`. Al guardar desde
+`movementService.ts`, si el minuto elegido coincide con el de creación del
+depósito y su inicio resulta anterior, se usa el instante exacto de creación
+del depósito. Por ejemplo, creación a las 18:42:35,750 y selección 18:42 se
+guardan con la misma fecha ISO del depósito. Así el primer ingreso o egreso
+impacta el saldo, en lugar de quedar clasificado como historial anterior.
+La recurrencia, si existe, utiliza la misma fecha normalizada.
+
+Una selección de un minuto o día anterior conserva su fecha y la regla de
+historial sin impacto en el saldo; no se cambian las reglas del repositorio ni
+del servidor. La normalización se aplica a movimientos nuevos del servicio
+compartido de Ingreso, Egreso y confirmación de OCR. Los movimientos existentes
+no se reescriben ni se recalculan automáticamente.
 
 ## Validaciones
 

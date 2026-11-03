@@ -36,6 +36,7 @@ export interface BotonPrincipalProps {
   titulo: string; cargando?: boolean; deshabilitado?: boolean; alPresionar: () => void;
 }
 export interface EncabezadoProps {
+  mostrarSincronizacion?:boolean;
   tema?: Tema; titulo?: string; descripcion?: string; altura?: number; alVolver?: () => void;
   alAbrirNotificaciones?: () => void; alAbrirPerfil?: () => void;
 }

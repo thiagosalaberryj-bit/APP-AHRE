@@ -1,4 +1,4 @@
-import type { Conexion, Movimiento, Tablas } from '../types';
+import type { Tablas } from '../types';
 import { ErrorBaseDatos } from '../errors';
 import { generarIdentificador } from '../identifiers';
 import { ejecutarTransaccion } from '../transactions';

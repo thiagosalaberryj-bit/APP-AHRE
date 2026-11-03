@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { View, Text } from 'react-native';
 import AccionesDeuda from './DebtActions';
 import EnlaceRelacionadoSocial from './SocialRelatedLink';

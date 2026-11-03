@@ -240,7 +240,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const estilosFormularioDeposito = crearEstilosDeposito(tema);
   const depositoId = ruta?.params?.depositoId;
   const [deposito, establecerDeposito] = useState<import("../database/types").Deposito | null>(null);
-  const [saldoVisible, establecerSaldoVisible] = useState(true);
+  const [saldoVisible, establecerSaldoVisible] = useState(false);
   const [guardandoVisibilidadSaldo, establecerGuardandoVisibilidadSaldo] = useState(false);
   const [movimientos, establecerMovimientos] = useState<{ deposito_nombre: string; id: string; deposito_id: string; categoria: string; recurrencia_id: string | null; transferencia_id: string | null; tipo: "ingreso" | "egreso" | "transferencia_salida" | "transferencia_entrada"; monto: number; descripcion: string; fecha_hora: string; anulado: number; reversion_de_id: string | null; fecha_creacion: string; fecha_actualizacion: string; }[]>([]);
   const [comparacionMensual, establecerComparacionMensual] = useState<Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null>(null);
@@ -297,6 +297,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const opacidadOverlay = useRef(new Animated.Value(0)).current;
   const desplazamientoPanel = useRef(new Animated.Value(0)).current;
   const guardadoVisibilidadEnCurso = useRef(false);
+  const revisionVisibilidadSaldo=useRef(0);
 
   useEffect(() => {
     depositoActual.current = deposito;
@@ -306,7 +307,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     const secuencia = secuenciaCarga.current + 1;
     secuenciaCarga.current = secuencia;
     establecerErrorCarga(null);
-    establecerSaldoVisible(false);
+    const revisionVisibilidad=revisionVisibilidadSaldo.current;
+    if(!depositoActual.current||depositoActual.current.id!==depositoId)establecerSaldoVisible(false);
     if (!depositoActual.current) establecerCargando(true);
 
     try {
@@ -319,7 +321,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         mostrarAviso('No se pudo cargar la preferencia de privacidad del saldo.', { tipo: 'error' });
       }
       if (secuencia !== secuenciaCarga.current) return;
-      establecerSaldoVisible(!saldoOculto);
+      if(revisionVisibilidad===revisionVisibilidadSaldo.current)establecerSaldoVisible(!saldoOculto);
       establecerDeposito(detalle.deposito);
       establecerComparacionMensual(detalle.comparacionMensual);
       establecerMovimientos(detalle.movimientos.map((movimiento) => ({
@@ -346,6 +348,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     if (!deposito || guardadoVisibilidadEnCurso.current) return;
 
     const visibleAnterior = saldoVisible;
+    revisionVisibilidadSaldo.current++;
     const visibleNuevo = !visibleAnterior;
     guardadoVisibilidadEnCurso.current = true;
     establecerGuardandoVisibilidadSaldo(true);

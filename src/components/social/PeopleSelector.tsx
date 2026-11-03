@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useState } from 'react';
 import { View, Text, Pressable, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

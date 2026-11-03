@@ -63,7 +63,7 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
   };
 
   return (
-    <ContenedorAutenticacion tema={tema} titulo="Creá tu cuenta" descripcion="Un paso más para organizar tu dinero con AHRE.">
+    <ContenedorAutenticacion tema={tema} titulo="Creá tu cuenta" descripcion="Conectate para crear y autorizar tu cuenta. Después vas a poder usar AHRE sin internet.">
       <View style={estilosAutenticacion.formulario}>
         <CampoAutenticacion
           estilosAutenticacion={estilosAutenticacion}

@@ -1,6 +1,6 @@
 import { ErrorAutenticacion } from '../authentication/errors';
 import { SetStateAction, useContext, useRef, useState } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import { Alert,Animated, Pressable, Text, View } from 'react-native';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
@@ -50,7 +50,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
     }).start();
   };
 
-  const manejarInicioSesion = async () => {
+  const manejarInicioSesion = async (reemplazarDispositivo=false) => {
     if (accionEnCurso.current) return;
 
     const nuevosErrores = validarInicioSesion({ correo, contrasena });
@@ -60,7 +60,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
     accionEnCurso.current = true;
     establecerCargando(true);
     try {
-      await iniciarSesion({ correo, contrasena, recordar: recordarme });
+      await iniciarSesion({ correo, contrasena, recordar: recordarme,reemplazarDispositivo });
       try {
         const preferencias = await cargarPreferenciasActuales();
         establecerApariencia(preferencias.apariencia);
@@ -72,6 +72,12 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
       establecerContrasena('');
       navegacion.reset({ index: 0, routes: [{ name: RUTAS.PRINCIPAL }] });
     } catch (error) {
+      if(error instanceof ErrorAutenticacion&&error.codigo==='dispositivo_ocupado'){
+        Alert.alert('Cambiar dispositivo','Esta cuenta está vinculada a otra instalación. Si continuás, se desvinculará la anterior. Solo recuperarás los datos que llegaron al servidor; sus cambios sin sincronizar no estarán disponibles aquí.',[
+          {text:'Cancelar',style:'cancel'},
+          {text:'Usar esta instalación',style:'destructive',onPress:()=>{void manejarInicioSesion(true);}},
+        ]);return;
+      }
       if ((error instanceof ErrorAutenticacion ? error.detalles : null)) establecerErrores((error instanceof ErrorAutenticacion ? error.detalles : null) || {});
       else mostrarAviso((error instanceof Error ? error.message : "") || 'No se pudo iniciar sesión. Intentá nuevamente.', { tipo: 'error' });
     } finally {
@@ -91,7 +97,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
   };
 
   return (
-    <ContenedorAutenticacion tema={tema} titulo="Iniciá sesión" descripcion="Ingresá a tu espacio y mantené tus finanzas en orden.">
+    <ContenedorAutenticacion tema={tema} titulo="Iniciá sesión" descripcion="La primera autorización necesita conexión. Después podés usar esta instalación sin internet.">
       <View style={estilosAutenticacion.formulario}>
         <CampoAutenticacion
           estilosAutenticacion={estilosAutenticacion}
@@ -122,7 +128,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           icono="lock-closed-outline"
           etiqueta="Contraseña"
           alCambiarTexto={cambiarContrasena}
-          onSubmitEditing={manejarInicioSesion}
+          onSubmitEditing={()=>{void manejarInicioSesion();}}
           placeholder="Ingresá tu contraseña"
           returnKeyType="go"
           textContentType="password"
@@ -158,7 +164,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           estilosAutenticacion={estilosAutenticacion}
           estilosGlobales={estilosGlobales}
           cargando={cargando}
-          alPresionar={manejarInicioSesion}
+          alPresionar={()=>{void manejarInicioSesion();}}
           titulo="Iniciar sesión"
         />
       </View>

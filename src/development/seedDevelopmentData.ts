@@ -7,10 +7,11 @@ import { movimientosRepositorio } from '../database/repositories/movementsReposi
 import { ejecutarTransaccion } from '../database/transactions';
 import { CUENTA_PRUEBA, DEPOSITOS_PRUEBA, MOVIMIENTOS_PRUEBA } from './developmentData';
 import { prepararSocialPrueba } from './seedSocialDevelopmentData';
+import {consultarAutorizacion,registrarAutorizacion} from '../sync/deviceAuthorization';
 
 let preparacionEnCurso: Promise<void> | null = null;
 
-async function prepararCuentaYDatos(incluirSocial: boolean) {
+async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean) {
   const cuenta = await autenticacionRepositorio.consultarCredencialesPorCorreo(CUENTA_PRUEBA.correo);
   let usuario: Pick<import('../database/types').Usuario,'id'|'nombre'>;
   if (cuenta) {
@@ -18,10 +19,16 @@ async function prepararCuentaYDatos(incluirSocial: boolean) {
       throw new Error('La cuenta de pruebas ya existe con otros datos. Iniciá sesión manualmente.');
     }
     usuario = cuenta;
+    if(!sincronizar){
+      const autorizacion=await consultarAutorizacion(cuenta.id);
+      if(autorizacion&&autorizacion.generacion>0)throw new Error('La cuenta de pruebas está vinculada al servidor. Iniciá sesión manualmente para conservar sus pendientes.');
+      await registrarAutorizacion(cuenta.id,'prueba-local',0);
+    }
   } else {
     usuario = await registrarUsuario({
       ...CUENTA_PRUEBA,
       confirmacion: CUENTA_PRUEBA.contrasena,
+      localPruebas:!sincronizar,
     });
   }
 
@@ -55,13 +62,13 @@ async function prepararCuentaYDatos(incluirSocial: boolean) {
     if (incluirSocial) await prepararSocialPrueba(usuario, conexion, depositos, diasAntes(1));
   });
 
-  await iniciarSesion({ ...CUENTA_PRUEBA, recordar: false });
+  await iniciarSesion({ ...CUENTA_PRUEBA, recordar: false,localPruebas:!sincronizar });
 }
 
-export function prepararDatosPrueba({ incluirSocial = true }: { incluirSocial?: boolean } = {}) {
+export function prepararDatosPrueba({ incluirSocial = true,sincronizar=false }: { incluirSocial?: boolean;sincronizar?:boolean } = {}) {
   if (!__DEV__) return Promise.reject(new Error('Los datos de prueba solo están disponibles en desarrollo.'));
   if (!preparacionEnCurso) {
-    preparacionEnCurso = prepararCuentaYDatos(incluirSocial).finally(() => { preparacionEnCurso = null; });
+    preparacionEnCurso = prepararCuentaYDatos(incluirSocial,sincronizar).finally(() => { preparacionEnCurso = null; });
   }
   return preparacionEnCurso;
 }

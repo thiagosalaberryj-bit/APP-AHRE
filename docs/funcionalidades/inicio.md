@@ -9,14 +9,7 @@ lectura no valida la sesión. La aplicación no decide durante el arranque si
 debe abrir Login o el Dashboard. La sesión se valida cuando la persona completa
 el deslizador.
 
-```text
-abrir AHRE
-→ inicializar SQLite
-→ cargar apariencia recordada, si existe
-→ permanecer en Inicio
-→ deslizar para iniciar
-→ consultar la sesión local
-```
+Al abrir AHRE se inicializa SQLite, se carga la apariencia recordada y se permanece en Inicio. Al deslizar se consulta la sesión local.
 
 La funcionalidad es local y funciona sin conexión. La carga posterior a la
 huella es una pantalla completa dentro de la ruta existente de Inicio; no agrega
@@ -45,12 +38,7 @@ cambiar el tema en ese momento.
 - Si falla SecureStore o una consulta local, se muestra un aviso y se puede
   volver a deslizar. Un error de lectura no se interpreta como falta de sesión.
 
-```text
-Inicio → deslizar → sin sesión → Login
-Inicio → deslizar → sesión válida → huella correcta
-       → pantalla de carga con barra animada durante 1,5 segundos → Dashboard
-Inicio → deslizar → huella cancelada o incorrecta → Inicio
-```
+Sin sesión, deslizar abre Login. Con una sesión válida, la huella correcta permite mostrar la carga animada durante 1,5 segundos y abrir Dashboard. Cancelar o fallar la huella conserva Inicio.
 
 La pantalla de carga aparece solo después de validar la huella. El logo completo
 queda fijo mientras la barra inferior verde brillante avanza. La fila sobre la
@@ -96,9 +84,14 @@ ni preparación de APK. El acceso no solicita huella porque inicia sesión con
 las credenciales ficticias de una cuenta de pruebas separada.
 
 La cuenta local usa correo `pruebas@ahre.test` y contraseña pública de pruebas
-`AhrePruebas2026!`. Se crea mediante el registro normal y se autentica mediante
-el Login local, sin guardar una contraseña en texto plano en SQLite. Si el correo
+`AhrePruebas2026!`. El botón usa una autorización exclusivamente local de desarrollo,
+sin llamar al servidor, y se autentica mediante el Login local, sin guardar una
+contraseña en texto plano en SQLite. Si el correo
 ya existe con otra contraseña o está desactivado, no se modifica esa cuenta.
+Si ya está vinculada a una autorización remota, el botón no la convierte en
+local ni modifica sus pendientes: se indica ingresar manualmente. Las pruebas
+automatizadas de integración pueden pedir explícitamente sincronizar la cuenta
+ficticia contra su backend MySQL local; el botón de Inicio conserva el modo local.
 
 | Depósito ficticio | Saldo inicial | Saldo tras los movimientos de ejemplo |
 | --- | ---: | ---: |

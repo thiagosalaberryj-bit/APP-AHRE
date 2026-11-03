@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import type { NombreIcono } from '../../constants/movimientos';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';

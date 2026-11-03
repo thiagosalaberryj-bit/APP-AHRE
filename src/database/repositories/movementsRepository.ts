@@ -1,6 +1,6 @@
-import type { Conexion, Movimiento, Tablas } from '../types';
+import type { Conexion, Tablas } from '../types';
 import { ejecutarConManejoDeErrores, ErrorBaseDatos } from '../errors';
-import { ejecutarConConexion } from '../connectionQueue';
+import { ejecutarLecturaConConexion } from '../connectionQueue';
 import { ejecutarTransaccion } from '../transactions';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../../constants/movimientos';
 import { ajustarSaldoActual } from './depositsRepository';
@@ -231,14 +231,14 @@ function construirConsultaHistorial(usuarioId: string, filtros: import('../../ty
 }
 
 async function consultarHistorial(usuarioId: string, filtros: import('../../types/forms').FiltrosHistorial = {}, opciones: {limite?:number; cursor?:{fecha_hora:string;id:string}|null} = {}, conexion: Conexion | null = null) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) => {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) => {
     const consulta = construirConsultaHistorial(usuarioId, filtros, opciones);
     return baseDatos.getAllAsync<Tablas['movimientos'] & { deposito_nombre: string }>(consulta.sql, consulta.parametros);
   }, conexion));
 }
 
 async function consultarOpcionesHistorial(usuarioId: string, conexion: Conexion | null = null) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion(async (baseDatos) => {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async (baseDatos) => {
     if (typeof usuarioId !== 'string' || !usuarioId) {
       throw new ErrorBaseDatos('integridad');
     }
@@ -282,7 +282,7 @@ async function consultarOpcionesHistorial(usuarioId: string, conexion: Conexion 
 }
 
 async function consultarHistorialPorId(usuarioId: string, movimientoId: string, conexion: Conexion | null = null) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) => {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) => {
     if (
       typeof usuarioId !== 'string'
       || !usuarioId
@@ -333,7 +333,7 @@ function construirFiltrosEstadistica(usuarioId: string, tipo: string, desde: str
 }
 
 async function consultarResumenPorCategoria(usuarioId: string, tipo: string, desde: string, hasta: string, conexion: Conexion | null = null) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) => {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) => {
     const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta);
     return baseDatos.getAllAsync<{categoria:string;total:number;cantidad:number}>(
       `SELECT m.categoria AS categoria,
@@ -358,7 +358,7 @@ async function consultarAgrupacionPorPeriodo(
   categoria: string | null = null,
   conexion: Conexion | null = null,
 ) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) => {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) => {
     if (!['dia', 'mes'].includes(agrupacion)) throw new ErrorBaseDatos('integridad');
     const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria);
     const expresionPeriodo = agrupacion === 'dia'
@@ -387,7 +387,7 @@ async function consultarDetalleMesCategoria(
   hasta: string,
   conexion: Conexion | null = null,
 ) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion(async (baseDatos) => {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async (baseDatos) => {
     const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria);
     const resumen = await baseDatos.getFirstAsync<{total:number;cantidad:number}>(
       `SELECT ROUND(COALESCE(SUM(m.monto), 0), 2) AS total,

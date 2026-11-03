@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useContext, useRef, useState } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
