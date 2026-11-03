@@ -37,8 +37,8 @@ APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
 entrega. El estado actual declara versión 0.5.0 y `android.versionCode` 3;
-la pantalla «Acerca de AHRE» todavía muestra un texto fijo 1.0.0, no los metadatos
-del binario. Esa discrepancia se documenta; no se corrige código en la etapa 8.
+la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
+`Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
 ## Publicar la descarga
 

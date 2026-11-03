@@ -107,7 +107,7 @@ avanzar con el teclado; los errores se marcan junto al campo correspondiente.
 Grupo `Ajustes avanzados` con los apartados `Cuenta fantasma`, `Seguridad` y
 `Registro` desactivados con la etiqueta `Próximamente`, y `Acerca de AHRE`,
 que abre un modal estático con el encabezado común, una descripción de las
-funciones de AHRE, un texto fijo de versión (`1.0.0`) alineado a la derecha y una `X` para
+funciones de AHRE, la versión de `Constants.expoConfig.version` (actualmente `0.5.0`) alineada a la derecha y una `X` para
 cerrar. No incluye exportar ni borrar datos: cualquier acción avanzada real
 será otro Issue.
 

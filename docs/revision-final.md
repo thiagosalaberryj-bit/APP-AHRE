@@ -59,10 +59,9 @@ No se ejecutaron push, merge, cambios en main ni comandos contra el servidor.
 
 ## Límites y asuntos separados
 
-- `src/screens/ProfileScreen.tsx` muestra «Versión 1.0.0» en Acerca de AHRE,
-  mientras los manifiestos declaran 0.5.0 y código Android 3. Resolver esa
-  discrepancia antes de presentar una nueva entrega pública; no altera la
-  validación de sincronización.
+- La discrepancia de Acerca de AHRE detectada en esta revisión se corrigió
+  posteriormente: `ProfileScreen.tsx` lee `Constants.expoConfig.version` en
+  lugar de un literal. Actualmente declara 0.5.0; no cambia el código Android 3.
 - La auditoría npm de la etapa 7, realizada el mismo día, mantiene 14 paquetes
   afectados en el árbol Expo. No se repitió la consulta de advisories ni se
   aplicó una migración de SDK durante esta etapa. Ver [dependencias](configuracion/dependencias.md).

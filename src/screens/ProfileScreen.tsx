@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import Constantes from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import * as AutenticacionLocal from 'expo-local-authentication';
 import {
@@ -1143,7 +1144,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                 tema={tema}
                 titulo="Acerca de AHRE"
               />
-              <Text style={estilos.valorOpcion}>Versión 1.0.0</Text>
+              <Text style={estilos.valorOpcion}>Versión {Constantes.expoConfig?.version ?? 'no disponible'}</Text>
             </Pressable>
           </Pressable>
         </Modal>

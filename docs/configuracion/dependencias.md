@@ -24,7 +24,7 @@ El proyecto utiliza Expo SDK 57, React Native y TypeScript. Las dependencias adm
 | `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes elegidos desde la galería en OCR y documentos. |
 | `expo-image-manipulator` | `~57.0.21` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
 | `expo-crypto` | `~57.0.4` | Genera bytes aleatorios y calcula resúmenes criptográficos con Expo. | `passwordSecurity.ts` crea una sal de 16 bytes con `getRandomBytesAsync()` y deriva el verificador con una pasada SHA-256 mediante `digestStringAsync()`. |
-| `expo-constants` | `~57.0.22` | Expone información constante de la aplicación y del entorno de ejecución. | Sin import directo de AHRE; utilizada indirectamente por Expo y expo-asset. Conservar. |
+| `expo-constants` | `~57.0.22` | Expone información constante de la aplicación y del entorno de ejecución. | Perfil lee `expoConfig.version` para Acerca de AHRE; Expo y expo-asset también la utilizan. |
 | `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Plugin en app.json y dependencia de @expo/vector-icons y Expo. Conservar. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Inicio la usa después de comprobar que existe una sesión local válida; la huella autoriza el acceso al Dashboard. |
 | `expo-secure-store` | `~57.0.4` | Guarda valores pequeños de forma segura utilizando mecanismos nativos del dispositivo. | `sessionService.ts` guarda el identificador del usuario si «Recordarme» está activo. `balanceVisibilityService.ts` conserva por usuario la preferencia para ocultar saldos. No guarda contraseñas ni sus verificadores. |
@@ -318,7 +318,7 @@ del reintento correcto contra el registro npm.
 | --- | --- |
 | `react-hook-form`, `@hookform/resolvers`, `zod` directo | Sin imports ni uso en scripts, plugins, módulos nativos o pruebas. La documentación solo describe una integración futura. El árbol muestra el vínculo de resolvers con los otros dos; se retiraron juntos con autorización del líder. La copia de Zod 3 de Expo CLI es distinta y se conserva. |
 | `expo-font` | Plugin en `app.json` y uso indirecto por los iconos y Expo: conservar. |
-| `expo-constants` | Expo, expo-asset y router-server lo requieren indirectamente: conservar. La ausencia de imports de AHRE no justifica retirarlo. |
+| `expo-constants` | Perfil consulta la versión configurada y Expo, expo-asset y router-server lo requieren indirectamente: conservar. |
 | `date-fns` | `src/components/DateSelector.tsx` importa funciones y el locale español: conservar. |
 | Paquetes nativos Expo/React Native | Hay imports, plugins o integración nativa; conservar el conjunto compatible con SDK 57. No actualizarlos de forma independiente solo por existir otra versión. |
 | React Navigation | Dentro de los rangos hay actualizaciones: bottom-tabs y native-stack 7.19.2 → 7.21.0, native 7.4.1 → 7.5.1. Son candidatas a evaluar con navegación y dispositivo; no son una corrección de las alertas auditadas. |
@@ -326,6 +326,29 @@ del reintento correcto contra el registro npm.
 | TypeScript y tipos | Mantener las versiones validadas. Un cambio mayor de compilador exige revisión propia; los tipos de Node del backend pueden alinearse con el runtime Node 24 en una actualización de herramientas, sin saltar a la última versión mayor por defecto. |
 
 ### Seguridad y obsolescencia
+
+La consulta repetida antes de integrar, el 3 de noviembre de 2026, conserva
+14 paquetes afectados (3 altos, 9 moderados, 2 bajos; sin críticos). Son cuatro
+avisos y sus propagaciones, no catorce fallos independientes. npm propone Expo
+58.0.23 como cambio mayor; esa propuesta no demuestra que toda la migración
+sea compatible ni que elimine cada aviso. No se modificaron dependencias.
+
+Para resolverlos, preparar una actualización separada: comprobar primero si
+hay parches compatibles con SDK 57 que cambien las transitivas afectadas;
+si no alcanzan, evaluar el salto de SDK siguiendo la
+[guía oficial de Expo](https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/).
+Después alinear los módulos con `npx expo install --fix`, ejecutar
+`npx expo-doctor`, revisar el lockfile y repetir audit, tipos, integración y
+exportación. Estas son tareas propuestas para esa actualización, no comandos
+ejecutados en esta corrección de interfaz. Probar además un APK nuevo con
+OCR/ML Kit, SQLite, acceso offline y sincronización antes de aprobarla.
+
+No forzar versiones mayores de transitivas mediante overrides sin comprobar
+sus consumidores. El aviso de
+[deepmerge](https://github.com/advisories/GHSA-gcqx-w48m-w2h4)
+todavía no identifica una versión corregida; si persiste tras actualizar Expo,
+documentar la ruta afectada y evaluar su exposición concreta. No declarar la
+app libre de riesgo solo porque los paquetes aparezcan en herramientas de Expo.
 
 La auditoría actual de APP-AHRE informa 14 paquetes afectados: 3 altos,
 9 moderados y 2 bajos; son alertas directas y propagadas desde cuatro avisos:
