@@ -408,10 +408,10 @@ El comando sube el código local a Expo y devuelve el enlace de seguimiento;
 cuando finaliza, permite descargar el APK e instalarlo. La versión `0.5.0`
 se verá al instalar esa nueva compilación. Este comando no publica en Google Play.
 
-Instalar las dependencias:
+El líder prepara las dependencias a partir del lockfile existente:
 
 ```bash
-npm install
+npm ci --no-audit --no-fund
 ```
 
 Iniciar Expo:
@@ -430,8 +430,64 @@ npm run typecheck
 npm test
 ```
 
+## Verificaciones locales y MySQL de pruebas
+
+El líder prepara las dependencias con el lockfile existente; no hace falta
+actualizar versiones para ejecutar las verificaciones. Desde APP-AHRE:
+
+```powershell
+npm run typecheck
+if ($LASTEXITCODE -ne 0) { throw 'Falló la comprobación de tipos.' }
+npm test
+if ($LASTEXITCODE -ne 0) { throw 'Fallaron las pruebas de la app.' }
+```
+
+Sin un backend compilado y MySQL de pruebas, se omiten los cinco escenarios
+de `tests/syncIntegration.test.ts`. Esto no equivale a aprobar la integración.
+Para incluirlos, primero preparar una instancia aislada de MySQL 8.4 y ejecutar
+la compilación y las pruebas de SERVER-AHRE indicadas en su README. Después,
+en la misma terminal y con las mismas variables `DB_HOST`, `DB_PORT`, `DB_USER`
+y `DB_PASSWORD` de pruebas:
+
+```powershell
+$env:AHRE_SERVER_SOURCE = (Resolve-Path '..\SERVER-AHRE').Path
+$env:AHRE_MYSQL_TEST = '1'
+npm test
+if ($LASTEXITCODE -ne 0) { throw 'Falló la integración con MySQL.' }
+```
+
+El usuario MySQL debe poder crear y eliminar bases temporales `ahre_test_*`.
+No usar las credenciales de la base activa de AHRE ni su instancia de producción
+para estas pruebas. Las credenciales no se guardan en Git ni se imprimen en los
+resultados. El entorno y los límites de la línea base del 2 de noviembre de 2026
+se registran en [la guía de TypeScript](docs/configuracion/typescript.md).
+
 ## Alcance del README
 
 Este archivo presenta el propósito, el alcance y el estado general de AHRE. Las
 decisiones de arquitectura, las convenciones y el flujo detallado de trabajo se
 mantienen en los documentos específicos dentro de `docs/`.
+
+### Recuperación de correo rechazado
+
+La etapa 3 permite corregir un correo duplicado desde Sincronización: Corregir en Perfil → guardar un correo distinto → volver → Aplicar correo corregido. Conserva los originales y los movimientos pendientes. Requiere el backend actualizado con los códigos de rechazo específicos y la revisión en `/auth/status`; desplegarlo antes de probar la recuperación en Expo Go o APK. Reiniciar la app para preparar las tablas auxiliares aditivas. No se modifican versiones ni se descartan datos.
+
+
+La etapa 4 separa las lecturas locales de la preparación de lotes, conserva la
+cola serial y agrega un índice para seleccionar los eventos de cada lote.
+Durante un envío limita los recuentos completos del indicador a uno cada 250 ms
+entre confirmaciones y vuelve a contarlos al finalizar o fallar. Pasaron tipos,
+151 pruebas de la app y 36 del backend con MySQL local aislado. La revisión
+manual offline/reconexión de esta etapa está pendiente; reiniciar Expo Go para
+preparar el índice, sin borrar datos. No requiere actualizar otra vez el backend
+de la etapa 3. Detalles y recorrido en
+[Implementación SQLite](docs/base-de-datos/implementacion.md#optimización-de-consultas-locales-etapa-4).
+
+
+La etapa 6 revisa la carga de Social: después de preparar su identidad propia,
+las consultas usan una transacción de lectura sin generar lotes ni pendientes.
+Se agrupan los adelantos por deuda y se reutilizan los formateadores de importes
+y fechas. La vista mantiene sus registros y resúmenes completos. No cambia el
+esquema ni necesita otro despliegue del backend de la etapa 5; se prueba
+recargando Expo Go. Alcance y recorrido en
+[Social: etapa 6](docs/funcionalidades/social.md#revisión-de-carga-de-social-etapa-6).

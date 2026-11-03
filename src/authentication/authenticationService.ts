@@ -8,7 +8,7 @@ import {generarIdentificador} from '../database/identifiers';
 import {ErrorRemoto,URL_SERVIDOR,autenticarRemoto,guardarSesionRemota,solicitarRemoto,obtenerSesionRemota,comprobarProtocolo,type SesionRemota} from '../sync/remote';
 import {consultarAutorizacion,registrarAutorizacion,obtenerInstalacion,contarPendientes,marcarRevocada,esPruebaLocal,autorizacionVigenteLocal} from '../sync/deviceAuthorization';
 import {sincronizarCuenta} from '../sync/syncService';
-import {ejecutarConConexion} from '../database/connectionQueue';
+import {ejecutarConConexion,ejecutarLecturaConConexion} from '../database/connectionQueue';
 
 const publico=(u:Pick<import('../database/types').Usuario,'id'|'nombre'|'correo_electronico'|'activo'>)=>({id:u.id,nombre:u.nombre,correo_electronico:u.correo_electronico,activo:u.activo});
 const pruebaLocal=(correo:string,solicitada=false)=>typeof __DEV__!=='undefined'&&__DEV__&&(!URL_SERVIDOR||(solicitada&&normalizarCorreo(correo)==='pruebas@ahre.test'));
@@ -46,7 +46,7 @@ export async function iniciarSesion({correo,contrasena,recordar=true,reemplazarD
     let cuenta=await autenticacionRepositorio.consultarCredencialesPorCorreo(normalizarCorreo(correo));
     const autorizacion=cuenta?await consultarAutorizacion(cuenta.id):null;
     if(autorizacion?.revocada&&cuenta&&await contarPendientes(cuenta.id))throw new ErrorAutenticacion('pendientes_otra_autorizacion');
-    const claveLocal=!!cuenta?.activo&&await verificarContrasena(contrasena,cuenta.contrasena_verificador);
+    let claveLocal=!!cuenta?.activo&&await verificarContrasena(contrasena,cuenta.contrasena_verificador);
     let remota:SesionRemota|null=null;
     if(!pruebaLocal(correo,localPruebas)&&!esPruebaLocal(autorizacion,normalizarCorreo(correo))){
       try{
@@ -58,11 +58,21 @@ export async function iniciarSesion({correo,contrasena,recordar=true,reemplazarD
       }
     }else if(!claveLocal)throw new ErrorAutenticacion('credenciales_invalidas');
     if(remota){
-      if(cuenta&&cuenta.id!==remota.usuario.id)throw new ErrorAutenticacion('pendientes_otra_autorizacion');
+      if(cuenta&&cuenta.id!==remota.usuario.id)throw new ErrorAutenticacion('identidad_incompatible');
+      // El correo editable puede estar pendiente de sincronizar. La identidad es el ID remoto.
+      if(!cuenta){
+        cuenta=await autenticacionRepositorio.consultarCredencialesPorId(remota.usuario.id);
+        if(cuenta){
+          const autorizacionPorId=await consultarAutorizacion(cuenta.id);
+          if(autorizacionPorId?.revocada&&await contarPendientes(cuenta.id))throw new ErrorAutenticacion('pendientes_otra_autorizacion');
+          claveLocal=!!cuenta.activo&&await verificarContrasena(contrasena,cuenta.contrasena_verificador);
+        }
+      }
+      if(cuenta&&!cuenta.activo)throw new ErrorAutenticacion('credenciales_invalidas');
       await guardarSesionRemota(remota.usuario.id,remota,recordar);
       if(!cuenta){
         await autenticacionRepositorio.crearCuenta({id:remota.usuario.id,nombre:remota.usuario.nombre,correo:normalizarCorreo(correo),contrasenaVerificador:await crearVerificadorContrasena(contrasena),omitirPreferencias:remota.revision>0});
-        cuenta=await autenticacionRepositorio.consultarCredencialesPorCorreo(normalizarCorreo(correo));
+        cuenta=await autenticacionRepositorio.consultarCredencialesPorId(remota.usuario.id);
       }else if(!claveLocal)await autenticacionRepositorio.actualizarVerificadorContrasena(cuenta.id,await crearVerificadorContrasena(contrasena));
     }
     if(!cuenta?.activo)throw new ErrorAutenticacion('credenciales_invalidas');
@@ -80,7 +90,7 @@ export async function prepararCambioDispositivo(){
   await sincronizarCuenta(usuario.id);
   const remota=await obtenerSesionRemota(usuario.id);
   if(!remota||await contarPendientes(usuario.id))throw new ErrorAutenticacion('sincronizacion_pendiente');
-  const revision=await ejecutarConConexion(async c=>Number((await c.getFirstAsync<{revision:number}>('SELECT revision FROM sync_state WHERE usuario_id=?',[usuario.id]))?.revision||0));
+  const revision=await ejecutarLecturaConConexion(async c=>Number((await c.getFirstAsync<{revision:number}>('SELECT revision FROM sync_state WHERE usuario_id=?',[usuario.id]))?.revision||0));
   await ejecutarConConexion(c=>c.withTransactionAsync(async()=>{
     if(await c.getFirstAsync('SELECT secuencia FROM sync_outbox WHERE usuario_id=? LIMIT 1',[usuario.id]))throw new ErrorAutenticacion('sincronizacion_pendiente');
     await c.runAsync('UPDATE sync_authorization SET revocada=1 WHERE usuario_id=?',[usuario.id]);

@@ -2,9 +2,7 @@
 
 ## Alcance
 
-Este documento registra la interfaz y el alcance local de la pantalla de
-Perfil. El usuario, el idioma, la apariencia, las notificaciones y el cierre de
-sesión se administran con SQLite y SecureStore, sin comunicación con backend.
+Este documento registra la interfaz de Perfil. El usuario y las preferencias se guardan primero en SQLite y se sincronizan con SERVER-AHRE. La sesión local usa SecureStore; cambiar la contraseña y desvincular la instalación requieren conexión.
 La selección de una foto continúa siendo temporal porque el avatar persistente
 queda fuera de este Issue.
 
@@ -70,6 +68,9 @@ almacenamiento. Al abrir la pantalla se muestra un skeleton de carga simulado
 (~1 segundo).
 
 ## Modal de edición
+
+La descripción y el aviso posterior a cambiar el correo indican que se use el correo anterior para ingresar con conexión hasta sincronizarlo. Guardar nombre y correo conserva el ID de cuenta. El ingreso por ese ID recupera los datos locales sin duplicar usuarios ni preferencias; las credenciales incorrectas o una identidad remota diferente no habilitan acceso.
+
 
 `Editar perfil` abre primero un modal para confirmar la identidad. El campo de
 contraseña envía la verificación con `Listo` del teclado; debajo aparece la
@@ -164,3 +165,9 @@ remota y conexión. Cerrar sesión es local; el modal también ofrece
 y libera la autorización de la instalación antes de cambiar de teléfono.
 Si falla la conexión después de pedir la desvinculación, se conserva el bloqueo
 local hasta volver a autenticarse: no se asume que el servidor rechazó la petición.
+
+## Recuperación guiada de correo rechazado (etapa 3)
+
+Ante `perfil_correo_duplicado`, Sincronización ofrece Corregir en Perfil y luego Aplicar correo corregido. La confirmación muestra el correo rechazado y el actual. Cancelar conserva la cola. La reparación requiere conexión, misma cuenta, generación y revisión, y una vista previa vigente. Si la cola cambió, debe confirmarse otra vez.
+
+Solo se modifica el correo en eventos de perfil no confirmados. Se conservan nombres, IDs, secuencias y eventos financieros, y se respaldan los originales. Los rechazos financieros, las revocaciones y los timeouts sin rechazo definitivo no habilitan esta acción. Una respuesta perdida se reintenta con el mismo contenido.

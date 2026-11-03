@@ -275,3 +275,43 @@ navegación de regreso, crear depósito y volver, modo avión, reinicio y cambio
 de cuenta. La captura OCR necesita el módulo nativo incluido en el APK.
 El esquema inicial requiere una base de desarrollo compatible; no convierte
 ni borra automáticamente bases anteriores.
+
+
+## Revisión de carga de Social (etapa 6)
+
+La investigación confirmó que `useSocialScreen.ts` recarga `cargarSocial()` al
+recuperar el foco y que la vista devuelta contiene agenda, deudas, salas, gastos,
+partes y depósitos. Los resúmenes y los detalles actuales utilizan ese conjunto;
+no se introdujo paginación ni se recortaron registros históricos, cancelados o
+inactivos que pueden ser necesarios para mostrar relaciones y saldos. Cambiar
+este contrato exigiría separar las consultas por pantalla y revisar sus consumidores.
+Las agrupaciones de pagos, partes, gastos e integrantes ya existían.
+
+Se aplicaron estas optimizaciones comprobadas:
+
+- `socialStore.ts` incorpora `conLecturaSocial`, que usa la misma cola serial
+  y una transacción de lectura para preparar el contexto y leer la vista completa.
+  Si falta la identidad propia, termina esa lectura y usa la transacción de
+  escritura existente para crearla y cargar la vista. Dos aperturas simultáneas
+  no crean dos identidades. Las operaciones financieras conservan `conSocial`.
+- Después del primer acceso, abrir Social no prepara un lote, no consulta
+  `MAX(secuencia)` ni actualiza `sync_context`. La primera creación de identidad
+  sigue generando su evento normal, y un fallo revierte esa creación.
+- `socialQueryService.ts` agrupa los movimientos de origen por deuda, evitando
+  buscar repetidamente cada adelanto en toda la lista. Conserva el primer origen
+  de cada deuda, tal como hacía la búsqueda anterior.
+- `socialHelpers.ts` y `socialQueryService.ts` reutilizan respectivamente los
+  formateadores de importe y fecha con la misma configuración `es-AR`, en lugar
+  de construir uno por cada valor. No se agrega una caché de datos entre cargas.
+
+No se modificaron pantallas, navegación, esquema, dependencias ni reglas de
+reparto, cobro o pago. La etapa se puede probar recargando Expo Go con el backend
+de la etapa 5 ya publicado. Revisar agenda, detalle de persona, sala, cierre,
+pago parcial y regreso entre pantallas, también sin conexión. Deben conservarse
+los importes y los adelantos; entrar y salir repetidamente de Social no debe
+crear nuevos pendientes una vez sincronizada la identidad propia.
+
+La etapa 6 pasó `npm run typecheck`, 158 pruebas de la app y 45 del backend
+con MySQL 8.4.13 temporal local, sin fallos ni omisiones. La prueba manual de
+esta etapa en Expo Go sigue pendiente. Se conservaron esquema, dependencias
+y los cambios de las etapas anteriores.

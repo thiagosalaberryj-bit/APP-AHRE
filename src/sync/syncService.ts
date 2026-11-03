@@ -1,6 +1,6 @@
-import { ejecutarConConexion } from '../database/connectionQueue';
+import { ejecutarConConexion, ejecutarLecturaConConexion } from '../database/connectionQueue';
 import { obtenerSesionActual } from '../authentication/sessionService';
-import { prepararCuentaLocal, aplicarCambios } from './journal';
+import { prepararCuentaLocal, aplicarCambios, consultarReparacion, aplicarReparacion, restaurarReparacion } from './journal';
 import { ErrorRemoto, URL_SERVIDOR, disponibilidadServidor, obtenerSesionRemota, solicitarRemoto } from './remote';
 import { TABLAS_SYNC, type CambioSync, type VersionSync } from './protocol';
 import {consultarAutorizacion,marcarRevocada,esPruebaLocal} from './deviceAuthorization';
@@ -63,6 +63,7 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
     await ejecutarConConexion(c=>prepararCuentaLocal(c,usuarioId));
     const contar=()=>contarRegistrosPendientes(usuarioId);
     pendientes=await contar();
+    let proximoRecuento=Date.now()+250;
     if(!remota){
       if(!URL_SERVIDOR){publicar({estado:'local',pendientes});return;}
       try{await solicitarRemoto('/health');}catch{/* La disponibilidad se informa sin confundirla con una sesión vencida. */}
@@ -75,25 +76,42 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
     // Un único consumidor. Nunca usar Promise.all para enviar estos lotes.
     while(true) {
       if((await obtenerSesionActual()).usuario?.id!==usuarioId)return;
-      const fila=await ejecutarConConexion(c=>c.getFirstAsync<{lote:string}>('SELECT lote FROM sync_outbox WHERE usuario_id=? ORDER BY secuencia LIMIT 1',[usuarioId]));
+      const fila=await ejecutarLecturaConConexion(c=>c.getFirstAsync<{lote:string}>('SELECT lote FROM sync_outbox WHERE usuario_id=? ORDER BY secuencia LIMIT 1',[usuarioId]));
       if(!fila)break;
-      const datos=await ejecutarConConexion(async c=>({generacion:(await c.getFirstAsync<{generacion:number}>('SELECT generacion FROM sync_batch_authorization WHERE usuario_id=? AND lote=?',[usuarioId,fila.lote]))?.generacion,base:Number((await c.getFirstAsync<{revision:number}>('SELECT revision FROM sync_state WHERE usuario_id=?',[usuarioId]))?.revision||0),filas:await c.getAllAsync<{cambio:string}>('SELECT cambio FROM sync_outbox WHERE usuario_id=? AND lote=? ORDER BY secuencia',[usuarioId,fila.lote])}));
+      const datos=await ejecutarLecturaConConexion(async c=>({generacion:(await c.getFirstAsync<{generacion:number}>('SELECT generacion FROM sync_batch_authorization WHERE usuario_id=? AND lote=?',[usuarioId,fila.lote]))?.generacion,base:Number((await c.getFirstAsync<{revision:number}>('SELECT revision FROM sync_state WHERE usuario_id=?',[usuarioId]))?.revision||0),filas:await c.getAllAsync<{cambio:string}>('SELECT cambio FROM sync_outbox WHERE usuario_id=? AND lote=? ORDER BY secuencia',[usuarioId,fila.lote])}));
       if(datos.generacion!==remota.generacion)throw new ErrorRemoto(409,'Hay cambios de otra autorización. Se conservan sin enviarlos.','generacion_distinta');
       const cambios=datos.filas.map(f=>JSON.parse(f.cambio) as CambioSync);
-      const respuesta=await solicitarRemoto<{revision:number}>('/sync',{id:fila.lote,base:datos.base,generacion:datos.generacion,cambios},remota.token);
+      let respuesta:{revision:number};
+      try {
+        respuesta=await solicitarRemoto<{revision:number}>('/sync',{id:fila.lote,base:datos.base,generacion:datos.generacion,cambios},remota.token);
+      } catch(error) {
+        if(error instanceof ErrorRemoto&&error.estado===400&&error.codigo==='perfil_correo_duplicado'&&cambios.every(c=>c.tabla==='usuarios'&&c.accion==='guardar'&&c.datos.id===usuarioId)){
+          await ejecutarConConexion(c=>c.runAsync('INSERT OR REPLACE INTO sync_profile_rejection(usuario_id,lote,base,generacion,contenido) VALUES(?,?,?,?,?)',[usuarioId,fila.lote,datos.base,datos.generacion!,JSON.stringify(cambios)]));
+        }
+        if(error instanceof ErrorRemoto&&error.codigo==='lote_confirmado_otro_contenido'){
+          const restaurada=await ejecutarConConexion(async c=>{let cambio=false;await c.withTransactionAsync(async()=>{cambio=await restaurarReparacion(c,usuarioId,fila.lote);});return cambio;});
+          if(restaurada)continue;
+        }
+        throw error;
+      }
       if((await obtenerSesionActual()).usuario?.id!==usuarioId)return;
       if(!Number.isSafeInteger(respuesta.revision)||respuesta.revision!==datos.base+1)throw new ErrorRemoto(409,'La revisión del servidor no coincide.');
       await ejecutarConConexion(c=>c.withTransactionAsync(async()=>{
         await c.runAsync('DELETE FROM sync_outbox WHERE usuario_id=? AND lote=?',[usuarioId,fila.lote]);
         await c.runAsync('DELETE FROM sync_batch_authorization WHERE usuario_id=? AND lote=?',[usuarioId,fila.lote]);
+        await c.runAsync('DELETE FROM sync_profile_rejection WHERE usuario_id=? AND lote=?',[usuarioId,fila.lote]);
         await c.runAsync('UPDATE sync_state SET revision=? WHERE usuario_id=?',[respuesta.revision,usuarioId]);
       }));
-      pendientes=await contar();publicar({estado:'sincronizando',pendientes});
+      // Acota las agrupaciones y las recargas de la pantalla durante ráfagas de lotes.
+      if(Date.now()>=proximoRecuento){
+        pendientes=await contar();publicar({estado:'sincronizando',pendientes});
+        proximoRecuento=Date.now()+250;
+      }
     }
     let mas=true;
     while(mas) {
       if((await obtenerSesionActual()).usuario?.id!==usuarioId)return;
-      const revision=await ejecutarConConexion(async c=>Number((await c.getFirstAsync<{revision:number}>('SELECT revision FROM sync_state WHERE usuario_id=?',[usuarioId]))?.revision||0));
+      const revision=await ejecutarLecturaConConexion(async c=>Number((await c.getFirstAsync<{revision:number}>('SELECT revision FROM sync_state WHERE usuario_id=?',[usuarioId]))?.revision||0));
       const respuesta=validarVersiones(await solicitarRemoto<unknown>(`/sync?desde=${revision}`,undefined,remota.token));
       if(respuesta.lotes.length)publicar({estado:'sincronizando',pendientes});
       if((await obtenerSesionActual()).usuario?.id!==usuarioId)return;
@@ -112,6 +130,8 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
     pendientes=await contar();publicar({estado:pendientes?'sincronizando':'online',pendientes});
   } catch(error) {
     if(error instanceof ErrorRemoto&&error.codigo==='pendientes_nuevos')return ejecutar(usuarioId,silenciosa);
+    // El cierre por error también debe mostrar la cantidad real tras los ACK recibidos.
+    try {if(usuarioId)pendientes=await contarRegistrosPendientes(usuarioId);} catch {/* Conservar el error original de SQLite. */}
     if(error instanceof ErrorRemoto&&['dispositivo_revocado','generacion_distinta'].includes(error.codigo||'')){
       const eraActual=(await obtenerSesionActual()).usuario?.id===usuarioId;
       await marcarRevocada(usuarioId);
@@ -126,3 +146,27 @@ export function sincronizarCuenta(usuarioId:string,silenciosa=false):Promise<voi
   const promesa=ejecutar(usuarioId,silenciosa).finally(()=>{enCurso=null;});enCurso={usuarioId,promesa};return promesa;
 }
 export async function sincronizarSesion(silenciosa=false){const {usuario}=await obtenerSesionActual();if(!usuario&&vista.estado==='revocado')return;return sincronizarCuenta(usuario?.id||'',silenciosa);}
+
+export async function consultarReparacionPerfil(){
+  const {usuario}=await obtenerSesionActual();
+  return usuario?ejecutarLecturaConConexion(c=>consultarReparacion(c,usuario.id)):null;
+}
+export function repararPerfilPendiente(vista:import('./protocol').ReparacionPerfil):Promise<void>{
+  if(enCurso)return Promise.reject(new Error('Esperá a que termine la sincronización y revisá nuevamente.'));
+  const promesa=(async()=>{
+    const {usuario}=await obtenerSesionActual();
+    if(usuario?.id!==vista.usuarioId)throw new Error('La sesión cambió. Revisá la sincronización.');
+    const remota=await obtenerSesionRemota(usuario.id);
+    if(!remota)throw new Error('Iniciá sesión con conexión antes de corregir pendientes.');
+    const estado=await solicitarRemoto<{revision:number;generacion:number}>('/auth/status',undefined,remota.token);
+    if((await obtenerSesionActual()).usuario?.id!==usuario.id)throw new Error('La sesión cambió. Revisá la sincronización.');
+    await ejecutarConConexion(c=>c.withTransactionAsync(async()=>{
+      const sesion=await c.getFirstAsync<{revocada:number;generacion:number}>('SELECT revocada,generacion FROM sync_authorization WHERE usuario_id=?',[usuario.id]);
+      const rechazo=await c.getFirstAsync<{base:number}>('SELECT base FROM sync_profile_rejection WHERE usuario_id=?',[usuario.id]);
+      if(!sesion||sesion.revocada||sesion.generacion!==estado.generacion||rechazo?.base!==estado.revision)throw new Error('La autorización o revisión cambió. Sincronizá antes de reparar.');
+      await aplicarReparacion(c,vista);
+    }));
+  })().finally(()=>{enCurso=null;});
+  enCurso={usuarioId:vista.usuarioId,promesa};
+  return promesa.then(()=>sincronizarCuenta(vista.usuarioId));
+}

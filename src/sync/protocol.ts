@@ -5,3 +5,7 @@ export type FilaSync = Record<string, string | number | null>;
 export interface CambioSync { tabla: TablaSync; accion: 'guardar' | 'eliminar'; datos: FilaSync; }
 export interface LoteSync { id: string; base: number; generacion:number; cambios: CambioSync[]; }
 export interface VersionSync { revision: number; lote: LoteSync; }
+
+export interface ReparacionPerfil {
+  usuarioId: string; lote: string; correoAnterior: string; correoNuevo: string; huella: string;
+}

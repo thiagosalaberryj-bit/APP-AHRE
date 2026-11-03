@@ -216,3 +216,22 @@ Las pruebas de servicios ejecutan repositorios, sesión y transacciones reales
 con un adaptador SQLite en memoria. Las de interfaz recorren los componentes
 reales en ambos temas con adaptadores de React y controles nativos; no verifican
 la distribución visual ni sustituyen una prueba de Expo SQLite en dispositivo.
+
+
+## Lecturas de la vista social (etapa 6)
+
+`cargarSocial()` usa `conLecturaSocial`: sesión, contexto y las consultas de la
+vista se coordinan en la cola serial existente. El contexto y los registros se
+leen dentro de una transacción para evitar que se intercalen escrituras o ACK
+entre las consultas. Si la identidad aún no existe, se sale de esa transacción
+y se ejecuta `conSocial`, que vuelve a validar sesión y contexto y crea la
+identidad atómicamente. Un error durante la primera carga revierte identidad y
+evento; los reintentos no duplican la identidad.
+
+La lectura mantiene las ocho consultas existentes de `leerSocial` y la consulta
+de adelantos; no requiere índices nuevos. Se elimina la preparación de lote y
+las cuatro operaciones auxiliares del diario en las cargas posteriores. Las
+mutaciones de Social mantienen sus transacciones y el diario de sincronización.
+`tests/socialQueries.test.ts` comprueba apertura concurrente, lecturas sin
+escrituras ni avisos, rollback, reintento, adelantos y actualización de la vista
+sin una caché persistente.

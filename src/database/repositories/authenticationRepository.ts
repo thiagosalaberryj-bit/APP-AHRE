@@ -1,5 +1,5 @@
 import type { Conexion, Tablas } from '../types';
-import { ejecutarConConexion } from '../connectionQueue';
+import { ejecutarConConexion, ejecutarLecturaConConexion } from '../connectionQueue';
 import { ErrorBaseDatos, ejecutarConManejoDeErrores } from '../errors';
 import { generarIdentificador } from '../identifiers';
 import { ejecutarTransaccion } from '../transactions';
@@ -9,7 +9,7 @@ function normalizarCorreo(correo: string) {
 }
 
 async function existeCorreoRegistrado(correo: string) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion(async (baseDatos) => {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async (baseDatos) => {
     const cuenta = await baseDatos.getFirstAsync<Pick<Tablas['usuarios'], 'id'>>(
       'SELECT id FROM usuarios WHERE LOWER(correo_electronico) = ? LIMIT 1;',
       [normalizarCorreo(correo)],
@@ -19,7 +19,7 @@ async function existeCorreoRegistrado(correo: string) {
 }
 
 async function consultarCredencialesPorCorreo(correo: string) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) =>
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) =>
     baseDatos.getFirstAsync<Pick<Tablas['usuarios'], 'id' | 'nombre' | 'correo_electronico' | 'activo'> & { contrasena_verificador: string }>(
       `SELECT usuarios.id, usuarios.nombre, usuarios.correo_electronico, usuarios.activo,
         credenciales_usuario.contrasena_verificador
@@ -33,12 +33,25 @@ async function consultarCredencialesPorCorreo(correo: string) {
 }
 
 async function consultarUsuarioActivoPorId(usuarioId: string) {
-  return ejecutarConManejoDeErrores('consulta', () => ejecutarConConexion((baseDatos) =>
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) =>
     baseDatos.getFirstAsync<Tablas['usuarios']>(
       `SELECT id, nombre, correo_electronico, activo, fecha_creacion, fecha_actualizacion
       FROM usuarios
       WHERE id = ? AND activo = 1
       LIMIT 1;`,
+      [usuarioId],
+    ),
+  ));
+}
+
+async function consultarCredencialesPorId(usuarioId: string) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) =>
+    baseDatos.getFirstAsync<NonNullable<Awaited<ReturnType<typeof consultarCredencialesPorCorreo>>>>(
+      `SELECT usuarios.id, usuarios.nombre, usuarios.correo_electronico, usuarios.activo,
+        credenciales_usuario.contrasena_verificador
+       FROM usuarios
+       INNER JOIN credenciales_usuario ON credenciales_usuario.usuario_id = usuarios.id
+       WHERE usuarios.id = ? LIMIT 1;`,
       [usuarioId],
     ),
   ));
@@ -116,6 +129,7 @@ async function crearCuenta({ nombre, correo, contrasenaVerificador, id, omitirPr
 export const autenticacionRepositorio = Object.freeze({
   existeCorreoRegistrado,
   consultarCredencialesPorCorreo,
+  consultarCredencialesPorId,
   consultarUsuarioActivoPorId,
   crearCuenta,
   actualizarVerificadorContrasena,

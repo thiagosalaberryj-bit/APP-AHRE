@@ -1,14 +1,16 @@
 import {useCallback,useContext,useRef,useState} from 'react';
-import {ActivityIndicator,FlatList,Pressable,Text,View} from 'react-native';
+import {Alert,ActivityIndicator,FlatList,Pressable,Text,View} from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {SafeAreaView,useSafeAreaInsets} from 'react-native-safe-area-context';
 import EncabezadoSeccion from '../components/SectionHeader';
 import TarjetaNotificacion from '../components/NotificationCard';
 import {TEXTOS_SYNC} from '../components/SyncStatus';
 import {ContextoApariencia} from '../contexts/AppearanceContext';
-import {observarSincronizacion,obtenerVistaSincronizacion,sincronizarSesion} from '../sync/syncService';
+import {observarSincronizacion,obtenerVistaSincronizacion,sincronizarSesion,consultarReparacionPerfil,repararPerfilPendiente} from '../sync/syncService';
 import {consultarPendientes,type RegistroPendiente} from '../sync/pendingService';
 import {obtenerSesionActual} from '../authentication/sessionService';
+import {RUTAS} from '../constants/routes';
+import type {ReparacionPerfil} from '../sync/protocol';
 import {consultarSaldoOculto} from '../profile/balanceVisibilityService';
 import {crearEstilosGlobales} from '../styles/globalStyles';
 import {crearEstilosNotificaciones} from '../styles/NotificationsScreenStyles';
@@ -21,6 +23,9 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
   const [datos,establecerDatos]=useState<{total:number;registros:RegistroPendiente[];soloLocal:boolean}>({total:0,registros:[],soloLocal:false});
   const [cargando,establecerCargando]=useState(true),[error,establecerError]=useState(''),[oculto,establecerOculto]=useState(true);
   const [expandido,establecerExpandido]=useState<string|null>(null);
+  const [errorReparacion,establecerErrorReparacion]=useState('');
+  const [reparacion,establecerReparacion]=useState<ReparacionPerfil|null>(null);
+  const [reparando,establecerReparando]=useState(false);
   const secuencia=useRef(0),datosActuales=useRef(datos),cargaActiva=useRef(false);
   const cargar=useCallback(async(reemplazar=true)=>{
     if(!reemplazar&&cargaActiva.current)return;
@@ -28,7 +33,9 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
     try{
       const actuales=datosActuales.current;
       const resultado=await consultarPendientes(30,reemplazar?0:actuales.registros.length);
+      const propuesta=await consultarReparacionPerfil();
       if(peticion!==secuencia.current)return;
+      establecerReparacion(propuesta);
       const nuevos={...resultado,registros:reemplazar?resultado.registros:[...actuales.registros,...resultado.registros]};
       datosActuales.current=nuevos;establecerDatos(nuevos);establecerError('');
     }catch{if(peticion===secuencia.current)establecerError('No se pudieron consultar los pendientes. Volvé a intentar.');}
@@ -43,7 +50,18 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
     const dejar=observarSincronizacion(v=>{establecerVista(v);void cargar();});
     return()=>{activa=false;secuencia.current++;cargaActiva.current=false;dejar();};
   },[cargar]));
-  const ocupado=['comprobando','sincronizando'].includes(vista.estado);
+  const ocupado=reparando||['comprobando','sincronizando'].includes(vista.estado);
+  const confirmarReparacion=()=>{
+    if(!reparacion)return;
+    const propuesta=reparacion;
+    Alert.alert('Corregir correo pendiente',`Se reemplazará ${propuesta.correoAnterior} por ${propuesta.correoNuevo} en los cambios de perfil sin confirmar. Los movimientos y sus importes se conservan.`,[
+      {text:'Cancelar',style:'cancel'},
+      {text:'Aplicar corrección',onPress:()=>{
+        establecerErrorReparacion('');establecerReparando(true);
+        void repararPerfilPendiente(propuesta).catch(fallo=>establecerErrorReparacion(fallo instanceof Error?fallo.message:'No se pudo reparar.')).finally(()=>{establecerReparando(false);void cargar();});
+      }},
+    ]);
+  };
   return <SafeAreaView edges={['top']} style={globales.areaSegura}><View style={globales.pantalla}>
     <EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Los datos guardados en este teléfono que faltan confirmar." alVolver={()=>navegacion.goBack()} mostrarSincronizacion={false}/>
     <FlatList data={datos.registros} keyExtractor={r=>r.id} contentContainerStyle={tarjetas.contenido}
@@ -55,7 +73,12 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
         <Pressable accessibilityRole="button" disabled={ocupado||datos.soloLocal} onPress={()=>{void sincronizarSesion().then(()=>cargar());}} style={[estilos.boton,(ocupado||datos.soloLocal)&&{opacity:0.5}]}>
           <Text style={estilos.textoBoton}>{ocupado?'Sincronizando…':'Sincronizar ahora'}</Text>
         </Pressable>
-        {error?<Text accessibilityRole="alert" style={estilos.texto}>{error}</Text>:null}
+        {reparacion?<View style={estilos.estado}>
+          <Text style={estilos.texto}>El servidor rechazó el correo de un cambio pendiente. Corregilo en Perfil y volvé aquí para confirmarlo.</Text>
+          <Pressable accessibilityRole="button" disabled={ocupado} onPress={()=>navegacion.navigate(RUTAS.PERFIL)} style={estilos.boton}><Text style={estilos.textoBoton}>Corregir en Perfil</Text></Pressable>
+          <Pressable accessibilityRole="button" disabled={ocupado||reparacion.correoAnterior===reparacion.correoNuevo} onPress={confirmarReparacion} style={[estilos.boton,(ocupado||reparacion.correoAnterior===reparacion.correoNuevo)&&{opacity:0.5}]}><Text style={estilos.textoBoton}>Aplicar correo corregido</Text></Pressable>
+        </View>:null}
+        {errorReparacion||error?<Text accessibilityRole="alert" style={estilos.texto}>{errorReparacion||error}</Text>:null}
       </View>}
       renderItem={({item})=>{
         const importe=item.importe===null?'':oculto?' · Importe oculto':` · $ ${item.importe.toLocaleString('es-AR',{maximumFractionDigits:2})}`;

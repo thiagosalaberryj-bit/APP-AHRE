@@ -166,6 +166,13 @@ export async function crearMovimiento(datos: import('../types/forms').DatosMovim
         baseDatos,
       );
       const categoria = consultarCategoriaDisponible(datos.categoria, tipo);
+      // El selector solo tiene precisión de minutos. No convertir ese mismo
+      // minuto en historial previo por los segundos de creación del depósito.
+      const marcaMovimiento = Date.parse(fechaHora);
+      const marcaCreacion = Date.parse(deposito.fecha_creacion);
+      const fechaHoraRegistro = marcaMovimiento < marcaCreacion
+        && Math.floor(marcaMovimiento / 60000) === Math.floor(marcaCreacion / 60000)
+        ? deposito.fecha_creacion : fechaHora;
       let recurrenciaId: string | null = null;
 
       if (datos.recurrente) {
@@ -176,9 +183,9 @@ export async function crearMovimiento(datos: import('../types/forms').DatosMovim
           monto,
           descripcion,
           frecuencia: datos.frecuencia as import('../database/types').Recurrencia['frecuencia'],
-          fecha_inicio: fechaHora,
+          fecha_inicio: fechaHoraRegistro,
           fecha_fin: null,
-          proxima_ejecucion: fechaHora,
+          proxima_ejecucion: fechaHoraRegistro,
           activa: 1,
         }, baseDatos);
         recurrenciaId = recurrencia.id;
@@ -192,7 +199,7 @@ export async function crearMovimiento(datos: import('../types/forms').DatosMovim
         tipo,
         monto,
         descripcion,
-        fecha_hora: fechaHora,
+        fecha_hora: fechaHoraRegistro,
         anulado: 0,
         reversion_de_id: null,
       }, baseDatos);

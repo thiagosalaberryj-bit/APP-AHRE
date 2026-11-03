@@ -182,7 +182,7 @@ export async function actualizarPerfil(datos: import('../types/forms').DatosPerf
       throw new ErrorPerfil('operacion_no_disponible');
     }
 
-    return usuarioActualizado;
+    return { ...usuarioActualizado, correoModificado: correo !== usuario.correo_electronico };
   } catch (error) {
     if (error instanceof ErrorPerfil) throw error;
     if (error instanceof ErrorBaseDatos && error.codigo === 'integridad') {

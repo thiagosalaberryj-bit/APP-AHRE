@@ -1,5 +1,7 @@
 import type { Conexion, Persona, Usuario, Tablas } from '../database/types';
 import { obtenerSesionActual } from '../authentication/sessionService';
+import { ejecutarLecturaConConexion } from '../database/connectionQueue';
+import { ejecutarConManejoDeErrores } from '../database/errors';
 import { ejecutarTransaccion } from '../database/transactions';
 import { personasRepositorio, salasRepositorio, gastosCompartidosRepositorio, participantesGastoRepositorio, pagosSocialesRepositorio, deudasRepositorio, personasSalaRepositorio, depositosRepositorio } from '../database/repositories';
 import { exigir } from './socialValidation';
@@ -22,16 +24,39 @@ export interface DatosSociales {
   depositos: Tablas['depositos'][];
 }
 
+async function consultarContexto(conexion: Conexion, usuario: Usuario, crearIdentidad: boolean): Promise<ContextoSocial | null> {
+  const activo = await conexion.getFirstAsync<Pick<Tablas['usuarios'], 'id'>>('SELECT id FROM usuarios WHERE id = ? AND activo = 1;', [usuario.id]);
+  exigir(activo, 'La sesión ya no está disponible.');
+  let propia = (await personasRepositorio.consultar({ usuario_id: usuario.id, es_usuario_actual: 1 }, {}, conexion))[0];
+  if (!propia && crearIdentidad) propia = await personasRepositorio.crear({ usuario_id: usuario.id, nombre: usuario.nombre, nombre_normalizado: normalizarNombrePersona(usuario.nombre), es_usuario_actual: 1, activa: 1 }, conexion);
+  return propia ? { usuario, propia, conexion } : null;
+}
+
 export async function conSocial<Resultado>(operacion: (contexto: ContextoSocial) => Promise<Resultado>): Promise<Resultado> {
   const { usuario } = await obtenerSesionActual();
   exigir(usuario, 'Iniciá sesión para utilizar Social.');
-  return ejecutarTransaccion(async (conexion) => {
-    const activo = await conexion.getFirstAsync<Pick<Tablas['usuarios'], 'id'>>('SELECT id FROM usuarios WHERE id = ? AND activo = 1;', [usuario.id]);
-    exigir(activo, 'La sesión ya no está disponible.');
-    let propia = (await personasRepositorio.consultar({ usuario_id: usuario.id, es_usuario_actual: 1 }, {}, conexion))[0];
-    if (!propia) propia = await personasRepositorio.crear({ usuario_id: usuario.id, nombre: usuario.nombre, nombre_normalizado: normalizarNombrePersona(usuario.nombre), es_usuario_actual: 1, activa: 1 }, conexion);
-    return operacion({ usuario, propia, conexion });
+  return ejecutarTransaccion(async conexion => {
+    const contexto = await consultarContexto(conexion, usuario, true);
+    exigir(contexto, 'La identidad de Social no está disponible.');
+    return operacion(contexto);
   });
+}
+
+export async function conLecturaSocial<Resultado>(operacion: (contexto: ContextoSocial) => Promise<Resultado>): Promise<Resultado> {
+  const { usuario } = await obtenerSesionActual();
+  exigir(usuario, 'Iniciá sesión para utilizar Social.');
+  const resultado = await ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async conexion => {
+    let salida: {valor: Resultado} | undefined;
+    await conexion.withTransactionAsync(async () => {
+      const contexto = await consultarContexto(conexion, usuario, false);
+      if (contexto) salida = {valor: await operacion(contexto)};
+    });
+    return salida;
+  }));
+  if (resultado) return resultado.valor;
+  // Solo el primer acceso necesita crear la identidad. Revalidar sesión y
+  // contexto al entrar a la cola de escritura; no reencolar dentro de la lectura.
+  return conSocial(operacion);
 }
 
 export const idPersistente = (id: string, contexto: ContextoSocial) => id === 'vos' ? contexto.propia.id : id;
