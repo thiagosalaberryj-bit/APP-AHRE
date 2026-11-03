@@ -9,7 +9,7 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.5.0-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.6.0-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 

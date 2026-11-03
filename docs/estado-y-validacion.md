@@ -72,7 +72,7 @@ local de duplicados. Seguir [Perfil](interfaces/perfil.md#recuperación-guiada-d
 - La consulta de Social mantiene su conjunto completo; paginar requiere revisar
   los consumidores. Los lotes financieros del backend también cargan estado completo.
 - Notificaciones muestra ejemplos; guardar idioma no implementa traducción integral.
-- «Acerca de AHRE» toma la versión de `Constants.expoConfig.version`; actualmente 0.5.0, con código Android 3 en el manifiesto.
+- «Acerca de AHRE» toma la versión de `Constants.expoConfig.version`; actualmente 0.6.0, con código Android 4 en el manifiesto.
 - Los movimientos ya guardados con una hora anterior al depósito no se
   recalculan automáticamente al instalar la corrección del formulario.
 - Auditoría de la app: 14 paquetes afectados (3 altos, 9 moderados, 2 bajos)
