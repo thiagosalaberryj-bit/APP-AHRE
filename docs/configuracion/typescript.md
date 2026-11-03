@@ -246,3 +246,11 @@ La clasificación queda asignada al líder para la etapa de dependencias.
 La sugerencia automática de npm implica Expo `58.0.22`, un cambio de SDK;
 no se aplica durante esta etapa. Repetir la auditoría antes de decidir una
 corrección, sin forzar versiones transitivas incompatibles.
+
+
+### Retirada del grupo de formularios (etapa 7)
+
+La revisión histórica anterior describía las dependencias disponibles al migrar.
+El 3 de noviembre de 2026 el líder autorizó retirar `react-hook-form`,
+`@hookform/resolvers` y el Zod directo, sin referencias en AHRE. La copia
+`zod@3.25.76` de Expo CLI se conserva. El compilador y los tipos no cambian.

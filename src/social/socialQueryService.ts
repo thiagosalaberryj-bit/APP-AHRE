@@ -1,4 +1,3 @@
-import type { ContextoSocial } from './socialStore';
 import type { Tablas } from '../database/types';
 import { conLecturaSocial, leerSocial, idVisible } from './socialStore';
 import { sumaPagos, unidades } from './socialValidation';

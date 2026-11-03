@@ -1,4 +1,4 @@
-import type { Conexion, Deposito, Tablas } from '../types';
+import type { Conexion, Tablas } from '../types';
 import { ejecutarConManejoDeErrores, ErrorBaseDatos } from '../errors';
 import { ejecutarLecturaConConexion } from '../connectionQueue';
 import { generarIdentificador } from '../identifiers';

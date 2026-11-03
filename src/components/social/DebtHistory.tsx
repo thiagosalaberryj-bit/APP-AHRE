@@ -1,6 +1,5 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
-import { SetStateAction, useState } from 'react';
+import { useState } from 'react';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { View, TextInput, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

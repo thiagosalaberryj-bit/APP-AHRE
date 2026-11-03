@@ -1,4 +1,4 @@
-import type { Deposito, Movimiento, Recurrencia } from '../database/types';
+import type { Movimiento } from '../database/types';
 
 export type CamposValidables = Record<string, unknown>;
 export type ImporteEntrada = string | number;

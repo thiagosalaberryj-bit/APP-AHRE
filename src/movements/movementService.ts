@@ -13,7 +13,6 @@ import {
   convertirMontoMovimiento,
   validarDatosMovimiento,
 } from '../utils/movementValidation';
-import { DatosMovimiento } from '../types/forms';
 
 const TIPOS_MOVIMIENTO_REGISTRABLES = Object.freeze(['ingreso', 'egreso']);
 

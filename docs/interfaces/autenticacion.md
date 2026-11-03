@@ -73,9 +73,6 @@ Perfil permite cerrar la sesión local o sincronizar y desvincular la instalaci�
 
 ## Navegación y conectividad
 
-```text
-Inicio → deslizar → sin sesión → Login → Registro → Login → Dashboard
-Inicio → deslizar → sesión válida → huella → carga animada → Dashboard
-```
+Al deslizar en Inicio sin sesión se abre Login, que permite acceder a Registro y regresar antes de entrar a Dashboard. Con sesión válida se solicita huella y se muestra la carga animada antes de Dashboard.
 
 Registro y primer ingreso usan la API remota y requieren conexión. Los ingresos offline posteriores comprueban el verificador local y la autorización de la instalación. Si se cambia el correo offline, Perfil avisa que se use el anterior para ingresar con conexión hasta confirmar el cambio. El ingreso remoto recupera la cuenta local por ID y conserva sus pendientes; no crea otra cuenta por la diferencia de correo. Una identidad remota distinta produce un aviso y no vincula los datos. El correo nuevo funciona remotamente después de sincronizar.

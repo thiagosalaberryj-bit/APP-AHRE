@@ -3,15 +3,12 @@
 ## Alcance
 
 Las pantallas existentes de Ingreso y Egreso usan el formulario compartido para
-crear movimientos en la base SQLite local. El flujo no utiliza Internet ni un
-backend y conserva la separación entre pantalla, lógica de dominio y
-repositorios. La pantalla define el tipo (`ingreso` o `egreso`), y el servicio
+crear movimientos primero en SQLite, sin necesitar conexión para el guardado.
+La misma transacción genera los eventos que después se envían a SERVER-AHRE.
+Se conserva la separación entre pantalla, lógica de dominio y repositorios. La pantalla define el tipo (`ingreso` o `egreso`), y el servicio
 común carga el catálogo correspondiente y guarda el movimiento.
 
-```text
-Dashboard → Ingreso o Egreso → cargar depósitos y categorías → validar → guardar
-movimiento → actualizar saldo → volver a la pantalla anterior
-```
+Desde Dashboard se abre Ingreso o Egreso, se cargan depósitos y categorías y se validan los datos. Guardar crea el movimiento, actualiza el saldo y vuelve a la pantalla anterior.
 
 ## Historial general, búsqueda y filtros
 

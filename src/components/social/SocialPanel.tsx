@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import type { NombreIcono } from '../../constants/movimientos';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { LIMITE_SALAS_ACTIVAS } from "../../social/socialConstants";

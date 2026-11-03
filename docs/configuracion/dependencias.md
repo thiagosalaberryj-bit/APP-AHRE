@@ -24,8 +24,8 @@ El proyecto utiliza Expo SDK 57, React Native y TypeScript. Las dependencias adm
 | `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes elegidos desde la galería en OCR y documentos. |
 | `expo-image-manipulator` | `~57.0.21` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
 | `expo-crypto` | `~57.0.4` | Genera bytes aleatorios y calcula resúmenes criptográficos con Expo. | `passwordSecurity.ts` crea una sal de 16 bytes con `getRandomBytesAsync()` y deriva el verificador con una pasada SHA-256 mediante `digestStringAsync()`. |
-| `expo-constants` | `~57.0.22` | Expone información constante de la aplicación y del entorno de ejecución. | Está declarada, pero el código de AHRE todavía no la importa. |
-| `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Está declarada para una posible tipografía personalizada; AHRE todavía usa la fuente del sistema. |
+| `expo-constants` | `~57.0.22` | Expone información constante de la aplicación y del entorno de ejecución. | Sin import directo de AHRE; utilizada indirectamente por Expo y expo-asset. Conservar. |
+| `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Plugin en app.json y dependencia de @expo/vector-icons y Expo. Conservar. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Inicio la usa después de comprobar que existe una sesión local válida; la huella autoriza el acceso al Dashboard. |
 | `expo-secure-store` | `~57.0.4` | Guarda valores pequeños de forma segura utilizando mecanismos nativos del dispositivo. | `sessionService.ts` guarda el identificador del usuario si «Recordarme» está activo. `balanceVisibilityService.ts` conserva por usuario la preferencia para ocultar saldos. No guarda contraseñas ni sus verificadores. |
 | `expo-splash-screen` | `~57.0.10` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Logo de AHRE y fondo claro/oscuro configurados explícitamente en el plugin; coordinación del inicio. |
@@ -41,31 +41,14 @@ El proyecto utiliza Expo SDK 57, React Native y TypeScript. Las dependencias adm
 | `react-native-reanimated` | `4.5.1` | Permite crear animaciones ejecutadas de forma eficiente. | Está declarada, pero las animaciones actuales usan `Animated` de React Native y no importan Reanimated directamente. |
 | `react-native-worklets` | `0.10.1` | Proporciona la ejecución de funciones de Reanimated en contextos de trabajo. | Soporte requerido por la versión instalada de Reanimated. |
 | `react-native-svg` | `15.15.4` | Permite renderizar y manipular gráficos SVG. | Íconos, gráficos y recursos vectoriales de la interfaz. |
-| `react-hook-form` | `^7.88.0` | Base para administrar estado, valores, envío y estado de formularios. | Disponible para futuros formularios; Login y Registro mantienen el estado local de sus campos. |
-| `zod` | `^4.6.7` | Permite definir esquemas para validar formatos y reglas de datos. | Disponible para formularios futuros; Login y Registro usan reglas locales en `authenticationValidation.ts`. |
-| `@hookform/resolvers` | `^5.9.1` | Conecta `react-hook-form` con librerías de validación como `zod`. | Integración futura de validaciones dentro de los formularios. |
 | `date-fns` | `^4.4.0` | Proporciona funciones para analizar, comparar, ordenar y formatear fechas. | Movimientos, depósitos, estadísticas, filtros y reportes. |
 
-## Cómo se complementan los formularios
+## Formularios y validación
 
-Estas dependencias cumplen responsabilidades diferentes:
-
-```text
-react-hook-form
-        ↓ administra los datos y el estado del formulario
-zod
-        ↓ define y ejecuta las reglas de validación
-@hookform/resolvers
-        ↓ conecta ambas dependencias
-formulario válido o errores por campo
-```
-
-Por ejemplo, `react-hook-form` puede controlar el valor de un campo de monto, mientras que `zod` comprueba que sea obligatorio, numérico y mayor que cero. `@hookform/resolvers` permite que ese resultado llegue al formulario y se muestre junto al campo correspondiente.
-
-Instalarlas no crea formularios automáticamente. Solo deja disponible una base común para que las pantallas implementen formularios consistentes cuando se desarrollen sus funcionalidades.
-Login y Registro utilizan validaciones locales y no dependen de
-`react-hook-form`, `zod` ni sus resolvers. Estas dependencias siguen disponibles
-para otros formularios que requieran estado y validación declarativa.
+Los formularios de AHRE utilizan estado de React y validaciones locales.
+`react-hook-form`, `@hookform/resolvers` y el `zod` directo se retiraron en
+la etapa 7 con autorización del líder, después de verificar que no tenían uso.
+La copia transitiva de Zod requerida por Expo CLI permanece instalada.
 
 ## Comandos utilizados
 
@@ -82,7 +65,7 @@ npx expo install expo-crypto
 Dependencias JavaScript:
 
 ```bash
-npm install react-hook-form zod @hookform/resolvers date-fns
+npm install date-fns
 ```
 
 ## Consideraciones de configuración
@@ -319,3 +302,88 @@ Cada dependencia debe responder a una necesidad concreta, ser compatible con
 la versión de Expo utilizada y tener su estado de uso documentado. Las
 dependencias ya declaradas pero todavía sin uso directo no significan que la
 capacidad correspondiente esté activa en AHRE.
+
+
+## Revisión de limpieza y dependencias (etapa 7, 3 de noviembre de 2026)
+
+La revisión buscó imports, reexportaciones, cargas dinámicas, configuración Expo,
+módulos nativos, scripts y pruebas, además de consultar `npm ls --all`, el lockfile,
+`npm audit --package-lock-only --json` y `npm outdated --json`. Tras esa revisión,
+el líder autorizó retirar los tres paquetes de formularios sin uso. Se actualizaron
+manifiesto y lockfile con npm, conservando las versiones de los demás paquetes.
+La primera consulta de red falló por DNS; los resultados indicados aquí provienen
+del reintento correcto contra el registro npm.
+
+| Dependencia o grupo | Evidencia y decisión propuesta al líder |
+| --- | --- |
+| `react-hook-form`, `@hookform/resolvers`, `zod` directo | Sin imports ni uso en scripts, plugins, módulos nativos o pruebas. La documentación solo describe una integración futura. El árbol muestra el vínculo de resolvers con los otros dos; se retiraron juntos con autorización del líder. La copia de Zod 3 de Expo CLI es distinta y se conserva. |
+| `expo-font` | Plugin en `app.json` y uso indirecto por los iconos y Expo: conservar. |
+| `expo-constants` | Expo, expo-asset y router-server lo requieren indirectamente: conservar. La ausencia de imports de AHRE no justifica retirarlo. |
+| `date-fns` | `src/components/DateSelector.tsx` importa funciones y el locale español: conservar. |
+| Paquetes nativos Expo/React Native | Hay imports, plugins o integración nativa; conservar el conjunto compatible con SDK 57. No actualizarlos de forma independiente solo por existir otra versión. |
+| React Navigation | Dentro de los rangos hay actualizaciones: bottom-tabs y native-stack 7.19.2 → 7.21.0, native 7.4.1 → 7.5.1. Son candidatas a evaluar con navegación y dispositivo; no son una corrección de las alertas auditadas. |
+| Expo y transitivas vulnerables | La herramienta propone Expo 58.0.23, una versión mayor. La migración necesita revisar conjuntamente Expo, React, React Native, los módulos y el OCR nativo. No aplicar automáticamente en esta limpieza. |
+| TypeScript y tipos | Mantener las versiones validadas. Un cambio mayor de compilador exige revisión propia; los tipos de Node del backend pueden alinearse con el runtime Node 24 en una actualización de herramientas, sin saltar a la última versión mayor por defecto. |
+
+### Seguridad y obsolescencia
+
+La auditoría actual de APP-AHRE informa 14 paquetes afectados: 3 altos,
+9 moderados y 2 bajos; son alertas directas y propagadas desde cuatro avisos:
+[Zod](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5),
+[glob](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4),
+[minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) y
+[deepmerge](https://github.com/advisories/GHSA-gcqx-w48m-w2h4).
+No se evaluó la explotabilidad concreta de cada ruta. Retirar formularios sin uso
+no resuelve las alertas del árbol de Expo. La actualización mayor propuesta no
+es una corrección que deba ejecutarse con `npm audit fix --force` en esta etapa.
+
+SERVER-AHRE informa cero vulnerabilidades. Express 4.22.3 y sus tipos 4.17.25
+están al día dentro de sus rangos; npm ofrece Express 5.3.0 y tipos 5.0.6 como
+versiones mayores. No hay motivo confirmado para migrarlos en una limpieza sin
+cambios de comportamiento. `mysql2`, `tsx` y TypeScript no aparecen atrasados
+según la consulta de sus rangos actuales. Ninguno de los dos lockfiles contiene
+paquetes marcados `deprecated`; eso no significa que estén libres de avisos.
+
+### Limpieza implementada
+
+Se retiraron `src/components/ErrorMessage.tsx`, `src/services/index.ts` y
+`src/utils/structureSmokeTest.ts`, sin consumidores de código, configuración o
+pruebas. Sus referencias descriptivas se retiraron de arquitectura, Perfil y
+README. Se conservaron las entradas históricas de changelog.
+
+El compilador confirmó y se retiraron imports sin uso de componentes Social,
+pantallas, repositorios, servicios y tipos. El parámetro ignorado de medición del
+gráfico se marca `_y`, conservando la posición de `ancho` en la API nativa.
+En SERVER-AHRE se eliminaron los selectores `.nota-demo` y `.franja` y sus reglas
+asociadas, ausentes del HTML y JavaScript; se conserva `.nota` y las demás reglas.
+
+La modificación de dependencias corresponde al líder según `AGENTS.md`; la
+revisión deja una propuesta concreta para retirar el grupo de formularios y
+separa las migraciones mayores que necesitan otro alcance y validación nativa.
+
+La limpieza pasó tipos, la comprobación adicional `--noUnusedLocals
+--noUnusedParameters`, 158 pruebas de la app y 45 del backend con MySQL
+8.4.13 temporal local, sin fallos ni omisiones. PostCSS aceptó el CSS resultante.
+El progreso anterior a esta etapa quedó guardado en APP-AHRE `dadf614` y
+SERVER-AHRE `b142f7e`; los cambios de limpieza siguen separados de esos commits.
+El líder autorizó después la retirada de los tres paquetes. Se ejecutó:
+
+```powershell
+npm uninstall react-hook-form @hookform/resolvers zod --ignore-scripts --no-audit --no-fund --offline
+```
+
+npm retiró también `@standard-schema/utils@0.3.0`, dependencia exclusiva de los
+resolvers. Se comprobó que ninguna versión, URL, integridad ni requisito de los
+paquetes conservados cambió. npm recalculó metadatos `peer` y `libc` del lockfile;
+no se forzaron overrides ni se modificó el Zod 3 interno de Expo. Las secciones
+históricas de auditorías anteriores conservan sus versiones y resultados originales.
+
+
+Después de retirar las dependencias pasaron otra vez tipos, las 158 pruebas
+de la app y las 45 del backend con MySQL local, sin fallos ni omisiones.
+`npm ls --all` no reportó problemas. También finalizó la exportación Android
+con Hermes; el primer intento falló al escribir un temporal del sandbox y
+el reintento con permisos suficientes terminó correctamente. Esta exportación
+comprueba el empaquetado, no sustituye instalar y probar un APK en dispositivo.
+La auditoría posterior conserva 14 paquetes afectados del árbol de Expo
+(3 altos, 9 moderados, 2 bajos); la retirada no corrige esos cuatro avisos.

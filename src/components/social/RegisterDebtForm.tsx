@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useRef, useState } from 'react';
 import { generarIdentificador } from '../../database/identifiers';

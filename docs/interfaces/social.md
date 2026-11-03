@@ -15,9 +15,8 @@ Nombres, descripciones e importes largos se truncan con puntos suspensivos en
 una línea. Los resúmenes mantienen sus columnas y tamaños de fuente; los campos
 editables conservan el contenido completo.
 
-La [lógica funcional](../funcionalidades/social.md), el
-[contrato de SQLite](../base-de-datos/social.md) y los
-[diagramas de escenarios](../diagramas/social/README.md) describen el comportamiento.
+La [lógica funcional](../funcionalidades/social.md) y el
+[contrato de SQLite](../base-de-datos/social.md) describen el comportamiento.
 
 ## Organización del código
 
@@ -29,7 +28,7 @@ La [lógica funcional](../funcionalidades/social.md), el
 - `ExpenseListForm.tsx`: lista editable, reparto común y ajustes por ítem.
 - `src/social/socialService.ts`: entrada pública a los servicios de personas,
   salas, ítems, deudas, pagos y consultas.
-- `src/social/useSocialScreen.tsx`: carga al recuperar el foco, navegación y apariencia.
+- `src/social/useSocialScreen.ts`: carga al recuperar el foco, navegación y apariencia.
 - `src/social/SocialDataContext.ts`: datos del usuario para los componentes de
   cada pantalla, sin un registro global mutable ni fixtures de producción.
 - `src/navigation/socialRoutes.tsx`: adapta las rutas existentes a cada pantalla.

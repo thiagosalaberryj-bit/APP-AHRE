@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { cerrarSala } from '../../social/socialService';
 import { View, Text } from 'react-native';

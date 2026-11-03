@@ -6,11 +6,7 @@ La pantalla secundaria existente `src/screens/OcrScreen.tsx` utiliza ML Kit para
 reconocimiento local y permite confirmar exclusivamente egresos. El comparador
 temporal y las opciones Tesseract se retiraron por indicación del líder.
 
-```text
-Dashboard o Nuevo → OCR → cámara / galería → ajustar recorte
-→ reconocer e interpretar → revisar → seleccionar categoría y depósito
-→ confirmar egreso local
-```
+Desde Dashboard o Nuevo se abre OCR para elegir cámara o galería y ajustar el recorte. Después se reconoce e interpreta el contenido, se revisa y se seleccionan categoría y depósito antes de confirmar el egreso local.
 
 ## Captura y recorte
 

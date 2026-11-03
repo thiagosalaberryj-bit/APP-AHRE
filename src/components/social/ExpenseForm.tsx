@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useEffect, useState } from 'react';
 import { montoParaEntrada } from '../../social/socialHelpers';

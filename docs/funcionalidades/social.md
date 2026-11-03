@@ -12,8 +12,7 @@ Social reutiliza el reconocimiento existente; ML Kit no está disponible en Expo
 La lista manual sí funciona en Expo Go. La preparación temporal
 de Inicio solo carga depósitos y movimientos; Social comienza vacío.
 
-Los [diagramas](../diagramas/social/README.md) explican los recorridos, la
-[guía de interfaz](../interfaces/social.md) describe las pantallas y el
+La [guía de interfaz](../interfaces/social.md) describe las pantallas y el
 [contrato del esquema](../base-de-datos/social.md) enumera las restricciones SQL.
 
 ## Responsabilidades
@@ -312,6 +311,6 @@ los importes y los adelantos; entrar y salir repetidamente de Social no debe
 crear nuevos pendientes una vez sincronizada la identidad propia.
 
 La etapa 6 pasó `npm run typecheck`, 158 pruebas de la app y 45 del backend
-con MySQL 8.4.13 temporal local, sin fallos ni omisiones. La prueba manual de
-esta etapa en Expo Go sigue pendiente. Se conservaron esquema, dependencias
+con MySQL 8.4.13 temporal local, sin fallos ni omisiones. El líder confirmó después la revisión manual de
+esta etapa en Expo Go, con consulta de registros y pago parcial. Se conservaron esquema, dependencias
 y los cambios de las etapas anteriores.

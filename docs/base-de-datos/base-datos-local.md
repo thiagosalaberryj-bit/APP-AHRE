@@ -4,24 +4,18 @@
 
 AHRE utiliza un enfoque offline-first. Las operaciones financieras principales deben poder realizarse sin conexión a Internet y la información debe guardarse localmente antes de considerar cualquier comunicación con un backend.
 
-El flujo general será:
+El flujo local es:
 
-```text
-usuario realiza una operación
-→ AHRE valida la información
-→ se guarda en SQLite
-→ se actualizan los saldos o estados relacionados
-→ la interfaz muestra el resultado
-```
+Cuando el usuario realiza una operación, AHRE valida la información, la guarda en SQLite, actualiza los saldos o estados relacionados y muestra el resultado.
 
 Este documento define la tecnología y el modelo inicial. La estructura SQLite,
 las migraciones y la capa base de repositorios están descritas en
 [`implementacion.md`](implementacion.md). La lógica funcional de cada módulo
-seguirá incorporándose en sus Issues correspondientes.
+se describe en las guías de funcionalidades.
 
 ## Tecnología seleccionada
 
-La persistencia principal será `expo-sqlite`.
+La persistencia principal es `expo-sqlite`.
 
 La elección se debe a que AHRE necesita:
 
@@ -30,21 +24,21 @@ La elección se debe a que AHRE necesita:
 - calcular saldos;
 - trabajar sin conexión;
 - conservar los datos entre reinicios de la aplicación;
-- dejar preparada una futura sincronización.
+- mantener una cola de cambios para la sincronización implementada.
 
-`expo-secure-store` se utilizará para conservar el identificador de la sesión local en el dispositivo. Las contraseñas no se guardan allí ni en texto plano: SQLite conserva solamente su verificador derivado.
+`expo-secure-store` se utiliza para conservar el identificador de la sesión local en el dispositivo. Las contraseñas no se guardan allí ni en texto plano: SQLite conserva solamente su verificador derivado.
 
-No se utilizará `AsyncStorage` como base principal porque el modelo de AHRE necesita relaciones y consultas estructuradas.
+No se utiliza `AsyncStorage` como base principal porque el modelo de AHRE necesita relaciones y consultas estructuradas.
 
 ## Convenciones de la base de datos
 
-- Los nombres de tablas y campos estarán en español.
-- Se utilizará `snake_case`.
-- No se utilizarán tildes ni caracteres especiales en nombres de tablas o campos.
-- Los identificadores serán textos generados localmente.
-- Los montos utilizarán el campo `monto` sin agregar campos adicionales de centavos.
-- Las fechas se guardarán como texto en formato ISO 8601.
-- Las tablas financieras no se eliminarán físicamente cuando se necesite conservar el historial.
+- Los nombres de tablas y campos están en español.
+- Se utiliza `snake_case`.
+- No se utilizan tildes ni caracteres especiales en nombres de tablas o campos.
+- Los identificadores son textos generados localmente.
+- Los montos utilizan el campo `monto` sin agregar campos adicionales de centavos.
+- Las fechas se guardan como texto en formato ISO 8601.
+- Las tablas financieras no se eliminan físicamente cuando se necesite conservar el historial.
 
 Ejemplos:
 
@@ -109,7 +103,7 @@ Guarda las preferencias básicas del usuario.
 | `fecha_creacion` | `TEXT` | Fecha de creación. |
 | `fecha_actualizacion` | `TEXT` | Última modificación. |
 
-Cada usuario tendrá como máximo un registro de preferencias.
+Cada usuario tiene como máximo un registro de preferencias.
 El registro local crea las preferencias en la misma transacción que el usuario
 y su verificador. `deposito_predeterminado_id` comienza en `NULL` y
 `notificaciones_activas` en `1`, `idioma` en `es` y `apariencia` en `sistema`.
@@ -256,10 +250,7 @@ Representa el traspaso de dinero entre dos depósitos del mismo usuario.
 
 Cada transferencia genera dos movimientos relacionados mediante `transferencia_id`:
 
-```text
-depósito origen  → transferencia_salida
-depósito destino → transferencia_entrada
-```
+El depósito de origen recibe `transferencia_salida` y el depósito de destino recibe `transferencia_entrada`.
 
 La transferencia no representa un ingreso o egreso real del usuario ni mueve
 dinero fuera de AHRE. Registra el traspaso y actualiza los saldos de los dos
@@ -308,8 +299,7 @@ participaciones, deudas propias y un registro común de pagos.
 | pagos_sociales | Compras, entregas de partes y pagos de deudas manuales, sin copiar filas al cerrar. |
 
 El [contrato de Social](social.md) detalla campos, índices, restricciones y
-responsabilidades de los servicios. Los [diagramas exclusivos de Social](../diagramas/social/README.md)
-explican los recorridos y las relaciones de estas tablas.
+responsabilidades de los servicios.
 
 Una compra pagada por Vos exige un egreso completo. Una compra pagada por otra
 persona no utiliza tus depósitos. Las entregas propias generan o vinculan un
@@ -338,58 +328,18 @@ Una transferencia entre depósitos no se registra como un ingreso o egreso
 personal. Se registra como una operación propia con un depósito de origen y uno
 de destino.
 
-```text
-seleccionar depósito de origen
-→ seleccionar depósito de destino
-→ ingresar monto
-→ crear transferencia
-→ crear egreso de transferencia en el origen
-→ crear ingreso de transferencia en el destino
-→ actualizar ambos saldos
-```
+Después de seleccionar origen, destino y monto, se crea la transferencia junto con un egreso en el origen y un ingreso en el destino. La operación actualiza ambos saldos.
 
-```text
-Depósito A
-    │ transferencia_salida: $500
-    ▼
-Depósito B
-    ▲ transferencia_entrada: $500
-```
+Por ejemplo, transferir $500 del depósito A al depósito B registra una salida de $500 en A y una entrada de $500 en B.
 
-## Flujo general offline-first
-
-```mermaid
-flowchart TD
-    A[Usuario realiza una acción] --> B[Pantalla]
-    B --> C[Validación de datos]
-    C --> D[Repositorio de la entidad]
-    D --> E[Base de datos SQLite]
-    E --> F[Actualización de saldos o estados]
-    F --> G[Actualización de la interfaz]
-
-    E -. La aplicación puede trabajar sin Internet .-> E
-    E -. Sincronización futura .-> H[Backend]
-```
 
 ## Flujo de un movimiento
 
-```text
-usuario completa el formulario
-→ se valida el tipo, monto, depósito y categoría
-→ se crea el movimiento local
-→ se actualiza el saldo calculado
-→ la pantalla consulta los datos actualizados
-```
+Al completar el formulario se validan tipo, monto, depósito y categoría. Se crea el movimiento local, se actualiza el saldo calculado y la pantalla consulta los datos actualizados.
 
 ## Flujo de una deuda
 
-```text
-se registra la deuda
-→ se guarda el monto total
-→ se registran pagos parciales o totales
-→ se calcula el monto pendiente
-→ se actualiza el estado de la deuda
-```
+Al registrar una deuda se guarda su monto total. Los pagos parciales o totales permiten calcular el pendiente y actualizar su estado.
 
 ## Reglas de eliminación
 
@@ -419,15 +369,9 @@ se compensan movimientos automáticamente por cambiar ese estado.
 
 ## Acceso a la base de datos
 
-Las pantallas no ejecutarán consultas SQL directamente. La comunicación seguirá esta separación:
+Las pantallas no ejecutan consultas SQL directamente. La comunicación sigue esta separación:
 
-```text
-pantalla
-→ repositorio
-→ SQLite
-→ resultado
-→ actualización de la interfaz
-```
+La pantalla llama al servicio de dominio, que utiliza el repositorio para operar sobre SQLite. El resultado permite actualizar la interfaz.
 
 La estructura actual separa el esquema y sus repositorios:
 
@@ -451,7 +395,7 @@ src/database/
 Los repositorios sociales usan el esquema actual. Los servicios coordinan
 validaciones y transacciones, sin SQL dentro de las pantallas.
 
-Las categorías predefinidas se mantendrán en `src/constants/` porque no son
+Las categorías predefinidas se mantienen en `src/constants/` porque no son
 datos almacenados en una tabla.
 
 Los repositorios financieros conservan sus reglas de saldo. Social los utiliza
@@ -464,3 +408,5 @@ La primera versión de SQLite conserva este modelo y sus tablas. Las categorías
 continúan como catálogos constantes del código y no se almacenan en una tabla;
 la implementación y las restricciones efectivas se detallan en
 [`implementacion.md`](implementacion.md).
+
+La [validación actual](../estado-y-validacion.md) distingue lo probado en Node y en Expo Go.

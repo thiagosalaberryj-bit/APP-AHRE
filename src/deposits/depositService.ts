@@ -8,7 +8,6 @@ import {
   validarDatosDeposito,
   validarDatosEdicionDeposito,
 } from '../utils/depositValidation';
-import { DatosDeposito } from '../types/forms';
 
 const MENSAJES_ERROR: Readonly<Record<string, string>> = Object.freeze({
   datos_invalidos: 'Revisá los campos marcados antes de continuar.',

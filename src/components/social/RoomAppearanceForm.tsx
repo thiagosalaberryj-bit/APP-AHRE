@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import type { NombreIcono } from '../../constants/movimientos';
 import { useEffect, useState } from 'react';
 import { COLORES_DEPOSITOS, COLOR_ICONO_DEPOSITO } from '../../styles/colors';

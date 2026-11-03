@@ -9,10 +9,10 @@ conversión de bases anteriores ni inserción automática de ejemplos.
 
 Los repositorios y los formularios ya utilizan este contrato mediante los
 servicios de `src/social/`. Las escrituras, cierres y pagos se prueban contra
-SQLite real en memoria; queda pendiente comprobarlos en Expo Go en dispositivo.
+SQLite real en memoria; el líder confirmó los recorridos funcionales en Expo Go.
+Ver [Estado y validación](../estado-y-validacion.md) para su alcance.
 
-Los [diagramas](../diagramas/social/README.md) explican los recorridos y la
-[especificación funcional](../funcionalidades/social.md) define las reglas que
+La [especificación funcional](../funcionalidades/social.md) define las reglas que
 ejecutan los servicios.
 
 ## Convenciones

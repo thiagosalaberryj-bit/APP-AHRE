@@ -5,10 +5,7 @@
 La pantalla existente de Perfil administra localmente la información del
 usuario autenticado y sus preferencias. Los cambios se guardan primero en SQLite y generan pendientes para SERVER-AHRE. Cambiar la contraseña y desvincular la instalación requieren conexión.
 
-```text
-Perfil → consultar usuario y preferencias → editar o guardar preferencias
-Perfil → confirmar cierre de sesión → eliminar solo la sesión → Login
-```
+Perfil consulta el usuario y sus preferencias para permitir editarlos o guardarlos. Confirmar el cierre elimina solo la sesión local y vuelve a Login.
 
 ## Usuario actual
 

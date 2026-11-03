@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FormularioPersona from './PersonForm';

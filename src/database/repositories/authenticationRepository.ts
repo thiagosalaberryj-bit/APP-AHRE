@@ -1,4 +1,4 @@
-import type { Conexion, Tablas } from '../types';
+import type { Tablas } from '../types';
 import { ejecutarConConexion, ejecutarLecturaConConexion } from '../connectionQueue';
 import { ErrorBaseDatos, ejecutarConManejoDeErrores } from '../errors';
 import { generarIdentificador } from '../identifiers';

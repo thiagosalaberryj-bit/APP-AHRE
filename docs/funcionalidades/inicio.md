@@ -9,14 +9,7 @@ lectura no valida la sesión. La aplicación no decide durante el arranque si
 debe abrir Login o el Dashboard. La sesión se valida cuando la persona completa
 el deslizador.
 
-```text
-abrir AHRE
-→ inicializar SQLite
-→ cargar apariencia recordada, si existe
-→ permanecer en Inicio
-→ deslizar para iniciar
-→ consultar la sesión local
-```
+Al abrir AHRE se inicializa SQLite, se carga la apariencia recordada y se permanece en Inicio. Al deslizar se consulta la sesión local.
 
 La funcionalidad es local y funciona sin conexión. La carga posterior a la
 huella es una pantalla completa dentro de la ruta existente de Inicio; no agrega
@@ -45,12 +38,7 @@ cambiar el tema en ese momento.
 - Si falla SecureStore o una consulta local, se muestra un aviso y se puede
   volver a deslizar. Un error de lectura no se interpreta como falta de sesión.
 
-```text
-Inicio → deslizar → sin sesión → Login
-Inicio → deslizar → sesión válida → huella correcta
-       → pantalla de carga con barra animada durante 1,5 segundos → Dashboard
-Inicio → deslizar → huella cancelada o incorrecta → Inicio
-```
+Sin sesión, deslizar abre Login. Con una sesión válida, la huella correcta permite mostrar la carga animada durante 1,5 segundos y abrir Dashboard. Cancelar o fallar la huella conserva Inicio.
 
 La pantalla de carga aparece solo después de validar la huella. El logo completo
 queda fijo mientras la barra inferior verde brillante avanza. La fila sobre la

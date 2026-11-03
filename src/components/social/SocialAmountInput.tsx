@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useState } from 'react';
 import EntradaMonto from '../MoneyInput';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';

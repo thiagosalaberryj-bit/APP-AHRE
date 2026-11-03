@@ -4,10 +4,7 @@
 
 AHRE registra y autentica cuentas mediante SERVER-AHRE y conserva en SQLite un verificador para ingresos offline posteriores. El registro y la primera autorización necesitan conexión. Solo una instalación por cuenta puede sincronizar. No incluye verificación de correo, OAuth ni recuperación de contraseña.
 
-```text
-Registro → validar → registrar y autorizar en servidor → crear cuenta local → Login
-Login → autenticar con servidor o validar acceso offline autorizado → sesión → Dashboard
-```
+El registro valida los datos, registra y autoriza la cuenta en el servidor y crea la cuenta local antes de volver a Login. El acceso autentica con el servidor o valida el acceso offline autorizado; después crea la sesión y abre Dashboard.
 
 ## Registro y validación
 
@@ -28,7 +25,7 @@ el hash, nunca la contraseña ni su confirmación. El uso de esta dependencia y
 de SecureStore está detallado en
 [`docs/configuracion/dependencias.md`](../configuracion/dependencias.md).
 
-Las cuentas de desarrollo creadas con un formato de verificador anterior no se convierten y no pueden autenticarse con este formato. Antes de probar esta versión, se descartan los datos locales de desarrollo y se crea la cuenta nuevamente. No se agrega código de transición para conservar esos verificadores.
+Las cuentas de desarrollo creadas con un formato de verificador anterior no se convierten y no pueden autenticarse con este formato. Si se necesita probar un cambio de ese formato, solo pueden descartarse datos sintéticos locales de desarrollo; las etapas actuales no requieren borrar datos. No se agrega código de transición para conservar esos verificadores.
 
 ## Datos locales y preferencias
 

@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, View, Text, ScrollView } from 'react-native';
 import { generarIdentificador } from '../../database/identifiers';

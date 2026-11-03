@@ -1,4 +1,4 @@
-import { SetStateAction, useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as AutenticacionLocal from 'expo-local-authentication';

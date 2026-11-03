@@ -11,30 +11,7 @@ queda fuera de este Issue.
 `src/screens/ProfileScreen.tsx` es secundaria con `EncabezadoSeccion`
 («Perfil») y contenido desplazable con `KeyboardAvoidingView`:
 
-```text
-Perfil
-│
-├── Usuario
-│   ├── Foto a la izquierda; nombre completo, correo y registro a su lado
-│   ├── Cambiar foto / Quitar foto → selector o avatar con iniciales
-│   └── Editar perfil → verificar con huella o contraseña → modal
-│
-├── Preferencias
-│   ├── Idioma → modal
-│   ├── Notificaciones → switch
-│   ├── Apariencia → opciones
-│   └── Restablecer apariencia → tema del dispositivo
-│
-├── Cuenta
-│   └── Cambiar contraseña → modal
-│
-├── Ajustes avanzados
-│   ├── Cuenta fantasma / Seguridad / Registro → próximamente
-│   └── Acerca de AHRE → modal
-
-└── Sesión
-    └── Cerrar sesión → confirmación, al final de la pantalla
-```
+Perfil reúne Usuario, Preferencias, Cuenta, Ajustes avanzados y Sesión. Usuario presenta la foto junto al nombre, correo y registro; permite cambiar o quitar la foto y verificar la identidad antes de editar el perfil. Preferencias ofrece idioma, notificaciones, apariencia y restablecimiento al tema del dispositivo. Cuenta permite cambiar la contraseña. Ajustes avanzados muestra las opciones futuras y Acerca de AHRE. Cerrar sesión abre una confirmación al final de la pantalla.
 
 Se abre desde el botón de Perfil del Dashboard. La flecha del encabezado
 vuelve atrás. Los estilos locales están en
@@ -130,7 +107,7 @@ avanzar con el teclado; los errores se marcan junto al campo correspondiente.
 Grupo `Ajustes avanzados` con los apartados `Cuenta fantasma`, `Seguridad` y
 `Registro` desactivados con la etiqueta `Próximamente`, y `Acerca de AHRE`,
 que abre un modal estático con el encabezado común, una descripción de las
-funciones de AHRE, la versión (`1.0.0`) alineada a la derecha y una `X` para
+funciones de AHRE, un texto fijo de versión (`1.0.0`) alineado a la derecha y una `X` para
 cerrar. No incluye exportar ni borrar datos: cualquier acción avanzada real
 será otro Issue.
 
@@ -147,7 +124,7 @@ será otro Issue.
 
 ## Decisiones de diseño
 
-- Se reutilizan `SectionHeader`, `Toggle`, `PrimaryButton` y `ErrorMessage`
+- Se reutilizan `SectionHeader`, `Toggle` y `PrimaryButton`
   sin modificarlos.
 - Los modales usan overlay con backdrop para cerrar y tarjeta con sombra,
   como el resto de la app. Sus encabezados mantienen el icono, título y
@@ -171,3 +148,7 @@ local hasta volver a autenticarse: no se asume que el servidor rechazó la petic
 Ante `perfil_correo_duplicado`, Sincronización ofrece Corregir en Perfil y luego Aplicar correo corregido. La confirmación muestra el correo rechazado y el actual. Cancelar conserva la cola. La reparación requiere conexión, misma cuenta, generación y revisión, y una vista previa vigente. Si la cola cambió, debe confirmarse otra vez.
 
 Solo se modifica el correo en eventos de perfil no confirmados. Se conservan nombres, IDs, secuencias y eventos financieros, y se respaldan los originales. Los rechazos financieros, las revocaciones y los timeouts sin rechazo definitivo no habilitan esta acción. Una respuesta perdida se reintenta con el mismo contenido.
+
+La versión fija de «Acerca de AHRE» no coincide con 0.5.0 de los manifiestos.
+Se registra como limitación en [Estado y validación](../estado-y-validacion.md);
+la etapa de documentación no modifica esa pantalla.
