@@ -17,7 +17,7 @@ el historial de sus entregas; no se reescriben desde una implementación.
 | 6 · Social en la app | Consultas sin escrituras tras preparar identidad, adelantos agrupados y formateadores reutilizados. |
 | 7 · Limpieza y dependencias | Archivos/imports/CSS sin uso retirados; grupo de formularios retirado con autorización. |
 | 8 · Documentación | Guías y README; sin cambios funcionales ni despliegue ejecutado por el agente. |
-| 9 · Integración final | Pendiente: revisión de ambos repositorios y preparación de integración en main. |
+| 9 · Integración final | Revisión técnica local aprobada; publicación, revisión del PR y merge pendientes. |
 
 El líder confirmó los recorridos manuales de las etapas 2 a 7 en Expo Go,
 incluidos correo, depósito nuevo, reconexión, Social y la prueba rápida tras
@@ -25,6 +25,10 @@ retirar dependencias. Son confirmaciones funcionales del recorrido solicitado,
 no una matriz exhaustiva de dispositivos, accesibilidad o rendimiento.
 
 ## Evidencia automatizada más reciente
+
+La etapa 9 volvió a aprobar tipos e integración: 158 pruebas de la app y 45
+del backend, sin fallos ni omisiones. Ver el [informe final](revision-final.md).
+La exportación Android y la auditoría npm siguientes corresponden a la etapa 7.
 
 Después de la retirada autorizada de paquetes en la etapa 7:
 

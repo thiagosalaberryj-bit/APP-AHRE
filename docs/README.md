@@ -12,6 +12,8 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 - [Compilar y publicar Android](configuracion/publicacion.md).
 - [Dependencias y auditoría](configuracion/dependencias.md).
 
+- [Revisión final e integración](revision-final.md).
+
 ## Arquitectura
 
 | Documento | Guía |
