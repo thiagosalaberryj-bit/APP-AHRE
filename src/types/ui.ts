@@ -45,5 +45,5 @@ export interface ToggleProps { tema: Tema; valor: boolean; alCambiar: (valor: bo
 export interface AvisoProps { duracion: number; mensaje: string; onDismiss: () => void; tipo: 'error' | 'exito' | 'informacion'; margenSuperior: number; }
 export type Frecuencia = { id: string; nombre: string };
 export interface RecurrenciaProps { tema: Tema; estilosMovimiento: EstilosMovimiento; valor: boolean; alCambiar: (valor: boolean) => void; frecuencias: readonly Frecuencia[]; frecuenciaSeleccionada: string; alCambiarFrecuencia: (id: string) => void; }
-export interface TarjetaMovimientoProps { tema: Tema; estilos: Estilos; movimiento: import('./forms').MovimientoVisible; alPresionar: (movimiento: import('./forms').MovimientoVisible, categoria: Partial<Categoria>) => void; soloHora?: boolean; }
+export interface TarjetaMovimientoProps { tema: Tema; movimiento: import('./forms').MovimientoVisible; alPresionar?: (movimiento: import('./forms').MovimientoVisible, categoria: Partial<Categoria>) => void; soloHora?: boolean; }
 export interface Notificacion { id: string; titulo: string; descripcion: string; fechaHora: string; tipo: string; icono: NombreIcono; leida?: boolean; }

@@ -343,11 +343,6 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     movimientosDia: {
       gap: ESPACIADO.pequeno,
     },
-    esqueletoMovimiento: {
-      height: 64,
-      borderRadius: BORDES.radios.campo,
-      backgroundColor: tema.fondoDeshabilitado,
-    },
     filaMovimiento: {
       minHeight: 72,
       flexDirection: 'row',

@@ -131,11 +131,6 @@ export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
       fontSize: TIPOGRAFIA.tamanos.secundario,
       textAlign: 'center',
     },
-    lineaCarga: {
-      height: 16,
-      backgroundColor: tema.borde,
-      borderRadius: BORDES.radios.campo,
-    },
     fondoSuperpuesto: {
       flex: 1,
       alignItems: 'center',

@@ -6,12 +6,6 @@ import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
 export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
   const columnasCategoriasFiltro = anchoVentana >= 420 ? 4 : 3;
   const anchoCategoriaFiltro = columnasCategoriasFiltro === 4 ? '22.5%' : '30%';
-  const estiloTextoCategoriaDescripcion = {
-    color: tema.textoPrincipal,
-    fontFamily: TIPOGRAFIA.familias.principal,
-    fontSize: TIPOGRAFIA.tamanos.secundario,
-    fontWeight: TIPOGRAFIA.pesos.seminegrita,
-  };
 
   return StyleSheet.create({
     contenido: {
@@ -408,77 +402,6 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
     movimientosDia: {
       gap: ESPACIADO.pequeno,
     },
-    filaMovimiento: {
-      minHeight: 72,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: ESPACIADO.medio,
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
-      borderRadius: BORDES.radios.tarjeta,
-      borderWidth: BORDES.anchos.fino,
-      padding: ESPACIADO.medio,
-    },
-    filaPresionada: {
-      opacity: 0.85,
-    },
-    iconoMovimiento: {
-      width: 48,
-      height: 48,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: BORDES.radios.circular,
-    },
-    detalleMovimiento: {
-      flex: 1,
-      minWidth: 0,
-      gap: ESPACIADO.minimo,
-    },
-    filaCategoriaDescripcion: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      minWidth: 0,
-      gap: ESPACIADO.minimo,
-    },
-    categoriaMovimiento: {
-      ...estiloTextoCategoriaDescripcion,
-      flexShrink: 1,
-      maxWidth: '40%',
-    },
-    separadorMetadatos: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-    },
-    descripcionEnLinea: {
-      flex: 1,
-      minWidth: 0,
-      maxWidth: '100%',
-      ...estiloTextoCategoriaDescripcion,
-    },
-    nombreMovimiento: {
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    metaMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-    },
-    tipoMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    montoMovimiento: {
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
     estadoVacio: {
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
@@ -511,11 +434,6 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    lineaCarga: {
-      height: 16,
-      backgroundColor: tema.borde,
-      borderRadius: BORDES.radios.campo,
     },
     tarjetaDeposito: {
       gap: ESPACIADO.minimo,

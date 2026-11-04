@@ -1,7 +1,7 @@
 import type { Tema } from '../colors';
 import { StyleSheet } from 'react-native';
-import { BORDES, ESPACIADO } from '../globalStyles';
-export default function crearEstilosMarco(tema: Tema, margenInferior = 0) {
+import { ESPACIADO } from '../globalStyles';
+export default function crearEstilosMarco(_tema: Tema, margenInferior = 0) {
   return StyleSheet.create({
     expandir: {
       flex: 1
@@ -25,11 +25,6 @@ export default function crearEstilosMarco(tema: Tema, margenInferior = 0) {
     contenidoGasto: {
       paddingHorizontal: ESPACIADO.grande,
       gap: ESPACIADO.medio
-    },
-    lineaCarga: {
-      backgroundColor: tema.borde,
-      borderRadius: BORDES.radios.campo,
-      height: 20
     }
   });
 }

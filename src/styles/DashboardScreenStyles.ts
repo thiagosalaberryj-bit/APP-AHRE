@@ -68,10 +68,6 @@ export function crearEstilosDashboard(tema: Tema) {
     montoBalance: {
       fontSize: 28,
     },
-    lineaCargaBalance: {
-      height: 30,
-      width: 150,
-    },
     accionesRapidas: {
       flexDirection: 'row',
       gap: ESPACIADO.pequeno,
@@ -194,79 +190,8 @@ export function crearEstilosDashboard(tema: Tema) {
     movimientosDia: {
       gap: ESPACIADO.pequeno,
     },
-    filaMovimiento: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: ESPACIADO.medio,
-      minHeight: 72,
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
-      borderRadius: BORDES.radios.tarjeta,
-      borderWidth: BORDES.anchos.fino,
-      padding: ESPACIADO.medio,
-    },
-    iconoMovimiento: {
-      alignItems: 'center',
-      borderRadius: BORDES.radios.circular,
-      height: 48,
-      justifyContent: 'center',
-      width: 48,
-    },
-    filaCategoriaDescripcion: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: ESPACIADO.minimo,
-      minWidth: 0,
-    },
-    categoriaMovimiento: {
-      color: tema.textoPrincipal,
-      flexShrink: 1,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      maxWidth: '40%',
-    },
-    descripcionMovimiento: {
-      flex: 1,
-      maxWidth: '100%',
-      minWidth: 0,
-    },
-    separadorMetadatos: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-    },
-    metaMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-    },
-    tipoMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    montoMovimiento: {
-      color: tema.textoPrincipal,
-      flexShrink: 0,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      textAlign: 'right',
-    },
     elementoPresionado: {
       opacity: 0.82,
-    },
-    estadoCarga: {
-      gap: ESPACIADO.grande,
-      padding: ESPACIADO.grande,
-    },
-    lineaCarga: {
-      backgroundColor: tema.fondoDeshabilitado,
-      borderRadius: BORDES.radios.circular,
-      height: 14,
-      width: '68%',
     },
     estadoVacio: {
       alignItems: 'stretch',

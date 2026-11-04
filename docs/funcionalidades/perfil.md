@@ -71,7 +71,7 @@ usuario para el próximo inicio de sesión.
 
 ## Estados y errores
 
-- **Cargando:** skeleton mientras se consulta el usuario y sus preferencias.
+- **Cargando:** consulta el usuario y sus preferencias sin mostrar esqueletos.
 - **Guardando:** el botón de edición muestra «Procesando…» y bloquea envíos
   repetidos.
 - **Error:** se conservan los errores junto a los campos y se utiliza el toast

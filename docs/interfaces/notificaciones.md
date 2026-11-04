@@ -66,8 +66,8 @@ compartido).
 
 ## Estado vacío y estado de carga
 
-- **Cargando:** skeleton de 3 líneas (~1 segundo simulado) con texto
-  `Buscando avisos...`.
+- **Carga:** los avisos de muestra disponibles se presentan directamente, sin
+  esqueletos, temporizadores ni mensajes de búsqueda simulada.
 - **Vacío:** tarjeta con ícono y `No tenés notificaciones.`
 - La lista soporta ninguna, pocas o muchas notificaciones con scroll
   vertical.

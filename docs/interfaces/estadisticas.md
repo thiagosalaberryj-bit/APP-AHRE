@@ -63,7 +63,11 @@ Si el período está vacío, se informa «No hay movimientos en este período» 
 lista no muestra filas ficticias.
 
 Los detalles y gráficos se vuelven a consultar al recuperar el foco de la
-pantalla. Toda la información procede de la base local y funciona sin conexión;
+pantalla, conservando los datos visibles si no cambió la consulta. La carga
+inicial no muestra textos intermedios de «Buscando movimientos locales»; los
+gráficos aparecen al completar la lectura. Al cambiar el período o el tipo se
+retiran los resultados anteriores para no mostrarlos bajo un filtro distinto.
+Toda la información procede de la base local y funciona sin conexión;
 no se usan datos de muestra ni servicios externos.
 
 Las listas dejan espacio al final del desplazamiento para que la última fila

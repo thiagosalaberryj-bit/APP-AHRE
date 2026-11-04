@@ -722,6 +722,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [indiceColumnaSeleccionada, establecerIndiceColumnaSeleccionada] = useState(0);
   const [estadisticas, establecerEstadisticas] = useState<{ resumen: { categorias: { categoria: string; total: number; cantidad: number; }[]; total: number; cantidad: number; }; columnas: { periodo: string; categoria: string; total: number; }[]; } | null>(null);
   const [estadoCarga, establecerEstadoCarga] = useState('cargando');
+  const ultimaConsultaCompletada = useRef<string|null>(null);
   const [intentoCarga, establecerIntentoCarga] = useState(0);
 
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
@@ -749,8 +750,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
   useFocusEffect(useCallback(() => {
     let vigente = true;
-    establecerEstadoCarga('cargando');
-    establecerEstadisticas(null);
+    const claveConsulta = JSON.stringify({tipoMovimiento,rangoResumen,rangoColumnas,modoColumnas});
+    if (ultimaConsultaCompletada.current !== claveConsulta) {
+      establecerEstadoCarga('cargando');
+      establecerEstadisticas(null);
+    }
     cargarEstadisticas({
       tipo: tipoMovimiento,
       rangoResumen,
@@ -758,6 +762,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
       agrupacionColumnas: modoColumnas === 'semana' ? 'dia' : 'mes',
     }).then((resultado) => {
       if (!vigente) return;
+      ultimaConsultaCompletada.current = claveConsulta;
       establecerEstadisticas(resultado);
       establecerEstadoCarga('listo');
     }).catch(() => {
@@ -1046,9 +1051,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                   <Text style={estilos.subtituloGrafico}>{tituloResumen}</Text>
                 </View>
                 <View style={estilos.contenedorGraficoCircular}>
-                  {estadoCarga === 'cargando' ? (
-                    <Text style={estilos.textoSinCategorias}>Buscando movimientos locales...</Text>
-                  ) : estadoCarga === 'error' ? (
+                  {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
                     <Pressable
                       accessibilityRole="button"
                       onPress={() => establecerIntentoCarga((intento) => intento + 1)}
@@ -1079,9 +1082,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                   <Text style={estilos.tituloGrafico}>{seccionesGrafico[1].titulo}</Text>
                   <Text style={estilos.subtituloGrafico}>{tituloColumnas}</Text>
                 </View>
-                {estadoCarga === 'cargando' ? (
-                  <Text style={estilos.textoSinCategorias}>Buscando movimientos locales...</Text>
-                ) : estadoCarga === 'error' ? (
+                {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => establecerIntentoCarga((intento) => intento + 1)}
@@ -1125,9 +1126,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
             {indiceGrafico === 0 ? (
               <>
                 <View style={estilos.detalleSeleccion}>
-                  {estadoCarga === 'cargando' ? (
-                    <Text style={estilos.textoDetalleSeleccion}>Buscando movimientos locales...</Text>
-                  ) : estadoCarga === 'error' ? (
+                  {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
                     <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
                   ) : !hayMovimientosResumen ? (
                     <Text style={estilos.textoDetalleSeleccion}>No hay movimientos en el período seleccionado.</Text>
@@ -1177,9 +1176,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
               </>
             ) : (
               <View style={estilos.detalleColumna}>
-                {estadoCarga === 'cargando' ? (
-                  <Text style={estilos.textoDetalleSeleccion}>Buscando movimientos locales...</Text>
-                ) : estadoCarga === 'error' ? (
+                {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
                   <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
                 ) : !hayDatosColumnas ? (
                   <Text style={estilos.textoDetalleSeleccion}>No hay movimientos en el período seleccionado.</Text>

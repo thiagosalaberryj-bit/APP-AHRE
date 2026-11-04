@@ -466,13 +466,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
         >
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={estilos.contenido}>
-              {cargandoInfo ? (
-                <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
-                  <View style={estilos.lineaCarga} />
-                  <View style={estilos.lineaCarga} />
-                  <View style={estilos.lineaCarga} />
-                </View>
-              ) : errorCarga ? (
+              {cargandoInfo ? null : errorCarga ? (
                 <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
                   <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{errorCarga}</Text>
                   <Pressable

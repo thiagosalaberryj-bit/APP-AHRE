@@ -3,11 +3,12 @@ import { Pressable, Text, View } from 'react-native';
 
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { COLORES_ESTADO } from '../styles/colors';
+import {crearEstilosTarjetaMovimiento} from '../styles/MovementCardStyles';
 
 function formatearMontoLista(monto: number, tipo: string) {
   if (typeof monto !== 'number') return '—';
   const valor = `$${monto.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
-  return tipo === 'ingreso' ? `+${valor}` : `-${valor}`;
+  return tipo === 'ingreso' || tipo === 'transferencia_entrada' ? `+${valor}` : `-${valor}`;
 }
 
 function formatearFechaLista(fechaISO: string|number|Date, soloHora = false) {
@@ -24,54 +25,33 @@ function formatearFechaLista(fechaISO: string|number|Date, soloHora = false) {
   return `${dia} · ${hora}`;
 }
 
-export default function TarjetaMovimiento({ tema, estilos, movimiento, alPresionar, soloHora = false }: import('../types/ui').TarjetaMovimientoProps) {
-  const esIngreso = movimiento.tipo === 'ingreso';
+export default function TarjetaMovimiento({ tema, movimiento, alPresionar, soloHora = false }: import('../types/ui').TarjetaMovimientoProps) {
+  const estilos = crearEstilosTarjetaMovimiento(tema);
+  const esIngreso = movimiento.tipo === 'ingreso' || movimiento.tipo === 'transferencia_entrada';
+  const esTransferencia = movimiento.tipo.startsWith('transferencia_');
   const catalogo = esIngreso ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
-  const categoria: Partial<(typeof CATEGORIAS_EGRESO)[number]> = catalogo.find((item) => item.id === movimiento.categoria) || {};
-  const deposito = { nombre: movimiento.deposito_nombre || '' };
-  const colorTipo = esIngreso ? COLORES_ESTADO.ingreso : COLORES_ESTADO.egreso;
-  const nombreCategoria = categoria.nombre || movimiento.categoria;
-  const fechaMovimiento = formatearFechaLista(movimiento.fecha_hora, soloHora);
-  const metadatosMovimiento = soloHora
-    ? `${fechaMovimiento} · ${deposito.nombre || ''}`
-    : `${nombreCategoria} · ${fechaMovimiento} · ${deposito.nombre || ''}`;
-
-  return (
-    <Pressable
-      accessibilityLabel={`${esIngreso ? 'Ingreso' : 'Egreso'}: ${movimiento.descripcion}`}
-      accessibilityRole="button"
-      onPress={() => alPresionar(movimiento, categoria)}
-      style={({ pressed: presionado }) => [estilos.filaMovimiento, presionado ? estilos.filaPresionada : null]}
-    >
-      <View style={[estilos.iconoMovimiento, { backgroundColor: colorTipo }]}>
-        <Ionicons color={tema.encabezado} name={categoria.icono || 'swap-horizontal-outline'} size={20} />
+  const categoria: Partial<(typeof CATEGORIAS_EGRESO)[number]> = catalogo.find(item => item.id === movimiento.categoria) || {};
+  const nombreCategoria = esTransferencia ? 'Transferencia' : categoria.nombre || movimiento.categoria;
+  const tipo = esTransferencia ? esIngreso ? 'Transferencia recibida' : 'Transferencia enviada' : esIngreso ? 'Ingreso' : 'Egreso';
+  const fecha = formatearFechaLista(movimiento.fecha_hora, soloHora);
+  const deposito = movimiento.deposito_nombre || movimiento.deposito;
+  const metadatos = [nombreCategoria, deposito, fecha].filter(Boolean).join(' · ');
+  const importe = formatearMontoLista(movimiento.monto, movimiento.tipo);
+  const contenido = <>
+    <View style={[estilos.icono, {backgroundColor:esIngreso?COLORES_ESTADO.ingreso:COLORES_ESTADO.egreso}]}>
+      <Ionicons color={tema.encabezado} name={esTransferencia?'swap-horizontal-outline':categoria.icono || (esIngreso?'arrow-down-outline':'arrow-up-outline')} size={18}/>
+    </View>
+    <View style={estilos.contenido}>
+      <View style={estilos.filaTitulo}>
+        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.titulo}>{movimiento.descripcion || nombreCategoria}</Text>
+        <Text style={estilos.importe}>{importe}</Text>
       </View>
-      <View style={estilos.detalleMovimiento}>
-        {soloHora ? (
-          <View style={estilos.filaCategoriaDescripcion}>
-            <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.categoriaMovimiento}>
-              {nombreCategoria}
-            </Text>
-            <Text style={estilos.separadorMetadatos}>·</Text>
-            <Text
-              ellipsizeMode="tail"
-              numberOfLines={1}
-              style={[estilos.categoriaMovimiento, estilos.descripcionEnLinea]}
-            >
-              {movimiento.descripcion}
-            </Text>
-          </View>
-        ) : (
-          <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.nombreMovimiento}>
-            {movimiento.descripcion}
-          </Text>
-        )}
-        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metaMovimiento}>
-          {metadatosMovimiento}
-        </Text>
-        <Text style={estilos.tipoMovimiento}>{esIngreso ? 'Ingreso' : 'Egreso'}</Text>
-      </View>
-      <Text style={estilos.montoMovimiento}>{formatearMontoLista(movimiento.monto, movimiento.tipo)}</Text>
-    </Pressable>
-  );
+      <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metadatos}>{metadatos}</Text>
+      <Text style={estilos.tipo}>{tipo}</Text>
+    </View>
+  </>;
+  const etiqueta = tipo+': '+movimiento.descripcion+'. '+importe+'. '+metadatos;
+  return alPresionar ? <Pressable accessibilityLabel={etiqueta} accessibilityRole="button" onPress={()=>alPresionar(movimiento,categoria)}
+    style={({pressed:presionado})=>[estilos.tarjeta,presionado&&estilos.presionada]}>{contenido}</Pressable>
+    : <View accessible accessibilityLabel={etiqueta} style={estilos.tarjeta}>{contenido}</View>;
 }

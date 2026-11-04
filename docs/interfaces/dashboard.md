@@ -69,6 +69,13 @@ representan su categoría, descripción, hora, depósito, tipo, monto e icono de
 categoría. Las transferencias entrantes se muestran como ingresos y las
 salientes como egresos. Los movimientos anulados no se incluyen.
 
+Inicio reutiliza `TarjetaMovimiento` (`src/components/MovementCard.tsx`), igual
+que la pestaña Movimientos: descripción e importe en la primera fila, metadatos
+debajo e icono compacto. Los importes conservan los centavos. Los estilos viven
+en `src/styles/MovementCardStyles.ts`; las tarjetas de Inicio siguen siendo
+informativas y las de Movimientos abren el detalle. Inicio conserva sus grupos
+por día y el límite de cinco movimientos recientes.
+
 Si la consulta no devuelve movimientos, se muestra un icono y un mensaje de
 estado vacío. «Ver todos» y la flecha del balance abren la pestaña Movimientos.
 
@@ -76,7 +83,8 @@ estado vacío. «Ver todos» y la flecha del balance abren la pestaña Movimient
 
 Al abrir el Dashboard o cuando vuelve a tomar el foco, la pantalla vuelve a
 consultar la sesión y la información financiera. En la primera consulta muestra
-los esqueletos ya maquetados; al volver a tomar el foco conserva los datos
+el balance como «—» hasta obtenerlo y agrega las listas al recibir los datos,
+sin esqueletos. Al volver a tomar el foco conserva los datos
 visibles mientras espera la actualización. Si falla una consulta, se muestra
 un aviso y un estado con la acción «Reintentar»; la ausencia de depósitos o
 movimientos no se trata como error.

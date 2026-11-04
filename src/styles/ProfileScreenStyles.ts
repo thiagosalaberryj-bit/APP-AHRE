@@ -477,11 +477,6 @@ export function crearEstilosPerfil(tema: Tema) {
     textoProcesando: {
       color: tema.textoSecundario,
     },
-    lineaCarga: {
-      height: 16,
-      backgroundColor: tema.borde,
-      borderRadius: BORDES.radios.campo,
-    },
   });
   return { ...estilos, colorIndicador: tema.textoSecundario };
 }

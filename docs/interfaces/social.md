@@ -2,6 +2,10 @@
 
 ## Funcionamiento actual
 
+Las pantallas comparten `SocialScreenFrame`: esperan la consulta inicial sin
+esqueletos ni tarjetas de carga y conservan los datos visibles al recuperar el
+foco mientras se actualiza la información local.
+
 Social es un registro personal offline conectado a SQLite. No utiliza cuentas
 remotas, invitaciones ni sincronización. Cada usuario local conserva su agenda,
 salas, ítems, pagos y deudas. El trabajo comenzó con el maquetado del Issue #18;

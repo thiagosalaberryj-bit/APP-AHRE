@@ -255,13 +255,22 @@ botones y modales.
 
 `src/screens/MovementsScreen.tsx` es pestaña con `MainHeader` («Movimientos») y
 consulta SQLite para el usuario de la sesión y agrupa los movimientos vigentes
-por día. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
+por mes y año, con el primer mes abierto inicialmente y los demás plegados, usando el encabezado compartido
+`EncabezadoSeccionPlegable` (`src/components/CollapsibleSectionHeader.tsx`). Cada
+mes se abre o cierra de forma independiente y mantiene la separación por día
+en su interior. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
 `tipo`, no se deduce del monto. Los encabezados muestran «Hoy», «Ayer» o la
 fecha para los días anteriores. Cada tarjeta usa un ícono de categoría y
-presenta `categoría · descripción`, `hora · depósito`, «Ingreso» o «Egreso» y
-el monto con signo. La descripción se recorta cuando no entra; el tipo también
+presenta descripción e importe con signo en la misma fila; debajo, categoría,
+depósito y hora, junto al texto «Ingreso» o «Egreso». La descripción se recorta
+cuando no entra; el tipo también
 se indica con texto, no solo con color. Los estilos locales están en
-`src/styles/MovementsScreenStyles.ts`.
+`src/styles/MovementsScreenStyles.ts`; los estilos de la tarjeta compartida con
+Inicio están en `src/styles/MovementCardStyles.ts`.
+
+La consulta inicial no muestra esqueletos de carga. Al volver a la pestaña se
+conserva el historial visible mientras se actualiza; cada mes puede abrirse o
+cerrarse manualmente sin perder esa elección al cargar otra página.
 
 Las filas reutilizan `TarjetaMovimiento` (`src/components/MovementCard.tsx`) y
 reciben el nombre real del depósito relacionado. SQLite ordena por
@@ -333,7 +342,8 @@ recuperar el foco.
 
 ### Estados vacíos
 
-- **Cargando:** skeleton mientras SQLite devuelve la página solicitada.
+- **Cargando:** espera la consulta de SQLite sin esqueletos; conserva las filas
+  disponibles durante la actualización.
 - **Sin movimientos:** tarjeta vacía cuando la cuenta no tiene ingresos ni
   egresos vigentes.
 - **Sin resultados:** mensaje para la búsqueda o los filtros, con acción para

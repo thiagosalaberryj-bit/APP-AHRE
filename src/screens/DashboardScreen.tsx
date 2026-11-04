@@ -15,35 +15,20 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { consultarSaldoOculto, guardarSaldoOculto } from '../profile/balanceVisibilityService';
 import EncabezadoPrincipal from '../components/MainHeader';
-import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
+import TarjetaMovimiento from '../components/MovementCard';
 import { RUTAS } from '../constants/routes';
 import { depositosRepositorio, movimientosRepositorio } from '../database/repositories';
-import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_ESTADO } from '../styles/colors';
+import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDashboard } from '../styles/DashboardScreenStyles';
 import { Movimiento,Deposito } from '../database/types';
 
 const CANTIDAD_MOVIMIENTOS_RECIENTES = 5;
-const CATEGORIAS_POR_ID = new Map(
-  [...CATEGORIAS_INGRESO, ...CATEGORIAS_EGRESO].map((categoria) => [categoria.id, categoria]),
-);
 const TIPOS_DEPOSITO = Object.freeze({
   efectivo: { nombre: 'Efectivo', icono: 'cash-outline' },
   banco: { nombre: 'Cuenta bancaria', icono: 'business-outline' },
   billetera_virtual: { nombre: 'Billetera virtual', icono: 'phone-portrait-outline' },
 });
-
-function obtenerNombreTipoMovimiento(tipo: string) {
-  if (tipo === 'ingreso') return 'Ingreso';
-  if (tipo === 'egreso') return 'Egreso';
-  if (tipo === 'transferencia_entrada') return 'Transferencia recibida';
-  if (tipo === 'transferencia_salida') return 'Transferencia enviada';
-  return 'Movimiento';
-}
-
-function esMovimientoDeIngreso(tipo: string) {
-  return tipo === 'ingreso' || tipo === 'transferencia_entrada';
-}
 
 function formatearMonto(monto: number) {
   const montoRedondeado = Math.round(Number(monto) || 0);
@@ -52,23 +37,8 @@ function formatearMonto(monto: number) {
 }
 
 function prepararMovimiento(movimiento: import('../database/types').Movimiento, depositosPorId: Map<string,import('../database/types').Deposito>) {
-  const categoria = CATEGORIAS_POR_ID.get(movimiento.categoria);
-  const tipoDeposito = TIPOS_DEPOSITO[depositosPorId.get(movimiento.deposito_id)?.tipo || "efectivo"];
-  const nombreCategoria = categoria?.nombre
-    || String(movimiento.categoria || 'Movimiento').replace(/_/g, ' ');
-  const iconoPorTipo = movimiento.tipo.startsWith('transferencia_')
-    ? 'swap-horizontal-outline'
-    : esMovimientoDeIngreso(movimiento.tipo)
-      ? 'cash-outline'
-      : 'card-outline';
-
-  return {
-    ...movimiento,
-    categoria: nombreCategoria,
-    descripcion: movimiento.descripcion || nombreCategoria,
-    deposito: depositosPorId.get(movimiento.deposito_id)?.nombre || tipoDeposito?.nombre || 'Depósito',
-    icono: categoria?.icono || iconoPorTipo,
-  };
+  const deposito = depositosPorId.get(movimiento.deposito_id);
+  return {...movimiento,deposito_nombre:deposito?.nombre || TIPOS_DEPOSITO[deposito?.tipo || 'efectivo'].nombre};
 }
 
 function formatearFechaDia(fecha: Date) {
@@ -80,10 +50,6 @@ function formatearFechaDia(fecha: Date) {
   if (diferenciaDias === 0) return 'Hoy';
   if (diferenciaDias === 1) return 'Ayer';
   return fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
-}
-
-function formatearHora(fechaHora: string|number|Date) {
-  return new Date(fechaHora).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 }
 
 function agruparMovimientosPorDia(movimientos: ReturnType<typeof prepararMovimiento>[]) {
@@ -247,13 +213,9 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                 <View style={estilos.contenidoBalance}>
                   <View style={estilos.filaBalance}>
                     <View style={estilos.filaSaldo}>
-                      {cargando ? (
-                        <View style={[estilos.lineaCarga, estilos.lineaCargaBalance]} />
-                      ) : (
-                        <Text style={[estilosGlobales.monto, estilos.montoBalance]}>
-                          {errorCarga ? '—' : saldoVisible ? formatearMonto(balance) : '$ •••••••'}
-                        </Text>
-                      )}
+                      <Text style={[estilosGlobales.monto, estilos.montoBalance]}>
+                        {errorCarga || (cargando && !datosCargados.current) ? '—' : saldoVisible ? formatearMonto(balance) : '$ •••••••'}
+                      </Text>
                       <Pressable
                         accessibilityLabel={saldoVisible ? 'Ocultar saldo' : 'Mostrar saldo'}
                         accessibilityRole="button"
@@ -336,13 +298,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                 ) : null}
               </View>
 
-              {cargando ? (
-                <View style={[estilosGlobales.tarjeta, estilos.estadoCarga]}>
-                  <View style={estilos.lineaCarga} />
-                  <View style={estilos.lineaCarga} />
-                  <View style={estilos.lineaCarga} />
-                </View>
-              ) : errorCarga && depositos.length === 0 ? null : depositos.length === 0 ? (
+              {cargando && depositos.length === 0 ? null : errorCarga && depositos.length === 0 ? null : depositos.length === 0 ? (
                 <View style={[estilosGlobales.tarjeta, estilos.estadoVacio]}>
                   <View style={estilos.contenidoEstadoVacio}>
                     <View style={estilos.iconoEstadoVacio}>
@@ -432,13 +388,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                 </Pressable>
               </View>
 
-              {cargando ? (
-                <View style={[estilosGlobales.tarjeta, estilos.estadoCarga]}>
-                  <View style={estilos.lineaCarga} />
-                  <View style={estilos.lineaCarga} />
-                  <View style={estilos.lineaCarga} />
-                </View>
-              ) : errorCarga && movimientos.length === 0 ? null : movimientos.length === 0 ? (
+              {cargando && movimientos.length === 0 ? null : errorCarga && movimientos.length === 0 ? null : movimientos.length === 0 ? (
                 <View style={[estilosGlobales.tarjeta, estilos.estadoVacio]}>
                   <View style={estilos.contenidoEstadoVacio}>
                     <View style={estilos.iconoEstadoVacio}>
@@ -460,43 +410,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                         {formatearFechaDia(grupo.fecha)}
                       </Text>
                       <View style={estilos.movimientosDia}>
-                        {grupo.movimientos.map((movimiento) => {
-                          const esIngreso = esMovimientoDeIngreso(movimiento.tipo);
-                          const colorMovimiento = esIngreso
-                            ? COLORES_ESTADO.ingreso
-                            : COLORES_ESTADO.egreso;
-                          const textoMonto = `${esIngreso ? '+' : '-'}${formatearMonto(movimiento.monto)}`;
-
-                          return (
-                            <View key={movimiento.id} style={estilos.filaMovimiento}>
-                              <View style={[estilos.iconoMovimiento, { backgroundColor: colorMovimiento }]}>
-                                <Ionicons color={tema.encabezado} name={movimiento.icono} size={20} />
-                              </View>
-                              <View style={estilos.detalleElemento}>
-                                <View style={estilos.filaCategoriaDescripcion}>
-                                  <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.categoriaMovimiento}>
-                                    {movimiento.categoria}
-                                  </Text>
-                                  <Text style={estilos.separadorMetadatos}>·</Text>
-                                  <Text
-                                    ellipsizeMode="tail"
-                                    numberOfLines={1}
-                                    style={[estilos.categoriaMovimiento, estilos.descripcionMovimiento]}
-                                  >
-                                    {movimiento.descripcion}
-                                  </Text>
-                                </View>
-                                <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metaMovimiento}>
-                                  {formatearHora(movimiento.fecha_hora)} · {movimiento.deposito}
-                                </Text>
-                                <Text style={estilos.tipoMovimiento}>
-                                  {obtenerNombreTipoMovimiento(movimiento.tipo)}
-                                </Text>
-                              </View>
-                              <Text style={estilos.montoMovimiento}>{textoMonto}</Text>
-                            </View>
-                          );
-                        })}
+                        {grupo.movimientos.map(movimiento => <TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} soloHora/>)}
                       </View>
                     </View>
                   ))}
