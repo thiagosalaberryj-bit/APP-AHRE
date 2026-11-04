@@ -4,6 +4,23 @@ import test from 'node:test';
 import { preparar } from './helpers/localDatabase.ts';
 import { interfazSocial } from './helpers/socialInterface.ts';
 
+for (const tema of ['claro','oscuro'] as const) {
+  test(`el encabezado mensual compartido permite plegar y recuperar las deudas en ${tema}`, async prueba => {
+    const e = await preparar(prueba); await e.prepararDatosPrueba();
+    const vista = interfazSocial(e, tema);
+    await vista.abrir(vista.rutas.PERSONAS_SOCIAL);
+    const encabezado = presente(vista.todos().find(n => n.type === 'Pressable' && (n.props.accessibilityState as {expanded?:boolean})?.expanded === true));
+    const titulo = String(encabezado.props.accessibilityLabel);
+    const cantidadAbierta = vista.todos().length;
+    await vista.pulsar(titulo);
+    assert.equal((vista.buscarBoton(titulo).props.accessibilityState as {expanded:boolean}).expanded, false);
+    assert.ok(vista.todos().length < cantidadAbierta, 'plegar retira las tarjetas del mes');
+    await vista.pulsar(titulo);
+    assert.equal((vista.buscarBoton(titulo).props.accessibilityState as {expanded:boolean}).expanded, true);
+    assert.equal(vista.todos().length, cantidadAbierta);
+  });
+}
+
 test('Gastos omite el acceso de edición rápida y conserva la edición individual sin duplicar ítems', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
   const sala = await e.crearSala({ nombre: 'Edición', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });

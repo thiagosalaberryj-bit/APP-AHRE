@@ -1,6 +1,5 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
-import { SetStateAction, useState } from 'react';
+import { useState } from 'react';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { View, TextInput, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +7,7 @@ import TarjetaResumenDeuda from './DebtSummaryCard';
 import EstadoVacio from './SocialEmptyState';
 import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-import crearEstilosPropios from '../../styles/social/DebtHistoryStyles';
+import EncabezadoSeccionPlegable from '../CollapsibleSectionHeader';
 export default function HistorialDeudas(propiedades: import('../../social/types').AspectoSocial & (Pick<import('../../social/types').AccionesSociales,'abrirRegistro'>)) {
   const {
     obtenerPersona,
@@ -20,8 +19,7 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
   } = {
     ...propiedades,
     estilos: {
-      ...crearEstilosCompartidos(propiedades.tema),
-      ...crearEstilosPropios(propiedades.tema)
+      ...crearEstilosCompartidos(propiedades.tema)
     }
   };
   const {
@@ -94,12 +92,8 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
         const [anio, mes] = grupo.clave.split('-');
         const nombre = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][Number(mes) - 1] + ' ' + anio;
         return <View key={grupo.clave} style={estilos.grupo}>
-              <Pressable accessibilityRole="button" accessibilityLabel={nombre} accessibilityState={{
-            expanded: abierto
-          }} onPress={() => establecerMesesCerrados(anteriores => abierto ? [...anteriores, grupo.clave] : anteriores.filter(clave => clave !== grupo.clave))} style={estilos.encabezadoMesDeudas}>
-                <View style={estilos.textoFlexible}><Text style={estilosGlobales.encabezadoSeccion}>{nombre}</Text><Text style={estilosGlobales.textoSecundario}>{grupo.deudas.filter(deuda => deuda.saldada).length} de {grupo.deudas.length} deudas saldadas</Text></View>
-                <Ionicons color={tema.foco} name={abierto ? 'chevron-up' : 'chevron-down'} size={22} />
-              </Pressable>
+              <EncabezadoSeccionPlegable tema={tema} titulo={nombre} resumen={`${grupo.deudas.filter(deuda => deuda.saldada).length} de ${grupo.deudas.length} deudas saldadas`} expandido={abierto}
+                alAlternar={() => establecerMesesCerrados(anteriores => abierto ? [...anteriores, grupo.clave] : anteriores.filter(clave => clave !== grupo.clave))}/>
               {abierto ? grupo.deudas.map(deuda => <TarjetaResumenDeuda key={deuda.id} deuda={deuda} alAbrir={() => abrirRegistro('detalleDeuda', {
             deudaId: deuda.id
           })} {...aspecto} />) : null}

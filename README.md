@@ -268,6 +268,18 @@ El estado se muestra como un icono de conexión en los encabezados, sin barra
 inferior. Al tocarlo se abre Sincronización, con los registros pendientes de
 la cuenta y una acción para reintentar. Los cambios repetidos del mismo registro
 se agrupan solamente para mostrarlos; el envío conserva todos sus eventos y orden.
+La pantalla reúne estado, cantidad de pendientes y última sincronización exitosa
+de la cuenta en este teléfono. Las tarjetas compactas se agrupan por mes y año,
+con los últimos cambios primero; muestran título e importe en la misma fila,
+según la privacidad del saldo, y debajo la acción y fecha y hora local del último
+cambio. Las tarjetas no se expanden y el resumen evita repetir el aviso de desconexión.
+Los meses comienzan plegados y se abren de forma independiente con el mismo
+encabezado reutilizable del historial de deudas de Social. Cargar más pendientes
+permite consultar las páginas siguientes sin desplegar los meses cerrados.
+La fecha se captura al escribir en el diario local, independientemente de la fecha
+del movimiento. Los pendientes anteriores sin esa información indican fecha no
+disponible. La última sincronización se guarda en SQLite solo al completar un ciclo
+sin pendientes; los errores y las sondas de conexión no la reemplazan.
 El contador se superpone en una esquina sin aumentar el tamaño del botón;
 admite tres dígitos y muestra `...` a partir de 1000 pendientes. El wifi llena
 sus arcos en orden al comprobar la conexión, muestra un loader mientras envía

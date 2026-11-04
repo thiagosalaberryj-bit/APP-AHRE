@@ -56,6 +56,11 @@ su ausencia. Ya no se utiliza el parámetro de demostración sinDeudas.
 
 El historial de deudas busca por nombre, apellido, apodo, descripción y origen.
 Combina Todas/Pendientes/Saldadas y agrupa por mes expandible, con X de Y saldadas.
+El encabezado mensual usa `src/components/CollapsibleSectionHeader.tsx`
+(`EncabezadoSeccionPlegable`), compartido con Sincronización y disponible para
+otras listas. Recibe título, resumen opcional, estado expandido y acción para
+alternarlo; sus estilos están en `src/styles/CollapsibleSectionHeaderStyles.ts`.
+Social conserva sus meses abiertos inicialmente y los reinicia al buscar o filtrar.
 El nombre mantiene elipsis y la fecha queda fija a la derecha de la tarjeta.
 Cada tarjeta abre el detalle de esa deuda. Las canceladas se conservan en SQLite
 pero se retiran del listado visible, como explica su confirmación de eliminación.

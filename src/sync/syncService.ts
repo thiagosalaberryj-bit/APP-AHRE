@@ -109,7 +109,11 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
       }mas=respuesta.mas;
       if(mas&&!respuesta.lotes.length)throw new Error('Paginación remota inválida.');
     }
-    pendientes=await contar();publicar({estado:pendientes?'sincronizando':'online',pendientes});
+    pendientes=await contar();
+    if(!pendientes&&(await obtenerSesionActual()).usuario?.id===usuarioId){
+      await ejecutarConConexion(c=>c.runAsync('INSERT INTO sync_last_success(usuario_id,fecha) VALUES(?,?) ON CONFLICT(usuario_id) DO UPDATE SET fecha=excluded.fecha',[usuarioId,new Date().toISOString()]));
+    }
+    publicar({estado:pendientes?'sincronizando':'online',pendientes});
   } catch(error) {
     if(error instanceof ErrorRemoto&&error.codigo==='pendientes_nuevos')return ejecutar(usuarioId,silenciosa);
     if(error instanceof ErrorRemoto&&['dispositivo_revocado','generacion_distinta'].includes(error.codigo||'')){

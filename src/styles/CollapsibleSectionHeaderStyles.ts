@@ -1,13 +1,14 @@
 import { StyleSheet } from 'react-native';
-import { ESPACIADO } from '../globalStyles';
-export default function crearEstilosPropios(_tema?: unknown) {
+import { ESPACIADO } from './globalStyles';
+export default function crearEstilosEncabezado() {
   return StyleSheet.create({
-    encabezadoMesDeudas: {
+    encabezado: {
       minHeight: 48,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
       paddingVertical: ESPACIADO.pequeno
-    }
+    },
+    textoFlexible: { flex: 1, minWidth: 0, gap: ESPACIADO.minimo }
   });
 }
