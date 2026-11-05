@@ -85,18 +85,32 @@ depósito» y la descripción «Consultá el saldo y los movimientos de este
 depósito». Respeta las áreas seguras superior e inferior; la distribución propia
 de esta pantalla vive en `src/styles/DepositDetailScreenStyles.ts`.
 
-La tarjeta superior presenta de forma compacta el ícono y nombre del depósito;
-debajo muestra la descripción y, a continuación, el tipo separado por un punto
-medio en el mismo texto. Si no hay descripción, muestra solo el tipo. Una línea
-separa esos datos del saldo, que aparece en un número grande con un control para
-ocultarlo o mostrarlo y una etiqueta de comparación mensual breve con la fecha
+La tarjeta superior sigue el estilo del detalle de movimiento: icono de 56 puntos,
+nombre completo y tipo a la izquierda, con el saldo a su derecha sobre fondo
+suave y el importe alineado a la derecha. El icono de ampliación aparece junto
+a «Saldo» cuando el importe visible es largo, como en el detalle de movimiento.
+Las opciones quedan en la parte inferior de la tarjeta, a la derecha de la fila
+de comparación mensual. La descripción queda libre de botones.
+La tarjeta usa radio de 10 puntos y conserva la separación superior de 24 puntos.
+Los modales del detalle (opciones, saldo, edición, íconos y eliminación) usan
+superficies del tema, ancho máximo de 480 puntos y radio de 12 puntos. Comparten
+la jerarquía de títulos, textos secundarios legibles y controles de cierre.
+La edición conserva sus campos y validaciones, con fondo suave en las entradas,
+separación de 16 puntos, selectores de tipo más compactos y acciones al pie de
+altura consistente. Los contadores siguen junto al título del campo. Estos
+ajustes son locales al detalle y no alteran el formulario de creación.
+Luego aparece la descripción completa; una línea separa
+la comparación mensual, con texto legible y su fecha de referencia. Esta pantalla
+respeta la preferencia de privacidad del balance general, sin botón de ojo.
+Tocar el saldo largo visible abre un modal
+temático con el importe completo seleccionable y desplazamiento horizontal si
+es muy largo; se cierra con X, Cerrar, Atrás o el fondo. La comparación conserva la fecha
 exacta y el saldo anterior usado como referencia. La visibilidad se comparte con
 el balance general y persiste por usuario al cerrar la aplicación. Cuando los
 saldos están ocultos, también se ocultan los montos de la comparación mensual.
 Al volver desde el detalle de un movimiento se actualizan los datos sin ocultar
 temporalmente un saldo que ya era visible. La carga inicial permanece oculta
-hasta leer la preferencia; una lectura atrasada no sobrescribe una elección de
-visibilidad hecha mientras se actualizaban los datos.
+hasta leer la preferencia.
 La comparación indica
 el porcentaje de aumento o disminución, o comunica que todavía no hay una
 referencia comparable. Si el saldo anterior era cero o negativo, la etiqueta

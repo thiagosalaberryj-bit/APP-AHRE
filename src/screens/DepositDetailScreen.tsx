@@ -30,7 +30,7 @@ import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
 import { actualizarDeposito, consultarDetalleDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
-import { consultarSaldoOculto, guardarSaldoOculto } from '../profile/balanceVisibilityService';
+import { consultarSaldoOculto } from '../profile/balanceVisibilityService';
 import { convertirSaldoInicial } from '../utils/depositValidation';
 import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
@@ -169,11 +169,23 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleDeposito(tema, anchoVentana);
-  const estilosFormularioDeposito = crearEstilosDeposito(tema);
+  const estilosBaseFormulario = crearEstilosDeposito(tema);
+  const estilosFormularioDeposito = {
+    ...estilosBaseFormulario,
+    formulario: { ...estilosBaseFormulario.formulario, ...estilos.formularioEdicion },
+    filaEntrada: { ...estilosBaseFormulario.filaEntrada, ...estilos.campoEdicion },
+    filaDescripcion: { ...estilosBaseFormulario.filaDescripcion, ...estilos.descripcionEdicion },
+    tarjetaTipo: { ...estilosBaseFormulario.tarjetaTipo, ...estilos.tipoEdicion },
+    iconoTipo: { ...estilosBaseFormulario.iconoTipo, ...estilos.iconoTipoEdicion },
+    tarjetaModal: estilos.tarjetaOpciones,
+    nombreIcono: { ...estilosBaseFormulario.nombreIcono, ...estilos.nombreSelectorEdicion },
+    nombreColor: { ...estilosBaseFormulario.nombreColor, ...estilos.nombreSelectorEdicion },
+  };
   const depositoId = ruta?.params?.depositoId;
   const [deposito, establecerDeposito] = useState<import("../database/types").Deposito | null>(null);
   const [saldoVisible, establecerSaldoVisible] = useState(false);
-  const [guardandoVisibilidadSaldo, establecerGuardandoVisibilidadSaldo] = useState(false);
+  const [saldoAmpliado, establecerSaldoAmpliado] = useState(false);
+  useEffect(()=>{establecerSaldoAmpliado(false);},[saldoVisible,depositoId]);
   const [movimientos, establecerMovimientos] = useState<{ deposito_nombre: string; id: string; deposito_id: string; categoria: string; recurrencia_id: string | null; transferencia_id: string | null; tipo: "ingreso" | "egreso" | "transferencia_salida" | "transferencia_entrada"; monto: number; descripcion: string; fecha_hora: string; anulado: number; reversion_de_id: string | null; fecha_creacion: string; fecha_actualizacion: string; }[]>([]);
   const [comparacionMensual, establecerComparacionMensual] = useState<Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null>(null);
   const [cargando, establecerCargando] = useState(true);
@@ -229,8 +241,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   };
   const opacidadOverlay = useRef(new Animated.Value(0)).current;
   const desplazamientoPanel = useRef(new Animated.Value(0)).current;
-  const guardadoVisibilidadEnCurso = useRef(false);
-  const revisionVisibilidadSaldo=useRef(0);
 
   useEffect(() => {
     depositoActual.current = deposito;
@@ -240,7 +250,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     const secuencia = secuenciaCarga.current + 1;
     secuenciaCarga.current = secuencia;
     establecerErrorCarga(null);
-    const revisionVisibilidad=revisionVisibilidadSaldo.current;
     if(!depositoActual.current||depositoActual.current.id!==depositoId)establecerSaldoVisible(false);
     if (!depositoActual.current) establecerCargando(true);
 
@@ -254,7 +263,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         mostrarAviso('No se pudo cargar la preferencia de privacidad del saldo.', { tipo: 'error' });
       }
       if (secuencia !== secuenciaCarga.current) return;
-      if(revisionVisibilidad===revisionVisibilidadSaldo.current)establecerSaldoVisible(!saldoOculto);
+      establecerSaldoVisible(!saldoOculto);
       establecerDeposito(detalle.deposito);
       establecerComparacionMensual(detalle.comparacionMensual);
       establecerMovimientos(detalle.movimientos.map((movimiento) => ({
@@ -276,27 +285,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       if (secuencia === secuenciaCarga.current) establecerCargando(false);
     }
   }, [depositoId, mostrarAviso]);
-
-  const alternarVisibilidadSaldo = async () => {
-    if (!deposito || guardadoVisibilidadEnCurso.current) return;
-
-    const visibleAnterior = saldoVisible;
-    revisionVisibilidadSaldo.current++;
-    const visibleNuevo = !visibleAnterior;
-    guardadoVisibilidadEnCurso.current = true;
-    establecerGuardandoVisibilidadSaldo(true);
-    establecerSaldoVisible(visibleNuevo);
-
-    try {
-      await guardarSaldoOculto(deposito.usuario_id, !visibleNuevo);
-    } catch (_error) {
-      establecerSaldoVisible(visibleAnterior);
-      mostrarAviso('No se pudo guardar esta preferencia. Intentá nuevamente.', { tipo: 'error' });
-    } finally {
-      guardadoVisibilidadEnCurso.current = false;
-      establecerGuardandoVisibilidadSaldo(false);
-    }
-  };
 
   useFocusEffect(useCallback(() => {
     cargarDetalle();
@@ -678,6 +666,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         : 'neutral'
     : 'neutral';
 
+  const saldoFormateado = deposito ? formatearSaldo(deposito.saldo_actual) : '';
+  const saldoLargo = saldoVisible && saldoFormateado.length > 12;
+
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
@@ -707,50 +698,36 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           <>
           <View style={[estilosGlobales.tarjeta, estilos.tarjetaDeposito]}>
             <View style={estilos.encabezadoDeposito}>
-              <View style={[estilos.iconoDeposito, { backgroundColor: deposito.color || COLOR_DEPOSITO_PREDETERMINADO }]}>
-                <Ionicons color={COLOR_ICONO_DEPOSITO} name={(deposito.icono || 'wallet-outline') as NombreIcono} size={28} />
+              <View style={estilos.identidadDeposito}>
+                <View style={[estilos.iconoDeposito,{backgroundColor:deposito.color || COLOR_DEPOSITO_PREDETERMINADO}]}>
+                  <Ionicons color={COLOR_ICONO_DEPOSITO} name={(deposito.icono || 'wallet-outline') as NombreIcono} size={30}/>
+                </View>
+                <View style={estilos.datosDeposito}>
+                  <Text style={estilos.nombreDeposito}>{deposito.nombre}</Text>
+                  <Text style={estilos.tipoDeposito}>{TIPOS_DEPOSITO.find(tipo=>tipo.id===deposito.tipo)?.nombre || deposito.tipo}</Text>
+                </View>
               </View>
-              <View style={estilos.datosDeposito}>
-                <Text numberOfLines={1} style={estilos.nombreDeposito}>{deposito.nombre}</Text>
-                <Text ellipsizeMode="tail" numberOfLines={3} style={estilos.descripcionDeposito}>
-                  {deposito.descripcion ? <>
-                    {deposito.descripcion}
-                    <Text style={estilos.tipoDeposito}> · {TIPOS_DEPOSITO.find((tipo) => tipo.id === deposito.tipo)?.nombre || deposito.tipo}</Text>
-                  </> : (
-                    <Text style={estilos.tipoDeposito}>
-                      {TIPOS_DEPOSITO.find((tipo) => tipo.id === deposito.tipo)?.nombre || deposito.tipo}
-                    </Text>
-                  )}
-                </Text>
-              </View>
-              <Pressable
-                accessibilityLabel="Opciones del depósito"
-                accessibilityRole="button"
-                onPress={() => establecerModalOpcionesVisible(true)}
-                style={estilos.botonOpciones}
-              >
-                <Ionicons color={tema.textoSecundario} name="ellipsis-horizontal" size={22} />
+              <Pressable style={estilos.resumenSaldo} disabled={!saldoLargo}
+                accessibilityRole={saldoLargo ? 'button' : undefined}
+                accessibilityLabel={saldoVisible ? 'Saldo: ' + saldoFormateado : 'Saldo oculto'}
+                accessibilityHint={saldoLargo ? 'Abre el saldo completo.' : undefined}
+                onPress={() => establecerSaldoAmpliado(true)}>
+                <View style={estilos.encabezadoSaldo}>
+                  <Text style={estilos.etiquetaSaldo}>Saldo</Text>
+                  {saldoLargo ? <Ionicons name="expand-outline" size={16} color={tema.foco} accessible={false}/> : null}
+                </View>
+                <Text selectable={saldoVisible && !saldoLargo} numberOfLines={1} ellipsizeMode="middle" adjustsFontSizeToFit={!saldoLargo} style={estilos.saldo}>{saldoVisible ? saldoFormateado : '$ •••••••'}</Text>
               </Pressable>
             </View>
-            <View style={estilos.resumenSaldo}>
-              <Text style={estilos.etiquetaSaldo}>Saldo de este depósito</Text>
+            <View style={estilos.seccionDescripcion}>
+              <Text style={estilos.etiquetaSaldo}>Descripción</Text>
+              <Text selectable style={estilos.descripcionDeposito}>{deposito.descripcion || 'Sin descripción'}</Text>
+            </View>
+            <View style={estilos.seccionComparacion}>
               <View style={estilos.filaSaldo}>
-                <Text adjustsFontSizeToFit minimumFontScale={0.78} numberOfLines={1} style={estilos.saldo}>
-                  {saldoVisible ? formatearSaldo(deposito.saldo_actual) : '$ •••••••'}
-                </Text>
-                <Pressable
-                  accessibilityLabel={saldoVisible ? 'Ocultar saldo' : 'Mostrar saldo'}
-                  accessibilityRole="button"
-                  disabled={guardandoVisibilidadSaldo}
-                  hitSlop={8}
-                  onPress={alternarVisibilidadSaldo}
-                  style={estilos.botonVisibilidadSaldo}
-                >
-                  <Ionicons
-                    color={tema.textoSecundario}
-                    name={saldoVisible ? 'eye-outline' : 'eye-off-outline'}
-                    size={20}
-                  />
+                <Text style={estilos.etiquetaSaldo}>Variación mensual</Text>
+                <Pressable accessibilityLabel="Opciones del depósito" accessibilityRole="button" onPress={() => establecerModalOpcionesVisible(true)} style={estilos.botonOpciones}>
+                  <Ionicons color={tema.textoSecundario} name="ellipsis-horizontal" size={22}/>
                 </Pressable>
               </View>
               <View style={estilos.comparacionSaldo}>
@@ -1196,10 +1173,28 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         </View>
       </Modal>
 
+      <Modal animationType="fade" transparent visible={saldoAmpliado && saldoVisible && Boolean(deposito)} onRequestClose={()=>establecerSaldoAmpliado(false)}>
+        <SafeAreaView style={estilos.fondoModalOpciones}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Cerrar saldo completo" style={estilos.fondoCierre} onPress={()=>establecerSaldoAmpliado(false)}/>
+          <View accessibilityViewIsModal style={estilos.tarjetaOpciones}>
+            <View style={estilos.encabezadoOpciones}>
+              <Text accessibilityRole="header" style={[estilos.tituloOpciones,{flex:1}]}>Saldo del depósito</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel="Cerrar" style={estilos.botonCerrarModal} onPress={()=>establecerSaldoAmpliado(false)}><Ionicons name="close" size={24} color={tema.textoSecundario}/></Pressable>
+            </View>
+            <Text style={estilos.descripcionOpciones}>{deposito?.nombre}</Text>
+            <View style={estilos.valorSaldoCompleto}>
+              <ScrollView horizontal showsHorizontalScrollIndicator><Text selectable style={estilos.saldoCompleto}>{saldoVisible && deposito?formatearSaldo(deposito.saldo_actual):'$ •••••••'}</Text></ScrollView>
+            </View>
+            <Text style={estilos.descripcionOpciones}>Podés deslizar el saldo para verlo completo y mantenerlo presionado para copiarlo.</Text>
+            <Pressable accessibilityRole="button" style={estilosGlobales.botonPrincipal} onPress={()=>establecerSaldoAmpliado(false)}><Text style={estilosGlobales.textoBotonPrincipal}>Cerrar</Text></Pressable>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
       <Modal animationType="fade" onRequestClose={() => establecerModalOpcionesVisible(false)} transparent visible={modalOpcionesVisible}>
         <View style={estilos.fondoModalOpciones}>
           <Pressable style={estilos.fondoCierre} onPress={() => establecerModalOpcionesVisible(false)} />
-          <View style={estilos.tarjetaOpciones}>
+          <View accessibilityViewIsModal style={estilos.tarjetaOpciones}>
             <View style={estilos.encabezadoOpciones}>
               <View style={estilos.detalleEncabezadoOpciones}>
                 <Text style={estilos.tituloOpciones}>Opciones del depósito</Text>
@@ -1252,7 +1247,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
       <Modal animationType="fade" onRequestClose={cerrarEdicion} transparent visible={modalEdicionVisible}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
-          <View style={estilos.tarjetaEdicion}>
+          <View accessibilityViewIsModal style={estilos.tarjetaEdicion}>
             <View style={estilos.encabezadoModal}>
               <View style={estilos.detalleEncabezadoEdicion}>
                 <Text style={estilos.tituloEdicion}>Editar depósito</Text>
@@ -1431,11 +1426,11 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                         <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} />
                       ) : null}
                     </View>
-                    <Text style={[
+                    <Text numberOfLines={1} adjustsFontSizeToFit style={[
                       estilosFormularioDeposito.nombreColor,
                       colorBorrador === COLOR_DEPOSITO_PREDETERMINADO && estilosFormularioDeposito.nombreColorSeleccionado,
                     ]}>
-                      Azul suave
+                      Azul
                     </Text>
                   </Pressable>
                   {COLORES_SELECTOR.map(({ nombre, valor }) => {
@@ -1459,11 +1454,11 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                         ]}>
                           {seleccionado ? <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} /> : null}
                         </View>
-                        <Text style={[
+                        <Text numberOfLines={1} adjustsFontSizeToFit style={[
                           estilosFormularioDeposito.nombreColor,
                           seleccionado && estilosFormularioDeposito.nombreColorSeleccionado,
                         ]}>
-                          {nombre}
+                          {nombre.replace(/ suave$/, '')}
                         </Text>
                       </Pressable>
                     );
@@ -1595,7 +1590,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       <Modal animationType="fade" onRequestClose={() => establecerModalEliminacionVisible(false)} transparent visible={modalEliminacionVisible && Boolean(deposito)}>
         <View style={estilos.fondoModal}>
           <Pressable style={estilos.fondoCierre} onPress={() => establecerModalEliminacionVisible(false)} />
-          <View style={estilos.tarjetaConfirmacion}>
+          <View accessibilityViewIsModal style={estilos.tarjetaConfirmacion}>
             <View style={estilos.encabezadoConfirmacion}>
               <View style={estilos.iconoEliminar}>
                 <Ionicons color={tema.error} name="trash-outline" size={25} />
