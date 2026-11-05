@@ -72,20 +72,20 @@ movimientos por ese ID. Solo se listan depósitos activos.
 ## Movimientos recientes
 
 Se consultan y muestran hasta cinco movimientos asociados a los depósitos del
-usuario, ordenados por `fecha_hora` descendente y agrupados por día. Se
+usuario, ordenados por `fecha_hora` descendente, sin encabezados diarios. Se
 representan su categoría, descripción, hora, depósito, tipo, monto e icono de
 categoría. Las transferencias entrantes se muestran como ingresos y las
 salientes como egresos. Los movimientos anulados no se incluyen.
 
 Inicio reutiliza `TarjetaMovimiento` (`src/components/MovementCard.tsx`), igual
 que la pestaña Movimientos y los detalles de depósito y categoría. La tarjeta
-ocupa dos renglones: descripción y tipo arriba; categoría, depósito, hora e
+ocupa dos renglones: descripción, día y tipo arriba; categoría, depósito, hora e
 importe debajo. Tipo e importe se agrupan sobre un fondo suave a la derecha,
 como en Deudas. Los importes conservan los centavos. Los estilos viven
 en `src/styles/MovementCardStyles.ts`; las tarjetas de Inicio y Movimientos
 abren el detalle existente. La franja del importe tiene 112 puntos de ancho,
-incluye una flecha y recorta importes largos en una sola línea. Inicio conserva sus grupos
-por día y el límite de cinco movimientos recientes.
+incluye una flecha y recorta importes largos en una sola línea. Inicio conserva el límite de cinco movimientos recientes; la fecha aparece
+en cada tarjeta, sin separadores por día.
 
 Si la consulta no devuelve movimientos, se muestra un icono y un mensaje de
 estado vacío. «Ver todos» y la flecha del balance abren la pestaña Movimientos.

@@ -66,20 +66,6 @@ function formatearFechaCorta(fecha: Date) {
   return fecha.toLocaleDateString('es-AR');
 }
 
-function formatearFechaDia(fecha: Date) {
-  const hoy = new Date();
-  const fechaNormalizada = crearFechaSinHora(fecha);
-  const hoyNormalizado = crearFechaSinHora(hoy);
-  const diferenciaDias = Math.round((hoyNormalizado.getTime() - fechaNormalizada.getTime()) / 86400000);
-
-  if (diferenciaDias === 0) return 'Hoy';
-  if (diferenciaDias === 1) return 'Ayer';
-  return fecha.toLocaleDateString('es-AR', {
-    day: 'numeric',
-    month: 'long',
-  });
-}
-
 function crearRangoConsultaFecha(fechaFiltro: string, fechaDia: Date|null, mesSeleccionado: Date|null, fechaInicial: Date|null, fechaFinal: Date|null) {
   let inicio: Date | null = null;
   let fin: Date | null = null;
@@ -119,22 +105,6 @@ function obtenerTextoTipoDeposito(tipo: string) {
   if (tipo === 'banco') return 'Banco';
   if (tipo === 'billetera_virtual') return 'Billetera virtual';
   return 'Depósito con movimientos';
-}
-
-function agruparMovimientosPorDia(movimientos: import('../types/forms').MovimientoVisible[]) {
-  return movimientos.reduce<{clave:string;fecha:Date;movimientos:import('../types/forms').MovimientoVisible[]}[]>((grupos, movimiento) => {
-    const fecha = new Date(movimiento.fecha_hora);
-    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
-    let grupo = grupos[grupos.length - 1];
-
-    if (!grupo || grupo.clave !== clave) {
-      grupo = { clave, fecha, movimientos: [] };
-      grupos.push(grupo);
-    }
-
-    grupo.movimientos.push(movimiento);
-    return grupos;
-  }, []);
 }
 
 function SeccionFiltro({
@@ -596,12 +566,12 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   }, [busqueda, tipoFiltro, fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal, montoMinimo, montoMaximo, categoriaFiltroIds, depositoFiltroIds, categoriasDisponiblesFiltro, categoriasHistorial, depositosHistorial, filtraPorDepositos, cambiarFechaFiltro]);
   const cantidadFiltros = filtrosAplicados.length;
   const gruposMovimientos = useMemo(() => {
-    const dias = agruparMovimientosPorDia(movimientosHistorial);
-    const meses = new Map<string,{clave:string;titulo:string;dias:typeof dias}>();
-    for (const dia of dias) {
-      const clave = dia.fecha.getFullYear()+'-'+dia.fecha.getMonth();
-      if (!meses.has(clave)) meses.set(clave,{clave,titulo:dia.fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^./,letra=>letra.toUpperCase()),dias:[]});
-      meses.get(clave)!.dias.push(dia);
+    const meses = new Map<string,{clave:string;titulo:string;movimientos:typeof movimientosHistorial}>();
+    for (const movimiento of movimientosHistorial) {
+      const fecha = new Date(movimiento.fecha_hora);
+      const clave = fecha.getFullYear()+'-'+fecha.getMonth();
+      if (!meses.has(clave)) meses.set(clave,{clave,titulo:fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^./,letra=>letra.toUpperCase()),movimientos:[]});
+      meses.get(clave)!.movimientos.push(movimiento);
     }
     return [...meses.values()];
   },[movimientosHistorial]);
@@ -845,15 +815,12 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
               </View>
             ) : (
               <View style={estilos.listaMovimientos}>
-                {gruposMovimientos.map((mes,indice) => <View key={mes.clave} style={estilos.grupoDia}>
+                {gruposMovimientos.map((mes,indice) => <View key={mes.clave} style={estilos.grupoMes}>
                   <EncabezadoSeccionPlegable tema={tema} titulo={mes.titulo} expandido={(mesesAbiertos[mes.clave] ?? indice === 0)}
                     alAlternar={()=>establecerMesesAbiertos(anteriores=>({...anteriores,[mes.clave]:!(anteriores[mes.clave] ?? indice === 0)}))}/>
-                  {(mesesAbiertos[mes.clave] ?? indice === 0)?mes.dias.map(grupo=><View key={grupo.clave} style={estilos.grupoDia}>
-                    <Text accessibilityRole="header" style={estilos.tituloDia}>{formatearFechaDia(grupo.fecha)}</Text>
-                    <View style={estilos.movimientosDia}>
-                      {grupo.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalle} soloHora/>)}
-                    </View>
-                  </View>):null}
+                  {(mesesAbiertos[mes.clave] ?? indice === 0)?<View style={estilos.movimientosMes}>
+                    {mes.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalle}/>)}
+                  </View>:null}
                 </View>)}
                 {errorCargaMas ? (
                   <View style={estilos.estadoVacio}>

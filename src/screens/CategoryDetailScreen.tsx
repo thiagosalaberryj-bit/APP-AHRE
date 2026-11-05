@@ -252,7 +252,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                   {formatearFechaDia(grupo.fecha)}
                 </Text>
                 <View style={estilos.movimientosDia}>
-                  {grupo.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalleMovimiento} soloHora/>)}
+                  {grupo.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalleMovimiento}/>)}
 
                 </View>
               </View>

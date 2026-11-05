@@ -198,7 +198,7 @@ para evaluación. Actualmente cuenta con:
 - Dashboard conectado a la base local para mostrar al usuario, depósitos,
   balance y hasta cinco movimientos recientes; mantiene los accesos rápidos a
   ingreso, egreso y OCR;
-- pantalla de Movimientos con historial agrupado en meses plegables y días, búsqueda y filtros
+- pantalla de Movimientos con historial agrupado en meses plegables, búsqueda y filtros
   locales por tipo, fecha, monto, categoría y depósito, con detalles de
   movimientos;
 - formularios de ingreso y egreso conectados a SQLite, con monto, descripción,

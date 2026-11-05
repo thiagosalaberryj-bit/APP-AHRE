@@ -257,17 +257,19 @@ botones y modales.
 consulta SQLite para el usuario de la sesión y agrupa los movimientos vigentes
 por mes y año, con el primer mes abierto inicialmente y los demás plegados, usando el encabezado compartido
 `EncabezadoSeccionPlegable` (`src/components/CollapsibleSectionHeader.tsx`). Cada
-mes se abre o cierra de forma independiente y mantiene la separación por día
-en su interior. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
-`tipo`, no se deduce del monto. Los encabezados muestran «Hoy», «Ayer» o la
-fecha para los días anteriores. Cada tarjeta usa un ícono de categoría y
-presenta dos renglones: descripción y tipo en el primero; categoría, depósito,
+mes se abre o cierra de forma independiente y muestra una lista continua
+en su interior, sin encabezados diarios. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
+`tipo`, no se deduce del monto. Cada tarjeta muestra «Hoy», «Ayer» o día y mes para otras fechas. Cada tarjeta usa un ícono de categoría y
+presenta dos renglones: descripción, día y tipo en el primero; categoría, depósito,
 hora e importe con signo en el segundo. El tipo y el importe ocupan una franja
 de fondo suave a la derecha, similar a las tarjetas de deudas. La franja tiene
 un ancho fijo de 112 puntos, con el tipo y la
 flecha arriba y el importe debajo, limitado a una línea con puntos suspensivos.
 La tarjeta usa un radio de 10 puntos y sus contenedores internos, de 5 puntos.
 El importe completo se conserva en la etiqueta accesible y en el detalle.
+El día dentro de la tarjeta muestra «Hoy», «Ayer» o día y mes abreviado para
+cualquier otra fecha, según el calendario local del teléfono. La hora se
+mantiene en el segundo renglón.
 La franja reserva 8 puntos de relleno lateral y 4 vertical para separar texto y
 flecha del borde; descripción e importe usan texto de 16 puntos. Su fondo usa
 `tema.fondo` en ambos temas.

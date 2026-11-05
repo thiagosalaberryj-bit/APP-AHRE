@@ -132,11 +132,16 @@ criterios activos aparecen debajo del buscador como chips que pueden quitarse;
 «Limpiar todo» restablece la búsqueda y los filtros. El rótulo muestra el
 número de criterios activos y el botón «Filtros» abre la hoja.
 El detalle no muestra un filtro de depósitos porque la lista ya está limitada
-al depósito seleccionado. Los resultados se agrupan por día y se ordenan por
+al depósito seleccionado. Los resultados se agrupan por mes y año y se ordenan por
 fecha y hora descendente.
 
+Los meses usan `EncabezadoSeccionPlegable`, el mismo componente de Movimientos,
+Social y Sincronización. El primer mes comienza abierto y los demás plegados;
+cada uno se alterna de forma independiente. No hay encabezados diarios: la fecha
+se muestra en cada tarjeta.
+
 Cada tarjeta reutiliza `MovementCard.tsx`, igual que Inicio, Movimientos y
-Detalle de categoría: descripción y tipo en el primer renglón; categoría,
+Detalle de categoría: descripción, día y tipo en el primer renglón; categoría,
 depósito, hora e importe con signo en el segundo, con una franja de fondo suave
 para el tipo y el importe. Al tocar una fila se abre el detalle
 existente con la descripción del movimiento y sus datos. Los estados incluyen

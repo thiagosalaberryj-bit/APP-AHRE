@@ -10,21 +10,20 @@ function formatearMontoLista(monto: number, tipo: string) {
   return tipo === 'ingreso' || tipo === 'transferencia_entrada' ? `+${valor}` : `-${valor}`;
 }
 
-function formatearFechaLista(fechaISO: string|number|Date, soloHora = false) {
-  if (!fechaISO) return '—';
+function formatearFechaLista(fechaISO: string|number|Date) {
+  if (!fechaISO) return {dia:'—',hora:'—'};
   const fecha = new Date(fechaISO);
-  if (Number.isNaN(fecha.getTime())) return '—';
+  if (Number.isNaN(fecha.getTime())) return {dia:'—',hora:'—'};
   const hora = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
-  if (soloHora) return hora;
   const ahora = new Date();
   const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   const inicioFecha = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
   const dias = Math.round((inicioHoy.getTime() - inicioFecha.getTime()) / 86400000);
   const dia = dias === 0 ? 'Hoy' : dias === 1 ? 'Ayer' : fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
-  return `${dia} · ${hora}`;
+  return {dia,hora};
 }
 
-export default function TarjetaMovimiento({ tema, movimiento, alPresionar, soloHora = false }: import('../types/ui').TarjetaMovimientoProps) {
+export default function TarjetaMovimiento({ tema, movimiento, alPresionar }: import('../types/ui').TarjetaMovimientoProps) {
   const estilos = crearEstilosTarjetaMovimiento(tema);
   const esIngreso = movimiento.tipo === 'ingreso' || movimiento.tipo === 'transferencia_entrada';
   const esTransferencia = movimiento.tipo.startsWith('transferencia_');
@@ -32,7 +31,7 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar, soloH
   const categoria: Partial<(typeof CATEGORIAS_EGRESO)[number]> = catalogo.find(item => item.id === movimiento.categoria) || {};
   const nombreCategoria = esTransferencia ? 'Transferencia' : categoria.nombre || movimiento.categoria;
   const tipo = esTransferencia ? esIngreso ? 'Transferencia recibida' : 'Transferencia enviada' : esIngreso ? 'Ingreso' : 'Egreso';
-  const fecha = formatearFechaLista(movimiento.fecha_hora, soloHora);
+  const fecha = formatearFechaLista(movimiento.fecha_hora);
   const deposito = movimiento.deposito_nombre || movimiento.deposito;
   const metadatos = [nombreCategoria, deposito].filter(Boolean).join(' · ');
   const colorTipo = esIngreso ? tema.exito : tema.error;
@@ -42,10 +41,13 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar, soloH
       <Ionicons color={colorTipo} name={esTransferencia?'swap-horizontal-outline':categoria.icono || (esIngreso?'arrow-down-outline':'arrow-up-outline')} size={18}/>
     </View>
     <View style={estilos.contenido}>
-      <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.titulo}>{movimiento.descripcion || nombreCategoria}</Text>
+      <View style={estilos.filaTitulo}>
+        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.titulo}>{movimiento.descripcion || nombreCategoria}</Text>
+        <Text numberOfLines={1} style={estilos.fecha}>{fecha.dia}</Text>
+      </View>
       <View style={estilos.filaMetadatos}>
         <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metadatos}>{metadatos}</Text>
-        <Text numberOfLines={1} style={estilos.fecha}>{fecha}</Text>
+        <Text numberOfLines={1} style={estilos.fecha}>{fecha.hora}</Text>
       </View>
     </View>
     <View style={estilos.franjaImporte}>
@@ -56,7 +58,7 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar, soloH
       <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.importe}>{importe}</Text>
     </View>
   </>;
-  const etiqueta = tipo+': '+movimiento.descripcion+'. '+importe+'. '+metadatos+'. '+fecha;
+  const etiqueta = tipo+': '+movimiento.descripcion+'. '+importe+'. '+metadatos+'. '+fecha.dia+' · '+fecha.hora;
   return alPresionar ? <Pressable accessibilityLabel={etiqueta} accessibilityRole="button" onPress={()=>alPresionar(movimiento,categoria)}
     style={({pressed:presionado})=>[estilos.tarjeta,presionado&&estilos.presionada]}>{contenido}</Pressable>
     : <View accessible accessibilityLabel={etiqueta} style={estilos.tarjeta}>{contenido}</View>;

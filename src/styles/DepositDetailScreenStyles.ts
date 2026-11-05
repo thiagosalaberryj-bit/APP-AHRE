@@ -330,17 +330,10 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     listaMovimientos: {
       gap: ESPACIADO.medio,
     },
-    grupoDia: {
+    grupoMes: {
       gap: ESPACIADO.minimo,
     },
-    tituloDia: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      paddingHorizontal: ESPACIADO.minimo,
-    },
-    movimientosDia: {
+    movimientosMes: {
       gap: ESPACIADO.pequeno,
     },
     fondoFiltros: {

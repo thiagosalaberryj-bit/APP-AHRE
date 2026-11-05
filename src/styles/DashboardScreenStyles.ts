@@ -186,19 +186,6 @@ export function crearEstilosDashboard(tema: Tema) {
     listaMovimientos: {
       gap: ESPACIADO.pequeno,
     },
-    grupoDia: {
-      gap: ESPACIADO.minimo,
-    },
-    tituloDia: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      paddingHorizontal: ESPACIADO.minimo,
-    },
-    movimientosDia: {
-      gap: ESPACIADO.pequeno,
-    },
     elementoPresionado: {
       opacity: 0.82,
     },

@@ -26,6 +26,7 @@ import SelectorCategoria from '../components/CategorySelector';
 import SelectorFecha from '../components/DateSelector';
 import EncabezadoSeccion from '../components/SectionHeader';
 import TarjetaMovimiento from '../components/MovementCard';
+import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
 import { actualizarDeposito, consultarDetalleDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
@@ -139,29 +140,6 @@ function esMovimientoDeIngreso(tipo: string) {
   return tipo === 'ingreso' || tipo === 'transferencia_entrada';
 }
 
-function formatearFechaDia(fecha: Date) {
-  const hoy = crearFechaSinHora(new Date());
-  const fechaNormalizada = crearFechaSinHora(fecha);
-  const diferenciaDias = Math.round((hoy.getTime() - fechaNormalizada.getTime()) / 86400000);
-  if (diferenciaDias === 0) return 'Hoy';
-  if (diferenciaDias === 1) return 'Ayer';
-  return fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
-}
-
-function agruparMovimientosPorDia(movimientos: import('../types/forms').MovimientoVisible[]) {
-  return movimientos.reduce<{clave:string;fecha:Date;movimientos:import('../types/forms').MovimientoVisible[]}[]>((grupos, movimiento) => {
-    const fecha = new Date(movimiento.fecha_hora);
-    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
-    let grupo = grupos[grupos.length - 1];
-    if (!grupo || grupo.clave !== clave) {
-      grupo = { clave, fecha, movimientos: [] };
-      grupos.push(grupo);
-    }
-    grupo.movimientos.push(movimiento);
-    return grupos;
-  }, []);
-}
-
 function SeccionFiltro({ titulo, resumen, abierta, alAlternar, colorAcento, estilos, children }: {titulo:string;resumen:string;abierta:boolean;alAlternar:()=>void;colorAcento:string;estilos:ReturnType<typeof crearEstilosDetalleDeposito>;children:import('react').ReactNode}) {
   return (
     <View style={estilos.seccionFiltro}>
@@ -203,6 +181,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const depositoActual = useRef(deposito);
   const secuenciaCarga = useRef(0);
 
+  const [mesesAbiertos, establecerMesesAbiertos] = useState<Record<string,boolean>>({});
   const [busqueda, establecerBusqueda] = useState('');
   const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
@@ -681,10 +660,16 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     }).slice().sort((a, b) => new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime());
   }, [busqueda, categoriaFiltroIds, errorFechaFiltro, errorMontoFiltro, fechaDia, fechaFinal, fechaFiltro, fechaInicial, fechaSemana, mesSeleccionado, montoMaximo, montoMaximoNumero, montoMinimo, montoMinimoNumero, movimientos, tipoFiltro]);
 
-  const gruposMovimientos = useMemo(
-    () => agruparMovimientosPorDia(movimientosFiltrados),
-    [movimientosFiltrados],
-  );
+  const gruposMovimientos = useMemo(() => {
+    const meses = new Map<string,{clave:string;titulo:string;movimientos:typeof movimientosFiltrados}>();
+    for (const movimiento of movimientosFiltrados) {
+      const fecha = new Date(movimiento.fecha_hora);
+      const clave = fecha.getFullYear()+'-'+fecha.getMonth();
+      if (!meses.has(clave)) meses.set(clave,{clave,titulo:fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^./,letra=>letra.toUpperCase()),movimientos:[]});
+      meses.get(clave)!.movimientos.push(movimiento);
+    }
+    return [...meses.values()];
+  },[movimientosFiltrados]);
   const direccionComparacion = comparacionMensual?.disponible
     ? comparacionMensual.diferencia > 0
       ? 'positivo'
@@ -892,22 +877,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </View>
             ) : movimientosFiltrados.length > 0 ? (
               <View style={estilos.listaMovimientos}>
-                {gruposMovimientos.map((grupo) => (
-                  <View key={grupo.clave} style={estilos.grupoDia}>
-                    <Text accessibilityRole="header" style={estilos.tituloDia}>{formatearFechaDia(grupo.fecha)}</Text>
-                    <View style={estilos.movimientosDia}>
-                      {grupo.movimientos.map((movimiento) => (
-                        <TarjetaMovimiento
-                          key={movimiento.id}
-                          tema={tema}
-                          movimiento={movimiento}
-                          alPresionar={abrirDetalleMovimiento}
-                          soloHora
-                        />
-                      ))}
-                    </View>
-                  </View>
-                ))}
+                {gruposMovimientos.map((mes,indice) => <View key={mes.clave} style={estilos.grupoMes}>
+                  <EncabezadoSeccionPlegable tema={tema} titulo={mes.titulo} expandido={mesesAbiertos[mes.clave] ?? indice === 0}
+                    alAlternar={()=>establecerMesesAbiertos(anteriores=>({...anteriores,[mes.clave]:!(anteriores[mes.clave] ?? indice === 0)}))}/>
+                  {(mesesAbiertos[mes.clave] ?? indice === 0)?<View style={estilos.movimientosMes}>
+                    {mes.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalleMovimiento}/>)}
+                  </View>:null}
+                </View>)}
               </View>
             ) : (
               <View style={estilos.estadoVacio}>

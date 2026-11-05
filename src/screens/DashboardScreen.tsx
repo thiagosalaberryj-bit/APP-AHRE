@@ -41,33 +41,6 @@ function prepararMovimiento(movimiento: import('../database/types').Movimiento, 
   return {...movimiento,deposito_nombre:deposito?.nombre || TIPOS_DEPOSITO[deposito?.tipo || 'efectivo'].nombre};
 }
 
-function formatearFechaDia(fecha: Date) {
-  const hoy = new Date();
-  const fechaNormalizada = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
-  const hoyNormalizado = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-  const diferenciaDias = Math.round((hoyNormalizado.getTime() - fechaNormalizada.getTime()) / 86400000);
-
-  if (diferenciaDias === 0) return 'Hoy';
-  if (diferenciaDias === 1) return 'Ayer';
-  return fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
-}
-
-function agruparMovimientosPorDia(movimientos: ReturnType<typeof prepararMovimiento>[]) {
-  return movimientos.reduce<{clave:string;fecha:Date;movimientos:ReturnType<typeof prepararMovimiento>[]}[]>((grupos, movimiento) => {
-    const fecha = new Date(movimiento.fecha_hora);
-    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
-    let grupo = grupos[grupos.length - 1];
-
-    if (!grupo || grupo.clave !== clave) {
-      grupo = { clave, fecha, movimientos: [] };
-      grupos.push(grupo);
-    }
-
-    grupo.movimientos.push(movimiento);
-    return grupos;
-  }, []);
-}
-
 const ACCIONES_RAPIDAS = Object.freeze([
   { etiqueta: 'Ingreso', icono: 'add-circle', ruta: RUTAS.INGRESO },
   { etiqueta: 'Egreso', icono: 'remove-circle', ruta: RUTAS.EGRESO },
@@ -406,16 +379,8 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                 </View>
               ) : (
                 <View style={estilos.listaMovimientos}>
-                  {agruparMovimientosPorDia(movimientos).map((grupo) => (
-                    <View key={grupo.clave} style={estilos.grupoDia}>
-                      <Text accessibilityRole="header" style={estilos.tituloDia}>
-                        {formatearFechaDia(grupo.fecha)}
-                      </Text>
-                      <View style={estilos.movimientosDia}>
-                        {grupo.movimientos.map(movimiento => <TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={registro=>navegacion.getParent()?.navigate(RUTAS.DETALLE_MOVIMIENTO,{movimientoId:registro.id})} soloHora/>)}
-                      </View>
-                    </View>
-                  ))}
+                  {movimientos.map(movimiento => <TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={registro=>navegacion.getParent()?.navigate(RUTAS.DETALLE_MOVIMIENTO,{movimientoId:registro.id})}/>)}
+
                 </View>
               )}
             </View>
