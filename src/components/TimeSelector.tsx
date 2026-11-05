@@ -47,7 +47,7 @@ export default function SelectorHora({
         <Text style={estilosMovimiento.valorInformacion}>{valor}</Text>
       </Pressable>
 
-      <Modal
+      <Modal statusBarTranslucent navigationBarTranslucent
         animationType="fade"
         onRequestClose={() => establecerModalVisible(false)}
         transparent

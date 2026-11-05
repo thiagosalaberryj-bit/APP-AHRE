@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
-import { Animated, Modal, PanResponder, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import usarPanelInferior from '../utils/useBottomSheet';
+import { type ReactNode } from 'react';
+import { Animated, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Tema } from '../styles/colors';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
@@ -38,75 +39,9 @@ export function SeccionFiltro({
 export default function PanelFiltrosMovimientos({ tema, filtrosVisibles, alCerrar, limpiarFiltros, cantidadFiltros, children }: {
   tema:Tema; filtrosVisibles:boolean; alCerrar:()=>void; limpiarFiltros:()=>void; cantidadFiltros:number; children:ReactNode;
 }) {
-  const { height:altoVentana, width:anchoVentana } = useWindowDimensions();
+  const { width:anchoVentana } = useWindowDimensions();
   const estilos = crearEstilosMovimientos(tema, anchoVentana);
-  const opacidadOverlay = useRef(new Animated.Value(0)).current;
-  const desplazamientoPanel = useRef(new Animated.Value(0)).current;
-  const cerrarFiltros = useCallback(() => {
-    Animated.parallel([
-      Animated.timing(opacidadOverlay, {
-        toValue: 0,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-      Animated.timing(desplazamientoPanel, {
-        toValue: altoVentana,
-        duration: 190,
-        useNativeDriver: true,
-      }),
-    ]).start(({ finished }) => {
-      if (finished) alCerrar();
-    });
-  }, [altoVentana, desplazamientoPanel, opacidadOverlay, alCerrar]);
-
-  const responderManija = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_evento, gesto) => gesto.dy > 6 && Math.abs(gesto.dy) > Math.abs(gesto.dx),
-    onPanResponderTerminationRequest: () => false,
-    onPanResponderMove: (_evento, gesto) => {
-      if (gesto.dy > 0) desplazamientoPanel.setValue(gesto.dy);
-    },
-    onPanResponderRelease: (_evento, gesto) => {
-      if (gesto.dy > 90 || gesto.vy > 0.8) {
-        cerrarFiltros();
-        return;
-      }
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 240,
-      }).start();
-    },
-    onPanResponderTerminate: () => {
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 240,
-      }).start();
-    },
-  }), [cerrarFiltros, desplazamientoPanel]);
-
-  useEffect(() => {
-    if (!filtrosVisibles) return undefined;
-    opacidadOverlay.setValue(0);
-    desplazamientoPanel.setValue(altoVentana);
-    Animated.parallel([
-      Animated.timing(opacidadOverlay, {
-        toValue: 1,
-        duration: 190,
-        useNativeDriver: true,
-      }),
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 24,
-        stiffness: 210,
-      }),
-    ]).start();
-    return undefined;
-  }, [altoVentana, desplazamientoPanel, filtrosVisibles, opacidadOverlay]);
+  const { opacidadOverlay, desplazamientoPanel, responderManija, cerrarPanel: cerrarFiltros } = usarPanelInferior(filtrosVisibles, alCerrar);
 
   return (
         <Modal

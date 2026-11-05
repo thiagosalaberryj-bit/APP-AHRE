@@ -22,7 +22,7 @@ export interface SelectorDepositoProps extends Aspecto {
   depositos?: readonly (Partial<Deposito> & { id: string; nombre: string; saldoTexto?: string })[];
   seleccionadoId?: string | null; alSeleccionar?: (id: string) => void; etiqueta?: string;
   seleccionMultiple?: boolean; seleccionadasIds?: string[]; alCambiarMulti?: (ids: string[]) => void;
-  enLinea?: boolean; error?: string | null;
+  impedirSeleccionVacia?: boolean; error?: string | null;
 }
 export interface SelectorFechaProps {
   tema: Tema; estilosMovimiento: EstilosMovimiento; valor: Date; alSeleccionar: (fecha: Date) => void;

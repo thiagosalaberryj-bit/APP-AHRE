@@ -5,6 +5,74 @@ import { preparar } from './helpers/localDatabase.ts';
 import { interfazSocial } from './helpers/socialInterface.ts';
 
 for (const tema of ['claro','oscuro'] as const) {
+  test(`el selector común de depósitos permite selección individual y múltiple sin perder la última opción en ${tema}`, async prueba => {
+    const e = await preparar(prueba);
+    const opciones = [{ id: 'uno', nombre: 'Caja', icono: 'cash-outline', color: '#BED5C8' }, { id: 'dos', nombre: 'Cuenta', icono: 'star-outline', color: '#CEC0E1' }];
+    const vista = interfazSocial(e, tema);
+    let ids = ['uno'];
+    await vista.abrirSelectorDepositos({ depositos: opciones, seleccionMultiple: true, seleccionadasIds: ids, impedirSeleccionVacia: true, alCambiarMulti: nuevos => { ids = nuevos; } });
+    await vista.pulsar('Depósito');
+    assert.equal(vista.buscarBoton('Caja', true).props.disabled, true);
+    await vista.pulsar('Cuenta', true); assert.deepEqual(ids, ['uno', 'dos']);
+    await vista.pulsar('Caja', true); assert.deepEqual(ids, ['dos']);
+    assert.equal(vista.buscarBoton('Cuenta', true).props.disabled, true);
+    await vista.pulsar('Seleccionar todos los depósitos'); assert.deepEqual(ids, ['uno', 'dos']);
+    await vista.pulsar('Listo');
+    assert.ok(JSON.stringify(vista.buscarBoton('Depósito').props.accessibilityValue).includes('Todos los depósitos'));
+    const individual = interfazSocial(e, tema);
+    let elegido = '';
+    await individual.abrirSelectorDepositos({ depositos: opciones, alSeleccionar: id => { elegido = id; } });
+    await individual.pulsar('Depósito'); await individual.pulsar('Cuenta', true);
+    assert.equal(elegido, 'dos');
+    assert.ok(JSON.stringify(individual.buscarBoton('Depósito').props.accessibilityValue).includes('Cuenta'));
+    assert.ok(individual.todos().some(n => n.type === 'Icon' && n.props.name === 'star-outline'));
+    assert.equal(individual.todos().filter(n => n.type === 'Modal' && n.props.visible).length, 0);
+    individual.mostrarTeclado(); await individual.pulsar('Depósito');
+    assert.equal(individual.todos().filter(n => n.type === 'Modal' && n.props.visible).length, 0, 'no se abre mientras se está cerrando el teclado');
+    await individual.ocultarTeclado();
+    const modal = presente(individual.todos().find(n => n.type === 'Modal' && n.props.visible));
+    assert.equal(modal.props.navigationBarTranslucent, true);
+    assert.equal(modal.props.statusBarTranslucent, true);
+    (modal.props.onShow as () => void)(); await individual.asentar();
+    const flotante = presente(individual.todos().find(n => Array.isArray(n.props.style) && n.props.style.some(estilo => estilo && typeof estilo === 'object' && 'top' in estilo && 'maxHeight' in estilo)));
+    const ancla = (flotante.props.style as {top?:number;maxHeight?:number}[]).find(estilo => estilo?.top !== undefined && estilo.maxHeight !== undefined)!;
+    assert.equal(ancla.top, 220 + 64 + 4, 'la lista deja visibles los 64 puntos del campo y no usa el desplazamiento de la ventana nativa');
+    await individual.pulsar('Cerrar selector de depósito');
+  });
+
+  test(`los desplegables y la vista previa del reparto conservan personas y montos en ${tema}`, async prueba => {
+    const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
+    const ana = presente(await e.guardarPersona({ nombre: 'Ana', apellido: 'Pérez', apodo: 'Ani' }));
+    const bruno = presente(await e.guardarPersona({ nombre: 'Bruno', apellido: 'Díaz', apodo: 'Bru' }));
+    const sala = await e.crearSala({ nombre: 'Reparto', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [ana.id, bruno.id] });
+    const vista = interfazSocial(e, tema);
+    await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id });
+    await vista.llenar('Importe del ítem', '100');
+    assert.ok(vista.texto().includes('$ 33,34'));
+    assert.ok(vista.texto().includes('$ 33,33'));
+    await vista.pulsar('Quién pagó');
+    const menu = presente(vista.todos().filter(n => n.type === 'Modal' && n.props.visible).at(-1));
+    (menu.props.onShow as () => void)(); await vista.asentar();
+    const ventanaMenu = presente(vista.todos(presente(vista.todos().filter(n => n.type === 'Modal' && n.props.visible).at(-1)).children).find(n => Array.isArray(n.props.style) && n.props.style.some(estilo => estilo && typeof estilo === 'object' && 'top' in estilo && 'maxHeight' in estilo)));
+    const posicion = (ventanaMenu.props.style as {top?:number;maxHeight?:number}[]).find(estilo => estilo?.top !== undefined && estilo.maxHeight !== undefined)!;
+    assert.ok(posicion.top! + 24 >= 220 + 38 + 4, 'el menú comienza debajo del control: ' + JSON.stringify(posicion));
+    await vista.pulsar('Ana');
+    assert.ok(JSON.stringify(vista.buscarBoton('Quién pagó').props.accessibilityValue).includes('Ana'));
+    await vista.pulsar('Personas involucradas'); await vista.pulsar('Bruno'); await vista.pulsar('Listo');
+    assert.ok(vista.texto().includes('$ 50,00'));
+    assert.ok(!vista.texto().includes('$ 33,33'));
+    await vista.pulsar('Cómo se reparte: Manual');
+    await vista.llenar('Parte de Vos', '40'); await vista.llenar('Parte de Ana', '70');
+    assert.ok(vista.texto().includes('Excede el importe por $ 10,00'));
+    await vista.pulsar('Cómo se reparte: Iguales');
+    assert.ok(vista.texto().includes('$ 50,00'));
+    await vista.pulsar('Cómo se reparte: Manual');
+    assert.ok(vista.texto().includes('Excede el importe por $ 10,00'));
+    await vista.llenar('Parte de Ana', '60');
+    assert.ok(vista.texto().includes('El reparto coincide con el importe.'));
+    assert.equal((await e.cargarSocial()).salas[0].gastos.length, 0);
+  });
+
   test(`el encabezado mensual compartido permite plegar y recuperar las deudas en ${tema}`, async prueba => {
     const e = await preparar(prueba); await e.prepararDatosPrueba();
     const vista = interfazSocial(e, tema);
@@ -60,12 +128,27 @@ test('lista manual conserva filas, permite ajustes y guarda borradores con un de
   await vista.pulsar('Registrar lista');
   await vista.llenar('Ítem 1', 'Comida'); await vista.llenar('Importe 1', '600');
   await vista.pulsar('Agregar otro ítem'); await vista.llenar('Ítem 2', 'Bebida'); await vista.llenar('Importe 2', '200');
+  assert.ok(vista.texto().includes('Total $ 800,00'));
+  assert.ok(!vista.texto().includes('Guardado local'));
   await vista.pulsar('Un ítem'); await vista.pulsar('Registrar lista');
   assert.equal(presente(vista.todos().find(n => n.type === 'TextInput' && n.props.accessibilityLabel === 'Ítem 2')).props.value, 'Bebida');
   await vista.pulsar('Ajustar ítem 2'); await vista.llenar('Importe del ítem', '300'); await vista.pulsar('Aplicar al ítem');
+  assert.ok(vista.texto().includes('Total $ 900,00'));
+  await vista.pulsar('Ajustar ítem 2'); await vista.llenar('Importe del ítem', '999'); await vista.pulsar('Cerrar edición del ítem');
+  assert.ok(vista.texto().includes('Total $ 900,00'), 'cancelar la edición conserva el importe anterior');
   await vista.pulsar('Opciones rápidas · Aplicar a todos');
-  await vista.pulsar('Aplicar depósito a todos');
-  await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Aplicar a todos');
+  await vista.pulsar('Ya pagados');
+  assert.equal((vista.buscarBoton('Aplicar pagos a todos').props.accessibilityState as {checked:boolean}).checked, true);
+  const manija = presente(vista.todos().find(n => n.props.accessibilityLabel === 'Deslizar hacia abajo para cerrar opciones rápidas'));
+  const soltar = manija.props.onPanResponderRelease as (evento: unknown, gesto: {dy:number;dx:number;vy:number}) => void;
+  soltar(null, { dy: 10, dx: 0, vy: 0 }); await vista.asentar();
+  assert.equal((vista.buscarBoton('Aplicar pagos a todos').props.accessibilityState as {checked:boolean}).checked, true);
+  soltar(null, { dy: 120, dx: 0, vy: 1 }); await vista.asentar();
+  await vista.pulsar('Opciones rápidas · Aplicar a todos');
+  assert.equal((vista.buscarBoton('Aplicar pagos a todos').props.accessibilityState as {checked:boolean}).checked, false);
+  await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true);
+  assert.equal((vista.buscarBoton('Aplicar depósito a todos').props.accessibilityState as {checked:boolean}).checked, true);
+  await vista.pulsar('Aplicar a todos');
   await vista.pulsar('Guardar lista');
   const gastos = (await e.cargarSocial()).salas[0].gastos;
   assert.equal(gastos.length, 2); assert.equal(presente(gastos.find(g => g.descripcion === 'Bebida')).montoNumero, 300);
@@ -242,7 +325,7 @@ test('registrar deuda a cobrar exige elegir origen y el cobro recupera el adelan
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'deuda', personaId: presente(persona).id });
   await vista.llenar('Monto de la deuda', '800'); await vista.llenar('Descripción', 'Adelanto del almuerzo');
   await vista.pulsar('Registrar deuda');
-  assert.ok(vista.texto().includes('Pagás $ 800'));
+  assert.ok(vista.texto().includes('Pagás') && vista.texto().includes('$ 800'));
   await vista.pulsar('Cerrar selección de movimiento');
   assert.equal(saldo(), inicial); assert.equal((await e.cargarSocial()).deudas.length, 0);
   await vista.pulsar('Registrar deuda'); await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
@@ -274,7 +357,7 @@ test('Le debo no pide depósito al crearla y registra solo el egreso al pagarla'
   assert.deepEqual(vista.destinos.at(-1), ['Atrás']);
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'pago', deudaId: deuda.id });
   await vista.pulsar('Registrar pago realizado');
-  assert.ok(vista.texto().includes('Pagás $ 400'));
+  assert.ok(vista.texto().includes('Pagás') && vista.texto().includes('$ 400'));
   await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
   assert.equal(saldo(), Number(inicial) - 400); assert.ok((await e.cargarSocial()).deudas[0].saldada);
   assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length + 1);
@@ -292,7 +375,7 @@ test('la agenda muestra inmediatamente el alta aunque hubiera una búsqueda ante
   assert.equal(presente(vista.todos().find(n => n.type === 'TextInput' && n.props.accessibilityLabel === 'Buscar persona registrada')).props.value, '');
 });
 
-test('los importes y descripciones largos usan una línea con puntos suspensivos', async prueba => {
+test('las cards y el detalle de deuda mantienen el truncado de textos largos', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
   const persona = await e.guardarPersona({ nombre: 'Nombre muy largo para el contacto de pruebas', apellido: 'Apellido muy largo para probar la tarjeta', apodo: 'Contacto' });
   const descripcion = 'Descripción extensa '.repeat(15).trim();
@@ -304,5 +387,7 @@ test('los importes y descripciones largos usan una línea con puntos suspensivos
   for (const texto of textos) { assert.equal(texto.props.numberOfLines, 1); assert.equal(texto.props.ellipsizeMode, 'tail'); }
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'detalleDeuda', deudaId: deuda.id });
   const titulo = vista.todos().find(n => n.type === 'Text' && String(n.children).includes(descripcion));
-  assert.equal(presente(titulo).props.numberOfLines, 1); assert.equal(presente(titulo).props.ellipsizeMode, 'tail');
+  assert.equal(String(presente(titulo).children), descripcion);
+  assert.equal(presente(titulo).props.numberOfLines, 1);
+  assert.equal(presente(titulo).props.ellipsizeMode, 'tail');
 });

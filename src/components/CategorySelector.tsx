@@ -147,7 +147,7 @@ export default function SelectorCategoria({
       ) : null}
 
       {enGrilla ? null : (
-      <Modal
+      <Modal statusBarTranslucent navigationBarTranslucent
         animationType="fade"
         onRequestClose={() => establecerModalVisible(false)}
         transparent

@@ -1,6 +1,10 @@
+import { crearEstilosEditorGastos } from '../../styles/social/ExpenseEditorStyles';
+import { Ionicons } from '@expo/vector-icons';
+import crearEstilosLista from '../../styles/social/ExpenseListRowStyles';
+import { convertirMontoMovimiento } from '../../utils/movementValidation';
 import type { AspectoSocial } from '../../social/types';
 import { useEffect, useRef, useState } from 'react';
-import { Modal, View, Text, ScrollView } from 'react-native';
+import { Modal, View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { generarIdentificador } from '../../database/identifiers';
 import { previsualizarListaGastos, guardarListaGastos } from '../../social/socialService';
 import { exigir } from '../../social/socialValidation';
@@ -18,7 +22,8 @@ import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 const nuevaFila = (descripcion = '', monto = ''): import('../../social/types').FilaGasto => ({ id: generarIdentificador(), claveOperacion: generarIdentificador(), descripcion, monto });
 
 export default function FormularioListaGastos({ sala, participantes, ticket, borrador, ...aspecto }: import('../../social/types').AspectoSocial & ({sala:import('../../social/types').SalaVista;participantes:import('../../social/types').PersonaVista[];ticket?:import('../../social/types').TicketSocial;borrador:import('react').RefObject<import('../../social/types').BorradorLista | null>})) {
-  const social = useDatosSociales(), estilos = crearEstilosCompartidos(aspecto.tema);
+  const social = useDatosSociales(), estilos = { ...crearEstilosCompartidos(aspecto.tema), ...crearEstilosLista(aspecto.tema) };
+  const estilosEditor = crearEstilosEditorGastos(aspecto.tema);
   const [filas, establecerFilas] = useState(() => borrador.current?.filas || [nuevaFila()]);
   const [depositoId, establecerDepositoId] = useState(borrador.current?.depositoId || null);
   const [editando, establecerEditando] = useState<import('../../social/types').FilaGasto | null>(null);
@@ -33,6 +38,11 @@ export default function FormularioListaGastos({ sala, participantes, ticket, bor
   const cambiar = (id: string, cambios: Partial<import('../../social/types').FilaGasto>) => establecerFilas(actuales => actuales.map(f => f.id === id ? { ...f, ...cambios } : f));
   return <>
     <BarraListaGastos llena={filas.length >= 100 || !social.habilitadoParaCrear} alAgregar={() => establecerFilas(actuales => [...actuales, nuevaFila()])} alOpciones={() => establecerOpciones(true)} alEscanear={() => social.abrirOcrSala(sala.id)} tema={aspecto.tema} />
+    <View style={estilos.listaGastos}>
+      <View style={estilos.resumenLista}>
+        <Text style={estilos.cantidadItems}>{filas.length} {filas.length === 1 ? 'ítem' : 'ítems'}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit style={estilos.totalLista}>Total $ { (filas.reduce((total, fila) => total + Math.round((convertirMontoMovimiento(fila.monto) || 0) * 100), 0) / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }</Text>
+      </View>
     {filas.map((fila, indice) => {
       const ajustes = { ...comun.current, ...fila.ajustes };
       const pagador = social.obtenerPersona(ajustes.pagadorId);
@@ -44,6 +54,7 @@ export default function FormularioListaGastos({ sala, participantes, ticket, bor
         alEditar={() => { individual.current = { ...ajustes, monto: fila.monto, descripcion: fila.descripcion }; establecerEditando(fila); }}
         alQuitar={() => establecerFilas(actuales => actuales.filter(f => f.id !== fila.id))} {...aspecto} />;
     })}
+    </View>
     <AccionesFormulario texto="Guardar lista" preparar={async () => {
       const lista = filas.map(f => ({ ...comun.current, ...f.ajustes, id: f.id, claveOperacion: f.claveOperacion, monto: f.monto, descripcion: f.descripcion, salaId: sala.id }));
       const plan = await previsualizarListaGastos(lista), fondos = lista.map((): import('../../social/types').Financiaciones => ({}));
@@ -71,19 +82,35 @@ export default function FormularioListaGastos({ sala, participantes, ticket, bor
         establecerOpciones(false);
       }} {...aspecto} /> : null}
     {editando ? <Modal transparent visible animationType="fade" onRequestClose={() => establecerEditando(null)}>
-      <View style={estilos.fondoModal}><View accessibilityViewIsModal style={estilos.tarjetaModal}>
-        <Text style={aspecto.estilosGlobales.encabezadoSeccion}>Ajustar ítem</Text>
-        <ScrollView style={estilos.desplazamientoModal} keyboardShouldPersistTaps="handled">
-          <FormularioGasto borradorInicial={individual.current as import('../../social/types').EditorGasto} participantes={participantes} alCambiar={(datos) => { individual.current = { ...individual.current, ...datos }; }} {...aspecto} />
-          <SelectorDeposito depositos={social.depositos} seleccionadoId={editando.depositoId || depositoId} alSeleccionar={id => establecerEditando(actual => actual ? { ...actual, depositoId: id } : actual)} {...aspecto} />
-        </ScrollView>
-        {!social.depositos.length ? <BotonSocial texto="Crear depósito" alPresionar={() => { establecerEditando(null); social.abrirDeposito(); }} {...aspecto} /> : null}
-        <BotonSocial texto="Aplicar al ítem" alPresionar={() => {
-          cambiar(editando.id, { ajustes: individual.current, descripcion: individual.current.descripcion, monto: individual.current.monto, depositoId: editando.depositoId });
-          establecerEditando(null);
-        }} {...aspecto} />
-        <BotonSocial texto="Volver a la lista" simple alPresionar={() => establecerEditando(null)} {...aspecto} />
-      </View></View>
+      <KeyboardAvoidingView style={estilosEditor.teclado} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={estilosEditor.fondo}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Descartar edición del ítem" onPress={() => establecerEditando(null)} style={estilosEditor.cierre} />
+        <View accessibilityViewIsModal style={estilosEditor.panel}>
+          <View style={estilosEditor.cabecera}>
+            <View style={estilosEditor.datosCabecera}>
+              <Text accessibilityRole="header" style={estilosEditor.titulo}>Ajustar ítem {filas.findIndex(fila => fila.id === editando.id) + 1}</Text>
+              <Text numberOfLines={1} style={estilosEditor.ayuda}>{editando.descripcion || 'Los cambios afectan solo a este ítem.'}</Text>
+            </View>
+            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar edición del ítem" onPress={() => establecerEditando(null)} style={estilosEditor.cerrar}><Ionicons color={aspecto.tema.textoSecundario} name="close" size={22} /></Pressable>
+          </View>
+          <ScrollView style={estilosEditor.scroll} contentContainerStyle={estilosEditor.contenido} keyboardShouldPersistTaps="handled">
+            <FormularioGasto borradorInicial={individual.current as import('../../social/types').EditorGasto} participantes={participantes} alCambiar={(datos) => { individual.current = { ...individual.current, ...datos }; }} {...aspecto} />
+            <View style={estilosEditor.seccion}>
+              <SelectorDeposito depositos={social.depositos} seleccionadoId={editando.depositoId || depositoId} alSeleccionar={id => establecerEditando(actual => actual ? { ...actual, depositoId: id } : actual)} {...aspecto} />
+              {!social.depositos.length ? <BotonSocial texto="Crear depósito" alPresionar={() => { establecerEditando(null); social.abrirDeposito(); }} {...aspecto} /> : null}
+            </View>
+          </ScrollView>
+          <View style={estilosEditor.pie}>
+            <View style={estilosEditor.acciones}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Aplicar al ítem" onPress={() => {
+                cambiar(editando.id, { ajustes: individual.current, descripcion: individual.current.descripcion, monto: individual.current.monto, depositoId: editando.depositoId });
+                establecerEditando(null);
+              }} style={estilosEditor.aplicar}><Text style={estilosEditor.textoAplicar}>Aplicar al ítem</Text></Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
+      </KeyboardAvoidingView>
     </Modal> : null}
   </>;
 }

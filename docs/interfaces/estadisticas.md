@@ -41,7 +41,9 @@ Los períodos de Estadísticas conservan sus selectores propios según el gráfi
 El botón indica cuántos filtros están activos; «Limpiar» permite restablecerlos.
 
 Los depósitos se combinan con categorías, monto y período, y se
-conservan en el detalle de categoría, incluyendo su evolución anual.
+conservan en el detalle de categoría, incluyendo su evolución anual. El filtro
+usa `DepositSelector.tsx` en modo múltiple desplegable, con íconos y colores
+reales, Todos y Listo, igual que Movimientos.
 
 El importe ofrece Cualquier monto, Hasta $1.000, $1.000–$5.000 y $5.000 o más.
 Los límites son inclusivos y se aplican a cada movimiento antes de sumar,

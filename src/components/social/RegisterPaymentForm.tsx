@@ -9,7 +9,7 @@ import { View, Text } from 'react-native';
 import AccionesFormulario from './SocialFormActions';
 import RegistroNoDisponible from './SocialRecordUnavailable';
 import EstadoVacio from './SocialEmptyState';
-import TarjetaResumenDeuda from './DebtSummaryCard';
+import TarjetaDeuda from '../DebtCard';
 import OpcionesSeleccion from './SocialChoiceGroup';
 import MontoSocial from './SocialAmountInput';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
@@ -42,7 +42,7 @@ export default function FormularioRegistrarPago({
   return <>
     <View style={estilos.grupoCampo}>
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.encabezadoSeccion}>{esPago ? `Le pagás a ${nombreCompletoPersona(persona)}` : `Recibís de ${nombreCompletoPersona(persona)}`}</Text>
-      <TarjetaResumenDeuda deuda={deuda} soloLectura {...aspecto} />
+      <TarjetaDeuda deuda={deuda} nombrePersona={nombreCompletoPersona(obtenerPersona(deuda.personaId))} compacta={false} soloLectura {...aspecto} />
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{deuda.origen} · Original: {deuda.monto}</Text>
       {deuda.estado.startsWith('Pago parcial') ? <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{deuda.estado}</Text> : null}
     </View>

@@ -49,10 +49,10 @@ export default function FormularioPersona(propiedades: import('../../social/type
           <BotonSocial texto="Ver persona existente" secundario alPresionar={() => abrirPersona(existente.id)} {...aspecto} />
           <Text style={estilosGlobales.textoAyuda}>Revisá su ficha antes de intentar registrarla nuevamente.</Text>
         </View> : null}
-      <AccionesFormulario texto={personaInicial ? "Guardar cambios" : "Registrar persona"} mostrarNota={false}
+      <AccionesFormulario texto={personaInicial ? "Guardar cambios" : "Registrar persona"}
         deshabilitado={!nombreNormalizado || !apellidoNormalizado || !apodoNormalizado || Boolean(existente)}
         recargarAntesDeCerrar alGuardar={() => guardarPersona({ nombre, apellido, apodo }, personaInicial?.id)} alExito={alCerrar} {...aspecto} />
-      {personaInicial ? <AccionesFormulario texto={personaInicial.activa ? 'Eliminar persona' : 'Reactivar persona'} peligro={personaInicial.activa} mostrarNota={false}
+      {personaInicial ? <AccionesFormulario texto={personaInicial.activa ? 'Eliminar persona' : 'Reactivar persona'} peligro={personaInicial.activa}
         confirmacion={personaInicial.activa ? { titulo: '¿Eliminar esta persona?', descripcion: 'Se desactivará su ficha. Sus salas, pagos y deudas anteriores se conservarán y podrán saldarse.', textoConfirmar: 'Sí, eliminar persona' } : undefined}
         recargarAntesDeCerrar alGuardar={() => cambiarActividadPersona(personaInicial.id, !personaInicial.activa)}
         alExito={persona => { alCerrar(); if (persona && !persona.activa) irAgenda(); }} {...aspecto} /> : null}

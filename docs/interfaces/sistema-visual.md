@@ -304,3 +304,32 @@ duplicar tokens globales ni mezclar sus layouts con los de otras pantallas.
   reutilizarse desde una pantalla de Expo.
 - Expo compila el bundle Android sin errores de importación.
 - Los estilos permanecen en archivos `.ts` y los componentes con JSX en `.tsx`; no se usa CSS web.
+
+### Selector compartido de depósitos
+
+Ingreso, Egreso, OCR, filtros de Movimientos y Estadísticas y formularios de
+Social usan exclusivamente `src/components/DepositSelector.tsx`. Sus estilos
+propios están en `src/styles/DepositSelectorStyles.ts`, con ambos temas. El
+campo conserva el aspecto de los formularios: altura mínima de 64 puntos,
+radio de 10 puntos, nombre de 16 puntos y dato secundario de 14. Muestra el
+ícono real del depósito sin recuadro de color, como los otros campos, con borde neutro fino y verde
+al abrir. La lista flotante se ancla
+al control, tiene scroll limitado, esquinas recortadas y selección por relleno.
+Se coloca debajo del borde inferior del campo, con altura limitada y scroll.
+La selección individual cierra al elegir; la múltiple permite marcar varias,
+seleccionar Todos y cerrar con Listo. `impedirSeleccionVacia` conserva la
+restricción del último depósito de los filtros. Ya no se usa una lista inline
+ni el cuadro centrado anterior; la presentación está definida en el componente,
+sin depender de los estilos específicos de cada formulario.
+
+Los modales de selección de categorías, depósito, fecha, hora y personas
+conservan el comportamiento edge-to-edge de Android mediante
+`statusBarTranslucent` y `navigationBarTranslucent`, evitando que la ventana
+del selector imponga otro fondo a la barra de navegación del sistema. El
+desplegable de depósitos espera `keyboardDidHide` antes de abrir si había
+teclado visible y no presenta la lista hasta medirla con la ventana abierta.
+
+El anclaje del depósito usa `measure` con `pageX/pageY` y la altura completa
+del campo. Las dimensiones disponibles provienen de `onLayout` de la capa
+flotante; no se resta el origen de otra ventana medido con `measureInWindow`.
+La lista no se reposiciona arriba al abrir, evitando que tape parte del campo.

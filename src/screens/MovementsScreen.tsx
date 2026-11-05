@@ -926,7 +926,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                       seleccionMultiple
                       seleccionadasIds={depositoFiltroIds}
                       alCambiarMulti={establecerDepositoFiltroIds}
-                      enLinea
+                      impedirSeleccionVacia
                     />
                   </SeccionFiltro>
 

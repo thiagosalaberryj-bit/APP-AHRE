@@ -60,6 +60,22 @@ La tarjeta Tus pendientes muestra Te deben y Debés sin compensar direcciones,
 con los accesos Nueva deuda, Personas y Nueva sala. Los importes se calculan
 sobre deudas propias pendientes, incluyendo pagos parciales y contactos inactivos.
 
+El panel conserva esa distribución con una escala visual más compacta, acorde
+con Inicio: resumen con relleno de 12 puntos, importes de 24 puntos, acciones
+con íconos de 20 puntos y esquinas menos redondeadas. Deudas recientes y Salas
+usan tarjetas compactas, con títulos de 16
+puntos, metadatos de 12 puntos y menor espacio interior. Sus contenedores tienen
+radio de 10 puntos y las franjas de importe, de 5. El estado sin deudas usa el
+mismo borde fino del tema. Los ajustes de resumen y acciones son locales al panel. El historial de deudas
+comparte la card compacta del panel. Se mantienen los temas claro y oscuro.
+
+La card de deuda se centraliza en `src/components/DebtCard.tsx`
+(`TarjetaDeuda`), con estilos propios en `src/styles/DebtCardStyles.ts`.
+Recibe deuda, nombre de la persona, tema y acción, sin consultar el contexto
+social. Social y el historial usan el mismo diseño compacto por defecto.
+Eliminar deuda y Registrar pago reutilizan su modo de solo lectura con tamaño
+anterior, sin flecha ni acción. No se mantiene una segunda card de resumen.
+
 Debajo aparecen hasta cinco deudas pendientes recientes y hasta tres salas
 abiertas. Ver todas las deudas y Ver todas las salas conservan sus flechas.
 Sin pendientes se muestran cero y el estado al día; sin salas abiertas se indica
@@ -67,6 +83,11 @@ su ausencia. Ya no se utiliza el parámetro de demostración sinDeudas.
 
 El historial de deudas busca por nombre, apellido, apodo, descripción y origen.
 Combina Todas/Pendientes/Saldadas y agrupa por mes expandible, con X de Y saldadas.
+El buscador y el acceso de alta tienen 44 puntos de altura, borde neutro y foco
+verde al escribir. Los filtros reutilizan los estilos de Movimientos y
+Estadísticas: 38 puntos de alto, radio de 5 puntos y selección por relleno sin
+cambiar tamaño. El contador ocupa una línea compacta, sin botón «Limpiar»,
+con 8 puntos de separación respecto de los filtros y el listado. Los estilos locales están en `DebtHistoryStyles.ts`.
 El encabezado mensual usa `src/components/CollapsibleSectionHeader.tsx`
 (`EncabezadoSeccionPlegable`), compartido con Sincronización y disponible para
 otras listas. Recibe título, resumen opcional, estado expandido y acción para
@@ -96,8 +117,9 @@ conservan los campos y se muestra un toast. Ver persona existente permite abrir
 una coincidencia. El registro desde selectores utiliza la misma agenda con su
 modal de alta; al regresar se conserva el borrador anterior.
 
-El perfil conserva avatar, nombre/apodo truncados, icono de edición, resumen de
-ambas direcciones y Registrar deuda. Sus tarjetas muestran pendientes y saldadas.
+El perfil conserva avatar, nombre y apodo, icono de edición, resumen de
+ambas direcciones y Registrar deuda. La cabecera permite leer nombres largos;
+las cards del listado mantienen su truncado. Sus tarjetas muestran pendientes y saldadas.
 Desde edición se puede Eliminar persona con confirmación o reactivar una ficha
 inactiva. Eliminar desactiva, sin borrar filas ni cancelar deudas. Una ficha
 inactiva conserva sus obligaciones anteriores y permite registrar sus pagos;
@@ -110,15 +132,52 @@ confirmación de baja utiliza el componente compartido de confirmaciones.
 
 ## Creación y detalle de sala
 
+En Agregar gasto, Un ítem/Registrar lista reutiliza `SegmentedSelector.tsx`.
+También lo hace Iguales/Manual en «Cómo se reparte», tanto en el formulario
+individual y la edición de ítems como en las opciones rápidas de la lista.
+Mantienen el estilo de las secciones de sala y la transición de 200 ms del
+indicador, respetando reducir movimiento. Cambiar de opción conserva los
+borradores y los valores del reparto.
+
+«Pagó» y «Participan» usan la variante `desplegable` de `PeopleSelector`, con
+controles de 38 puntos y listas compactas ancladas al campo sobre el contenido.
+Las listas se anclan debajo del selector, midiendo campo y capa flotante en el
+mismo sistema de coordenadas para no superponerlos. La ventana flotante
+conserva el mismo tratamiento de la barra de estado que la ventana de origen
+y se vuelve a medir cuando termina de abrir. Al abrir se oculta el teclado
+y se recalcula la posición. Tienen scroll, borde del tema, esquinas recortadas y selección por
+relleno, sin la tarjeta de diálogo centrada. Pagó se cierra al elegir; Participan
+permite marcar varias personas y confirmar con Listo. Las otras selecciones de
+personas conservan su presentación anterior.
+
+El reparto en partes iguales muestra la parte exacta de cada persona usando el
+mismo cálculo en centavos que el guardado. Los redondeos se distribuyen en el
+orden de las personas seleccionadas. El reparto manual presenta los nombres y
+entradas de monto de 38 puntos en filas compactas sin líneas de separación entre
+personas, el total asignado y cuánto
+falta o excede el importe. El resumen manual reduce su relleno a 8 puntos.
+Solo indica que el reparto coincide cuando todas las partes son positivas y
+suman el total. Cambiar entre Iguales y Manual conserva los importes escritos;
+la vista previa no registra movimientos ni guarda gastos por su cuenta.
+
 Crear sala guarda nombre, descripción opcional, categoría de egreso, icono,
 color y personas. La fecha de la ocasión sigue siendo el último campo y comienza
 con el día actual. Se conserva separada de la fecha de creación. Vos se incluye
 automáticamente y se aplica un máximo real de tres salas abiertas por usuario.
 
 El detalle conserva su resumen con total gastado y las opciones Balances,
-Gastos y Personas, del mismo ancho y con iconos al lado del texto. Agregar gasto
+Gastos y Personas reunidas en `SegmentedSelector.tsx`, el mismo selector de
+Estadísticas, con tres segmentos del mismo ancho y texto en una línea. El
+indicador se desliza en 200 ms al cambiar de sección y respeta reducir movimiento.
+No hay animación de carga inicial. Agregar gasto
 permanece dentro del resumen. Cada gasto es un ítem independiente, con pagador,
 importe, personas, reparto y pagos propios.
+El resumen, los balances y las tarjetas de gastos usan rellenos de 8–12 puntos,
+radios de 5–10 puntos y tipografía de 12–16 puntos, con el nombre de sala a 18 y
+los totales a 24. Las personas usan filas de 52 puntos, avatares de 32 y
+buscador/alta de 44. Se conserva la distribución y el comportamiento de las
+acciones, incluidas las salas cerradas. Estos ajustes son locales a las salas
+y mantienen ambos temas.
 Agregar gasto comparte los estilos de las acciones del panel, con icono encima
 del texto. Ocupa la misma altura y ancho que Total gastado en una fila sin salto;
 la cantidad de gastos se muestra debajo de esa fila.
@@ -165,16 +224,32 @@ Un ítem conserva el formulario rápido. El modo se elige con el mismo selector
 segmentado de Egresos/Ingresos de Estadísticas. Escanear ticket aparece únicamente
 en la barra superior de Registrar lista. Registrar lista permite hasta 100 filas
 con descripción e importe, agregar/quitar filas y ajustar reparto y depósito
-por ítem en modal. El reparto y depósito comunes se aplican a las filas sin
+por ítem en un panel inferior con título y número del ítem, cierre accesible,
+contenido desplazable y acción Aplicar al ítem fija fuera del scroll.
+Se adapta al teclado. La X y tocar fuera descartan los cambios de esa edición. El reparto y depósito comunes se aplican a las filas sin
 ajustes propios. Las filas compactas alinean nombre y precio, muestran pagador,
-reparto, personas y depósito en un resumen truncado, y tienen iconos de editar
+reparto, personas y depósito en un resumen de hasta dos líneas, y tienen iconos de editar
 en verde y borrar en rojo arriba, cada uno sobre su propio fondo.
 Nombre e importe usan borde gris fino en reposo y verde al recibir el foco.
 Agregar, Opciones y Escanear quedan juntos en una barra compacta encima de las
 filas. No se repite Escanear debajo del selector cuando se está en modo lista.
-Opciones rápidas abre un modal con campos seleccionables: pagador, personas,
-reparto, depósito y pagos. Solo se despliegan los controles marcados y Aplicar
-a todos modifica únicamente esos campos, conservando los demás ajustes de cada
+La barra usa botones de 44 puntos con ícono y texto en una fila. Las tarjetas
+tienen radio de 10 puntos, campos de 38 puntos y separación de 8 puntos entre
+ítems. Encima de las filas se muestra la cantidad de ítems y el total actualizado
+en centavos. Un ítem y Registrar lista omiten la nota de guardado local debajo
+del botón de guardar.
+Opciones rápidas abre un panel inferior con la misma animación y gesto de
+arrastre de los filtros de Movimientos: entrada desde abajo, fondo progresivo
+y cierre al arrastrar la manija, tocar fuera, pulsar Atrás o la X. Al aplicar,
+primero termina el cierre y luego se actualiza la lista. El movimiento se
+reutiliza mediante `src/utils/useBottomSheet.ts`; no modifica el selector
+Un ítem/Registrar lista ni la apertura de la edición individual.
+El panel tiene los controles visibles de pagador,
+personas, reparto, depósito y pagos. Cambiar un valor activa automáticamente
+su campo; el encabezado permite incluirlo o excluirlo sin ocultar el control.
+Cada sección distingue «Sin cambios» de «Se aplicará». El pie fijo resume los
+campos elegidos y muestra Aplicar a todos. No se repite el botón Cancelar. Aplicar a todos modifica
+únicamente esos campos, conservando los demás ajustes de cada
 ítem y sus nombres e importes. Aplicar queda deshabilitado hasta elegir un cambio.
 El formulario de reparto ya no se muestra permanentemente debajo de la lista.
 Cambiar de modo conserva el borrador de ambos formularios.
@@ -199,12 +274,10 @@ que los ítems y pagos; cancelar no guarda ni la deuda ni el movimiento. Deuda y
 origen se confirman en una transacción. El detalle y el registro de pago identifican
 el adelanto y su depósito, usando el campo de origen existente.
 El detalle reúne persona, apodo, descripción y estado. Original ocupa la fila
-superior; debajo quedan el pendiente y el dinero pagado o recibido lado a lado,
-seguidos por fecha y origen. Reutiliza los
-contenedores de importe y las acciones de pago/eliminación. Ver persona y
-Ver sala de origen quedan fuera del resumen, como accesos secundarios con
-icono destacado y flecha del verde claro del texto del botón secundario, con
-contraste sobre su fondo verde en ambos temas. El acceso a la sala también
+superior y debajo quedan pendiente y Pagaste/Recibiste lado a lado,
+seguidos por fecha y origen. Conserva las acciones de pago/eliminación.
+Ver persona y Ver sala de origen quedan fuera del resumen como accesos
+secundarios de superficie neutra, con ícono y flecha en ambos temas. El acceso a la sala también
 queda fuera de las tarjetas del perfil.
 Registrar pago conserva la tarjeta de
 consulta, Saldar todo/Otro importe y el monto editable. Los pagos parciales y
@@ -266,3 +339,23 @@ Los recorridos de revisión visual incluyen navegación Atrás, teclado, texto
 ampliado, creación de depósito y regreso, reinicio, cambio de cuenta, modo avión
 y diálogos nativos. La lectura real requiere ML Kit, incluido en el APK y no
 disponible en Expo Go.
+
+El modal Agregar personas usa una búsqueda compacta con foco verde, filas
+resaltadas al seleccionarlas y un pie fijo con Crear persona y Agregar uno
+al lado del otro. Agregar indica la cantidad elegida y permanece deshabilitado
+sin selección o mientras guarda. Los botones conservan sus acciones anteriores.
+
+La confirmación de movimiento presenta descripción e importe en un resumen,
+fecha y hora en filas separadas y confirmación fija al pie. Crear movimiento/Ya
+registrado reutiliza `SegmentedSelector.tsx`, con el mismo deslizamiento de las
+otras secciones. Las opciones existentes distinguen la selección por relleno
+y borde, manteniendo el importe y las reglas de vinculación. Social elimina
+las notas repetidas de guardado local de sus formularios y de Personas; el
+estado de sincronización conserva los avisos de conexión sin repetir esa nota.
+
+El detalle de deuda conserva la distribución anterior: persona, descripción y
+estado, Original arriba y los importes pendiente y pagado/recibido debajo,
+seguidos de fecha, origen y acciones. Solo reduce rellenos y tipografía usando
+estilos locales en `DebtDetailsStyles.ts`. No incorpora una barra de progreso.
+El perfil de persona conserva su rediseño en `SocialDetailStyles.ts`, con
+resumen compacto y la card de deuda compartida.

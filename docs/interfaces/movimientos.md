@@ -359,7 +359,8 @@ depósitos y límites monetarios; Movimientos conserva sus fechas y tipos existe
   extremo correspondiente. Día usa un calendario inline; Semana toma una fecha
   y usa la semana de lunes a domingo; Mes permite elegir mes y año;
   Personalizado permite elegir inicio y fin e incluye ambas fechas.
-- **Depósitos:** aparecen todos seleccionados inicialmente. Si están todos
+- **Depósitos:** el selector compartido abre una lista flotante con íconos y
+  colores reales, selección múltiple y acción Listo. Aparecen todos seleccionados inicialmente. Si están todos
   seleccionados no se restringen los resultados; al desmarcar alguno, se
   filtran por los que continúan marcados. No se puede quitar el último depósito
   hasta marcar otro. «Todos» vuelve a seleccionar cada depósito. Las opciones

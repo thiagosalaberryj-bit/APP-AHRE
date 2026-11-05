@@ -1,5 +1,5 @@
 import type { AspectoSocial } from '../../social/types';
-import type { NombreIcono } from '../../constants/movimientos';
+import SelectorSegmentado from '../SegmentedSelector';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
 import { cambiarPersonasSala } from '../../social/socialService';
@@ -43,26 +43,22 @@ export default function DetalleSala(propiedades: import('../../social/types').As
   const cerrada = sala.estado === 'cerrada';
   const participantes = [personaActual, ...personasSala.map(obtenerPersona)];
   return <>
-      <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
-        <View style={estilos.filaCampos}><View style={[estilos.iconoLista, {
+      <View style={[estilosGlobales.tarjeta, estilos.tarjetaSala, estilos.grupo]}>
+        <View style={estilos.filaCampos}><View style={[estilos.iconoSala, {
           backgroundColor: sala.color
-        }]}><Ionicons color={COLOR_ICONO_DEPOSITO} name={sala.icono as import('../../constants/movimientos').NombreIcono} size={24} /></View><View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.subtitulo}>{sala.nombre}</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{CATEGORIAS_EGRESO.find(categoria => categoria.id === sala.categoriaId)?.nombre}</Text></View></View>
-        <Text style={estilosGlobales.textoSecundario}>{sala.fecha} · {cerrada ? 'Cerrada · Solo lectura' : 'Activa'} · {participantes.length} participantes</Text>
-        <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{sala.descripcion}</Text>
+        }]}><Ionicons color={COLOR_ICONO_DEPOSITO} name={sala.icono as import('../../constants/movimientos').NombreIcono} size={20} /></View><View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.tituloSala}>{sala.nombre}</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoSala}>{CATEGORIAS_EGRESO.find(categoria => categoria.id === sala.categoriaId)?.nombre}</Text></View></View>
+        <Text style={estilos.textoSala}>{sala.fecha} · {cerrada ? 'Cerrada · Solo lectura' : 'Activa'} · {participantes.length} participantes</Text>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoSala}>{sala.descripcion}</Text>
         <View style={estilos.resumenGastosSala}>
-          <ResumenImporteSocial etiqueta="Total gastado" valor={sala.totalGastado} icono="receipt-outline" {...aspecto} />
+          <ResumenImporteSocial etiqueta="Total gastado" valor={sala.totalGastado} icono="receipt-outline" compacto estiloValor={estilos.importeSala} {...aspecto} />
           {!cerrada ? <Pressable accessibilityRole="button" accessibilityLabel="Agregar gasto" onPress={() => abrirRegistro('gasto', {
           salaId: sala.id
-        })} style={estilos.accionPanel}><Ionicons color={tema.botonPrincipalTexto} name="add-circle-outline" size={24} /><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoAccionPanel}>Agregar gasto</Text></Pressable> : null}
+        })} style={estilos.accionPanel}><Ionicons color={tema.botonPrincipalTexto} name="add-circle-outline" size={20} /><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoAccionPanel}>Agregar gasto</Text></Pressable> : null}
         </View>
-        <Text style={estilosGlobales.textoSecundario}>{sala.gastos.length} gastos</Text>
+        <Text style={estilos.textoSala}>{sala.gastos.length} gastos</Text>
         {cerrada ? <Text style={estilosGlobales.texto}>No se puede modificar. Las deudas pendientes siguen activas en Personas y deudas.</Text> : null}
       </View>
-      <View accessibilityRole="tablist" style={estilos.filaSimple}>
-        {SECCIONES_SALA.map(opcion => <Pressable key={opcion.id} accessibilityLabel={opcion.nombre} accessibilityRole="tab" accessibilityState={{
-        selected: seccion === opcion.id
-      }} onPress={() => establecerSeccion(opcion.id)} style={[estilos.seccionSala, seccion === opcion.id && estilos.pestanaActiva]}><Ionicons color={seccion === opcion.id ? tema.botonPrincipalTexto : tema.textoSecundario} name={opcion.icono as NombreIcono} size={22} /><Text ellipsizeMode="tail" numberOfLines={2} style={[estilos.textoPestana, estilos.nombreSeccionSala, seccion === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
-      </View>
+      <SelectorSegmentado tema={tema} opciones={SECCIONES_SALA} valor={seccion} alSeleccionar={establecerSeccion} etiqueta="Sección de sala" />
       {seccion === 'balances' ? <BalancesSala sala={sala} alAbrirGasto={alAbrirGasto} {...aspecto} /> : seccion === 'participantes' ? <PersonasSala personasSala={personasSala} gastos={sala.gastos} alCambiar={async ids => { await cambiarPersonasSala(sala.id, ids); await recargar(); }} cerrada={cerrada} alCrearPersona={() => abrirRegistro('persona')} {...aspecto} /> : <View style={estilos.grupo}>
           {sala.gastos.length ? sala.gastos.map(gasto => <TarjetaGastoSala key={gasto.id} gasto={gasto} alAbrir={() => alAbrirGasto(gasto.id)} {...aspecto} />) : <EstadoVacio icono="receipt-outline" titulo="Todavía no hay gastos" descripcion="Registrá quién pagó y cómo se reparten las partes." {...aspecto} />}
         </View>}
@@ -71,7 +67,7 @@ export default function DetalleSala(propiedades: import('../../social/types').As
         salaId: sala.id
       })} style={({
         pressed: presionado
-      }) => [estilosGlobales.botonSecundario, estilos.filaSimple, presionado && estilos.deudaHistorialPresionada]}>
+      }) => [estilosGlobales.botonSecundario, estilos.cerrarSala, estilos.filaSimple, presionado && estilos.deudaHistorialPresionada]}>
           <Ionicons color={tema.botonSecundarioTexto} name="lock-closed-outline" size={22} />
           <Text style={estilosGlobales.textoBotonSecundario}>Cerrar sala</Text>
         </Pressable>

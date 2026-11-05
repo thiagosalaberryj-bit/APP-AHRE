@@ -1,6 +1,5 @@
 import type { AspectoSocial } from '../../social/types';
 import { useContext, useEffect, useRef, useState } from 'react';
-import { Text } from 'react-native';
 import { ContextoAvisos } from '../../contexts/ToastContext';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import BotonSocial from './SocialButton';
@@ -8,7 +7,7 @@ import ModalConfirmacionSocial from './SocialConfirmationModal';
 import ModalMovimientoSocial from './SocialMovementModal';
 
 export default function AccionesFormulario<Resultado>({ texto, peligro = false, deshabilitado = false, confirmacion = undefined,
-  alGuardar, preparar = undefined, alExito = undefined, mostrarNota = true, recargarAntesDeCerrar = false, mensajeExito = 'Cambios guardados.', ...aspecto }: import('../../social/types').AccionesFormularioProps<Resultado>) {
+  alGuardar, preparar = undefined, alExito = undefined, recargarAntesDeCerrar = false, mensajeExito = 'Cambios guardados.', ...aspecto }: import('../../social/types').AccionesFormularioProps<Resultado>) {
   const social = useDatosSociales();
   const { mostrarAviso } = useContext(ContextoAvisos);
   const [confirmando, establecerConfirmando] = useState(false);
@@ -56,9 +55,7 @@ export default function AccionesFormulario<Resultado>({ texto, peligro = false, 
   };
   return <>
     <BotonSocial peligro={peligro} deshabilitado={deshabilitado || guardando || Boolean(plan)} texto={guardando ? 'Guardando…' : texto}
-      alPresionar={() => confirmacion ? establecerConfirmando(true) : iniciar()} {...aspecto} />
-    {mostrarNota ? <Text style={aspecto.estilosGlobales.textoAyuda}>Guardado local · Disponible sin conexión</Text> : null}
-    {confirmando && confirmacion ? <ModalConfirmacionSocial {...confirmacion} peligro={peligro} alCerrar={() => establecerConfirmando(false)} alConfirmar={iniciar} {...aspecto} /> : null}
+      alPresionar={() => confirmacion ? establecerConfirmando(true) : iniciar()} {...aspecto} />    {confirmando && confirmacion ? <ModalConfirmacionSocial {...confirmacion} peligro={peligro} alCerrar={() => establecerConfirmando(false)} alConfirmar={iniciar} {...aspecto} /> : null}
     {plan ? <ModalMovimientoSocial plan={plan} guardando={guardando} alCerrar={() => { if (!guardando) establecerPlan(null); }} alConfirmar={guardar} {...aspecto} /> : null}
   </>;
 }
