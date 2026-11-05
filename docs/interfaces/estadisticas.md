@@ -123,6 +123,24 @@ scroll interna pequeña.
 
 ## Detalles y datos
 
+El detalle de categoría usa una tarjeta de resumen con ícono y nombre, familia
+de color y descripción. El total mensual queda alineado a la derecha, en una
+sola línea adaptable para importes largos; debajo aparecen la cantidad de
+movimientos y el promedio por movimiento. El ícono mantiene contraste sobre
+el relleno de la categoría también en modo oscuro. El selector de año ocupa
+el lugar del número junto a «Evolución anual» y abre una lista flotante con
+scroll, borde del tema y contenido recortado en las esquinas. Se cierra al
+elegir, tocar fuera, desplazar la pantalla o pulsar Atrás, sin abrir un modal.
+
+La evolución anual se presenta en doce columnas compactas con el color de la
+categoría. Tocar un mes cambia el período del resumen y los movimientos, sin
+un selector de mes adicional ni información repetida debajo del gráfico. El
+resaltado mensual tiene extremos redondeados y no altera las dimensiones; al consultar otro mes del
+mismo año se conserva el gráfico mientras llegan los nuevos datos. La lista
+inferior reutiliza las cards de movimientos, con su fecha dentro y sin
+encabezados repetidos por día. El estado vacío permite seguir cambiando el
+período. Todos estos estilos son locales al detalle y admiten ambos temas.
+
 El detalle de categoría suma los movimientos de la categoría, el tipo y el mes
 seleccionados. Sus filas usan la descripción, fecha y hora, y monto. Al abrir
 una fila se muestra el detalle de movimiento con tipo, categoría, monto,
