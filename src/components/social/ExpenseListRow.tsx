@@ -10,6 +10,7 @@ export default function FilaListaGastos({ fila, indice, resumen, alCambiar, alEd
   return <View style={[estilosGlobales.tarjeta, estilos.tarjetaCompacta]}>
     <View style={estilos.cabecera}>
       <Text style={[estilosGlobales.etiqueta, estilos.textoFlexible]}>Ítem {indice + 1}</Text>
+      <Text style={estilosGlobales.contadorCampo}>{fila.descripcion.length}/500</Text>
       <Pressable accessibilityRole="button" accessibilityLabel={`Ajustar ítem ${indice + 1}`} hitSlop={4} onPress={alEditar} style={[estilos.accion, estilos.editar]}><Ionicons name="create-outline" size={20} color={tema.foco} /></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={`Quitar ítem ${indice + 1}`} hitSlop={4} onPress={alQuitar} style={[estilos.accion, estilos.borrar]}><Ionicons name="trash-outline" size={20} color={tema.error} /></Pressable>
     </View>

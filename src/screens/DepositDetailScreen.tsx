@@ -1275,7 +1275,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               style={estilos.contenidoModal}
             >
               <View style={estilosFormularioDeposito.grupo}>
-                <Text style={estilosGlobales.etiqueta}>Nombre del depósito *</Text>
+                <View style={estilosGlobales.encabezadoCampo}>
+                  <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Nombre del depósito *</Text>
+                  <Text style={estilosGlobales.contadorCampo}>{(borrador.nombre || '').length}/30</Text>
+                </View>
                 <View style={[
                   estilosGlobales.campo,
                   estilosFormularioDeposito.filaEntrada,
@@ -1307,7 +1310,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     </Pressable>
                   ) : null}
                 </View>
-                <Text style={estilosFormularioDeposito.contador}>{`${(borrador.nombre || '').length}/30`}</Text>
                 {erroresEdicion.nombre ? <Text style={estilosGlobales.textoError}>{erroresEdicion.nombre}</Text> : null}
               </View>
 
@@ -1481,7 +1483,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               <View style={estilosFormularioDeposito.grupo}>
                 <View style={estilosFormularioDeposito.encabezadoColor}>
                   <Text style={estilosGlobales.etiqueta}>Descripción</Text>
-                  <Text style={estilosFormularioDeposito.textoOpcional}>Opcional</Text>
+                  <View style={estilosFormularioDeposito.detalleEncabezadoCampo}>
+                    <Text style={estilosFormularioDeposito.textoOpcional}>Opcional ·</Text>
+                    <Text style={estilosGlobales.contadorCampo}>{(borrador.descripcion || '').length}/60</Text>
+                  </View>
                 </View>
                 <View style={[
                   estilosGlobales.campo,
@@ -1514,7 +1519,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     </Pressable>
                   ) : null}
                 </View>
-                <Text style={estilosFormularioDeposito.contador}>{`${(borrador.descripcion || '').length}/60`}</Text>
                 <Text style={estilosGlobales.textoAyuda}>
                   Si la dejás vacía, se generará automáticamente con el nombre y el tipo.
                 </Text>

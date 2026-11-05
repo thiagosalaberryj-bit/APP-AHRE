@@ -16,6 +16,13 @@ necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
 
 ## Organización
 
+Los campos con límite de caracteres muestran `actual/máximo` en la misma fila
+que su etiqueta, alineado a la derecha, sin reservar otra fila debajo del input.
+Los estilos compartidos `encabezadoCampo`, `etiquetaCampo` y `contadorCampo` de
+`globalStyles.ts` permiten aplicar esta disposición en formularios y modales.
+Los límites y las validaciones existentes se conservan, incluido el tratamiento
+de descripciones OCR que superan el máximo y deben resumirse antes de guardar.
+
 El contenido principal de todas las pantallas usa el mismo margen lateral que
 Inicio/Dashboard: **12 puntos por lado**, definido por
 `MARGEN_LATERAL_PANTALLA` en `src/styles/globalStyles.ts`. El ancho disponible

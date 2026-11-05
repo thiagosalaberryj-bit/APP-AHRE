@@ -40,7 +40,7 @@ export default function FormularioCrearSala(propiedades: import('../../social/ty
   const registrarPersona = () => abrirRegistro('persona');
   const etiqueta = 'Crear sala';
   return <>
-          <CampoFormulario etiqueta="Nombre de la ocasión" ejemplo="Ej.: Cena del viernes" valor={nombre} alCambiar={establecerNombre} limite={100} {...aspecto} /><CampoFormulario etiqueta="Descripción (opcional)" valor={descripcion} alCambiar={establecerDescripcion} limite={500} {...aspecto} /><PersonalizacionSala alCambiar={establecerApariencia} {...aspecto} />
+          <CampoFormulario etiqueta="Nombre de la ocasión" ejemplo="Ej.: Cena del viernes" valor={nombre} alCambiar={establecerNombre} limite={100} {...aspecto} /><CampoFormulario etiqueta="Descripción (opcional)" multilinea valor={descripcion} alCambiar={establecerDescripcion} limite={500} {...aspecto} /><PersonalizacionSala alCambiar={establecerApariencia} {...aspecto} />
           <SelectorPersonas etiqueta="Participantes" personas={personasSociales} seleccionadas={seleccionadas} multiple alCambiar={establecerSeleccionadas} alRegistrar={registrarPersona} {...aspecto} />
           <Text style={estilosGlobales.textoAyuda}>Vos ya estás incluido. Elegí del listado o registrá una persona desde el selector.</Text>
           <View style={estilosMovimiento.tarjetaInformacion}><SelectorFecha etiqueta="Fecha de la ocasión" valor={fecha} alSeleccionar={establecerFecha} tema={tema} estilosMovimiento={estilosMovimiento} /></View>

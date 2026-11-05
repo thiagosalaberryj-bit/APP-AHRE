@@ -115,6 +115,13 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
     },
+    encabezadoCampo: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIADO.pequeno,
+    },
+    etiquetaCampo: { flex: 1, minWidth: 0 },
+    contadorCampo: {
+      color: tema.textoSecundario, fontSize: TIPOGRAFIA.tamanos.auxiliar, textAlign: 'right', flexShrink: 0,
+    },
     etiqueta: {
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,

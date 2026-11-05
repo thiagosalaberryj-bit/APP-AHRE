@@ -56,7 +56,7 @@ export default function FormularioGasto(propiedades: import('../../social/types'
   };
   return <View style={estilos.grupo}>
       <MontoSocial etiqueta="Importe del ítem" valor={monto} alCambiar={establecerMonto} {...aspecto} />
-      <CampoFormulario etiqueta="Qué se pagó" ejemplo="Ej.: Pizzas, bebidas, taxi" valor={descripcion} alCambiar={establecerDescripcion} {...aspecto} />
+      <CampoFormulario etiqueta="Qué se pagó" ejemplo="Ej.: Pizzas, bebidas, taxi" valor={descripcion} limite={500} alCambiar={establecerDescripcion} {...aspecto} />
       <View style={estilos.filaCampos}>
         <SelectorPersonas etiqueta="Quién pagó" etiquetaCorta="Pagó" compacto personas={participantes} seleccionadas={[pagadorId]} alCambiar={ids => {
         establecerPagadorId(ids[0]);

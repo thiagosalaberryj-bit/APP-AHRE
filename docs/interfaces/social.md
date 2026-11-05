@@ -2,6 +2,13 @@
 
 ## Funcionamiento actual
 
+Los campos limitados muestran el contador junto al título: nombre, apellido y
+apodo de personas, nombre y descripción de sala, descripción de deuda y de gastos,
+y descripción de cada ítem de lista.
+La descripción de sala admite varias líneas y mantiene el estilo compartido de
+los campos de Social, con borde neutro y foco verde. Se reutiliza `SocialTextField`
+con sus estilos locales en `src/styles/social/SocialTextFieldStyles.ts`.
+
 Las pantallas comparten `SocialScreenFrame`: esperan la consulta inicial sin
 esqueletos ni tarjetas de carga y conservan los datos visibles al recuperar el
 foco mientras se actualiza la información local.
