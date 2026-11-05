@@ -353,6 +353,29 @@ error controlado y permite volver; si falla la lectura, ofrece reintentar. Al
 volver, los filtros se conservan y el historial se consulta nuevamente al
 recuperar el foco.
 
+El detalle reúne toda la información en una tarjeta compacta. Tipo y categoría
+comparten una cabecera de superficie neutra con el importe destacado sobre un
+fondo suave, como en las tarjetas de movimientos. Categoría e importe conservan
+dos columnas flexibles; la categoría admite varias líneas sin acortarse y el
+importe ajusta el texto dentro de su columna sin pasar debajo por su longitud.
+El contenido se separa 24 puntos del encabezado de la pantalla.
+Las etiquetas usan 14 puntos y los valores, 16, con un icono de categoría de 56 puntos.
+La descripción
+completa aparece debajo; solo se muestra estado si el registro recibido está
+anulado. «Vigente» se omite porque la consulta habitual ya exige `anulado = 0`.
+Fecha y hora, depósito y recurrencia cuando corresponde
+se presentan como filas compactas de etiqueta y valor con separadores finos.
+Se conservan los márgenes laterales de 12 puntos, ambos temas y los estados reales
+de carga, error y registro no disponible. La descripción puede seleccionarse y
+ocupar varias líneas. El importe se mantiene en una línea: si el texto formateado
+supera 12 caracteres, muestra elipsis e icono de ampliación; tocar su contenedor
+abre un modal de AHRE con el importe completo seleccionable y Cerrar. El modal
+respeta ambos temas, permite desplazamiento horizontal para valores muy largos
+y se cierra con X, Cerrar, Atrás o tocando el fondo. La etiqueta accesible
+también conserva el valor completo. Los importes cortos y los valores de los datos
+usan tamaño de texto adaptable. Fecha y hora usan el formato compacto
+`dd/mm/aaaa · hh:mm`, sin saltos de línea.
+
 ### Estados vacíos
 
 - **Cargando:** espera la consulta de SQLite sin esqueletos; conserva las filas
