@@ -1,3 +1,5 @@
+import { formatearEntradaMonto } from '../utils/moneyInput';
+import EntradaMonto from '../components/MoneyInput';
 import type { NombreIcono } from '../constants/movimientos';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import {
@@ -173,13 +175,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const estilosFormularioDeposito = {
     ...estilosBaseFormulario,
     formulario: { ...estilosBaseFormulario.formulario, ...estilos.formularioEdicion },
-    filaEntrada: { ...estilosBaseFormulario.filaEntrada, ...estilos.campoEdicion },
-    filaDescripcion: { ...estilosBaseFormulario.filaDescripcion, ...estilos.descripcionEdicion },
-    tarjetaTipo: { ...estilosBaseFormulario.tarjetaTipo, ...estilos.tipoEdicion },
-    iconoTipo: { ...estilosBaseFormulario.iconoTipo, ...estilos.iconoTipoEdicion },
     tarjetaModal: estilos.tarjetaOpciones,
-    nombreIcono: { ...estilosBaseFormulario.nombreIcono, ...estilos.nombreSelectorEdicion },
-    nombreColor: { ...estilosBaseFormulario.nombreColor, ...estilos.nombreSelectorEdicion },
   };
   const depositoId = ruta?.params?.depositoId;
   const [deposito, establecerDeposito] = useState<import("../database/types").Deposito | null>(null);
@@ -231,6 +227,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const tipoSeleccionado = TIPOS_DEPOSITO.find((opcion) => opcion.id === borrador.tipo)?.id;
   const colorBorrador = borrador.color || COLOR_DEPOSITO_PREDETERMINADO;
   const opcionColorSeleccionado = COLORES_SELECTOR.find((opcion) => opcion.valor === colorBorrador);
+  const iconoAdicionalSeleccionado = ICONOS_ADICIONALES.find((opcion) => opcion.nombre === borrador.icono);
   const iconoFueraDeVista = !ICONOS_PRINCIPALES.some((opcion) => opcion.nombre === borrador.icono);
   const estilosFormularioEdicion = {
     ...estilosFormularioDeposito,
@@ -479,8 +476,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     }
 
     if (montoMinimo.trim() || montoMaximo.trim()) {
-      const minimo = montoMinimo.trim() ? `$${montoMinimo.trim()}` : 'Sin mínimo';
-      const maximo = montoMaximo.trim() ? `$${montoMaximo.trim()}` : 'Sin máximo';
+      const minimo = montoMinimo.trim() ? ('$ ' + formatearEntradaMonto(montoMinimo.trim())) : 'Sin mínimo';
+      const maximo = montoMaximo.trim() ? ('$ ' + formatearEntradaMonto(montoMaximo.trim())) : 'Sin máximo';
       filtros.push({
         id: 'monto',
         etiqueta: `Monto: ${minimo} – ${maximo}`,
@@ -539,7 +536,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       .map((categoria) => categoria.nombre)
       .join(', ');
   const resumenMonto = montoMinimo.trim() || montoMaximo.trim()
-    ? `${montoMinimo.trim() ? `$${montoMinimo.trim()}` : 'Sin mínimo'} – ${montoMaximo.trim() ? `$${montoMaximo.trim()}` : 'Sin máximo'}`
+    ? `${montoMinimo.trim() ? ('$ ' + formatearEntradaMonto(montoMinimo.trim())) : 'Sin mínimo'} – ${montoMaximo.trim() ? ('$ ' + formatearEntradaMonto(montoMaximo.trim())) : 'Sin máximo'}`
     : 'Cualquier monto';
 
   const abrirEdicion = () => {
@@ -1130,32 +1127,20 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                         <Ionicons color={tema.textoSecundario} name="arrow-down-outline" size={16} />
                         <Text style={estilos.textoEtiquetaCampoRango}>Mínimo</Text>
                       </View>
-                      <TextInput
-                        accessibilityLabel="Monto mínimo"
-                        keyboardType="decimal-pad"
-                        onChangeText={establecerMontoMinimo}
-                        placeholder="$ 0"
-                        placeholderTextColor={tema.textoSecundario}
-                        selectionColor={tema.foco}
-                        style={estilos.campoRango}
-                        value={montoMinimo}
-                      />
+                      <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+                          etiqueta="Monto mínimo" valor={montoMinimo} alCambiarTexto={establecerMontoMinimo}
+                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
+                          estiloContenedor={estilos.campoRango}/>
                     </View>
                     <View style={estilos.grupoCampoRango}>
                       <View style={estilos.etiquetaCampoRango}>
                         <Ionicons color={tema.textoSecundario} name="arrow-up-outline" size={16} />
                         <Text style={estilos.textoEtiquetaCampoRango}>Máximo</Text>
                       </View>
-                      <TextInput
-                        accessibilityLabel="Monto máximo"
-                        keyboardType="decimal-pad"
-                        onChangeText={establecerMontoMaximo}
-                        placeholder="$ 0"
-                        placeholderTextColor={tema.textoSecundario}
-                        selectionColor={tema.foco}
-                        style={estilos.campoRango}
-                        value={montoMaximo}
-                      />
+                      <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+                          etiqueta="Monto máximo" valor={montoMaximo} alCambiarTexto={establecerMontoMaximo}
+                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
+                          estiloContenedor={estilos.campoRango}/>
                     </View>
                   </View>
                   {errorMontoFiltro ? <Text style={estilosGlobales.textoError}>{errorMontoFiltro}</Text> : null}
@@ -1379,18 +1364,18 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     );
                   })}
                   <Pressable
-                    accessibilityLabel="Ver más íconos"
+                    accessibilityLabel={iconoAdicionalSeleccionado ? `Ícono ${iconoAdicionalSeleccionado.etiqueta}. Ver más íconos` : 'Ver más íconos'}
                     accessibilityRole="button"
-                    accessibilityState={{ expanded: modalIconosEdicionVisible }}
+                    accessibilityState={{ expanded: modalIconosEdicionVisible, selected: Boolean(iconoAdicionalSeleccionado) }}
                     onPress={() => establecerModalIconosEdicionVisible(true)}
                     style={({ pressed }) => [
                       estilosFormularioDeposito.botonIcono,
-                      estilosFormularioDeposito.botonMasIconos,
+                      iconoAdicionalSeleccionado ? estilosFormularioDeposito.botonIconoSeleccionado : estilosFormularioDeposito.botonMasIconos,
                       pressed && estilosFormularioDeposito.elementoPresionado,
                     ]}
                   >
-                    <Ionicons color={tema.foco} name="add-outline" size={23} />
-                    <Text style={estilosFormularioDeposito.nombreIcono}>Más</Text>
+                    <Ionicons color={tema.foco} name={(iconoAdicionalSeleccionado?.nombre || 'add-outline') as NombreIcono} size={23} />
+                    <Text numberOfLines={1} style={estilosFormularioDeposito.nombreIcono}>{iconoAdicionalSeleccionado?.etiqueta || 'Más'}</Text>
                   </Pressable>
                 </View>
                 {iconoFueraDeVista ? (

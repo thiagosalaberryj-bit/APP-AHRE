@@ -14,31 +14,6 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       paddingBottom: ESPACIADO.extraGrande,
       gap: ESPACIADO.grande,
     },
-    campoEdicion: {
-      minHeight: 52,
-      backgroundColor: tema.fondo,
-      borderRadius: BORDES.radios.campo,
-      paddingHorizontal: ESPACIADO.medio,
-    },
-    descripcionEdicion: {
-      backgroundColor: tema.fondo,
-      borderRadius: BORDES.radios.campo,
-      paddingHorizontal: ESPACIADO.medio,
-    },
-    tipoEdicion: {
-      minHeight: 84,
-      borderRadius: BORDES.radios.campo,
-      paddingVertical: ESPACIADO.pequeno,
-      gap: ESPACIADO.minimo,
-    },
-    iconoTipoEdicion: {
-      width: 32,
-      height: 32,
-      borderRadius: BORDES.radios.campo / 2,
-    },
-    nombreSelectorEdicion: {
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-    },
     contenido: {
       width: '100%',
       alignSelf: 'center',

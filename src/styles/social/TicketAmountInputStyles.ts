@@ -8,8 +8,10 @@ export default function crearEstilosPropios(tema: Tema) {
       alignItems: 'center',
       gap: ESPACIADO.minimo,
       width: 100,
-      borderBottomWidth: BORDES.anchos.fino,
-      borderBottomColor: tema.borde
+      borderWidth: BORDES.anchos.fino,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.campo,
+      paddingHorizontal: ESPACIADO.pequeno,
     },
     simboloTicket: {
       color: tema.textoSecundario,

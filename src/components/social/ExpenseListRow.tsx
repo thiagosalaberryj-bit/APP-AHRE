@@ -1,3 +1,4 @@
+import EntradaMonto from '../MoneyInput';
 import { View, Text, TextInput, Pressable } from 'react-native';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +17,10 @@ export default function FilaListaGastos({ fila, indice, resumen, alCambiar, alEd
     </View>
     <View style={estilos.filaCampos}>
       <TextInput accessibilityLabel={`Ítem ${indice + 1}`} value={fila.descripcion} maxLength={500} onChangeText={descripcion => alCambiar({ descripcion })} onFocus={() => establecerEnfocado('nombre')} onBlur={() => establecerEnfocado(null)} placeholder="Qué se pagó" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosGlobales.campo, estilos.campo, estilosGlobales.texto, estilos.nombre, enfocado === 'nombre' && estilosGlobales.campoEnfocado]} />
-      <View style={[estilosGlobales.campo, estilos.campo, estilos.precio, enfocado === 'precio' && estilosGlobales.campoEnfocado]}><Text style={estilosGlobales.textoSecundario}>$</Text><TextInput accessibilityLabel={`Importe ${indice + 1}`} value={fila.monto} onChangeText={monto => alCambiar({ monto })} onFocus={() => establecerEnfocado('precio')} onBlur={() => establecerEnfocado(null)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosGlobales.texto, estilos.entradaPrecio]} /></View>
+      <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+        etiqueta={'Importe ' + (indice + 1)} valor={fila.monto} alCambiarTexto={monto => alCambiar({ monto })}
+        mostrarEtiqueta={false} mostrarLimpiar={false} compacto
+        estiloContenedor={[estilos.campo, estilos.precio]} estiloEntrada={[estilosGlobales.texto, estilos.entradaPrecio]}/>
     </View>
     <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoAyuda}>{resumen}</Text>
   </View>;

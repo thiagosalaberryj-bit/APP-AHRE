@@ -55,7 +55,7 @@ export default function SelectorCategoria({
     ? seleccionadasIds.includes(categoriaId)
     : seleccionadaId === categoriaId);
 
-  const mostrarTarjeta = (categoria: NonNullable<import('../types/ui').SelectorCategoriaProps['categorias']>[number]) => {
+  const mostrarTarjeta = (categoria: NonNullable<import('../types/ui').SelectorCategoriaProps['categorias']>[number], abrirSelector = false) => {
     const activa = categoriaActiva(categoria.id);
     const indiceCategoria = categorias.findIndex(
       (elemento) => elemento.id === categoria.id,
@@ -68,10 +68,10 @@ export default function SelectorCategoria({
     return (
       <Pressable
         key={categoria.id}
-        accessibilityLabel={categoria.nombre}
+        accessibilityLabel={abrirSelector ? `${categoria.nombre}. Ver más categorías` : categoria.nombre}
         accessibilityRole="button"
-        accessibilityState={{ selected: activa }}
-        onPress={() => seleccionarCategoria(categoria.id)}
+        accessibilityState={{ selected: activa, ...(abrirSelector ? { expanded: modalVisible } : {}) }}
+        onPress={() => abrirSelector ? establecerModalVisible(true) : seleccionarCategoria(categoria.id)}
         style={({ pressed: presionado }) => [
           estiloTarjeta || estilosMovimiento.tarjetaCategoria,
           { backgroundColor: colorFondo },
@@ -112,7 +112,7 @@ export default function SelectorCategoria({
       ) : (
       <View style={[estilosMovimiento.listaCategorias, enGrilla ? { flexWrap: 'wrap' } : null]}>
         {categoriasPrincipales.map((categoria) => mostrarTarjeta(categoria))}
-        {enGrilla ? null : (
+        {enGrilla ? null : seleccionFueraDeVista && !seleccionMultiple ? mostrarTarjeta(seleccionada, true) : (
         <Pressable
           accessibilityLabel="Ver más categorías"
           accessibilityRole="button"

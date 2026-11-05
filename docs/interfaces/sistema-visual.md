@@ -16,6 +16,22 @@ necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
 
 ## Organización
 
+Todos los importes editables usan `EntradaMonto` (`src/components/MoneyInput.tsx`):
+ingresos, egresos, total OCR, saldo inicial de depósitos, límites de filtros y
+los importes de Social (deudas, pagos, gastos y repartos manuales). La variante
+compacta permite conservar el espacio de filas y filtros sin duplicar inputs.
+El contenedor mantiene el fondo de superficie del tema (blanco en tema claro).
+
+Mientras se escribe, los miles se separan con puntos y los decimales con coma:
+`1234567,50` se muestra como `1.234.567,50`. El componente entrega al formulario
+texto local sin puntos de miles; las validaciones y la persistencia conservan
+sus conversiones existentes. La presentación conserva la coma final, ceros
+decimales y precisión del texto; admite dos decimales. El punto decimal de un
+teclado se convierte en coma. Se puede pegar un monto local con símbolo `$`,
+editar en medio, borrar y limpiar sin que los puntos automáticos traben el cursor.
+La lógica de texto vive en `src/utils/moneyInput.ts` y los estilos compactos en
+`src/styles/MoneyInputStyles.ts`.
+
 Los campos con límite de caracteres muestran `actual/máximo` en la misma fila
 que su etiqueta, alineado a la derecha, sin reservar otra fila debajo del input.
 Los estilos compartidos `encabezadoCampo`, `etiquetaCampo` y `contadorCampo` de

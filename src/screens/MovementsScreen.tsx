@@ -1,3 +1,5 @@
+import { formatearEntradaMonto } from '../utils/moneyInput';
+import EntradaMonto from '../components/MoneyInput';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -524,8 +526,8 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     }
 
     if (montoMinimo.trim() || montoMaximo.trim()) {
-      const minimo = montoMinimo.trim() ? `$${montoMinimo.trim()}` : 'Sin mínimo';
-      const maximo = montoMaximo.trim() ? `$${montoMaximo.trim()}` : 'Sin máximo';
+      const minimo = montoMinimo.trim() ? ('$ ' + formatearEntradaMonto(montoMinimo.trim())) : 'Sin mínimo';
+      const maximo = montoMaximo.trim() ? ('$ ' + formatearEntradaMonto(montoMaximo.trim())) : 'Sin máximo';
       filtros.push({
         id: 'monto',
         etiqueta: `Monto: ${minimo} – ${maximo}`,
@@ -605,7 +607,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
       .map((categoria) => categoria.nombre)
       .join(', ');
   const resumenMonto = montoMinimo.trim() || montoMaximo.trim()
-    ? `${montoMinimo.trim() ? `$${montoMinimo.trim()}` : 'Sin mínimo'} – ${montoMaximo.trim() ? `$${montoMaximo.trim()}` : 'Sin máximo'}`
+    ? `${montoMinimo.trim() ? ('$ ' + formatearEntradaMonto(montoMinimo.trim())) : 'Sin mínimo'} – ${montoMaximo.trim() ? ('$ ' + formatearEntradaMonto(montoMaximo.trim())) : 'Sin máximo'}`
     : 'Cualquier monto';
 
   const limpiarFiltros = () => {
@@ -1141,32 +1143,20 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                           <Ionicons color={tema.textoSecundario} name="arrow-down-outline" size={16} />
                           <Text style={estilos.textoEtiquetaCampoRango}>Mínimo</Text>
                         </View>
-                        <TextInput
-                          accessibilityLabel="Monto mínimo"
-                          keyboardType="numeric"
-                          onChangeText={establecerMontoMinimo}
-                          placeholder="$ 0"
-                          placeholderTextColor={tema.textoSecundario}
-                          selectionColor={tema.foco}
-                          style={estilos.campoRango}
-                          value={montoMinimo}
-                        />
+                        <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+                          etiqueta="Monto mínimo" valor={montoMinimo} alCambiarTexto={establecerMontoMinimo}
+                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
+                          estiloContenedor={estilos.campoRango}/>
                       </View>
                       <View style={estilos.grupoCampoRango}>
                         <View style={estilos.etiquetaCampoRango}>
                           <Ionicons color={tema.textoSecundario} name="arrow-up-outline" size={16} />
                           <Text style={estilos.textoEtiquetaCampoRango}>Máximo</Text>
                         </View>
-                        <TextInput
-                          accessibilityLabel="Monto máximo"
-                          keyboardType="numeric"
-                          onChangeText={establecerMontoMaximo}
-                          placeholder="$ 0"
-                          placeholderTextColor={tema.textoSecundario}
-                          selectionColor={tema.foco}
-                          style={estilos.campoRango}
-                          value={montoMaximo}
-                        />
+                        <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+                          etiqueta="Monto máximo" valor={montoMaximo} alCambiarTexto={establecerMontoMaximo}
+                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
+                          estiloContenedor={estilos.campoRango}/>
                       </View>
                     </View>
                     {errorMontoFiltro ? (

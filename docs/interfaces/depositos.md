@@ -27,7 +27,11 @@ indica con borde y cambio de fondo además del color, sin una marca de tilde.
 
 El ícono empieza con una opción de efectivo seleccionada. La grilla muestra
 Efectivo, Banco, Virtual, Billetera y «Más», siguiendo el patrón compacto del
-selector de categorías. «Más» abre un modal con Tarjeta y Ahorros. Se guarda la
+selector de categorías. «Más» abre un modal con Tarjeta y Ahorros. Al elegir una
+de estas opciones, la quinta casilla muestra su ícono y nombre con el estado
+seleccionado; tocarla vuelve a abrir el modal. Si se elige una opción principal,
+la quinta casilla vuelve a mostrar «Más». Este comportamiento se comparte con
+la edición del depósito. Se guarda la
 referencia permitida del ícono, no el componente visual.
 
 El color predeterminado es el azul suave `#C3D1E3`. El selector presenta en una
@@ -36,7 +40,9 @@ suave, violeta, rosa y amarillo suave. Esta paleta identifica depósitos y es
 independiente de los colores de categorías de Estadísticas. La opción
 seleccionada presenta un tick y un borde verde de foco; las demás conservan un
 borde neutro. El texto también informa el color seleccionado. Se persiste el
-color elegido o el azul suave predeterminado.
+color elegido o el azul suave predeterminado. Los nombres visibles son Azul,
+Verde, Violeta, Rosa y Amarillo, en una sola línea; la información de selección
+conserva el nombre completo.
 
 La descripción es opcional. Se recortan los espacios y se admiten hasta 60
 caracteres. Si queda vacía, la lógica de depósitos genera una descripción con
@@ -70,7 +76,10 @@ margen por lado, igual que Inicio, y se adapta a
 pantallas angostas mediante tarjetas que pueden ocupar más de una fila.
 
 El encabezado reutiliza `SectionHeader`; los campos y las acciones utilizan los
-estilos globales. Los estilos propios de distribución están en
+estilos globales. Crear y editar comparten campos con fondo de superficie (blanco en tema claro) y radio de
+10 puntos, separación de 16 puntos entre grupos, tarjetas de tipo de 84 puntos
+e íconos de tipo en contenedores de 32 puntos. El modal de íconos usa radio de
+12 puntos y ancho máximo de 480 puntos. Los estilos propios de distribución están en
 `src/styles/DepositScreenStyles.ts` y consumen `TEMAS`,
 `COLOR_DEPOSITO_PREDETERMINADO`, `COLORES_GRAFICOS` y los tokens de
 `globalStyles.ts`. La paleta se mantiene legible en modo claro y
@@ -95,10 +104,11 @@ La tarjeta usa radio de 10 puntos y conserva la separación superior de 24 punto
 Los modales del detalle (opciones, saldo, edición, íconos y eliminación) usan
 superficies del tema, ancho máximo de 480 puntos y radio de 12 puntos. Comparten
 la jerarquía de títulos, textos secundarios legibles y controles de cierre.
-La edición conserva sus campos y validaciones, con fondo suave en las entradas,
+La edición conserva sus campos y validaciones, con fondo de superficie en las entradas,
 separación de 16 puntos, selectores de tipo más compactos y acciones al pie de
 altura consistente. Los contadores siguen junto al título del campo. Estos
-ajustes son locales al detalle y no alteran el formulario de creación.
+estilos de campos y selectores se comparten con el formulario de creación en
+`DepositScreenStyles.ts`; la distribución del modal queda en los estilos del detalle.
 Luego aparece la descripción completa; una línea separa
 la comparación mensual, con texto legible y su fecha de referencia. Esta pantalla
 respeta la preferencia de privacidad del balance general, sin botón de ojo.

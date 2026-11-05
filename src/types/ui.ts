@@ -28,7 +28,11 @@ export interface SelectorFechaProps {
   mantenerAbiertoAlSeleccionar?: boolean; resaltarExtremosRango?: boolean;
 }
 export interface MontoProps extends Aspecto {
-  etiqueta?: string; valor: string; alCambiarTexto: (valor: string) => void; alLimpiar: () => void; error?: string | null;
+  etiqueta?: string; valor: string; alCambiarTexto: (valor: string) => void; alLimpiar?: () => void; error?: string | null;
+  mostrarEtiqueta?: boolean; mostrarLimpiar?: boolean; compacto?: boolean; editable?: boolean;
+  etiquetaAccesibilidad?: string; ayudaAccesibilidad?: string;
+  estiloContenedor?: StyleProp<ViewStyle>; estiloEntrada?: StyleProp<TextStyle>;
+  estiloSimbolo?: StyleProp<TextStyle>; estiloLimpiar?: StyleProp<ViewStyle>;
 }
 export interface BotonPrincipalProps {
   estilosGlobales: EstilosGlobales;

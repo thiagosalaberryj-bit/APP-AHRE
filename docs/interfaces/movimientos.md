@@ -118,7 +118,10 @@ borde de foco y radio activo.
 
 `SelectorCategoria` (`src/components/CategorySelector.tsx`) muestra cuatro
 tarjetas compactas y una quinta tarjeta «Más», sin desplazamiento horizontal.
-«Más» abre un modal con las categorías adicionales. El servicio de categorías
+«Más» abre un modal con las categorías adicionales. En selección individual,
+elegir una categoría del modal reemplaza esa quinta tarjeta por el ícono,
+nombre y color de la categoría elegida; tocarla vuelve a abrir el selector.
+Al elegir una de las cuatro principales, reaparece «Más». El servicio de categorías
 entrega el catálogo local de ingreso o egreso definido en
 `src/constants/movimientos.ts`.
 
