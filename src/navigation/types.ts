@@ -8,6 +8,7 @@ import type { RUTAS } from '../constants/routes';
 export type NombreRuta = (typeof RUTAS)[keyof typeof RUTAS];
 export interface ParametrosPantalla extends ParametrosSociales {
   screen?: NombreRuta; depositoId?: string; movimientoId?: string; categoria?: Partial<Categoria> & {color?:string};
+  rangoMontoEstadistica?: import('../utils/statisticsFilters').FiltrosDatosEstadistica;
   tipoMovimiento?: string; anio?: number; mes?: number; movimiento?: Partial<MovimientoVisible>;
   deposito_nombre?: string; destino?: string;
 }

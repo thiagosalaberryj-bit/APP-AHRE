@@ -5,6 +5,75 @@ import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './global
 
 export function crearEstilosEstadisticas(tema: Tema) {
   return StyleSheet.create({
+    capaSelectores: { position:'absolute', top:0, right:0, bottom:0, left:0, zIndex:100 },
+    fondoSelectorFlotante: { position:'absolute', top:0, right:0, bottom:0, left:0 },
+    selectorFlotante: {
+      position:'absolute', backgroundColor:tema.superficie, borderRadius:BORDES.radios.campo,
+      borderColor:tema.borde, borderWidth:BORDES.anchos.fino, overflow:'hidden',
+      elevation:8, shadowColor:'#000000', shadowOffset:{width:0,height:3}, shadowOpacity:0.2, shadowRadius:6,
+    },
+    contenidoCalendarioFecha: { padding:ESPACIADO.pequeno },
+    nombreMesCompacto: { flex:1, minWidth:0, textAlign:'center' },
+    contenidoOpcionesFecha: { paddingVertical:ESPACIADO.minimo },
+    listaDesplegableFecha: { maxHeight:184 },
+    opcionFechaCompacta: {
+      minHeight:32, flexDirection:'row', alignItems:'center', gap:ESPACIADO.pequeno,
+      paddingHorizontal:ESPACIADO.pequeno, paddingVertical:ESPACIADO.minimo,
+    },
+    textoOpcionFechaCompacta: {
+      flex:1, minWidth:0, color:tema.textoPrincipal,
+      fontFamily:TIPOGRAFIA.familias.principal, fontSize:TIPOGRAFIA.tamanos.secundario,
+    },
+    filaTipoMovimiento: {
+      backgroundColor: tema.superficie,
+      borderColor: tema.borde,
+      borderRadius: BORDES.radios.boton,
+      borderWidth: BORDES.anchos.fino,
+      flexDirection: 'row',
+      padding: ESPACIADO.minimo,
+    },
+
+    botonTipoMovimiento: {
+      alignItems: 'center',
+      borderRadius: BORDES.radios.boton,
+      flex: 1,
+      justifyContent: 'center',
+      minHeight: 40,
+    },
+
+    botonTipoMovimientoActivo: {
+      backgroundColor: tema.encabezado,
+    },
+
+    textoBotonTipo: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+    },
+
+    textoBotonTipoActivo: {
+      color: tema.encabezadoTexto,
+    },
+
+    encabezadoFiltrosRapidos: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIADO.pequeno },
+    filtroRapido: {
+      minHeight: 38, paddingHorizontal: ESPACIADO.medio,
+      alignItems: 'center', justifyContent: 'center',
+      borderRadius: BORDES.radios.campo / 2, borderWidth: BORDES.anchos.fino,
+      borderColor: tema.borde, backgroundColor: tema.superficie,
+    },
+    filtroRapidoActivo: { backgroundColor: tema.encabezado },
+    textoFiltroRapido: { color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.secundario },
+    textoFiltroRapidoActivo: { color: tema.encabezadoTexto },
+    accionFiltroRapido: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.minimo },
+    textoAccionFiltroRapido: { color: tema.foco, fontSize: TIPOGRAFIA.tamanos.secundario, fontWeight: TIPOGRAFIA.pesos.seminegrita },
+    descripcionFiltrosRapidos: { color: tema.textoSecundario, fontSize: TIPOGRAFIA.tamanos.auxiliar },
+    tituloFamilia: {
+      color: tema.textoSecundario, fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+      paddingTop: ESPACIADO.medio, paddingBottom: ESPACIADO.minimo,
+    },
     contenidoDesplazable: {
       flexGrow: 1,
       paddingBottom: ESPACIADO.enorme + ESPACIADO.pantalla,
@@ -16,33 +85,6 @@ export function crearEstilosEstadisticas(tema: Tema) {
     controles: {
       gap: ESPACIADO.pequeno,
       paddingTop: ESPACIADO.medio,
-    },
-    filaTipoMovimiento: {
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
-      borderRadius: BORDES.radios.boton,
-      borderWidth: BORDES.anchos.fino,
-      flexDirection: 'row',
-      padding: ESPACIADO.minimo,
-    },
-    botonTipoMovimiento: {
-      alignItems: 'center',
-      borderRadius: BORDES.radios.boton,
-      flex: 1,
-      justifyContent: 'center',
-      minHeight: 40,
-    },
-    botonTipoMovimientoActivo: {
-      backgroundColor: tema.encabezado,
-    },
-    textoBotonTipo: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    textoBotonTipoActivo: {
-      color: tema.encabezadoTexto,
     },
     desplazamientoSelectores: {
       alignSelf: 'stretch',
@@ -60,14 +102,14 @@ export function crearEstilosEstadisticas(tema: Tema) {
       alignItems: 'center',
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
-      borderRadius: BORDES.radios.boton,
+      borderRadius: BORDES.radios.campo / 2,
       borderWidth: BORDES.anchos.fino,
       flexDirection: 'row',
       flexGrow: 1,
       gap: ESPACIADO.minimo,
       justifyContent: 'space-between',
       flexShrink: 0,
-      minHeight: 40,
+      minHeight: 38,
       paddingHorizontal: ESPACIADO.medio,
     },
     textoSelector: {

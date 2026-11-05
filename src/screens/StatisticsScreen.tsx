@@ -1,8 +1,20 @@
+import SelectorSegmentado from '../components/SegmentedSelector';
+import FilaFiltrosHorizontal from '../components/HorizontalFilterRow';
+import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
+import PanelFiltrosMovimientos, { SeccionFiltro } from '../components/MovementFiltersPanel';
+import SelectorCategoria from '../components/CategorySelector';
+import SelectorDeposito from '../components/DepositSelector';
+import EntradaMonto from '../components/MoneyInput';
+import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
+import { cargarOpcionesHistorialMovimientos } from '../movements/movementService';
+import { convertirSaldoInicial } from '../utils/depositValidation';
+import { formatearEntradaMonto } from '../utils/moneyInput';
+import { PREAJUSTES_CATEGORIAS, PREAJUSTES_MONTOS, coincidenCategorias, alternarGrupoCategorias, agruparCategoriasSeleccionadas } from '../utils/statisticsFilters';
 import type { Tema } from '../styles/colors';
-import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
+import { Fragment, useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  Modal,
+  BackHandler,
   Pressable,
   ScrollView,
   Text,
@@ -20,7 +32,7 @@ import {
   CATEGORIAS_INGRESO,
 } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
-import { obtenerColoresGraficos } from '../styles/colors';
+import { obtenerColorIconoCategoria, ordenarCategoriasPorColor, obtenerColorCategoria, obtenerFamiliaCategoria } from '../styles/categoryColors';
 import { crearEstilosGlobales, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from '../styles/globalStyles';
 import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
 import { cargarEstadisticas } from '../statistics/statisticsService';
@@ -126,12 +138,11 @@ function formatearSemanaSelector(fecha: Date) {
 
 function obtenerCategorias(tipoMovimiento: string, tema: Tema) {
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
-  const coloresGraficos = obtenerColoresGraficos(tema);
 
-  return catalogo.map((categoria, indice) => ({
+  return ordenarCategoriasPorColor(catalogo, tema, tipoMovimiento).map((categoria, indice) => ({
     ...categoria,
     indiceCategoria: indice,
-    color: coloresGraficos[indice % coloresGraficos.length],
+    color: obtenerColorCategoria(categoria.id, tema, tipoMovimiento),
   }));
 }
 
@@ -221,6 +232,7 @@ function crearDatosColumnas(categorias: (import('../constants/movimientos').Cate
   ]));
   const totalesGenerales = new Map<string, number>();
   filas.forEach((fila) => {
+    if (!categorias.some(categoria => categoria.id === fila.categoria)) return;
     totalesGenerales.set(
       fila.periodo,
       (totalesGenerales.get(fila.periodo) || 0) + (Number(fila.total) || 0),
@@ -243,7 +255,7 @@ function crearDatosColumnas(categorias: (import('../constants/movimientos').Cate
   });
 }
 
-function ModalSelector({
+function SelectorDesplegable({
   visible,
   titulo,
   opciones,
@@ -252,73 +264,49 @@ function ModalSelector({
   estilos,
   alCerrar,
   alSeleccionar,
-}: {visible:boolean;titulo:string;opciones:readonly {id:string|number;nombre:string}[];valorSeleccionado:string|number|null;tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;alCerrar:()=>void;alSeleccionar:(id:string|number)=>void}) {
+  altoMaximo = 224,
+}: {altoMaximo?:number;visible:boolean;titulo:string;opciones:readonly {id:string|number;nombre:string}[];valorSeleccionado:string|number|null;tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;alCerrar:()=>void;alSeleccionar:(id:string|number)=>void}) {
+  if (!visible) return null;
   return (
-    <Modal
-      animationType="fade"
-      onRequestClose={alCerrar}
-      transparent
-      visible={visible}
-    >
-      <View style={estilos.fondoModal}>
-        <Pressable
-          accessibilityLabel="Cerrar selector"
-          onPress={alCerrar}
-          style={estilos.fondoTocable}
-        />
-        <View style={[estilos.tarjetaModal, { backgroundColor: tema.superficie }]}>
-          <View style={estilos.encabezadoModal}>
-            <Text style={[estilos.tituloModal, { color: tema.textoPrincipal }]}>{titulo}</Text>
-            <Pressable
-              accessibilityLabel="Cerrar"
-              accessibilityRole="button"
-              onPress={alCerrar}
-              style={estilos.botonCerrarModal}
-            >
-              <Ionicons color={tema.textoPrincipal} name="close" size={22} />
-            </Pressable>
-          </View>
-          <ScrollView contentContainerStyle={estilos.opcionesModal} showsVerticalScrollIndicator={false}>
+          <ScrollView style={[estilos.listaDesplegableFecha, { maxHeight:Math.min(184, altoMaximo) }]} nestedScrollEnabled keyboardShouldPersistTaps="handled" contentContainerStyle={estilos.contenidoOpcionesFecha} showsVerticalScrollIndicator>
             {opciones.map((opcion) => {
               const seleccionada = opcion.id === valorSeleccionado;
 
               return (
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityLabel={titulo + ': ' + opcion.nombre}
                   accessibilityState={{ selected: seleccionada }}
                   key={opcion.id}
                   onPress={() => alSeleccionar(opcion.id)}
                   style={[
-                    estilos.opcionModal,
-                    { borderColor: seleccionada ? tema.foco : tema.borde },
+                    estilos.opcionFechaCompacta,
                     seleccionada && { backgroundColor: tema.nombre === 'oscuro' ? '#1B443C' : '#EDF5E8' },
                   ]}
                 >
-                  <Text style={[estilos.textoOpcionModal, { color: tema.textoPrincipal }]}>
+                  <Text numberOfLines={1} adjustsFontSizeToFit style={estilos.textoOpcionFechaCompacta}>
                     {opcion.nombre}
                   </Text>
                   <Ionicons
                     color={seleccionada ? tema.foco : tema.borde}
-                    name={seleccionada ? 'radio-button-on' : 'radio-button-off'}
-                    size={20}
+                    name="checkmark"
+                    size={16}
+                    style={{ opacity: seleccionada ? 1 : 0 }}
                   />
                 </Pressable>
               );
             })}
           </ScrollView>
-        </View>
-      </View>
-    </Modal>
   );
 }
 
-function ModalCalendario({ visible, fecha, tema, estilos, alCerrar, alSeleccionar }: {visible:boolean;fecha:Date;tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;alCerrar:()=>void;alSeleccionar:(fecha:Date)=>void}) {
+function CalendarioDesplegable({ visible, fecha, tema, estilos, alCerrar, alSeleccionar }: {visible:boolean;fecha:Date;tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;alCerrar:()=>void;alSeleccionar:(fecha:Date)=>void}) {
   const [mesVisible, establecerMesVisible] = useState(
     () => new Date(fecha.getFullYear(), fecha.getMonth(), 1),
   );
   const primerDia = (new Date(mesVisible.getFullYear(), mesVisible.getMonth(), 1).getDay() + 6) % 7;
   const cantidadDias = new Date(mesVisible.getFullYear(), mesVisible.getMonth() + 1, 0).getDate();
-  const diasCalendario = Array.from({ length: 42 }, (_, indice) => {
+  const diasCalendario = Array.from({ length: Math.ceil((primerDia + cantidadDias) / 7) * 7 }, (_, indice) => {
     const dia = indice - primerDia + 1;
     return dia > 0 && dia <= cantidadDias ? dia : null;
   });
@@ -335,11 +323,9 @@ function ModalCalendario({ visible, fecha, tema, estilos, alCerrar, alSelecciona
     ));
   };
 
+  if (!visible) return null;
   return (
-    <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}>
-      <View style={estilos.fondoModal}>
-        <Pressable accessibilityLabel="Cerrar calendario" onPress={alCerrar} style={estilos.fondoTocable} />
-        <View style={[estilos.tarjetaModal, { backgroundColor: tema.superficie }]}>
+        <View style={estilos.contenidoCalendarioFecha}>
           <View style={estilos.encabezadoModal}>
             <Text style={[estilos.tituloModal, { color: tema.textoPrincipal }]}>Elegí una fecha</Text>
             <Pressable accessibilityLabel="Cerrar calendario" accessibilityRole="button" onPress={alCerrar} style={estilos.botonCerrarModal}>
@@ -350,7 +336,7 @@ function ModalCalendario({ visible, fecha, tema, estilos, alCerrar, alSelecciona
             <Pressable accessibilityLabel="Mes anterior" accessibilityRole="button" onPress={() => cambiarMes(-1)} style={estilos.botonMesCalendario}>
               <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
             </Pressable>
-            <Text style={[estilos.mesCalendario, { color: tema.textoPrincipal }]}>
+            <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.mesCalendario, estilos.nombreMesCompacto, { color: tema.textoPrincipal }]}>
               {MESES[mesVisible.getMonth()].nombre} {mesVisible.getFullYear()}
             </Text>
             <Pressable accessibilityLabel="Mes siguiente" accessibilityRole="button" onPress={() => cambiarMes(1)} style={estilos.botonMesCalendario}>
@@ -403,84 +389,6 @@ function ModalCalendario({ visible, fecha, tema, estilos, alCerrar, alSelecciona
             <Text style={[estilos.textoBotonHoyCalendario, { color: tema.foco }]}>Ir a hoy</Text>
           </Pressable>
         </View>
-      </View>
-    </Modal>
-  );
-}
-
-function ModalCategorias({
-  visible,
-  categorias,
-  categoriasSeleccionadas,
-  tema,
-  estilos,
-  alCerrar,
-  alAlternar,
-  alSeleccionarTodas,
-  alLimpiar,
-}: {visible:boolean;categorias:(import('../constants/movimientos').Categoria&{color:string})[];categoriasSeleccionadas:string[];tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;alCerrar:()=>void;alAlternar:(id:string)=>void;alSeleccionarTodas:()=>void;alLimpiar:()=>void}) {
-  return (
-    <Modal
-      animationType="fade"
-      onRequestClose={alCerrar}
-      transparent
-      visible={visible}
-    >
-      <View style={estilos.fondoModal}>
-        <Pressable
-          accessibilityLabel="Cerrar filtro de categorías"
-          onPress={alCerrar}
-          style={estilos.fondoTocable}
-        />
-        <View style={[estilos.tarjetaModal, { backgroundColor: tema.superficie }]}>
-          <View style={estilos.encabezadoModal}>
-            <Text style={[estilos.tituloModal, { color: tema.textoPrincipal }]}>Filtrar categorías</Text>
-            <Pressable
-              accessibilityLabel="Cerrar"
-              accessibilityRole="button"
-              onPress={alCerrar}
-              style={estilos.botonCerrarModal}
-            >
-              <Ionicons color={tema.textoPrincipal} name="close" size={22} />
-            </Pressable>
-          </View>
-          <View style={estilos.accionesCategorias}>
-            <Pressable accessibilityRole="button" onPress={alSeleccionarTodas}>
-              <Text style={[estilos.textoAccionCategorias, { color: tema.foco }]}>Todas</Text>
-            </Pressable>
-            <Pressable accessibilityRole="button" onPress={alLimpiar}>
-              <Text style={[estilos.textoAccionCategorias, { color: tema.foco }]}>Limpiar</Text>
-            </Pressable>
-          </View>
-          <ScrollView contentContainerStyle={estilos.opcionesModal} showsVerticalScrollIndicator={false}>
-            {categorias.map((categoria) => {
-              const seleccionada = categoriasSeleccionadas.includes(categoria.id);
-
-              return (
-                <Pressable
-                  accessibilityLabel={categoria.nombre}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: seleccionada }}
-                  key={categoria.id}
-                  onPress={() => alAlternar(categoria.id)}
-                  style={[estilos.opcionCategoria, { borderColor: tema.borde }]}
-                >
-                  <Ionicons color={categoria.color} name={categoria.icono} size={22} />
-                  <Text numberOfLines={1} style={[estilos.textoOpcionModal, { color: tema.textoPrincipal }]}>
-                    {categoria.nombre}
-                  </Text>
-                  <Ionicons
-                    color={seleccionada ? tema.foco : tema.borde}
-                    name={seleccionada ? 'checkbox' : 'square-outline'}
-                    size={22}
-                  />
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
   );
 }
 
@@ -695,6 +603,9 @@ function GraficoColumnas({
 }
 
 export default function PantallaEstadisticas({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
+  const raizSelectores = useRef<View>(null);
+  const controlesSelectores = useRef<Record<string, View | null>>({});
+  const [anclaSelector, establecerAnclaSelector] = useState<{left:number;top:number;width:number;altoMaximo:number} | null>(null);
   const { tema } = useContext(ContextoApariencia);
   const anchoPantalla = useWindowDimensions().width;
   const tamanoGrafico = Math.min(320, Math.max(248, anchoPantalla - 64));
@@ -704,6 +615,26 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [indiceGrafico, establecerIndiceGrafico] = useState(0);
   const [barraEnInteraccion, establecerBarraEnInteraccion] = useState(false);
   const [tipoMovimiento, establecerTipoMovimiento] = useState('egreso');
+  const [preajusteMontoId, establecerPreajusteMontoId] = useState('todos');
+  const [montoMinimo, establecerMontoMinimo] = useState('');
+  const [montoMaximo, establecerMontoMaximo] = useState('');
+  const [depositos, establecerDepositos] = useState<Awaited<ReturnType<typeof cargarOpcionesHistorialMovimientos>>['depositos']>([]);
+  const [depositosIds, establecerDepositosIds] = useState<string[] | null>(null);
+  const [errorDepositos, establecerErrorDepositos] = useState(false);
+  const [seccionesAbiertas, establecerSeccionesAbiertas] = useState(['categorias', 'monto']);
+  const estilosFiltros = crearEstilosMovimientos(tema, anchoPantalla);
+  const minimo = montoMinimo.trim() ? convertirSaldoInicial(montoMinimo) : undefined;
+  const maximo = montoMaximo.trim() ? convertirSaldoInicial(montoMaximo) : undefined;
+  const errorMonto = preajusteMontoId === 'personalizado' && (minimo === null || maximo === null || (minimo !== undefined && maximo !== undefined && minimo > maximo)) ? 'Revisá los montos: el mínimo no puede superar al máximo.' : null;
+  const rangoMonto = useMemo(() => ({
+    ...(preajusteMontoId === 'personalizado' ? { minimo: minimo ?? undefined, maximo: maximo ?? undefined } : PREAJUSTES_MONTOS.find(opcion => opcion.id === preajusteMontoId)!.rango),
+    ...(depositosIds === null ? {} : { depositos: depositosIds }),
+  }), [preajusteMontoId, minimo, maximo, depositosIds]);
+  useFocusEffect(useCallback(() => {
+    let vigente = true;
+    cargarOpcionesHistorialMovimientos().then(datos => { if (vigente) { establecerDepositos(datos.depositos); establecerErrorDepositos(false); } }).catch(() => { if (vigente) establecerErrorDepositos(true); });
+    return () => { vigente = false; };
+  }, []));
   const [categoriasSeleccionadas, establecerCategoriasSeleccionadas] = useState(
     CATEGORIAS_EGRESO.map((categoria) => categoria.id),
   );
@@ -717,6 +648,12 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [anioColumnas, establecerAnioColumnas] = useState(ANIO_ACTUAL);
   const [selectorActual, establecerSelectorActual] = useState<string | null>(null);
   const [selectorFechaActual, establecerSelectorFechaActual] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selectorActual && !selectorFechaActual) return;
+    const suscripcion = BackHandler.addEventListener('hardwareBackPress', () => { establecerSelectorActual(null); establecerSelectorFechaActual(null); return true; });
+    return () => suscripcion.remove();
+  }, [selectorActual, selectorFechaActual]);
+  useEffect(() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); }, [indiceGrafico, anchoPantalla]);
   const [filtroCategoriasAbierto, establecerFiltroCategoriasAbierto] = useState(false);
   const [categoriaSeleccionada, establecerCategoriaSeleccionada] = useState<string | null>(null);
   const [indiceColumnaSeleccionada, establecerIndiceColumnaSeleccionada] = useState(0);
@@ -750,7 +687,8 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
   useFocusEffect(useCallback(() => {
     let vigente = true;
-    const claveConsulta = JSON.stringify({tipoMovimiento,rangoResumen,rangoColumnas,modoColumnas});
+    if (errorMonto) { establecerEstadisticas(null); establecerEstadoCarga('listo'); return; }
+    const claveConsulta = JSON.stringify({tipoMovimiento,rangoResumen,rangoColumnas,modoColumnas,rangoMonto});
     if (ultimaConsultaCompletada.current !== claveConsulta) {
       establecerEstadoCarga('cargando');
       establecerEstadisticas(null);
@@ -760,6 +698,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
       rangoResumen,
       rangoColumnas,
       agrupacionColumnas: modoColumnas === 'semana' ? 'dia' : 'mes',
+      rangoMonto,
     }).then((resultado) => {
       if (!vigente) return;
       ultimaConsultaCompletada.current = claveConsulta;
@@ -772,9 +711,10 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
     return () => {
       vigente = false;
     };
-  }, [tipoMovimiento, rangoResumen, rangoColumnas, modoColumnas, intentoCarga]));
+  }, [tipoMovimiento, rangoResumen, rangoColumnas, modoColumnas, rangoMonto, errorMonto, intentoCarga]));
 
-  const totalResumen = estadisticas?.resumen.total || 0;
+  const filasResumenVisibles = (estadisticas?.resumen.categorias || []).filter(fila => categoriasSeleccionadas.includes(fila.categoria));
+  const totalResumen = Math.round((filasResumenVisibles.reduce((total, fila) => total + fila.total, 0) + Number.EPSILON) * 100) / 100;
   const datosResumen = useMemo(
     () => crearDatosResumen(
       categoriasVisibles,
@@ -799,7 +739,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const indiceColumnaVisible = Math.min(indiceColumnaSeleccionada, datosColumnas.length - 1);
   const filasDetalleColumna = barraSeleccionada?.segmentos.filter((segmento) => segmento.monto > 0) || [];
   const totalBarraSeleccionada = filasDetalleColumna.reduce((suma, segmento) => suma + segmento.monto, 0);
-  const hayMovimientosResumen = Boolean(estadisticas?.resumen.cantidad);
+  const hayMovimientosResumen = filasResumenVisibles.some(fila => fila.cantidad > 0);
   const hayDatosResumen = Boolean(hayMovimientosResumen && totalResumen > 0);
   const hayDatosColumnas = Boolean(estadisticas?.columnas.length);
   const hayDatosColumnasVisibles = datosColumnas.some((barra) => (
@@ -837,23 +777,18 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
       tipoMovimiento,
       anio: anioDetalle,
       mes: mesDetalle,
+      rangoMontoEstadistica: rangoMonto,
     });
   };
 
   const cambiarTipoMovimiento = (nuevoTipo: SetStateAction<string>) => {
     const nuevoCatalogo = nuevoTipo === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
     establecerTipoMovimiento(nuevoTipo);
+    establecerPreajusteMontoId('todos');
+    establecerMontoMinimo(''); establecerMontoMaximo('');
     establecerCategoriasSeleccionadas(nuevoCatalogo.map((categoria) => categoria.id));
     establecerCategoriaSeleccionada(null);
     establecerIndiceColumnaSeleccionada(0);
-  };
-
-  const alternarCategoria = (categoriaId: string) => {
-    establecerCategoriasSeleccionadas((seleccionadas) => (
-      seleccionadas.includes(categoriaId)
-        ? seleccionadas.filter((id) => id !== categoriaId)
-        : [...seleccionadas, categoriaId]
-    ));
   };
 
   const obtenerOpcionesSelector = () => {
@@ -951,10 +886,64 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
       : [{ id: 'anioColumnas', texto: String(anioColumnas), etiqueta: `Año ${anioColumnas}`, calendario: false }]),
   ];
   const selectoresActuales = indiceGrafico === 0 ? selectoresResumen : selectoresColumnas;
+  const preajustesCategorias = [
+    { id: 'todos', nombre: 'Todas', categorias: catalogo.map(categoria => categoria.id) },
+    ...PREAJUSTES_CATEGORIAS[tipoMovimiento === 'ingreso' ? 'ingreso' : 'egreso'],
+  ];
+  const todasLasCategorias = catalogo.map(categoria => categoria.id);
+  const todasSeleccionadas = coincidenCategorias(categoriasSeleccionadas, todasLasCategorias);
+  const gruposCategoriasActivos = todasSeleccionadas ? [] : agruparCategoriasSeleccionadas(categoriasSeleccionadas, preajustesCategorias.filter(opcion => opcion.id !== 'todos'), categorias);
+  const esPreajusteActivo = (opcion: typeof preajustesCategorias[number]) => opcion.id === 'todos'
+    ? todasSeleccionadas
+    : !todasSeleccionadas && opcion.categorias.every(id => categoriasSeleccionadas.includes(id));
+  const textoCategoriasActivas = todasSeleccionadas
+    ? 'Todas las categorías'
+    : categorias.filter(categoria => categoriasSeleccionadas.includes(categoria.id)).map(categoria => categoria.nombre).join(' · ') || 'Sin categorías seleccionadas';
+
+  const textoMontoActivo = (rangoMonto.minimo === undefined ? 'Sin mínimo' : '$ ' + formatearEntradaMonto(String(rangoMonto.minimo).replace('.', ','))) + ' – ' + (rangoMonto.maximo === undefined ? 'Sin máximo' : '$ ' + formatearEntradaMonto(String(rangoMonto.maximo).replace('.', ',')));
+  const elegirRango = (id:string) => {
+    const opcion = PREAJUSTES_MONTOS.find(opcion => opcion.id === id)!;
+    establecerMontoMinimo(opcion.rango.minimo === undefined ? '' : String(opcion.rango.minimo).replace('.', ','));
+    establecerMontoMaximo(opcion.rango.maximo === undefined ? '' : String(opcion.rango.maximo).replace('.', ','));
+    establecerPreajusteMontoId(id);
+    establecerCategoriaSeleccionada(null);
+  };
+  const limpiarFiltrosEstadistica = () => { establecerCategoriasSeleccionadas(catalogo.map(categoria => categoria.id)); elegirRango('todos'); establecerDepositosIds(null); };
+  const alternarSeccion = (id:string) => establecerSeccionesAbiertas(actuales => actuales.includes(id) ? actuales.filter(actual => actual !== id) : [...actuales, id]);
+
+  const filtrosActivosEstadistica = [
+    ...gruposCategoriasActivos.map(grupo => ({ id:'categorias-' + grupo.id, etiqueta:grupo.nombre, alQuitar:() => {
+      establecerCategoriasSeleccionadas(actuales => actuales.filter(id => !grupo.categorias.includes(id)));
+      establecerCategoriaSeleccionada(null);
+    } })),
+    ...(!todasSeleccionadas && !categoriasSeleccionadas.length ? [{ id:'sin-categorias', etiqueta:'Sin categorías', alQuitar:() => establecerCategoriasSeleccionadas(todasLasCategorias) }] : []),
+    ...(rangoMonto.minimo !== undefined || rangoMonto.maximo !== undefined ? [{ id:'monto', etiqueta:textoMontoActivo, alQuitar:() => elegirRango('todos') }] : []),
+    ...(depositosIds !== null ? [{ id:'depositos', etiqueta:depositos.filter(deposito => depositosIds.includes(deposito.id)).map(deposito => deposito.nombre).join(' · ') || 'Depósitos seleccionados', alQuitar:() => establecerDepositosIds(null) }] : []),
+  ];
+
+  const cantidadFiltrosActivos = filtrosActivosEstadistica.length;
+
+  const cerrarSelectores = () => { establecerSelectorActual(null); establecerSelectorFechaActual(null); };
+  const abrirSelectorAnclado = (id:string, calendario:boolean) => {
+    if (selectorActual === id || selectorFechaActual === id) { cerrarSelectores(); return; }
+    controlesSelectores.current[id]?.measureInWindow((x, y, ancho, alto) => {
+      raizSelectores.current?.measureInWindow((raizX, raizY, anchoRaiz, altoRaiz) => {
+        const anchoMenu = Math.min(calendario ? 304 : Math.max(132, ancho), calendario ? 304 : 224, anchoRaiz - 24);
+        const posicionX = Math.max(12, Math.min(x - raizX, anchoRaiz - anchoMenu - 12));
+        const debajo = y - raizY + alto + 4;
+        const espacioDebajo = altoRaiz - debajo - 12;
+        const abrirArriba = espacioDebajo < 160 && y - raizY > espacioDebajo;
+        const altoMaximo = Math.min(calendario ? 360 : 240, abrirArriba ? y - raizY - 16 : espacioDebajo);
+        establecerAnclaSelector({ left:posicionX, top:abrirArriba ? Math.max(12, y - raizY - altoMaximo - 4) : debajo, width:anchoMenu, altoMaximo:Math.max(80, altoMaximo) });
+        if (calendario) { establecerSelectorActual(null); establecerSelectorFechaActual(id); }
+        else { establecerSelectorFechaActual(null); establecerSelectorActual(id); }
+      });
+    });
+  };
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
+      <View ref={raizSelectores} collapsable={false} style={estilosGlobales.pantalla}>
         <EncabezadoPrincipal
           alAbrirNotificaciones={() => abrirPantallaRaiz(RUTAS.NOTIFICACIONES)}
           alAbrirPerfil={() => abrirPantallaRaiz(RUTAS.PERFIL)}
@@ -964,68 +953,48 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
         />
 
         <ScrollView
+          keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
           contentContainerStyle={estilos.contenidoDesplazable}
           showsVerticalScrollIndicator={false}
           style={estilos.desplazamiento}
         >
           <View style={estilos.controles}>
-            <View style={estilos.filaTipoMovimiento}>
-              {[
-                { id: 'egreso', nombre: 'Egresos' },
-                { id: 'ingreso', nombre: 'Ingresos' },
-              ].map((opcion) => {
-                const activa = tipoMovimiento === opcion.id;
+            <SelectorSegmentado tema={tema} etiqueta="Tipo de movimiento" opciones={[{ id:'egreso', nombre:'Egresos' }, { id:'ingreso', nombre:'Ingresos' }]} valor={tipoMovimiento} alSeleccionar={cambiarTipoMovimiento}/>
 
-                return (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: activa }}
-                    key={opcion.id}
-                    onPress={() => cambiarTipoMovimiento(opcion.id)}
-                    style={[estilos.botonTipoMovimiento, activa && estilos.botonTipoMovimientoActivo]}
-                  >
-                    <Text style={[estilos.textoBotonTipo, activa && estilos.textoBotonTipoActivo]}>
-                      {opcion.nombre}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
 
-            <ScrollView
-              contentContainerStyle={estilos.filaSelectores}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={estilos.desplazamientoSelectores}
-            >
+            <FilaFiltrosHorizontal tema={tema} estiloContenido={estilos.filaSelectores}>
               {selectoresActuales.map((selector) => (
                 <Pressable
                   accessibilityLabel={selector.etiqueta || selector.texto}
                   accessibilityRole="button"
                   key={selector.id}
-                  onPress={() => (
-                    selector.calendario
-                      ? establecerSelectorFechaActual(selector.id)
-                      : establecerSelectorActual(selector.id)
-                  )}
+                  accessibilityState={{ expanded: selectorActual === selector.id || selectorFechaActual === selector.id }}
+                  ref={elemento => { controlesSelectores.current[selector.id] = elemento; }}
+                  onPress={() => abrirSelectorAnclado(selector.id, selector.calendario)}
                   style={estilos.botonSelector}
                 >
                   <Text numberOfLines={1} style={estilos.textoSelector}>{selector.texto}</Text>
-                  <Ionicons color={tema.textoPrincipal} name={selector.calendario ? 'calendar-outline' : 'chevron-down'} size={16} />
+                  <Ionicons color={tema.textoPrincipal} name={selectorActual === selector.id || selectorFechaActual === selector.id ? 'chevron-up' : 'chevron-down'} size={16} />
                 </Pressable>
               ))}
-              <Pressable
-                accessibilityLabel={`Filtrar categorías, ${categoriasSeleccionadas.length} seleccionadas`}
-                accessibilityRole="button"
-                onPress={() => establecerFiltroCategoriasAbierto(true)}
-                style={estilos.botonSelectorCategoria}
-              >
-                <Ionicons color={tema.textoPrincipal} name="options-outline" size={18} />
-                <Text numberOfLines={1} style={estilos.textoSelector}>
-                  Categorías {categoriasSeleccionadas.length}/{catalogo.length}
-                </Text>
-              </Pressable>
-            </ScrollView>
+            </FilaFiltrosHorizontal>
+
+
+
+
+            <BuscadorFiltrosMovimientos tema={tema} mostrarBuscador={false} alAbrirFiltros={() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); establecerFiltroCategoriasAbierto(true); }} alLimpiar={limpiarFiltrosEstadistica} filtrosActivos={filtrosActivosEstadistica} cantidad={cantidadFiltrosActivos}>
+              {preajustesCategorias.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: esPreajusteActivo(opcion) }}
+                onPress={() => { establecerCategoriasSeleccionadas(actuales => opcion.id === 'todos' ? todasLasCategorias : alternarGrupoCategorias(actuales, opcion.categorias, todasLasCategorias)); establecerCategoriaSeleccionada(null); }}
+                style={[estilos.filtroRapido, esPreajusteActivo(opcion) && estilos.filtroRapidoActivo]}>
+                <Text style={[estilos.textoFiltroRapido, esPreajusteActivo(opcion) && estilos.textoFiltroRapidoActivo]}>{opcion.nombre}</Text>
+              </Pressable>)}
+              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: preajusteMontoId === opcion.id }} onPress={() => elegirRango(preajusteMontoId === opcion.id ? 'todos' : opcion.id)} style={[estilos.filtroRapido, preajusteMontoId === opcion.id && estilos.filtroRapidoActivo]}>
+                <Text style={[estilos.textoFiltroRapido, preajusteMontoId === opcion.id && estilos.textoFiltroRapidoActivo]}>{opcion.nombre}</Text>
+              </Pressable>)}
+            </BuscadorFiltrosMovimientos>
+            {errorMonto ? <Text style={estilosGlobales.textoError}>{errorMonto}</Text> : null}
+
+
           </View>
 
           <View
@@ -1060,7 +1029,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                       <Text style={estilos.textoSinCategorias}>No se pudieron cargar las estadísticas. Tocá para reintentar.</Text>
                     </Pressable>
                   ) : !hayMovimientosResumen ? (
-                    <Text style={estilos.textoSinCategorias}>No hay movimientos en este período.</Text>
+                    <Text style={estilos.textoSinCategorias}>No hay movimientos con estos filtros. Probá restablecerlos o cambiar el período.</Text>
                   ) : !hayDatosResumen ? (
                     <Text style={estilos.textoSinCategorias}>El total del período es cero y no hay importes para distribuir.</Text>
                   ) : datosResumen.length ? (
@@ -1129,7 +1098,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                   {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
                     <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
                   ) : !hayMovimientosResumen ? (
-                    <Text style={estilos.textoDetalleSeleccion}>No hay movimientos en el período seleccionado.</Text>
+                    <Text style={estilos.textoDetalleSeleccion}>No hay movimientos con estos filtros.</Text>
                   ) : !hayDatosResumen ? (
                     <Text style={estilos.textoDetalleSeleccion}>El total del período es cero.</Text>
                   ) : categoriaActiva ? (
@@ -1147,11 +1116,15 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                   )}
                 </View>
                 <View style={estilos.listaCategorias}>
-                  {datosResumen.map((categoria) => {
+                  {datosResumen.map((categoria, indice) => {
+                    const familia = obtenerFamiliaCategoria(categoria.id, tipoMovimiento);
+                    const iniciaFamilia = indice === 0 || obtenerFamiliaCategoria(datosResumen[indice - 1].id, tipoMovimiento).id !== familia.id;
                     const porcentaje = formatearPorcentaje(categoria.participacion);
                     const activa = categoria.id === categoriaSeleccionada;
 
                     return (
+                      <Fragment key={categoria.id}>
+                      {iniciaFamilia ? <Text accessibilityRole="header" style={estilos.tituloFamilia}>{familia.nombre}</Text> : null}
                       <Pressable
                         accessibilityLabel={`Ver detalle de ${categoria.nombre}, ${formatearMonto(categoria.monto)}, ${porcentaje}, ${categoria.cantidad} movimientos`}
                         accessibilityRole="button"
@@ -1160,7 +1133,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                         style={[estilos.filaCategoria, activa && estilos.filaCategoriaActiva]}
                       >
                         <View style={[estilos.muestraColor, { backgroundColor: categoria.color }]} />
-                        <Ionicons color={categoria.color} name={categoria.icono} size={20} />
+                        <Ionicons color={obtenerColorIconoCategoria(categoria.id, tema, tipoMovimiento)} name={categoria.icono} size={20} />
                         <View style={estilos.nombreCategoriaContenedor}>
                           <Text numberOfLines={1} style={estilos.nombreCategoria}>{categoria.nombre}</Text>
                           <Text style={estilos.cantidadMovimientos}>
@@ -1170,6 +1143,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                         <Text style={estilos.porcentajeCategoria}>{porcentaje}</Text>
                         <Text style={estilos.montoCategoria}>{formatearMonto(categoria.monto)}</Text>
                       </Pressable>
+                      </Fragment>
                     );
                   })}
                 </View>
@@ -1214,35 +1188,55 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
           </View>
         </ScrollView>
 
-        <ModalSelector
-          alCerrar={() => establecerSelectorActual(null)}
-          alSeleccionar={aplicarOpcionSelector}
-          estilos={estilos}
-          opciones={opcionesSelector}
-          tema={tema}
-          titulo={obtenerTituloSelector()}
-          valorSeleccionado={obtenerValorSelector()}
-          visible={Boolean(selectorActual)}
-        />
-        <ModalCategorias
-          alAlternar={alternarCategoria}
-          alCerrar={() => establecerFiltroCategoriasAbierto(false)}
-          alLimpiar={() => establecerCategoriasSeleccionadas([])}
-          alSeleccionarTodas={() => establecerCategoriasSeleccionadas(catalogo.map((categoria) => categoria.id))}
-          categorias={categorias}
-          categoriasSeleccionadas={categoriasSeleccionadas}
-          estilos={estilos}
-          tema={tema}
-          visible={filtroCategoriasAbierto}
-        />
-        <ModalCalendario
-          alCerrar={() => establecerSelectorFechaActual(null)}
-          alSeleccionar={seleccionarFechaCalendario}
-          estilos={estilos}
-          fecha={fechaCalendario}
-          tema={tema}
-          visible={Boolean(selectorFechaActual)}
-        />
+
+        {anclaSelector && (selectorActual || selectorFechaActual) ? <View pointerEvents="box-none" style={estilos.capaSelectores}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Cerrar desplegable" onPress={cerrarSelectores} style={estilos.fondoSelectorFlotante}/>
+          <View style={[estilos.selectorFlotante, { left:anclaSelector.left, top:anclaSelector.top, width:anclaSelector.width }]}>
+            {selectorActual ? (
+            <SelectorDesplegable
+              altoMaximo={anclaSelector.altoMaximo}
+              alCerrar={() => establecerSelectorActual(null)}
+              alSeleccionar={aplicarOpcionSelector}
+              estilos={estilos}
+              opciones={opcionesSelector}
+              tema={tema}
+              titulo={obtenerTituloSelector()}
+              valorSeleccionado={obtenerValorSelector()}
+              visible={Boolean(selectorActual)}
+            />
+            ) : <ScrollView style={{ maxHeight:anclaSelector.altoMaximo }} nestedScrollEnabled keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
+            <CalendarioDesplegable
+              alCerrar={() => establecerSelectorFechaActual(null)}
+              alSeleccionar={seleccionarFechaCalendario}
+              estilos={estilos}
+              fecha={fechaCalendario}
+              tema={tema}
+              visible={Boolean(selectorFechaActual)}
+            />
+            </ScrollView>}
+          </View>
+        </View> : null}
+
+        <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtroCategoriasAbierto} alCerrar={() => establecerFiltroCategoriasAbierto(false)} limpiarFiltros={limpiarFiltrosEstadistica} cantidadFiltros={cantidadFiltrosActivos}>
+          <SeccionFiltro titulo="Categorías" resumen={textoCategoriasActivas} abierta={seccionesAbiertas.includes('categorias')} alAlternar={() => alternarSeccion('categorias')} colorAcento={tema.foco} estilos={estilosFiltros}>
+            <View style={estilos.encabezadoFiltrosRapidos}>
+              <Pressable accessibilityRole="button" onPress={() => establecerCategoriasSeleccionadas(catalogo.map(categoria => categoria.id))} style={estilos.accionFiltroRapido}><Text style={estilos.textoAccionFiltroRapido}>Todas</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={() => establecerCategoriasSeleccionadas([])} style={estilos.accionFiltroRapido}><Text style={estilos.textoAccionFiltroRapido}>Ninguna</Text></Pressable>
+            </View>
+            <SelectorCategoria tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} categorias={categorias} tipoMovimiento={tipoMovimiento} etiqueta="" variante="grilla" seleccionMultiple seleccionadasIds={categoriasSeleccionadas} alCambiarMulti={establecerCategoriasSeleccionadas} usarColorIconoComoRelleno estiloTarjeta={estilosFiltros.tarjetaCategoriaFiltro}/>
+          </SeccionFiltro>
+          <SeccionFiltro titulo="Depósitos" resumen={depositosIds === null ? 'Todos los depósitos' : depositosIds.length + ' seleccionados'} abierta={seccionesAbiertas.includes('depositos')} alAlternar={() => alternarSeccion('depositos')} colorAcento={tema.foco} estilos={estilosFiltros}>
+            {errorDepositos ? <Text style={estilosGlobales.textoError}>No se pudieron cargar los depósitos. Volvé a abrir la pantalla para reintentar.</Text> : <SelectorDeposito tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} etiqueta="" depositos={depositos} seleccionMultiple seleccionadasIds={depositosIds ?? depositos.map(deposito => deposito.id)} alCambiarMulti={establecerDepositosIds} enLinea/>}
+          </SeccionFiltro>
+          <SeccionFiltro titulo="Monto" resumen={textoMontoActivo} abierta={seccionesAbiertas.includes('monto')} alAlternar={() => alternarSeccion('monto')} colorAcento={tema.foco} estilos={estilosFiltros}>
+            <View style={estilosFiltros.filaRango}>
+              <View style={estilosFiltros.grupoCampoRango}><Text style={estilosFiltros.textoEtiquetaCampoRango}>Mínimo</Text><EntradaMonto tema={tema} estilosGlobales={estilosGlobales} etiqueta="Monto mínimo" mostrarEtiqueta={false} mostrarLimpiar={false} compacto valor={montoMinimo} alCambiarTexto={valor => { establecerMontoMinimo(valor); establecerPreajusteMontoId('personalizado'); }} estiloContenedor={estilosFiltros.campoRango}/></View>
+              <View style={estilosFiltros.grupoCampoRango}><Text style={estilosFiltros.textoEtiquetaCampoRango}>Máximo</Text><EntradaMonto tema={tema} estilosGlobales={estilosGlobales} etiqueta="Monto máximo" mostrarEtiqueta={false} mostrarLimpiar={false} compacto valor={montoMaximo} alCambiarTexto={valor => { establecerMontoMaximo(valor); establecerPreajusteMontoId('personalizado'); }} estiloContenedor={estilosFiltros.campoRango}/></View>
+            </View>
+            {errorMonto ? <Text style={estilosGlobales.textoError}>{errorMonto}</Text> : null}
+          </SeccionFiltro>
+        </PanelFiltrosMovimientos>
+
       </View>
     </SafeAreaView>
   );

@@ -8,7 +8,7 @@ import EncabezadoSeccion from '../components/SectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO, DEPOSITOS_SIMULADOS } from '../constants/movimientos';
 import { ErrorBaseDatos } from '../database/errors';
 import { ErrorMovimiento, consultarDetalleHistorialMovimiento } from '../movements/movementService';
-import { obtenerColoresGraficos } from '../styles/colors';
+import { obtenerColorIconoCategoria, obtenerColorCategoria } from '../styles/categoryColors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleMovimiento } from '../styles/MovementDetailScreenStyles';
 
@@ -84,14 +84,10 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   const colorTipo = esIngreso ? tema.exito : tema.error;
   const catalogo = esIngreso ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   const categoriaCatalogo = catalogo.find((item) => item.id === movimiento.categoria);
-  const indiceCategoria = catalogo.findIndex((item) => item.id === movimiento.categoria);
-  const coloresGraficos = obtenerColoresGraficos(tema);
   const categoria = {
     ...(categoriaCatalogo || {}),
     ...categoriaRecibida,
-    color: indiceCategoria >= 0
-      ? coloresGraficos[indiceCategoria % coloresGraficos.length]
-      : categoriaRecibida.color || tema.foco,
+    color: obtenerColorCategoria(movimiento.categoria || '', tema, esIngreso ? 'ingreso' : 'egreso'),
   };
   const deposito = movimiento.deposito_nombre
     ? { nombre: movimiento.deposito_nombre }
@@ -187,7 +183,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
             <View style={estilos.filaResumen}>
               <View style={estilos.identidad}>
                 <View style={[estilos.iconoCategoria,{backgroundColor:(categoria.color || tema.foco)+'24'}]}>
-                  <Ionicons color={categoria.color || tema.foco} name={categoria.icono || 'swap-horizontal-outline'} size={30}/>
+                  <Ionicons color={obtenerColorIconoCategoria(movimiento.categoria || '', tema, esIngreso ? 'ingreso' : 'egreso')} name={categoria.icono || 'swap-horizontal-outline'} size={30}/>
                 </View>
                 <View style={estilos.textoIdentidad}>
                   <Text style={estilos.nombreCategoria}>{categoria.nombre || movimiento.categoria || 'Sin categoría'}</Text>

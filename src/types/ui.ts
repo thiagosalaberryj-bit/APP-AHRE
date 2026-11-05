@@ -11,6 +11,8 @@ export type EstilosGlobales = ReturnType<typeof crearEstilosGlobales>;
 export type EstilosMovimiento = Partial<{ [Clave in keyof ReturnType<typeof crearEstilosEgreso>]: Clave extends 'colorIndicador' ? string : ViewStyle & TextStyle & ImageStyle }> & Partial<Record<'opcionDepositoFiltro'|'iconoDepositoFiltro'|'seleccionDepositoFiltro'|'listaDepositosFiltro'|'listaDepositos'|'accionesDepositosFiltro'|'textoAccionDepositoFiltro', ViewStyle & TextStyle>>;
 export interface Aspecto { tema: Tema; estilosGlobales: EstilosGlobales; estilosMovimiento?: EstilosMovimiento; }
 export interface SelectorCategoriaProps extends Aspecto {
+  tipoMovimiento?: string;
+  categoriasPrincipalesIds?: readonly string[];
   categorias?: readonly (Pick<Categoria, 'id'|'nombre'|'icono'> & Partial<Categoria>)[]; seleccionadaId?: string | null; alSeleccionar?: (id: string) => void;
   etiqueta?: string; seleccionMultiple?: boolean; seleccionadasIds?: string[];
   alCambiarMulti?: (ids: string[]) => void; variante?: string; cantidadPrincipales?: number; carrusel?: boolean;

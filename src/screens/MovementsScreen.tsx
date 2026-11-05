@@ -1,3 +1,7 @@
+import { obtenerPreajustesMovimientos, PREAJUSTES_MONTOS, alternarGrupoCategorias, agruparCategoriasSeleccionadas } from '../utils/statisticsFilters';
+import { crearEstilosBusquedaFiltros } from '../styles/MovementSearchFiltersStyles';
+import PanelFiltrosMovimientos, { SeccionFiltro } from '../components/MovementFiltersPanel';
+import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
 import { formatearEntradaMonto } from '../utils/moneyInput';
 import EntradaMonto from '../components/MoneyInput';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
@@ -5,13 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
-  Animated,
-  Modal,
-  PanResponder,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -109,43 +109,13 @@ function obtenerTextoTipoDeposito(tipo: string) {
   return 'Depósito con movimientos';
 }
 
-function SeccionFiltro({
-  titulo,
-  resumen,
-  abierta,
-  alAlternar,
-  colorAcento,
-  estilos,
-  children,
-}: {titulo:string;resumen:string;abierta:boolean;alAlternar:()=>void;colorAcento:string;estilos:ReturnType<typeof crearEstilosMovimientos>;children:import('react').ReactNode}) {
-  return (
-    <View style={estilos.seccionFiltro}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded: abierta }}
-        onPress={alAlternar}
-        style={estilos.encabezadoSeccionFiltro}
-      >
-        <View style={estilos.detalleEncabezadoSeccionFiltro}>
-          <View style={[estilos.acentoSeccionFiltro, { backgroundColor: colorAcento }]} />
-          <View style={estilos.textosEncabezadoSeccionFiltro}>
-            <Text numberOfLines={1} style={estilos.tituloSeccionFiltro}>{titulo}</Text>
-            {!abierta ? <Text numberOfLines={1} style={estilos.resumenSeccionFiltro}>{resumen}</Text> : null}
-          </View>
-        </View>
-        <Ionicons color={colorAcento} name={abierta ? 'chevron-up' : 'chevron-down'} size={20} />
-      </Pressable>
-      {abierta ? <View style={estilos.contenidoSeccionFiltro}>{children}</View> : null}
-    </View>
-  );
-}
-
 export default function PantallaMovimientos({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
   const { height: altoVentana, width: anchoVentana } = useWindowDimensions();
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosMovimientos(tema, anchoVentana);
+  const estilosAccesos = crearEstilosBusquedaFiltros(tema);
   const abrirPantallaSecundaria = (ruta: string, parametros: import('../navigation/types').ParametrosPantalla | undefined = undefined) => navegacion.getParent()?.navigate(ruta, parametros);
   const [mesesAbiertos, establecerMesesAbiertos] = useState<Record<string,boolean>>({});
   const [busqueda, establecerBusqueda] = useState('');
@@ -185,7 +155,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   });
   const [seccionesFiltrosAbiertas, establecerSeccionesFiltrosAbiertas] = useState(['tipo', 'fecha']);
   const [cargando, establecerCargando] = useState(true);
-  const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
   const secuenciaConsulta = useRef(0);
   const bloqueoCargaMas = useRef(false);
   const depositosHistorialRef = useRef<typeof depositosHistorial>([]);
@@ -195,8 +164,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   }, [depositoFiltroIds]);
   const filtraPorDepositos = depositoFiltroIds.length > 0
     && depositoFiltroIds.length < depositosHistorial.length;
-  const opacidadOverlay = useRef(new Animated.Value(0)).current;
-  const desplazamientoPanel = useRef(new Animated.Value(0)).current;
   const categoriasDisponiblesFiltro = tipoFiltro === 'ingreso'
     ? categoriasHistorial.filter((categoria) => categoria.tipo === 'ingreso')
     : tipoFiltro === 'egreso'
@@ -299,72 +266,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   const abrirFiltros = () => {
     establecerFiltrosVisibles(true);
   };
-
-  const cerrarFiltros = useCallback(() => {
-    Animated.parallel([
-      Animated.timing(opacidadOverlay, {
-        toValue: 0,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-      Animated.timing(desplazamientoPanel, {
-        toValue: altoVentana,
-        duration: 190,
-        useNativeDriver: true,
-      }),
-    ]).start(({ finished }) => {
-      if (finished) establecerFiltrosVisibles(false);
-    });
-  }, [altoVentana, desplazamientoPanel, opacidadOverlay]);
-
-  const responderManija = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_evento, gesto) => gesto.dy > 6 && Math.abs(gesto.dy) > Math.abs(gesto.dx),
-    onPanResponderTerminationRequest: () => false,
-    onPanResponderMove: (_evento, gesto) => {
-      if (gesto.dy > 0) desplazamientoPanel.setValue(gesto.dy);
-    },
-    onPanResponderRelease: (_evento, gesto) => {
-      if (gesto.dy > 90 || gesto.vy > 0.8) {
-        cerrarFiltros();
-        return;
-      }
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 240,
-      }).start();
-    },
-    onPanResponderTerminate: () => {
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 240,
-      }).start();
-    },
-  }), [cerrarFiltros, desplazamientoPanel]);
-
-  useEffect(() => {
-    if (!filtrosVisibles) return undefined;
-    opacidadOverlay.setValue(0);
-    desplazamientoPanel.setValue(altoVentana);
-    Animated.parallel([
-      Animated.timing(opacidadOverlay, {
-        toValue: 1,
-        duration: 190,
-        useNativeDriver: true,
-      }),
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 24,
-        stiffness: 210,
-      }),
-    ]).start();
-    return undefined;
-  }, [altoVentana, desplazamientoPanel, filtrosVisibles, opacidadOverlay]);
 
   const cambiarFechaFiltro = useCallback((modo: string) => {
     if (modo === fechaFiltro) return;
@@ -538,14 +439,16 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
       });
     }
 
-    categoriaFiltroIds.forEach((idCategoria) => {
-      const categoria = categoriasDisponiblesFiltro.find((elemento) => elemento.id === idCategoria)
-        || categoriasHistorial.find((elemento) => elemento.id === idCategoria);
-      if (!categoria) return;
+    const gruposCategorias = agruparCategoriasSeleccionadas(
+      categoriaFiltroIds,
+      obtenerPreajustesMovimientos(tipoFiltro, categoriasHistorial),
+      categoriasDisponiblesFiltro,
+    );
+    gruposCategorias.forEach(grupo => {
       filtros.push({
-        id: `categoria-${idCategoria}`,
-        etiqueta: `Categoría: ${categoria.nombre}`,
-        alQuitar: () => establecerCategoriaFiltroIds((ids) => ids.filter((id) => id !== idCategoria)),
+        id: 'categorias-' + grupo.id,
+        etiqueta: grupo.nombre,
+        alQuitar: () => establecerCategoriaFiltroIds(ids => ids.filter(id => !grupo.categorias.includes(id))),
       });
     });
 
@@ -679,6 +582,8 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     }
   }, [movimientosHistorial, usuarioId, enfocada, cargando, cargandoMas, hayMas, errorMontoFiltro, filtrosConsulta, mostrarAviso]);
 
+  const preajustesCategorias = obtenerPreajustesMovimientos(tipoFiltro, categoriasHistorial);
+
   const sinMovimientos = !cargando && cantidadTotal === 0;
   const sinResultados = !cargando && (cantidadTotal || 0) > 0 && movimientosHistorial.length === 0;
 
@@ -694,96 +599,31 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
         />
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={estilos.contenido}>
-            <View style={estilos.filaBusqueda}>
-              <View style={[
-                estilosGlobales.campo,
-                estilos.buscador,
-                buscadorEnfocado ? estilosGlobales.campoEnfocado : null,
-              ]}>
-                <Ionicons color={tema.textoSecundario} name="search" size={22} />
-                <TextInput
-                  accessibilityLabel="Buscar movimientos"
-                  onBlur={() => establecerBuscadorEnfocado(false)}
-                  onChangeText={establecerBusqueda}
-                  onFocus={() => establecerBuscadorEnfocado(true)}
-                  placeholder="Buscar"
-                  placeholderTextColor={tema.textoSecundario}
-                  selectionColor={tema.botonPrincipal}
-                  style={estilos.entradaBuscador}
-                  value={busqueda}
-                />
-                {busqueda ? (
-                  <Pressable
-                    accessibilityLabel="Limpiar búsqueda"
-                    accessibilityRole="button"
-                    onPress={() => establecerBusqueda('')}
-                    style={estilos.accionBuscador}
-                  >
-                    <Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} />
-                  </Pressable>
-                ) : null}
-              </View>
-              <Pressable
-                accessibilityLabel="Filtros"
-                accessibilityRole="button"
-                onPress={abrirFiltros}
-                style={({ pressed: presionado }) => [
-                  estilosGlobales.botonSecundario,
-                  estilos.botonFiltros,
-                  presionado ? { opacity: 0.85 } : null,
-                ]}
-              >
-                <Ionicons color={tema.botonSecundarioTexto} name="list" size={20} />
-                <Text style={estilosGlobales.textoBotonSecundario}>Filtros</Text>
-              </Pressable>
-            </View>
-
-            <View style={estilos.filtrosAplicados}>
-              <View style={estilos.encabezadoFiltrosAplicados}>
-                <Text style={estilos.textoFiltrosActivos}>
-                  {cantidadFiltros === 0 ? 'Sin filtros aplicados' : `Filtros aplicados (${cantidadFiltros})`}
-                </Text>
-                {cantidadFiltros > 0 ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={limpiarFiltros}
-                    style={estilos.botonLimpiar}
-                  >
-                    <Text style={estilos.textoBotonLimpiar}>Limpiar todo</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-              {cantidadFiltros > 0 ? (
-                <ScrollView
-                  contentContainerStyle={estilos.filaFiltrosAplicados}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                >
-                  {filtrosAplicados.map((filtro) => (
-                    <Pressable
-                      accessibilityLabel={filtro.bloqueado
-                        ? `${filtro.etiqueta}. Seleccioná otro depósito antes de quitar este filtro.`
-                        : `Quitar ${filtro.etiqueta}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: filtro.bloqueado }}
-                      disabled={filtro.bloqueado}
-                      key={filtro.id}
-                      onPress={filtro.alQuitar}
-                      style={estilos.chipFiltroAplicado}
-                    >
-                      <Text numberOfLines={1} style={estilos.textoChipFiltroAplicado}>
-                        {filtro.etiqueta}
-                      </Text>
-                      <Ionicons
-                        color={tema.textoSecundario}
-                        name={filtro.bloqueado ? 'lock-closed' : 'close'}
-                        size={16}
-                      />
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              ) : null}
-            </View>
+            <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={establecerBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosAplicados} cantidad={cantidadFiltros}>
+              {OPCIONES_TIPO.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: tipoFiltro === opcion.id }} onPress={() => cambiarTipoFiltro(opcion.id)} style={[estilosAccesos.filtro, tipoFiltro === opcion.id && estilosAccesos.filtroActivo]}>
+                <Text style={[estilosAccesos.textoFiltro, tipoFiltro === opcion.id && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+              </Pressable>)}
+              {preajustesCategorias.map(opcion => {
+                const disponible = opcion.categorias.length > 0;
+                const activo = disponible && tipoFiltro === opcion.tipo && opcion.categorias.every(id => categoriaFiltroIds.includes(id));
+                return <Pressable key={opcion.tipo + ':' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo, disabled: !disponible }} disabled={!disponible} accessibilityHint={disponible ? undefined : 'No hay movimientos de estas categorías.'}
+                  onPress={() => {
+                    establecerTipoFiltro(opcion.tipo);
+                    establecerCategoriaFiltroIds(actuales => alternarGrupoCategorias(tipoFiltro === opcion.tipo || tipoFiltro === 'todos' ? actuales : [], opcion.categorias));
+                  }}
+                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo, !disponible && { opacity: 0.5 }]}>
+                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+                </Pressable>;
+              })}
+              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => {
+                const activo = !errorMontoFiltro && (montoMinimoNumerico ?? undefined) === opcion.rango.minimo && (montoMaximoNumerico ?? undefined) === opcion.rango.maximo;
+                return <Pressable key={'monto:' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo }}
+                  onPress={() => { establecerMontoMinimo(activo || opcion.rango.minimo === undefined ? '' : String(opcion.rango.minimo).replace('.', ',')); establecerMontoMaximo(activo || opcion.rango.maximo === undefined ? '' : String(opcion.rango.maximo).replace('.', ',')); }}
+                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo]}>
+                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+                </Pressable>;
+              })}
+            </BuscadorFiltrosMovimientos>
 
             {cargando && movimientosHistorial.length === 0 ? null : errorConsulta ? (
               <View style={estilos.estadoVacio}>
@@ -849,47 +689,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
           </View>
         </ScrollView>
 
-        <Modal
-          animationType="none"
-          onRequestClose={cerrarFiltros}
-          transparent
-          visible={filtrosVisibles}
-        >
-          <View style={estilos.fondoFiltros}>
-            <Animated.View pointerEvents="none" style={[estilos.overlayFiltros, { opacity: opacidadOverlay }]} />
-            <Pressable
-              accessibilityLabel="Cerrar filtros"
-              onPress={cerrarFiltros}
-              style={estilos.fondoTactilFiltros}
-            />
-            <Animated.View
-              style={[
-                estilos.panelFiltros,
-                { transform: [{ translateY: desplazamientoPanel }] },
-              ]}
-            >
-              <View style={estilos.encabezadoPanelFiltros}>
-                <View style={estilos.zonaManijaFiltros} {...responderManija.panHandlers}>
-                  <View style={estilos.manijaFiltros} />
-                </View>
-                <View style={estilos.encabezadoPanelContenido}>
-                  <Text style={estilos.tituloModal}>Filtros</Text>
-                  <Pressable
-                    accessibilityLabel="Cerrar filtros"
-                    accessibilityRole="button"
-                    onPress={cerrarFiltros}
-                    style={estilos.botonCerrarModal}
-                  >
-                    <Ionicons color={tema.textoPrincipal} name="close" size={24} />
-                  </Pressable>
-                </View>
-              </View>
-              <ScrollView
-                contentContainerStyle={estilos.contenidoFiltrosScroll}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                style={estilos.scrollFiltros}
-              >
+        <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={() => establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
                 <View style={estilos.listaSeccionesFiltro}>
                   <SeccionFiltro
                     titulo="Tipo"
@@ -1101,6 +901,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                       usarColorIconoComoRelleno
                       etiqueta=""
                       categorias={categoriasDisponiblesFiltro}
+                    tipoMovimiento={tipoFiltro === 'todos' ? undefined : tipoFiltro}
                       variante="grilla"
                       seleccionMultiple
                       seleccionadasIds={categoriaFiltroIds}
@@ -1164,17 +965,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                     ) : null}
                   </SeccionFiltro>
                 </View>
-              </ScrollView>
-              {cantidadFiltros > 0 ? (
-                <View style={estilos.piePanelFiltros}>
-                  <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
-                    <Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </Animated.View>
-          </View>
-        </Modal>
+        </PanelFiltrosMovimientos>
       </View>
     </SafeAreaView>
   );

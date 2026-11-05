@@ -118,12 +118,28 @@ borde de foco y radio activo.
 
 `SelectorCategoria` (`src/components/CategorySelector.tsx`) muestra cuatro
 tarjetas compactas y una quinta tarjeta «Más», sin desplazamiento horizontal.
-«Más» abre un modal con las categorías adicionales. En selección individual,
+«Más» abre un modal con todas las categorías, también las cuatro principales,
+tanto en ingreso como en egreso y en los demás usos del selector compartido.
+Las grillas y los modales se ordenan por familia de color y, dentro de cada
+familia, del tono más intenso al más claro. En selección individual,
 elegir una categoría del modal reemplaza esa quinta tarjeta por el ícono,
 nombre y color de la categoría elegida; tocarla vuelve a abrir el selector.
 Al elegir una de las cuatro principales, reaparece «Más». El servicio de categorías
 entrega el catálogo local de ingreso o egreso definido en
 `src/constants/movimientos.ts`.
+
+En el formulario de egreso las cuatro opciones principales son Alimentación,
+Compras, Hogar y Servicios. Ingreso conserva Sueldo, Trabajo independiente,
+Ventas y Transferencias recibidas como accesos iniciales. Los formularios usan
+el tono completo de la categoría como relleno de las tarjetas y del modal,
+con texto oscuro legible y el borde fino de las filas de entrada del formulario
+(`tema.borde`, 1 punto), sin heredar el borde fuerte del campo global. Respeta
+el tema activo, sin cambiar la paleta
+de los gráficos claros. El estado seleccionado cambia el relleno y el color del
+texto para conservar legibilidad; el borde mantiene su grosor y color del tema.
+Debajo del selector de selección individual aparece siempre «Categoría
+seleccionada: Ninguna» o el nombre completo elegido, tanto para opciones
+principales como para las elegidas desde el modal.
 
 Categorías de egreso:
 
@@ -296,22 +312,43 @@ movimientos» solicita la siguiente página usando la fecha, hora e ID de la
 
 ### Buscador
 
-El buscador comparte la fila con el botón «Filtros». Tiene lupa,
-`placeholder` «Buscar» y botón `X` para limpiar. Su borde es fino y neutro en
+El buscador ocupa una fila completa; debajo aparece una fila horizontal con
+«Filtros» y accesos a Todos, Ingresos y Egresos. Se comparte el componente
+`MovementSearchFilters.tsx` con Estadísticas, que usa la variante sin buscador. Tiene lupa,
+`placeholder` «Buscar movimientos» y botón `X` para limpiar. Su borde es fino y neutro en
 reposo; solo toma el color de foco mientras el campo está enfocado. La búsqueda
+en modo oscuro también usa el borde neutro, sin heredar el verde de `bordeFuerte`.
+La búsqueda
 se realiza en SQLite, ignora mayúsculas y minúsculas y consulta la descripción.
 Se aplica junto con los filtros. Debajo aparecen los criterios activos como
-chips horizontales; cada chip se puede quitar y «Limpiar todo» restablece la
+chips en una línea independiente debajo de los accesos rápidos;
+cada chip se puede quitar y «Limpiar» restablece la
 búsqueda y los filtros. Si no hay coincidencias, se muestra `Sin resultados
 para “…”` o un mensaje para los filtros seleccionados.
 
+La fila incluye los mismos preajustes de categorías e importe de Estadísticas:
+Día a día, Servicios y obligaciones, Bienestar y formación, Movilidad y salidas,
+Finanzas y trabajo, y los grupos propios de ingreso. Al elegir un grupo se
+seleccionan su tipo y las categorías presentes en el historial. Los grupos del
+mismo tipo se acumulan; tocar uno activo quita solo sus categorías. Cambiar a
+un grupo del otro tipo inicia una selección de ese tipo. Un grupo sin
+movimientos queda deshabilitado. Los rangos completan los límites monetarios
+del panel y se combinan con fecha, depósitos y búsqueda. Los criterios activos
+siguen pudiendo quitarse individualmente. Cada grupo seleccionado se muestra
+por su nombre, sin desglosar sus categorías en chips separados. «Limpiar» queda fijo a la derecha de
+la línea inferior y no se desplaza junto con los chips. La línea mantiene su
+altura y muestra «Sin filtros seleccionados» cuando está vacía. Todos usan altura mínima
+de 38 puntos y tipografía secundaria compartida, conservando los anchos previos.
+
 ### Filtros
 
-El botón «Filtros», de la misma altura que el buscador, abre una hoja modal
+El botón «Filtros» indica la cantidad de criterios activos y abre una hoja modal
 sobre un overlay. El panel tiene un encabezado fijo y una manija que permite
 cerrarlo al deslizar hacia abajo. Las secciones se expanden dentro del panel y
 resumen su selección cuando están cerradas. El orden es Tipo, Fecha, Categorías,
-Depósitos y Monto.
+Depósitos y Monto. La presentación y las secciones plegables se extraen a
+`MovementFiltersPanel.tsx`, reutilizado por Estadísticas con sus categorías,
+depósitos y límites monetarios; Movimientos conserva sus fechas y tipos existentes.
 
 - **Tipo:** Todos, Ingresos o Egresos, repartidos por igual en la fila. Al
   elegir un tipo, Categorías muestra solo las opciones de ese tipo y quita las

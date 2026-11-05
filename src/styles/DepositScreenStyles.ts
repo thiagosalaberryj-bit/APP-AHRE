@@ -113,9 +113,7 @@ export function crearEstilosDeposito(tema: Tema) {
       paddingVertical: ESPACIADO.pequeno,
     },
     tarjetaTipoSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
-      backgroundColor: tema.nombre === 'oscuro' ? tema.contenedorVerde : tema.superficie,
+      backgroundColor: tema.fondo,
     },
     tarjetaTipoError: {
       borderColor: tema.error,
@@ -165,9 +163,8 @@ export function crearEstilosDeposito(tema: Tema) {
       borderStyle: 'dashed',
     },
     botonIconoSeleccionado: {
-      backgroundColor: tema.nombre === 'oscuro' ? tema.contenedorVerde : tema.superficie,
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
+
     },
     nombreIcono: {
       maxWidth: '100%',
@@ -213,8 +210,6 @@ export function crearEstilosDeposito(tema: Tema) {
       borderWidth: BORDES.anchos.fino,
     },
     muestraColorSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
       borderStyle: 'solid',
     },
     colorPredeterminado: {
@@ -229,7 +224,7 @@ export function crearEstilosDeposito(tema: Tema) {
     },
     nombreColorSeleccionado: {
       color: tema.textoPrincipal,
-      fontWeight: TIPOGRAFIA.pesos.negrita,
+
     },
     colorSeleccionadoInfo: {
       flexDirection: 'row',
@@ -321,8 +316,7 @@ export function crearEstilosDeposito(tema: Tema) {
       paddingVertical: ESPACIADO.pequeno,
     },
     opcionIconoModalSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     nombreOpcionIcono: {
       flex: 1,

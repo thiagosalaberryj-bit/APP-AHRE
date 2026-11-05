@@ -16,6 +16,11 @@ necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
 
 ## Organización
 
+Los filtros y las tarjetas seleccionables de los formularios destacan la
+selección mediante relleno, conservando dimensiones, rellenos internos,
+grosor de borde y peso tipográfico. El color del texto e icono puede cambiar
+para mantener contraste, sin desplazar los controles vecinos.
+
 Todos los importes editables usan `EntradaMonto` (`src/components/MoneyInput.tsx`):
 ingresos, egresos, total OCR, saldo inicial de depósitos, límites de filtros y
 los importes de Social (deudas, pagos, gastos y repartos manuales). La variante

@@ -41,7 +41,8 @@ un gráfico de ceros.
 
 SQLite agrupa por `categoria` y devuelve `ROUND(SUM(m.monto), 2)` y
 `COUNT(m.id)`. El total general se calcula sumando los totales agrupados del
-tipo y período actuales, antes de aplicar el filtro visual de categorías.
+tipo y período actuales, aplicando primero el rango de importe a cada movimiento.
+La pantalla suma únicamente las categorías seleccionadas para el total visible.
 Para cada categoría visible:
 
 ```text
@@ -49,9 +50,14 @@ participación = total de categoría / total general × 100
 ```
 
 Si el total general es cero no se calcula una división. El filtro de categorías
-solo oculta o muestra series y filas; no cambia el denominador. Por eso el
-gráfico circular puede mostrar un arco parcial cuando se ocultan categorías,
-mientras que el centro mantiene el total de todos los movimientos incluidos.
+actualiza series, filas y denominador: el centro y los porcentajes representan
+únicamente la selección visible. El rango monetario se aplica en SQL mediante
+límites inclusivos y parámetros enlazados, antes de `SUM` y `COUNT`; se conserva
+en las columnas, la evolución anual y los movimientos del detalle de categoría.
+La consulta admite además búsqueda literal en la descripción y una selección
+de depósitos. Ambos criterios se enlazan como parámetros y se combinan con
+usuario, tipo, período, categoría e importe. Una selección vacía de depósitos
+produce cero resultados. La búsqueda escapa comodines SQL igual que Movimientos.
 El resumen muestra categoría, importe, participación y cantidad de movimientos.
 
 ## Detalle y evolución de categoría
@@ -70,8 +76,9 @@ La tarjeta del detalle presenta el icono, el nombre de la categoría y su
 descripción. Los selectores de mes y año aparecen juntos con el estilo de los
 filtros de Estadísticas y abren listas de opciones. Una línea gris los separa
 del resultado mensual, que muestra la cantidad de movimientos y el importe
-total. La evolución anual conserva las doce barras y omite importes repetidos.
-Cada barra sigue exponiendo su importe mediante su etiqueta de accesibilidad.
+total. La evolución anual conserva las doce barras, muestra sus importes y
+permite tocar un mes para consultar sus movimientos. Cada barra también expone
+su importe y la acción mediante su etiqueta de accesibilidad.
 
 El detalle vuelve a consultar SQLite al recuperar el foco y al cambiar de mes.
 Cuando el mes no tiene movimientos, el resumen mensual muestra un único estado

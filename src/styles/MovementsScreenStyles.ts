@@ -163,7 +163,7 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
       gap: ESPACIADO.minimo,
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
-      borderRadius: BORDES.radios.campo,
+      borderRadius: BORDES.radios.campo / 2,
       borderWidth: BORDES.anchos.fino,
       padding: ESPACIADO.pequeno,
     },
@@ -293,19 +293,19 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
       alignItems: 'center',
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
-      borderRadius: BORDES.radios.boton,
+      borderRadius: BORDES.radios.campo / 2,
       borderWidth: BORDES.anchos.fino,
       flexDirection: 'row',
       flexShrink: 0,
       gap: ESPACIADO.minimo,
-      minHeight: 40,
+      minHeight: 38,
       paddingHorizontal: ESPACIADO.medio,
     },
     textoChipFiltroAplicado: {
       color: tema.textoPrincipal,
       flexShrink: 1,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
       fontWeight: TIPOGRAFIA.pesos.medio,
     },
     filaOpcionesTipo: {
@@ -323,13 +323,12 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
       justifyContent: 'center',
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
-      borderRadius: BORDES.radios.circular,
+      borderRadius: BORDES.radios.campo / 2,
       borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
     },
     chipActivo: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     textoChip: {
       color: tema.textoSecundario,
@@ -529,8 +528,7 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
       paddingVertical: ESPACIADO.pequeno,
     },
     opcionDepositoSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     opcionDepositoFiltro: {
       minHeight: 52,
@@ -573,8 +571,7 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
       padding: ESPACIADO.pequeno,
     },
     tarjetaCategoriaSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     tarjetaMasCategorias: {
       width: 104,
@@ -627,8 +624,7 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
       paddingHorizontal: ESPACIADO.medio,
     },
     opcionCategoriaSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     textoOpcionCategoria: {
       flex: 1,

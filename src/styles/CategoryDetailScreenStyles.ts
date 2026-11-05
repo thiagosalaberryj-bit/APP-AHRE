@@ -5,6 +5,14 @@ import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './global
 
 export function crearEstilosDetalleCategoria(tema: Tema) {
   return StyleSheet.create({
+    importeEvolucion: {
+      width: 100, color: tema.textoPrincipal,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar, textAlign: 'right',
+    },
+    mesEvolucionActivo: {
+      backgroundColor: tema.fondo,
+      borderRadius: BORDES.radios.campo,
+    },
     iconoCategoriaGrande: {
       alignItems: 'center',
       borderColor: tema.borde,
@@ -131,7 +139,7 @@ export function crearEstilosDetalleCategoria(tema: Tema) {
       alignItems: 'center',
       flexDirection: 'row',
       gap: ESPACIADO.minimo,
-      minHeight: 22,
+      minHeight: 44,
     },
     mesEvolucion: {
       color: tema.textoSecundario,

@@ -222,6 +222,21 @@ deudas, pagos y conservación del historial.
 
 ## Errores
 
+En desarrollo, los fallos de inicialización incluyen `operacion` y
+`mensajeTecnico` del error nativo, además del código. Permiten distinguir
+apertura, activación/comprobación de claves foráneas, lectura de versión,
+aplicación del esquema y preparación del diario. La interfaz conserva el
+mensaje seguro habitual; el diagnóstico ampliado no se registra en producción.
+La inicialización fallida cierra su conexión y permite reintentar, sin borrar
+ni recrear automáticamente el archivo de datos.
+
+Al abrir cada conexión se configura `PRAGMA busy_timeout = 2000` para tolerar
+escrituras concurrentes breves. Si la preparación idempotente del diario recibe
+`SQLITE_BUSY`, `SQLITE_LOCKED` o el mensaje nativo «database is locked», se
+reintenta sobre la misma conexión hasta tres veces, con pausas de 200 y 400 ms.
+Los demás errores no se reintentan. Si el bloqueo persiste, se conserva el
+diagnóstico original y el inicio permite un nuevo intento; no se borran datos.
+
 `ErrorBaseDatos` ofrece mensajes seguros para inicialización, migraciones,
 consultas, escrituras, integridad y transacciones. Los errores de SQLite se
 clasifican centralmente; en desarrollo solo se registra la etapa y el código

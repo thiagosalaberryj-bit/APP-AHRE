@@ -69,7 +69,7 @@ test('lista manual conserva filas, permite ajustes y guarda borradores con un de
   await vista.pulsar('Guardar lista');
   const gastos = (await e.cargarSocial()).salas[0].gastos;
   assert.equal(gastos.length, 2); assert.equal(presente(gastos.find(g => g.descripcion === 'Bebida')).montoNumero, 300);
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length);
 });
 
 test('Social abre el OCR existente y recibe sus ítems en una lista editable sin egresos', async prueba => {
@@ -90,7 +90,7 @@ test('Social abre el OCR existente y recibe sus ítems en una lista editable sin
   await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Aplicar a todos');
   await vista.pulsar('Guardar lista');
   assert.equal((await e.cargarSocial()).salas[0].gastos.length, 2);
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length);
 });
 
 for (const tema of ['claro', 'oscuro'] as const) test(`interfaces principales guardan y consultan datos reales en ${tema}`, async prueba => {
@@ -202,7 +202,7 @@ test('la interfaz vincula un movimiento existente y conserva el saldo', async pr
   await vista.pulsar('Registrar pago realizado'); await vista.pulsar('Ya registrado');
   await vista.pulsar('Transporte de prueba', true); await vista.pulsar('Confirmar y guardar');
   assert.equal(presente(e.base.prepare('SELECT SUM(saldo_actual) AS saldo FROM depositos').get()).saldo, anterior);
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length);
   assert.ok((await e.cargarSocial()).deudas[0].saldada);
 });
 
@@ -223,12 +223,12 @@ test('todos pagaron solicita cada movimiento propio y cierra sin generar deudas'
   assert.ok(vista.texto().includes('3 de 3'));
   await vista.pulsar('Confirmar y guardar');
   assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM pagos_sociales').get()).n, 0);
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length);
   assert.equal(presente(e.base.prepare('SELECT SUM(saldo_actual) AS saldo FROM depositos').get()).saldo, saldoAnterior);
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'cerrar', salaId: sala.id });
   await vista.pulsar('Confirmar cierre');
   assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM pagos_sociales').get()).n, 3);
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 9);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length + 3);
   assert.equal(presente(e.base.prepare('SELECT SUM(saldo_actual) AS saldo FROM depositos').get()).saldo, saldoAnterior - 300);
   assert.equal((await e.cargarSocial()).deudas.length, 0);
   assert.equal((await e.cargarSocial()).salas[0].estado, 'cerrada');
@@ -270,14 +270,14 @@ test('Le debo no pide depósito al crearla y registra solo el egreso al pagarla'
   await vista.llenar('Monto de la deuda', '400'); await vista.llenar('Descripción', 'Préstamo'); await vista.pulsar('Registrar deuda');
   const deuda = (await e.cargarSocial()).deudas[0];
   assert.equal(deuda.pendienteNumero, 400); assert.equal(deuda.movimientoOrigen, null);
-  assert.equal(saldo(), inicial); assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(saldo(), inicial); assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length);
   assert.deepEqual(vista.destinos.at(-1), ['Atrás']);
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'pago', deudaId: deuda.id });
   await vista.pulsar('Registrar pago realizado');
   assert.ok(vista.texto().includes('Pagás $ 400'));
   await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
   assert.equal(saldo(), Number(inicial) - 400); assert.ok((await e.cargarSocial()).deudas[0].saldada);
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 7);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length + 1);
 });
 
 test('la agenda muestra inmediatamente el alta aunque hubiera una búsqueda anterior', async prueba => {

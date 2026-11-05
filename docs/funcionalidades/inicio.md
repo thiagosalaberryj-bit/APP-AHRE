@@ -111,18 +111,26 @@ ficticia contra su backend MySQL local; el botón de Inicio conserva el modo loc
 | Banco de prueba | $350.000 | $650.000 |
 | Billetera de prueba | $80.000 | $116.000 |
 
-Los seis movimientos representan sueldo, trabajo independiente, comida,
-transporte, farmacia y suscripción. Se fechan dentro de los últimos seis días;
-los depósitos se crean con una fecha anterior para que sus movimientos afecten
-el saldo según las reglas financieras existentes. Se reutilizan los repositorios
-de depósitos y movimientos dentro de una misma transacción.
+Los seis movimientos originales representan sueldo, trabajo independiente,
+comida, transporte, farmacia y suscripción, dentro de los últimos seis días.
+Se agregan 204 movimientos para evaluar la interfaz: 17 categorías de egreso y
+las 10 de ingreso, actividad repartida en seis meses, tres depósitos e importes
+de $450 a $1.250.000, incluidos los límites $1.000 y $5.000 de los filtros.
+Cada gasto adicional tiene un ingreso ficticio del mismo importe y depósito;
+por eso los 210 registros conservan los saldos netos de la tabla anterior.
+Los depósitos nuevos se fechan 240 días antes para incluir toda la actividad.
+Los existentes conservan su fecha: los registros históricos anteriores no
+modifican su saldo, conforme a las reglas existentes. Se reutilizan los
+repositorios de depósitos y movimientos dentro de una misma transacción.
+Para completar una cuenta de prueba ya creada, basta volver a entrar mediante
+«Entrar con datos de prueba»: se agregan solo los identificadores que faltan.
 
 La misma transacción prepara tres contactos (Ana García, Bruno Pérez y Carla
 López) y la sala abierta **Encuentro de prueba**, con cuatro personas contando
 a «Vos». Incluye cena ($12.000), taxi ($6.000), compras con reparto manual
 ($10.000) y café ($1.500). Hay pagos propios y de terceros, partes ya pagadas
 y pendientes. Las asociaciones a depósitos se guardan como borradores: los
-seis movimientos de ejemplo y el saldo total de $872.800 no cambian hasta
+210 movimientos de ejemplo y el saldo total de $872.800 no cambian hasta
 confirmar el cierre o registrar pagos.
 
 También se prepara una deuda manual de $1.800 por una entrada adelantada por

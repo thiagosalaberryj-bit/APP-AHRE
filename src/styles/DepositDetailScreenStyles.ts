@@ -212,7 +212,6 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       paddingVertical: ESPACIADO.pequeno,
     },
     chipSeleccionado: {
-      borderColor: tema.foco,
       backgroundColor: tema.nombre === 'oscuro' ? tema.contenedorVerde : '#E8F1EE',
     },
     textoChip: {
@@ -222,7 +221,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     textoChipSeleccionado: {
       color: tema.foco,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+
     },
     chipFiltro: {
       minHeight: 44,
@@ -235,8 +234,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       paddingHorizontal: ESPACIADO.grande,
     },
     chipFiltroActivo: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     textoChipFiltro: {
       color: tema.textoSecundario,
@@ -548,8 +546,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       padding: ESPACIADO.pequeno,
     },
     tarjetaCategoriaSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     nombreCategoria: {
       color: tema.textoPrincipal,

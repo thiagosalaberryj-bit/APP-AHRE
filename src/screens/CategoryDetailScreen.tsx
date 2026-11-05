@@ -12,7 +12,7 @@ import {
   CATEGORIAS_EGRESO,
   CATEGORIAS_INGRESO,
 } from '../constants/movimientos';
-import { obtenerColoresGraficos } from '../styles/colors';
+import { obtenerColorIconoCategoria, obtenerColorCategoria, obtenerFamiliaCategoria } from '../styles/categoryColors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleCategoria } from '../styles/CategoryDetailScreenStyles';
 import { cargarDetalleCategoriaEstadistica } from '../statistics/statisticsService';
@@ -71,11 +71,10 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   const indiceCategoria = catalogo.findIndex((item) => item.id === categoriaRecibida.id);
   const categoriaCatalogo = catalogo[indiceCategoria] || catalogo[0];
-  const coloresGraficos = obtenerColoresGraficos(tema);
   const categoria = {
     ...categoriaCatalogo,
     ...categoriaRecibida,
-    color: coloresGraficos[Math.max(0, indiceCategoria) % coloresGraficos.length],
+    color: obtenerColorCategoria(categoriaCatalogo.id, tema, tipoMovimiento),
   };
   const anioRecibido = Number(ruta.params?.anio);
   const anioActual = new Date().getFullYear();
@@ -114,6 +113,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
       tipo: tipoMovimiento,
       anio,
       mes: mesSeleccionado,
+      rangoMonto: ruta.params?.rangoMontoEstadistica,
     }).then((resultado) => {
       if (!vigente) return;
       establecerAnioMinimoDisponible(resultado.anioMinimoDisponible);
@@ -127,7 +127,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
     return () => {
       vigente = false;
     };
-  }, [categoria.id, tipoMovimiento, anio, mesSeleccionado, intentoCarga]));
+  }, [categoria.id, tipoMovimiento, anio, mesSeleccionado, intentoCarga, ruta.params?.rangoMontoEstadistica]));
 
   const movimientos = datosDetalle?.movimientos || [];
   const gruposMovimientos = agruparMovimientosPorDia(movimientos);
@@ -159,14 +159,16 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
           <View style={estilos.resumenCategoria}>
             <View style={estilos.encabezadoCategoria}>
               <View style={[estilos.iconoCategoriaGrande, { backgroundColor: tema.superficie, borderColor: categoria.color }]}>
-                <Ionicons color={categoria.color} name={categoria.icono} size={40} />
+                <Ionicons color={obtenerColorIconoCategoria(categoria.id, tema, tipoMovimiento)} name={categoria.icono} size={40} />
               </View>
               <View style={estilos.datosCategoria}>
                 <Text style={estilos.nombreCategoriaResumen}>{categoria.nombre}</Text>
+                <Text style={estilos.descripcionCategoria}>{obtenerFamiliaCategoria(categoria.id, tipoMovimiento).nombre}</Text>
                 <Text style={estilos.descripcionCategoria}>{categoria.descripcion}</Text>
               </View>
             </View>
 
+            {ruta.params?.rangoMontoEstadistica && (ruta.params.rangoMontoEstadistica.minimo !== undefined || ruta.params.rangoMontoEstadistica.maximo !== undefined) ? <Text style={estilos.descripcionCategoria}>Importe por movimiento: {ruta.params.rangoMontoEstadistica.minimo === undefined ? 'sin mínimo' : formatearMonto(ruta.params.rangoMontoEstadistica.minimo, 'ingreso').replace('+', '')} – {ruta.params.rangoMontoEstadistica.maximo === undefined ? 'sin máximo' : formatearMonto(ruta.params.rangoMontoEstadistica.maximo, 'ingreso').replace('+', '')}</Text> : null}
             <View style={estilos.selectoresPeriodo}>
               <Pressable
                 accessibilityLabel={`Mes ${MESES[mesSeleccionado].nombre}. Cambiar mes`}
@@ -224,11 +226,13 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
               {evolucion.map((item) => {
                 const anchoBarra = maximoEvolucion > 0 ? (item.total / maximoEvolucion) * 100 : 0;
                 return (
-                  <View
-                    accessible
-                    accessibilityLabel={`${MESES[item.mes].nombre}: ${formatearMonto(item.total, tipoMovimiento)}`}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: item.mes === mesSeleccionado }}
+                    onPress={() => establecerMesSeleccionado(item.mes)}
+                    accessibilityLabel={`${MESES[item.mes].nombre}: ${formatearMonto(item.total, tipoMovimiento)}. Ver movimientos`}
                     key={item.mes}
-                    style={estilos.filaEvolucion}
+                    style={[estilos.filaEvolucion, item.mes === mesSeleccionado && estilos.mesEvolucionActivo]}
                   >
                     <Text style={estilos.mesEvolucion}>{MESES[item.mes].corto}</Text>
                     <View style={estilos.fondoBarraEvolucion}>
@@ -239,7 +243,8 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                         ]}
                       />
                     </View>
-                  </View>
+                    <Text numberOfLines={1} adjustsFontSizeToFit style={estilos.importeEvolucion}>{formatearMonto(item.total, tipoMovimiento)}</Text>
+                  </Pressable>
                 );
               })}
             </View>

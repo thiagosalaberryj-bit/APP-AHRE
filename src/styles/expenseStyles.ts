@@ -176,8 +176,7 @@ export function crearEstilosEgreso(tema: Tema) {
       paddingVertical: ESPACIADO.pequeno,
     },
     opcionCategoriaSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     textoOpcionCategoria: {
       flex: 1,
@@ -197,8 +196,7 @@ export function crearEstilosEgreso(tema: Tema) {
       paddingVertical: ESPACIADO.pequeno,
     },
     opcionDepositoSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     listaCategorias: {
       flexDirection: 'row',
@@ -224,8 +222,7 @@ export function crearEstilosEgreso(tema: Tema) {
       borderStyle: 'dashed',
     },
     tarjetaCategoriaSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     nombreCategoria: {
       color: tema.textoPrincipal,

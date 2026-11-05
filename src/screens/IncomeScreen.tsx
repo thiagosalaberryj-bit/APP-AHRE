@@ -273,6 +273,9 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
           estilosGlobales={estilosGlobales}
           estilosMovimiento={estilosMovimiento}
           categorias={categorias}
+          tipoMovimiento={esEgreso ? 'egreso' : 'ingreso'}
+          categoriasPrincipalesIds={esEgreso ? ['alimentacion', 'compras', 'hogar', 'servicios'] : undefined}
+          usarColorIconoComoRelleno
           seleccionadaId={categoriaId}
           alSeleccionar={establecerCategoriaId}
           error={errorCategoria}
