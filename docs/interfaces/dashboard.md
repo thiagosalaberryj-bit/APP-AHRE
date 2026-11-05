@@ -54,6 +54,14 @@ con su identificador, nombre, tipo, descripción, icono, color y saldo actual. E
 icono y el color guardados se utilizan cuando están disponibles; se usan valores
 predeterminados visuales si faltan.
 
+Las tarjetas de depósitos usan un icono cuadrado de 40 puntos con el color
+guardado y esquinas suaves. Nombre y descripción ocupan dos
+líneas; el texto secundario usa 12 puntos. A la derecha, una columna de 112
+puntos separada por una línea muestra «Saldo» y el importe, con la flecha de
+acceso al detalle fuera de la columna. El saldo conserva su control de privacidad.
+El radio exterior es de 10 puntos. El importe no usa el recuadro de los
+movimientos, lo que permite distinguir ambos tipos de tarjeta.
+
 Si no hay depósitos, el estado vacío muestra un icono de billetera, una
 explicación y el botón «Crear depósito», que abre la ruta existente. Cuando hay
 depósitos, «Agregar depósito» aparece en el encabezado de la sección. Al

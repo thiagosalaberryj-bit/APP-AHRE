@@ -337,6 +337,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                     return (
                       <Pressable
                         accessibilityRole="button"
+                        accessibilityLabel={deposito.nombre+'. '+detalleDeposito+'. '+(saldoVisible?'Saldo '+formatearMonto(deposito.saldo_actual):'Saldo oculto')}
                         key={deposito.id}
                         onPress={() => navegacion.getParent()?.navigate(RUTAS.DETALLE_DEPOSITO, { depositoId: deposito.id })}
                         style={({ pressed }) => [
@@ -348,7 +349,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                           <Ionicons color={COLOR_ICONO_DEPOSITO} name={iconoDeposito as import('../constants/movimientos').NombreIcono} size={20} />
                         </View>
                         <View style={estilos.detalleElemento}>
-                          <Text style={[estilosGlobales.texto, estilos.nombreElemento]}>{deposito.nombre}</Text>
+                          <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.nombreElemento]}>{deposito.nombre}</Text>
                           <Text
                             numberOfLines={1}
                             ellipsizeMode="tail"
@@ -358,11 +359,12 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                           </Text>
                         </View>
                         <View style={estilos.finalDeposito}>
-                          <Text style={[estilosGlobales.etiqueta, estilos.saldoDeposito]}>
+                          <Text style={estilos.etiquetaSaldoDeposito}>Saldo</Text>
+                          <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.etiqueta, estilos.saldoDeposito]}>
                             {saldoVisible ? formatearMonto(deposito.saldo_actual) : '$ •••••••'}
                           </Text>
-                          <Ionicons color={tema.textoSecundario} name="chevron-forward" size={17} />
                         </View>
+                        <Ionicons color={tema.foco} name="chevron-forward" size={16} />
                       </Pressable>
                     );
                   })}
