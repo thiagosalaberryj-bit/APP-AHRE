@@ -70,10 +70,13 @@ categoría. Las transferencias entrantes se muestran como ingresos y las
 salientes como egresos. Los movimientos anulados no se incluyen.
 
 Inicio reutiliza `TarjetaMovimiento` (`src/components/MovementCard.tsx`), igual
-que la pestaña Movimientos: descripción e importe en la primera fila, metadatos
-debajo e icono compacto. Los importes conservan los centavos. Los estilos viven
-en `src/styles/MovementCardStyles.ts`; las tarjetas de Inicio siguen siendo
-informativas y las de Movimientos abren el detalle. Inicio conserva sus grupos
+que la pestaña Movimientos y los detalles de depósito y categoría. La tarjeta
+ocupa dos renglones: descripción y tipo arriba; categoría, depósito, hora e
+importe debajo. Tipo e importe se agrupan sobre un fondo suave a la derecha,
+como en Deudas. Los importes conservan los centavos. Los estilos viven
+en `src/styles/MovementCardStyles.ts`; las tarjetas de Inicio y Movimientos
+abren el detalle existente. La franja del importe tiene 112 puntos de ancho,
+incluye una flecha y recorta importes largos en una sola línea. Inicio conserva sus grupos
 por día y el límite de cinco movimientos recientes.
 
 Si la consulta no devuelve movimientos, se muestra un icono y un mensaje de

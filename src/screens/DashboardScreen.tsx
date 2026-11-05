@@ -410,7 +410,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                         {formatearFechaDia(grupo.fecha)}
                       </Text>
                       <View style={estilos.movimientosDia}>
-                        {grupo.movimientos.map(movimiento => <TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} soloHora/>)}
+                        {grupo.movimientos.map(movimiento => <TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={registro=>navegacion.getParent()?.navigate(RUTAS.DETALLE_MOVIMIENTO,{movimientoId:registro.id})} soloHora/>)}
                       </View>
                     </View>
                   ))}

@@ -1,15 +1,15 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
   return StyleSheet.create({
     contenido: {
       gap: ESPACIADO.formulario,
       padding: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme + insetInferior,
-      maxWidth: 480,
       width: '100%',
       alignSelf: 'center',
     },

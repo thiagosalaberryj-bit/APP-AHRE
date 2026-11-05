@@ -1,14 +1,14 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosDetalleMovimiento(tema: Tema) {
   return StyleSheet.create({
     contenido: {
       flexGrow: 1,
       paddingBottom: ESPACIADO.enorme,
-      paddingHorizontal: ESPACIADO.grande,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
     },
     encabezado: {
       alignItems: 'center',
@@ -81,7 +81,7 @@ export function crearEstilosDetalleMovimiento(tema: Tema) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: ESPACIADO.medio,
-      paddingHorizontal: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme,
     },
     textoEstadoHistorial: {

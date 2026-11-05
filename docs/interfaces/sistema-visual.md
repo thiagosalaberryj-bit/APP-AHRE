@@ -16,6 +16,18 @@ necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
 
 ## Organización
 
+El contenido principal de todas las pantallas usa el mismo margen lateral que
+Inicio/Dashboard: **12 puntos por lado**, definido por
+`MARGEN_LATERAL_PANTALLA` en `src/styles/globalStyles.ts`. El ancho disponible
+es el de la pantalla menos 24 puntos, también en pantallas anchas; los
+contenedores principales no agregan límites de 480 o 560 puntos.
+
+Esta regla se aplica a listas, formularios, detalles, Perfil, Sincronización,
+Estadísticas, OCR, autenticación, bienvenida y todas las vistas de Social.
+Los espaciados verticales y el relleno interno de tarjetas, campos, encabezados
+y diálogos conservan sus propios tokens. Los carruseles y controles que calculan
+su ancho desde la ventana descuentan el mismo margen lateral compartido.
+
 ```text
 src/
 └── styles/

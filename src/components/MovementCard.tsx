@@ -2,11 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
-import { COLORES_ESTADO } from '../styles/colors';
 import {crearEstilosTarjetaMovimiento} from '../styles/MovementCardStyles';
 
 function formatearMontoLista(monto: number, tipo: string) {
-  if (typeof monto !== 'number') return '—';
+  if (!Number.isFinite(monto)) return '—';
   const valor = `$${monto.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
   return tipo === 'ingreso' || tipo === 'transferencia_entrada' ? `+${valor}` : `-${valor}`;
 }
@@ -35,22 +34,29 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar, soloH
   const tipo = esTransferencia ? esIngreso ? 'Transferencia recibida' : 'Transferencia enviada' : esIngreso ? 'Ingreso' : 'Egreso';
   const fecha = formatearFechaLista(movimiento.fecha_hora, soloHora);
   const deposito = movimiento.deposito_nombre || movimiento.deposito;
-  const metadatos = [nombreCategoria, deposito, fecha].filter(Boolean).join(' · ');
+  const metadatos = [nombreCategoria, deposito].filter(Boolean).join(' · ');
+  const colorTipo = esIngreso ? tema.exito : tema.error;
   const importe = formatearMontoLista(movimiento.monto, movimiento.tipo);
   const contenido = <>
-    <View style={[estilos.icono, {backgroundColor:esIngreso?COLORES_ESTADO.ingreso:COLORES_ESTADO.egreso}]}>
-      <Ionicons color={tema.encabezado} name={esTransferencia?'swap-horizontal-outline':categoria.icono || (esIngreso?'arrow-down-outline':'arrow-up-outline')} size={18}/>
+    <View style={[estilos.icono,{backgroundColor:colorTipo+'18'}]}>
+      <Ionicons color={colorTipo} name={esTransferencia?'swap-horizontal-outline':categoria.icono || (esIngreso?'arrow-down-outline':'arrow-up-outline')} size={18}/>
     </View>
     <View style={estilos.contenido}>
-      <View style={estilos.filaTitulo}>
-        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.titulo}>{movimiento.descripcion || nombreCategoria}</Text>
-        <Text style={estilos.importe}>{importe}</Text>
+      <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.titulo}>{movimiento.descripcion || nombreCategoria}</Text>
+      <View style={estilos.filaMetadatos}>
+        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metadatos}>{metadatos}</Text>
+        <Text numberOfLines={1} style={estilos.fecha}>{fecha}</Text>
       </View>
-      <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metadatos}>{metadatos}</Text>
-      <Text style={estilos.tipo}>{tipo}</Text>
+    </View>
+    <View style={estilos.franjaImporte}>
+      <View style={estilos.filaTipo}>
+        <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.tipo,{color:colorTipo}]}>{esTransferencia?esIngreso?'Recibida':'Enviada':tipo}</Text>
+        {alPresionar?<Ionicons color={tema.textoSecundario} name="chevron-forward" size={16}/>:null}
+      </View>
+      <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.importe}>{importe}</Text>
     </View>
   </>;
-  const etiqueta = tipo+': '+movimiento.descripcion+'. '+importe+'. '+metadatos;
+  const etiqueta = tipo+': '+movimiento.descripcion+'. '+importe+'. '+metadatos+'. '+fecha;
   return alPresionar ? <Pressable accessibilityLabel={etiqueta} accessibilityRole="button" onPress={()=>alPresionar(movimiento,categoria)}
     style={({pressed:presionado})=>[estilos.tarjeta,presionado&&estilos.presionada]}>{contenido}</Pressable>
     : <View accessible accessibilityLabel={etiqueta} style={estilos.tarjeta}>{contenido}</View>;

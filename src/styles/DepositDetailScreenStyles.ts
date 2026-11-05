@@ -1,7 +1,7 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
   const columnasCategoriasFiltro = anchoVentana >= 420 ? 4 : 3;
@@ -10,10 +10,10 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
   const estilos = StyleSheet.create({
     contenido: {
       width: '100%',
-      maxWidth: 560,
       alignSelf: 'center',
       gap: ESPACIADO.grande,
       padding: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme + ESPACIADO.pantalla,
     },
     encabezadoDeposito: {
@@ -342,81 +342,6 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     movimientosDia: {
       gap: ESPACIADO.pequeno,
-    },
-    filaMovimiento: {
-      minHeight: 72,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: ESPACIADO.medio,
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
-      borderRadius: BORDES.radios.tarjeta,
-      borderWidth: BORDES.anchos.fino,
-      padding: ESPACIADO.medio,
-    },
-    filaPresionada: {
-      opacity: 0.85,
-    },
-    iconoMovimiento: {
-      width: 48,
-      height: 48,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: BORDES.radios.circular,
-    },
-    detalleMovimiento: {
-      flex: 1,
-      minWidth: 0,
-      gap: ESPACIADO.minimo,
-    },
-    filaCategoriaDescripcion: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      minWidth: 0,
-      gap: ESPACIADO.minimo,
-    },
-    categoriaMovimiento: {
-      flexShrink: 1,
-      maxWidth: '40%',
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    separadorMetadatos: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-    },
-    descripcionEnLinea: {
-      flex: 1,
-      minWidth: 0,
-      maxWidth: '100%',
-    },
-    nombreMovimiento: {
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    metaMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-    },
-    tipoMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    montoMovimiento: {
-      maxWidth: '38%',
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      textAlign: 'right',
     },
     fondoFiltros: {
       flex: 1,

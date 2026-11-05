@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import EncabezadoSeccion from '../components/SectionHeader';
+import TarjetaMovimiento from '../components/MovementCard';
 import { RUTAS } from '../constants/routes';
 import {
   CATEGORIAS_EGRESO,
@@ -44,10 +45,6 @@ function formatearFechaDia(fecha: Date) {
   });
 }
 
-function formatearHora(fechaISO: string|number|Date) {
-  const fecha = new Date(fechaISO);
-  return fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-}
 
 function agruparMovimientosPorDia(movimientos: import('../types/forms').MovimientoVisible[]) {
   return movimientos.reduce<{clave:string;fecha:Date;movimientos:import('../types/forms').MovimientoVisible[]}[]>((grupos, movimiento) => {
@@ -255,31 +252,8 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                   {formatearFechaDia(grupo.fecha)}
                 </Text>
                 <View style={estilos.movimientosDia}>
-                  {grupo.movimientos.map((movimiento) => (
-                    <Pressable
-                      accessibilityLabel={`Ver ${movimiento.descripcion}, ${movimiento.deposito_nombre || 'Depósito'}, ${formatearHora(movimiento.fecha_hora)}`}
-                      accessibilityRole="button"
-                      key={movimiento.id}
-                      onPress={() => abrirDetalleMovimiento(movimiento)}
-                      style={estilos.filaMovimiento}
-                    >
-                      <View style={[estilos.iconoMovimiento, { backgroundColor: tema.superficie }]}>
-                        <Ionicons color={categoria.color} name={categoria.icono} size={21} />
-                      </View>
-                      <View style={estilos.detalleFilaMovimiento}>
-                        <Text numberOfLines={1} style={estilos.nombreFilaMovimiento}>{movimiento.descripcion}</Text>
-                        <Text numberOfLines={1} style={estilos.subtituloFilaMovimiento}>
-                          {movimiento.deposito_nombre || 'Depósito'} · {formatearHora(movimiento.fecha_hora)}
-                        </Text>
-                      </View>
-                      <Text style={[
-                        estilos.montoFilaMovimiento,
-                        tipoMovimiento === 'ingreso' ? estilos.montoIngreso : estilos.montoEgreso,
-                      ]}>
-                        {formatearMonto(movimiento.monto, tipoMovimiento)}
-                      </Text>
-                    </Pressable>
-                  ))}
+                  {grupo.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalleMovimiento} soloHora/>)}
+
                 </View>
               </View>
               ))}

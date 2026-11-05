@@ -1,7 +1,7 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosDashboard(tema: Tema) {
   return StyleSheet.create({
@@ -11,7 +11,7 @@ export function crearEstilosDashboard(tema: Tema) {
     contenidoDashboard: {
       gap: ESPACIADO.grande,
       marginTop: -ESPACIADO.pequeno,
-      paddingHorizontal: ESPACIADO.medio,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       position: 'relative',
       zIndex: 1,
     },

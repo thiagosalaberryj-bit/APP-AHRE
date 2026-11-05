@@ -1,8 +1,8 @@
 import {StyleSheet} from 'react-native';
 import type {Tema} from './colors';
-import {ESPACIADO,TIPOGRAFIA,BORDES} from './globalStyles';
+import {ESPACIADO,TIPOGRAFIA,BORDES,MARGEN_LATERAL_PANTALLA} from './globalStyles';
 export const crearEstilosSincronizacion=(tema:Tema,insetInferior=0)=>StyleSheet.create({
-  contenido:{padding:ESPACIADO.grande,paddingBottom:ESPACIADO.enorme+insetInferior},
+  contenido:{padding:ESPACIADO.grande,paddingHorizontal:MARGEN_LATERAL_PANTALLA,paddingBottom:ESPACIADO.enorme+insetInferior},
   resumen:{gap:ESPACIADO.medio},
   fila:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio},
   flexible:{flex:1,minWidth:0,gap:ESPACIADO.minimo},

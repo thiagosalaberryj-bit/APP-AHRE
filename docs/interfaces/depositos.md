@@ -65,7 +65,8 @@ Las reglas completas de persistencia se describen en
 La pantalla combina `KeyboardAvoidingView`, `ScrollView`,
 `keyboardShouldPersistTaps="handled"` y el espacio inferior del área segura para
 mantener accesibles los campos y las acciones con el teclado abierto. El saldo
-usa `decimal-pad`. El formulario limita el ancho a 480 puntos y se adapta a
+usa `decimal-pad`. El formulario ocupa el ancho disponible con 12 puntos de
+margen por lado, igual que Inicio, y se adapta a
 pantallas angostas mediante tarjetas que pueden ocupar más de una fila.
 
 El encabezado reutiliza `SectionHeader`; los campos y las acciones utilizan los
@@ -134,8 +135,10 @@ El detalle no muestra un filtro de depósitos porque la lista ya está limitada
 al depósito seleccionado. Los resultados se agrupan por día y se ordenan por
 fecha y hora descendente.
 
-Cada tarjeta presenta categoría y descripción, hora y depósito, tipo e importe
-con signo, como en la pestaña Movimientos. Al tocar una fila se abre el detalle
+Cada tarjeta reutiliza `MovementCard.tsx`, igual que Inicio, Movimientos y
+Detalle de categoría: descripción y tipo en el primer renglón; categoría,
+depósito, hora e importe con signo en el segundo, con una franja de fondo suave
+para el tipo y el importe. Al tocar una fila se abre el detalle
 existente con la descripción del movimiento y sus datos. Los estados incluyen
 carga, error, sin movimientos, sin resultados de búsqueda y sin resultados por
 filtros.

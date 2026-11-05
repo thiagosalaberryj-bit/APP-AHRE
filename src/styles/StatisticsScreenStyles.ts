@@ -1,14 +1,14 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosEstadisticas(tema: Tema) {
   return StyleSheet.create({
     contenidoDesplazable: {
       flexGrow: 1,
       paddingBottom: ESPACIADO.enorme + ESPACIADO.pantalla,
-      paddingHorizontal: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
     },
     desplazamiento: {
       flex: 1,

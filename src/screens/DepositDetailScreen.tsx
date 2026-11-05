@@ -25,12 +25,13 @@ import BotonPrincipal from '../components/PrimaryButton';
 import SelectorCategoria from '../components/CategorySelector';
 import SelectorFecha from '../components/DateSelector';
 import EncabezadoSeccion from '../components/SectionHeader';
+import TarjetaMovimiento from '../components/MovementCard';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
 import { actualizarDeposito, consultarDetalleDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
 import { consultarSaldoOculto, guardarSaldoOculto } from '../profile/balanceVisibilityService';
 import { convertirSaldoInicial } from '../utils/depositValidation';
-import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS, COLORES_ESTADO } from '../styles/colors';
+import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleDeposito } from '../styles/DepositDetailScreenStyles';
 import { crearEstilosDeposito } from '../styles/DepositScreenStyles';
@@ -90,9 +91,6 @@ function formatearFechaCorta(fecha: Date) {
   return fecha.toLocaleDateString('es-AR');
 }
 
-function formatearFechaHora(fechaHora: string|number|Date) {
-  return new Date(fechaHora).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-}
 
 function formatearSaldo(monto: number) {
   const saldo = Number(monto);
@@ -139,50 +137,6 @@ function formatearRangoSemana(fecha: Date) {
 
 function esMovimientoDeIngreso(tipo: string) {
   return tipo === 'ingreso' || tipo === 'transferencia_entrada';
-}
-
-function obtenerNombreTipoMovimiento(tipo: string) {
-  if (tipo === 'transferencia_entrada') return 'Transferencia recibida';
-  if (tipo === 'transferencia_salida') return 'Transferencia enviada';
-  return esMovimientoDeIngreso(tipo) ? 'Ingreso' : 'Egreso';
-}
-
-function TarjetaMovimientoDeposito({ tema, estilos, movimiento, alPresionar }: {tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosDetalleDeposito>;movimiento:import('../types/forms').MovimientoVisible;alPresionar:(movimiento:import('../types/forms').MovimientoVisible,categoria:Partial<import('../constants/movimientos').Categoria>)=>void}) {
-  const categoria: Partial<import('../constants/movimientos').Categoria> = CATEGORIAS_POR_ID.get(movimiento.categoria) || {};
-  const esIngreso = esMovimientoDeIngreso(movimiento.tipo);
-  const monto = Number(movimiento.monto);
-  const textoMonto = Number.isFinite(monto)
-    ? `${esIngreso ? '+' : '−'}$${Math.abs(monto).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`
-    : '—';
-
-  return (
-    <Pressable
-      accessibilityLabel={`${obtenerNombreTipoMovimiento(movimiento.tipo)}: ${movimiento.descripcion || categoria.nombre || 'Movimiento'}`}
-      accessibilityRole="button"
-      onPress={() => alPresionar(movimiento, categoria)}
-      style={({ pressed }) => [estilos.filaMovimiento, pressed ? estilos.filaPresionada : null]}
-    >
-      <View style={[estilos.iconoMovimiento, { backgroundColor: esIngreso ? COLORES_ESTADO.ingreso : COLORES_ESTADO.egreso }]}>
-        <Ionicons color={tema.encabezado} name={categoria.icono || 'swap-horizontal-outline'} size={20} />
-      </View>
-      <View style={estilos.detalleMovimiento}>
-        <View style={estilos.filaCategoriaDescripcion}>
-          <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.categoriaMovimiento}>
-            {categoria.nombre || movimiento.categoria}
-          </Text>
-          <Text style={estilos.separadorMetadatos}>·</Text>
-          <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.categoriaMovimiento, estilos.descripcionEnLinea]}>
-            {movimiento.descripcion || categoria.nombre || 'Movimiento'}
-          </Text>
-        </View>
-        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.metaMovimiento}>
-          {formatearFechaHora(movimiento.fecha_hora)} · {movimiento.deposito_nombre}
-        </Text>
-        <Text style={estilos.tipoMovimiento}>{obtenerNombreTipoMovimiento(movimiento.tipo)}</Text>
-      </View>
-      <Text style={estilos.montoMovimiento}>{textoMonto}</Text>
-    </Pressable>
-  );
 }
 
 function formatearFechaDia(fecha: Date) {
@@ -943,12 +897,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     <Text accessibilityRole="header" style={estilos.tituloDia}>{formatearFechaDia(grupo.fecha)}</Text>
                     <View style={estilos.movimientosDia}>
                       {grupo.movimientos.map((movimiento) => (
-                        <TarjetaMovimientoDeposito
+                        <TarjetaMovimiento
                           key={movimiento.id}
                           tema={tema}
-                          estilos={estilos}
                           movimiento={movimiento}
                           alPresionar={abrirDetalleMovimiento}
+                          soloHora
                         />
                       ))}
                     </View>

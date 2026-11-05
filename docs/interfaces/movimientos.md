@@ -245,8 +245,8 @@ dentro de una transacción. El egreso guarda un monto positivo con tipo
 El formulario combina `KeyboardAvoidingView` con `ScrollView`,
 `keyboardShouldPersistTaps="handled"` y espacio inferior según el área segura
 del dispositivo para que el botón de guardado pueda verse completo. El monto
-abre teclado numérico. El contenido limita su ancho a 480 puntos y conserva
-márgenes en pantallas pequeñas. Las cinco tarjetas de categoría se distribuyen
+abre teclado numérico. El contenido utiliza el ancho disponible con un margen
+compartido de 12 puntos por lado, igual que Inicio. Las cinco tarjetas de categoría se distribuyen
 en el ancho disponible sin scroll horizontal. Lee el modo claro u oscuro del
 sistema y aplica `TEMAS.claro` u `TEMAS.oscuro` a fondos, textos, bordes,
 botones y modales.
@@ -261,12 +261,23 @@ mes se abre o cierra de forma independiente y mantiene la separación por día
 en su interior. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
 `tipo`, no se deduce del monto. Los encabezados muestran «Hoy», «Ayer» o la
 fecha para los días anteriores. Cada tarjeta usa un ícono de categoría y
-presenta descripción e importe con signo en la misma fila; debajo, categoría,
-depósito y hora, junto al texto «Ingreso» o «Egreso». La descripción se recorta
+presenta dos renglones: descripción y tipo en el primero; categoría, depósito,
+hora e importe con signo en el segundo. El tipo y el importe ocupan una franja
+de fondo suave a la derecha, similar a las tarjetas de deudas. La franja tiene
+un ancho fijo de 112 puntos, con el tipo y la
+flecha arriba y el importe debajo, limitado a una línea con puntos suspensivos.
+La tarjeta usa un radio de 10 puntos y sus contenedores internos, de 5 puntos.
+El importe completo se conserva en la etiqueta accesible y en el detalle.
+La franja reserva 8 puntos de relleno lateral y 4 vertical para separar texto y
+flecha del borde; descripción e importe usan texto de 16 puntos. Su fondo usa
+`tema.fondo` en ambos temas.
+La descripción se recorta
 cuando no entra; el tipo también
 se indica con texto, no solo con color. Los estilos locales están en
 `src/styles/MovementsScreenStyles.ts`; los estilos de la tarjeta compartida con
-Inicio están en `src/styles/MovementCardStyles.ts`.
+Inicio están en `src/styles/MovementCardStyles.ts`. Detalle de depósito y Detalle
+de categoría también reutilizan la misma tarjeta. La hora queda separada del
+texto recortable; la etiqueta accesible conserva toda la información.
 
 La consulta inicial no muestra esqueletos de carga. Al volver a la pestaña se
 conserva el historial visible mientras se actualiza; cada mes puede abrirse o

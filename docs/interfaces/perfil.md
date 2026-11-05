@@ -41,7 +41,7 @@ Perfil
 Se abre desde el botón de Perfil del Dashboard. La flecha del encabezado
 vuelve atrás. Los estilos locales están en
 `src/styles/ProfileScreenStyles.ts` con tokens de `colors.ts` y
-`globalStyles.ts`; el contenido limita su ancho a 480 puntos y acompaña los
+`globalStyles.ts`; el contenido usa 12 puntos de margen por lado, igual que Inicio, y acompaña los
 temas claro y oscuro, incluidos modales y controles.
 
 ## Información del usuario

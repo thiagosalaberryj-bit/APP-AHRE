@@ -21,7 +21,7 @@ import {
 } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
 import { obtenerColoresGraficos } from '../styles/colors';
-import { crearEstilosGlobales, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
+import { crearEstilosGlobales, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from '../styles/globalStyles';
 import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
 import { cargarEstadisticas } from '../statistics/statisticsService';
 
@@ -1045,7 +1045,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
               showsHorizontalScrollIndicator={false}
               style={estilos.carrusel}
             >
-              <View style={[estilos.paginaGrafico, { width: anchoSlider || Math.max(0, anchoPantalla - (ESPACIADO.pantalla * 2)) }]}>
+              <View style={[estilos.paginaGrafico, { width: anchoSlider || Math.max(0, anchoPantalla - (MARGEN_LATERAL_PANTALLA * 2)) }]}>
                 <View style={estilos.cabeceraGrafico}>
                   <Text style={estilos.tituloGrafico}>{seccionesGrafico[0].titulo}</Text>
                   <Text style={estilos.subtituloGrafico}>{tituloResumen}</Text>
@@ -1077,7 +1077,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                   )}
                 </View>
               </View>
-              <View style={[estilos.paginaGrafico, { width: anchoSlider || Math.max(0, anchoPantalla - (ESPACIADO.pantalla * 2)) }]}>
+              <View style={[estilos.paginaGrafico, { width: anchoSlider || Math.max(0, anchoPantalla - (MARGEN_LATERAL_PANTALLA * 2)) }]}>
                 <View style={estilos.cabeceraGrafico}>
                   <Text style={estilos.tituloGrafico}>{seccionesGrafico[1].titulo}</Text>
                   <Text style={estilos.subtituloGrafico}>{tituloColumnas}</Text>

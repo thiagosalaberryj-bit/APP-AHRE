@@ -3,7 +3,7 @@ import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'r
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
+import { ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from '../styles/globalStyles';
 
 export default function ContenedorAutenticacion({ tema, titulo, descripcion, children: contenido }: import('../types/ui').ContenedorAuthProps) {
   const estilos = crearEstilos(tema);
@@ -65,13 +65,12 @@ function crearEstilos(tema: Tema) {
     },
     contenidoDesplazable: {
       flexGrow: 1,
-      paddingHorizontal: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.grande,
     },
     contenido: {
       flexGrow: 1,
       width: '100%' as const,
-      maxWidth: 480,
       alignSelf: 'center' as const,
       paddingTop: ESPACIADO.grande,
     },

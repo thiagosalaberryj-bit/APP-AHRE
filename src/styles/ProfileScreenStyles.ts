@@ -1,15 +1,15 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosPerfil(tema: Tema) {
   const estilos = StyleSheet.create({
     contenido: {
       gap: ESPACIADO.medio,
       padding: ESPACIADO.grande,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme,
-      maxWidth: 480,
       width: '100%',
       alignSelf: 'center',
     },

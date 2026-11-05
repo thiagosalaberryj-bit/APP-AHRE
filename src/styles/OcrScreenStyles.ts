@@ -1,7 +1,7 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosOcr(tema: Tema) {
   return StyleSheet.create({
@@ -9,8 +9,8 @@ export function crearEstilosOcr(tema: Tema) {
       flexGrow: 1,
       gap: ESPACIADO.formulario,
       padding: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme,
-      maxWidth: 480,
       width: '100%',
       alignSelf: 'center',
     },

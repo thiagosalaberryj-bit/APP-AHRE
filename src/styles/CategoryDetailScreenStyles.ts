@@ -1,7 +1,7 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosDetalleCategoria(tema: Tema) {
   return StyleSheet.create({
@@ -16,7 +16,7 @@ export function crearEstilosDetalleCategoria(tema: Tema) {
     },
     contenidoCategoria: {
       paddingBottom: ESPACIADO.enorme + ESPACIADO.pantalla,
-      paddingHorizontal: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
     },
     encabezadoCategoria: {
       alignItems: 'flex-start',
@@ -173,47 +173,6 @@ export function crearEstilosDetalleCategoria(tema: Tema) {
     },
     movimientosDia: {
       gap: ESPACIADO.minimo,
-    },
-    filaMovimiento: {
-      alignItems: 'center',
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
-      borderRadius: BORDES.radios.tarjeta,
-      borderWidth: BORDES.anchos.fino,
-      flexDirection: 'row',
-      gap: ESPACIADO.pequeno,
-      minHeight: 68,
-      paddingHorizontal: ESPACIADO.medio,
-      paddingVertical: ESPACIADO.minimo,
-    },
-    iconoMovimiento: {
-      alignItems: 'center',
-      borderRadius: BORDES.radios.circular,
-      height: 40,
-      justifyContent: 'center',
-      width: 40,
-    },
-    detalleFilaMovimiento: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    nombreFilaMovimiento: {
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    subtituloFilaMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      marginTop: ESPACIADO.minimo,
-    },
-    montoFilaMovimiento: {
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      textAlign: 'right',
     },
     fondoModalPeriodo: {
       alignItems: 'center',

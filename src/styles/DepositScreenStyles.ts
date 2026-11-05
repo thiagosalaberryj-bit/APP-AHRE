@@ -2,7 +2,7 @@ import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
 import { COLOR_DEPOSITO_PREDETERMINADO } from './colors';
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosDeposito(tema: Tema) {
   const estilos = StyleSheet.create({
@@ -11,10 +11,10 @@ export function crearEstilosDeposito(tema: Tema) {
     },
     formulario: {
       width: '100%',
-      maxWidth: 480,
       alignSelf: 'center',
       gap: ESPACIADO.formulario,
       padding: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme,
     },
     grupo: {
