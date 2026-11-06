@@ -1,120 +1,77 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
   const columnasCategoriasFiltro = anchoVentana >= 420 ? 4 : 3;
   const anchoCategoriaFiltro = columnasCategoriasFiltro === 4 ? '22.5%' : '30%';
 
   const estilos = StyleSheet.create({
+    formularioEdicion: {
+      padding: ESPACIADO.grande,
+      paddingHorizontal: ESPACIADO.grande,
+      paddingBottom: ESPACIADO.extraGrande,
+      gap: ESPACIADO.grande,
+    },
     contenido: {
       width: '100%',
-      maxWidth: 560,
       alignSelf: 'center',
       gap: ESPACIADO.grande,
       padding: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme + ESPACIADO.pantalla,
     },
     encabezadoDeposito: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: ESPACIADO.medio,
+      flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio,paddingHorizontal:ESPACIADO.grande,paddingTop:ESPACIADO.grande,paddingBottom:ESPACIADO.pequeno,
     },
     tarjetaDeposito: {
-      gap: ESPACIADO.medio,
-      padding: ESPACIADO.medio,
+      padding:0, overflow: 'hidden', borderRadius:BORDES.radios.campo,
     },
     iconoDeposito: {
-      width: 44,
-      height: 44,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: BORDES.radios.circular,
+      width:56,height:56,alignItems:'center',justifyContent:'center',borderRadius:BORDES.radios.campo/2,
     },
+    identidadDeposito:{flex:1.35,minWidth:0,flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno},
+    encabezadoSaldo:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo},
+    seccionDescripcion:{paddingHorizontal:ESPACIADO.grande,paddingBottom:ESPACIADO.medio,gap:ESPACIADO.minimo},
+    seccionComparacion:{marginHorizontal:ESPACIADO.grande,paddingVertical:ESPACIADO.medio,borderTopWidth:BORDES.anchos.fino,borderTopColor:tema.borde,gap:ESPACIADO.pequeno,flexDirection:'row',alignItems:'center'},
+    resumenComparacion:{flex:1,minWidth:0,gap:ESPACIADO.minimo},
+    valorSaldoCompleto:{padding:ESPACIADO.medio,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo/2},
+    saldoCompleto:{fontSize:TIPOGRAFIA.tamanos.titulo,fontWeight:TIPOGRAFIA.pesos.negrita,color:tema.textoPrincipal,paddingBottom:ESPACIADO.pequeno},
     datosDeposito: {
       flex: 1,
       minWidth: 0,
       gap: 2,
     },
     nombreDeposito: {
-      minWidth: 0,
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+      minWidth:0,color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.encabezado,fontWeight:TIPOGRAFIA.pesos.seminegrita,
     },
     tipoDeposito: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      color:tema.textoSecundario,fontSize:TIPOGRAFIA.tamanos.secundario,
     },
     descripcionDeposito: {
-      minWidth: 0,
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      lineHeight: 16,
+      color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.encabezado,fontWeight:TIPOGRAFIA.pesos.medio,
     },
     botonOpciones: {
-      width: 36,
-      height: 36,
-      flexShrink: 0,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: BORDES.radios.circular,
-      backgroundColor: tema.fondo,
+      width:44,height:44,alignItems:'center',justifyContent:'center',
     },
     resumenSaldo: {
-      gap: ESPACIADO.minimo,
-      paddingTop: ESPACIADO.medio,
-      borderTopWidth: BORDES.anchos.fino,
-      borderTopColor: tema.borde,
+      flex:1,minWidth:0,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo/2,paddingHorizontal:ESPACIADO.medio,paddingVertical:ESPACIADO.pequeno,gap:ESPACIADO.minimo,alignItems:'flex-end',
     },
     etiquetaSaldo: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      color:tema.textoSecundario,fontSize:TIPOGRAFIA.tamanos.secundario,
     },
     saldo: {
-      flex: 1,
-      minWidth: 0,
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.titulo + 6,
-      fontWeight: TIPOGRAFIA.pesos.negrita,
-      lineHeight: TIPOGRAFIA.tamanos.titulo + 12,
-      letterSpacing: -0.6,
+      alignSelf:'stretch',minWidth:0,color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.monto,fontWeight:TIPOGRAFIA.pesos.negrita,textAlign:'right',
     },
     filaSaldo: {
-      minWidth: 0,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: ESPACIADO.pequeno,
-    },
-    botonVisibilidadSaldo: {
-      width: 36,
-      height: 36,
-      flexShrink: 0,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: BORDES.radios.circular,
-      backgroundColor: tema.fondo,
+      flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:ESPACIADO.minimo,
     },
     comparacionSaldo: {
-      alignSelf: 'flex-start',
-      maxWidth: '100%',
-      minHeight: 22,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: ESPACIADO.minimo,
+      flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno,backgroundColor:tema.superficie,
     },
     textoComparacion: {
-      flexShrink: 1,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      lineHeight: 16,
-      fontWeight: TIPOGRAFIA.pesos.medio,
+      flex:1,minWidth:0,fontSize:TIPOGRAFIA.tamanos.secundario,
     },
     textoComparacionPositiva: {
       color: tema.exito,
@@ -138,7 +95,6 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     seccionMovimientos: {
       width: '100%',
-      maxWidth: 480,
       alignSelf: 'center',
       gap: ESPACIADO.medio,
     },
@@ -252,12 +208,11 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       justifyContent: 'center',
       borderColor: tema.borde,
       borderWidth: BORDES.anchos.fino,
-      borderRadius: BORDES.radios.circular,
+      borderRadius: BORDES.radios.campo,
       paddingHorizontal: ESPACIADO.medio,
       paddingVertical: ESPACIADO.pequeno,
     },
     chipSeleccionado: {
-      borderColor: tema.foco,
       backgroundColor: tema.nombre === 'oscuro' ? tema.contenedorVerde : '#E8F1EE',
     },
     textoChip: {
@@ -267,21 +222,20 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     textoChipSeleccionado: {
       color: tema.foco,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
+
     },
     chipFiltro: {
-      minHeight: 40,
+      minHeight: 44,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
-      borderRadius: BORDES.radios.circular,
+      borderRadius: BORDES.radios.campo,
       borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
     },
     chipFiltroActivo: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     textoChipFiltro: {
       color: tema.textoSecundario,
@@ -330,98 +284,11 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     listaMovimientos: {
       gap: ESPACIADO.medio,
     },
-    grupoDia: {
+    grupoMes: {
       gap: ESPACIADO.minimo,
     },
-    tituloDia: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      paddingHorizontal: ESPACIADO.minimo,
-    },
-    movimientosDia: {
+    movimientosMes: {
       gap: ESPACIADO.pequeno,
-    },
-    esqueletoMovimiento: {
-      height: 64,
-      borderRadius: BORDES.radios.campo,
-      backgroundColor: tema.fondoDeshabilitado,
-    },
-    filaMovimiento: {
-      minHeight: 72,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: ESPACIADO.medio,
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
-      borderRadius: BORDES.radios.tarjeta,
-      borderWidth: BORDES.anchos.fino,
-      padding: ESPACIADO.medio,
-    },
-    filaPresionada: {
-      opacity: 0.85,
-    },
-    iconoMovimiento: {
-      width: 48,
-      height: 48,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: BORDES.radios.circular,
-    },
-    detalleMovimiento: {
-      flex: 1,
-      minWidth: 0,
-      gap: ESPACIADO.minimo,
-    },
-    filaCategoriaDescripcion: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      minWidth: 0,
-      gap: ESPACIADO.minimo,
-    },
-    categoriaMovimiento: {
-      flexShrink: 1,
-      maxWidth: '40%',
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    separadorMetadatos: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-    },
-    descripcionEnLinea: {
-      flex: 1,
-      minWidth: 0,
-      maxWidth: '100%',
-    },
-    nombreMovimiento: {
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    metaMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
-    },
-    tipoMovimiento: {
-      color: tema.textoSecundario,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-    },
-    montoMovimiento: {
-      maxWidth: '38%',
-      color: tema.textoPrincipal,
-      fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      fontWeight: TIPOGRAFIA.pesos.seminegrita,
-      textAlign: 'right',
     },
     fondoFiltros: {
       flex: 1,
@@ -452,8 +319,8 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       borderColor: tema.borde,
       borderLeftWidth: BORDES.anchos.fino,
       borderRightWidth: BORDES.anchos.fino,
-      borderTopLeftRadius: BORDES.radios.tarjeta,
-      borderTopRightRadius: BORDES.radios.tarjeta,
+      borderTopLeftRadius: BORDES.radios.boton,
+      borderTopRightRadius: BORDES.radios.boton,
       borderTopWidth: BORDES.anchos.fino,
       paddingTop: ESPACIADO.minimo,
       paddingBottom: ESPACIADO.medio,
@@ -467,8 +334,8 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       backgroundColor: tema.superficie,
       borderBottomColor: tema.borde,
       borderBottomWidth: BORDES.anchos.fino,
-      borderTopLeftRadius: BORDES.radios.tarjeta,
-      borderTopRightRadius: BORDES.radios.tarjeta,
+      borderTopLeftRadius: BORDES.radios.boton,
+      borderTopRightRadius: BORDES.radios.boton,
       paddingHorizontal: ESPACIADO.grande,
       paddingBottom: ESPACIADO.minimo,
     },
@@ -680,8 +547,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       padding: ESPACIADO.pequeno,
     },
     tarjetaCategoriaSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     nombreCategoria: {
       color: tema.textoPrincipal,
@@ -784,7 +650,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       padding: ESPACIADO.grande,
       borderColor: tema.borde,
       borderWidth: BORDES.anchos.fino,
-      borderRadius: BORDES.radios.tarjeta,
+      borderRadius: BORDES.radios.boton,
       backgroundColor: tema.superficie,
     },
     iconoEstadoVacio: {
@@ -822,12 +688,12 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     tarjetaOpciones: {
       width: '100%',
-      maxWidth: 400,
-      gap: ESPACIADO.pequeno,
+      maxWidth: 480,
+      gap: ESPACIADO.medio,
       padding: ESPACIADO.grande,
       borderColor: tema.borde,
       borderWidth: BORDES.anchos.fino,
-      borderRadius: BORDES.radios.tarjeta,
+      borderRadius: BORDES.radios.boton,
       backgroundColor: tema.superficie,
       elevation: 12,
       shadowColor: '#000000',
@@ -854,11 +720,11 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     descripcionOpciones: {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      lineHeight: 17,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      lineHeight: 20,
     },
     opcionModal: {
-      minHeight: 56,
+      minHeight: 64,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.medio,
@@ -867,14 +733,14 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     separadorOpcionModal: {
       height: BORDES.anchos.fino,
       backgroundColor: tema.borde,
-      marginLeft: 36 + ESPACIADO.medio,
+      marginLeft: 40 + ESPACIADO.medio,
     },
     iconoOpcionModal: {
-      width: 36,
-      height: 36,
+      width: 40,
+      height: 40,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: BORDES.radios.circular,
+      borderRadius: BORDES.radios.campo / 2,
       backgroundColor: tema.fondo,
     },
     iconoOpcionEliminar: {
@@ -897,7 +763,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     subtituloOpcionModal: {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
     },
     textoOpcionEliminar: {
       color: tema.error,
@@ -909,7 +775,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       overflow: 'hidden',
       borderColor: tema.borde,
       borderWidth: BORDES.anchos.fino,
-      borderRadius: BORDES.radios.tarjeta,
+      borderRadius: BORDES.radios.boton,
       backgroundColor: tema.superficie,
       elevation: 10,
       shadowColor: '#000000',
@@ -942,7 +808,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     subtituloEdicion: {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
     },
     contenidoModal: {
       flexShrink: 1,
@@ -963,7 +829,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     botonPrincipalModal: {
       flex: 1,
-      minHeight: 56,
+      minHeight: 52,
     },
     accionesModal: {
       flexDirection: 'row',
@@ -972,7 +838,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     botonSecundarioModal: {
       flex: 1,
-      minHeight: 48,
+      minHeight: 52,
       alignItems: 'center',
       justifyContent: 'center',
       borderColor: tema.borde,
@@ -983,7 +849,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     textoSecundarioModal: {
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     botonPrincipal: {
@@ -1003,12 +869,12 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     tarjetaConfirmacion: {
       width: '100%',
-      maxWidth: 420,
+      maxWidth: 480,
       gap: ESPACIADO.medio,
       padding: ESPACIADO.grande,
       borderColor: tema.borde,
       borderWidth: BORDES.anchos.fino,
-      borderRadius: BORDES.radios.tarjeta,
+      borderRadius: BORDES.radios.boton,
       backgroundColor: tema.superficie,
       elevation: 12,
       shadowColor: '#000000',
@@ -1095,7 +961,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     botonEliminar: {
       flex: 1,
-      minHeight: 48,
+      minHeight: 52,
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: BORDES.radios.boton,
@@ -1105,7 +971,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     textoEliminar: {
       color: '#FFFFFF',
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
   });

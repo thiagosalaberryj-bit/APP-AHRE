@@ -3,13 +3,28 @@ import type { Tema } from '../styles/colors';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { BORDES } from '../styles/globalStyles';
 
-import { obtenerColoresGraficos } from '../styles/colors';
+import { obtenerColorIconoCategoria, obtenerColorCategoria, ordenarCategoriasPorColor } from '../styles/categoryColors';
+
+const obtenerTintaCategoria = (id: string, tema: Tema, tipo?: string) => {
+  const color = obtenerColorIconoCategoria(id, tema, tipo);
+  if (tema.nombre === 'oscuro') return color;
+  return '#' + color.slice(1).match(/.{2}/g)!.map(canal =>
+    Math.round(parseInt(canal, 16) * 0.65).toString(16).padStart(2, '0'),
+  ).join('');
+};
 
 const crearFondoCategoria = (color: string, tema: Tema) => {
-  const [rojo, verde, azul] = (color.slice(1).match(/.{2}/g) || []).map((valor) => parseInt(valor, 16));
-  const opacidad = tema.nombre === 'oscuro' ? 0.22 : 0.12;
-  return `rgba(${rojo}, ${verde}, ${azul}, ${opacidad})`;
+  const canales = color.slice(1).match(/.{2}/g)!.map(valor => parseInt(valor, 16));
+  const superficie = tema.superficie.slice(1).match(/.{2}/g)!.map(valor => parseInt(valor, 16));
+  const esOscuro = tema.nombre === 'oscuro';
+  const intensidad = esOscuro ? 0.36 : 0.8;
+  const centro = (Math.max(...canales) + Math.min(...canales)) / 2;
+  return '#' + canales.map((canal, indice) => {
+    const tono = esOscuro ? canal : Math.max(0, Math.min(255, centro + (canal - centro) * 1.45));
+    return Math.round(tono * intensidad + superficie[indice] * (1 - intensidad)).toString(16).padStart(2, '0');
+  }).join('');
 };
 
 export default function SelectorCategoria({
@@ -18,6 +33,8 @@ export default function SelectorCategoria({
   estilosMovimiento = crearEstilosEgreso(tema),
   etiqueta = 'Categoría',
   categorias = [],
+  tipoMovimiento,
+  categoriasPrincipalesIds = [],
   seleccionadaId = undefined,
   alSeleccionar = (_valor?) => {},
   seleccionMultiple = false,
@@ -27,14 +44,22 @@ export default function SelectorCategoria({
   cantidadPrincipales = 4,
   carrusel = false,
   estiloTarjeta = null,
-  usarColorIconoComoRelleno = false,
   error = undefined,
 }: import('../types/ui').SelectorCategoriaProps) {
   const [modalVisible, establecerModalVisible] = useState(false);
+  const bordeCampo = {
+    borderColor: estilosMovimiento.filaDescripcion?.borderColor ?? tema.borde,
+    borderWidth: estilosMovimiento.filaDescripcion?.borderWidth ?? BORDES.anchos.fino,
+    borderStyle: 'solid' as const,
+  };
   const enGrilla = variante === 'grilla';
-  const categoriasPrincipales = enGrilla ? categorias : categorias.slice(0, cantidadPrincipales);
-  const categoriasAdicionales = enGrilla ? [] : categorias.slice(cantidadPrincipales);
-  const coloresGraficos = obtenerColoresGraficos(tema);
+  const categoriasOrdenadas = ordenarCategoriasPorColor(categorias, tema, tipoMovimiento);
+  const categoriasPrioritarias = [
+    ...categoriasPrincipalesIds.flatMap(id => categoriasOrdenadas.filter(categoria => categoria.id === id)),
+    ...categoriasOrdenadas.filter(categoria => !categoriasPrincipalesIds.includes(categoria.id)),
+  ];
+  const categoriasPrincipales = enGrilla ? ordenarCategoriasPorColor(categorias, tema, tipoMovimiento) : categoriasPrioritarias.slice(0, cantidadPrincipales);
+  const categoriasModal = ordenarCategoriasPorColor(categorias, tema, tipoMovimiento);
   const seleccionada = categorias.find((categoria) => categoria.id === seleccionadaId);
   const seleccionFueraDeVista = seleccionada
     && !categoriasPrincipales.some((categoria) => categoria.id === seleccionadaId);
@@ -55,30 +80,22 @@ export default function SelectorCategoria({
     ? seleccionadasIds.includes(categoriaId)
     : seleccionadaId === categoriaId);
 
-  const mostrarTarjeta = (categoria: NonNullable<import('../types/ui').SelectorCategoriaProps['categorias']>[number]) => {
+  const mostrarTarjeta = (categoria: NonNullable<import('../types/ui').SelectorCategoriaProps['categorias']>[number], abrirSelector = false) => {
     const activa = categoriaActiva(categoria.id);
-    const indiceCategoria = categorias.findIndex(
-      (elemento) => elemento.id === categoria.id,
-    );
-    const color = coloresGraficos[indiceCategoria % coloresGraficos.length];
-    const colorFondo = usarColorIconoComoRelleno ? color : crearFondoCategoria(color, tema);
-    const colorIcono = usarColorIconoComoRelleno
-      ? (tema.nombre === 'oscuro' ? '#111111' : tema.textoPrincipal)
-      : color;
+    const color = obtenerColorCategoria(categoria.id, tema, tipoMovimiento);
+    const colorFondo = activa ? tema.encabezado : crearFondoCategoria(color, tema);
+    const colorIcono = activa ? tema.encabezadoTexto : obtenerTintaCategoria(categoria.id, tema, tipoMovimiento);
     return (
       <Pressable
         key={categoria.id}
-        accessibilityLabel={categoria.nombre}
+        accessibilityLabel={abrirSelector ? `${categoria.nombre}. Ver más categorías` : categoria.nombre}
         accessibilityRole="button"
-        accessibilityState={{ selected: activa }}
-        onPress={() => seleccionarCategoria(categoria.id)}
+        accessibilityState={{ selected: activa, ...(abrirSelector ? { expanded: modalVisible } : {}) }}
+        onPress={() => abrirSelector ? establecerModalVisible(true) : seleccionarCategoria(categoria.id)}
         style={({ pressed: presionado }) => [
           estiloTarjeta || estilosMovimiento.tarjetaCategoria,
           { backgroundColor: colorFondo },
-          activa ? estilosMovimiento.tarjetaCategoriaSeleccionada : null,
-          { borderColor: usarColorIconoComoRelleno
-            ? (activa ? tema.foco : color)
-            : (activa ? color : tema.borde) },
+          bordeCampo,
           presionado ? { opacity: 0.82 } : null,
         ]}
       >
@@ -91,7 +108,8 @@ export default function SelectorCategoria({
           numberOfLines={1}
           style={[
             estilosMovimiento.nombreCategoria,
-            usarColorIconoComoRelleno ? { color: tema.nombre === 'oscuro' ? '#111111' : tema.textoPrincipal } : null,
+            { color: tema.textoPrincipal },
+            activa && { color: tema.encabezadoTexto },
           ]}
         >
           {categoria.nombreCorto || categoria.nombre}
@@ -106,13 +124,13 @@ export default function SelectorCategoria({
       {carrusel ? (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={estilosMovimiento.listaCategorias}>
-          {categorias.map((categoria) => mostrarTarjeta(categoria))}
+          {categoriasOrdenadas.map((categoria) => mostrarTarjeta(categoria))}
         </View>
       </ScrollView>
       ) : (
       <View style={[estilosMovimiento.listaCategorias, enGrilla ? { flexWrap: 'wrap' } : null]}>
         {categoriasPrincipales.map((categoria) => mostrarTarjeta(categoria))}
-        {enGrilla ? null : (
+        {enGrilla ? null : seleccionFueraDeVista && !seleccionMultiple ? mostrarTarjeta(seleccionada, true) : (
         <Pressable
           accessibilityLabel="Ver más categorías"
           accessibilityRole="button"
@@ -121,6 +139,7 @@ export default function SelectorCategoria({
           style={({ pressed: presionado }) => [
             estilosMovimiento.tarjetaCategoria,
             estilosMovimiento.tarjetaMasCategorias,
+            bordeCampo,
             presionado ? { opacity: 0.82 } : null,
           ]}
         >
@@ -130,9 +149,9 @@ export default function SelectorCategoria({
         )}
       </View>
       )}
-      {seleccionFueraDeVista ? (
-        <Text style={estilosGlobales.textoAyuda}>
-          Seleccionada: {seleccionada.nombre}
+      {!seleccionMultiple ? (
+        <Text accessibilityLiveRegion="polite" style={estilosGlobales.textoAyuda}>
+          Categoría seleccionada: {seleccionada?.nombre || 'Ninguna'}
         </Text>
       ) : null}
       {error ? (
@@ -140,7 +159,7 @@ export default function SelectorCategoria({
       ) : null}
 
       {enGrilla ? null : (
-      <Modal
+      <Modal statusBarTranslucent navigationBarTranslucent
         animationType="fade"
         onRequestClose={() => establecerModalVisible(false)}
         transparent
@@ -153,7 +172,7 @@ export default function SelectorCategoria({
         >
           <Pressable onPress={() => {}} style={estilosMovimiento.tarjetaSuperpuesta}>
             <View style={estilosMovimiento.encabezadoModal}>
-              <Text style={estilosMovimiento.tituloModal}>Más categorías</Text>
+              <Text style={estilosMovimiento.tituloModal}>Todas las categorías</Text>
               <Pressable
                 accessibilityLabel="Cerrar"
                 accessibilityRole="button"
@@ -169,12 +188,9 @@ export default function SelectorCategoria({
               showsVerticalScrollIndicator={false}
               style={estilosMovimiento.scrollCategorias}
             >
-              {categoriasAdicionales.map((categoria) => {
+              {categoriasModal.map((categoria) => {
                 const activa = categoria.id === seleccionadaId;
-                const indiceCategoria = categorias.findIndex(
-                  (elemento) => elemento.id === categoria.id,
-                );
-                const color = coloresGraficos[indiceCategoria % coloresGraficos.length];
+                const color = obtenerColorCategoria(categoria.id, tema, tipoMovimiento);
                 return (
                   <Pressable
                     key={categoria.id}
@@ -183,19 +199,18 @@ export default function SelectorCategoria({
                     onPress={() => seleccionarCategoria(categoria.id)}
                     style={[
                       estilosMovimiento.opcionCategoria,
-                      { backgroundColor: crearFondoCategoria(color, tema) },
-                      activa ? estilosMovimiento.opcionCategoriaSeleccionada : null,
-                      { borderColor: activa ? color : 'transparent' },
+                      { backgroundColor: activa ? tema.encabezado : crearFondoCategoria(color, tema) },
+                      bordeCampo,
                     ]}
                   >
                     <Ionicons
-                      color={color}
+                      color={activa ? tema.encabezadoTexto : obtenerTintaCategoria(categoria.id, tema, tipoMovimiento)}
                       name={categoria.icono}
                       size={22}
                     />
-                    <Text style={estilosMovimiento.textoOpcionCategoria}>{categoria.nombre}</Text>
+                    <Text style={[estilosMovimiento.textoOpcionCategoria, { color: activa ? tema.encabezadoTexto : tema.textoPrincipal }]}>{categoria.nombre}</Text>
                     <Ionicons
-                      color={activa ? color : tema.borde}
+                      color={activa ? tema.encabezadoTexto : tema.textoSecundario}
                       name={activa ? 'radio-button-on' : 'radio-button-off'}
                       size={20}
                     />

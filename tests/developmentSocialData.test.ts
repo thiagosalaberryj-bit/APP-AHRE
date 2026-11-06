@@ -29,7 +29,7 @@ test('cerrar la sala de prueba confirma seis movimientos y deudas sin duplicar e
   const datos = await e.cargarSocial();
   assert.equal(datos.salas[0].estado, 'cerrada'); assert.equal(datos.deudas.length, 5);
   assert.equal(datos.totales.porCobrar, '$ 9.500'); assert.equal(datos.totales.porPagar, '$ 3.800');
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 12);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length + 6);
   assert.equal(presente(e.base.prepare('SELECT SUM(saldo_actual) AS saldo FROM depositos').get()).saldo, 857550);
   assert.deepEqual(e.base.prepare('PRAGMA foreign_key_check').all(), []);
 });
@@ -44,7 +44,7 @@ test('la deuda manual de ejemplo admite pago parcial, reintento y saldo completo
   const final = await e.cargarSocial();
   assert.equal(final.deudas[0].saldada, true); assert.equal(final.salas[0].estado, 'abierta');
   assert.equal(final.totales.porPagar, '$ 0');
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 8);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length + 2);
   assert.equal(presente(e.base.prepare('SELECT SUM(saldo_actual) AS saldo FROM depositos').get()).saldo, 871000);
 });
 
@@ -76,7 +76,7 @@ test('una cuenta de pruebas financiera existente puede sumar Social sin duplicar
   assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM salas').get()).n, 0);
   await e.prepararDatosPrueba(); await e.prepararDatosPrueba();
   assert.equal((await e.cargarSocial()).salas.length, 1);
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length);
 });
 
 test('un lote válido de cien gastos conserva todos los centavos y genera trescientas deudas al cerrar', async prueba => {
@@ -116,5 +116,5 @@ for (const [nombre, plan] of [
   const gasto = (await e.cargarSocial()).salas[0].gastos[0];
   e.base.prepare('UPDATE gastos_compartidos SET plan_pagos = ? WHERE id = ?').run(plan, gasto.id);
   await assert.rejects(e.cargarSocial(), /borrador/);
-  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length);
 });

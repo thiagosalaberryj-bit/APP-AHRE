@@ -1,11 +1,36 @@
 import {StyleSheet} from 'react-native';
 import type {Tema} from './colors';
-import {ESPACIADO,TIPOGRAFIA,BORDES} from './globalStyles';
-export const crearEstilosSincronizacion=(tema:Tema)=>StyleSheet.create({
-  estado:{gap:ESPACIADO.pequeno,marginBottom:ESPACIADO.grande},
+import {ESPACIADO,TIPOGRAFIA,BORDES,MARGEN_LATERAL_PANTALLA} from './globalStyles';
+export const crearEstilosSincronizacion=(tema:Tema,insetInferior=0)=>StyleSheet.create({
+  reparacion:{gap:ESPACIADO.pequeno,padding:ESPACIADO.medio,backgroundColor:tema.superficie,borderRadius:BORDES.radios.campo,borderWidth:BORDES.anchos.fino,borderColor:tema.borde},
+  contenido:{padding:ESPACIADO.grande,paddingHorizontal:MARGEN_LATERAL_PANTALLA,paddingBottom:ESPACIADO.enorme+insetInferior},
+  resumen:{gap:ESPACIADO.medio},
+  fila:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio},
+  flexible:{flex:1,minWidth:0,gap:ESPACIADO.minimo},
+  iconoEstado:{padding:ESPACIADO.medio,borderRadius:BORDES.radios.tarjeta,backgroundColor:tema.superficie,alignItems:'center',justifyContent:'center'},
+  etiqueta:{fontSize:TIPOGRAFIA.tamanos.auxiliar,color:tema.textoSecundario,fontWeight:TIPOGRAFIA.pesos.medio},
   titulo:{fontSize:TIPOGRAFIA.tamanos.encabezado,fontWeight:TIPOGRAFIA.pesos.negrita,color:tema.textoPrincipal},
   texto:{fontSize:TIPOGRAFIA.tamanos.secundario,color:tema.textoSecundario},
-  boton:{padding:ESPACIADO.medio,borderRadius:BORDES.radios.boton,backgroundColor:tema.botonPrincipal,alignItems:'center'},
-  textoBoton:{color:tema.botonPrincipalTexto,fontWeight:TIPOGRAFIA.pesos.seminegrita},
-  separador:{height:ESPACIADO.medio},
+  ayuda:{fontSize:TIPOGRAFIA.tamanos.auxiliar,color:tema.textoSecundario},
+  metricas:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.grande,padding:ESPACIADO.grande,borderRadius:BORDES.radios.tarjeta,backgroundColor:tema.superficie},
+  contador:{alignItems:'center',gap:ESPACIADO.minimo},
+  numero:{fontSize:TIPOGRAFIA.tamanos.titulo,fontWeight:TIPOGRAFIA.pesos.negrita,color:tema.foco},
+  ultima:{flex:1,borderLeftWidth:BORDES.anchos.fino,borderLeftColor:tema.borde,paddingLeft:ESPACIADO.grande,gap:ESPACIADO.pequeno},
+  valor:{fontSize:TIPOGRAFIA.tamanos.secundario,color:tema.textoPrincipal,fontWeight:TIPOGRAFIA.pesos.seminegrita},
+  boton:{minHeight:48,padding:ESPACIADO.medio,borderRadius:BORDES.radios.boton,backgroundColor:tema.botonPrincipal,flexDirection:'row',gap:ESPACIADO.pequeno,alignItems:'center',justifyContent:'center'},
+  textoBoton:{color:tema.botonPrincipalTexto,fontSize:TIPOGRAFIA.tamanos.boton,fontWeight:TIPOGRAFIA.pesos.seminegrita},
+  deshabilitado:{opacity:0.5},
+  encabezadoLista:{marginTop:ESPACIADO.medio,gap:ESPACIADO.minimo},
+  tarjeta:{padding:ESPACIADO.medio,borderRadius:BORDES.radios.boton,backgroundColor:tema.superficie,borderColor:tema.borde,borderWidth:BORDES.anchos.fino,gap:ESPACIADO.pequeno},
+  iconoRegistro:{padding:ESPACIADO.pequeno,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo},
+  filaTitulo:{flexDirection:'row',alignItems:'baseline',gap:ESPACIADO.pequeno},
+  nombre:{flex:1,minWidth:0,color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.secundario,fontWeight:TIPOGRAFIA.pesos.seminegrita},
+  metadatos:{flexDirection:'row',flexWrap:'wrap',columnGap:ESPACIADO.pequeno,rowGap:ESPACIADO.minimo},
+  importe:{maxWidth:'50%',flexShrink:1,fontSize:TIPOGRAFIA.tamanos.secundario,fontWeight:TIPOGRAFIA.pesos.seminegrita,color:tema.textoPrincipal,textAlign:'right'},
+  separador:{height:ESPACIADO.pequeno},
+  vacio:{alignItems:'center',gap:ESPACIADO.medio,paddingVertical:ESPACIADO.extraGrande},
+  carga:{padding:ESPACIADO.grande},
+  error:{padding:ESPACIADO.medio,backgroundColor:tema.errorFondo,borderRadius:BORDES.radios.campo},
+  textoError:{color:tema.error,fontSize:TIPOGRAFIA.tamanos.secundario},
+  reintentar:{minHeight:44,justifyContent:'center'},
 });

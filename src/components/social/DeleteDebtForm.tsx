@@ -5,7 +5,7 @@ import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AccionesFormulario from './SocialFormActions';
 import RegistroNoDisponible from './SocialRecordUnavailable';
-import TarjetaResumenDeuda from './DebtSummaryCard';
+import TarjetaDeuda from '../DebtCard';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function FormularioEliminarDeuda({
   parametros,
@@ -27,7 +27,7 @@ export default function FormularioEliminarDeuda({
       <View style={estilos.filaCampos}><Ionicons color={tema.error} name="trash-outline" size={24} /><Text style={estilosGlobales.encabezadoSeccion}>Revisá antes de eliminar</Text></View>
       <Text style={estilosGlobales.textoSecundario}>Esta deuda dejaría de aparecer en tu listado. Eliminarla no registra un pago.</Text>
     </View>
-    <TarjetaResumenDeuda deuda={deuda} soloLectura {...aspecto} />
+    <TarjetaDeuda deuda={deuda} nombrePersona={nombreCompletoPersona(obtenerPersona(deuda.personaId))} soloLectura {...aspecto} />
     <View style={[estilosGlobales.tarjeta, estilos.tarjetaCompacta]}>
       <Text style={estilosGlobales.etiqueta}>Lo que se conserva</Text>
       <Text style={estilosGlobales.textoSecundario}>{deuda.salaId ? 'El ítem de origen y el historial de la sala no se borran.' : 'La persona permanece en tu agenda.'} Los pagos ya registrados se conservan.</Text>

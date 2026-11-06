@@ -45,7 +45,7 @@ async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean) 
         deposito = await depositosRepositorio.crear({
           ...datos, id, usuario_id: usuario.id, activo: 1,
           descripcion: 'Depósito ficticio para pruebas locales.',
-          fecha_creacion: diasAntes(45),
+          fecha_creacion: diasAntes(240),
         }, conexion);
       }
       depositos.set(clave, deposito);

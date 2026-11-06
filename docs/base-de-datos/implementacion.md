@@ -222,6 +222,21 @@ deudas, pagos y conservación del historial.
 
 ## Errores
 
+En desarrollo, los fallos de inicialización incluyen `operacion` y
+`mensajeTecnico` del error nativo, además del código. Permiten distinguir
+apertura, activación/comprobación de claves foráneas, lectura de versión,
+aplicación del esquema y preparación del diario. La interfaz conserva el
+mensaje seguro habitual; el diagnóstico ampliado no se registra en producción.
+La inicialización fallida cierra su conexión y permite reintentar, sin borrar
+ni recrear automáticamente el archivo de datos.
+
+Al abrir cada conexión se configura `PRAGMA busy_timeout = 2000` para tolerar
+escrituras concurrentes breves. Si la preparación idempotente del diario recibe
+`SQLITE_BUSY`, `SQLITE_LOCKED` o el mensaje nativo «database is locked», se
+reintenta sobre la misma conexión hasta tres veces, con pausas de 200 y 400 ms.
+Los demás errores no se reintentan. Si el bloqueo persiste, se conserva el
+diagnóstico original y el inicio permite un nuevo intento; no se borran datos.
+
 `ErrorBaseDatos` ofrece mensajes seguros para inicialización, migraciones,
 consultas, escrituras, integridad y transacciones. Los errores de SQLite se
 clasifican centralmente; en desarrollo solo se registra la etapa y el código
@@ -237,7 +252,7 @@ confirmó los recorridos de registro, acceso, modo offline, reconexión, saldos 
 Social en Expo Go. El alcance está en [Estado y validación](../estado-y-validacion.md).
 
 El esquema contiene quince tablas de datos locales (catorce sincronizadas y
-credenciales) y siete auxiliares del diario. La definición de origen es
+credenciales) y nueve auxiliares del diario. La definición de origen es
 `001_initialSchema.ts`. El esquema Social, sus restricciones y los recorridos
 se detallan en [social.md](social.md). Las pruebas cubren FK, CHECK, triggers,
 rollback y relaciones por cuenta; el guardado local de credenciales usa un
@@ -246,6 +261,11 @@ verificador SHA-256 con sal y la autorización remota usa SERVER-AHRE.
 ## Diario y reparación de perfil
 
 El DDL de sincronización se define en `001_initialSchema.ts`, en `prepararEsquemaSincronizacion`, y se prepara de forma aditiva al abrir SQLite. No se agregan migraciones de transición ni se borran datos existentes. `journal.ts` conserva la generación de triggers y la gestión de eventos.
+
+La misma preparación incluye `sync_local_dates`, que conserva la fecha de cada
+cambio pendiente, y `sync_last_success`, que registra la última sincronización
+exitosa por cuenta. La pantalla de sincronización consulta estos datos junto
+con los pendientes mediante una lectura serializada.
 
 `sync_profile_rejection` conserva usuario, lote, base, generación y contenido exacto rechazado. `sync_profile_backup` conserva los eventos originales por usuario y secuencia, incluso tras su confirmación, como respaldo local no sincronizado. No incluye credenciales. La reparación comprueba la vista previa y guarda respaldo y cambios en una transacción. Solo cambia correos de eventos de usuarios; la cola financiera conserva contenido y orden.
 

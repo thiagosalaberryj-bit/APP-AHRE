@@ -15,6 +15,8 @@ export const ESPACIADO = Object.freeze({
   formulario: 16,
 });
 
+export const MARGEN_LATERAL_PANTALLA = ESPACIADO.medio;
+
 export const BORDES = Object.freeze({
   radios: Object.freeze({
     campo: 10,
@@ -59,6 +61,7 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
     },
     contenido: {
       padding: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
     },
     encabezado: {
       backgroundColor: tema.encabezado,
@@ -111,6 +114,13 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario,
+    },
+    encabezadoCampo: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIADO.pequeno,
+    },
+    etiquetaCampo: { flex: 1, minWidth: 0 },
+    contadorCampo: {
+      color: tema.textoSecundario, fontSize: TIPOGRAFIA.tamanos.auxiliar, textAlign: 'right', flexShrink: 0,
     },
     etiqueta: {
       color: tema.textoPrincipal,

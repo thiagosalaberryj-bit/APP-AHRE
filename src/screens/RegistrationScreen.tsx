@@ -75,6 +75,7 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
           estilosGlobales={estilosGlobales}
           icono="person-outline"
           etiqueta="Nombre"
+          limiteCaracteres={80}
           alCambiarTexto={cambiarCampo('nombre', establecerNombre)}
           onSubmitEditing={() => referenciaCorreo.current?.focus()}
           placeholder="Ingresá tu nombre"

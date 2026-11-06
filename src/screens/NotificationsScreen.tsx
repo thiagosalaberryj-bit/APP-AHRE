@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -86,7 +86,6 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
   const { bottom: insetInferior } = useSafeAreaInsets();
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosNotificaciones(tema, insetInferior);
-  const [cargando, establecerCargando] = useState(true);
   const [leidas, establecerLeidas] = useState(['deuda-pendiente']);
   const [expandidaId, establecerExpandidaId] = useState<string | null | null>(null);
   const [ajustesVisibles, establecerAjustesVisibles] = useState(false);
@@ -94,10 +93,6 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
     Object.freeze({ recordatorios: true, vencimientos: true, movimientos: true, resumenes: false }),
   );
 
-  useEffect(() => {
-    const temporizador = setTimeout(() => establecerCargando(false), 1200);
-    return () => clearTimeout(temporizador);
-  }, []);
 
   const nuevas = useMemo(
     () => NOTIFICACIONES_SIMULADAS.filter((item) => !leidas.includes(item.id)),
@@ -132,9 +127,7 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
           <View style={estilos.contenido}>
             <View style={estilos.filaEncabezado}>
               <Text style={estilos.textoNuevas}>
-                {cargando
-                  ? 'Buscando avisos...'
-                  : nuevas.length === 0
+                {nuevas.length === 0
                     ? 'Estás al día'
                     : `${nuevas.length} nueva${nuevas.length > 1 ? 's' : ''} sin leer`}
               </Text>
@@ -148,13 +141,7 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
               </Pressable>
             </View>
 
-            {cargando ? (
-              <View style={[estilosGlobales.tarjeta, { gap: 12 }]}>
-                <View style={estilos.lineaCarga} />
-                <View style={estilos.lineaCarga} />
-                <View style={estilos.lineaCarga} />
-              </View>
-            ) : NOTIFICACIONES_SIMULADAS.length === 0 ? (
+            {NOTIFICACIONES_SIMULADAS.length === 0 ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.textoSecundario} name="notifications-off-outline" size={32} />
                 <Text style={estilos.textoEstadoVacio}>No tenés notificaciones.</Text>

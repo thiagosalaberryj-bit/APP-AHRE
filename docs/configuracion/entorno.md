@@ -41,6 +41,27 @@ sin acceso a Metro, una recarga puede impedir volver a cargar el JavaScript.
 
 ## Pruebas
 
+### Expo desde otra red
+
+Para probar desde Expo Go sin compartir la red de la PC, iniciar un solo Metro:
+
+```powershell
+npm start -- --go --tunnel --port 8081
+```
+
+El túnel requiere `@expo/ngrok` disponible globalmente en el entorno de Node que
+ejecuta Expo. Su instalación corresponde al líder, salvo autorización expresa;
+no requiere agregarlo al `package.json` de AHRE. Expo informa cuando el túnel
+está listo y proporciona un QR o enlace `exp://…exp.direct`. Ese enlace puede
+cambiar entre sesiones: usar el de la ejecución actual.
+
+La PC debe permanecer encendida, conectada y con Metro activo para recibir
+cambios. Si Metro no reconoce un archivo que existe después de cambiar de rama,
+detenerlo y reiniciarlo agregando `--clear`. El túnel permite acceder al servidor
+de desarrollo; no publica un APK ni reemplaza una build interna.
+
+### Comandos de verificación
+
 ```powershell
 npm run typecheck
 if ($LASTEXITCODE -ne 0) { throw 'Falló la comprobación de tipos.' }

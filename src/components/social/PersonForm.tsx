@@ -39,20 +39,19 @@ export default function FormularioPersona(propiedades: import('../../social/type
     establecer(valor);
   };
   return <RequisitoCreacionSocial aplicar={!personaInicial} {...aspecto}><View style={estilos.grupo}>
-      <CampoFormulario etiqueta="Nombre" ejemplo="Ej.: Ana" valor={nombre} alCambiar={cambiar(establecerNombre)} {...aspecto} />
-      <CampoFormulario etiqueta="Apellido" ejemplo="Ej.: Pérez" valor={apellido} alCambiar={cambiar(establecerApellido)} {...aspecto} />
+      <CampoFormulario etiqueta="Nombre" ejemplo="Ej.: Ana" valor={nombre} limite={80} alCambiar={cambiar(establecerNombre)} {...aspecto} />
+      <CampoFormulario etiqueta="Apellido" ejemplo="Ej.: Pérez" valor={apellido} limite={80} alCambiar={cambiar(establecerApellido)} {...aspecto} />
       <CampoFormulario etiqueta="Apodo" ejemplo="Ej.: Ani" valor={apodo} limite={20} alCambiar={valor => cambiar(establecerApodo)(valor.slice(0, 20))} {...aspecto} />
-      <Text style={estilosGlobales.textoAyuda}>{apodo.length}/20 caracteres</Text>
       <Text style={estilosGlobales.textoAyuda}>Nombre, apellido y apodo son obligatorios.</Text>
       {existente ? <View style={estilos.grupo}>
           <Text numberOfLines={1} ellipsizeMode="tail" accessibilityLiveRegion="polite" style={estilosGlobales.texto}>Estos datos coinciden con {nombreCompletoPersona(existente)}{existente.apodo ? ` (${existente.apodo})` : ''}, que ya está en tu listado.</Text>
           <BotonSocial texto="Ver persona existente" secundario alPresionar={() => abrirPersona(existente.id)} {...aspecto} />
           <Text style={estilosGlobales.textoAyuda}>Revisá su ficha antes de intentar registrarla nuevamente.</Text>
         </View> : null}
-      <AccionesFormulario texto={personaInicial ? "Guardar cambios" : "Registrar persona"} mostrarNota={false}
+      <AccionesFormulario texto={personaInicial ? "Guardar cambios" : "Registrar persona"}
         deshabilitado={!nombreNormalizado || !apellidoNormalizado || !apodoNormalizado || Boolean(existente)}
         recargarAntesDeCerrar alGuardar={() => guardarPersona({ nombre, apellido, apodo }, personaInicial?.id)} alExito={alCerrar} {...aspecto} />
-      {personaInicial ? <AccionesFormulario texto={personaInicial.activa ? 'Eliminar persona' : 'Reactivar persona'} peligro={personaInicial.activa} mostrarNota={false}
+      {personaInicial ? <AccionesFormulario texto={personaInicial.activa ? 'Eliminar persona' : 'Reactivar persona'} peligro={personaInicial.activa}
         confirmacion={personaInicial.activa ? { titulo: '¿Eliminar esta persona?', descripcion: 'Se desactivará su ficha. Sus salas, pagos y deudas anteriores se conservarán y podrán saldarse.', textoConfirmar: 'Sí, eliminar persona' } : undefined}
         recargarAntesDeCerrar alGuardar={() => cambiarActividadPersona(personaInicial.id, !personaInicial.activa)}
         alExito={persona => { alCerrar(); if (persona && !persona.activa) irAgenda(); }} {...aspecto} /> : null}

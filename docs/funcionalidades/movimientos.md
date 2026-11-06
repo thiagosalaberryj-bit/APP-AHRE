@@ -66,7 +66,8 @@ pestaña estaba fuera de foco.
 
 ## Estados y rendimiento
 
-- **Cargando:** skeleton mientras consulta SQLite, incluido el reintento.
+- **Cargando:** consulta SQLite sin esqueletos, incluido el reintento; conserva
+  las filas disponibles mientras se actualizan los datos.
 - **Sin movimientos:** mensaje cuando el usuario no tiene ingresos ni egresos
   vigentes.
 - **Sin resultados:** mensaje para una búsqueda o combinación de filtros sin

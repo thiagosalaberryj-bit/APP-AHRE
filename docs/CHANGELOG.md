@@ -3,6 +3,81 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [v0.7.0] - 2026-11-05 - no estable
+
+### Añadido
+
+- Agrupaciones mensuales plegables en pendientes de sincronización,
+  Movimientos e historial de depósitos, reutilizando el mismo encabezado.
+- Fecha y hora local de los pendientes y última sincronización exitosa por cuenta.
+- Filtros rápidos acumulativos por familias de categorías y rangos de importe
+  en Movimientos y Estadísticas, con criterios visibles que se pueden quitar.
+- Campo monetario compartido con separadores de miles al escribir y soporte
+  de decimales, pegado y edición del texto.
+- Comparación del balance general con el cierre del mes anterior, calculada
+  con movimientos y ajustes locales y respetando la privacidad del saldo.
+- Consulta del importe completo de movimientos y depósitos mediante un modal.
+
+### Cambiado
+
+- Unificación de márgenes, tipografías, bordes y tamaños en claro y oscuro.
+  Cards de movimientos y deudas comparten su base visual, colores semánticos
+  y franja de importe; los depósitos conservan una presentación diferenciada.
+- Rediseño de Sincronización, Estadísticas y detalles de movimiento, depósito
+  y categoría. Inicio y Social comparten las proporciones de sus resúmenes.
+- Categorías organizadas por familias cromáticas y variaciones de tono,
+  con contraste específico en oscuro y prioridad de categorías frecuentes.
+- Cards de categorías con relleno uniforme intermedio y mayor saturación en
+  claro, con íconos más contrastados. Los colores de los gráficos se conservan.
+  Salas muestra las categorías frecuentes en el mismo orden que Egresos.
+- Filtros de Estadísticas, Movimientos e Historial de deudas con el mismo estilo.
+- Selectores de depósito compartidos y desplegables flotantes de fecha,
+  período y personas. La selección cambia el relleno sin agrandar controles.
+- Etiqueta del selector de depósitos sin negrita en todos sus usos.
+- Formularios y modales con estilos coordinados, contadores junto a las
+  etiquetas y selección de íconos y categorías más clara.
+- Social más compacto: cards de deuda compartidas, pestañas animadas, reparto
+  igualitario con importes por persona, edición manual, listas y opciones rápidas.
+- Crear sala presenta Participantes antes de Categoría y reutiliza el modal
+  de agregar personas, con búsqueda, selección previa y confirmación. El selector
+  de color comparte estilos, nombres y orden con la creación de depósitos.
+- Variación mensual del depósito en dos renglones compactos, con opciones
+  a la derecha. El texto largo se desplaza y reinicia tras tres segundos al
+  final; respeta la preferencia de reducir movimiento.
+- Datos de prueba ampliados para recorrer categorías, períodos e importes.
+- Guías de interfaz, funcionamiento y desarrollo actualizadas. Los Issues
+  pasan a ser contexto opcional para el trabajo indicado por el usuario.
+
+### Corregido
+
+- Bloqueos transitorios de SQLite al preparar el diario: espera y reintentos
+  acotados, con diagnóstico y sin borrar datos.
+- Anclaje del selector de depósitos y tratamiento de las barras de Android
+  al abrir selectores. Los buscadores resaltan su borde solo al recibir foco.
+- Textos e importes largos y mensajes repetidos de conexión o guardado local.
+
+### Eliminado
+
+- Esqueletos y animaciones de entrada de las pantallas, sin retirar las consultas.
+- Buscador de Estadísticas y separadores diarios redundantes en los listados.
+
+### Verificación
+
+- TypeScript correcto; 194 pruebas: 186 aprobadas, 8 omitidas por requerir
+  entornos externos y ningún fallo. Incluye la reconstrucción del cierre anterior
+  con depósitos nuevos, registros históricos y reversiones.
+- Exportación Android/Hermes correcta con 2157 módulos y 38 recursos.
+- Metadatos de app y paquetes en 0.7.0, con código Android 5. Las comprobaciones
+  automáticas no sustituyen la revisión visual ni la de funciones nativas en APK.
+- Trabajo de interfaz asociado al [PR #67](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/67).
+
+### Alcance pendiente
+
+- La categoría permanece asociada a la sala. Elegir una categoría por gasto
+  requiere una implementación posterior coordinada con el backend.
+- Las funciones nativas de OCR y biometría deben comprobarse en un APK de esta
+  versión. La publicación de esta release no genera ni actualiza el APK.
+
 ## [v0.6.0] - 2026-11-03 - no estable
 
 ### Añadido

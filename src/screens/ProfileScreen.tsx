@@ -469,13 +469,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
         >
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={estilos.contenido}>
-              {cargandoInfo ? (
-                <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
-                  <View style={estilos.lineaCarga} />
-                  <View style={estilos.lineaCarga} />
-                  <View style={estilos.lineaCarga} />
-                </View>
-              ) : errorCarga ? (
+              {cargandoInfo ? null : errorCarga ? (
                 <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
                   <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{errorCarga}</Text>
                   <Pressable
@@ -946,7 +940,10 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   />
                   <View style={estilos.separadorModal} />
                   <View style={estilos.grupoCampoModal}>
-                    <Text style={estilosGlobales.etiqueta}>Nombre</Text>
+                    <View style={estilosGlobales.encabezadoCampo}>
+                      <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Nombre</Text>
+                      <Text style={estilosGlobales.contadorCampo}>{nombreEdicion.length}/80</Text>
+                    </View>
                     <View style={[estilos.campoEdicion, errorEdicion ? estilosGlobales.campoError : null]}>
                       <TextInput
                         accessibilityLabel="Nombre"
@@ -967,7 +964,10 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                     {errorEdicion ? <Text style={estilosGlobales.textoError}>{errorEdicion}</Text> : null}
                   </View>
                   <View style={estilos.grupoCampoModal}>
-                    <Text style={estilosGlobales.etiqueta}>Correo electrónico</Text>
+                    <View style={estilosGlobales.encabezadoCampo}>
+                      <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Correo electrónico</Text>
+                      <Text style={estilosGlobales.contadorCampo}>{correoEdicion.length}/120</Text>
+                    </View>
                     <View style={[estilos.campoEdicion, errorCorreoEdicion ? estilosGlobales.campoError : null]}>
                       <TextInput
                         accessibilityLabel="Correo electrónico"

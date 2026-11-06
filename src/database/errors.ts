@@ -22,7 +22,7 @@ export class ErrorBaseDatos extends Error {
   }
 }
 
-export function manejarErrorBaseDatos(etapa: string, error: unknown) {
+export function manejarErrorBaseDatos(etapa: string, error: unknown, contexto?: { operacion: string }) {
   if (error instanceof ErrorBaseDatos) {
     return error;
   }
@@ -42,6 +42,10 @@ export function manejarErrorBaseDatos(etapa: string, error: unknown) {
       etapa,
       codigo,
       codigoTecnico: fallo?.code || 'desconocido',
+      ...(contexto ? {
+        operacion: contexto.operacion,
+        mensajeTecnico: String(fallo?.message || error),
+      } : {}),
     });
   }
 

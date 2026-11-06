@@ -12,6 +12,7 @@ export type PropiedadesCampoAutenticacion = TextInputProps & {
   estilosGlobales: ReturnType<typeof crearEstilosGlobales>;
   tema: Tema;
   etiqueta: string;
+  limiteCaracteres?: number;
   valor: string;
   alCambiarTexto: (valor: string) => void;
   error?: string;
@@ -26,6 +27,7 @@ export default forwardRef<TextInput, PropiedadesCampoAutenticacion>(function Cam
     estilosGlobales,
     tema,
     etiqueta,
+    limiteCaracteres,
     valor,
     alCambiarTexto,
     error,
@@ -50,7 +52,10 @@ export default forwardRef<TextInput, PropiedadesCampoAutenticacion>(function Cam
 
   return (
     <View style={estilosAutenticacion.campoGrupo}>
-      <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text>
+      <View style={estilosGlobales.encabezadoCampo}>
+        <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>{etiqueta}</Text>
+        {limiteCaracteres!==undefined?<Text style={estilosGlobales.contadorCampo}>{Array.from(valor).length}/{limiteCaracteres}</Text>:null}
+      </View>
       <View style={[estilosGlobales.campo, estilosAutenticacion.campo, estiloEstadoCampo]}>
         {icono ? (
           <Ionicons

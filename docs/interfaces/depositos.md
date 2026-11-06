@@ -27,7 +27,11 @@ indica con borde y cambio de fondo además del color, sin una marca de tilde.
 
 El ícono empieza con una opción de efectivo seleccionada. La grilla muestra
 Efectivo, Banco, Virtual, Billetera y «Más», siguiendo el patrón compacto del
-selector de categorías. «Más» abre un modal con Tarjeta y Ahorros. Se guarda la
+selector de categorías. «Más» abre un modal con Tarjeta y Ahorros. Al elegir una
+de estas opciones, la quinta casilla muestra su ícono y nombre con el estado
+seleccionado; tocarla vuelve a abrir el modal. Si se elige una opción principal,
+la quinta casilla vuelve a mostrar «Más». Este comportamiento se comparte con
+la edición del depósito. Se guarda la
 referencia permitida del ícono, no el componente visual.
 
 El color predeterminado es el azul suave `#C3D1E3`. El selector presenta en una
@@ -36,7 +40,9 @@ suave, violeta, rosa y amarillo suave. Esta paleta identifica depósitos y es
 independiente de los colores de categorías de Estadísticas. La opción
 seleccionada presenta un tick y un borde verde de foco; las demás conservan un
 borde neutro. El texto también informa el color seleccionado. Se persiste el
-color elegido o el azul suave predeterminado.
+color elegido o el azul suave predeterminado. Los nombres visibles son Azul,
+Verde, Violeta, Rosa y Amarillo, en una sola línea; la información de selección
+conserva el nombre completo.
 
 La descripción es opcional. Se recortan los espacios y se admiten hasta 60
 caracteres. Si queda vacía, la lógica de depósitos genera una descripción con
@@ -65,11 +71,15 @@ Las reglas completas de persistencia se describen en
 La pantalla combina `KeyboardAvoidingView`, `ScrollView`,
 `keyboardShouldPersistTaps="handled"` y el espacio inferior del área segura para
 mantener accesibles los campos y las acciones con el teclado abierto. El saldo
-usa `decimal-pad`. El formulario limita el ancho a 480 puntos y se adapta a
+usa `decimal-pad`. El formulario ocupa el ancho disponible con 12 puntos de
+margen por lado, igual que Inicio, y se adapta a
 pantallas angostas mediante tarjetas que pueden ocupar más de una fila.
 
 El encabezado reutiliza `SectionHeader`; los campos y las acciones utilizan los
-estilos globales. Los estilos propios de distribución están en
+estilos globales. Crear y editar comparten campos con fondo de superficie (blanco en tema claro) y radio de
+10 puntos, separación de 16 puntos entre grupos, tarjetas de tipo de 84 puntos
+e íconos de tipo en contenedores de 32 puntos. El modal de íconos usa radio de
+12 puntos y ancho máximo de 480 puntos. Los estilos propios de distribución están en
 `src/styles/DepositScreenStyles.ts` y consumen `TEMAS`,
 `COLOR_DEPOSITO_PREDETERMINADO`, `COLORES_GRAFICOS` y los tokens de
 `globalStyles.ts`. La paleta se mantiene legible en modo claro y
@@ -84,18 +94,46 @@ depósito» y la descripción «Consultá el saldo y los movimientos de este
 depósito». Respeta las áreas seguras superior e inferior; la distribución propia
 de esta pantalla vive en `src/styles/DepositDetailScreenStyles.ts`.
 
-La tarjeta superior presenta de forma compacta el ícono y nombre del depósito;
-debajo muestra la descripción y, a continuación, el tipo separado por un punto
-medio en el mismo texto. Si no hay descripción, muestra solo el tipo. Una línea
-separa esos datos del saldo, que aparece en un número grande con un control para
-ocultarlo o mostrarlo y una etiqueta de comparación mensual breve con la fecha
+La tarjeta superior sigue el estilo del detalle de movimiento: icono de 56 puntos,
+nombre completo y tipo a la izquierda, con el saldo a su derecha sobre fondo
+suave y el importe alineado a la derecha. El icono de ampliación aparece junto
+a «Saldo» cuando el importe visible es largo, como en el detalle de movimiento.
+Las opciones quedan en la parte inferior de la tarjeta, a la derecha de la fila
+de comparación mensual. La descripción queda libre de botones.
+La comparación ocupa una columna compacta: «Variación mensual» en el primer
+renglón y el dato con su ícono justo debajo, separados por 4 puntos. El botón
+de tres puntos queda a la derecha del conjunto, centrado respecto de ambas
+filas, y conserva su área de 44 por 44 puntos.
+
+Si el dato supera el ancho disponible, se muestra en una sola línea y se
+desplaza automáticamente hasta el final. Espera un segundo antes de avanzar,
+se mueve a velocidad constante y, al llegar al final, espera tres segundos
+antes de volver al inicio. Cuando cabe completo permanece quieto. La animación
+se detiene al salir de la pantalla y se reinicia al cambiar el contenido o las
+medidas. Respeta la preferencia del sistema de reducir movimiento: en ese caso
+permite deslizar el texto manualmente. La etiqueta accesible conserva el dato
+completo y, al ocultar el saldo, se reemplaza por «Variación mensual oculta».
+La tarjeta usa radio de 10 puntos y conserva la separación superior de 24 puntos.
+Los modales del detalle (opciones, saldo, edición, íconos y eliminación) usan
+superficies del tema, ancho máximo de 480 puntos y radio de 12 puntos. Comparten
+la jerarquía de títulos, textos secundarios legibles y controles de cierre.
+La edición conserva sus campos y validaciones, con fondo de superficie en las entradas,
+separación de 16 puntos, selectores de tipo más compactos y acciones al pie de
+altura consistente. Los contadores siguen junto al título del campo. Estos
+estilos de campos y selectores se comparten con el formulario de creación en
+`DepositScreenStyles.ts`; la distribución del modal queda en los estilos del detalle.
+Luego aparece la descripción completa; una línea separa
+la comparación mensual, con texto legible y su fecha de referencia. Esta pantalla
+respeta la preferencia de privacidad del balance general, sin botón de ojo.
+Tocar el saldo largo visible abre un modal
+temático con el importe completo seleccionable y desplazamiento horizontal si
+es muy largo; se cierra con X, Cerrar, Atrás o el fondo. La comparación conserva la fecha
 exacta y el saldo anterior usado como referencia. La visibilidad se comparte con
 el balance general y persiste por usuario al cerrar la aplicación. Cuando los
 saldos están ocultos, también se ocultan los montos de la comparación mensual.
 Al volver desde el detalle de un movimiento se actualizan los datos sin ocultar
 temporalmente un saldo que ya era visible. La carga inicial permanece oculta
-hasta leer la preferencia; una lectura atrasada no sobrescribe una elección de
-visibilidad hecha mientras se actualizaban los datos.
+hasta leer la preferencia.
 La comparación indica
 el porcentaje de aumento o disminución, o comunica que todavía no hay una
 referencia comparable. Si el saldo anterior era cero o negativo, la etiqueta
@@ -131,11 +169,18 @@ criterios activos aparecen debajo del buscador como chips que pueden quitarse;
 «Limpiar todo» restablece la búsqueda y los filtros. El rótulo muestra el
 número de criterios activos y el botón «Filtros» abre la hoja.
 El detalle no muestra un filtro de depósitos porque la lista ya está limitada
-al depósito seleccionado. Los resultados se agrupan por día y se ordenan por
+al depósito seleccionado. Los resultados se agrupan por mes y año y se ordenan por
 fecha y hora descendente.
 
-Cada tarjeta presenta categoría y descripción, hora y depósito, tipo e importe
-con signo, como en la pestaña Movimientos. Al tocar una fila se abre el detalle
+Los meses usan `EncabezadoSeccionPlegable`, el mismo componente de Movimientos,
+Social y Sincronización. El primer mes comienza abierto y los demás plegados;
+cada uno se alterna de forma independiente. No hay encabezados diarios: la fecha
+se muestra en cada tarjeta.
+
+Cada tarjeta reutiliza `MovementCard.tsx`, igual que Inicio, Movimientos y
+Detalle de categoría: descripción, día y tipo en el primer renglón; categoría,
+depósito, hora e importe con signo en el segundo, con una franja de fondo suave
+para el tipo y el importe. Al tocar una fila se abre el detalle
 existente con la descripción del movimiento y sus datos. Los estados incluyen
 carga, error, sin movimientos, sin resultados de búsqueda y sin resultados por
 filtros.

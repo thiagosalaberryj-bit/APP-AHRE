@@ -189,7 +189,7 @@ export default function SelectorFecha({
       </Pressable>
       {enLinea && expandido ? mostrarCalendario() : null}
       {enLinea ? null : (
-      <Modal
+      <Modal statusBarTranslucent navigationBarTranslucent
         animationType="fade"
         onRequestClose={() => establecerModalVisible(false)}
         transparent

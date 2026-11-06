@@ -218,7 +218,10 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
         />
 
         <View style={estilosMovimiento.grupo}>
-          <Text style={estilosGlobales.etiqueta}>Descripción *</Text>
+          <View style={estilosGlobales.encabezadoCampo}>
+            <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Descripción *</Text>
+            <Text style={estilosMovimiento.contador}>{`${descripcion.length}/500`}</Text>
+          </View>
           <View
             style={[
               estilosGlobales.campo,
@@ -248,7 +251,6 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
               value={descripcion}
             />
           </View>
-          <Text style={estilosMovimiento.contador}>{`${descripcion.length}/500`}</Text>
           {errorDescripcion ? (
             <Text style={[estilosGlobales.textoError, estilosMovimiento.errorCampo]}>
               {errorDescripcion}
@@ -271,6 +273,8 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
           estilosGlobales={estilosGlobales}
           estilosMovimiento={estilosMovimiento}
           categorias={categorias}
+          tipoMovimiento={esEgreso ? 'egreso' : 'ingreso'}
+          categoriasPrincipalesIds={esEgreso ? ['alimentacion', 'compras', 'hogar', 'servicios'] : undefined}
           seleccionadaId={categoriaId}
           alSeleccionar={establecerCategoriaId}
           error={errorCategoria}

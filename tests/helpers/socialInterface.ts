@@ -21,6 +21,9 @@ type Rutas = typeof RUTAS;
 // Ejecuta los componentes y callbacks reales; sustituye únicamente React/native.
 // No es un motor de layout ni una comprobación visual en dispositivo.
 export function interfazSocial(servicios: typeof import('../../src/social/socialService.ts'), nombreTema: keyof typeof TEMAS) {
+  let componentePrueba: Componente | undefined;
+  let tecladoVisible = false;
+  const eventosTeclado = new Map<string, Set<() => void>>();
   let instancias = new Map<string, Casilla[]>(), actual: Casilla[] = [], indice = 0;
   let efectos: (() => void)[] = [], usados = new Set<string>();
   const avisos: string[] = [], destinos: unknown[][] = [], cache = new Map<string, unknown>();
@@ -37,6 +40,11 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       return [casilla.valor as T, valor => { const siguiente = typeof valor === 'function' ? (valor as (anterior:T)=>T)(casilla.valor as T) : valor; if (!Object.is(siguiente, casilla.valor)) casilla.valor = siguiente; }];
     },
     useRef<T>(inicial: T) { const posicion = indice++; return (actual[posicion] ||= { current: inicial }) as {current:T}; },
+    useMemo<T>(calcular: () => T, deps?: readonly unknown[]): T {
+      const posicion = indice++;
+      if (!actual[posicion] || !iguales(actual[posicion].deps, deps)) actual[posicion] = { deps, valor: calcular() };
+      return actual[posicion].valor as T;
+    },
     useCallback<F extends (...args: never[]) => unknown>(funcion: F, deps?: readonly unknown[]): F {
       const posicion = indice++;
       if (!actual[posicion] || !iguales(actual[posicion].deps, deps)) actual[posicion] = { deps, funcion };
@@ -53,6 +61,39 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
   const elemento = (type: Elemento['type'], props: Propiedades | null, key?: string | number): Elemento => ({ type, props: props || {}, key });
   const nativo: Record<string, unknown> = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'Modal', 'TextInput', 'KeyboardAvoidingView'].map(n => [n, n]));
   nativo.Platform = { OS: 'android' };
+  nativo.Keyboard = {
+    isVisible: () => tecladoVisible,
+    dismiss() {},
+    addListener: (evento: string, callback: () => void) => {
+      const callbacks = eventosTeclado.get(evento) || new Set<() => void>();
+      callbacks.add(callback); eventosTeclado.set(evento, callbacks);
+      return { remove() { callbacks.delete(callback); } };
+    },
+  };
+  nativo.useWindowDimensions = () => ({ width: 360, height: 780, scale: 1, fontScale: 1 });
+  nativo.AccessibilityInfo = {
+    isReduceMotionEnabled: async () => true,
+    addEventListener: () => ({ remove() {} }),
+  };
+  nativo.Animated = {
+    Value: class {
+      valor: number;
+      constructor(valor: number) { this.valor = valor; }
+      setValue(valor: number) { this.valor = valor; }
+    },
+    View: 'AnimatedView',
+    timing: (valor: { setValue: (destino: number) => void }, opciones: { toValue: number }) => ({
+      start(alTerminar?: (resultado: { finished: boolean }) => void) { valor.setValue(opciones.toValue); alTerminar?.({ finished: true }); },
+      stop() {},
+    }),
+    spring: (valor: { setValue: (destino: number) => void }, opciones: { toValue: number }) => ({
+      start() { valor.setValue(opciones.toValue); }, stop() {},
+    }),
+    parallel: (animaciones: { start: () => void }[]) => ({
+      start(alTerminar?: (resultado: { finished: boolean }) => void) { animaciones.forEach(animacion => animacion.start()); alTerminar?.({ finished: true }); },
+    }),
+  };
+  nativo.PanResponder = { create: (manejadores: Record<string, unknown>) => ({ panHandlers: manejadores }) };
   nativo.StyleSheet = { create: <T>(x: T) => x, absoluteFill: { position: 'absolute' } };
   function cargar<T>(archivo: string): T {
     archivo = path.resolve(archivo);
@@ -100,6 +141,15 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       return expandir(nodo.type(nodo.props), clave);
     }
     if (nodo.type === 'Modal' && !nodo.props.visible) return null;
+    if ((nodo.type === 'Pressable' || nodo.type === 'View') && nodo.props.ref) {
+      const referencia = nodo.props.ref as { current: unknown } | ((valor: unknown) => void);
+      const control = {
+        measureInWindow: (callback: (...medidas: number[]) => void) => nodo.type === 'Pressable' ? callback(12, 196, 160, 64) : callback(0, 24, 360, 756),
+        measure: (callback: (...medidas: number[]) => void) => callback(0, 0, 160, 64, 12, 220),
+      };
+      if (typeof referencia === 'function') referencia(control);
+      else referencia.current = control;
+    }
     return { type: nodo.type, props: nodo.props, children: expandir(nodo.props.children, sitio + '/' + nodo.type) };
   }
   function renderizar() {
@@ -107,7 +157,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     const nombre = propiedades.route.name;
     const pantalla = nombre === rutas.SALA_SOCIAL ? adaptadores.RutaSalas : nombre === rutas.PERSONAS_SOCIAL ? adaptadores.RutaPersonas
       : nombre === rutas.REGISTRO_SOCIAL ? adaptadores.RutaRegistro : nombre === rutas.PERSONA_SOCIAL ? persona : nombre === rutas.GASTO_SOCIAL ? gasto : principal;
-    arbol = expandir(elemento(pantalla, propiedades));
+    arbol = expandir(elemento(componentePrueba || pantalla, propiedades));
     for (const [clave, valores] of instancias) if (!usados.has(clave)) { valores.forEach(v => v?.limpiar?.()); instancias.delete(clave); }
     efectos.forEach(f => f());
   }
@@ -148,5 +198,20 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     assert.ok(campo, 'Campo ' + etiqueta); assert.equal(typeof campo.props.onChangeText, 'function');
     (campo.props.onChangeText as (valor:string)=>void)(valor); renderizar(); await asentar();
   }
-  return { abrir, pulsar, llenar, texto, todos, buscarBoton, avisos, destinos, rutas, asentar };
+  async function abrirSelectorDepositos(opciones: Omit<import('../../src/types/ui.ts').SelectorDepositoProps, 'tema' | 'estilosGlobales'>) {
+    const selector = cargar<{default:Componente}>(path.join(raiz, 'src/components/DepositSelector.tsx')).default;
+    const globales = cargar<{crearEstilosGlobales: (tema: typeof TEMAS[keyof typeof TEMAS]) => unknown}>(path.join(raiz, 'src/styles/globalStyles.ts'));
+    componentePrueba = () => {
+      const [ids, establecerIds] = react.useState(opciones.seleccionadasIds || []);
+      const [id, establecerId] = react.useState(opciones.seleccionadoId);
+      return elemento(selector, { ...opciones, tema: temas[nombreTema], estilosGlobales: globales.crearEstilosGlobales(temas[nombreTema]), seleccionadoId: id, seleccionadasIds: ids,
+        alSeleccionar: (nuevo: string) => { establecerId(nuevo); opciones.alSeleccionar?.(nuevo); },
+        alCambiarMulti: (nuevos: string[]) => { establecerIds(nuevos); opciones.alCambiarMulti?.(nuevos); },
+      });
+    };
+    await abrir();
+  }
+  const mostrarTeclado = () => { tecladoVisible = true; };
+  const ocultarTeclado = async () => { tecladoVisible = false; eventosTeclado.get('keyboardDidHide')?.forEach(callback => callback()); await asentar(); };
+  return { abrir, abrirSelectorDepositos, mostrarTeclado, ocultarTeclado, pulsar, llenar, texto, todos, buscarBoton, avisos, destinos, rutas, asentar };
 }

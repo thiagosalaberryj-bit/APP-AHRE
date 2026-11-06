@@ -1,15 +1,17 @@
+import { obtenerPreajustesMovimientos, PREAJUSTES_MONTOS, alternarGrupoCategorias, agruparCategoriasSeleccionadas } from '../utils/statisticsFilters';
+import { crearEstilosBusquedaFiltros } from '../styles/MovementSearchFiltersStyles';
+import PanelFiltrosMovimientos, { SeccionFiltro } from '../components/MovementFiltersPanel';
+import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
+import { formatearEntradaMonto } from '../utils/moneyInput';
+import EntradaMonto from '../components/MoneyInput';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
-  Animated,
-  Modal,
-  PanResponder,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -23,6 +25,7 @@ import SelectorFecha from '../components/DateSelector';
 import SelectorDeposito from '../components/DepositSelector';
 import EncabezadoPrincipal from '../components/MainHeader';
 import TarjetaMovimiento from '../components/MovementCard';
+import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
 import { RUTAS } from '../constants/routes';
 import {
   CATEGORIAS_EGRESO,
@@ -63,20 +66,6 @@ function crearFechaSinHora(fecha: Date) {
 
 function formatearFechaCorta(fecha: Date) {
   return fecha.toLocaleDateString('es-AR');
-}
-
-function formatearFechaDia(fecha: Date) {
-  const hoy = new Date();
-  const fechaNormalizada = crearFechaSinHora(fecha);
-  const hoyNormalizado = crearFechaSinHora(hoy);
-  const diferenciaDias = Math.round((hoyNormalizado.getTime() - fechaNormalizada.getTime()) / 86400000);
-
-  if (diferenciaDias === 0) return 'Hoy';
-  if (diferenciaDias === 1) return 'Ayer';
-  return fecha.toLocaleDateString('es-AR', {
-    day: 'numeric',
-    month: 'long',
-  });
 }
 
 function crearRangoConsultaFecha(fechaFiltro: string, fechaDia: Date|null, mesSeleccionado: Date|null, fechaInicial: Date|null, fechaFinal: Date|null) {
@@ -120,60 +109,15 @@ function obtenerTextoTipoDeposito(tipo: string) {
   return 'Depósito con movimientos';
 }
 
-function agruparMovimientosPorDia(movimientos: import('../types/forms').MovimientoVisible[]) {
-  return movimientos.reduce<{clave:string;fecha:Date;movimientos:import('../types/forms').MovimientoVisible[]}[]>((grupos, movimiento) => {
-    const fecha = new Date(movimiento.fecha_hora);
-    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
-    let grupo = grupos[grupos.length - 1];
-
-    if (!grupo || grupo.clave !== clave) {
-      grupo = { clave, fecha, movimientos: [] };
-      grupos.push(grupo);
-    }
-
-    grupo.movimientos.push(movimiento);
-    return grupos;
-  }, []);
-}
-
-function SeccionFiltro({
-  titulo,
-  resumen,
-  abierta,
-  alAlternar,
-  colorAcento,
-  estilos,
-  children,
-}: {titulo:string;resumen:string;abierta:boolean;alAlternar:()=>void;colorAcento:string;estilos:ReturnType<typeof crearEstilosMovimientos>;children:import('react').ReactNode}) {
-  return (
-    <View style={estilos.seccionFiltro}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded: abierta }}
-        onPress={alAlternar}
-        style={estilos.encabezadoSeccionFiltro}
-      >
-        <View style={estilos.detalleEncabezadoSeccionFiltro}>
-          <View style={[estilos.acentoSeccionFiltro, { backgroundColor: colorAcento }]} />
-          <View style={estilos.textosEncabezadoSeccionFiltro}>
-            <Text numberOfLines={1} style={estilos.tituloSeccionFiltro}>{titulo}</Text>
-            {!abierta ? <Text numberOfLines={1} style={estilos.resumenSeccionFiltro}>{resumen}</Text> : null}
-          </View>
-        </View>
-        <Ionicons color={colorAcento} name={abierta ? 'chevron-up' : 'chevron-down'} size={20} />
-      </Pressable>
-      {abierta ? <View style={estilos.contenidoSeccionFiltro}>{children}</View> : null}
-    </View>
-  );
-}
-
 export default function PantallaMovimientos({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
   const { height: altoVentana, width: anchoVentana } = useWindowDimensions();
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosMovimientos(tema, anchoVentana);
+  const estilosAccesos = crearEstilosBusquedaFiltros(tema);
   const abrirPantallaSecundaria = (ruta: string, parametros: import('../navigation/types').ParametrosPantalla | undefined = undefined) => navegacion.getParent()?.navigate(ruta, parametros);
+  const [mesesAbiertos, establecerMesesAbiertos] = useState<Record<string,boolean>>({});
   const [busqueda, establecerBusqueda] = useState('');
   const [busquedaAplicada, establecerBusquedaAplicada] = useState('');
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
@@ -211,7 +155,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   });
   const [seccionesFiltrosAbiertas, establecerSeccionesFiltrosAbiertas] = useState(['tipo', 'fecha']);
   const [cargando, establecerCargando] = useState(true);
-  const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
   const secuenciaConsulta = useRef(0);
   const bloqueoCargaMas = useRef(false);
   const depositosHistorialRef = useRef<typeof depositosHistorial>([]);
@@ -221,8 +164,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   }, [depositoFiltroIds]);
   const filtraPorDepositos = depositoFiltroIds.length > 0
     && depositoFiltroIds.length < depositosHistorial.length;
-  const opacidadOverlay = useRef(new Animated.Value(0)).current;
-  const desplazamientoPanel = useRef(new Animated.Value(0)).current;
   const categoriasDisponiblesFiltro = tipoFiltro === 'ingreso'
     ? categoriasHistorial.filter((categoria) => categoria.tipo === 'ingreso')
     : tipoFiltro === 'egreso'
@@ -325,72 +266,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   const abrirFiltros = () => {
     establecerFiltrosVisibles(true);
   };
-
-  const cerrarFiltros = useCallback(() => {
-    Animated.parallel([
-      Animated.timing(opacidadOverlay, {
-        toValue: 0,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-      Animated.timing(desplazamientoPanel, {
-        toValue: altoVentana,
-        duration: 190,
-        useNativeDriver: true,
-      }),
-    ]).start(({ finished }) => {
-      if (finished) establecerFiltrosVisibles(false);
-    });
-  }, [altoVentana, desplazamientoPanel, opacidadOverlay]);
-
-  const responderManija = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_evento, gesto) => gesto.dy > 6 && Math.abs(gesto.dy) > Math.abs(gesto.dx),
-    onPanResponderTerminationRequest: () => false,
-    onPanResponderMove: (_evento, gesto) => {
-      if (gesto.dy > 0) desplazamientoPanel.setValue(gesto.dy);
-    },
-    onPanResponderRelease: (_evento, gesto) => {
-      if (gesto.dy > 90 || gesto.vy > 0.8) {
-        cerrarFiltros();
-        return;
-      }
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 240,
-      }).start();
-    },
-    onPanResponderTerminate: () => {
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 240,
-      }).start();
-    },
-  }), [cerrarFiltros, desplazamientoPanel]);
-
-  useEffect(() => {
-    if (!filtrosVisibles) return undefined;
-    opacidadOverlay.setValue(0);
-    desplazamientoPanel.setValue(altoVentana);
-    Animated.parallel([
-      Animated.timing(opacidadOverlay, {
-        toValue: 1,
-        duration: 190,
-        useNativeDriver: true,
-      }),
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 24,
-        stiffness: 210,
-      }),
-    ]).start();
-    return undefined;
-  }, [altoVentana, desplazamientoPanel, filtrosVisibles, opacidadOverlay]);
 
   const cambiarFechaFiltro = useCallback((modo: string) => {
     if (modo === fechaFiltro) return;
@@ -552,8 +427,8 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     }
 
     if (montoMinimo.trim() || montoMaximo.trim()) {
-      const minimo = montoMinimo.trim() ? `$${montoMinimo.trim()}` : 'Sin mínimo';
-      const maximo = montoMaximo.trim() ? `$${montoMaximo.trim()}` : 'Sin máximo';
+      const minimo = montoMinimo.trim() ? ('$ ' + formatearEntradaMonto(montoMinimo.trim())) : 'Sin mínimo';
+      const maximo = montoMaximo.trim() ? ('$ ' + formatearEntradaMonto(montoMaximo.trim())) : 'Sin máximo';
       filtros.push({
         id: 'monto',
         etiqueta: `Monto: ${minimo} – ${maximo}`,
@@ -564,14 +439,16 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
       });
     }
 
-    categoriaFiltroIds.forEach((idCategoria) => {
-      const categoria = categoriasDisponiblesFiltro.find((elemento) => elemento.id === idCategoria)
-        || categoriasHistorial.find((elemento) => elemento.id === idCategoria);
-      if (!categoria) return;
+    const gruposCategorias = agruparCategoriasSeleccionadas(
+      categoriaFiltroIds,
+      obtenerPreajustesMovimientos(tipoFiltro, categoriasHistorial),
+      categoriasDisponiblesFiltro,
+    );
+    gruposCategorias.forEach(grupo => {
       filtros.push({
-        id: `categoria-${idCategoria}`,
-        etiqueta: `Categoría: ${categoria.nombre}`,
-        alQuitar: () => establecerCategoriaFiltroIds((ids) => ids.filter((id) => id !== idCategoria)),
+        id: 'categorias-' + grupo.id,
+        etiqueta: grupo.nombre,
+        alQuitar: () => establecerCategoriaFiltroIds(ids => ids.filter(id => !grupo.categorias.includes(id))),
       });
     });
 
@@ -593,10 +470,16 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     return filtros;
   }, [busqueda, tipoFiltro, fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal, montoMinimo, montoMaximo, categoriaFiltroIds, depositoFiltroIds, categoriasDisponiblesFiltro, categoriasHistorial, depositosHistorial, filtraPorDepositos, cambiarFechaFiltro]);
   const cantidadFiltros = filtrosAplicados.length;
-  const gruposMovimientos = useMemo(
-    () => agruparMovimientosPorDia(movimientosHistorial),
-    [movimientosHistorial],
-  );
+  const gruposMovimientos = useMemo(() => {
+    const meses = new Map<string,{clave:string;titulo:string;movimientos:typeof movimientosHistorial}>();
+    for (const movimiento of movimientosHistorial) {
+      const fecha = new Date(movimiento.fecha_hora);
+      const clave = fecha.getFullYear()+'-'+fecha.getMonth();
+      if (!meses.has(clave)) meses.set(clave,{clave,titulo:fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^./,letra=>letra.toUpperCase()),movimientos:[]});
+      meses.get(clave)!.movimientos.push(movimiento);
+    }
+    return [...meses.values()];
+  },[movimientosHistorial]);
   const resumenTipo = OPCIONES_TIPO.find((opcion) => opcion.id === tipoFiltro)?.nombre || 'Todos';
   const resumenFecha = fechaFiltro === 'dia'
     ? (fechaDia ? formatearFechaCorta(fechaDia) : 'Elegí un día')
@@ -627,7 +510,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
       .map((categoria) => categoria.nombre)
       .join(', ');
   const resumenMonto = montoMinimo.trim() || montoMaximo.trim()
-    ? `${montoMinimo.trim() ? `$${montoMinimo.trim()}` : 'Sin mínimo'} – ${montoMaximo.trim() ? `$${montoMaximo.trim()}` : 'Sin máximo'}`
+    ? `${montoMinimo.trim() ? ('$ ' + formatearEntradaMonto(montoMinimo.trim())) : 'Sin mínimo'} – ${montoMaximo.trim() ? ('$ ' + formatearEntradaMonto(montoMaximo.trim())) : 'Sin máximo'}`
     : 'Cualquier monto';
 
   const limpiarFiltros = () => {
@@ -699,6 +582,8 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     }
   }, [movimientosHistorial, usuarioId, enfocada, cargando, cargandoMas, hayMas, errorMontoFiltro, filtrosConsulta, mostrarAviso]);
 
+  const preajustesCategorias = obtenerPreajustesMovimientos(tipoFiltro, categoriasHistorial);
+
   const sinMovimientos = !cargando && cantidadTotal === 0;
   const sinResultados = !cargando && (cantidadTotal || 0) > 0 && movimientosHistorial.length === 0;
 
@@ -714,104 +599,33 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
         />
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={estilos.contenido}>
-            <View style={estilos.filaBusqueda}>
-              <View style={[
-                estilosGlobales.campo,
-                estilos.buscador,
-                buscadorEnfocado ? estilosGlobales.campoEnfocado : null,
-              ]}>
-                <Ionicons color={tema.textoSecundario} name="search" size={22} />
-                <TextInput
-                  accessibilityLabel="Buscar movimientos"
-                  onBlur={() => establecerBuscadorEnfocado(false)}
-                  onChangeText={establecerBusqueda}
-                  onFocus={() => establecerBuscadorEnfocado(true)}
-                  placeholder="Buscar"
-                  placeholderTextColor={tema.textoSecundario}
-                  selectionColor={tema.botonPrincipal}
-                  style={estilos.entradaBuscador}
-                  value={busqueda}
-                />
-                {busqueda ? (
-                  <Pressable
-                    accessibilityLabel="Limpiar búsqueda"
-                    accessibilityRole="button"
-                    onPress={() => establecerBusqueda('')}
-                    style={estilos.accionBuscador}
-                  >
-                    <Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} />
-                  </Pressable>
-                ) : null}
-              </View>
-              <Pressable
-                accessibilityLabel="Filtros"
-                accessibilityRole="button"
-                onPress={abrirFiltros}
-                style={({ pressed: presionado }) => [
-                  estilosGlobales.botonSecundario,
-                  estilos.botonFiltros,
-                  presionado ? { opacity: 0.85 } : null,
-                ]}
-              >
-                <Ionicons color={tema.botonSecundarioTexto} name="list" size={20} />
-                <Text style={estilosGlobales.textoBotonSecundario}>Filtros</Text>
-              </Pressable>
-            </View>
+            <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={establecerBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosAplicados} cantidad={cantidadFiltros}>
+              {OPCIONES_TIPO.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: tipoFiltro === opcion.id }} onPress={() => cambiarTipoFiltro(opcion.id)} style={[estilosAccesos.filtro, tipoFiltro === opcion.id && estilosAccesos.filtroActivo]}>
+                <Text style={[estilosAccesos.textoFiltro, tipoFiltro === opcion.id && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+              </Pressable>)}
+              {preajustesCategorias.map(opcion => {
+                const disponible = opcion.categorias.length > 0;
+                const activo = disponible && tipoFiltro === opcion.tipo && opcion.categorias.every(id => categoriaFiltroIds.includes(id));
+                return <Pressable key={opcion.tipo + ':' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo, disabled: !disponible }} disabled={!disponible} accessibilityHint={disponible ? undefined : 'No hay movimientos de estas categorías.'}
+                  onPress={() => {
+                    establecerTipoFiltro(opcion.tipo);
+                    establecerCategoriaFiltroIds(actuales => alternarGrupoCategorias(tipoFiltro === opcion.tipo || tipoFiltro === 'todos' ? actuales : [], opcion.categorias));
+                  }}
+                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo, !disponible && { opacity: 0.5 }]}>
+                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+                </Pressable>;
+              })}
+              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => {
+                const activo = !errorMontoFiltro && (montoMinimoNumerico ?? undefined) === opcion.rango.minimo && (montoMaximoNumerico ?? undefined) === opcion.rango.maximo;
+                return <Pressable key={'monto:' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo }}
+                  onPress={() => { establecerMontoMinimo(activo || opcion.rango.minimo === undefined ? '' : String(opcion.rango.minimo).replace('.', ',')); establecerMontoMaximo(activo || opcion.rango.maximo === undefined ? '' : String(opcion.rango.maximo).replace('.', ',')); }}
+                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo]}>
+                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+                </Pressable>;
+              })}
+            </BuscadorFiltrosMovimientos>
 
-            <View style={estilos.filtrosAplicados}>
-              <View style={estilos.encabezadoFiltrosAplicados}>
-                <Text style={estilos.textoFiltrosActivos}>
-                  {cantidadFiltros === 0 ? 'Sin filtros aplicados' : `Filtros aplicados (${cantidadFiltros})`}
-                </Text>
-                {cantidadFiltros > 0 ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={limpiarFiltros}
-                    style={estilos.botonLimpiar}
-                  >
-                    <Text style={estilos.textoBotonLimpiar}>Limpiar todo</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-              {cantidadFiltros > 0 ? (
-                <ScrollView
-                  contentContainerStyle={estilos.filaFiltrosAplicados}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                >
-                  {filtrosAplicados.map((filtro) => (
-                    <Pressable
-                      accessibilityLabel={filtro.bloqueado
-                        ? `${filtro.etiqueta}. Seleccioná otro depósito antes de quitar este filtro.`
-                        : `Quitar ${filtro.etiqueta}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: filtro.bloqueado }}
-                      disabled={filtro.bloqueado}
-                      key={filtro.id}
-                      onPress={filtro.alQuitar}
-                      style={estilos.chipFiltroAplicado}
-                    >
-                      <Text numberOfLines={1} style={estilos.textoChipFiltroAplicado}>
-                        {filtro.etiqueta}
-                      </Text>
-                      <Ionicons
-                        color={tema.textoSecundario}
-                        name={filtro.bloqueado ? 'lock-closed' : 'close'}
-                        size={16}
-                      />
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              ) : null}
-            </View>
-
-            {cargando ? (
-              <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
-                <View style={estilos.lineaCarga} />
-                <View style={estilos.lineaCarga} />
-                <View style={estilos.lineaCarga} />
-              </View>
-            ) : errorConsulta ? (
+            {cargando && movimientosHistorial.length === 0 ? null : errorConsulta ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.error} name="alert-circle-outline" size={32} />
                 <Text style={estilos.textoEstadoVacio}>{errorConsulta}</Text>
@@ -843,25 +657,13 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
               </View>
             ) : (
               <View style={estilos.listaMovimientos}>
-                {gruposMovimientos.map((grupo) => (
-                  <View key={grupo.clave} style={estilos.grupoDia}>
-                    <Text accessibilityRole="header" style={estilos.tituloDia}>
-                      {formatearFechaDia(grupo.fecha)}
-                    </Text>
-                    <View style={estilos.movimientosDia}>
-                      {grupo.movimientos.map((movimiento) => (
-                        <TarjetaMovimiento
-                          key={movimiento.id}
-                          tema={tema}
-                          estilos={estilos}
-                          movimiento={movimiento}
-                          alPresionar={abrirDetalle}
-                          soloHora
-                        />
-                      ))}
-                    </View>
-                  </View>
-                ))}
+                {gruposMovimientos.map((mes,indice) => <View key={mes.clave} style={estilos.grupoMes}>
+                  <EncabezadoSeccionPlegable tema={tema} titulo={mes.titulo} expandido={(mesesAbiertos[mes.clave] ?? indice === 0)}
+                    alAlternar={()=>establecerMesesAbiertos(anteriores=>({...anteriores,[mes.clave]:!(anteriores[mes.clave] ?? indice === 0)}))}/>
+                  {(mesesAbiertos[mes.clave] ?? indice === 0)?<View style={estilos.movimientosMes}>
+                    {mes.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalle}/>)}
+                  </View>:null}
+                </View>)}
                 {errorCargaMas ? (
                   <View style={estilos.estadoVacio}>
                     <Text style={estilos.textoEstadoVacio}>{errorCargaMas}</Text>
@@ -887,47 +689,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
           </View>
         </ScrollView>
 
-        <Modal
-          animationType="none"
-          onRequestClose={cerrarFiltros}
-          transparent
-          visible={filtrosVisibles}
-        >
-          <View style={estilos.fondoFiltros}>
-            <Animated.View pointerEvents="none" style={[estilos.overlayFiltros, { opacity: opacidadOverlay }]} />
-            <Pressable
-              accessibilityLabel="Cerrar filtros"
-              onPress={cerrarFiltros}
-              style={estilos.fondoTactilFiltros}
-            />
-            <Animated.View
-              style={[
-                estilos.panelFiltros,
-                { transform: [{ translateY: desplazamientoPanel }] },
-              ]}
-            >
-              <View style={estilos.encabezadoPanelFiltros}>
-                <View style={estilos.zonaManijaFiltros} {...responderManija.panHandlers}>
-                  <View style={estilos.manijaFiltros} />
-                </View>
-                <View style={estilos.encabezadoPanelContenido}>
-                  <Text style={estilos.tituloModal}>Filtros</Text>
-                  <Pressable
-                    accessibilityLabel="Cerrar filtros"
-                    accessibilityRole="button"
-                    onPress={cerrarFiltros}
-                    style={estilos.botonCerrarModal}
-                  >
-                    <Ionicons color={tema.textoPrincipal} name="close" size={24} />
-                  </Pressable>
-                </View>
-              </View>
-              <ScrollView
-                contentContainerStyle={estilos.contenidoFiltrosScroll}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                style={estilos.scrollFiltros}
-              >
+        <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={() => establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
                 <View style={estilos.listaSeccionesFiltro}>
                   <SeccionFiltro
                     titulo="Tipo"
@@ -1136,9 +898,9 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                       estilosGlobales={estilosGlobales}
                       estilosMovimiento={estilos}
                       estiloTarjeta={estilos.tarjetaCategoriaFiltro}
-                      usarColorIconoComoRelleno
                       etiqueta=""
                       categorias={categoriasDisponiblesFiltro}
+                    tipoMovimiento={tipoFiltro === 'todos' ? undefined : tipoFiltro}
                       variante="grilla"
                       seleccionMultiple
                       seleccionadasIds={categoriaFiltroIds}
@@ -1163,7 +925,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                       seleccionMultiple
                       seleccionadasIds={depositoFiltroIds}
                       alCambiarMulti={establecerDepositoFiltroIds}
-                      enLinea
+                      impedirSeleccionVacia
                     />
                   </SeccionFiltro>
 
@@ -1181,32 +943,20 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                           <Ionicons color={tema.textoSecundario} name="arrow-down-outline" size={16} />
                           <Text style={estilos.textoEtiquetaCampoRango}>Mínimo</Text>
                         </View>
-                        <TextInput
-                          accessibilityLabel="Monto mínimo"
-                          keyboardType="numeric"
-                          onChangeText={establecerMontoMinimo}
-                          placeholder="$ 0"
-                          placeholderTextColor={tema.textoSecundario}
-                          selectionColor={tema.foco}
-                          style={estilos.campoRango}
-                          value={montoMinimo}
-                        />
+                        <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+                          etiqueta="Monto mínimo" valor={montoMinimo} alCambiarTexto={establecerMontoMinimo}
+                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
+                          estiloContenedor={estilos.campoRango}/>
                       </View>
                       <View style={estilos.grupoCampoRango}>
                         <View style={estilos.etiquetaCampoRango}>
                           <Ionicons color={tema.textoSecundario} name="arrow-up-outline" size={16} />
                           <Text style={estilos.textoEtiquetaCampoRango}>Máximo</Text>
                         </View>
-                        <TextInput
-                          accessibilityLabel="Monto máximo"
-                          keyboardType="numeric"
-                          onChangeText={establecerMontoMaximo}
-                          placeholder="$ 0"
-                          placeholderTextColor={tema.textoSecundario}
-                          selectionColor={tema.foco}
-                          style={estilos.campoRango}
-                          value={montoMaximo}
-                        />
+                        <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+                          etiqueta="Monto máximo" valor={montoMaximo} alCambiarTexto={establecerMontoMaximo}
+                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
+                          estiloContenedor={estilos.campoRango}/>
                       </View>
                     </View>
                     {errorMontoFiltro ? (
@@ -1214,17 +964,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                     ) : null}
                   </SeccionFiltro>
                 </View>
-              </ScrollView>
-              {cantidadFiltros > 0 ? (
-                <View style={estilos.piePanelFiltros}>
-                  <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
-                    <Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </Animated.View>
-          </View>
-        </Modal>
+        </PanelFiltrosMovimientos>
       </View>
     </SafeAreaView>
   );

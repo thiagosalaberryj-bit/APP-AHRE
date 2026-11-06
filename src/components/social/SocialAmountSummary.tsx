@@ -12,14 +12,15 @@ type PropiedadesResumen = Omit<AspectoSocial, 'estilosMovimiento'> & {
   color?: string;
   estiloValor?: StyleProp<TextStyle>;
   enFila?: boolean;
+  compacto?: boolean;
 };
 
-export default function ResumenImporteSocial({ etiqueta, valor, icono, color, tema, estilosGlobales, estiloValor, enFila = true }: PropiedadesResumen) {
+export default function ResumenImporteSocial({ etiqueta, valor, icono, color, tema, estilosGlobales, estiloValor, enFila = true, compacto = false }: PropiedadesResumen) {
   const estilos = crearEstilosCompartidos(tema);
-  return <View style={[enFila && estilos.totalPanel, estilos.importeResumen]}>
+  return <View style={[enFila && estilos.totalPanel, estilos.importeResumen, compacto && estilos.importeResumenCompacto]}>
     <View style={estilos.etiquetaImportePersona}>
-      <Ionicons color={color || tema.foco} name={icono} size={20} />
-      <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.etiqueta, estilos.textoFlexible]}>{etiqueta}</Text>
+      <Ionicons color={color || tema.foco} name={icono} size={compacto ? 18 : 20} />
+      <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.etiqueta, estilos.textoFlexible, compacto && estilos.etiquetaResumenCompacta]}>{etiqueta}</Text>
     </View>
     <Text numberOfLines={1} ellipsizeMode="tail" style={estiloValor || estilosGlobales.titulo}>{valor}</Text>
   </View>;

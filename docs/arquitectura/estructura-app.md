@@ -352,3 +352,16 @@ se prepara en `001_initialSchema.ts`; no se duplica en las pantallas.
 
 El [índice general](../README.md) enlaza las guías de entorno,
 publicación y validación actual.
+
+### Presentación compartida de registros financieros
+
+`src/styles/FinancialRecordCardStyles.ts` centraliza las dimensiones, tipografía,
+superficies y franja de importe de movimientos y deudas. Los adaptadores
+`MovementCardStyles.ts` y `DebtCardStyles.ts` conservan la disposición específica
+de sus datos sin duplicar la base visual. `TarjetaDeuda` sigue siendo el único
+componente de card para el panel Social, historial, persona y resúmenes de los
+formularios de pago y eliminación.
+
+Estadísticas, Movimientos e Historial de deudas reutilizan los estilos de filtros
+de `MovementSearchFiltersStyles.ts`, incluidos tamaño, peso y selección por
+relleno. Las particularidades de cada pantalla permanecen en sus propios estilos.

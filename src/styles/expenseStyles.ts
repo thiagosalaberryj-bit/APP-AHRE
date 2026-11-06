@@ -1,15 +1,15 @@
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosEgreso(tema: Tema) {
   const estilos = StyleSheet.create({
     formulario: {
       gap: ESPACIADO.formulario,
       padding: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme,
-      maxWidth: 480,
       width: '100%',
       alignSelf: 'center',
     },
@@ -176,8 +176,7 @@ export function crearEstilosEgreso(tema: Tema) {
       paddingVertical: ESPACIADO.pequeno,
     },
     opcionCategoriaSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     textoOpcionCategoria: {
       flex: 1,
@@ -197,8 +196,7 @@ export function crearEstilosEgreso(tema: Tema) {
       paddingVertical: ESPACIADO.pequeno,
     },
     opcionDepositoSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     listaCategorias: {
       flexDirection: 'row',
@@ -224,8 +222,7 @@ export function crearEstilosEgreso(tema: Tema) {
       borderStyle: 'dashed',
     },
     tarjetaCategoriaSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     nombreCategoria: {
       color: tema.textoPrincipal,

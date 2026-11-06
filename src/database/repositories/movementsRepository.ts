@@ -1,3 +1,4 @@
+import { validarRangoMontoEstadistica, type FiltrosDatosEstadistica } from '../../utils/statisticsFilters';
 import type { Conexion, Tablas } from '../types';
 import { ejecutarConManejoDeErrores, ErrorBaseDatos } from '../errors';
 import { ejecutarLecturaConConexion } from '../connectionQueue';
@@ -310,7 +311,7 @@ async function consultarHistorialPorId(usuarioId: string, movimientoId: string, 
   }, conexion));
 }
 
-function construirFiltrosEstadistica(usuarioId: string, tipo: string, desde: string, hasta: string, categoria: string | null = null) {
+function construirFiltrosEstadistica(usuarioId: string, tipo: string, desde: string, hasta: string, categoria: string | null = null, rangoMonto: FiltrosDatosEstadistica = {}) {
   if (
     typeof usuarioId !== 'string'
     || !usuarioId
@@ -319,22 +320,36 @@ function construirFiltrosEstadistica(usuarioId: string, tipo: string, desde: str
     || !validarMarcaTemporal(hasta)
     || Date.parse(desde) >= Date.parse(hasta)
     || (categoria !== null && (typeof categoria !== 'string' || !categoria))
+    || !validarRangoMontoEstadistica(rangoMonto)
   ) {
     throw new ErrorBaseDatos('integridad');
   }
 
-  return {
+  const filtros: { clausula: string; parametros: (string | number)[] } = {
     clausula: `d.usuario_id = ? AND m.tipo = ? AND m.anulado = 0
       AND m.fecha_hora >= ? AND m.fecha_hora < ?${categoria === null ? '' : ' AND m.categoria = ?'}`,
     parametros: categoria === null
       ? [usuarioId, tipo, desde, hasta]
       : [usuarioId, tipo, desde, hasta, categoria],
   };
+  if (rangoMonto.minimo !== undefined) { filtros.clausula += ' AND m.monto >= ?'; filtros.parametros.push(rangoMonto.minimo); }
+  if (rangoMonto.maximo !== undefined) { filtros.clausula += ' AND m.monto <= ?'; filtros.parametros.push(rangoMonto.maximo); }
+  if (rangoMonto.busqueda !== undefined) {
+    if (typeof rangoMonto.busqueda !== 'string') throw new ErrorBaseDatos('integridad');
+    const termino = rangoMonto.busqueda.trim().toLocaleLowerCase().replace(/!/g, '!!').replace(/%/g, '!%').replace(/_/g, '!_');
+    if (termino) { filtros.clausula += " AND LOWER(m.descripcion) LIKE ? ESCAPE '!'"; filtros.parametros.push('%' + termino + '%'); }
+  }
+  if (rangoMonto.depositos !== undefined) {
+    if (!Array.isArray(rangoMonto.depositos) || rangoMonto.depositos.some(id => typeof id !== 'string' || !id)) throw new ErrorBaseDatos('integridad');
+    if (!rangoMonto.depositos.length) filtros.clausula += ' AND 1 = 0';
+    else { filtros.clausula += ' AND m.deposito_id IN (' + rangoMonto.depositos.map(() => '?').join(',') + ')'; filtros.parametros.push(...rangoMonto.depositos); }
+  }
+  return filtros;
 }
 
-async function consultarResumenPorCategoria(usuarioId: string, tipo: string, desde: string, hasta: string, conexion: Conexion | null = null) {
+async function consultarResumenPorCategoria(usuarioId: string, tipo: string, desde: string, hasta: string, conexion: Conexion | null = null, rangoMonto: FiltrosDatosEstadistica = {}) {
   return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) => {
-    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta);
+    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, null, rangoMonto);
     return baseDatos.getAllAsync<{categoria:string;total:number;cantidad:number}>(
       `SELECT m.categoria AS categoria,
               ROUND(SUM(m.monto), 2) AS total,
@@ -357,10 +372,11 @@ async function consultarAgrupacionPorPeriodo(
   agrupacion: string,
   categoria: string | null = null,
   conexion: Conexion | null = null,
+  rangoMonto: FiltrosDatosEstadistica = {},
 ) {
   return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) => {
     if (!['dia', 'mes'].includes(agrupacion)) throw new ErrorBaseDatos('integridad');
-    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria);
+    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria, rangoMonto);
     const expresionPeriodo = agrupacion === 'dia'
       ? "strftime('%Y-%m-%d', m.fecha_hora, 'localtime')"
       : "strftime('%Y-%m', m.fecha_hora, 'localtime')";
@@ -386,9 +402,10 @@ async function consultarDetalleMesCategoria(
   desde: string,
   hasta: string,
   conexion: Conexion | null = null,
+  rangoMonto: FiltrosDatosEstadistica = {},
 ) {
   return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async (baseDatos) => {
-    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria);
+    const filtros = construirFiltrosEstadistica(usuarioId, tipo, desde, hasta, categoria, rangoMonto);
     const resumen = await baseDatos.getFirstAsync<{total:number;cantidad:number}>(
       `SELECT ROUND(COALESCE(SUM(m.monto), 0), 2) AS total,
               COUNT(m.id) AS cantidad
@@ -677,9 +694,35 @@ async function eliminar(id: string, conexion: Conexion | null = null) {
   );
 }
 
+async function consultarSaldoCierreAnterior(usuarioId: string, inicioMes: string) {
+  if (!usuarioId || !validarMarcaTemporal(inicioMes)) throw new ErrorBaseDatos('integridad');
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async conexion => {
+    const fila = await conexion.getFirstAsync<{ saldo: number | null }>(`
+      SELECT ROUND(SUM(d.saldo_actual - COALESCE((
+        SELECT SUM(CASE WHEN m.tipo IN ('ingreso', 'transferencia_entrada') THEN m.monto ELSE -m.monto END)
+        FROM movimientos m
+        LEFT JOIN movimientos original ON original.id = m.reversion_de_id
+        LEFT JOIN transferencias t ON t.id = m.transferencia_id
+        LEFT JOIN transferencias transferencia_original ON transferencia_original.id = t.reversion_de_id
+        WHERE m.deposito_id = d.id AND m.anulado = 0
+          AND julianday(m.fecha_hora) >= julianday(?)
+          AND julianday(COALESCE(original.fecha_hora, transferencia_original.fecha_hora, m.fecha_hora)) >= julianday(d.fecha_creacion)
+      ), 0) - COALESCE((
+        SELECT SUM(h.saldo_informado - h.saldo_anterior)
+        FROM historial_saldos_deposito h WHERE h.deposito_id = d.id
+          AND julianday(h.fecha_hora) >= julianday(?)
+      ), 0)), 2) AS saldo
+      FROM depositos d
+      WHERE d.usuario_id = ? AND d.activo = 1 AND julianday(d.fecha_creacion) < julianday(?);
+    `, [inicioMes, inicioMes, usuarioId, inicioMes]);
+    return fila?.saldo ?? null;
+  }));
+}
+
 export const movimientosRepositorio = Object.freeze({
   ...repositorioBaseMovimientos,
   consultarHistorial,
+  consultarSaldoCierreAnterior,
   consultarOpcionesHistorial,
   consultarHistorialPorId,
   consultarResumenPorCategoria,

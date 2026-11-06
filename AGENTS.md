@@ -1,31 +1,43 @@
 # Instrucciones para agentes de AHRE
 
 Estas reglas aplican a Codex, OpenCode y cualquier otro agente que trabaje en
-este repositorio. Se aplican junto con las instrucciones del usuario y del
-Issue activo; si falta información para delimitar el trabajo, pregunta antes de
-implementar.
+este repositorio. Se aplican junto con las instrucciones del usuario y, cuando
+exista, del Issue asociado. El pedido del usuario y sus aclaraciones definen el
+alcance; el Issue sirve como guía y contexto. Pregunta antes de implementar solo
+si falta información indispensable para avanzar con criterio.
 
 ## Al comenzar una tarea
 
 - Lee este archivo al comenzar cada tarea o sesión en el repositorio. Busca y
   sigue también cualquier `AGENTS.md` aplicable en la carpeta que vayas a
   modificar y sus directorios superiores.
-- Antes de empezar una implementación, pide el número del Issue de GitHub si
-  todavía no está indicado. Luego consulta ese Issue y lee su descripción y
-  criterios de aceptación. No empieces a implementar hasta identificar el
-  Issue y su alcance.
+- Si el usuario todavía no indicó un Issue, pregunta una sola vez si la tarea
+  está asociada a uno, para que pueda compartir su número o enlace si lo tiene.
+  La consulta es informativa: no exijas un Issue ni bloquees el trabajo mientras
+  esperas la respuesta si el pedido ya permite avanzar. Si no hay Issue,
+  continúa con el pedido del usuario como referencia.
+- Cuando se proporcione un Issue, consulta su descripción y criterios de
+  aceptación y úsalos como guía junto con las aclaraciones del usuario. No
+  rechaces ajustes relacionados con el objetivo por no estar escritos de forma
+  explícita o completa en el Issue. Si existe una contradicción que no se pueda
+  resolver con las instrucciones del usuario, consulta ese punto concreto.
 - Revisa `git status` y la rama actual antes de actualizar o cambiar de rama.
   Con el árbol de trabajo limpio, cambia a `main` y ejecuta
-  `git pull origin main`. Después vuelve a la rama existente del Issue o crea
+  `git pull origin main`. Después vuelve a la rama existente de la tarea o crea
   una nueva desde ese `main` actualizado. Si el árbol tiene cambios sin
   guardar, no ejecutes el pull ni cambies de rama: informa al usuario y acuerda
   cómo preservarlos.
-- Usa una rama del Issue con el formato definido en
+- Cuando haya un Issue asociado, usa una rama con el formato definido en
   `docs/proceso/flujo-issues-prs-changelog.md`:
   `feature/issue-<numero>-<nombre-corto-en-minusculas-y-sin-acentos>`. Si la rama del Issue
   ya existe localmente o en `origin`, compruébala y continúa en ella. Si no
   existe, créala desde `main` actualizado. No crees una segunda rama para el
   mismo Issue.
+- Para tareas sin Issue, continúa en la rama de trabajo correspondiente si ya
+  existe; si hace falta una nueva, usa `codex/<nombre-corto-descriptivo>`. No
+  inventes un número ni exijas crear un Issue. Las reglas de este archivo sobre
+  Issues opcionales prevalecen sobre las exigencias de Issue obligatorio de
+  `docs/proceso/flujo-issues-prs-changelog.md`.
 - Antes de implementar, lee `README.md` y todos los documentos Markdown bajo
   `docs/`, incluidas sus subcarpetas. No omitas documentos por parecer ajenos al
   Issue: sirven para entender el contexto y las decisiones existentes.
@@ -35,11 +47,15 @@ implementar.
 
 ## Alcance del trabajo
 
-- Implementa únicamente lo que solicita el Issue y lo necesario para cumplir
-  sus criterios de aceptación. No agregues funcionalidades, pantallas,
-  validaciones, lógica de negocio, hooks, servicios ni persistencia que el Issue
-  no pida.
-- Modifica las pantallas existentes; no crees pantallas nuevas. Si el Issue
+- Implementa el pedido del usuario tomando el Issue asociado, si existe, como
+  guía. Resuelve detalles no especificados y realiza los ajustes necesarios
+  para que el resultado cumpla el objetivo, respetando las convenciones del
+  proyecto. No hace falta pedir aprobación para cada decisión razonable de
+  implementación; explica las decisiones relevantes al comunicar el resultado.
+- No agregues funcionalidades ajenas al objetivo. Si aparece una ampliación
+  importante o una duda que cambie el comportamiento esperado, consulta al
+  usuario antes de implementarla; no exijas otro Issue para aclararla.
+- Modifica las pantallas existentes; no crees pantallas nuevas. Si la tarea
   parece requerir una pantalla nueva, detente y consulta al usuario o al líder
   del proyecto antes de crearla.
 - No cambies componentes compartidos, navegación, configuración raíz o estilos
@@ -75,7 +91,7 @@ implementar.
   archivo de estilos separado para esa pantalla. Evita cambiar los estilos
   globales para resolver una necesidad local y no dupliques valores globales.
 - Mantén el soporte de los temas claro y oscuro y las decisiones de interfaz
-  documentadas, salvo que el Issue indique expresamente otro comportamiento.
+  documentadas, salvo que el usuario o el Issue indiquen expresamente otro comportamiento.
 
 ## Nombres en el código
 
@@ -94,16 +110,17 @@ implementar.
 - No agregues, actualices ni elimines dependencias; tampoco ejecutes comandos
   para instalarlas. Esa responsabilidad corresponde únicamente al líder del
   proyecto.
-- Si el Issue requiere una dependencia nueva o un cambio de versión, detén esa
+- Si la tarea requiere una dependencia nueva o un cambio de versión, detén esa
   parte y pide al líder que lo resuelva. No edites `package.json` ni archivos de
   lock para sortear esta regla.
 
 ## Changelog y Pull Requests
 
-- El agente que implementa un Issue no debe editar `docs/CHANGELOG.md`.
+- El agente que implementa una tarea, con o sin Issue, no debe editar `docs/CHANGELOG.md`.
 - Únicamente la persona que revisa el Pull Request, después de comprobar el
-  Issue y sus criterios, actualiza el changelog antes del merge según
+  pedido y los criterios del Issue, si existe, actualiza el changelog antes del merge según
   `docs/proceso/flujo-issues-prs-changelog.md`.
-- No presentes una implementación como terminada ni amplíes su alcance para
-  resolver asuntos que pertenecen a otro Issue. Si detectas trabajo adicional,
-  descríbelo y solicita un Issue separado.
+- Presenta una implementación como terminada solo después de verificar el
+  pedido y los criterios aplicables del Issue, si existe. Si detectas trabajo
+  independiente del objetivo actual, descríbelo y consulta si el usuario quiere
+  tratarlo como otra tarea; puede asociarlo a otro Issue si corresponde.

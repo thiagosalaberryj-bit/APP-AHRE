@@ -12,7 +12,7 @@ dispositivo ni navegación contextual. Todo es simulado y solo en pantalla.
 `src/screens/NotificationsScreen.tsx` es secundaria con `EncabezadoSeccion`
 («Notificaciones») y lista desplazable. Se abre desde el botón de
 notificaciones del Dashboard; la flecha del encabezado regresa. El contenido
-limita su ancho a 480 puntos y acompaña los temas claro y oscuro, incluidos
+usa 12 puntos de margen lateral, igual que Inicio, y acompaña los temas claro y oscuro, incluidos
 el modal y los controles. El scroll reserva espacio para el área segura inferior
 del dispositivo, de modo que la última tarjeta pueda verse completa.
 
@@ -66,8 +66,8 @@ compartido).
 
 ## Estado vacío y estado de carga
 
-- **Cargando:** skeleton de 3 líneas (~1 segundo simulado) con texto
-  `Buscando avisos...`.
+- **Carga:** los avisos de muestra disponibles se presentan directamente, sin
+  esqueletos, temporizadores ni mensajes de búsqueda simulada.
 - **Vacío:** tarjeta con ícono y `No tenés notificaciones.`
 - La lista soporta ninguna, pocas o muchas notificaciones con scroll
   vertical.

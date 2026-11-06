@@ -1,194 +1,92 @@
-import { crearEstilosEgreso } from '../styles/expenseStyles';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, Text, View } from 'react-native';
-import {
-  COLOR_DEPOSITO_PREDETERMINADO,
-  COLOR_ICONO_DEPOSITO,
-  COLORES_DEPOSITOS,
-} from '../styles/colors';
+import { Keyboard, Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../styles/colors';
+import type { NombreIcono } from '../constants/movimientos';
+import { crearEstilosSelectorDeposito } from '../styles/DepositSelectorStyles';
+import type { SelectorDepositoProps } from '../types/ui';
 
-const ESTILOS_ICONOS_DEPOSITO = Object.freeze({
-  efectivo: Object.freeze({ color: COLOR_DEPOSITO_PREDETERMINADO, icono: 'cash-outline' }),
-  'mercado-pago': Object.freeze({ color: COLORES_DEPOSITOS[1], icono: 'phone-portrait-outline' }),
-  'cuenta-bancaria': Object.freeze({ color: COLORES_DEPOSITOS[2], icono: 'business-outline' }),
-  banco: Object.freeze({ color: COLORES_DEPOSITOS[2], icono: 'business-outline' }),
-});
+type DepositoSeleccionable = NonNullable<SelectorDepositoProps['depositos']>[number];
+const iconoDeposito = (deposito?: DepositoSeleccionable): NombreIcono => (deposito?.icono as NombreIcono) || (deposito?.tipo === 'efectivo' ? 'cash-outline' : deposito?.tipo === 'banco' ? 'business-outline' : deposito?.tipo === 'billetera_virtual' ? 'phone-portrait-outline' : 'wallet-outline');
 
-export default function SelectorDeposito({
-  tema,
-  estilosGlobales,
-  estilosMovimiento = crearEstilosEgreso(tema),
-  etiqueta = 'Depósito',
-  depositos = [],
-  seleccionadoId = undefined,
-  alSeleccionar = (_valor?) => {},
-  seleccionMultiple = false,
-  seleccionadasIds = [],
-  alCambiarMulti = (_valor?) => {},
-  enLinea = false,
-  error = undefined,
-}: import('../types/ui').SelectorDepositoProps) {
-  const [visible, establecerVisible] = useState(false);
-  const seleccionado = depositos.find((deposito) => deposito.id === seleccionadoId);
-
-  const depositoActivo = (depositoId: string) => (seleccionMultiple
-    ? seleccionadasIds.includes(depositoId)
-    : seleccionadoId === depositoId);
-
-  const seleccionarDeposito = (depositoId: string, cerrar = true) => {
-    if (seleccionMultiple) {
-      const activo = seleccionadasIds.includes(depositoId);
-      if (enLinea && activo && seleccionadasIds.length === 1) return;
-      alCambiarMulti(activo
-        ? seleccionadasIds.filter((id) => id !== depositoId)
-        : [...seleccionadasIds, depositoId]);
-      return;
-    }
-    alSeleccionar(depositoId);
-    if (cerrar) establecerVisible(false);
+export default function SelectorDeposito({ tema, etiqueta = 'Depósito', depositos = [], seleccionadoId, alSeleccionar, seleccionMultiple = false, seleccionadasIds = [], alCambiarMulti, impedirSeleccionVacia = false, error }: SelectorDepositoProps) {
+  const estilos = crearEstilosSelectorDeposito(tema);
+  const control = useRef<View>(null);
+  const ventana = useWindowDimensions();
+  const dimensionesCapa = useRef({ width: ventana.width, height: ventana.height });
+  const aperturaPendiente = useRef(false);
+  const modalListo = useRef(false);
+  const [visible, establecerVisible] = useState(false), [posicionado, establecerPosicionado] = useState(false);
+  const [ancla, establecerAncla] = useState({ left: 12, top: 0, width: 240, maxHeight: 280 });
+  const elegidos = depositos.filter(deposito => seleccionMultiple ? seleccionadasIds.includes(deposito.id) : deposito.id === seleccionadoId);
+  const elegido = elegidos.length === 1 ? elegidos[0] : undefined;
+  const todos = depositos.length > 0 && elegidos.length === depositos.length;
+  const titulo = seleccionMultiple ? todos ? 'Todos los depósitos' : elegidos.length ? elegidos.length + (elegidos.length === 1 ? ' depósito' : ' depósitos') : 'Ningún depósito' : elegido?.nombre || (depositos.length ? 'Seleccioná un depósito' : 'No hay depósitos disponibles');
+  const detalle = seleccionMultiple ? elegidos.map(deposito => deposito.nombre).join(' · ') : elegido?.saldoTexto;
+  const posicionar = () => {
+    if (!modalListo.current) return;
+    // El modal ocupa la ventana completa. pageX/pageY evita mezclar los
+    // desplazamientos de ventanas nativas distintas que agrega measureInWindow.
+    control.current?.measure((_x, _y, ancho, alto, pageX, pageY) => {
+      if (ancho <= 0 || alto <= 0) return;
+      const { width: anchoCapa, height: altoCapa } = dimensionesCapa.current;
+      const width = Math.min(Math.max(ancho, 240), 360, anchoCapa - 24);
+      const top = pageY + alto + 4;
+      const minimo = seleccionMultiple ? 124 : 48;
+      const maxHeight = Math.min(320, Math.max(minimo, depositos.length * 52 + (seleccionMultiple ? 76 : 0) + 2), Math.max(minimo, altoCapa - top - 12));
+      establecerAncla({ left: Math.max(12, Math.min(pageX, anchoCapa - width - 12)), top, width, maxHeight });
+      establecerPosicionado(true);
+    });
   };
-
-  const mostrarOpcion = (deposito: NonNullable<import('../types/ui').SelectorDepositoProps['depositos']>[number]) => {
-    const activo = depositoActivo(deposito.id);
-    const opcionFiltro = seleccionMultiple && enLinea;
-    const bloqueada = opcionFiltro && activo && seleccionadasIds.length === 1;
-    const estiloIconoDeposito = ESTILOS_ICONOS_DEPOSITO[deposito.id as keyof typeof ESTILOS_ICONOS_DEPOSITO]
-      || { color: COLOR_DEPOSITO_PREDETERMINADO, icono: 'wallet-outline' };
-    return (
-      <Pressable
-        key={deposito.id}
-        accessibilityRole={seleccionMultiple ? 'checkbox' : 'button'}
-        accessibilityState={seleccionMultiple
-          ? { checked: activo, disabled: bloqueada }
-          : { selected: activo }}
-        accessibilityHint={bloqueada ? 'Seleccioná otro depósito antes de quitar este.' : undefined}
-        disabled={bloqueada}
-        onPress={() => {
-          if (!bloqueada) seleccionarDeposito(deposito.id);
-        }}
-        style={[
-          opcionFiltro ? estilosMovimiento.opcionDepositoFiltro : estilosMovimiento.opcionDeposito,
-          !opcionFiltro && activo ? estilosMovimiento.opcionDepositoSeleccionada : null,
-        ]}
-      >
-        {opcionFiltro ? (
-          <View
-            style={[
-              estilosMovimiento.iconoDepositoFiltro,
-              { backgroundColor: estiloIconoDeposito.color },
-            ]}
-          >
-            <Ionicons color={COLOR_ICONO_DEPOSITO} name={estiloIconoDeposito.icono} size={20} />
-          </View>
-        ) : (
-          <Ionicons
-            color={activo ? tema.foco : tema.textoSecundario}
-            name={seleccionMultiple
-              ? (activo ? 'checkbox' : 'square-outline')
-              : (activo ? 'radio-button-on' : 'radio-button-off')}
-            size={20}
-          />
-        )}
-        <View style={estilosMovimiento.textoDeposito}>
-          <Text style={estilosMovimiento.nombreDeposito}>{deposito.nombre}</Text>
-          <Text style={estilosMovimiento.saldoDeposito}>{deposito.saldoTexto}</Text>
-        </View>
-        {opcionFiltro ? (
-          <View style={estilosMovimiento.seleccionDepositoFiltro}>
-            <Ionicons
-              color={activo ? tema.foco : tema.borde}
-              name={activo ? 'checkbox' : 'square-outline'}
-              size={22}
-            />
-            {bloqueada ? (
-              <Ionicons color={tema.textoSecundario} name="lock-closed" size={14} />
-            ) : null}
-          </View>
-        ) : null}
-      </Pressable>
-    );
+  useEffect(() => {
+    const suscripcion = Keyboard.addListener('keyboardDidHide', () => {
+      if (aperturaPendiente.current) {
+        aperturaPendiente.current = false;
+        establecerVisible(true);
+      }
+    });
+    return () => { aperturaPendiente.current = false; suscripcion.remove(); };
+  }, []);
+  const abrir = () => {
+    modalListo.current = false;
+    establecerPosicionado(false);
+    if (Keyboard.isVisible()) { aperturaPendiente.current = true; Keyboard.dismiss(); }
+    else establecerVisible(true);
   };
-
-  const textoBoton = seleccionMultiple
-    ? (seleccionadasIds.length === 0
-      ? 'Todos los depósitos'
-      : `${seleccionadasIds.length} depósito${seleccionadasIds.length > 1 ? 's' : ''}`)
-    : (seleccionado ? seleccionado.nombre : 'Seleccioná un depósito');
-  const textoAyuda = seleccionMultiple
-    ? (seleccionadasIds.length === 0
-      ? 'Efectivo, Mercado Pago, cuenta bancaria'
-      : depositos.filter((deposito) => seleccionadasIds.includes(deposito.id)).map((deposito) => deposito.nombre).join(', '))
-    : (seleccionado ? seleccionado.saldoTexto : 'Efectivo, Mercado Pago, cuenta bancaria');
-
-  return (
-    <View style={estilosMovimiento.grupo}>
-      {etiqueta ? <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text> : null}
-      {enLinea ? (
-        <View style={seleccionMultiple ? estilosMovimiento.listaDepositosFiltro : estilosMovimiento.listaDepositos}>
-          {seleccionMultiple ? (
-            <View style={estilosMovimiento.accionesDepositosFiltro}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Seleccionar todos los depósitos"
-                onPress={() => alCambiarMulti(depositos.map((deposito) => deposito.id))}
-              >
-                <Text style={estilosMovimiento.textoAccionDepositoFiltro}>Todos</Text>
-              </Pressable>
-            </View>
-          ) : null}
-          {depositos.map((deposito) => mostrarOpcion(deposito))}
+  const seleccionar = (id: string) => {
+    if (!seleccionMultiple) { alSeleccionar?.(id); establecerVisible(false); return; }
+    const activa = seleccionadasIds.includes(id);
+    if (activa && impedirSeleccionVacia && elegidos.length === 1) return;
+    alCambiarMulti?.(activa ? seleccionadasIds.filter(actual => actual !== id) : [...seleccionadasIds, id]);
+  };
+  return <View style={estilos.grupo}>
+    {etiqueta ? <Text style={estilos.etiqueta}>{etiqueta}</Text> : null}
+    <Pressable ref={control} collapsable={false} accessibilityRole="button" accessibilityLabel={etiqueta || 'Depósitos'} accessibilityValue={{ text: detalle ? titulo + '. ' + detalle : titulo }} accessibilityState={{ expanded: visible, disabled: !depositos.length }} disabled={!depositos.length} onPress={abrir}
+      style={[estilos.control, visible && estilos.controlAbierto, !!error && estilos.controlError]}>
+      <View style={estilos.iconoCampo}><Ionicons color={tema.textoSecundario} name={iconoDeposito(elegido)} size={22} /></View>
+      <View style={estilos.textos}><Text numberOfLines={1} style={estilos.nombreCampo}>{titulo}</Text>{detalle ? <Text numberOfLines={1} style={estilos.detalleCampo}>{detalle}</Text> : null}</View>
+      <Ionicons name={visible ? 'chevron-up' : 'chevron-down'} size={22} color={tema.textoSecundario} />
+    </Pressable>
+    {error ? <Text accessibilityRole="alert" style={estilos.error}>{error}</Text> : null}
+    <Modal statusBarTranslucent navigationBarTranslucent transparent visible={visible} animationType="none" onShow={() => { modalListo.current = true; posicionar(); }} onRequestClose={() => establecerVisible(false)}>
+      <View collapsable={false} onLayout={evento => { dimensionesCapa.current = evento.nativeEvent.layout; posicionar(); }} style={estilos.capa}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Cerrar selector de depósito" onPress={() => establecerVisible(false)} style={estilos.cierre} />
+        <View accessibilityViewIsModal style={[estilos.menu, ancla, !posicionado && estilos.sinPosicion]}>
+          {seleccionMultiple ? <View style={estilos.cabeceraLista}><Text style={estilos.detalle}>Elegí los depósitos</Text><Pressable accessibilityRole="button" accessibilityLabel="Seleccionar todos los depósitos" onPress={() => alCambiarMulti?.(depositos.map(deposito => deposito.id))} style={estilos.accion}><Text style={estilos.textoAccion}>Todos</Text></Pressable></View> : null}
+          <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: ancla.maxHeight - (seleccionMultiple ? 76 : 0) }}>
+            {depositos.map(deposito => {
+              const activa = elegidos.some(elegido => elegido.id === deposito.id);
+              const bloqueada = seleccionMultiple && impedirSeleccionVacia && activa && elegidos.length === 1;
+              return <Pressable key={deposito.id} accessibilityRole={seleccionMultiple ? 'checkbox' : 'button'} accessibilityState={seleccionMultiple ? { checked: activa, disabled: bloqueada } : { selected: activa }} accessibilityHint={bloqueada ? 'Seleccioná otro depósito antes de quitar este.' : undefined} disabled={bloqueada} onPress={() => seleccionar(deposito.id)} style={[estilos.opcion, activa && estilos.opcionActiva]}>
+                <View style={[estilos.icono, { backgroundColor: deposito.color || COLOR_DEPOSITO_PREDETERMINADO }]}><Ionicons color={COLOR_ICONO_DEPOSITO} name={iconoDeposito(deposito)} size={18} /></View>
+                <View style={estilos.textos}><Text numberOfLines={1} style={estilos.nombre}>{deposito.nombre}</Text>{deposito.saldoTexto ? <Text numberOfLines={1} style={estilos.detalle}>{deposito.saldoTexto}</Text> : null}</View>
+                <Ionicons color={activa ? tema.foco : tema.textoSecundario} name={seleccionMultiple ? activa ? 'checkbox' : 'square-outline' : 'checkmark'} size={18} style={{ opacity: seleccionMultiple || activa ? 1 : 0 }} />
+              </Pressable>;
+            })}
+          </ScrollView>
+          {seleccionMultiple ? <Pressable accessibilityRole="button" accessibilityLabel="Listo" onPress={() => establecerVisible(false)} style={estilos.confirmar}><Text style={estilos.textoAccion}>Listo · {elegidos.length}</Text></Pressable> : null}
         </View>
-      ) : (
-      <View style={estilosMovimiento.tarjetaDeposito}>
-        <Pressable
-          accessibilityLabel={etiqueta}
-          accessibilityRole="button"
-          accessibilityState={{ expanded: visible }}
-          onPress={() => establecerVisible(true)}
-          style={({ pressed: presionado }) => [
-            estilosMovimiento.botonDeposito,
-            visible ? estilosMovimiento.botonDepositoEnfocado : null,
-            error && !seleccionadoId ? estilosMovimiento.botonDepositoError : null,
-            presionado ? { opacity: 0.85 } : null,
-          ]}
-        >
-          <View style={estilosMovimiento.iconoDeposito}>
-            <Ionicons color={tema.textoSecundario} name="wallet-outline" size={28} />
-          </View>
-          <View style={estilosMovimiento.textoDeposito}>
-            <Text style={estilosMovimiento.nombreDeposito}>
-              {textoBoton}
-            </Text>
-            <Text style={estilosMovimiento.saldoDeposito}>
-              {textoAyuda}
-            </Text>
-          </View>
-          <Ionicons color={tema.textoPrincipal} name="chevron-down" size={24} />
-        </Pressable>
       </View>
-      )}
-      {error ? (
-        <Text style={[estilosGlobales.textoError, estilosMovimiento.errorCampo]}>{error}</Text>
-      ) : null}
-      {enLinea ? null : (
-      <Modal
-        animationType="fade"
-        onRequestClose={() => establecerVisible(false)}
-        transparent
-        visible={visible}
-      >
-        <Pressable
-          accessibilityLabel="Cerrar selector de depósito"
-          onPress={() => establecerVisible(false)}
-          style={estilosMovimiento.fondoSuperpuesto}
-        >
-          <Pressable style={estilosMovimiento.tarjetaSuperpuesta}>
-            {depositos.map((deposito) => mostrarOpcion(deposito))}
-          </Pressable>
-        </Pressable>
-      </Modal>
-      )}
-    </View>
-  );
+    </Modal>
+  </View>;
 }

@@ -1,17 +1,18 @@
-import { useCallback, useContext, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import EncabezadoSeccion from '../components/SectionHeader';
+import TarjetaMovimiento from '../components/MovementCard';
 import { RUTAS } from '../constants/routes';
 import {
   CATEGORIAS_EGRESO,
   CATEGORIAS_INGRESO,
 } from '../constants/movimientos';
-import { obtenerColoresGraficos } from '../styles/colors';
+import { obtenerColorIconoCategoria, obtenerColorCategoria, obtenerFamiliaCategoria } from '../styles/categoryColors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleCategoria } from '../styles/CategoryDetailScreenStyles';
 import { cargarDetalleCategoriaEstadistica } from '../statistics/statisticsService';
@@ -37,34 +38,6 @@ function formatearMonto(monto: number, tipo: string) {
   return tipo === 'ingreso' ? `+$ ${valor}` : `−$ ${valor}`;
 }
 
-function formatearFechaDia(fecha: Date) {
-  return fecha.toLocaleDateString('es-AR', {
-    day: 'numeric',
-    month: 'long',
-  });
-}
-
-function formatearHora(fechaISO: string|number|Date) {
-  const fecha = new Date(fechaISO);
-  return fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-}
-
-function agruparMovimientosPorDia(movimientos: import('../types/forms').MovimientoVisible[]) {
-  return movimientos.reduce<{clave:string;fecha:Date;movimientos:import('../types/forms').MovimientoVisible[]}[]>((grupos, movimiento) => {
-    const fecha = new Date(movimiento.fecha_hora);
-    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
-    let grupo = grupos[grupos.length - 1];
-
-    if (!grupo || grupo.clave !== clave) {
-      grupo = { clave, fecha, movimientos: [] };
-      grupos.push(grupo);
-    }
-
-    grupo.movimientos.push(movimiento);
-    return grupos;
-  }, []);
-}
-
 export default function PantallaDetalleCategoria({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
   const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
@@ -74,11 +47,10 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   const indiceCategoria = catalogo.findIndex((item) => item.id === categoriaRecibida.id);
   const categoriaCatalogo = catalogo[indiceCategoria] || catalogo[0];
-  const coloresGraficos = obtenerColoresGraficos(tema);
   const categoria = {
     ...categoriaCatalogo,
     ...categoriaRecibida,
-    color: coloresGraficos[Math.max(0, indiceCategoria) % coloresGraficos.length],
+    color: obtenerColorCategoria(categoriaCatalogo.id, tema, tipoMovimiento),
   };
   const anioRecibido = Number(ruta.params?.anio);
   const anioActual = new Date().getFullYear();
@@ -89,7 +61,31 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   const [anioMinimoDisponible, establecerAnioMinimoDisponible] = useState(
     () => Math.min(anioInicial, anioActual - 1),
   );
-  const [selectorPeriodo, establecerSelectorPeriodo] = useState<string | null>(null);
+  const [selectorPeriodo, establecerSelectorPeriodo] = useState<'anio' | null>(null);
+  const raizContenido = useRef<View>(null);
+  const controlAnio = useRef<View>(null);
+  const [anclaSelector, establecerAnclaSelector] = useState({ left: 0, top: 0, width: 160, maxHeight: 184 });
+  const abrirSelector = () => {
+    if (selectorPeriodo) { establecerSelectorPeriodo(null); return; }
+    controlAnio.current?.measureInWindow((x, y, ancho, alto) => {
+      raizContenido.current?.measureInWindow((raizX, raizY, anchoRaiz, altoRaiz) => {
+        const anchoMenu = Math.min(Math.max(ancho, 148), 200, anchoRaiz - 24);
+        const debajo = y - raizY + alto + 4;
+        const abrirArriba = altoRaiz - debajo < 184 && y - raizY > altoRaiz - debajo;
+        const altura = Math.min(184, Math.max(32, (abrirArriba ? y - raizY : altoRaiz - debajo) - 12));
+        establecerAnclaSelector({ left: Math.max(12, Math.min(x - raizX, anchoRaiz - anchoMenu - 12)), top: abrirArriba ? y - raizY - altura - 4 : debajo, width: anchoMenu, maxHeight: altura });
+        establecerSelectorPeriodo('anio');
+      });
+    });
+  };
+  useFocusEffect(useCallback(() => {
+    const suscripcion = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!selectorPeriodo) return false;
+      establecerSelectorPeriodo(null);
+      return true;
+    });
+    return () => suscripcion.remove();
+  }, [selectorPeriodo]));
   const aniosDisponibles = useMemo(() => {
     if (!Number.isInteger(anioMinimoDisponible) || anioMinimoDisponible > anioActual) return [];
     return Array.from(
@@ -111,12 +107,12 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   useFocusEffect(useCallback(() => {
     let vigente = true;
     establecerEstadoCarga('cargando');
-    establecerDatosDetalle(null);
     cargarDetalleCategoriaEstadistica({
       categoria: categoria.id,
       tipo: tipoMovimiento,
       anio,
       mes: mesSeleccionado,
+      rangoMonto: ruta.params?.rangoMontoEstadistica,
     }).then((resultado) => {
       if (!vigente) return;
       establecerAnioMinimoDisponible(resultado.anioMinimoDisponible);
@@ -130,16 +126,14 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
     return () => {
       vigente = false;
     };
-  }, [categoria.id, tipoMovimiento, anio, mesSeleccionado, intentoCarga]));
+  }, [categoria.id, tipoMovimiento, anio, mesSeleccionado, intentoCarga, ruta.params?.rangoMontoEstadistica]));
 
   const movimientos = datosDetalle?.movimientos || [];
-  const gruposMovimientos = agruparMovimientosPorDia(movimientos);
   const montoCategoria = datosDetalle?.resumenMes.total || 0;
   const cantidadMovimientos = datosDetalle?.resumenMes.cantidad || 0;
-  const evolucion = datosDetalle?.evolucion || [];
-  const maximoEvolucion = Math.max(0, ...evolucion.map((item) => item.total));
-  const hayMovimientosAnuales = maximoEvolucion > 0;
-  const textoResultado = `${cantidadMovimientos} ${cantidadMovimientos === 1 ? 'movimiento' : 'movimientos'} en ${MESES[mesSeleccionado].nombre.toLowerCase()}`;
+  const evolucion = MESES.map(mes => ({ mes: mes.id, total: datosDetalle?.anio === anio ? datosDetalle.evolucion.find(item => item.mes === mes.id)?.total || 0 : 0 }));
+  const maximoEvolucion = Math.max(0, ...evolucion.map(item => item.total));
+  const promedioMovimiento = cantidadMovimientos ? montoCategoria / cantidadMovimientos : 0;
 
   const abrirDetalleMovimiento = (movimiento: import('../types/forms').MovimientoVisible) => {
     navegacion.push(RUTAS.DETALLE_MOVIMIENTO, {
@@ -151,197 +145,111 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
-          alVolver={() => navegacion.goBack()}
-          descripcion="Consultá los movimientos de esta categoría."
-          tema={tema}
-          titulo="Detalle de categoría"
-        />
-
-        <ScrollView contentContainerStyle={estilos.contenidoCategoria} showsVerticalScrollIndicator={false}>
-          <View style={estilos.resumenCategoria}>
-            <View style={estilos.encabezadoCategoria}>
-              <View style={[estilos.iconoCategoriaGrande, { backgroundColor: tema.superficie, borderColor: categoria.color }]}>
-                <Ionicons color={categoria.color} name={categoria.icono} size={40} />
-              </View>
-              <View style={estilos.datosCategoria}>
-                <Text style={estilos.nombreCategoriaResumen}>{categoria.nombre}</Text>
-                <Text style={estilos.descripcionCategoria}>{categoria.descripcion}</Text>
-              </View>
-            </View>
-
-            <View style={estilos.selectoresPeriodo}>
-              <Pressable
-                accessibilityLabel={`Mes ${MESES[mesSeleccionado].nombre}. Cambiar mes`}
-                accessibilityRole="button"
-                onPress={() => establecerSelectorPeriodo('mes')}
-                style={({ pressed }) => [
-                  estilos.selectorPeriodo,
-                  pressed && estilos.selectorPeriodoPresionado,
-                ]}
-              >
-                <Text numberOfLines={1} style={estilos.textoSelectorPeriodo}>{MESES[mesSeleccionado].nombre}</Text>
-                <Ionicons color={tema.textoSecundario} name="chevron-down" size={16} />
-              </Pressable>
-              <Pressable
-                accessibilityLabel={`Año ${anio}. Cambiar año`}
-                accessibilityHint="Elegí un año anterior o el año actual."
-                accessibilityRole="button"
-                onPress={() => establecerSelectorPeriodo('anio')}
-                style={({ pressed }) => [
-                  estilos.selectorPeriodo,
-                  pressed && estilos.selectorPeriodoPresionado,
-                ]}
-              >
-                <Text style={estilos.textoSelectorPeriodo}>{anio}</Text>
-                <Ionicons color={tema.textoSecundario} name="chevron-down" size={16} />
-              </Pressable>
-            </View>
-
-            <View style={estilos.separadorResumen} />
-
-            {estadoCarga === 'cargando' ? (
-              <Text style={estilos.estadoCargaDetalle}>Buscando movimientos locales...</Text>
-            ) : estadoCarga === 'error' ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => establecerIntentoCarga((intento) => intento + 1)}
-              >
-                <Text style={estilos.estadoCargaDetalle}>No se pudieron cargar los datos. Tocá para reintentar.</Text>
-              </Pressable>
-            ) : cantidadMovimientos === 0 ? (
-              <Text style={estilos.estadoCargaDetalle}>No hay movimientos en este período.</Text>
-            ) : (
-              <View accessibilityLiveRegion="polite" style={estilos.resultadoCategoria}>
-                <Text style={[estilos.montoCategoria, tipoMovimiento === 'ingreso' ? estilos.montoIngreso : estilos.montoEgreso]}>
-                  {formatearMonto(montoCategoria, tipoMovimiento)}
-                </Text>
-                <Text style={estilos.cantidadMovimientosCategoria}>{textoResultado}</Text>
-              </View>
-            )}
-          </View>
-
-          {estadoCarga === 'listo' && hayMovimientosAnuales ? (
-            <View style={estilos.evolucionCategoria}>
-              <Text style={estilos.tituloEvolucion}>Evolución anual</Text>
-              {evolucion.map((item) => {
-                const anchoBarra = maximoEvolucion > 0 ? (item.total / maximoEvolucion) * 100 : 0;
-                return (
-                  <View
-                    accessible
-                    accessibilityLabel={`${MESES[item.mes].nombre}: ${formatearMonto(item.total, tipoMovimiento)}`}
-                    key={item.mes}
-                    style={estilos.filaEvolucion}
-                  >
-                    <Text style={estilos.mesEvolucion}>{MESES[item.mes].corto}</Text>
-                    <View style={estilos.fondoBarraEvolucion}>
-                      <View
-                        style={[
-                          estilos.barraEvolucion,
-                          { backgroundColor: categoria.color, width: `${anchoBarra}%` },
-                        ]}
-                      />
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          ) : null}
-          {estadoCarga === 'listo' && gruposMovimientos.length ? (
-            <View style={estilos.listaMovimientosCategoria}>
-              {gruposMovimientos.map((grupo) => (
-              <View key={grupo.clave} style={estilos.grupoDia}>
-                <Text accessibilityRole="header" style={estilos.tituloDia}>
-                  {formatearFechaDia(grupo.fecha)}
-                </Text>
-                <View style={estilos.movimientosDia}>
-                  {grupo.movimientos.map((movimiento) => (
-                    <Pressable
-                      accessibilityLabel={`Ver ${movimiento.descripcion}, ${movimiento.deposito_nombre || 'Depósito'}, ${formatearHora(movimiento.fecha_hora)}`}
-                      accessibilityRole="button"
-                      key={movimiento.id}
-                      onPress={() => abrirDetalleMovimiento(movimiento)}
-                      style={estilos.filaMovimiento}
-                    >
-                      <View style={[estilos.iconoMovimiento, { backgroundColor: tema.superficie }]}>
-                        <Ionicons color={categoria.color} name={categoria.icono} size={21} />
-                      </View>
-                      <View style={estilos.detalleFilaMovimiento}>
-                        <Text numberOfLines={1} style={estilos.nombreFilaMovimiento}>{movimiento.descripcion}</Text>
-                        <Text numberOfLines={1} style={estilos.subtituloFilaMovimiento}>
-                          {movimiento.deposito_nombre || 'Depósito'} · {formatearHora(movimiento.fecha_hora)}
-                        </Text>
-                      </View>
-                      <Text style={[
-                        estilos.montoFilaMovimiento,
-                        tipoMovimiento === 'ingreso' ? estilos.montoIngreso : estilos.montoEgreso,
-                      ]}>
-                        {formatearMonto(movimiento.monto, tipoMovimiento)}
-                      </Text>
-                    </Pressable>
-                  ))}
+        <EncabezadoSeccion alVolver={() => navegacion.goBack()} descripcion="Consultá la evolución y los movimientos de esta categoría." tema={tema} titulo="Detalle de categoría" />
+        <View ref={raizContenido} collapsable={false} style={estilos.cuerpo}>
+          <ScrollView contentContainerStyle={estilos.contenidoCategoria} showsVerticalScrollIndicator={false} onScrollBeginDrag={() => establecerSelectorPeriodo(null)}>
+            <View style={estilos.resumenCategoria}>
+              <View style={estilos.encabezadoCategoria}>
+                <View style={[estilos.iconoCategoria, { backgroundColor: categoria.color }]}>
+                  <Ionicons color={tema.nombre === 'oscuro' ? tema.fondo : obtenerColorIconoCategoria(categoria.id, tema, tipoMovimiento)} name={categoria.icono} size={30} />
+                </View>
+                <View style={estilos.datosCategoria}>
+                  <Text style={estilos.nombreCategoria}>{categoria.nombre}</Text>
+                  <Text style={estilos.textoSecundario}>{obtenerFamiliaCategoria(categoria.id, tipoMovimiento).nombre}</Text>
                 </View>
               </View>
-              ))}
+              <Text style={estilos.textoSecundario}>{categoria.descripcion}</Text>
+              {estadoCarga !== 'error' ? <>
+                <View accessibilityLiveRegion="polite" style={estilos.filaTotal}>
+                  <View style={estilos.datosTotal}>
+                    <Text style={estilos.etiquetaTotal}>{tipoMovimiento === 'ingreso' ? 'Total de ingresos' : 'Total de egresos'}</Text>
+                    <Text style={estilos.textoSecundario}>{MESES[mesSeleccionado].nombre} · {anio}</Text>
+                  </View>
+                  <Text accessibilityLabel={estadoCarga === 'listo' ? formatearMonto(montoCategoria, tipoMovimiento) : 'Consultando importe'} numberOfLines={1} adjustsFontSizeToFit style={[estilos.montoCategoria, { color: tipoMovimiento === 'ingreso' ? tema.exito : tema.error }]}>{estadoCarga === 'listo' ? formatearMonto(montoCategoria, tipoMovimiento) : '—'}</Text>
+                </View>
+                <View style={estilos.datosResumen}>
+                  <View style={estilos.datoResumen}>
+                    <Text style={estilos.textoSecundario}>Movimientos</Text>
+                    <Text style={estilos.valorResumen}>{estadoCarga === 'listo' ? cantidadMovimientos : '—'}</Text>
+                  </View>
+                  <View style={[estilos.datoResumen, estilos.datoPromedio]}>
+                    <Text style={estilos.textoSecundario}>Promedio por movimiento</Text>
+                    <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.valorResumen, estilos.valorPromedio]}>{estadoCarga === 'listo' && cantidadMovimientos ? formatearMonto(promedioMovimiento, tipoMovimiento) : '—'}</Text>
+                  </View>
+                </View>
+              </> : (
+                <Pressable accessibilityRole="button" onPress={() => establecerIntentoCarga(intento => intento + 1)} style={estilos.estadoDetalle}>
+                  <Ionicons color={tema.error} name="alert-circle-outline" size={22} />
+                  <Text style={estilos.textoEstado}>No se pudieron cargar los datos. Tocá para reintentar.</Text>
+                </Pressable>
+              )}
             </View>
-          ) : null}
-        </ScrollView>
 
-        <Modal
-          animationType="fade"
-          onRequestClose={() => establecerSelectorPeriodo(null)}
-          transparent
-          visible={selectorPeriodo !== null}
-        >
-          <View style={estilos.fondoModalPeriodo}>
-            <Pressable
-              accessibilityLabel="Cerrar selección del período"
-              onPress={() => establecerSelectorPeriodo(null)}
-              style={StyleSheet.absoluteFill}
-            />
-            <View accessibilityViewIsModal style={[estilos.tarjetaModalPeriodo, { backgroundColor: tema.superficie }]}>
-              <View style={estilos.encabezadoModalPeriodo}>
-                <Text style={estilos.tituloModalPeriodo}>
-                  {selectorPeriodo === 'mes' ? 'Seleccioná un mes' : 'Seleccioná un año'}
-                </Text>
-                <Pressable
-                  accessibilityLabel="Cerrar selección del período"
-                  accessibilityRole="button"
-                  onPress={() => establecerSelectorPeriodo(null)}
-                  style={estilos.botonCerrarModalPeriodo}
-                >
-                  <Ionicons color={tema.textoPrincipal} name="close" size={22} />
+            {ruta.params?.rangoMontoEstadistica && (ruta.params.rangoMontoEstadistica.minimo !== undefined || ruta.params.rangoMontoEstadistica.maximo !== undefined) ? (
+              <View style={estilos.avisoFiltro}>
+                <Ionicons color={tema.textoSecundario} name="options-outline" size={16} />
+                <Text style={estilos.textoAviso}>Importe por movimiento: {ruta.params.rangoMontoEstadistica.minimo === undefined ? 'sin mínimo' : formatearMonto(ruta.params.rangoMontoEstadistica.minimo, 'ingreso').replace('+', '')} – {ruta.params.rangoMontoEstadistica.maximo === undefined ? 'sin máximo' : formatearMonto(ruta.params.rangoMontoEstadistica.maximo, 'ingreso').replace('+', '')}</Text>
+              </View>
+            ) : null}
+
+            <View style={estilos.evolucionCategoria}>
+              <View style={estilos.encabezadoSeccion}>
+                <Text accessibilityRole="header" style={estilos.tituloSeccion}>Evolución anual</Text>
+                <Pressable ref={controlAnio} accessibilityLabel={'Año ' + anio + '. Cambiar año'} accessibilityRole="button"
+                  accessibilityState={{ expanded: selectorPeriodo !== null }} onPress={abrirSelector}
+                  style={[estilos.selectorPeriodo, selectorPeriodo && estilos.selectorPeriodoActivo]}>
+                  <Text numberOfLines={1} style={estilos.textoSelectorPeriodo}>{anio}</Text>
+                  <Ionicons color={tema.textoSecundario} name={selectorPeriodo ? 'chevron-up' : 'chevron-down'} size={14} />
                 </Pressable>
               </View>
-              <ScrollView contentContainerStyle={estilos.opcionesPeriodo} showsVerticalScrollIndicator={false}>
-                {(selectorPeriodo === 'mes'
-                  ? MESES.map((mes) => ({ valor: mes.id, etiqueta: mes.nombre }))
-                  : aniosDisponibles.map((opcionAnio) => ({ valor: opcionAnio, etiqueta: String(opcionAnio) }))
-                ).map((opcion) => {
-                  const seleccionado = selectorPeriodo === 'mes'
-                    ? opcion.valor === mesSeleccionado
-                    : opcion.valor === anio;
-                  return (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: seleccionado }}
-                      key={opcion.valor}
-                      onPress={() => {
-                        if (selectorPeriodo === 'mes') establecerMesSeleccionado(opcion.valor);
-                        else establecerAnio(opcion.valor);
-                        establecerSelectorPeriodo(null);
-                      }}
-                      style={[estilos.opcionPeriodo, seleccionado && estilos.opcionPeriodoActiva]}
-                    >
-                      <Text style={estilos.textoOpcionPeriodo}>{opcion.etiqueta}</Text>
-                      {seleccionado ? <Ionicons color={tema.foco} name="checkmark" size={20} /> : null}
-                    </Pressable>
-                  );
+              <View style={estilos.graficoEvolucion}>
+                {evolucion.map(item => {
+                  const seleccionado = item.mes === mesSeleccionado;
+                  return <Pressable key={item.mes} accessibilityRole="button" accessibilityState={{ selected: seleccionado }}
+                    accessibilityLabel={MESES[item.mes].nombre + ': ' + formatearMonto(item.total, tipoMovimiento) + '. Ver movimientos'}
+                    onPress={() => establecerMesSeleccionado(item.mes)} style={estilos.columnaMes}>
+                    <View style={[estilos.pistaMes, seleccionado && estilos.pistaMesActiva]}>
+                      <View style={[estilos.barraMes, { height: item.total > 0 ? Math.max(4, item.total / maximoEvolucion * 100) + '%' as `${number}%` : 2, backgroundColor: item.total > 0 ? categoria.color : tema.borde }]} />
+                    </View>
+                    <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.etiquetaMes, seleccionado && estilos.etiquetaMesActiva]}>{MESES[item.mes].corto}</Text>
+                  </Pressable>;
+                })}
+              </View>
+            </View>
+
+            {estadoCarga === 'listo' ? (
+              <View style={estilos.listaMovimientos}>
+                <View style={estilos.encabezadoSeccion}>
+                  <Text accessibilityRole="header" style={estilos.tituloSeccion}>Movimientos</Text>
+                  <Text style={estilos.textoSecundario}>{MESES[mesSeleccionado].nombre} · {anio}</Text>
+                </View>
+                {movimientos.length ? movimientos.map(movimiento => <TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalleMovimiento} />) : (
+                  <View style={estilos.vacio}>
+                    <Ionicons color={tema.textoSecundario} name="receipt-outline" size={28} />
+                    <Text style={estilos.tituloVacio}>Sin movimientos este mes</Text>
+                    <Text style={estilos.textoEstado}>Probá con otro mes o año para consultar esta categoría.</Text>
+                  </View>
+                )}
+              </View>
+            ) : null}
+          </ScrollView>
+          {selectorPeriodo ? <View style={estilos.capaSelector}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar selección del período" onPress={() => establecerSelectorPeriodo(null)} style={StyleSheet.absoluteFill} />
+            <View style={[estilos.menuPeriodo, anclaSelector]}>
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: anclaSelector.maxHeight }} keyboardShouldPersistTaps="handled">
+                {aniosDisponibles.map(valor => ({ valor, etiqueta: String(valor) })).map(opcion => {
+                  const seleccionado = opcion.valor === anio;
+                  return <Pressable key={opcion.valor} accessibilityRole="button" accessibilityState={{ selected: seleccionado }}
+                    onPress={() => { establecerAnio(opcion.valor); establecerSelectorPeriodo(null); }}
+                    style={[estilos.opcionPeriodo, seleccionado && estilos.opcionPeriodoActiva]}>
+                    <Text numberOfLines={1} style={estilos.textoSelectorPeriodo}>{opcion.etiqueta}</Text>
+                    <Ionicons color={tema.foco} name="checkmark" size={16} style={{ opacity: seleccionado ? 1 : 0 }} />
+                  </Pressable>;
                 })}
               </ScrollView>
             </View>
-          </View>
-        </Modal>
+          </View> : null}
+        </View>
       </View>
     </SafeAreaView>
   );

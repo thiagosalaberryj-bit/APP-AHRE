@@ -1,28 +1,31 @@
-import {useCallback,useContext,useRef,useState} from 'react';
-import {Alert,ActivityIndicator,FlatList,Pressable,Text,View} from 'react-native';
+import {useCallback,useContext,useMemo,useRef,useState} from 'react';
+import {Alert,ActivityIndicator,Pressable,SectionList,Text,View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect} from '@react-navigation/native';
 import {SafeAreaView,useSafeAreaInsets} from 'react-native-safe-area-context';
 import EncabezadoSeccion from '../components/SectionHeader';
-import TarjetaNotificacion from '../components/NotificationCard';
+import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
 import {TEXTOS_SYNC} from '../components/SyncStatus';
 import {ContextoApariencia} from '../contexts/AppearanceContext';
 import {observarSincronizacion,obtenerVistaSincronizacion,sincronizarSesion,consultarReparacionPerfil,repararPerfilPendiente} from '../sync/syncService';
-import {consultarPendientes,type RegistroPendiente} from '../sync/pendingService';
+import {consultarPendientes,type DatosPendientes,type RegistroPendiente} from '../sync/pendingService';
 import {obtenerSesionActual} from '../authentication/sessionService';
 import {RUTAS} from '../constants/routes';
 import type {ReparacionPerfil} from '../sync/protocol';
 import {consultarSaldoOculto} from '../profile/balanceVisibilityService';
 import {crearEstilosGlobales} from '../styles/globalStyles';
-import {crearEstilosNotificaciones} from '../styles/NotificationsScreenStyles';
 import {crearEstilosSincronizacion} from '../styles/SyncScreenStyles';
+
+const fechaValida=(valor:string)=>{const fecha=new Date(valor);return Number.isNaN(fecha.getTime())?null:fecha;};
+const formatearFecha=(valor:string)=>fechaValida(valor)?.toLocaleString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})??'Fecha no disponible';
 
 export default function PantallaSincronizacion({navigation:navegacion}:import('../navigation/types').PropiedadesPantalla){
   const {tema}=useContext(ContextoApariencia),{bottom}=useSafeAreaInsets();
-  const globales=crearEstilosGlobales(tema),tarjetas=crearEstilosNotificaciones(tema,bottom),estilos=crearEstilosSincronizacion(tema);
+  const globales=crearEstilosGlobales(tema),estilos=crearEstilosSincronizacion(tema,bottom);
   const [vista,establecerVista]=useState(obtenerVistaSincronizacion);
-  const [datos,establecerDatos]=useState<{total:number;registros:RegistroPendiente[];soloLocal:boolean}>({total:0,registros:[],soloLocal:false});
+  const [datos,establecerDatos]=useState<DatosPendientes>({total:0,registros:[],soloLocal:false,ultimaSincronizacion:null});
   const [cargando,establecerCargando]=useState(true),[error,establecerError]=useState(''),[oculto,establecerOculto]=useState(true);
-  const [expandido,establecerExpandido]=useState<string|null>(null);
+  const [mesesAbiertos,establecerMesesAbiertos]=useState<string[]>([]);
   const [errorReparacion,establecerErrorReparacion]=useState('');
   const [reparacion,establecerReparacion]=useState<ReparacionPerfil|null>(null);
   const [reparando,establecerReparando]=useState(false);
@@ -50,7 +53,18 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
     const dejar=observarSincronizacion(v=>{establecerVista(v);void cargar();});
     return()=>{activa=false;secuencia.current++;cargaActiva.current=false;dejar();};
   },[cargar]));
+  const secciones=useMemo(()=>{
+    const grupos=new Map<string,{titulo:string;data:RegistroPendiente[]}>();
+    for(const registro of datos.registros){
+      const fecha=fechaValida(registro.fecha);
+      const clave=fecha?`${fecha.getFullYear()}-${fecha.getMonth()}`:'sin-fecha';
+      if(!grupos.has(clave))grupos.set(clave,{titulo:fecha?fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^./,letra=>letra.toUpperCase()):'Fecha no disponible',data:[]});
+      grupos.get(clave)!.data.push(registro);
+    }
+    return [...grupos].map(([key,grupo])=>({key,titulo:grupo.titulo,data:mesesAbiertos.includes(key)?grupo.data:[]}));
+  },[datos.registros,mesesAbiertos]);
   const ocupado=reparando||['comprobando','sincronizando'].includes(vista.estado);
+  const deshabilitado=ocupado||datos.soloLocal;
   const confirmarReparacion=()=>{
     if(!reparacion)return;
     const propuesta=reparacion;
@@ -63,32 +77,56 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
     ]);
   };
   return <SafeAreaView edges={['top']} style={globales.areaSegura}><View style={globales.pantalla}>
-    <EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Los datos guardados en este teléfono que faltan confirmar." alVolver={()=>navegacion.goBack()} mostrarSincronizacion={false}/>
-    <FlatList data={datos.registros} keyExtractor={r=>r.id} contentContainerStyle={tarjetas.contenido}
-      ListHeaderComponent={<View style={estilos.estado}>
-        <Text accessibilityLiveRegion="polite" style={estilos.titulo}>{TEXTOS_SYNC[vista.estado]}</Text>
-        <Text style={estilos.texto}>{datos.soloLocal?'Esta cuenta contiene ejemplos locales y no se envía al servidor.':`${datos.total} registro${datos.total===1?'':'s'} pendiente${datos.total===1?'':'s'}.`}</Text>
-        {!datos.soloLocal?<Text style={estilos.texto}>Los registros salen de esta lista cuando el servidor los confirma.</Text>:null}
-        {vista.detalle?<Text style={estilos.texto}>{vista.detalle}</Text>:null}
-        <Pressable accessibilityRole="button" disabled={ocupado||datos.soloLocal} onPress={()=>{void sincronizarSesion().then(()=>cargar());}} style={[estilos.boton,(ocupado||datos.soloLocal)&&{opacity:0.5}]}>
-          <Text style={estilos.textoBoton}>{ocupado?'Sincronizando…':'Sincronizar ahora'}</Text>
+    <EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>navegacion.goBack()} mostrarSincronizacion={false}/>
+    <SectionList sections={secciones} keyExtractor={r=>r.id} contentContainerStyle={estilos.contenido} stickySectionHeadersEnabled={false}
+      ListHeaderComponent={<View style={estilos.resumen}>
+        <View style={estilos.fila}>
+          <View style={estilos.iconoEstado}>{ocupado?<ActivityIndicator color={tema.foco}/>:<Ionicons name={datos.soloLocal?'phone-portrait-outline':vista.estado==='online'?'cloud-done-outline':vista.estado==='offline'?'cloud-offline-outline':'cloud-upload-outline'} size={24} color={tema.foco}/>}</View>
+          <View style={estilos.flexible}>
+            <Text style={estilos.etiqueta}>ESTADO ACTUAL</Text>
+            <Text accessibilityLiveRegion="polite" style={estilos.titulo}>{TEXTOS_SYNC[vista.estado]}</Text>
+          </View>
+        </View>
+        <View style={estilos.metricas}>
+          <View style={estilos.contador}><Text style={estilos.numero}>{cargando&&!datos.registros.length?'—':datos.total}</Text><Text style={estilos.texto}>pendientes</Text></View>
+          <View style={estilos.ultima}>
+            <Text style={estilos.etiqueta}>Última sincronización exitosa</Text>
+            <Text style={estilos.valor}>{datos.soloLocal?'Solo en este teléfono':datos.ultimaSincronizacion?formatearFecha(datos.ultimaSincronizacion):'Sin sincronizaciones registradas'}</Text>
+          </View>
+        </View>
+        {datos.soloLocal?<Text style={estilos.texto}>Esta cuenta contiene ejemplos locales y no se envía al servidor.</Text>:null}
+        {vista.detalle&&vista.estado!=='offline'?<Text style={estilos.texto}>{vista.detalle}</Text>:null}
+        <Pressable accessibilityRole="button" accessibilityState={{disabled:deshabilitado,busy:ocupado}} disabled={deshabilitado} onPress={()=>{void sincronizarSesion().then(()=>cargar()).catch(()=>establecerError('No se pudo sincronizar. Volvé a intentar.'));}} style={[estilos.boton,deshabilitado&&estilos.deshabilitado]}>
+          <Ionicons name="sync-outline" size={18} color={tema.botonPrincipalTexto}/><Text style={estilos.textoBoton}>{ocupado?'Sincronizando…':'Sincronizar ahora'}</Text>
         </Pressable>
-        {reparacion?<View style={estilos.estado}>
+        {reparacion?<View style={estilos.reparacion}>
           <Text style={estilos.texto}>El servidor rechazó el correo de un cambio pendiente. Corregilo en Perfil y volvé aquí para confirmarlo.</Text>
           <Pressable accessibilityRole="button" disabled={ocupado} onPress={()=>navegacion.navigate(RUTAS.PERFIL)} style={estilos.boton}><Text style={estilos.textoBoton}>Corregir en Perfil</Text></Pressable>
           <Pressable accessibilityRole="button" disabled={ocupado||reparacion.correoAnterior===reparacion.correoNuevo} onPress={confirmarReparacion} style={[estilos.boton,(ocupado||reparacion.correoAnterior===reparacion.correoNuevo)&&{opacity:0.5}]}><Text style={estilos.textoBoton}>Aplicar correo corregido</Text></Pressable>
         </View>:null}
-        {errorReparacion||error?<Text accessibilityRole="alert" style={estilos.texto}>{errorReparacion||error}</Text>:null}
+        {errorReparacion||error?<View style={estilos.error}><Text accessibilityRole="alert" style={estilos.textoError}>{errorReparacion||error}</Text><Pressable accessibilityRole="button" onPress={()=>{void cargar();}} style={estilos.reintentar}><Text style={estilos.valor}>Volver a intentar</Text></Pressable></View>:null}
+        {datos.total>0?<View style={estilos.encabezadoLista}><Text style={estilos.titulo}>Cambios pendientes</Text><Text style={estilos.ayuda}>Más recientes primero · Hora local</Text></View>:null}
       </View>}
+      renderSectionHeader={({section})=><EncabezadoSeccionPlegable tema={tema} titulo={section.titulo} expandido={mesesAbiertos.includes(section.key)}
+        alAlternar={()=>establecerMesesAbiertos(anteriores=>anteriores.includes(section.key)?anteriores.filter(clave=>clave!==section.key):[...anteriores,section.key])}/>}
       renderItem={({item})=>{
-        const importe=item.importe===null?'':oculto?' · Importe oculto':` · $ ${item.importe.toLocaleString('es-AR',{maximumFractionDigits:2})}`;
-        return <TarjetaNotificacion tema={tema} estilos={tarjetas} nueva={false} expandida={expandido===item.id} etiquetaAccesibilidad={`Registro pendiente: ${item.titulo}`} alPresionar={()=>establecerExpandido(v=>v===item.id?null:item.id)}
-          notificacion={{id:item.id,titulo:item.titulo,mensaje:item.descripcion+importe,fechaHora:item.fecha,icono:'cloud-upload-outline'}}/>;
+        const fecha=fechaValida(item.fecha);
+        return <View accessible accessibilityLabel={`${item.titulo}. ${item.accion}. Registro local: ${formatearFecha(item.fecha)}${item.importe===null?'':oculto?'. Importe oculto':`. $ ${item.importe.toLocaleString('es-AR')}`}`} style={estilos.tarjeta}>
+          <View style={estilos.fila}>
+            <View style={estilos.iconoRegistro}><Ionicons name="cloud-upload-outline" size={18} color={tema.foco}/></View>
+            <View style={estilos.flexible}>
+              <View style={estilos.filaTitulo}>
+                <Text numberOfLines={1} style={estilos.nombre}>{item.titulo}</Text>
+                {item.importe!==null?<Text style={estilos.importe}>{oculto?'Importe oculto':`$ ${item.importe.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}`}</Text>:null}
+              </View>
+              <View style={estilos.metadatos}><Text style={estilos.ayuda}>{item.accion}</Text><Text style={estilos.ayuda}>{fecha?fecha.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'Fecha no disponible'}</Text></View>
+            </View>
+          </View>
+        </View>;
       }}
       ItemSeparatorComponent={()=> <View style={estilos.separador}/>}
-      ListEmptyComponent={!cargando&&!error?<View style={tarjetas.estadoVacio}><Text style={tarjetas.textoEstadoVacio}>{datos.soloLocal?'Datos de prueba guardados solo aquí.':'No hay registros pendientes.'}</Text></View>:null}
-      ListFooterComponent={cargando?<ActivityIndicator color={tema.foco}/>:null}
-      onEndReached={()=>{if(!cargando&&datos.registros.length<datos.total)void cargar(false);}} onEndReachedThreshold={0.3}
+      ListEmptyComponent={!cargando&&!error?<View style={estilos.vacio}><View style={estilos.iconoEstado}><Ionicons name={datos.soloLocal?'phone-portrait-outline':'checkmark-done-outline'} size={28} color={tema.foco}/></View><Text style={estilos.titulo}>{datos.soloLocal?'Datos de prueba':'Sin pendientes'}</Text><Text style={estilos.texto}>{datos.soloLocal?'Los ejemplos se guardan solo en este teléfono.':'Todos los cambios locales están confirmados.'}</Text></View>:null}
+      ListFooterComponent={cargando?<ActivityIndicator style={estilos.carga} color={tema.foco}/>:!error&&datos.registros.length<datos.total?<Pressable accessibilityRole="button" onPress={()=>{void cargar(false);}} style={estilos.reintentar}><Text style={estilos.valor}>Cargar más pendientes</Text></Pressable>:null}
     />
   </View></SafeAreaView>;
 }

@@ -209,7 +209,7 @@ test('un backend anterior se detecta antes de enviar un registro o un ingreso',a
   assert.equal(e.base.prepare('SELECT COUNT(*) n FROM usuarios').get()!.n,0);
 });
 
-test('la lista de pendientes agrupa por registro, conserva el orden y no modifica la cola',async prueba=>{
+test('la lista de pendientes agrupa por registro, muestra recientes primero y no modifica la cola',async prueba=>{
   const e=await escenario(prueba);e.desconectar();
   const deposito=await e.deposito();
   await e.depositosRepositorio.actualizar(deposito.id,{nombre:'Nombre actualizado'});
@@ -219,6 +219,7 @@ test('la lista de pendientes agrupa por registro, conserva el orden y no modific
   assert.equal(e.obtenerVistaSincronizacion().pendientes,2);
   const paginaUno=await e.consultarPendientes(1,0),paginaDos=await e.consultarPendientes(1,1);
   assert.equal(paginaUno.total,2);assert.equal(paginaUno.registros.length,1);
+  // El ajuste de saldo del depósito es la última escritura del mismo lote.
   assert.match(paginaUno.registros[0].titulo,/Nombre actualizado/);
   assert.equal(paginaUno.registros[0].importe,950);
   assert.match(paginaDos.registros[0].titulo,/Egreso/);
@@ -226,6 +227,44 @@ test('la lista de pendientes agrupa por registro, conserva el orden y no modific
   assert.equal(JSON.stringify(e.cola()),antes);
   e.conectar();await e.sincronizarCuenta(e.usuario.id);
   assert.equal((await e.consultarPendientes()).total,0);
+});
+
+test('los pendientes usan la hora de escritura local y no la fecha histórica del movimiento',async prueba=>{
+  const e=await escenario(prueba);e.desconectar();
+  const deposito=await e.deposito();
+  await e.movimientosRepositorio.crear({deposito_id:deposito.id,tipo:'egreso',categoria:'alimentacion',monto:25,descripcion:'Compra antigua',fecha_hora:'2020-01-01T12:00:00.000Z'});
+  const registro=(await e.consultarPendientes()).registros.find(r=>r.titulo.includes('Compra antigua'))!;
+  assert.ok(registro);
+  assert.ok(Math.abs(Date.now()-new Date(registro.fecha).getTime())<10000);
+  assert.equal(registro.accion,'Actualización');
+  assert.ok(e.base.prepare('SELECT COUNT(*) n FROM sync_local_dates').get()!.n);
+  e.conectar();await e.sincronizarCuenta(e.usuario.id);
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM sync_local_dates').get()!.n,0);
+});
+
+test('la última sincronización exitosa persiste por cuenta y los fallos no la reemplazan',async prueba=>{
+  const e=await escenario(prueba);
+  const anterior=(await e.consultarPendientes()).ultimaSincronizacion;
+  assert.ok(anterior);
+  assert.equal(e.base.prepare('SELECT fecha FROM sync_last_success WHERE usuario_id=?').get(e.usuario.id)!.fecha,anterior);
+  e.desconectar();await e.deposito();await e.sincronizarCuenta(e.usuario.id);
+  assert.equal((await e.consultarPendientes()).ultimaSincronizacion,anterior);
+  const otra=await e.usuariosRepositorio.crear({id:randomUUID(),nombre:'Sin historial',correo_electronico:'sin-historial@example.test',activo:1});
+  await e.registrarAutorizacion(otra.id,await e.obtenerInstalacion(),1);
+  await e.crearSesion(otra.id,false);
+  assert.equal((await e.consultarPendientes()).ultimaSincronizacion,null);
+});
+
+test('la paginación respeta los meses y un registro sin fecha local no inventa un horario',async prueba=>{
+  const e=await escenario(prueba);e.desconectar();
+  const primero=await e.deposito(),segundo=await e.deposito();
+  const filas=e.base.prepare('SELECT secuencia FROM sync_outbox ORDER BY secuencia').all();
+  e.base.prepare('UPDATE sync_local_dates SET fecha=? WHERE secuencia=?').run('2026-09-01T12:00:00.000Z',filas[0].secuencia);
+  e.base.prepare('UPDATE sync_local_dates SET fecha=? WHERE secuencia=?').run('2026-10-01T12:00:00.000Z',filas[1].secuencia);
+  assert.equal((await e.consultarPendientes(1,0)).registros[0].id,`depositos:${segundo.id}`);
+  assert.equal((await e.consultarPendientes(1,1)).registros[0].id,`depositos:${primero.id}`);
+  e.base.prepare('DELETE FROM sync_local_dates WHERE secuencia=?').run(filas[0].secuencia);
+  assert.equal((await e.consultarPendientes(1,1)).registros[0].fecha,'');
 });
 
 test('una comprobación silenciosa sin pendientes conserva el estado sincronizado',async prueba=>{

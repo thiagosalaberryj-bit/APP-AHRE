@@ -4,13 +4,19 @@ import test from 'node:test';
 import { preparar } from './helpers/localDatabase.ts';
 
 test('el acceso prepara cuenta, depósitos y movimientos con saldos reales y sesión no recordada', async prueba => {
-  const { base, almacenamiento, prepararDatosPrueba, obtenerSesionActual } = await preparar(prueba);
+  const { base, almacenamiento, prepararDatosPrueba, obtenerSesionActual, MOVIMIENTOS_PRUEBA } = await preparar(prueba);
   await prepararDatosPrueba();
   const { usuario } = await obtenerSesionActual();
   assert.equal(presente(usuario).correo_electronico, 'pruebas@ahre.test');
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM usuarios').get()).n, 1);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM depositos').get()).n, 3);
-  assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, MOVIMIENTOS_PRUEBA.length);
+  assert.equal(MOVIMIENTOS_PRUEBA.length, 210);
+  assert.equal(new Set(MOVIMIENTOS_PRUEBA.map(movimiento => movimiento.clave)).size, 210);
+  assert.equal(new Set(MOVIMIENTOS_PRUEBA.filter(movimiento => movimiento.tipo === 'egreso').map(movimiento => movimiento.categoria)).size, 17);
+  assert.equal(new Set(MOVIMIENTOS_PRUEBA.filter(movimiento => movimiento.tipo === 'ingreso').map(movimiento => movimiento.categoria)).size, 10);
+  assert.ok(Math.max(...MOVIMIENTOS_PRUEBA.map(movimiento => movimiento.dias)) >= 150);
+  for (const monto of [450, 1000, 5000, 1250000]) assert.ok(MOVIMIENTOS_PRUEBA.some(movimiento => movimiento.monto === monto));
   assert.equal(presente(base.prepare('SELECT SUM(saldo_actual) AS saldo FROM depositos').get()).saldo, 872800);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM personas').get()).n, 4);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM salas').get()).n, 1);
@@ -51,7 +57,7 @@ test('la cuenta habitual y sus depósitos permanecen intactos al entrar a prueba
 });
 
 test('un fallo revierte todos los depósitos y movimientos y permite reintentar', async prueba => {
-  const { base, inicializarBaseDatos, prepararDatosPrueba } = await preparar(prueba);
+  const { base, inicializarBaseDatos, prepararDatosPrueba, MOVIMIENTOS_PRUEBA } = await preparar(prueba);
   await inicializarBaseDatos();
   base.exec("CREATE TRIGGER fallo_prueba BEFORE INSERT ON movimientos BEGIN SELECT RAISE(ABORT, 'fallo de prueba'); END;");
   await assert.rejects(prepararDatosPrueba());
@@ -60,7 +66,7 @@ test('un fallo revierte todos los depósitos y movimientos y permite reintentar'
   base.exec('DROP TRIGGER fallo_prueba');
   await prepararDatosPrueba();
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM depositos').get()).n, 3);
-  assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, 6);
+  assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, MOVIMIENTOS_PRUEBA.length);
 });
 
 test('no sobrescribe una cuenta con el correo de prueba y otra contraseña', async prueba => {

@@ -23,6 +23,7 @@ import { crearDeposito, ErrorDeposito } from '../deposits/depositService';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import BotonPrincipal from '../components/PrimaryButton';
+import EntradaMonto from '../components/MoneyInput';
 import EncabezadoSeccion from '../components/SectionHeader';
 import { COLOR_DEPOSITO_PREDETERMINADO, COLORES_DEPOSITOS } from '../styles/colors';
 import { crearEstilosDeposito } from '../styles/DepositScreenStyles';
@@ -59,7 +60,6 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
   const [descripcion, establecerDescripcion] = useState('');
   const [iconosAdicionalesVisibles, establecerIconosAdicionalesVisibles] = useState(false);
   const [nombreEnfocado, establecerNombreEnfocado] = useState(false);
-  const [saldoEnfocado, establecerSaldoEnfocado] = useState(false);
   const [descripcionEnfocada, establecerDescripcionEnfocada] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [guardando, establecerGuardando] = useState(false);
@@ -75,6 +75,7 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
   const iconoFueraDeVista = Boolean(
     icono && !ICONOS_PRINCIPALES_DEPOSITO.some((opcion) => opcion.id === icono),
   );
+  const iconoAdicionalSeleccionado = ICONOS_ADICIONALES_DEPOSITO.find((opcion) => opcion.id === icono);
   const opcionColorSeleccionado = COLORES_SELECTOR.find((opcion) => opcion.valor === color);
   const cambiarNombre = (valor: string) => {
     establecerNombre(valor);
@@ -152,49 +153,15 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
           >
             <View style={estilos.grupo}>
               <Text style={estilosGlobales.etiqueta}>Saldo inicial *</Text>
-              <View
-                style={[
-                  estilosGlobales.campo,
-                  estilos.filaSaldo,
-                  errorSaldo
-                    ? estilosGlobales.campoError
-                    : saldoEnfocado
-                      ? estilosGlobales.campoEnfocado
-                      : null,
-                ]}
-              >
-                <Text style={estilos.simboloSaldo}>$</Text>
-                <TextInput
-                  accessibilityLabel="Saldo inicial"
-                  accessibilityHint={errorSaldo || 'Ingresá el monto en pesos.'}
-                  editable={!guardando}
-                  keyboardType="decimal-pad"
-                  onBlur={() => establecerSaldoEnfocado(false)}
-                  onChangeText={cambiarSaldo}
-                  onFocus={() => establecerSaldoEnfocado(true)}
-                  placeholder="0"
-                  placeholderTextColor={tema.textoSecundario}
-                  returnKeyType="next"
-                  selectionColor={tema.foco}
-                  style={estilos.entradaSaldo}
-                  value={saldoInicial}
-                />
-                {saldoInicial ? (
-                  <Pressable
-                    accessibilityLabel="Limpiar saldo inicial"
-                    accessibilityRole="button"
-                    disabled={guardando}
-                    onPress={() => cambiarSaldo('')}
-                    style={estilos.accionLimpiarSaldo}
-                  >
-                    <Ionicons color={tema.textoSecundario} name="close-circle-outline" size={24} />
-                  </Pressable>
-                ) : null}
-              </View>
+              <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+                etiqueta="Saldo inicial" valor={saldoInicial} alCambiarTexto={cambiarSaldo}
+                mostrarEtiqueta={false} editable={!guardando} error={errorSaldo}
+                ayudaAccesibilidad="Ingresá el monto en pesos."
+                estiloContenedor={estilos.filaSaldo} estiloEntrada={estilos.entradaSaldo}
+                estiloSimbolo={estilos.simboloSaldo} estiloLimpiar={estilos.accionLimpiarSaldo}/>
               <Text style={estilosGlobales.textoAyuda}>
                 Para ingresar decimales, usá coma.
               </Text>
-              {errorSaldo ? <Text style={estilosGlobales.textoError}>{errorSaldo}</Text> : null}
             </View>
 
             <View style={estilos.grupo}>
@@ -314,19 +281,19 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
                   );
                 })}
                 <Pressable
-                  accessibilityLabel="Ver más íconos"
+                  accessibilityLabel={iconoAdicionalSeleccionado ? `Ícono ${iconoAdicionalSeleccionado.nombre}. Ver más íconos` : 'Ver más íconos'}
                   accessibilityRole="button"
-                  accessibilityState={{ expanded: iconosAdicionalesVisibles }}
+                  accessibilityState={{ expanded: iconosAdicionalesVisibles, selected: Boolean(iconoAdicionalSeleccionado) }}
                   disabled={guardando}
                   onPress={() => establecerIconosAdicionalesVisibles(true)}
                   style={({ pressed }) => [
                     estilos.botonIcono,
-                    estilos.botonMasIconos,
+                    iconoAdicionalSeleccionado ? estilos.botonIconoSeleccionado : estilos.botonMasIconos,
                     pressed && estilos.elementoPresionado,
                   ]}
                 >
-                  <Ionicons color={tema.foco} name="add-outline" size={23} />
-                  <Text style={estilos.nombreIcono}>Más</Text>
+                  <Ionicons color={tema.foco} name={iconoAdicionalSeleccionado?.id || 'add-outline'} size={23} />
+                  <Text numberOfLines={1} style={estilos.nombreIcono}>{iconoAdicionalSeleccionado?.nombre || 'Más'}</Text>
                 </Pressable>
               </View>
               {iconoFueraDeVista ? (
@@ -365,8 +332,8 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
                       <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} />
                     ) : null}
                   </View>
-                  <Text style={[estilos.nombreColor, color === null && estilos.nombreColorSeleccionado]}>
-                    Azul suave
+                  <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.nombreColor, color === null && estilos.nombreColorSeleccionado]}>
+                    Azul
                   </Text>
                 </Pressable>
                 {COLORES_SELECTOR.map(({ nombre, valor }) => {
@@ -395,8 +362,8 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
                           <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} />
                         ) : null}
                       </View>
-                      <Text style={[estilos.nombreColor, seleccionado && estilos.nombreColorSeleccionado]}>
-                        {nombre}
+                      <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.nombreColor, seleccionado && estilos.nombreColorSeleccionado]}>
+                        {nombre.replace(/ suave$/, '')}
                       </Text>
                     </Pressable>
                   );

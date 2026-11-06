@@ -72,7 +72,7 @@ local de duplicados. Seguir [Perfil](interfaces/perfil.md#recuperación-guiada-d
 - La consulta de Social mantiene su conjunto completo; paginar requiere revisar
   los consumidores. Los lotes financieros del backend también cargan estado completo.
 - Notificaciones muestra ejemplos; guardar idioma no implementa traducción integral.
-- «Acerca de AHRE» toma la versión de `Constants.expoConfig.version`; actualmente 0.6.0, con código Android 4 en el manifiesto.
+- «Acerca de AHRE» toma la versión de `Constants.expoConfig.version`; actualmente 0.7.0, con código Android 5 en el manifiesto.
 - Los movimientos ya guardados con una hora anterior al depósito no se
   recalculan automáticamente al instalar la corrección del formulario.
 - Auditoría de la app: 14 paquetes afectados (3 altos, 9 moderados, 2 bajos)
@@ -92,3 +92,28 @@ la documentación de ambos repositorios.
 
 Las fuentes de la app, dependencias y scripts de despliegue se conservaron.
 No se repiten pruebas funcionales por estos cambios exclusivamente documentales.
+
+## Verificación de los últimos ajustes de interfaz
+
+El 5 de noviembre de 2026 se verificó el commit `63363c8` de la rama
+`codex/cambios-interfaz`: `npm run typecheck` correcto y `npm test` con
+194 pruebas, 186 aprobadas, 8 omitidas y ningún fallo. Las omisiones dependen
+de entornos externos; no equivalen a pruebas aprobadas. La suite incluye la
+comprobación nueva del cierre anterior con depósitos nuevos, registros
+históricos y reversiones. Posteriormente se completaron los ajustes de creación
+de sala, contraste de categorías y etiqueta del selector de depósitos para 0.7.0.
+
+Estos ajustes unifican cards y filtros, las proporciones de los resúmenes de
+Inicio y Social, la variación del balance general y la presentación compacta
+con desplazamiento del dato mensual en Detalle de depósito. TypeScript y las
+pruebas no verifican layout ni animaciones nativas: la revisión en dispositivo
+debe cubrir textos largos, privacidad, claro/oscuro y reducción de movimiento.
+El túnel Expo de desarrollo no implica que se haya generado o publicado un APK
+con estos cambios.
+
+La verificación final de 0.7.0 del mismo día repitió TypeScript y la suite completa:
+194 pruebas, 186 aprobadas, 8 omitidas y ningún fallo. También pasó la exportación
+Android/Hermes (2157 módulos y 38 recursos). Incluye los últimos cambios de
+creación de salas, colores de categorías y contraste de íconos. Los escenarios
+de interfaz cubren búsqueda, confirmación y reapertura de participantes y
+persistencia del color de la sala en ambos temas. No se generó un APK 0.7.0.

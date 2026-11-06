@@ -2,7 +2,7 @@ import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
 import { COLOR_DEPOSITO_PREDETERMINADO } from './colors';
-import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export function crearEstilosDeposito(tema: Tema) {
   const estilos = StyleSheet.create({
@@ -11,23 +11,24 @@ export function crearEstilosDeposito(tema: Tema) {
     },
     formulario: {
       width: '100%',
-      maxWidth: 480,
       alignSelf: 'center',
-      gap: ESPACIADO.formulario,
+      gap: ESPACIADO.grande,
       padding: ESPACIADO.pantalla,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
       paddingBottom: ESPACIADO.enorme,
     },
     grupo: {
       gap: ESPACIADO.pequeno,
     },
     filaEntrada: {
-      minHeight: 58,
+      minHeight: 52,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
+      borderRadius: BORDES.radios.campo,
       borderColor: tema.borde,
       borderWidth: BORDES.anchos.fino,
-      paddingHorizontal: ESPACIADO.grande,
+      paddingHorizontal: ESPACIADO.medio,
     },
     entradaTexto: {
       flex: 1,
@@ -65,6 +66,7 @@ export function crearEstilosDeposito(tema: Tema) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
+      borderRadius: BORDES.radios.campo,
       borderColor: tema.borde,
       borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
@@ -99,31 +101,29 @@ export function crearEstilosDeposito(tema: Tema) {
       flexGrow: 1,
       flexBasis: 82,
       minWidth: 82,
-      minHeight: 104,
+      minHeight: 84,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: ESPACIADO.pequeno,
+      gap: ESPACIADO.minimo,
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
-      borderRadius: BORDES.radios.tarjeta,
+      borderRadius: BORDES.radios.campo,
       borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.pequeno,
-      paddingVertical: ESPACIADO.medio,
+      paddingVertical: ESPACIADO.pequeno,
     },
     tarjetaTipoSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
-      backgroundColor: tema.nombre === 'oscuro' ? tema.contenedorVerde : tema.superficie,
+      backgroundColor: tema.fondo,
     },
     tarjetaTipoError: {
       borderColor: tema.error,
     },
     iconoTipo: {
-      width: 40,
-      height: 40,
+      width: 32,
+      height: 32,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: BORDES.radios.circular,
+      borderRadius: BORDES.radios.campo / 2,
       backgroundColor: tema.fondo,
     },
     iconoTipoSeleccionado: {
@@ -163,15 +163,14 @@ export function crearEstilosDeposito(tema: Tema) {
       borderStyle: 'dashed',
     },
     botonIconoSeleccionado: {
-      backgroundColor: tema.nombre === 'oscuro' ? tema.contenedorVerde : tema.superficie,
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
+
     },
     nombreIcono: {
       maxWidth: '100%',
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar - 2,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
       textAlign: 'center',
     },
     encabezadoColor: {
@@ -211,8 +210,6 @@ export function crearEstilosDeposito(tema: Tema) {
       borderWidth: BORDES.anchos.fino,
     },
     muestraColorSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
       borderStyle: 'solid',
     },
     colorPredeterminado: {
@@ -222,12 +219,12 @@ export function crearEstilosDeposito(tema: Tema) {
       maxWidth: '100%',
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar - 2,
+      fontSize: TIPOGRAFIA.tamanos.auxiliar,
       textAlign: 'center',
     },
     nombreColorSeleccionado: {
       color: tema.textoPrincipal,
-      fontWeight: TIPOGRAFIA.pesos.negrita,
+
     },
     colorSeleccionadoInfo: {
       flexDirection: 'row',
@@ -246,9 +243,10 @@ export function crearEstilosDeposito(tema: Tema) {
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: ESPACIADO.pequeno,
+      borderRadius: BORDES.radios.campo,
       borderColor: tema.borde,
       borderWidth: BORDES.anchos.fino,
-      paddingHorizontal: ESPACIADO.grande,
+      paddingHorizontal: ESPACIADO.medio,
       paddingTop: ESPACIADO.medio,
     },
     entradaDescripcion: {
@@ -273,13 +271,13 @@ export function crearEstilosDeposito(tema: Tema) {
     },
     tarjetaModal: {
       width: '100%',
-      maxWidth: 400,
-      gap: ESPACIADO.pequeno,
+      maxWidth: 480,
+      gap: ESPACIADO.medio,
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
-      borderRadius: BORDES.radios.tarjeta,
+      borderRadius: BORDES.radios.boton,
       borderWidth: BORDES.anchos.fino,
-      padding: ESPACIADO.medio,
+      padding: ESPACIADO.grande,
       elevation: 8,
       shadowColor: '#000000',
       shadowOffset: { width: 0, height: 4 },
@@ -318,8 +316,7 @@ export function crearEstilosDeposito(tema: Tema) {
       paddingVertical: ESPACIADO.pequeno,
     },
     opcionIconoModalSeleccionada: {
-      borderColor: tema.foco,
-      borderWidth: BORDES.anchos.normal,
+      backgroundColor: tema.fondo,
     },
     nombreOpcionIcono: {
       flex: 1,

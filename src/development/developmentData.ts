@@ -1,6 +1,7 @@
 // Datos ficticios y credenciales públicas, exclusivamente para desarrollo local.
 // Eliminar junto con el acceso temporal de Inicio al terminar las pruebas.
 import { COLORES_DEPOSITOS } from '../styles/colors';
+import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 
 export const CUENTA_PRUEBA = Object.freeze({
   nombre: 'Cuenta de pruebas',
@@ -14,7 +15,7 @@ export const DEPOSITOS_PRUEBA: readonly (Omit<import('../database/types').Deposi
   { clave: 'billetera', nombre: 'Billetera de prueba', tipo: 'billetera_virtual', saldo_inicial: 80000, icono: 'wallet-outline', color: COLORES_DEPOSITOS[2] },
 ]);
 
-export const MOVIMIENTOS_PRUEBA: readonly (Pick<import('../database/types').Movimiento,'tipo'|'categoria'|'monto'|'descripcion'> & {clave:string;deposito:string;dias:number})[] = Object.freeze([
+const MOVIMIENTOS_BASE_PRUEBA: readonly (Pick<import('../database/types').Movimiento,'tipo'|'categoria'|'monto'|'descripcion'> & {clave:string;deposito:string;dias:number})[] = Object.freeze([
   { clave: 'farmacia', deposito: 'efectivo', tipo: 'egreso', categoria: 'salud', monto: 3200, descripcion: 'Farmacia de prueba', dias: 6 },
   { clave: 'trabajo', deposito: 'billetera', tipo: 'ingreso', categoria: 'trabajo_independiente', monto: 45000, descripcion: 'Trabajo de prueba', dias: 5 },
   { clave: 'suscripcion', deposito: 'billetera', tipo: 'egreso', categoria: 'suscripciones', monto: 9000, descripcion: 'Suscripción de prueba', dias: 3 },
@@ -22,6 +23,27 @@ export const MOVIMIENTOS_PRUEBA: readonly (Pick<import('../database/types').Movi
   { clave: 'comida', deposito: 'efectivo', tipo: 'egreso', categoria: 'alimentacion', monto: 8500, descripcion: 'Comida de prueba', dias: 1 },
   { clave: 'transporte', deposito: 'efectivo', tipo: 'egreso', categoria: 'transporte', monto: 1500, descripcion: 'Transporte de prueba', dias: 0 },
 ]);
+
+// Seis meses de actividad para revisar listas, gráficos y filtros sin alterar
+// el saldo neto de los ejemplos originales. Cada gasto tiene una financiación
+// ficticia del mismo importe y depósito; ambos son movimientos independientes.
+const IMPORTES_ESTADISTICAS = [450, 1000, 1850.5, 3200, 5000, 8750.75, 15600, 42350, 125000, 1250000];
+const movimientosEstadisticas = Array.from({ length: 6 }, (_, mes) =>
+  CATEGORIAS_EGRESO.flatMap((categoria, indice) => {
+    const orden = mes * CATEGORIAS_EGRESO.length + indice;
+    const ingreso = CATEGORIAS_INGRESO[orden % CATEGORIAS_INGRESO.length];
+    const deposito = DEPOSITOS_PRUEBA[indice % DEPOSITOS_PRUEBA.length].clave;
+    const monto = IMPORTES_ESTADISTICAS[orden % IMPORTES_ESTADISTICAS.length];
+    const dias = mes * 30 + indice + (indice % 5) / 24;
+    const clave = 'estadisticas-v1-' + mes + '-' + categoria.id;
+    return [
+      { clave: clave + '-ingreso', deposito, tipo: 'ingreso' as const, categoria: ingreso.id, monto, descripcion: ingreso.nombre + ' · ejemplo ampliado', dias },
+      { clave: clave + '-egreso', deposito, tipo: 'egreso' as const, categoria: categoria.id, monto, descripcion: categoria.nombre + ' · ejemplo ampliado', dias },
+    ];
+  }),
+).flat();
+
+export const MOVIMIENTOS_PRUEBA = Object.freeze([...MOVIMIENTOS_BASE_PRUEBA, ...movimientosEstadisticas]);
 
 export const PERSONAS_PRUEBA = [
   { clave: 'ana', nombre: 'Ana', apellido: 'García', apodo: 'Ani' },

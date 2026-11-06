@@ -2,6 +2,21 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {preparar} from './helpers/localDatabase.ts';
 
+test('el cierre anterior respeta depósitos nuevos, históricos y reversiones', async t => {
+  const e = await preparar(t); await e.prepararDatosPrueba();
+  const { usuario } = await e.obtenerSesionActual(); assert.ok(usuario);
+  const corte = '2026-10-01T00:00:00.000Z';
+  const base = await e.movimientosRepositorio.consultarSaldoCierreAnterior(usuario.id, corte) ?? 0;
+  const deposito = await e.depositosRepositorio.crear({ usuario_id: usuario.id, nombre: 'Anterior', tipo: 'efectivo', icono: 'cash-outline', saldo_inicial: 1000, fecha_creacion: '2026-09-01T12:00:00.000Z' });
+  const ingreso = await e.movimientosRepositorio.crear({ deposito_id: deposito.id, tipo: 'ingreso', categoria: 'sueldo', descripcion: 'Ingreso mensual', monto: 300, fecha_hora: '2026-10-02T12:00:00.000Z' });
+  await e.movimientosRepositorio.crear({ deposito_id: deposito.id, tipo: 'egreso', categoria: 'alimentacion', descripcion: 'Compra anterior', monto: 50, fecha_hora: '2026-09-15T12:00:00.000Z' });
+  await e.movimientosRepositorio.crear({ deposito_id: deposito.id, tipo: 'egreso', categoria: 'alimentacion', descripcion: 'Compra histórica', monto: 90, fecha_hora: '2026-08-15T12:00:00.000Z' });
+  await e.depositosRepositorio.crear({ usuario_id: usuario.id, nombre: 'Nuevo', tipo: 'efectivo', icono: 'cash-outline', saldo_inicial: 500, fecha_creacion: '2026-10-03T12:00:00.000Z' });
+  assert.equal(await e.movimientosRepositorio.consultarSaldoCierreAnterior(usuario.id, corte), base + 950);
+  await e.movimientosRepositorio.eliminar(ingreso.id);
+  assert.equal(await e.movimientosRepositorio.consultarSaldoCierreAnterior(usuario.id, corte), base + 950);
+});
+
 for(const tipo of ['ingreso','egreso'] as const)test(`${tipo} del formulario actualiza el saldo de un depósito creado en ese mismo minuto`,async t=>{
   const e=await preparar(t);await e.prepararDatosPrueba();
   const {usuario}=await e.obtenerSesionActual();assert.ok(usuario);

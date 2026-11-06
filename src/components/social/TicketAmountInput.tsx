@@ -1,22 +1,11 @@
-import { View, Text, TextInput } from 'react-native';
-import crearEstilosCompartidos from '../../styles/social/SharedStyles';
+import EntradaMonto from '../MoneyInput';
 import crearEstilosPropios from '../../styles/social/TicketAmountInputStyles';
-export default function ImporteTicket(propiedades: import('../../social/types').AspectoSocial & ({etiqueta:string;valor:string;alCambiar:(valor:string)=>void})) {
-  const {
-    etiqueta,
-    valor,
-    alCambiar,
-    tema,
-    estilos
-  } = {
-    ...propiedades,
-    estilos: {
-      ...crearEstilosCompartidos(propiedades.tema),
-      ...crearEstilosPropios(propiedades.tema)
-    }
-  };
-  return <View style={estilos.campoImporteTicket}>
-      <Text style={estilos.simboloTicket}>$</Text>
-      <TextInput accessibilityLabel={etiqueta} value={valor} onChangeText={alCambiar} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={estilos.entradaImporteTicket} />
-    </View>;
+
+export default function ImporteTicket({ etiqueta, valor, alCambiar, tema, estilosGlobales }: import('../../social/types').AspectoSocial & {etiqueta:string;valor:string;alCambiar:(valor:string)=>void}) {
+  const estilos = crearEstilosPropios(tema);
+  return <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
+    etiqueta={etiqueta} valor={valor} alCambiarTexto={alCambiar}
+    mostrarEtiqueta={false} mostrarLimpiar={false} compacto
+    estiloContenedor={estilos.campoImporteTicket}
+    estiloSimbolo={estilos.simboloTicket} estiloEntrada={estilos.entradaImporteTicket}/>;
 }

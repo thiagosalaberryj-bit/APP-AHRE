@@ -16,6 +16,57 @@ necesita. Por ejemplo, Login y Registro consumen los temas globales y agregan
 
 ## Organización
 
+Los filtros y las tarjetas seleccionables de los formularios destacan la
+selección mediante relleno, conservando dimensiones, rellenos internos,
+grosor de borde y peso tipográfico. El color del texto e icono puede cambiar
+para mantener contraste, sin desplazar los controles vecinos.
+
+Los filtros rápidos y activos de Movimientos, Estadísticas y el historial de
+deudas usan `MovementSearchFiltersStyles.ts`: altura mínima de 38 puntos,
+radio de 5, texto de 14 con peso medio y los mismos colores de selección.
+
+Las cards de movimientos y deudas comparten la base
+`FinancialRecordCardStyles.ts`: título de 16 con seminegrita, importe de 16
+en negrita y texto secundario de 12 regular. Comparten rellenos, bordes,
+ícono de 32 puntos y franja de importe de 112. Ingreso y «Te debe» usan el
+verde de éxito; Egreso y «Le debés» usan el rojo de error del tema. Los montos
+usan el texto principal y los metadatos el secundario en ambos tipos de card.
+
+Todos los importes editables usan `EntradaMonto` (`src/components/MoneyInput.tsx`):
+ingresos, egresos, total OCR, saldo inicial de depósitos, límites de filtros y
+los importes de Social (deudas, pagos, gastos y repartos manuales). La variante
+compacta permite conservar el espacio de filas y filtros sin duplicar inputs.
+El contenedor mantiene el fondo de superficie del tema (blanco en tema claro).
+
+Mientras se escribe, los miles se separan con puntos y los decimales con coma:
+`1234567,50` se muestra como `1.234.567,50`. El componente entrega al formulario
+texto local sin puntos de miles; las validaciones y la persistencia conservan
+sus conversiones existentes. La presentación conserva la coma final, ceros
+decimales y precisión del texto; admite dos decimales. El punto decimal de un
+teclado se convierte en coma. Se puede pegar un monto local con símbolo `$`,
+editar en medio, borrar y limpiar sin que los puntos automáticos traben el cursor.
+La lógica de texto vive en `src/utils/moneyInput.ts` y los estilos compactos en
+`src/styles/MoneyInputStyles.ts`.
+
+Los campos con límite de caracteres muestran `actual/máximo` en la misma fila
+que su etiqueta, alineado a la derecha, sin reservar otra fila debajo del input.
+Los estilos compartidos `encabezadoCampo`, `etiquetaCampo` y `contadorCampo` de
+`globalStyles.ts` permiten aplicar esta disposición en formularios y modales.
+Los límites y las validaciones existentes se conservan, incluido el tratamiento
+de descripciones OCR que superan el máximo y deben resumirse antes de guardar.
+
+El contenido principal de todas las pantallas usa el mismo margen lateral que
+Inicio/Dashboard: **12 puntos por lado**, definido por
+`MARGEN_LATERAL_PANTALLA` en `src/styles/globalStyles.ts`. El ancho disponible
+es el de la pantalla menos 24 puntos, también en pantallas anchas; los
+contenedores principales no agregan límites de 480 o 560 puntos.
+
+Esta regla se aplica a listas, formularios, detalles, Perfil, Sincronización,
+Estadísticas, OCR, autenticación, bienvenida y todas las vistas de Social.
+Los espaciados verticales y el relleno interno de tarjetas, campos, encabezados
+y diálogos conservan sus propios tokens. Los carruseles y controles que calculan
+su ancho desde la ventana descuentan el mismo margen lateral compartido.
+
 ```text
 src/
 └── styles/
@@ -113,6 +164,19 @@ En modo oscuro se usan `#F58D8B`, `#F8B878`, `#F9D879`, `#BBE991`,
 
 Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender
 únicamente del color.
+
+Los selectores de categorías comparten un relleno intermedio en formularios,
+Salas y filtros: mezclan el color de la categoría con la superficie del tema,
+con intensidad de 80 % en claro y 36 % en oscuro. En claro se aumenta la
+saturación del relleno para conservar matices vivos, especialmente el naranja
+de Alimentación, sin alterar la paleta de los gráficos. Íconos y textos conservan
+contraste: los íconos claros usan una tinta más oscura de su propia familia,
+tanto en las cards como en el modal. El modo oscuro conserva su tinta anterior.
+La selección utiliza el verde de encabezado. Este tratamiento solo
+afecta las cards del selector, sin modificar los colores de los gráficos.
+Salas prioriza Alimentación, Compras, Hogar y Servicios como Egresos; las demás
+opciones y el modal siguen el orden de familias y tonos de intenso a claro.
+La etiqueta superior del selector compartido de depósitos usa peso regular.
 
 ## Encabezados de pantalla
 
@@ -264,3 +328,32 @@ duplicar tokens globales ni mezclar sus layouts con los de otras pantallas.
   reutilizarse desde una pantalla de Expo.
 - Expo compila el bundle Android sin errores de importación.
 - Los estilos permanecen en archivos `.ts` y los componentes con JSX en `.tsx`; no se usa CSS web.
+
+### Selector compartido de depósitos
+
+Ingreso, Egreso, OCR, filtros de Movimientos y Estadísticas y formularios de
+Social usan exclusivamente `src/components/DepositSelector.tsx`. Sus estilos
+propios están en `src/styles/DepositSelectorStyles.ts`, con ambos temas. El
+campo conserva el aspecto de los formularios: altura mínima de 64 puntos,
+radio de 10 puntos, nombre de 16 puntos y dato secundario de 14. Muestra el
+ícono real del depósito sin recuadro de color, como los otros campos, con borde neutro fino y verde
+al abrir. La lista flotante se ancla
+al control, tiene scroll limitado, esquinas recortadas y selección por relleno.
+Se coloca debajo del borde inferior del campo, con altura limitada y scroll.
+La selección individual cierra al elegir; la múltiple permite marcar varias,
+seleccionar Todos y cerrar con Listo. `impedirSeleccionVacia` conserva la
+restricción del último depósito de los filtros. Ya no se usa una lista inline
+ni el cuadro centrado anterior; la presentación está definida en el componente,
+sin depender de los estilos específicos de cada formulario.
+
+Los modales de selección de categorías, depósito, fecha, hora y personas
+conservan el comportamiento edge-to-edge de Android mediante
+`statusBarTranslucent` y `navigationBarTranslucent`, evitando que la ventana
+del selector imponga otro fondo a la barra de navegación del sistema. El
+desplegable de depósitos espera `keyboardDidHide` antes de abrir si había
+teclado visible y no presenta la lista hasta medirla con la ventana abierta.
+
+El anclaje del depósito usa `measure` con `pageX/pageY` y la altura completa
+del campo. Las dimensiones disponibles provienen de `onLayout` de la capa
+flotante; no se resta el origen de otra ventana medido con `measureInWindow`.
+La lista no se reposiciona arriba al abrir, evitando que tape parte del campo.

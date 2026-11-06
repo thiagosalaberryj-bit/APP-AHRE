@@ -138,6 +138,8 @@ export default function crearEstilosCompartidos(tema: Tema) {
       minWidth: 0,
       gap: ESPACIADO.minimo
     },
+    importeResumenCompacto: { padding: ESPACIADO.pequeno, borderRadius: BORDES.radios.campo / 2 },
+    etiquetaResumenCompacta: { fontSize: TIPOGRAFIA.tamanos.auxiliar },
     importeResumen: {
       backgroundColor: tema.fondo,
       borderRadius: BORDES.radios.campo,

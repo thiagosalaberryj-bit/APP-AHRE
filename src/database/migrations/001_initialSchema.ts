@@ -626,6 +626,12 @@ export async function prepararEsquemaSincronizacion(conexion: Pick<Conexion, 'ex
     CREATE TABLE IF NOT EXISTS sync_state (usuario_id TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 0, preparada INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS sync_outbox (secuencia INTEGER PRIMARY KEY AUTOINCREMENT, lote TEXT NOT NULL, usuario_id TEXT NOT NULL, cambio TEXT NOT NULL);
     CREATE INDEX IF NOT EXISTS sync_outbox_usuario ON sync_outbox(usuario_id,secuencia);
+    CREATE TABLE IF NOT EXISTS sync_local_dates (secuencia INTEGER PRIMARY KEY REFERENCES sync_outbox(secuencia) ON DELETE CASCADE, fecha TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS sync_last_success (usuario_id TEXT PRIMARY KEY, fecha TEXT NOT NULL);
+    CREATE TRIGGER IF NOT EXISTS sync_fecha_local AFTER INSERT ON sync_outbox
+    BEGIN INSERT INTO sync_local_dates(secuencia,fecha) VALUES(NEW.secuencia,strftime('%Y-%m-%dT%H:%M:%fZ','now')); END;
+    CREATE TRIGGER IF NOT EXISTS sync_limpiar_fecha AFTER DELETE ON sync_outbox
+    BEGIN DELETE FROM sync_local_dates WHERE secuencia=OLD.secuencia; END;
     CREATE INDEX IF NOT EXISTS sync_outbox_usuario_lote ON sync_outbox(usuario_id,lote,secuencia);
     CREATE TABLE IF NOT EXISTS sync_authorization (usuario_id TEXT PRIMARY KEY, dispositivo_id TEXT NOT NULL, generacion INTEGER NOT NULL, revocada INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS sync_batch_authorization (lote TEXT PRIMARY KEY, usuario_id TEXT NOT NULL, generacion INTEGER NOT NULL);

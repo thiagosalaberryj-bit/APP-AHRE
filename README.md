@@ -9,7 +9,7 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.6.0-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.7.0-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
@@ -79,3 +79,12 @@ cuentas por web. Notificaciones muestra ejemplos y el idioma elegido no traduce
 toda la interfaz. Los pendientes de una autorización revocada se conservan sin
 recuperación automática. La app es una versión de evaluación; ver los
 [límites y verificaciones](docs/estado-y-validacion.md).
+
+## Mejoras de interfaz
+
+La rama de interfaz unifica márgenes, tarjetas y formularios; agrupa movimientos
+y pendientes por meses plegables, comparte selectores y mejora Estadísticas y
+Social. Los filtros admiten grupos acumulativos y los montos se formatean al
+escribir. Los recorridos se documentan en [Sistema visual](docs/interfaces/sistema-visual.md),
+[Movimientos](docs/interfaces/movimientos.md), [Estadísticas](docs/interfaces/estadisticas.md)
+y [Social](docs/interfaces/social.md).

@@ -16,7 +16,7 @@ Perfil reúne Usuario, Preferencias, Cuenta, Ajustes avanzados y Sesión. Usuari
 Se abre desde el botón de Perfil del Dashboard. La flecha del encabezado
 vuelve atrás. Los estilos locales están en
 `src/styles/ProfileScreenStyles.ts` con tokens de `colors.ts` y
-`globalStyles.ts`; el contenido limita su ancho a 480 puntos y acompaña los
+`globalStyles.ts`; el contenido usa 12 puntos de margen por lado, igual que Inicio, y acompaña los
 temas claro y oscuro, incluidos modales y controles.
 
 ## Información del usuario
@@ -41,8 +41,8 @@ recorta la imagen como un cuadrado. Cuando hay una foto, las acciones compactas
 «Cambiar» y «Quitar» aparecen en una misma línea para conservar el alto de la
 tarjeta. «Quitar» vuelve a mostrar las iniciales. La foto se conserva en
 memoria mientras la pantalla de Perfil está abierta; no se guarda en
-almacenamiento. Al abrir la pantalla se muestra un skeleton de carga simulado
-(~1 segundo).
+almacenamiento. Al abrir la pantalla se consulta el usuario y sus preferencias;
+el contenido se muestra al completar la lectura, sin esqueletos ni esperas simuladas.
 
 ## Modal de edición
 
@@ -113,7 +113,7 @@ será otro Issue.
 
 ## Estados visuales
 
-- **Cargando información:** skeleton al abrir la pantalla.
+- **Cargando información:** espera la consulta real sin mostrar esqueletos.
 - **Foto de perfil:** el selector del sistema permite elegir y recortar una
   imagen; la vista previa se mantiene mientras Perfil está abierta.
 - **Confirmación de identidad:** permite enviar la contraseña con `Listo` en

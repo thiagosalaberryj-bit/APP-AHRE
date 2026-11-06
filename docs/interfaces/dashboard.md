@@ -14,10 +14,10 @@ disponible.
 La pantalla se compone de:
 
 1. encabezado con marca, bienvenida, nombre y accesos a Notificaciones y Perfil;
-2. tarjeta de balance con una franja superior integrada titulada «Balance»,
+2. tarjeta de balance con título «Balance», recuadro de saldo y variación mensual,
    control para ocultar el monto y acciones rápidas;
 3. lista local de depósitos y acceso para crear uno;
-4. hasta cinco movimientos recientes, agrupados por día, y acceso a Movimientos.
+4. hasta cinco movimientos recientes, con fecha dentro de cada card, y acceso a Movimientos.
 
 No se muestra una sección de deudas en el Dashboard.
 
@@ -25,9 +25,22 @@ No se muestra una sección de deudas en el Dashboard.
 
 El encabezado reutiliza `MainHeader.tsx` y muestra el nombre devuelto por la
 sesión local junto con los accesos a Notificaciones y Perfil. La tarjeta de
-balance se superpone al borde inferior del encabezado verde y mantiene sus
-cuatro esquinas redondeadas. Su franja superior centra «Balance» y la separa
-del monto con un borde fino.
+balance se superpone al borde inferior del encabezado verde. Su contenedor
+sigue las proporciones del resumen de deudas: radio de 12 puntos, relleno y
+separaciones de 12. «Balance» aparece a la izquierda junto a un ícono y el
+monto usa 24 puntos. Una línea fina separa el saldo de las acciones, que tienen
+74 puntos de altura, íconos de 20 y etiquetas de 12, igual que en Social.
+El saldo ocupa un recuadro con fondo del tema, radio de 10 y relleno de 12,
+como los totales de deudas. Su etiqueta «Saldo disponible» comparte fila con
+los controles de privacidad y acceso a Movimientos; el importe aparece debajo.
+
+Debajo del importe se muestra la variación porcentual frente al cierre del mes
+anterior, con flecha ascendente o descendente. La base se reconstruye para los
+depósitos activos existentes al cierre, descontando los movimientos y ajustes
+posteriores; los registros históricos anteriores al alta del depósito no afectan
+el saldo. El porcentaje usa una decimal y solo se calcula con base positiva.
+Sin base se informa que no hay saldo anterior para comparar; al ocultar el saldo
+también se oculta la comparación. No es una comparación de ingresos mensuales.
 
 El saldo general se calcula sumando `saldo_actual` de los depósitos consultados.
 No se guarda un balance separado. Si no hay depósitos, el monto es cero. El
@@ -54,6 +67,14 @@ con su identificador, nombre, tipo, descripción, icono, color y saldo actual. E
 icono y el color guardados se utilizan cuando están disponibles; se usan valores
 predeterminados visuales si faltan.
 
+Las tarjetas de depósitos usan un icono cuadrado de 40 puntos con el color
+guardado y esquinas suaves. Nombre y descripción ocupan dos
+líneas; el texto secundario usa 12 puntos. A la derecha, una columna de 112
+puntos separada por una línea muestra «Saldo» y el importe, con la flecha de
+acceso al detalle fuera de la columna. El saldo conserva su control de privacidad.
+El radio exterior es de 10 puntos. El importe no usa el recuadro de los
+movimientos, lo que permite distinguir ambos tipos de tarjeta.
+
 Si no hay depósitos, el estado vacío muestra un icono de billetera, una
 explicación y el botón «Crear depósito», que abre la ruta existente. Cuando hay
 depósitos, «Agregar depósito» aparece en el encabezado de la sección. Al
@@ -64,10 +85,20 @@ movimientos por ese ID. Solo se listan depósitos activos.
 ## Movimientos recientes
 
 Se consultan y muestran hasta cinco movimientos asociados a los depósitos del
-usuario, ordenados por `fecha_hora` descendente y agrupados por día. Se
+usuario, ordenados por `fecha_hora` descendente, sin encabezados diarios. Se
 representan su categoría, descripción, hora, depósito, tipo, monto e icono de
 categoría. Las transferencias entrantes se muestran como ingresos y las
 salientes como egresos. Los movimientos anulados no se incluyen.
+
+Inicio reutiliza `TarjetaMovimiento` (`src/components/MovementCard.tsx`), igual
+que la pestaña Movimientos y los detalles de depósito y categoría. La tarjeta
+ocupa dos renglones: descripción, día y tipo arriba; categoría, depósito, hora e
+importe debajo. Tipo e importe se agrupan sobre un fondo suave a la derecha,
+como en Deudas. Los importes conservan los centavos. Los estilos viven
+en `src/styles/MovementCardStyles.ts`; las tarjetas de Inicio y Movimientos
+abren el detalle existente. La franja del importe tiene 112 puntos de ancho,
+incluye una flecha y recorta importes largos en una sola línea. Inicio conserva el límite de cinco movimientos recientes; la fecha aparece
+en cada tarjeta, sin separadores por día.
 
 Si la consulta no devuelve movimientos, se muestra un icono y un mensaje de
 estado vacío. «Ver todos» y la flecha del balance abren la pestaña Movimientos.
@@ -76,7 +107,8 @@ estado vacío. «Ver todos» y la flecha del balance abren la pestaña Movimient
 
 Al abrir el Dashboard o cuando vuelve a tomar el foco, la pantalla vuelve a
 consultar la sesión y la información financiera. En la primera consulta muestra
-los esqueletos ya maquetados; al volver a tomar el foco conserva los datos
+el balance como «—» hasta obtenerlo y agrega las listas al recibir los datos,
+sin esqueletos. Al volver a tomar el foco conserva los datos
 visibles mientras espera la actualización. Si falla una consulta, se muestra
 un aviso y un estado con la acción «Reintentar»; la ausencia de depósitos o
 movimientos no se trata como error.

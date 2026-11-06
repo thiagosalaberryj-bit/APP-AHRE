@@ -1,3 +1,4 @@
+import type { FiltrosDatosEstadistica } from '../utils/statisticsFilters';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { ErrorBaseDatos } from '../database/errors';
 import { movimientosRepositorio } from '../database/repositories';
@@ -48,7 +49,8 @@ export async function cargarEstadisticas({
   rangoResumen,
   rangoColumnas,
   agrupacionColumnas,
-}: {tipo:string;rangoResumen:{inicio:Date;fin:Date};rangoColumnas:{inicio:Date;fin:Date};agrupacionColumnas:string}) {
+  rangoMonto = {},
+}: {tipo:string;rangoResumen:{inicio:Date;fin:Date};rangoColumnas:{inicio:Date;fin:Date};agrupacionColumnas:string;rangoMonto?:FiltrosDatosEstadistica}) {
   validarTipo(tipo);
   if (!['dia', 'mes'].includes(agrupacionColumnas)) throw new ErrorBaseDatos('integridad');
   const rangoResumenISO = convertirRango(rangoResumen);
@@ -61,6 +63,7 @@ export async function cargarEstadisticas({
       tipo,
       rangoResumenISO.desde,
       rangoResumenISO.hasta,
+      null, rangoMonto,
     ),
     movimientosRepositorio.consultarAgrupacionPorPeriodo(
       usuario.id,
@@ -68,6 +71,7 @@ export async function cargarEstadisticas({
       rangoColumnasISO.desde,
       rangoColumnasISO.hasta,
       agrupacionColumnas,
+      null, null, rangoMonto,
     ),
   ]);
   const categorias = normalizarCategorias(filasResumen);
@@ -86,7 +90,7 @@ export async function cargarEstadisticas({
   };
 }
 
-export async function cargarDetalleCategoriaEstadistica({ categoria, tipo, anio, mes }: {categoria:string;tipo:string;anio:number;mes:number}) {
+export async function cargarDetalleCategoriaEstadistica({ categoria, tipo, anio, mes, rangoMonto = {} }: {categoria:string;tipo:string;anio:number;mes:number;rangoMonto?:FiltrosDatosEstadistica}) {
   validarTipo(tipo);
   const catalogo = tipo === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
   if (
@@ -121,7 +125,7 @@ export async function cargarDetalleCategoriaEstadistica({ categoria, tipo, anio,
       inicioAnio.toISOString(),
       finAnio.toISOString(),
       'mes',
-      categoria,
+      categoria, null, rangoMonto,
     ),
     movimientosRepositorio.consultarDetalleMesCategoria(
       usuario.id,
@@ -129,6 +133,7 @@ export async function cargarDetalleCategoriaEstadistica({ categoria, tipo, anio,
       categoria,
       inicioMes.toISOString(),
       finMes.toISOString(),
+      null, rangoMonto,
     ),
   ]);
   const totalesMes = new Map(filasEvolucion.map((fila) => [

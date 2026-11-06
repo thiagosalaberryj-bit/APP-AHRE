@@ -71,5 +71,5 @@ export interface AccionesFormularioProps<Resultado> extends AspectoSocial {
   texto: string; peligro?: boolean; deshabilitado?: boolean; confirmacion?: ConfirmacionSocial;
   alGuardar: (financiaciones: Financiaciones) => Promise<Resultado>;
   preparar?: () => PlanOperaciones | Promise<PlanOperaciones>; alExito?: (resultado: Resultado) => void | Promise<void>;
-  mostrarNota?: boolean; recargarAntesDeCerrar?: boolean; mensajeExito?: string | ((resultado: Resultado) => string);
+  recargarAntesDeCerrar?: boolean; mensajeExito?: string | ((resultado: Resultado) => string);
 }

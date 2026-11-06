@@ -2,7 +2,7 @@ import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
 import { COLORES_MARCA } from './colors';
-import { ESPACIADO, TIPOGRAFIA } from './globalStyles';
+import { ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
 export const TAMANO_CONTROL_DESLIZADOR = 52;
 
@@ -28,7 +28,7 @@ export function crearEstilosInicio(
     },
     pantallaCarga: {
       flex: 1,
-      paddingHorizontal: ESPACIADO.extraGrande,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
     },
     contenidoCarga: {
       flex: 1,
@@ -80,7 +80,7 @@ export function crearEstilosInicio(
     contenido: {
       flex: 1,
       alignItems: 'center',
-      paddingHorizontal: ESPACIADO.extraGrande,
+      paddingHorizontal: MARGEN_LATERAL_PANTALLA,
     },
     marca: {
       width: tamanoMarca,

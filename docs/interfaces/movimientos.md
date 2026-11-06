@@ -88,9 +88,28 @@ borde de foco y radio activo.
 
 `SelectorCategoria` (`src/components/CategorySelector.tsx`) muestra cuatro
 tarjetas compactas y una quinta tarjeta «Más», sin desplazamiento horizontal.
-«Más» abre un modal con las categorías adicionales. El servicio de categorías
+«Más» abre un modal con todas las categorías, también las cuatro principales,
+tanto en ingreso como en egreso y en los demás usos del selector compartido.
+Las grillas y los modales se ordenan por familia de color y, dentro de cada
+familia, del tono más intenso al más claro. En selección individual,
+elegir una categoría del modal reemplaza esa quinta tarjeta por el ícono,
+nombre y color de la categoría elegida; tocarla vuelve a abrir el selector.
+Al elegir una de las cuatro principales, reaparece «Más». El servicio de categorías
 entrega el catálogo local de ingreso o egreso definido en
 `src/constants/movimientos.ts`.
+
+En el formulario de egreso las cuatro opciones principales son Alimentación,
+Compras, Hogar y Servicios. Ingreso conserva Sueldo, Trabajo independiente,
+Ventas y Transferencias recibidas como accesos iniciales. Los formularios usan
+el tono completo de la categoría como relleno de las tarjetas y del modal,
+con texto oscuro legible y el borde fino de las filas de entrada del formulario
+(`tema.borde`, 1 punto), sin heredar el borde fuerte del campo global. Respeta
+el tema activo, sin cambiar la paleta
+de los gráficos claros. El estado seleccionado cambia el relleno y el color del
+texto para conservar legibilidad; el borde mantiene su grosor y color del tema.
+Debajo del selector de selección individual aparece siempre «Categoría
+seleccionada: Ninguna» o el nombre completo elegido, tanto para opciones
+principales como para las elegidas desde el modal.
 
 Categorías de egreso:
 
@@ -215,8 +234,8 @@ dentro de una transacción. El egreso guarda un monto positivo con tipo
 El formulario combina `KeyboardAvoidingView` con `ScrollView`,
 `keyboardShouldPersistTaps="handled"` y espacio inferior según el área segura
 del dispositivo para que el botón de guardado pueda verse completo. El monto
-abre teclado numérico. El contenido limita su ancho a 480 puntos y conserva
-márgenes en pantallas pequeñas. Las cinco tarjetas de categoría se distribuyen
+abre teclado numérico. El contenido utiliza el ancho disponible con un margen
+compartido de 12 puntos por lado, igual que Inicio. Las cinco tarjetas de categoría se distribuyen
 en el ancho disponible sin scroll horizontal. Lee el modo claro u oscuro del
 sistema y aplica `TEMAS.claro` u `TEMAS.oscuro` a fondos, textos, bordes,
 botones y modales.
@@ -225,13 +244,35 @@ botones y modales.
 
 `src/screens/MovementsScreen.tsx` es pestaña con `MainHeader` («Movimientos») y
 consulta SQLite para el usuario de la sesión y agrupa los movimientos vigentes
-por día. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
-`tipo`, no se deduce del monto. Los encabezados muestran «Hoy», «Ayer» o la
-fecha para los días anteriores. Cada tarjeta usa un ícono de categoría y
-presenta `categoría · descripción`, `hora · depósito`, «Ingreso» o «Egreso» y
-el monto con signo. La descripción se recorta cuando no entra; el tipo también
+por mes y año, con el primer mes abierto inicialmente y los demás plegados, usando el encabezado compartido
+`EncabezadoSeccionPlegable` (`src/components/CollapsibleSectionHeader.tsx`). Cada
+mes se abre o cierra de forma independiente y muestra una lista continua
+en su interior, sin encabezados diarios. Solo presenta `ingreso` y `egreso`; el tipo se lee desde el campo
+`tipo`, no se deduce del monto. Cada tarjeta muestra «Hoy», «Ayer» o día y mes para otras fechas. Cada tarjeta usa un ícono de categoría y
+presenta dos renglones: descripción, día y tipo en el primero; categoría, depósito,
+hora e importe con signo en el segundo. El tipo y el importe ocupan una franja
+de fondo suave a la derecha, similar a las tarjetas de deudas. La franja tiene
+un ancho fijo de 112 puntos, con el tipo y la
+flecha arriba y el importe debajo, limitado a una línea con puntos suspensivos.
+La tarjeta usa un radio de 10 puntos y sus contenedores internos, de 5 puntos.
+El importe completo se conserva en la etiqueta accesible y en el detalle.
+El día dentro de la tarjeta muestra «Hoy», «Ayer» o día y mes abreviado para
+cualquier otra fecha, según el calendario local del teléfono. La hora se
+mantiene en el segundo renglón.
+La franja reserva 8 puntos de relleno lateral y 4 vertical para separar texto y
+flecha del borde; descripción e importe usan texto de 16 puntos. Su fondo usa
+`tema.fondo` en ambos temas.
+La descripción se recorta
+cuando no entra; el tipo también
 se indica con texto, no solo con color. Los estilos locales están en
-`src/styles/MovementsScreenStyles.ts`.
+`src/styles/MovementsScreenStyles.ts`; los estilos de la tarjeta compartida con
+Inicio están en `src/styles/MovementCardStyles.ts`. Detalle de depósito y Detalle
+de categoría también reutilizan la misma tarjeta. La hora queda separada del
+texto recortable; la etiqueta accesible conserva toda la información.
+
+La consulta inicial no muestra esqueletos de carga. Al volver a la pestaña se
+conserva el historial visible mientras se actualiza; cada mes puede abrirse o
+cerrarse manualmente sin perder esa elección al cargar otra página.
 
 Las filas reutilizan `TarjetaMovimiento` (`src/components/MovementCard.tsx`) y
 reciben el nombre real del depósito relacionado. SQLite ordena por
@@ -241,22 +282,43 @@ movimientos» solicita la siguiente página usando la fecha, hora e ID de la
 
 ### Buscador
 
-El buscador comparte la fila con el botón «Filtros». Tiene lupa,
-`placeholder` «Buscar» y botón `X` para limpiar. Su borde es fino y neutro en
+El buscador ocupa una fila completa; debajo aparece una fila horizontal con
+«Filtros» y accesos a Todos, Ingresos y Egresos. Se comparte el componente
+`MovementSearchFilters.tsx` con Estadísticas, que usa la variante sin buscador. Tiene lupa,
+`placeholder` «Buscar movimientos» y botón `X` para limpiar. Su borde es fino y neutro en
 reposo; solo toma el color de foco mientras el campo está enfocado. La búsqueda
+en modo oscuro también usa el borde neutro, sin heredar el verde de `bordeFuerte`.
+La búsqueda
 se realiza en SQLite, ignora mayúsculas y minúsculas y consulta la descripción.
 Se aplica junto con los filtros. Debajo aparecen los criterios activos como
-chips horizontales; cada chip se puede quitar y «Limpiar todo» restablece la
+chips en una línea independiente debajo de los accesos rápidos;
+cada chip se puede quitar y «Limpiar» restablece la
 búsqueda y los filtros. Si no hay coincidencias, se muestra `Sin resultados
 para “…”` o un mensaje para los filtros seleccionados.
 
+La fila incluye los mismos preajustes de categorías e importe de Estadísticas:
+Día a día, Servicios y obligaciones, Bienestar y formación, Movilidad y salidas,
+Finanzas y trabajo, y los grupos propios de ingreso. Al elegir un grupo se
+seleccionan su tipo y las categorías presentes en el historial. Los grupos del
+mismo tipo se acumulan; tocar uno activo quita solo sus categorías. Cambiar a
+un grupo del otro tipo inicia una selección de ese tipo. Un grupo sin
+movimientos queda deshabilitado. Los rangos completan los límites monetarios
+del panel y se combinan con fecha, depósitos y búsqueda. Los criterios activos
+siguen pudiendo quitarse individualmente. Cada grupo seleccionado se muestra
+por su nombre, sin desglosar sus categorías en chips separados. «Limpiar» queda fijo a la derecha de
+la línea inferior y no se desplaza junto con los chips. La línea mantiene su
+altura y muestra «Sin filtros seleccionados» cuando está vacía. Todos usan altura mínima
+de 38 puntos y tipografía secundaria compartida, conservando los anchos previos.
+
 ### Filtros
 
-El botón «Filtros», de la misma altura que el buscador, abre una hoja modal
+El botón «Filtros» indica la cantidad de criterios activos y abre una hoja modal
 sobre un overlay. El panel tiene un encabezado fijo y una manija que permite
 cerrarlo al deslizar hacia abajo. Las secciones se expanden dentro del panel y
 resumen su selección cuando están cerradas. El orden es Tipo, Fecha, Categorías,
-Depósitos y Monto.
+Depósitos y Monto. La presentación y las secciones plegables se extraen a
+`MovementFiltersPanel.tsx`, reutilizado por Estadísticas con sus categorías,
+depósitos y límites monetarios; Movimientos conserva sus fechas y tipos existentes.
 
 - **Tipo:** Todos, Ingresos o Egresos, repartidos por igual en la fila. Al
   elegir un tipo, Categorías muestra solo las opciones de ese tipo y quita las
@@ -267,7 +329,8 @@ Depósitos y Monto.
   extremo correspondiente. Día usa un calendario inline; Semana toma una fecha
   y usa la semana de lunes a domingo; Mes permite elegir mes y año;
   Personalizado permite elegir inicio y fin e incluye ambas fechas.
-- **Depósitos:** aparecen todos seleccionados inicialmente. Si están todos
+- **Depósitos:** el selector compartido abre una lista flotante con íconos y
+  colores reales, selección múltiple y acción Listo. Aparecen todos seleccionados inicialmente. Si están todos
   seleccionados no se restringen los resultados; al desmarcar alguno, se
   filtran por los que continúan marcados. No se puede quitar el último depósito
   hasta marcar otro. «Todos» vuelve a seleccionar cada depósito. Las opciones
@@ -301,9 +364,33 @@ error controlado y permite volver; si falla la lectura, ofrece reintentar. Al
 volver, los filtros se conservan y el historial se consulta nuevamente al
 recuperar el foco.
 
+El detalle reúne toda la información en una tarjeta compacta. Tipo y categoría
+comparten una cabecera de superficie neutra con el importe destacado sobre un
+fondo suave, como en las tarjetas de movimientos. Categoría e importe conservan
+dos columnas flexibles; la categoría admite varias líneas sin acortarse y el
+importe ajusta el texto dentro de su columna sin pasar debajo por su longitud.
+El contenido se separa 24 puntos del encabezado de la pantalla.
+Las etiquetas usan 14 puntos y los valores, 16, con un icono de categoría de 56 puntos.
+La descripción
+completa aparece debajo; solo se muestra estado si el registro recibido está
+anulado. «Vigente» se omite porque la consulta habitual ya exige `anulado = 0`.
+Fecha y hora, depósito y recurrencia cuando corresponde
+se presentan como filas compactas de etiqueta y valor con separadores finos.
+Se conservan los márgenes laterales de 12 puntos, ambos temas y los estados reales
+de carga, error y registro no disponible. La descripción puede seleccionarse y
+ocupar varias líneas. El importe se mantiene en una línea: si el texto formateado
+supera 12 caracteres, muestra elipsis e icono de ampliación; tocar su contenedor
+abre un modal de AHRE con el importe completo seleccionable y Cerrar. El modal
+respeta ambos temas, permite desplazamiento horizontal para valores muy largos
+y se cierra con X, Cerrar, Atrás o tocando el fondo. La etiqueta accesible
+también conserva el valor completo. Los importes cortos y los valores de los datos
+usan tamaño de texto adaptable. Fecha y hora usan el formato compacto
+`dd/mm/aaaa · hh:mm`, sin saltos de línea.
+
 ### Estados vacíos
 
-- **Cargando:** skeleton mientras SQLite devuelve la página solicitada.
+- **Cargando:** espera la consulta de SQLite sin esqueletos; conserva las filas
+  disponibles durante la actualización.
 - **Sin movimientos:** tarjeta vacía cuando la cuenta no tiene ingresos ni
   egresos vigentes.
 - **Sin resultados:** mensaje para la búsqueda o los filtros, con acción para

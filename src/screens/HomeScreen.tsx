@@ -22,7 +22,7 @@ import { APARIENCIA_PREDETERMINADA } from '../constants/profile';
 import { RUTAS } from '../constants/routes';
 import { ErrorBaseDatos } from '../database/errors';
 import { COLORES_MARCA } from '../styles/colors';
-import { ESPACIADO } from '../styles/globalStyles';
+import { ESPACIADO, MARGEN_LATERAL_PANTALLA } from '../styles/globalStyles';
 import {
   crearEstilosInicio,
   TAMANO_CONTROL_DESLIZADOR,
@@ -41,7 +41,7 @@ export default function PantallaInicio({ navigation: navegacion }: import('../na
   const contextoAvisos = useContext(ContextoAvisos);
   const mostrarAviso = contextoAvisos?.mostrarAviso;
   const { width: anchoVentana, height: altoVentana } = useWindowDimensions();
-  const anchoDeslizador = Math.max(0, anchoVentana - ESPACIADO.pantalla * 2);
+  const anchoDeslizador = Math.max(0, anchoVentana - MARGEN_LATERAL_PANTALLA * 2);
   const recorridoDeslizador = Math.max(
     1,
     anchoDeslizador - TAMANO_CONTROL_DESLIZADOR - ESPACIADO.pequeno * 2,

@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { View, TextInput, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import TarjetaResumenDeuda from './DebtSummaryCard';
+import TarjetaDeuda from '../DebtCard';
 import EstadoVacio from './SocialEmptyState';
-import BotonSocial from './SocialButton';
+import crearEstilosHistorial from '../../styles/social/DebtHistoryStyles';
+import { crearEstilosBusquedaFiltros } from '../../styles/MovementSearchFiltersStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-import crearEstilosPropios from '../../styles/social/DebtHistoryStyles';
+import EncabezadoSeccionPlegable from '../CollapsibleSectionHeader';
 export default function HistorialDeudas(propiedades: import('../../social/types').AspectoSocial & (Pick<import('../../social/types').AccionesSociales,'abrirRegistro'>)) {
   const {
     obtenerPersona,
@@ -20,15 +21,16 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
     ...propiedades,
     estilos: {
       ...crearEstilosCompartidos(propiedades.tema),
-      ...crearEstilosPropios(propiedades.tema)
+      ...crearEstilosHistorial(propiedades.tema)
     }
   };
   const {
     tema,
     estilos,
-    estilosGlobales,
-    estilosMovimiento
+    estilosGlobales
   } = aspecto;
+  const estilosFiltros = crearEstilosBusquedaFiltros(tema);
+  const [enfocado, establecerEnfocado] = useState(false);
   const [busqueda, establecerBusqueda] = useState('');
   const [estado, establecerEstado] = useState('todas');
   const [mesesCerrados, establecerMesesCerrados] = useState<string[]>([]);
@@ -55,21 +57,17 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
       deudas: [deuda]
     });
   });
-  const limpiar = () => {
-    cambiarBusqueda('');
-    cambiarEstado('todas');
-  };
-  return <>
+  return <View style={estilos.historial}>
       <View style={estilos.grupo}>
         <View style={estilos.filaCampos}>
-          <View style={[estilosMovimiento.botonDeposito, estilos.columnaCampo, estilos.busquedaAgenda]}>
-            <Ionicons color={tema.textoSecundario} name="search-outline" size={22} />
-            <TextInput accessibilityLabel="Buscar deudas por persona" value={busqueda} onChangeText={cambiarBusqueda} placeholder="Persona, apodo o deuda" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosMovimiento.entradaDescripcion, estilos.entradaBusquedaAgenda]} />
-            {busqueda ? <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda de deudas" onPress={() => cambiarBusqueda('')} style={estilos.accionIcono}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
+          <View style={[estilos.buscador, enfocado && estilos.buscadorEnfocado]}>
+            <Ionicons color={tema.textoSecundario} name="search-outline" size={20} />
+            <TextInput accessibilityLabel="Buscar deudas por persona" value={busqueda} onChangeText={cambiarBusqueda} onFocus={() => establecerEnfocado(true)} onBlur={() => establecerEnfocado(false)} placeholder="Persona, apodo o deuda" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={estilos.entradaBusqueda} />
+            {busqueda ? <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda de deudas" onPress={() => cambiarBusqueda('')} style={estilos.accionBusqueda}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Registrar deuda" onPress={() => abrirRegistro('deuda')} style={estilos.agregarPersonaAgenda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={28} /></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Registrar deuda" onPress={() => abrirRegistro('deuda')} style={estilos.agregarDeuda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={24} /></Pressable>
         </View>
-        <View style={estilos.repartoEnLinea}>
+        <View style={estilos.filtrosEstado}>
           {[{
           id: 'todas',
           nombre: 'Todas'
@@ -81,11 +79,11 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
           nombre: 'Saldadas'
         }].map(opcion => <Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{
           checked: estado === opcion.id
-        }} onPress={() => cambiarEstado(opcion.id)} style={[estilos.opcionReparto, estado === opcion.id && estilos.pestanaActiva]}>
-              <Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, estado === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text>
+        }} onPress={() => cambiarEstado(opcion.id)} style={[estilosFiltros.filtro, estado === opcion.id && estilosFiltros.filtroActivo]}>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosFiltros.textoFiltro, estado === opcion.id && estilosFiltros.textoActivo]}>{opcion.nombre}</Text>
             </Pressable>)}
         </View>
-        <Text accessibilityLiveRegion="polite" style={estilosGlobales.textoSecundario}>{deudas.length} de {deudasSociales.length} deudas</Text>
+        <Text accessibilityLiveRegion="polite" style={estilos.resultado}>{deudas.length} de {deudasSociales.length} deudas</Text>
       </View>
       <View style={estilos.grupo}>
         {deudas.length ? grupos.map(grupo => {
@@ -93,18 +91,13 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
         const [anio, mes] = grupo.clave.split('-');
         const nombre = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][Number(mes) - 1] + ' ' + anio;
         return <View key={grupo.clave} style={estilos.grupo}>
-              <Pressable accessibilityRole="button" accessibilityLabel={nombre} accessibilityState={{
-            expanded: abierto
-          }} onPress={() => establecerMesesCerrados(anteriores => abierto ? [...anteriores, grupo.clave] : anteriores.filter(clave => clave !== grupo.clave))} style={estilos.encabezadoMesDeudas}>
-                <View style={estilos.textoFlexible}><Text style={estilosGlobales.encabezadoSeccion}>{nombre}</Text><Text style={estilosGlobales.textoSecundario}>{grupo.deudas.filter(deuda => deuda.saldada).length} de {grupo.deudas.length} deudas saldadas</Text></View>
-                <Ionicons color={tema.foco} name={abierto ? 'chevron-up' : 'chevron-down'} size={22} />
-              </Pressable>
-              {abierto ? grupo.deudas.map(deuda => <TarjetaResumenDeuda key={deuda.id} deuda={deuda} alAbrir={() => abrirRegistro('detalleDeuda', {
+              <EncabezadoSeccionPlegable tema={tema} titulo={nombre} resumen={`${grupo.deudas.filter(deuda => deuda.saldada).length} de ${grupo.deudas.length} deudas saldadas`} expandido={abierto}
+                alAlternar={() => establecerMesesCerrados(anteriores => abierto ? [...anteriores, grupo.clave] : anteriores.filter(clave => clave !== grupo.clave))}/>
+              {abierto ? grupo.deudas.map(deuda => <TarjetaDeuda key={deuda.id} deuda={deuda} nombrePersona={nombreCompletoPersona(obtenerPersona(deuda.personaId))} alAbrir={() => abrirRegistro('detalleDeuda', {
             deudaId: deuda.id
           })} {...aspecto} />) : null}
             </View>;
       }) : <EstadoVacio icono="search-outline" titulo={consulta ? 'No encontramos deudas' : estado === 'saldadas' ? 'No hay deudas saldadas' : 'No hay deudas pendientes'} descripcion="Probá con otra persona o cambiá el estado seleccionado." {...aspecto} />}
-        {consulta || estado !== 'todas' ? <BotonSocial texto="Limpiar búsqueda y filtros" simple alPresionar={limpiar} {...aspecto} /> : null}
       </View>
-    </>;
+    </View>;
 }

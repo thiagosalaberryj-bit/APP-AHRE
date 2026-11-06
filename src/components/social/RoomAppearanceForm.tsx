@@ -1,6 +1,7 @@
 import type { NombreIcono } from '../../constants/movimientos';
 import { useEffect, useState } from 'react';
-import { COLORES_DEPOSITOS, COLOR_ICONO_DEPOSITO } from '../../styles/colors';
+import { COLORES_DEPOSITOS, COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../../styles/colors';
+import { crearEstilosDeposito } from '../../styles/DepositScreenStyles';
 import { View, Text, Pressable, Modal, ScrollView } from 'react-native';
 import SelectorCategoria from '../CategorySelector';
 import { CATEGORIAS_EGRESO } from '../../constants/movimientos';
@@ -29,9 +30,11 @@ export default function PersonalizacionSala(propiedades: import('../../social/ty
   const [icono, establecerIcono] = useState('restaurant-outline');
   const [color, establecerColor] = useState(COLORES_DEPOSITOS[0]);
   const [mostrarIconos, establecerMostrarIconos] = useState(false);
+  const estilosColor = crearEstilosDeposito(tema);
+  const colores = [COLOR_DEPOSITO_PREDETERMINADO, ...COLORES_DEPOSITOS.filter(valor => valor !== COLOR_DEPOSITO_PREDETERMINADO)];
   useEffect(() => { alCambiar?.({ categoriaId, icono, color }); }, [alCambiar, categoriaId, icono, color]);
   return <View style={estilos.grupo}>
-      <SelectorCategoria categorias={CATEGORIAS_EGRESO} seleccionadaId={categoriaId} alSeleccionar={establecerCategoriaId} {...aspecto} />
+      <SelectorCategoria categorias={CATEGORIAS_EGRESO} tipoMovimiento="egreso" categoriasPrincipalesIds={['alimentacion', 'compras', 'hogar', 'servicios']} seleccionadaId={categoriaId} alSeleccionar={establecerCategoriaId} {...aspecto} />
       <View style={estilos.grupoCampo}>
         <Text style={estilosGlobales.etiqueta}>Icono de la sala</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Elegir icono de la sala" accessibilityState={{
@@ -48,14 +51,19 @@ export default function PersonalizacionSala(propiedades: import('../../social/ty
       </View>
       <View style={estilos.grupoCampo}>
         <Text style={estilosGlobales.etiqueta}>Color de la sala</Text>
-        <View style={estilos.coloresSala}>
-          {COLORES_DEPOSITOS.map((valor, indice) => <Pressable key={valor} accessibilityRole="radio" accessibilityLabel={`Color de sala: ${NOMBRES_COLORES_SALA[indice]}`} accessibilityState={{
+        <View style={estilosColor.listaColores}>
+          {colores.map(valor => <Pressable key={valor} accessibilityRole="radio" accessibilityLabel={`Color de sala: ${NOMBRES_COLORES_SALA[COLORES_DEPOSITOS.indexOf(valor)]}`} accessibilityState={{
           checked: color === valor
-        }} onPress={() => establecerColor(valor)} style={estilos.opcionColorSala}><View style={[estilos.muestraColorSala, {
+        }} onPress={() => establecerColor(valor)} style={({pressed}) => [estilosColor.opcionColor, pressed && estilosColor.elementoPresionado]}><View style={[estilosColor.muestraColor, color === valor && estilosColor.muestraColorSeleccionada, {
             backgroundColor: valor
-          }]}>{color === valor ? <Ionicons color={COLOR_ICONO_DEPOSITO} name="checkmark" size={22} /> : null}</View></Pressable>)}
+          }]}>{color === valor ? <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} /> : null}</View>
+            <Text numberOfLines={1} adjustsFontSizeToFit style={[estilosColor.nombreColor, color === valor && estilosColor.nombreColorSeleccionado]}>{NOMBRES_COLORES_SALA[COLORES_DEPOSITOS.indexOf(valor)].replace(/ suave$/, '')}</Text>
+          </Pressable>)}
         </View>
-        <Text style={estilosGlobales.textoSecundario}>{NOMBRES_COLORES_SALA[COLORES_DEPOSITOS.indexOf(color)]}</Text>
+        <View style={estilosColor.colorSeleccionadoInfo}>
+          <View style={[estilosColor.indicadorColorSeleccionado, { backgroundColor: color }]} />
+          <Text style={estilosGlobales.textoAyuda}>Color: {NOMBRES_COLORES_SALA[COLORES_DEPOSITOS.indexOf(color)]}</Text>
+        </View>
       </View>
       <Modal transparent animationType="fade" visible={mostrarIconos} onRequestClose={() => establecerMostrarIconos(false)}>
         <View style={estilos.fondoModal}>

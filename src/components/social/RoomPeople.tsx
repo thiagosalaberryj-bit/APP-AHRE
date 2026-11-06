@@ -44,6 +44,7 @@ export default function PersonasSala(propiedades: import('../../social/types').A
     catch (error) { mostrarAviso((error instanceof Error ? error.message : '') || 'No se pudo actualizar la sala.', { tipo: 'error' }); }
     finally { enCurso.current = false; establecerGuardando(false); }
   };
+  const [enfocado, establecerEnfocado] = useState(false);
   const [busqueda, establecerBusqueda] = useState('');
   const [agregando, establecerAgregando] = useState(false);
   const [personaAQuitar, establecerPersonaAQuitar] = useState<import('../../social/types').PersonaVista | null>(null);
@@ -54,21 +55,21 @@ export default function PersonasSala(propiedades: import('../../social/types').A
   const personas = [personaActual, ...personasSala.map(obtenerPersona)].filter((persona): persona is NonNullable<typeof persona> => Boolean(persona)).filter(persona => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo || ''}`).includes(consulta));
   return <View style={estilos.grupo}>
       <View style={estilos.filaCampos}>
-        <View style={[estilosMovimiento.botonDeposito, estilos.columnaCampo, estilos.busquedaAgenda]}>
-          <Ionicons color={tema.textoSecundario} name="search-outline" size={22} />
-          <TextInput accessibilityLabel="Buscar personas de la sala" value={busqueda} onChangeText={establecerBusqueda} placeholder="Nombre, apellido o apodo" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosMovimiento.entradaDescripcion, estilos.entradaBusquedaAgenda]} />
+        <View style={[estilosMovimiento.botonDeposito, estilos.columnaCampo, estilos.busquedaAgenda, enfocado && estilos.busquedaEnfocada]}>
+          <Ionicons color={tema.textoSecundario} name="search-outline" size={20} />
+          <TextInput accessibilityLabel="Buscar personas de la sala" value={busqueda} onChangeText={establecerBusqueda} onFocus={() => establecerEnfocado(true)} onBlur={() => establecerEnfocado(false)} placeholder="Nombre, apellido o apodo" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosMovimiento.entradaDescripcion, estilos.entradaBusquedaAgenda]} />
           {busqueda ? <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda en la sala" onPress={() => establecerBusqueda('')} style={estilos.accionIcono}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
         </View>
         {!cerrada ? <Pressable accessibilityRole="button" accessibilityLabel="Agregar personas a la sala" accessibilityState={{
         expanded: agregando
-      }} onPress={() => establecerAgregando(true)} style={estilos.agregarPersonaAgenda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={28} /></Pressable> : null}
+      }} onPress={() => establecerAgregando(true)} style={estilos.agregarPersonaAgenda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={24} /></Pressable> : null}
       </View>
       <Text style={estilosGlobales.textoSecundario}>{personasSala.length + 1} personas en esta sala</Text>
       <View style={estilos.agenda}>
         {personas.length ? personas.map(persona => <View key={persona.id} style={estilos.personaAgenda}>
             <View style={estilos.avatarAgenda}><Text style={estilos.textoAvatar}>{persona.iniciales}</Text></View>
-            <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{nombreCompletoPersona(persona)}</Text>{persona.apodo ? <Text ellipsizeMode="tail" numberOfLines={1} style={estilosGlobales.textoSecundario}>{persona.apodo}</Text> : null}</View>
-            {!cerrada && persona.id !== 'vos' ? <Pressable accessibilityRole="button" accessibilityLabel={`Quitar a ${nombreCompletoPersona(persona)} de la sala`} onPress={() => establecerPersonaAQuitar(persona)} style={estilos.accionIcono}><Ionicons color={tema.error} name="remove-circle-outline" size={24} /></Pressable> : null}
+            <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.nombrePersona]}>{nombreCompletoPersona(persona)}</Text>{persona.apodo ? <Text ellipsizeMode="tail" numberOfLines={1} style={[estilosGlobales.textoSecundario, estilos.detallePersona]}>{persona.apodo}</Text> : null}</View>
+            {!cerrada && persona.id !== 'vos' ? <Pressable accessibilityRole="button" accessibilityLabel={`Quitar a ${nombreCompletoPersona(persona)} de la sala`} onPress={() => establecerPersonaAQuitar(persona)} style={estilos.accionIcono}><Ionicons color={tema.error} name="remove-circle-outline" size={20} /></Pressable> : null}
           </View>) : <Text style={estilosGlobales.textoSecundario}>No encontramos personas con esos datos.</Text>}
       </View>
       {agregando ? <ModalAgregarPersonasSala personasSala={personasSala} guardando={guardando} alAgregar={ids => cambiar([...personasSala, ...ids], () => {
@@ -78,7 +79,6 @@ export default function PersonasSala(propiedades: import('../../social/types').A
       alCrearPersona();
     }} {...aspecto} /> : null}
       {personaQuitada ? <Text numberOfLines={1} ellipsizeMode="tail" accessibilityLiveRegion="polite" style={estilosGlobales.textoAyuda}>{nombreCompletoPersona(personaQuitada)} ya no figura en las personas de la sala. Su agenda, gastos y pagos se conservaron.</Text> : null}
-      {!cerrada ? <Text style={estilosGlobales.textoAyuda}>Los cambios se guardan en este dispositivo. Los gastos y pagos anteriores se conservan.</Text> : null}
       <Modal transparent animationType="fade" visible={Boolean(personaAQuitar)} onRequestClose={() => establecerPersonaAQuitar(null)}>
         <View style={estilos.fondoModal}>
           <Pressable accessibilityRole="button" accessibilityLabel="Cancelar eliminación de persona" onPress={() => establecerPersonaAQuitar(null)} style={estilos.cierreFondo} />

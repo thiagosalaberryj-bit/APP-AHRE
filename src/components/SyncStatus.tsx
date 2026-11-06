@@ -24,7 +24,7 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
       if(v.estado==='revocado'&&anterior!=='revocado'){
         mostrarAviso('Esta instalación fue desvinculada. Los pendientes se conservaron.',{tipo:'informacion'});alRevocar();
       }
-      if(v.estado==='offline'&&anterior!=='offline')mostrarAviso('Sin conexión con el servidor. Tus cambios se guardan en este dispositivo.');
+      if(v.estado==='offline'&&anterior!=='offline')mostrarAviso('Sin conexión con el servidor.');
       if(v.estado==='online'&&anterior==='offline')mostrarAviso('Conexión recuperada. Tus datos están sincronizados.');
       // Las comprobaciones silenciosas no cambian el estado visual online.
       if(!['comprobando','sincronizando'].includes(v.estado))anterior=v.estado;

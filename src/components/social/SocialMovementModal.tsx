@@ -10,12 +10,13 @@ import SelectorDeposito from '../DepositSelector';
 import SelectorFecha from '../DateSelector';
 import SelectorHora from '../TimeSelector';
 import BotonSocial from './SocialButton';
-import OpcionesSeleccion from './SocialChoiceGroup';
+import SelectorSegmentado from '../SegmentedSelector';
+import crearEstilosConfirmacion from '../../styles/social/SocialMovementModalStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 
 export default function ModalMovimientoSocial({ plan, guardando, alCerrar, alConfirmar, ...aspecto }: import('../../social/types').AspectoSocial & ({plan:import('../../social/types').PlanOperaciones;guardando:boolean;alCerrar:()=>void;alConfirmar:(financiaciones:import('../../social/types').Financiaciones)=>void})) {
   const { tema, estilosGlobales, estilosMovimiento } = aspecto;
-  const estilos = crearEstilosCompartidos(tema), social = useDatosSociales();
+  const estilos = { ...crearEstilosCompartidos(tema), ...crearEstilosConfirmacion(tema) }, social = useDatosSociales();
   const [indice, establecerIndice] = useState(0), [selecciones, establecerSelecciones] = useState<Record<string, Financiacion>>({});
   const [modo, establecerModo] = useState('nuevo'), [depositoId, establecerDepositoId] = useState<string | null>(null);
   const [movimientoId, establecerMovimientoId] = useState<string | null>(null), [movimientos, establecerMovimientos] = useState<Awaited<ReturnType<typeof consultarMovimientosCompatibles>>>([]);
@@ -43,30 +44,42 @@ export default function ModalMovimientoSocial({ plan, guardando, alCerrar, alCon
     <View style={estilos.fondoModal}>
       <Pressable accessibilityRole="button" accessibilityLabel="Volver al formulario" onPress={cerrar} style={estilos.cierreFondo} />
       <View accessibilityViewIsModal style={estilos.tarjetaModal}>
-        <View style={estilos.filaModal}><Text style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>Confirmar movimiento</Text><Pressable accessibilityRole="button" accessibilityLabel="Cerrar selección de movimiento" onPress={cerrar} style={estilos.botonCerrar}><Ionicons name="close" size={24} color={tema.textoPrincipal} /></Pressable></View>
-        <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal} contentContainerStyle={estilos.grupo}>
-          {plan.diferido ? <Text style={estilosGlobales.textoSecundario}>Se guardará esta asociación. Los movimientos nuevos afectarán el depósito recién al cerrar la sala; vincular uno existente no lo duplica.</Text> : null}
+        <View style={estilos.filaModal}><View style={estilos.textoFlexible}><Text accessibilityRole="header" style={estilos.tituloConfirmacion}>Confirmar movimiento</Text><Text style={estilos.ayudaConfirmacion}>{plan.operaciones.length > 1 ? 'Movimiento ' + (indice + 1) + ' de ' + plan.operaciones.length : 'Revisá los datos antes de guardar.'}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cerrar selección de movimiento" onPress={cerrar} style={estilos.botonCerrar}><Ionicons name="close" size={24} color={tema.textoPrincipal} /></Pressable></View>
+        <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal} contentContainerStyle={estilos.contenidoConfirmacion}>
+          {plan.diferido ? <Text style={estilosGlobales.textoSecundario}>Se aplicará al cerrar la sala. Un movimiento ya registrado se vincula sin duplicarlo.</Text> : null}
           {operacion ? <>
-            <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{indice + 1} de {plan.operaciones.length} · {operacion.descripcion}</Text>
-            <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.subtitulo}>{operacion.tipo === 'egreso' ? 'Pagás' : 'Recibís'} {formatearMontoSocial(operacion.monto)}</Text>
-            <OpcionesSeleccion enLinea opciones={[{ id: 'nuevo', nombre: 'Crear movimiento' }, { id: 'existente', nombre: 'Ya registrado' }]} elegida={modo} alElegir={establecerModo} {...aspecto} />
+            <View style={estilos.resumenOperacion}>
+              <View style={[estilos.iconoOperacion, { backgroundColor: (operacion.tipo === 'egreso' ? tema.error : tema.exito) + '18' }]}>
+                <Ionicons color={operacion.tipo === 'egreso' ? tema.error : tema.exito} name={operacion.tipo === 'egreso' ? 'arrow-up-outline' : 'arrow-down-outline'} size={22} />
+              </View>
+              <View style={estilos.textoFlexible}><Text style={estilos.ayudaConfirmacion}>{operacion.tipo === 'egreso' ? 'Pagás' : 'Recibís'}</Text><Text numberOfLines={2} style={estilos.descripcionOperacion}>{operacion.descripcion}</Text></View>
+              <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.importeOperacion, { color: operacion.tipo === 'egreso' ? tema.error : tema.exito }]}>{formatearMontoSocial(operacion.monto)}</Text>
+            </View>
+            <SelectorSegmentado tema={tema} opciones={[{ id: 'nuevo', nombre: 'Crear movimiento' }, { id: 'existente', nombre: 'Ya registrado' }]} valor={modo} alSeleccionar={establecerModo} etiqueta="Origen del movimiento" />
             {modo === 'nuevo' ? <>
               <SelectorDeposito depositos={social.depositos} seleccionadoId={depositoId} alSeleccionar={establecerDepositoId} {...aspecto} />
               {!social.depositos.length ? <BotonSocial texto="Crear depósito" alPresionar={() => { cerrar(); social.abrirDeposito(); }} {...aspecto} /> : null}
+              <View style={estilos.fechaHora}><View style={estilos.columnaFecha}>
               <SelectorFecha etiqueta="Fecha del pago" valor={fecha} alSeleccionar={establecerFecha} tema={tema} estilosMovimiento={estilosMovimiento} />
+              </View><View style={estilos.columnaFecha}>
               <SelectorHora valor={hora} alSeleccionar={establecerHora} tema={tema} estilosMovimiento={estilosMovimiento} />
+              </View></View>
             </> : <>
               {cargando ? <Text style={estilosGlobales.textoSecundario}>Buscando movimientos…</Text> : null}
               {error ? <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{error}</Text> : null}
               {!cargando && !error && !movimientos.length ? <Text style={estilosGlobales.textoSecundario}>No hay movimientos disponibles con ese importe y dirección.</Text> : null}
-              {movimientos.filter(m => !Object.values(selecciones).some(s => s.movimientoId === m.id)).map(m => <Pressable key={m.id} accessibilityRole="radio" accessibilityState={{ checked: m.id === movimientoId }} onPress={() => establecerMovimientoId(m.id)} style={estilos.opcionPersona}>
-                <Ionicons name={m.id === movimientoId ? 'radio-button-on' : 'radio-button-off'} color={tema.foco} size={22} /><View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{m.descripcion}</Text><Text style={estilosGlobales.textoSecundario}>{m.deposito} · {new Date(m.fecha_hora).toLocaleString('es-AR')}</Text></View>
+              {movimientos.filter(m => !Object.values(selecciones).some(s => s.movimientoId === m.id)).map(m => <Pressable key={m.id} accessibilityRole="radio" accessibilityState={{ checked: m.id === movimientoId }} onPress={() => establecerMovimientoId(m.id)} style={[estilos.movimientoDisponible, m.id === movimientoId && estilos.movimientoSeleccionado]}>
+                <Ionicons name={m.id === movimientoId ? 'radio-button-on' : 'radio-button-off'} color={tema.foco} size={22} /><View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.descripcionOperacion}>{m.descripcion}</Text><Text style={estilos.ayudaConfirmacion}>{m.deposito} · {new Date(m.fecha_hora).toLocaleString('es-AR')}</Text></View>
               </Pressable>)}
               <Text style={estilosGlobales.textoAyuda}>Vincularlo no vuelve a modificar tu saldo.</Text>
             </>}
           </> : null}
         </ScrollView>
-        <BotonSocial texto={guardando ? 'Guardando…' : operacion && indice < plan.operaciones.length - 1 ? 'Continuar' : 'Confirmar y guardar'} deshabilitado={guardando || !valida} alPresionar={avanzar} {...aspecto} />
+        <View style={estilos.pieConfirmacion}>
+          <Pressable accessibilityRole="button" accessibilityLabel={guardando ? 'Guardando…' : operacion && indice < plan.operaciones.length - 1 ? 'Continuar' : 'Confirmar y guardar'} disabled={guardando || !valida} onPress={avanzar} style={[estilos.confirmarMovimiento, (guardando || !valida) && estilos.confirmacionDeshabilitada]}>
+            <Text style={estilos.textoConfirmarMovimiento}>{guardando ? 'Guardando…' : operacion && indice < plan.operaciones.length - 1 ? 'Continuar' : 'Confirmar y guardar'}</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   </Modal>;
