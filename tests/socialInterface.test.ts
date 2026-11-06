@@ -194,10 +194,17 @@ for (const tema of ['claro', 'oscuro'] as const) test(`interfaces principales gu
   assert.ok(vista.texto().includes('Lucita'));
   await vista.abrir(rutas.REGISTRO_SOCIAL, { tipo: 'crear' });
   await vista.llenar('Nombre de la ocasión', 'Cena real');
-  await vista.pulsar('Participantes'); await vista.pulsar('Lucía'); await vista.pulsar('Listo');
+  await vista.pulsar('Participantes');
+  await vista.llenar('Buscar personas para agregar', 'Lucita');
+  await vista.pulsar('Seleccionar a Lucía Gómez'); await vista.pulsar('Listo');
+  await vista.pulsar('Participantes');
+  assert.ok(vista.texto().includes('1 seleccionadas'));
+  await vista.pulsar('Cerrar selección de personas');
+  await vista.pulsar('Color de sala: Violeta');
   await vista.pulsar('Crear sala');
   const sala = (await servicios.cargarSocial()).salas[0];
   assert.equal(sala.nombre, 'Cena real');
+  assert.equal(sala.color, '#CEC0E1');
   assert.deepEqual(vista.destinos.at(-1), [rutas.SALA_SOCIAL, { salaId: sala.id }]);
   await vista.abrir(rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id });
   await vista.llenar('Importe del ítem', '1200'); await vista.llenar('Qué se pagó', 'Pizzas reales');

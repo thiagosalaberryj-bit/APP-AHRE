@@ -1,6 +1,6 @@
 # Documentación de APP-AHRE
 
-Guía vigente al 3 de noviembre de 2026. El [README](../README.md) presenta la app;
+Guía vigente al 5 de noviembre de 2026, versión 0.7.0 (no estable). El [README](../README.md) presenta la app;
 este índice enlaza el detalle. El [estado y las verificaciones](estado-y-validacion.md)
 separan lo implementado, las pruebas automáticas, las confirmaciones del líder y
 el trabajo pendiente. Los documentos históricos de TypeScript y dependencias

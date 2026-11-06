@@ -7,10 +7,24 @@ import { BORDES } from '../styles/globalStyles';
 
 import { obtenerColorIconoCategoria, obtenerColorCategoria, ordenarCategoriasPorColor } from '../styles/categoryColors';
 
+const obtenerTintaCategoria = (id: string, tema: Tema, tipo?: string) => {
+  const color = obtenerColorIconoCategoria(id, tema, tipo);
+  if (tema.nombre === 'oscuro') return color;
+  return '#' + color.slice(1).match(/.{2}/g)!.map(canal =>
+    Math.round(parseInt(canal, 16) * 0.65).toString(16).padStart(2, '0'),
+  ).join('');
+};
+
 const crearFondoCategoria = (color: string, tema: Tema) => {
-  const [rojo, verde, azul] = (color.slice(1).match(/.{2}/g) || []).map((valor) => parseInt(valor, 16));
-  const opacidad = tema.nombre === 'oscuro' ? 0.22 : 0.12;
-  return `rgba(${rojo}, ${verde}, ${azul}, ${opacidad})`;
+  const canales = color.slice(1).match(/.{2}/g)!.map(valor => parseInt(valor, 16));
+  const superficie = tema.superficie.slice(1).match(/.{2}/g)!.map(valor => parseInt(valor, 16));
+  const esOscuro = tema.nombre === 'oscuro';
+  const intensidad = esOscuro ? 0.36 : 0.8;
+  const centro = (Math.max(...canales) + Math.min(...canales)) / 2;
+  return '#' + canales.map((canal, indice) => {
+    const tono = esOscuro ? canal : Math.max(0, Math.min(255, centro + (canal - centro) * 1.45));
+    return Math.round(tono * intensidad + superficie[indice] * (1 - intensidad)).toString(16).padStart(2, '0');
+  }).join('');
 };
 
 export default function SelectorCategoria({
@@ -30,7 +44,6 @@ export default function SelectorCategoria({
   cantidadPrincipales = 4,
   carrusel = false,
   estiloTarjeta = null,
-  usarColorIconoComoRelleno = false,
   error = undefined,
 }: import('../types/ui').SelectorCategoriaProps) {
   const [modalVisible, establecerModalVisible] = useState(false);
@@ -40,9 +53,10 @@ export default function SelectorCategoria({
     borderStyle: 'solid' as const,
   };
   const enGrilla = variante === 'grilla';
+  const categoriasOrdenadas = ordenarCategoriasPorColor(categorias, tema, tipoMovimiento);
   const categoriasPrioritarias = [
-    ...categoriasPrincipalesIds.flatMap(id => categorias.filter(categoria => categoria.id === id)),
-    ...categorias.filter(categoria => !categoriasPrincipalesIds.includes(categoria.id)),
+    ...categoriasPrincipalesIds.flatMap(id => categoriasOrdenadas.filter(categoria => categoria.id === id)),
+    ...categoriasOrdenadas.filter(categoria => !categoriasPrincipalesIds.includes(categoria.id)),
   ];
   const categoriasPrincipales = enGrilla ? ordenarCategoriasPorColor(categorias, tema, tipoMovimiento) : categoriasPrioritarias.slice(0, cantidadPrincipales);
   const categoriasModal = ordenarCategoriasPorColor(categorias, tema, tipoMovimiento);
@@ -69,10 +83,8 @@ export default function SelectorCategoria({
   const mostrarTarjeta = (categoria: NonNullable<import('../types/ui').SelectorCategoriaProps['categorias']>[number], abrirSelector = false) => {
     const activa = categoriaActiva(categoria.id);
     const color = obtenerColorCategoria(categoria.id, tema, tipoMovimiento);
-    const colorFondo = activa ? tema.encabezado : usarColorIconoComoRelleno ? color : crearFondoCategoria(color, tema);
-    const colorIcono = activa ? tema.encabezadoTexto : usarColorIconoComoRelleno
-      ? (tema.nombre === 'oscuro' ? '#111111' : tema.textoPrincipal)
-      : obtenerColorIconoCategoria(categoria.id, tema, tipoMovimiento);
+    const colorFondo = activa ? tema.encabezado : crearFondoCategoria(color, tema);
+    const colorIcono = activa ? tema.encabezadoTexto : obtenerTintaCategoria(categoria.id, tema, tipoMovimiento);
     return (
       <Pressable
         key={categoria.id}
@@ -96,7 +108,7 @@ export default function SelectorCategoria({
           numberOfLines={1}
           style={[
             estilosMovimiento.nombreCategoria,
-            usarColorIconoComoRelleno ? { color: tema.nombre === 'oscuro' ? '#111111' : tema.textoPrincipal } : null,
+            { color: tema.textoPrincipal },
             activa && { color: tema.encabezadoTexto },
           ]}
         >
@@ -112,7 +124,7 @@ export default function SelectorCategoria({
       {carrusel ? (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={estilosMovimiento.listaCategorias}>
-          {categorias.map((categoria) => mostrarTarjeta(categoria))}
+          {categoriasOrdenadas.map((categoria) => mostrarTarjeta(categoria))}
         </View>
       </ScrollView>
       ) : (
@@ -187,18 +199,18 @@ export default function SelectorCategoria({
                     onPress={() => seleccionarCategoria(categoria.id)}
                     style={[
                       estilosMovimiento.opcionCategoria,
-                      { backgroundColor: activa ? tema.encabezado : usarColorIconoComoRelleno ? color : crearFondoCategoria(color, tema) },
+                      { backgroundColor: activa ? tema.encabezado : crearFondoCategoria(color, tema) },
                       bordeCampo,
                     ]}
                   >
                     <Ionicons
-                      color={activa ? tema.encabezadoTexto : usarColorIconoComoRelleno ? '#111111' : obtenerColorIconoCategoria(categoria.id, tema, tipoMovimiento)}
+                      color={activa ? tema.encabezadoTexto : obtenerTintaCategoria(categoria.id, tema, tipoMovimiento)}
                       name={categoria.icono}
                       size={22}
                     />
-                    <Text style={[estilosMovimiento.textoOpcionCategoria, usarColorIconoComoRelleno && { color: '#111111' }, activa && { color: tema.encabezadoTexto }]}>{categoria.nombre}</Text>
+                    <Text style={[estilosMovimiento.textoOpcionCategoria, { color: activa ? tema.encabezadoTexto : tema.textoPrincipal }]}>{categoria.nombre}</Text>
                     <Ionicons
-                      color={activa ? tema.encabezadoTexto : usarColorIconoComoRelleno ? '#111111' : tema.borde}
+                      color={activa ? tema.encabezadoTexto : tema.textoSecundario}
                       name={activa ? 'radio-button-on' : 'radio-button-off'}
                       size={20}
                     />

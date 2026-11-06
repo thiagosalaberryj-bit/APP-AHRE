@@ -898,7 +898,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                       estilosGlobales={estilosGlobales}
                       estilosMovimiento={estilos}
                       estiloTarjeta={estilos.tarjetaCategoriaFiltro}
-                      usarColorIconoComoRelleno
                       etiqueta=""
                       categorias={categoriasDisponiblesFiltro}
                     tipoMovimiento={tipoFiltro === 'todos' ? undefined : tipoFiltro}

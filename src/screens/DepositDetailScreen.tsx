@@ -1135,7 +1135,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     estilosGlobales={estilosGlobales}
                     estilosMovimiento={estilos}
                     estiloTarjeta={estilos.tarjetaCategoriaFiltro}
-                    usarColorIconoComoRelleno
                     etiqueta=""
                     categorias={categoriasDisponiblesFiltro}
                     variante="grilla"

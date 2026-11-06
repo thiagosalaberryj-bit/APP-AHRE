@@ -165,6 +165,19 @@ En modo oscuro se usan `#F58D8B`, `#F8B878`, `#F9D879`, `#BBE991`,
 Las leyendas de gráficos deben mostrar el nombre de la categoría y no depender
 únicamente del color.
 
+Los selectores de categorías comparten un relleno intermedio en formularios,
+Salas y filtros: mezclan el color de la categoría con la superficie del tema,
+con intensidad de 80 % en claro y 36 % en oscuro. En claro se aumenta la
+saturación del relleno para conservar matices vivos, especialmente el naranja
+de Alimentación, sin alterar la paleta de los gráficos. Íconos y textos conservan
+contraste: los íconos claros usan una tinta más oscura de su propia familia,
+tanto en las cards como en el modal. El modo oscuro conserva su tinta anterior.
+La selección utiliza el verde de encabezado. Este tratamiento solo
+afecta las cards del selector, sin modificar los colores de los gráficos.
+Salas prioriza Alimentación, Compras, Hogar y Servicios como Egresos; las demás
+opciones y el modal siguen el orden de familias y tonos de intenso a claro.
+La etiqueta superior del selector compartido de depósitos usa peso regular.
+
 ## Encabezados de pantalla
 
 Los encabezados principales y secundarios comparten una altura de `120` puntos.

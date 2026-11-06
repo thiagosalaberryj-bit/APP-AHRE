@@ -275,7 +275,6 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
           categorias={categorias}
           tipoMovimiento={esEgreso ? 'egreso' : 'ingreso'}
           categoriasPrincipalesIds={esEgreso ? ['alimentacion', 'compras', 'hogar', 'servicios'] : undefined}
-          usarColorIconoComoRelleno
           seleccionadaId={categoriaId}
           alSeleccionar={establecerCategoriaId}
           error={errorCategoria}

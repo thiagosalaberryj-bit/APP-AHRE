@@ -170,6 +170,16 @@ color y personas. La fecha de la ocasión sigue siendo el último campo y comien
 con el día actual. Se conserva separada de la fecha de creación. Vos se incluye
 automáticamente y se aplica un máximo real de tres salas abiertas por usuario.
 
+Participantes aparece antes de Categoría y abre el mismo
+`AddRoomPeopleModal.tsx` usado para agregar integrantes a una sala existente.
+Incluye búsqueda por nombre, apellido o apodo, contador, selección previa y
+botones Crear persona/Listo en una fila. Confirmar aplica la selección;
+cancelar conserva la anterior. La categoría de sala se mantiene por ahora.
+Los colores reutilizan directamente `DepositScreenStyles.ts`: muestras de
+34 puntos, nombres cortos en una línea, marca de selección y resumen del color.
+El orden visual es Azul, Verde, Violeta, Rosa y Amarillo, como en depósitos;
+no cambia el color inicial ni los valores persistidos de la sala.
+
 El detalle conserva su resumen con total gastado y las opciones Balances,
 Gastos y Personas reunidas en `SegmentedSelector.tsx`, el mismo selector de
 Estadísticas, con tres segmentos del mismo ancho y texto en una línea. El

@@ -5,7 +5,7 @@ import { BORDES, ESPACIADO, TIPOGRAFIA } from './globalStyles';
 export function crearEstilosSelectorDeposito(tema: Tema) {
   return StyleSheet.create({
     grupo: { gap: ESPACIADO.pequeno },
-    etiqueta: { color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.etiqueta, fontWeight: TIPOGRAFIA.pesos.seminegrita },
+    etiqueta: { color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.etiqueta, fontWeight: TIPOGRAFIA.pesos.regular },
     control: { flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.medio, minHeight: 64, paddingHorizontal: ESPACIADO.grande, paddingVertical: ESPACIADO.medio, borderWidth: BORDES.anchos.fino, borderColor: tema.borde, borderRadius: BORDES.radios.campo, backgroundColor: tema.superficie },
     controlAbierto: { borderColor: tema.foco },
     controlError: { borderColor: tema.error },

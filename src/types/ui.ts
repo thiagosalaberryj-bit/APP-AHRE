@@ -16,7 +16,7 @@ export interface SelectorCategoriaProps extends Aspecto {
   categorias?: readonly (Pick<Categoria, 'id'|'nombre'|'icono'> & Partial<Categoria>)[]; seleccionadaId?: string | null; alSeleccionar?: (id: string) => void;
   etiqueta?: string; seleccionMultiple?: boolean; seleccionadasIds?: string[];
   alCambiarMulti?: (ids: string[]) => void; variante?: string; cantidadPrincipales?: number; carrusel?: boolean;
-  estiloTarjeta?: StyleProp<ViewStyle>; usarColorIconoComoRelleno?: boolean; error?: string | null;
+  estiloTarjeta?: StyleProp<ViewStyle>; error?: string | null;
 }
 export interface SelectorDepositoProps extends Aspecto {
   depositos?: readonly (Partial<Deposito> & { id: string; nombre: string; saldoTexto?: string })[];
