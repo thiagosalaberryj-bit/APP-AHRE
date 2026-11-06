@@ -1,5 +1,6 @@
-import { SetStateAction, useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import Constantes from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import * as AutenticacionLocal from 'expo-local-authentication';
 import {
@@ -352,11 +353,13 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
     const nuevoCorreo = correoEdicion.trim();
     establecerGuardando(true);
     try {
-      await actualizarPerfil(datos);
+      const resultadoPerfil = await actualizarPerfil(datos);
       establecerNombre(nuevoNombre);
       establecerCorreo(nuevoCorreo);
       establecerModalEdicion(false);
-      mostrarAviso('Los datos de tu perfil se guardaron.', { tipo: 'exito' });
+      mostrarAviso(resultadoPerfil.correoModificado
+        ? 'Correo guardado en este teléfono. Hasta que el servidor confirme el cambio, usá el correo anterior para ingresar con conexión.'
+        : 'Los datos de tu perfil se guardaron.', { tipo: resultadoPerfil.correoModificado ? 'informacion' : 'exito' });
     } catch (error) {
       if (error instanceof ErrorPerfil && error.errores) {
         establecerErroresEdicion(error.errores);
@@ -928,7 +931,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                 <View style={estilos.formularioModal}>
                   <EncabezadoModalPerfil
                     alCerrar={() => establecerModalEdicion(false)}
-                    descripcion="Actualizá el nombre y correo de tu cuenta."
+                    descripcion="Los cambios se guardan en este teléfono. Si cambiás el correo, usá el anterior para ingresar con conexión hasta que se sincronice."
                     etiquetaCerrar="Cerrar edición de perfil"
                     estilos={estilos}
                     icono="person-outline"
@@ -1141,7 +1144,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                 tema={tema}
                 titulo="Acerca de AHRE"
               />
-              <Text style={estilos.valorOpcion}>Versión 1.0.0</Text>
+              <Text style={estilos.valorOpcion}>Versión {Constantes.expoConfig?.version ?? 'no disponible'}</Text>
             </Pressable>
           </Pressable>
         </Modal>

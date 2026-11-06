@@ -1,6 +1,7 @@
 const MENSAJES: Readonly<Record<string, string>> = Object.freeze({
   datos_invalidos: 'Revisá los datos ingresados.',
   usuario_duplicado: 'Ya existe una cuenta con ese correo electrónico.',
+  identidad_incompatible: 'El correo corresponde a otra identidad en el servidor. Conservamos las cuentas locales y sus pendientes sin vincularlas.',
   credenciales_invalidas: 'El correo electrónico o la contraseña no son correctos.',
   sesion_no_disponible: 'No se pudo acceder a la sesión local. Intentá nuevamente.',
   operacion_no_disponible: 'No se pudo completar la operación. Intentá nuevamente.',

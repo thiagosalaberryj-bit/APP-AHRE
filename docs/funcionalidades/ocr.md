@@ -35,11 +35,7 @@ Fuentes primarias:
 
 ## Flujo y arquitectura
 
-```text
-Dashboard o Nuevo → OCR → cámara o galería → recorte → ML Kit local
-→ interpretación → revisión editable → categoría y depósito → confirmar
-→ crearMovimiento(datos, 'egreso') → SQLite → regreso
-```
+Desde Dashboard o Nuevo se abre OCR y se elige cámara o galería. Tras recortar, ML Kit reconoce localmente el contenido y se interpreta para una revisión editable. Se seleccionan categoría y depósito antes de confirmar; `crearMovimiento(datos, 'egreso')` guarda en SQLite y permite regresar.
 
 `OcrScreen.tsx` conserva la captura y el recorte dentro de la pantalla existente.
 `src/ocr/ocrService.ts` invoca exclusivamente ML Kit; `receiptParser.ts` interpreta

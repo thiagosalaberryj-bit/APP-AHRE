@@ -1,6 +1,5 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
-import { SetStateAction, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { generarIdentificador } from '../../database/identifiers';
 import { registrarPagoDeuda } from '../../social/socialService';
 import { centavos, exigir, unidades } from '../../social/socialValidation';

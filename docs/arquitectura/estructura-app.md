@@ -17,7 +17,10 @@ El informe del proyecto define AHRE como una aplicación orientada inicialmente
 a Android y con un enfoque offline-first. Por eso la información local es el
 núcleo de la aplicación y los servicios conectados son extensiones opcionales.
 
-## Árbol actual
+## Mapa de carpetas principales
+
+Selección representativa; el árbol incluye las piezas de referencia y no enumera
+cada pantalla, prueba ni componente. Los módulos especializados se describen debajo.
 
 ```text
 APP-AHRE/
@@ -42,8 +45,6 @@ APP-AHRE/
 │   │   └── implementacion.md
 │   ├── configuracion/
 │   │   └── dependencias.md
-│   ├── diagramas/
-│   │   └── social/                 # Recorridos y relaciones de Social
 │   ├── interfaces/
 │   │   ├── autenticacion.md
 │   │   └── sistema-visual.md
@@ -65,7 +66,6 @@ APP-AHRE/
 │   ├── components/
 │   │   ├── AuthContainer.tsx
 │   │   ├── AuthInput.tsx
-│   │   ├── ErrorMessage.tsx
 │   │   ├── MainHeader.tsx
 │   │   ├── PasswordInput.tsx
 │   │   ├── PrimaryButton.tsx
@@ -128,8 +128,6 @@ APP-AHRE/
 │   │   ├── ProfileScreen.tsx
 │   │   ├── RegistrationScreen.tsx
 │   │   └── SocialScreen.tsx
-│   ├── services/
-│   │   └── index.ts
 │   ├── styles/
 │   │   ├── HomeScreenStyles.ts
 │   │   ├── authStyles.ts
@@ -137,8 +135,7 @@ APP-AHRE/
 │   │   ├── globalStyles.ts
 │   │   └── toastNotificationStyles.ts
 │   └── utils/
-│       ├── depositValidation.ts
-│       └── structureSmokeTest.ts
+│       └── depositValidation.ts
 ├── package.json
 └── package-lock.json
 ```
@@ -157,7 +154,7 @@ y el sufijo `Screen`, por ejemplo `DashboardScreen.tsx` o
 `MovementsScreen.tsx`. Las pantallas coordinan la vista, pero delegan la lógica
 reutilizable a componentes, módulos de base de datos, servicios y utilidades.
 
-Las áreas previstas de AHRE podrán incorporarse aquí: Inicio, Login y registro,
+Las áreas actuales de AHRE se implementan aquí: Inicio, Login y registro,
 Dashboard, Notificaciones, Movimientos, Perfil, Estadísticas, Depósitos,
 Ingresos, Egresos, OCR y Social.
 
@@ -168,9 +165,10 @@ Los formularios comparten `SocialFormActions.tsx` para validación, guardado y
 confirmación, `SocialMovementModal.tsx` para elegir depósito o vincular un
 movimiento, y `SocialRecordUnavailable.tsx` para registros no disponibles.
 `src/social/` contiene servicios por responsabilidad, consultas, validaciones,
-constantes y contexto. `useSocialScreen.tsx` recarga por foco; el marco
+constantes y contexto. `useSocialScreen.ts` recarga por foco; el marco
 `SocialScreenFrame.tsx` comparte encabezado, teclado, desplazamiento y proveedor
-de datos. No hay colecciones simuladas de personas, salas o deudas.
+de datos. Las vistas normales consultan SQLite; `src/development/` prepara ejemplos
+sintéticos únicamente mediante el acceso de desarrollo.
 El reconocimiento se comparte con el OCR general mediante OcrScreen y su parser.
 `RoomExpenseCard.tsx` dibuja las tarjetas compactas de Gastos con los estilos
 comunes de Balances. `SocialAmountSummary.tsx` comparte los contenedores de
@@ -185,11 +183,10 @@ Ver [organización de Social](../interfaces/social.md#organización-del-código)
 
 Contiene componentes visuales reutilizables entre dos o más pantallas. Los
 componentes utilizan PascalCase y un nombre relacionado con su responsabilidad,
-como `MoneyInput.tsx` o `MovementCard.tsx`. Muchas pantallas financieras todavía
-esperan sus componentes funcionales. Login y Registro reutilizan
+como `MoneyInput.tsx` o `MovementCard.tsx`. Login y Registro reutilizan
 `ContenedorAutenticacion` (`AuthContainer.tsx`), `CampoAutenticacion`
 (`AuthInput.tsx`), `CampoContrasena` (`PasswordInput.tsx`), `BotonPrincipal`
-(`PrimaryButton.tsx`) y `MensajeError` (`ErrorMessage.tsx`); sus estilos de
+(`PrimaryButton.tsx`); sus estilos de
 distribución están en `src/styles/authStyles.ts`.
 `MainHeader.tsx` define el encabezado de las secciones principales, con el logo
 de AHRE, título, descripción y accesos a notificaciones y perfil.
@@ -233,12 +230,6 @@ de contraseñas y el ciclo de vida de la sesión. Se comunica con el repositorio
 de autenticación para SQLite y con SecureStore para recordar el identificador
 de sesión y guardar por usuario la preferencia de visibilidad de saldos.
 
-### `src/services/`
-
-Contiene integraciones que requieran conexión o infraestructura externa, como
-sincronización, autenticación remota, OCR en línea o importaciones. Las
-funciones esenciales deben poder utilizarse sin esta capa.
-
 ### `src/ocr/` y `modules/receipt-ocr/`
 
 `src/ocr/` coordina el reconocimiento local con ML Kit, interpreta texto y
@@ -247,7 +238,7 @@ dentro de la pantalla OCR existente. La confirmación reutiliza el servicio
 normal de movimientos; no mantiene repositorios financieros propios.
 `modules/receipt-ocr/` es el adaptador Expo local Android, escrito en Kotlin para
 invocar el SDK nativo. El modelo latino está incluido para operar sin descargarlo
-al primer uso; esta funcionalidad no depende de `src/services/` ni de un backend.
+al primer uso; esta funcionalidad utiliza el módulo nativo local.
 
 ### `src/deposits/`
 
@@ -266,8 +257,7 @@ perfil. Las pantallas no ejecutan SQL.
 
 Contiene funciones auxiliares puras que no dependen de una pantalla, como
 formateo de montos, fechas, validaciones y cálculos.
-`structureSmokeTest.ts` es una prueba de humo mínima que confirma que las rutas
-base pueden importarse juntas.
+Las verificaciones automatizadas se ejecutan desde `tests/` con `npm test`.
 
 ### `src/constants/`
 
@@ -345,13 +335,20 @@ Ver [configuración y verificación](../configuracion/typescript.md).
   no queda en el historial después de ese destino.
 - Una pantalla mínima verifica la cadena `App → navegación → pantalla →
   componente`.
-- La navegación base está implementada con las dependencias de React
-  Navigation ya instaladas. La creación de depósitos ya utiliza la lógica de
-  dominio y el repositorio local; otras pantallas financieras siguen el alcance
-  de sus respectivos Issues.
+- La navegación usa React Navigation. Depósitos, movimientos, perfil y Social
+  utilizan servicios y repositorios locales; la autenticación y la
+  sincronización se comunican con el backend según su autorización.
 - No se crean carpetas vacías para funcionalidades futuras. Las nuevas áreas se
   incorporarán cuando tengan pantallas, componentes o lógica real.
-- `structureSmokeTest.ts` contiene una función auxiliar que comprueba que las
-  rutas base estén definidas. Actualmente no está conectada a una pantalla; cuando
-  se incorpore un test runner, esta comprobación deberá trasladarse a pruebas
-  automatizadas.
+
+
+### Sincronización y desarrollo
+
+`src/sync/` separa transporte (`remote.ts`), autorización (`deviceAuthorization.ts`),
+diario (`journal.ts`), consultas de pendientes (`pendingService.ts`), programación
+(`syncScheduler.ts`) y consumo de lotes (`syncService.ts`). El esquema auxiliar
+se prepara en `001_initialSchema.ts`; no se duplica en las pantallas.
+`src/development/` contiene la preparación explícita de datos sintéticos.
+
+El [índice general](../README.md) enlaza las guías de entorno,
+publicación y validación actual.

@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import type { Financiacion } from '../../social/types';
 import { useEffect, useState } from 'react';
 import { Modal, View, Text, Pressable, ScrollView } from 'react-native';

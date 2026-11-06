@@ -7,11 +7,7 @@ preparar SQLite, queda esperando que la persona deslice el control para
 continuar. El gesto consulta la sesión local y conduce a Login o, luego de
 validar la huella, al Dashboard.
 
-```text
-Abrir AHRE → Inicio → deslizar
-                       ├── sin sesión → Login
-                       └── sesión válida → huella → carga animada → Dashboard
-```
+Abrir AHRE muestra Inicio. Al deslizar, una cuenta sin sesión pasa a Login; una sesión válida requiere huella y muestra la carga animada antes de Dashboard.
 
 ## Elementos visuales
 

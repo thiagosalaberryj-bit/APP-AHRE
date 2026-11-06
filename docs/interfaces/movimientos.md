@@ -13,23 +13,7 @@ quedan fuera de este alcance.
 `src/screens/ExpenseScreen.tsx` presenta «Nuevo egreso» con
 `EncabezadoSeccion` y un formulario desplazable compatible con el teclado:
 
-```text
-Nuevo egreso
-│
-├── Monto
-├── Descripción *
-├── Depósito
-├── Categoría
-│   ├── cuatro accesos directos
-│   └── Más → modal con categorías adicionales
-├── Información adicional
-│   ├── Fecha
-│   ├── Hora
-│   ├── Recurrente
-│   └── Aclaración: los movimientos anteriores a la creación del depósito no afectan el saldo actual
-│
-└── Guardar egreso
-```
+Nuevo egreso presenta monto, descripción obligatoria, depósito y categoría. Categoría ofrece cuatro accesos directos y un modal con opciones adicionales. Información adicional reúne fecha, hora, recurrencia y la aclaración sobre movimientos anteriores a la creación del depósito. El formulario termina con Guardar egreso.
 
 El formulario se abre desde `Dashboard → Egreso` o `Nuevo → Egreso`. Consulta
 SQLite para obtener los depósitos activos del usuario y las categorías de
@@ -44,21 +28,7 @@ formulario. Al regresar de Nuevo depósito, vuelve a consultar los datos locales
 `src/screens/IncomeScreen.tsx` contiene el formulario compartido, configurado
 como «Nuevo ingreso» desde su ruta existente:
 
-```text
-Nuevo ingreso
-│
-├── Monto
-├── Descripción *
-├── Depósito
-├── Categoría
-├── Información adicional
-│   ├── Fecha
-│   ├── Hora
-│   ├── Recurrente
-│   └── Aclaración: los movimientos anteriores a la creación del depósito no afectan el saldo actual
-│
-└── Guardar ingreso
-```
+Nuevo ingreso presenta monto, descripción obligatoria, depósito y categoría. Información adicional reúne fecha, hora, recurrencia y la aclaración sobre movimientos anteriores a la creación del depósito. El formulario termina con Guardar ingreso.
 
 El formulario se abre desde `Dashboard → Ingreso` o `Nuevo → Ingreso`.
 La descripción es obligatoria y se marca con `*`. El monto usa teclado

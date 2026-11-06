@@ -1,4 +1,3 @@
-import type { ContextoSocial } from './socialStore';
 import { salasRepositorio, personasSalaRepositorio, personasRepositorio, pagosSocialesRepositorio, deudasRepositorio } from '../database/repositories';
 import { conSocial, registroPropio, idPersistente, salaAbierta, leerSocial, exigirDepositoConDinero } from './socialStore';
 import { exigir, textoSocial, unidades, sumaPagos } from './socialValidation';

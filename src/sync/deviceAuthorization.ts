@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import {ejecutarConConexion} from '../database/connectionQueue';
+import {ejecutarConConexion,ejecutarLecturaConConexion} from '../database/connectionQueue';
 import {ErrorAutenticacion} from '../authentication/errors';
 
 export interface AutorizacionLocal {dispositivo_id:string;generacion:number;revocada:number;}
@@ -14,8 +14,8 @@ export function obtenerInstalacion(){
   })().catch(error=>{instalacion=null;throw error;});
   return instalacion;
 }
-export const consultarAutorizacion=(usuarioId:string)=>ejecutarConConexion(c=>c.getFirstAsync<AutorizacionLocal>('SELECT dispositivo_id,generacion,revocada FROM sync_authorization WHERE usuario_id=?',[usuarioId]));
-export const contarPendientes=(usuarioId:string)=>ejecutarConConexion(async c=>Number((await c.getFirstAsync<{n:number}>('SELECT COUNT(*) n FROM sync_outbox WHERE usuario_id=?',[usuarioId]))?.n||0));
+export const consultarAutorizacion=(usuarioId:string)=>ejecutarLecturaConConexion(c=>c.getFirstAsync<AutorizacionLocal>('SELECT dispositivo_id,generacion,revocada FROM sync_authorization WHERE usuario_id=?',[usuarioId]));
+export const contarPendientes=(usuarioId:string)=>ejecutarLecturaConConexion(async c=>Number((await c.getFirstAsync<{n:number}>('SELECT COUNT(*) n FROM sync_outbox WHERE usuario_id=?',[usuarioId]))?.n||0));
 export async function registrarAutorizacion(usuarioId:string,dispositivoId:string,generacion:number){
   await ejecutarConConexion(c=>c.withTransactionAsync(async()=>{
     const anterior=await c.getFirstAsync<AutorizacionLocal>('SELECT dispositivo_id,generacion,revocada FROM sync_authorization WHERE usuario_id=?',[usuarioId]);

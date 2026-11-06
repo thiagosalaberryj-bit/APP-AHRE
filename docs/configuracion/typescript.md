@@ -136,3 +136,121 @@ con Hermes; no se informó un desglose de escenarios manuales por pantalla.
 La versión `0.5.0` con código Android `3` se preparó después de esta build.
 La numeración nueva corresponde a la próxima compilación; la build enlazada
 conserva la versión y el commit con los que fue probada.
+
+## Línea base de la etapa 1 (2026-11-02)
+
+Esta revisión corresponde a `codex/sincronizacion-servidor`, commit
+`b33df80723899408a4b3373e3e4e3d25e4bf228d`, junto con SERVER-AHRE en
+`4522f224f8b01ac4a397ddae435abb5795b19e55`. El líder autorizó esta etapa sin
+Issue. No modifica las verificaciones históricas de la migración anterior.
+
+El entorno local dispone de Node `24.12.0` y npm `11.6.2`. Los manifiestos
+coinciden con sus lockfiles de formato 3. La app mantiene TypeScript `6.0.3`;
+el backend mantiene `7.0.2`. No se cambiaron versiones ni archivos de paquetes.
+
+### Estado inicial comprobado
+
+| Verificación oficial | Resultado |
+| --- | --- |
+| App: `npm run typecheck` | Bloqueada: no está instalado el ejecutable `tsc`. |
+| App: `npm test` | Pasan 27 pruebas; nueve archivos de pruebas no pueden cargar el paquete `typescript`. La suite completa no llega a ejecutarse. |
+| Backend: `npm run typecheck`, `npm run build` y `npm test` | Bloqueadas: no existe `backend/node_modules` y falta `tsc`. Las pruebas no llegan a iniciarse. |
+| MySQL de integración | Pendiente: no se configuró una instancia aislada ni las variables de conexión de pruebas. |
+
+Estos resultados iniciales identificaron un entorno incompleto; no demostraban
+un fallo de tipos o de lógica en las fuentes. El líder autorizó expresamente
+instalar las dependencias locales desde ambos lockfiles y preparar MySQL
+temporal. Las comprobaciones siguientes se ejecutaron con los scripts
+oficiales, sin el compilador auxiliar de la auditoría.
+
+### Resultado después de preparar el entorno
+
+| Verificación oficial | Resultado |
+| --- | --- |
+| App: `npm run typecheck` | Aprobada, incluida la configuración de herramientas y pruebas. |
+| App: `npm test`, sin MySQL | 133 aprobadas y cinco omitidas; sin fallos. |
+| App: `npm test`, con MySQL | 138 aprobadas, cero fallidas y cero omitidas. |
+| Backend: `npm run typecheck` y `npm run build` | Aprobadas. |
+| Backend: `npm test`, sin MySQL | 18 aprobadas y 18 omitidas; sin fallos. |
+| Backend: `npm test`, con MySQL | 36 aprobadas, cero fallidas y cero omitidas. |
+
+Se utilizó MySQL Community Server `8.4.13` para Windows, descargado del
+[sitio oficial](https://dev.mysql.com/downloads/mysql/8.4.html?os=3) como ZIP.
+El archivo coincidió con el checksum publicado y se extrajo fuera de los
+repositorios. La instancia se limitó a `127.0.0.1:13307`, sin servicio de
+Windows y con directorio de datos independiente. Las credenciales se generaron
+para esa ejecución y no se escribieron en logs ni documentación. El usuario de
+pruebas solo tenía permisos sobre bases `ahre_test_*`.
+
+Las suites crearon y eliminaron sus bases sintéticas. Al terminar se comprobó
+que no quedaban bases `ahre_test_*`, se apagó el proceso temporal y se eliminó
+su directorio de datos sintéticos. No se contactó la base del servidor de AHRE
+ni se utilizaron datos de la APK.
+Los cuatro archivos de manifiesto y lockfile conservaron sus hashes SHA-256
+anteriores a la preparación. La etapa 1 queda verificada; no se implementaron
+las correcciones de las etapas siguientes ni se generó una build de APK.
+
+### Preparación y recorrido reproducible
+
+La instalación de dependencias corresponde al líder, salvo autorización
+explícita para delegarla. En APP-AHRE y, por separado, en SERVER-AHRE/backend:
+
+```powershell
+npm ci --no-audit --no-fund
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el entorno desde el lockfile.' }
+```
+
+El comando recrea las dependencias instaladas con las versiones bloqueadas.
+No usar `npm update` ni `npm audit fix` para reconstruir esta línea base.
+Comprobar después que `package.json` y `package-lock.json` no tienen cambios.
+
+Ejecutar primero tipos, compilación y pruebas del backend. Para la integración
+real, el líder debe proporcionar MySQL 8.4 aislado de la instalación activa de
+AHRE, con un usuario que pueda crear y eliminar bases `ahre_test_*`.
+Configurar `DB_HOST`, `DB_PORT`, `DB_USER` y `DB_PASSWORD` mediante el entorno,
+sin versionar ni mostrar la contraseña. `AHRE_MYSQL_TEST=1` habilita las pruebas
+del backend. En la app también hace falta `AHRE_SERVER_SOURCE`, apuntando a
+SERVER-AHRE con su backend ya compilado. Los comandos están en los README de
+ambos repositorios.
+
+Registrar por separado pruebas aprobadas, fallidas y omitidas, y el commit
+usado. Una ejecución con casos MySQL omitidos no cierra la integración. La
+compilación del backend tampoco equivale a una build o prueba del APK.
+
+### Auditoría del lockfile
+
+`npm audit --package-lock-only --json` devuelve 14 paquetes afectados en la
+app: tres de severidad alta, nueve moderada y dos baja. Son cuatro avisos
+originales y su propagación en el árbol de Expo. El lockfile del backend no
+reporta vulnerabilidades en esta comprobación.
+
+| Paquete transitivo bloqueado | Cadena identificada | Severidad del aviso | Corrección publicada |
+| --- | --- | --- | --- |
+| `deepmerge 4.3.1` | `@expo/config` | Baja | El aviso no identifica una versión corregida. |
+| `glob 13.0.6` | Configuración, plugins, fingerprint, Metro y CLI de Expo | Moderada | `14.0.2`, fuera del rango `^13.0.0` declarado por sus consumidores. |
+| `minimatch 10.2.6` | `glob` y `@expo/fingerprint` | Moderada | `11.0.1`, fuera de `^10.2.2`. |
+| `zod 3.25.76` dentro de Expo | CLI de Expo | Alta | `4.6.6`, fuera de `^3.25.76`. El `zod 4.6.7` directo de AHRE es otra instalación. |
+
+Fuentes de los avisos: [deepmerge](https://github.com/advisories/GHSA-gcqx-w48m-w2h4),
+[glob](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4),
+[minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) y
+[Zod](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+
+No hay imports directos de estos paquetes en las fuentes propias de AHRE.
+Las cadenas observadas corresponden a herramientas de configuración,
+compilación y CLI; no se comprobó la explotabilidad de sus entradas ni que
+formen parte del código ejecutado por el APK. No interpretar este resultado
+como 14 fallos explotables en la aplicación instalada.
+
+La clasificación queda asignada al líder para la etapa de dependencias.
+La sugerencia automática de npm implica Expo `58.0.22`, un cambio de SDK;
+no se aplica durante esta etapa. Repetir la auditoría antes de decidir una
+corrección, sin forzar versiones transitivas incompatibles.
+
+
+### Retirada del grupo de formularios (etapa 7)
+
+La revisión histórica anterior describía las dependencias disponibles al migrar.
+El 3 de noviembre de 2026 el líder autorizó retirar `react-hook-form`,
+`@hookform/resolvers` y el Zod directo, sin referencias en AHRE. La copia
+`zod@3.25.76` de Expo CLI se conserva. El compilador y los tipos no cambian.

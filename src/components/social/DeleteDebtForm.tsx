@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { cancelarDeuda } from '../../social/socialService';
 import { nombreCompletoPersona } from '../../social/socialHelpers';

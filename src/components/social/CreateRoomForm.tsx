@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import AccionesFormulario from './SocialFormActions';
 import { useRef, useState } from 'react';

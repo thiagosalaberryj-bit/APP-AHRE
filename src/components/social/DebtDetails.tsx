@@ -1,5 +1,4 @@
 import crearEstilosDetalle from '../../styles/social/DebtDetailsStyles';
-import type { AspectoSocial } from '../../social/types';
 import { View, Text } from 'react-native';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { nombreCompletoPersona, formatearMontoSocial } from '../../social/socialHelpers';

@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import SelectorSegmentado from '../SegmentedSelector';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';

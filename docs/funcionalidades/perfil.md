@@ -3,12 +3,9 @@
 ## Alcance
 
 La pantalla existente de Perfil administra localmente la información del
-usuario autenticado y sus preferencias. No utiliza Internet ni un backend.
+usuario autenticado y sus preferencias. Los cambios se guardan primero en SQLite y generan pendientes para SERVER-AHRE. Cambiar la contraseña y desvincular la instalación requieren conexión.
 
-```text
-Perfil → consultar usuario y preferencias → editar o guardar preferencias
-Perfil → confirmar cierre de sesión → eliminar solo la sesión → Login
-```
+Perfil consulta el usuario y sus preferencias para permitir editarlos o guardarlos. Confirmar el cierre elimina solo la sesión local y vuelve a Login.
 
 ## Usuario actual
 
@@ -25,6 +22,8 @@ validan con las mismas reglas básicas de Registro, incluidos campos
 obligatorios, formato, longitud y correo único. Guardar actualiza `usuarios` y
 refleja los cambios inmediatamente. Cerrar el editor con la `X` descarta el
 borrador y no escribe en la base.
+
+Al cambiar el correo, el servicio devuelve `correoModificado` y la pantalla muestra un aviso: hasta que el servidor confirme el cambio, se usa el correo anterior para ingresar con conexión. La cuenta se conserva por su ID; el ingreso no sobrescribe su nombre o correo pendientes con la copia remota. La validación de correo único en esta pantalla es local; un rechazo remoto requiere revisión de la sincronización.
 
 ## Preferencias
 
@@ -51,7 +50,7 @@ detalle de depósitos, y permanece al cerrar la aplicación.
 
 La biometría solo verifica localmente a quien usa el dispositivo al abrir el
 editor; no almacena datos de huella ni reemplaza el verificador de contraseña.
-El cambio de contraseña verifica la contraseña actual, deriva un verificador
+El cambio de contraseña requiere sesión remota y conexión, verifica la contraseña actual, actualiza el servidor, deriva un verificador
 nuevo y actualiza `credenciales_usuario` en SQLite. El cambio queda disponible
 en los siguientes ingresos, incluso después de cerrar y volver a abrir AHRE.
 
@@ -96,6 +95,4 @@ usuario para el próximo inicio de sesión.
 
 ## Funcionamiento offline
 
-Todas las operaciones usan SQLite, SecureStore y estado local de la aplicación.
-Perfil, preferencias y cierre de sesión funcionan sin Wi-Fi, datos móviles o
-backend.
+La edición de perfil, las preferencias y el cierre de sesión local funcionan sin conexión, conservando pendientes. El registro, la primera autorización, el cambio de contraseña y la desvinculación necesitan servidor. Un correo editado offline no se convierte en correo de acceso remoto hasta que el servidor lo confirma.

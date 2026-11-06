@@ -1,4 +1,4 @@
-import { SetStateAction, useContext, useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   KeyboardAvoidingView,

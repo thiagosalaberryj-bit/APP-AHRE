@@ -1,5 +1,4 @@
 import crearEstilosSala from '../../styles/social/RoomDetailsStyles';
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { View, Text, Pressable } from 'react-native';
 import { nombreCompletoPersona } from '../../social/socialHelpers';

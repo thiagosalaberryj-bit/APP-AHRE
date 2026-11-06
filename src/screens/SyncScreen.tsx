@@ -1,5 +1,5 @@
 import {useCallback,useContext,useMemo,useRef,useState} from 'react';
-import {ActivityIndicator,Pressable,SectionList,Text,View} from 'react-native';
+import {Alert,ActivityIndicator,Pressable,SectionList,Text,View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect} from '@react-navigation/native';
 import {SafeAreaView,useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -7,9 +7,11 @@ import EncabezadoSeccion from '../components/SectionHeader';
 import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
 import {TEXTOS_SYNC} from '../components/SyncStatus';
 import {ContextoApariencia} from '../contexts/AppearanceContext';
-import {observarSincronizacion,obtenerVistaSincronizacion,sincronizarSesion} from '../sync/syncService';
+import {observarSincronizacion,obtenerVistaSincronizacion,sincronizarSesion,consultarReparacionPerfil,repararPerfilPendiente} from '../sync/syncService';
 import {consultarPendientes,type DatosPendientes,type RegistroPendiente} from '../sync/pendingService';
 import {obtenerSesionActual} from '../authentication/sessionService';
+import {RUTAS} from '../constants/routes';
+import type {ReparacionPerfil} from '../sync/protocol';
 import {consultarSaldoOculto} from '../profile/balanceVisibilityService';
 import {crearEstilosGlobales} from '../styles/globalStyles';
 import {crearEstilosSincronizacion} from '../styles/SyncScreenStyles';
@@ -24,6 +26,9 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
   const [datos,establecerDatos]=useState<DatosPendientes>({total:0,registros:[],soloLocal:false,ultimaSincronizacion:null});
   const [cargando,establecerCargando]=useState(true),[error,establecerError]=useState(''),[oculto,establecerOculto]=useState(true);
   const [mesesAbiertos,establecerMesesAbiertos]=useState<string[]>([]);
+  const [errorReparacion,establecerErrorReparacion]=useState('');
+  const [reparacion,establecerReparacion]=useState<ReparacionPerfil|null>(null);
+  const [reparando,establecerReparando]=useState(false);
   const secuencia=useRef(0),datosActuales=useRef(datos),cargaActiva=useRef(false);
   const cargar=useCallback(async(reemplazar=true)=>{
     if(!reemplazar&&cargaActiva.current)return;
@@ -31,7 +36,9 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
     try{
       const actuales=datosActuales.current;
       const resultado=await consultarPendientes(30,reemplazar?0:actuales.registros.length);
+      const propuesta=await consultarReparacionPerfil();
       if(peticion!==secuencia.current)return;
+      establecerReparacion(propuesta);
       const nuevos={...resultado,registros:reemplazar?resultado.registros:[...actuales.registros,...resultado.registros]};
       datosActuales.current=nuevos;establecerDatos(nuevos);establecerError('');
     }catch{if(peticion===secuencia.current)establecerError('No se pudieron consultar los pendientes. Volvé a intentar.');}
@@ -56,8 +63,19 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
     }
     return [...grupos].map(([key,grupo])=>({key,titulo:grupo.titulo,data:mesesAbiertos.includes(key)?grupo.data:[]}));
   },[datos.registros,mesesAbiertos]);
-  const ocupado=['comprobando','sincronizando'].includes(vista.estado);
+  const ocupado=reparando||['comprobando','sincronizando'].includes(vista.estado);
   const deshabilitado=ocupado||datos.soloLocal;
+  const confirmarReparacion=()=>{
+    if(!reparacion)return;
+    const propuesta=reparacion;
+    Alert.alert('Corregir correo pendiente',`Se reemplazará ${propuesta.correoAnterior} por ${propuesta.correoNuevo} en los cambios de perfil sin confirmar. Los movimientos y sus importes se conservan.`,[
+      {text:'Cancelar',style:'cancel'},
+      {text:'Aplicar corrección',onPress:()=>{
+        establecerErrorReparacion('');establecerReparando(true);
+        void repararPerfilPendiente(propuesta).catch(fallo=>establecerErrorReparacion(fallo instanceof Error?fallo.message:'No se pudo reparar.')).finally(()=>{establecerReparando(false);void cargar();});
+      }},
+    ]);
+  };
   return <SafeAreaView edges={['top']} style={globales.areaSegura}><View style={globales.pantalla}>
     <EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>navegacion.goBack()} mostrarSincronizacion={false}/>
     <SectionList sections={secciones} keyExtractor={r=>r.id} contentContainerStyle={estilos.contenido} stickySectionHeadersEnabled={false}
@@ -81,7 +99,12 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
         <Pressable accessibilityRole="button" accessibilityState={{disabled:deshabilitado,busy:ocupado}} disabled={deshabilitado} onPress={()=>{void sincronizarSesion().then(()=>cargar()).catch(()=>establecerError('No se pudo sincronizar. Volvé a intentar.'));}} style={[estilos.boton,deshabilitado&&estilos.deshabilitado]}>
           <Ionicons name="sync-outline" size={18} color={tema.botonPrincipalTexto}/><Text style={estilos.textoBoton}>{ocupado?'Sincronizando…':'Sincronizar ahora'}</Text>
         </Pressable>
-        {error?<View style={estilos.error}><Text accessibilityRole="alert" style={estilos.textoError}>{error}</Text><Pressable accessibilityRole="button" onPress={()=>{void cargar();}} style={estilos.reintentar}><Text style={estilos.valor}>Volver a intentar</Text></Pressable></View>:null}
+        {reparacion?<View style={estilos.reparacion}>
+          <Text style={estilos.texto}>El servidor rechazó el correo de un cambio pendiente. Corregilo en Perfil y volvé aquí para confirmarlo.</Text>
+          <Pressable accessibilityRole="button" disabled={ocupado} onPress={()=>navegacion.navigate(RUTAS.PERFIL)} style={estilos.boton}><Text style={estilos.textoBoton}>Corregir en Perfil</Text></Pressable>
+          <Pressable accessibilityRole="button" disabled={ocupado||reparacion.correoAnterior===reparacion.correoNuevo} onPress={confirmarReparacion} style={[estilos.boton,(ocupado||reparacion.correoAnterior===reparacion.correoNuevo)&&{opacity:0.5}]}><Text style={estilos.textoBoton}>Aplicar correo corregido</Text></Pressable>
+        </View>:null}
+        {errorReparacion||error?<View style={estilos.error}><Text accessibilityRole="alert" style={estilos.textoError}>{errorReparacion||error}</Text><Pressable accessibilityRole="button" onPress={()=>{void cargar();}} style={estilos.reintentar}><Text style={estilos.valor}>Volver a intentar</Text></Pressable></View>:null}
         {datos.total>0?<View style={estilos.encabezadoLista}><Text style={estilos.titulo}>Cambios pendientes</Text><Text style={estilos.ayuda}>Más recientes primero · Hora local</Text></View>:null}
       </View>}
       renderSectionHeader={({section})=><EncabezadoSeccionPlegable tema={tema} titulo={section.titulo} expandido={mesesAbiertos.includes(section.key)}

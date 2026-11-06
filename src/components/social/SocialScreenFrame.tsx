@@ -1,4 +1,3 @@
-import type { AspectoSocial } from '../../social/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import EncabezadoSeccion from '../SectionHeader';

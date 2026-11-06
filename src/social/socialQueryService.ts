@@ -1,9 +1,10 @@
-import type { ContextoSocial } from './socialStore';
 import type { Tablas } from '../database/types';
-import { conSocial, leerSocial, idVisible } from './socialStore';
+import { conLecturaSocial, leerSocial, idVisible } from './socialStore';
 import { sumaPagos, unidades } from './socialValidation';
 import { formatearMontoSocial } from './socialHelpers';
 import { leerPlanGasto } from './socialRoomDraft';
+
+const formatoFecha = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const diaLocal = (valor: string) => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) return valor;
@@ -12,7 +13,7 @@ const diaLocal = (valor: string) => {
 };
 const fechaCorta = (valor: string) => {
   const [anio, mes, dia] = diaLocal(valor).split('-').map(Number);
-  return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(anio, mes - 1, dia));
+  return formatoFecha.format(new Date(anio, mes - 1, dia));
 };
 
 function agruparPor<Registro, Clave>(registros: Registro[], clave: (registro: Registro) => Clave) {
@@ -27,7 +28,7 @@ function agruparPor<Registro, Clave>(registros: Registro[], clave: (registro: Re
 }
 
 export function cargarSocial() {
-  return conSocial(async (contexto) => {
+  return conLecturaSocial(async (contexto) => {
     const datos = await leerSocial(contexto), visibles = (id: string) => idVisible(id, contexto);
     const pagosPorDeuda = agruparPor(datos.pagos, p => p.deuda_id);
     const pagosPorParte = agruparPor(datos.pagos, p => p.participante_gasto_id);
@@ -41,13 +42,14 @@ export function cargarSocial() {
     const origenes = await contexto.conexion.getAllAsync<Pick<Tablas['pagos_sociales'], 'deuda_id'> & Pick<Tablas['movimientos'], 'id'|'tipo'|'monto'|'descripcion'|'fecha_hora'> & {deposito:string}>(`SELECT p.deuda_id, m.id, m.tipo, m.monto, m.descripcion, m.fecha_hora, d.nombre AS deposito
       FROM pagos_sociales p JOIN movimientos m ON m.id = p.movimiento_id JOIN depositos d ON d.id = m.deposito_id
       WHERE p.usuario_id = ? AND p.clase = 'origen_deuda' AND p.estado = 'vigente';`, [contexto.usuario.id]);
+    const origenesPorDeuda = agruparPor(origenes, o => o.deuda_id);
     const deudas = datos.deudas.filter(d => d.estado !== 'cancelada').map(deuda => {
       const pagado = sumaPagos(pagosPorDeuda.get(deuda.id) || []);
       const pendiente = Math.max(0, unidades(deuda.monto) - pagado), esPago = deuda.deudor_id === contexto.propia.id;
       const parte = partesPorId.get(deuda.participante_gasto_id || '');
       const gasto = gastosPorId.get(parte?.gasto_compartido_id || '');
       const sala = salasPorId.get(gasto?.sala_id || '');
-      const movimientoOrigen = origenes.find(o => o.deuda_id === deuda.id);
+      const movimientoOrigen = origenesPorDeuda.get(deuda.id)?.[0];
       return { id: deuda.id, personaId: visibles(esPago ? deuda.acreedor_id : deuda.deudor_id), tipo: esPago ? 'debo' : 'me_deben',
         descripcion: deuda.descripcion, fecha: diaLocal(deuda.fecha), fechaISO: deuda.fecha, monto: formatearMontoSocial(deuda.monto), montoNumero: deuda.monto,
         pendiente: formatearMontoSocial(pendiente / 100), pendienteNumero: pendiente / 100, saldada: pendiente === 0,

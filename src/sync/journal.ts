@@ -1,3 +1,4 @@
+import { prepararEsquemaSincronizacion } from '../database/migrations/001_initialSchema';
 import type { Conexion } from '../database/types';
 import { TABLAS_SYNC, type CambioSync, type TablaSync } from './protocol';
 const oyentes=new Set<()=>void>();
@@ -11,24 +12,7 @@ export function propietarioSql(tabla: TablaSync, alias: string) {
 }
 
 export async function prepararDiario(conexion: Conexion) {
-  await conexion.execAsync(`
-    CREATE TABLE IF NOT EXISTS sync_context (id INTEGER PRIMARY KEY CHECK(id=1), lote TEXT, importando INTEGER NOT NULL DEFAULT 0);
-    INSERT OR IGNORE INTO sync_context(id) VALUES(1);
-    CREATE TABLE IF NOT EXISTS sync_state (usuario_id TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 0, preparada INTEGER NOT NULL DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS sync_outbox (secuencia INTEGER PRIMARY KEY AUTOINCREMENT, lote TEXT NOT NULL, usuario_id TEXT NOT NULL, cambio TEXT NOT NULL);
-    CREATE INDEX IF NOT EXISTS sync_outbox_usuario ON sync_outbox(usuario_id,secuencia);
-    CREATE TABLE IF NOT EXISTS sync_local_dates (secuencia INTEGER PRIMARY KEY REFERENCES sync_outbox(secuencia) ON DELETE CASCADE, fecha TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS sync_last_success (usuario_id TEXT PRIMARY KEY, fecha TEXT NOT NULL);
-    CREATE TRIGGER IF NOT EXISTS sync_fecha_local AFTER INSERT ON sync_outbox
-    BEGIN INSERT INTO sync_local_dates(secuencia,fecha) VALUES(NEW.secuencia,strftime('%Y-%m-%dT%H:%M:%fZ','now')); END;
-    CREATE TRIGGER IF NOT EXISTS sync_limpiar_fecha AFTER DELETE ON sync_outbox
-    BEGIN DELETE FROM sync_local_dates WHERE secuencia=OLD.secuencia; END;
-    CREATE TABLE IF NOT EXISTS sync_authorization (usuario_id TEXT PRIMARY KEY, dispositivo_id TEXT NOT NULL, generacion INTEGER NOT NULL, revocada INTEGER NOT NULL DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS sync_batch_authorization (lote TEXT PRIMARY KEY, usuario_id TEXT NOT NULL, generacion INTEGER NOT NULL);
-    CREATE TRIGGER IF NOT EXISTS sync_autorizacion_lote AFTER INSERT ON sync_outbox
-    BEGIN INSERT OR IGNORE INTO sync_batch_authorization(lote,usuario_id,generacion)
-      SELECT NEW.lote,NEW.usuario_id,generacion FROM sync_authorization WHERE usuario_id=NEW.usuario_id; END;
-  `);
+  await prepararEsquemaSincronizacion(conexion);
   for (const tabla of TABLAS_SYNC) {
     const columnas = await conexion.getAllAsync<{name:string}>(`PRAGMA table_info(${tabla});`);
     for (const [accion, evento, alias] of [['guardar','INSERT','NEW'], ['guardar','UPDATE','NEW'], ['eliminar','DELETE','OLD']] as const) {
@@ -82,4 +66,41 @@ export async function aplicarCambios(conexion: Conexion, cambios: CambioSync[]) 
   }
   for (const trigger of triggers) await conexion.execAsync(trigger.sql);
   await conexion.runAsync('UPDATE sync_context SET importando=0 WHERE id=1');
+}
+
+export async function consultarReparacion(conexion: Conexion, usuarioId: string): Promise<import('./protocol').ReparacionPerfil|null> {
+  const rechazo=await conexion.getFirstAsync<{lote:string;base:number;generacion:number;contenido:string}>('SELECT * FROM sync_profile_rejection WHERE usuario_id=?',[usuarioId]);
+  if(!rechazo)return null;
+  const filas=await conexion.getAllAsync<{secuencia:number;lote:string;cambio:string;generacion:number|null}>(`SELECT o.secuencia,o.lote,o.cambio,a.generacion FROM sync_outbox o LEFT JOIN sync_batch_authorization a ON a.lote=o.lote AND a.usuario_id=o.usuario_id WHERE o.usuario_id=? ORDER BY o.secuencia`,[usuarioId]);
+  const autorizacion=await conexion.getFirstAsync<{generacion:number;revocada:number}>('SELECT generacion,revocada FROM sync_authorization WHERE usuario_id=?',[usuarioId]);
+  if(!filas.length||filas[0].lote!==rechazo.lote||!autorizacion||autorizacion.revocada||autorizacion.generacion!==rechazo.generacion||filas.some(f=>f.generacion!==rechazo.generacion))return null;
+  const cambios=filas.filter(f=>f.lote===rechazo.lote).map(f=>JSON.parse(f.cambio) as CambioSync);
+  if(JSON.stringify(cambios)!==rechazo.contenido||cambios.some(c=>c.tabla!=='usuarios'||c.accion!=='guardar'||c.datos.id!==usuarioId))return null;
+  const usuario=await conexion.getFirstAsync<{correo_electronico:string}>('SELECT correo_electronico FROM usuarios WHERE id=? AND activo=1',[usuarioId]);
+  if(!usuario)return null;
+  return {usuarioId,lote:rechazo.lote,correoAnterior:String(cambios[0].datos.correo_electronico),correoNuevo:usuario.correo_electronico,huella:JSON.stringify({rechazo,filas,correo:usuario.correo_electronico})};
+}
+
+export async function aplicarReparacion(conexion:Conexion,vista:import('./protocol').ReparacionPerfil){
+  const actual=await consultarReparacion(conexion,vista.usuarioId);
+  if(!actual||actual.huella!==vista.huella||actual.correoNuevo===actual.correoAnterior)throw new Error('La cola o el perfil cambiaron. Revisá la corrección nuevamente.');
+  const filas=await conexion.getAllAsync<{secuencia:number;lote:string;cambio:string}>('SELECT secuencia,lote,cambio FROM sync_outbox WHERE usuario_id=? ORDER BY secuencia',[vista.usuarioId]);
+  for(const fila of filas){
+    const cambio=JSON.parse(fila.cambio) as CambioSync;
+    if(cambio.tabla!=='usuarios'||cambio.accion!=='guardar'||cambio.datos.id!==vista.usuarioId)continue;
+    if(cambio.datos.correo_electronico===actual.correoNuevo)continue;
+    await conexion.runAsync('INSERT OR IGNORE INTO sync_profile_backup(usuario_id,secuencia,lote,cambio) VALUES(?,?,?,?)',[vista.usuarioId,fila.secuencia,fila.lote,fila.cambio]);
+    cambio.datos.correo_electronico=actual.correoNuevo;
+    await conexion.runAsync('UPDATE sync_outbox SET cambio=? WHERE usuario_id=? AND secuencia=?',[JSON.stringify(cambio),vista.usuarioId,fila.secuencia]);
+  }
+  await conexion.runAsync('DELETE FROM sync_profile_rejection WHERE usuario_id=?',[vista.usuarioId]);
+}
+
+export async function restaurarReparacion(conexion:Conexion,usuarioId:string,lote:string){
+  const filas=await conexion.getAllAsync<{secuencia:number;cambio:string;actual:string}>(`SELECT b.secuencia,b.cambio,o.cambio AS actual FROM sync_profile_backup b JOIN sync_outbox o ON o.usuario_id=b.usuario_id AND o.secuencia=b.secuencia WHERE b.usuario_id=? AND b.lote=?`,[usuarioId,lote]);
+  if(!filas.some(f=>f.cambio!==f.actual))return false;
+  // Restaurar también las copias de perfil posteriores que todavía sigan pendientes.
+  await conexion.runAsync(`UPDATE sync_outbox SET cambio=(SELECT b.cambio FROM sync_profile_backup b WHERE b.usuario_id=sync_outbox.usuario_id AND b.secuencia=sync_outbox.secuencia) WHERE usuario_id=? AND EXISTS(SELECT 1 FROM sync_profile_backup b WHERE b.usuario_id=sync_outbox.usuario_id AND b.secuencia=sync_outbox.secuencia)`,[usuarioId]);
+  await conexion.runAsync('DELETE FROM sync_profile_rejection WHERE usuario_id=?',[usuarioId]);
+  return true;
 }

@@ -1,6 +1,6 @@
-import type { Conexion, Deposito, Tablas } from '../types';
+import type { Conexion, Tablas } from '../types';
 import { ejecutarConManejoDeErrores, ErrorBaseDatos } from '../errors';
-import { ejecutarConConexion } from '../connectionQueue';
+import { ejecutarLecturaConConexion } from '../connectionQueue';
 import { generarIdentificador } from '../identifiers';
 import { ejecutarTransaccion } from '../transactions';
 import { crearRepositorio } from './repositoryFactory';
@@ -114,7 +114,7 @@ async function actualizar(id: string, cambios: Partial<import('../types').Deposi
 
 async function consultarSaldoActual(depositoId: string, conexion: Conexion | null = null) {
   return ejecutarConManejoDeErrores('consulta', () =>
-    ejecutarConConexion(async (baseDatos) => {
+    ejecutarLecturaConConexion(async (baseDatos) => {
       const resultado = await baseDatos.getFirstAsync<Pick<Tablas['depositos'], 'saldo_actual'>>(
         'SELECT saldo_actual FROM depositos WHERE id = ?;',
         [depositoId],
@@ -181,7 +181,7 @@ async function actualizarSaldoInformado(
 
 async function consultarHistorialSaldos(depositoId: string, conexion: Conexion | null = null) {
   return ejecutarConManejoDeErrores('consulta', () =>
-    ejecutarConConexion((baseDatos) =>
+    ejecutarLecturaConConexion((baseDatos) =>
       baseDatos.getAllAsync<Tablas['historial_saldos_deposito']>(
         `SELECT * FROM historial_saldos_deposito
          WHERE deposito_id = ?

@@ -1,7 +1,6 @@
 import { repartirGasto } from '../../social/socialValidation';
 import { convertirMontoMovimiento } from '../../utils/movementValidation';
 import SelectorSegmentado from '../SegmentedSelector';
-import type { AspectoSocial } from '../../social/types';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useEffect, useState } from 'react';
 import { montoParaEntrada, nombreCompletoPersona } from '../../social/socialHelpers';

@@ -504,7 +504,7 @@ function GraficoColumnas({
   const altoMaximoBarra = altoContenedor - ESPACIADO.grande - ESPACIADO.minimo - 20;
 
   const medirGrafico = useCallback(() => {
-    referenciaGrafico.current?.measureInWindow((x, y, ancho) => {
+    referenciaGrafico.current?.measureInWindow((x, _y, ancho) => {
       medidasGrafico.current = { x, ancho };
     });
   }, []);

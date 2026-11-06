@@ -2,7 +2,6 @@ import { crearEstilosEditorGastos } from '../../styles/social/ExpenseEditorStyle
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosLista from '../../styles/social/ExpenseListRowStyles';
 import { convertirMontoMovimiento } from '../../utils/movementValidation';
-import type { AspectoSocial } from '../../social/types';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { generarIdentificador } from '../../database/identifiers';

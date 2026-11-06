@@ -1,6 +1,5 @@
 import usarPanelInferior from '../../utils/useBottomSheet';
 import SelectorSegmentado from '../SegmentedSelector';
-import type { AspectoSocial } from '../../social/types';
 import { useState } from 'react';
 import { Animated, Modal, View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

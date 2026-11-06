@@ -48,6 +48,26 @@ async function escenarioNegocio(t:import('node:test').TestContext){
   return {...e,usuario,db,url,comprobar,conectar:()=>{offline=false;},desconectar:()=>{offline=true;},perderConfirmacion:()=>{perderRespuesta=true;}};
 }
 
+test('MySQL: recuperar por ID un correo editado offline conserva perfil, saldos y acceso posterior',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+  const e=await escenarioNegocio(t);
+  const deposito=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Correo',tipo:'efectivo',saldo_inicial:500,icono:'cash-outline'});
+  await e.comprobar();
+  await e.actualizarPerfil({nombre:'Nombre offline',correo:'nuevo@example.test'});
+  await e.movimientosRepositorio.crear({deposito_id:deposito.id,tipo:'egreso',categoria:'alimentacion',monto:25,descripcion:'Correo offline',fecha_hora:new Date().toISOString()});
+  await e.cerrarSesion();e.conectar();
+  await assert.rejects(e.iniciarSesion({correo:'nuevo@example.test',contrasena:'NegocioPrueba123!'}),{codigo:'credenciales_invalidas'});
+  const recuperada=await e.iniciarSesion({correo:'negocio@example.test',contrasena:'NegocioPrueba123!',recordar:true});
+  assert.equal(recuperada.id,e.usuario.id);assert.equal(recuperada.nombre,'Nombre offline');
+  assert.equal(recuperada.correo_electronico,'nuevo@example.test');
+  await e.comprobar();
+  assert.equal((await e.db.get('SELECT correo_electronico FROM usuarios WHERE id=?',[e.usuario.id]))!.correo_electronico,'nuevo@example.test');
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM usuarios').get()!.n,1);
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM preferencias').get()!.n,1);
+  assert.equal((await e.db.get('SELECT saldo_actual FROM depositos WHERE id=?',[deposito.id]))!.saldo_actual,475);
+  await e.cerrarSesion();e.conectar();
+  await e.iniciarSesion({correo:'nuevo@example.test',contrasena:'NegocioPrueba123!',recordar:false});
+});
+
 test('negocio MySQL: depósitos, ingresos, egresos, ajustes y transferencias se reconcilian offline sin duplicarse',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
   const e=await escenarioNegocio(t);e.desconectar();
   const datos={usuario_id:e.usuario.id,tipo:'efectivo' as const,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'};
@@ -250,4 +270,70 @@ test('integración real MySQL: offline, reemplazo confirmado, revocación, pendi
   assert.equal((await tres.cargarSocial()).salas[0].estado,'cerrada');
   assert.deepEqual(uno.base.prepare('PRAGMA foreign_key_check').all(),[]);
   assert.deepEqual(dos.base.prepare('PRAGMA foreign_key_check').all(),[]);
+});
+
+test('MySQL: reparar correo rechazado conserva eventos, respalda originales y libera FIFO',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+  const e=await escenarioNegocio(t);await e.comprobar();e.conectar();
+  await e.solicitarRemoto('/auth/register',{id:randomUUID(),nombre:'Otra cuenta',correo:'ocupado@example.test',contrasena:'OtraCuenta123!',dispositivoId:randomUUID()});
+  await e.actualizarPerfil({nombre:'Perfil pendiente',correo:'ocupado@example.test'});
+  await e.sincronizarCuenta(e.usuario.id);
+  assert.equal(e.obtenerVistaSincronizacion().estado,'conflicto');
+  let propuesta=await e.consultarReparacionPerfil();assert.ok(propuesta);
+  const reiniciada=await preparar(t,true,{url:e.url,fetch,base:e.base,almacenamiento:e.almacenamiento});
+  await reiniciada.iniciarSesion({correo:'negocio@example.test',contrasena:'NegocioPrueba123!',recordar:false});
+  assert.ok(await reiniciada.consultarReparacionPerfil());
+  const rechazo=e.base.prepare('SELECT * FROM sync_profile_rejection').get();assert.ok(rechazo);
+  await assert.rejects(e.repararPerfilPendiente(propuesta),/cola o el perfil/);
+  e.desconectar();
+  await e.actualizarPerfil({nombre:'Nombre final',correo:'corregido@example.test'});
+  const deposito=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Posterior',tipo:'efectivo',saldo_inicial:500,icono:'cash-outline'});
+  await e.movimientosRepositorio.crear({deposito_id:deposito.id,tipo:'egreso',categoria:'alimentacion',monto:25,descripcion:'Conservar',fecha_hora:new Date().toISOString()});
+  const finanzas=JSON.stringify(e.base.prepare("SELECT secuencia,lote,cambio FROM sync_outbox WHERE json_extract(cambio,'$.tabla')<>'usuarios' ORDER BY secuencia").all());
+  await assert.rejects(e.repararPerfilPendiente(propuesta));
+  propuesta=await e.consultarReparacionPerfil();assert.ok(propuesta);assert.equal(propuesta.correoNuevo,'corregido@example.test');
+  e.conectar();
+  // Una edición posterior a la confirmación invalida la vista previa.
+  await e.actualizarPerfil({nombre:'Nombre definitivo',correo:'corregido@example.test'});
+  await assert.rejects(e.repararPerfilPendiente(propuesta),/cola o el perfil/);
+  propuesta=await e.consultarReparacionPerfil();assert.ok(propuesta);
+  e.perderConfirmacion();await e.repararPerfilPendiente(propuesta);
+  assert.equal(e.obtenerVistaSincronizacion().estado,'offline');
+  assert.equal(JSON.stringify(e.base.prepare("SELECT secuencia,lote,cambio FROM sync_outbox WHERE json_extract(cambio,'$.tabla')<>'usuarios' ORDER BY secuencia").all()),finanzas);
+  assert.ok(Number(e.base.prepare('SELECT COUNT(*) n FROM sync_profile_backup').get()!.n)>0);
+  await e.sincronizarCuenta(e.usuario.id);
+  assert.equal(e.obtenerVistaSincronizacion().estado,'online');
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM sync_outbox').get()!.n,0);
+  assert.equal((await e.db.get('SELECT correo_electronico FROM usuarios WHERE id=?',[e.usuario.id]))!.correo_electronico,'corregido@example.test');
+  assert.equal((await e.db.get('SELECT saldo_actual FROM depositos WHERE id=?',[deposito.id]))!.saldo_actual,475);
+  assert.equal((await e.db.get('SELECT COUNT(*) n FROM movimientos'))!.n,1);
+  e.desconectar();
+  await e.actualizarPerfil({nombre:'Otro intento',correo:'ocupado@example.test'});
+  e.conectar();await e.sincronizarCuenta(e.usuario.id);
+  await e.actualizarPerfil({nombre:'Conservar',correo:'final@example.test'});
+  const revocada=await e.consultarReparacionPerfil();assert.ok(revocada);
+  await e.marcarRevocada(e.usuario.id);
+  const colaRevocada=JSON.stringify(e.base.prepare('SELECT * FROM sync_outbox').all());
+  await assert.rejects(e.repararPerfilPendiente(revocada));
+  assert.equal(JSON.stringify(e.base.prepare('SELECT * FROM sync_outbox').all()),colaRevocada);
+});
+
+
+test('MySQL: ingreso y egreso del formulario en un depósito recién creado conservan el saldo al sincronizar y reiniciar',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+  const e=await escenarioNegocio(t);e.desconectar();
+  const fecha=new Date(2026,10,2,18,42,35,750);
+  const deposito=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Depósito nuevo',tipo:'efectivo',saldo_inicial:1000,icono:'cash-outline',fecha_creacion:fecha.toISOString()});
+  const datos={descripcion:'Creación y movimiento en el mismo minuto',deposito_id:deposito.id,fecha,hora:'18:42',recurrente:false};
+  await e.crearMovimiento({...datos,monto:'100',categoria:'sueldo'},'ingreso');
+  await e.crearMovimiento({...datos,monto:'25',categoria:'alimentacion'},'egreso');
+  assert.equal((await e.depositosRepositorio.consultarPorId(deposito.id))!.saldo_actual,1075);
+  await e.comprobar();
+  assert.equal((await e.db.get('SELECT saldo_actual FROM depositos WHERE id=?',[deposito.id]))!.saldo_actual,1075);
+  await e.cerrarSesion();e.conectar();
+  // Base SQLite vacía con la misma identidad de instalación: importa el estado confirmado.
+  const reiniciada=await preparar(t,true,{url:e.url,fetch,almacenamiento:e.almacenamiento});
+  await reiniciada.iniciarSesion({correo:'negocio@example.test',contrasena:'NegocioPrueba123!'});
+  assert.equal(reiniciada.obtenerVistaSincronizacion().estado,'online');
+  assert.equal((await reiniciada.depositosRepositorio.consultarPorId(deposito.id))!.saldo_actual,1075);
+  assert.equal(reiniciada.base.prepare('SELECT COUNT(*) n FROM movimientos WHERE deposito_id=?').get(deposito.id)!.n,2);
+  assert.equal(await reiniciada.contarRegistrosPendientes(e.usuario.id),0);
 });

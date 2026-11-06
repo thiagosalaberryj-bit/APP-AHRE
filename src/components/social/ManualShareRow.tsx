@@ -1,6 +1,5 @@
 import crearEstilosReparto from '../../styles/social/ExpenseFormStyles';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
-import type { AspectoSocial } from '../../social/types';
 import { View, Text } from 'react-native';
 import ImporteTicket from './TicketAmountInput';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
