@@ -92,3 +92,20 @@ la documentación de ambos repositorios.
 
 Las fuentes de la app, dependencias y scripts de despliegue se conservaron.
 No se repiten pruebas funcionales por estos cambios exclusivamente documentales.
+
+## Verificación de los últimos ajustes de interfaz
+
+El 5 de noviembre de 2026 se verificó el commit `63363c8` de la rama
+`codex/cambios-interfaz`: `npm run typecheck` correcto y `npm test` con
+194 pruebas, 186 aprobadas, 8 omitidas y ningún fallo. Las omisiones dependen
+de entornos externos; no equivalen a pruebas aprobadas. La suite incluye la
+comprobación nueva del cierre anterior con depósitos nuevos, registros
+históricos y reversiones. Después solo se amplió la documentación.
+
+Estos ajustes unifican cards y filtros, las proporciones de los resúmenes de
+Inicio y Social, la variación del balance general y la presentación compacta
+con desplazamiento del dato mensual en Detalle de depósito. TypeScript y las
+pruebas no verifican layout ni animaciones nativas: la revisión en dispositivo
+debe cubrir textos largos, privacidad, claro/oscuro y reducción de movimiento.
+El túnel Expo de desarrollo no implica que se haya generado o publicado un APK
+con estos cambios.

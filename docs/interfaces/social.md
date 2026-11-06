@@ -68,6 +68,11 @@ radio de 10 puntos y las franjas de importe, de 5. El estado sin deudas usa el
 mismo borde fino del tema. Los ajustes de resumen y acciones son locales al panel. El historial de deudas
 comparte la card compacta del panel. Se mantienen los temas claro y oscuro.
 
+El resumen principal comparte proporciones con el Balance de Inicio: acciones
+de altura mínima de 74 puntos, etiquetas de 12 con seminegrita y recuadros de
+totales con fondo del tema, radio de 10 y relleno de 12. Mantiene dos totales
+independientes, «Te deben» y «Debés», mientras Inicio presenta el saldo general.
+
 La card de deuda se centraliza en `src/components/DebtCard.tsx`
 (`TarjetaDeuda`), con estilos propios en `src/styles/DebtCardStyles.ts` que
 reutilizan la base de Movimientos en `FinancialRecordCardStyles.ts`.

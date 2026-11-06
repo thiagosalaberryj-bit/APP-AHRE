@@ -100,6 +100,19 @@ suave y el importe alineado a la derecha. El icono de ampliación aparece junto
 a «Saldo» cuando el importe visible es largo, como en el detalle de movimiento.
 Las opciones quedan en la parte inferior de la tarjeta, a la derecha de la fila
 de comparación mensual. La descripción queda libre de botones.
+La comparación ocupa una columna compacta: «Variación mensual» en el primer
+renglón y el dato con su ícono justo debajo, separados por 4 puntos. El botón
+de tres puntos queda a la derecha del conjunto, centrado respecto de ambas
+filas, y conserva su área de 44 por 44 puntos.
+
+Si el dato supera el ancho disponible, se muestra en una sola línea y se
+desplaza automáticamente hasta el final. Espera un segundo antes de avanzar,
+se mueve a velocidad constante y, al llegar al final, espera tres segundos
+antes de volver al inicio. Cuando cabe completo permanece quieto. La animación
+se detiene al salir de la pantalla y se reinicia al cambiar el contenido o las
+medidas. Respeta la preferencia del sistema de reducir movimiento: en ese caso
+permite deslizar el texto manualmente. La etiqueta accesible conserva el dato
+completo y, al ocultar el saldo, se reemplaza por «Variación mensual oculta».
 La tarjeta usa radio de 10 puntos y conserva la separación superior de 24 puntos.
 Los modales del detalle (opciones, saldo, edición, íconos y eliminación) usan
 superficies del tema, ancho máximo de 480 puntos y radio de 12 puntos. Comparten

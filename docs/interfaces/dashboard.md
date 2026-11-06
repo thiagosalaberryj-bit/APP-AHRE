@@ -14,10 +14,10 @@ disponible.
 La pantalla se compone de:
 
 1. encabezado con marca, bienvenida, nombre y accesos a Notificaciones y Perfil;
-2. tarjeta de balance con una franja superior integrada titulada «Balance»,
+2. tarjeta de balance con título «Balance», recuadro de saldo y variación mensual,
    control para ocultar el monto y acciones rápidas;
 3. lista local de depósitos y acceso para crear uno;
-4. hasta cinco movimientos recientes, agrupados por día, y acceso a Movimientos.
+4. hasta cinco movimientos recientes, con fecha dentro de cada card, y acceso a Movimientos.
 
 No se muestra una sección de deudas en el Dashboard.
 

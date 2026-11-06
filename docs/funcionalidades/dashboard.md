@@ -23,6 +23,29 @@ La visibilidad de los saldos se guarda por usuario en SecureStore y se comparte
 entre el balance general, los saldos de la lista y el detalle de cada depósito.
 Al ocultarlos, la comparación mensual del detalle también deja de mostrar montos.
 
+### Comparación con el cierre anterior
+
+El resumen consulta `movimientosRepositorio.consultarSaldoCierreAnterior` con
+el comienzo del mes actual en la zona horaria local, convertido a ISO. La
+consulta serializada reconstruye el saldo al cierre del mes anterior de los
+depósitos que siguen activos y ya existían entonces: resta del saldo actual
+el impacto posterior de movimientos y ajustes manuales registrados en el
+historial de saldos. Respeta las reversiones de movimientos y transferencias;
+los registros históricos anteriores al alta del depósito no afectan su saldo.
+Los depósitos creados durante el mes no aportan saldo al cierre anterior.
+
+Si la base es positiva, el porcentaje es
+`(saldo actual - saldo al cierre) / saldo al cierre × 100`, redondeado a una
+decimal. Si no hay base, es cero o es negativa, se informa que no hay saldo
+anterior para comparar. Cero por ciento se presenta como «Sin cambios».
+Este dato compara saldos de los depósitos actualmente activos: incluye el
+dinero incorporado en depósitos nuevos y no representa ingresos, gastos ni
+rentabilidad. No es una instantánea histórica inmutable: cambios retroactivos
+de los registros pueden modificar la referencia.
+
+La comparación se actualiza junto con el resto del Dashboard al recuperar el
+foco. Al ocultar el saldo, tampoco se muestra el porcentaje ni su dirección.
+
 ## Movimientos recientes
 
 Se consultan los movimientos asociados a los identificadores de los depósitos
