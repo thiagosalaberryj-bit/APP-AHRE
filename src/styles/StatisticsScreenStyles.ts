@@ -57,15 +57,6 @@ export function crearEstilosEstadisticas(tema: Tema) {
     },
 
     encabezadoFiltrosRapidos: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIADO.pequeno },
-    filtroRapido: {
-      minHeight: 38, paddingHorizontal: ESPACIADO.medio,
-      alignItems: 'center', justifyContent: 'center',
-      borderRadius: BORDES.radios.campo / 2, borderWidth: BORDES.anchos.fino,
-      borderColor: tema.borde, backgroundColor: tema.superficie,
-    },
-    filtroRapidoActivo: { backgroundColor: tema.encabezado },
-    textoFiltroRapido: { color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.secundario },
-    textoFiltroRapidoActivo: { color: tema.encabezadoTexto },
     accionFiltroRapido: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.minimo },
     textoAccionFiltroRapido: { color: tema.foco, fontSize: TIPOGRAFIA.tamanos.secundario, fontWeight: TIPOGRAFIA.pesos.seminegrita },
     descripcionFiltrosRapidos: { color: tema.textoSecundario, fontSize: TIPOGRAFIA.tamanos.auxiliar },

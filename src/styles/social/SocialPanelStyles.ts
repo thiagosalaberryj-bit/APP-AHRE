@@ -21,7 +21,7 @@ export default function crearEstilosPropios(tema: Tema) {
     accionPanel: {
       flex: 1,
       minWidth: 0,
-      minHeight: 64,
+      minHeight: 74,
       alignItems: 'center',
       justifyContent: 'center',
       gap: ESPACIADO.minimo,

@@ -58,6 +58,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
   const [depositos, establecerDepositos] = useState<import('../database/types').Deposito[]>([]);
   const [movimientos, establecerMovimientos] = useState<ReturnType<typeof prepararMovimiento>[]>([]);
   const [balance, establecerBalance] = useState(0);
+  const [saldoAnterior, establecerSaldoAnterior] = useState<number | null>(null);
   const [cargando, establecerCargando] = useState(true);
   const [errorCarga, establecerErrorCarga] = useState<string | null>(null);
   const secuenciaCarga = useRef(0);
@@ -132,6 +133,10 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
         (total, deposito) => total + (Number(deposito.saldo_actual) || 0),
         0,
       );
+      const ahora = new Date();
+      const cierreAnterior = await movimientosRepositorio.consultarSaldoCierreAnterior(
+        sesion.usuario.id, new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString(),
+      );
 
       if (identificadorCarga !== secuenciaCarga.current) return;
       datosCargados.current = true;
@@ -139,6 +144,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
       establecerDepositos(depositosUsuario);
       establecerMovimientos(movimientosPreparados);
       establecerBalance(balanceUsuario);
+      establecerSaldoAnterior(cierreAnterior);
     } catch (_error) {
       if (identificadorCarga !== secuenciaCarga.current) return;
       const mensaje = usuarioNoDisponible
@@ -160,6 +166,10 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
     };
   }, [cargarDatos]));
 
+  const variacion = saldoAnterior !== null && saldoAnterior > 0
+    ? Math.round((balance - saldoAnterior) / saldoAnterior * 1000) / 10 : null;
+  const colorVariacion = variacion === null || variacion === 0 ? tema.textoSecundario : variacion > 0 ? tema.exito : tema.error;
+
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
@@ -180,38 +190,39 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
             <View style={estilos.contenedorTarjetaBalance}>
               <View style={[estilosGlobales.tarjeta, estilos.tarjetaBalance]}>
                 <View style={estilos.encabezadoBalance}>
-                  <Text style={[estilos.textoPestanaBalance, { color: tema.textoPrincipal }]}>Balance</Text>
+                  <Ionicons color={tema.foco} name="wallet-outline" size={20} />
+                  <Text style={estilos.textoPestanaBalance}>Balance</Text>
                 </View>
                 <View style={estilos.contenidoBalance}>
                   <View style={estilos.filaBalance}>
+                    <View style={estilos.encabezadoTotal}>
+                      <View style={estilos.etiquetaTotal}>
+                        <Ionicons color={tema.foco} name="cash-outline" size={20} />
+                        <Text style={estilosGlobales.etiqueta}>Saldo disponible</Text>
+                      </View>
+                      <View style={estilos.controlesTotal}>
+                        <Pressable accessibilityLabel={saldoVisible ? 'Ocultar saldo' : 'Mostrar saldo'} accessibilityRole="button"
+                          disabled={!usuario || guardandoVisibilidadSaldo} hitSlop={8} onPress={alternarVisibilidadSaldo} style={estilos.botonVisibilidad}>
+                          <Ionicons color={tema.textoSecundario} name={saldoVisible ? 'eye-outline' : 'eye-off-outline'} size={20} />
+                        </Pressable>
+                        <Pressable accessibilityLabel="Ver movimientos" accessibilityRole="button" hitSlop={8}
+                          onPress={() => navegacion.navigate(RUTAS.MOVIMIENTOS)} style={estilos.botonAccesoMovimientos}>
+                          <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
+                        </Pressable>
+                      </View>
+                    </View>
                     <View style={estilos.filaSaldo}>
-                      <Text style={[estilosGlobales.monto, estilos.montoBalance]}>
+                      <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.monto, estilos.montoBalance]}>
                         {errorCarga || (cargando && !datosCargados.current) ? '—' : saldoVisible ? formatearMonto(balance) : '$ •••••••'}
                       </Text>
-                      <Pressable
-                        accessibilityLabel={saldoVisible ? 'Ocultar saldo' : 'Mostrar saldo'}
-                        accessibilityRole="button"
-                        disabled={!usuario || guardandoVisibilidadSaldo}
-                        hitSlop={8}
-                        onPress={alternarVisibilidadSaldo}
-                        style={estilos.botonVisibilidad}
-                      >
-                        <Ionicons
-                          color={tema.textoSecundario}
-                          name={saldoVisible ? 'eye-outline' : 'eye-off-outline'}
-                          size={21}
-                        />
-                      </Pressable>
                     </View>
-                    <Pressable
-                      accessibilityLabel="Ver movimientos"
-                      accessibilityRole="button"
-                      hitSlop={8}
-                      onPress={() => navegacion.navigate(RUTAS.MOVIMIENTOS)}
-                      style={estilos.botonAccesoMovimientos}
-                    >
-                      <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={21} />
-                    </Pressable>
+                    {!errorCarga && datosCargados.current ? <View style={estilos.comparacionBalance}>
+                      <Ionicons color={saldoVisible ? colorVariacion : tema.textoSecundario}
+                        name={!saldoVisible || variacion === null || variacion === 0 ? 'remove-outline' : variacion > 0 ? 'trending-up-outline' : 'trending-down-outline'} size={16} />
+                      <Text style={[estilos.textoComparacion, { color: saldoVisible ? colorVariacion : tema.textoSecundario }]}>
+                        {!saldoVisible ? 'Comparación oculta' : variacion === null ? 'Sin saldo anterior para comparar' : variacion === 0 ? 'Sin cambios respecto al cierre del mes anterior' : `${Math.abs(variacion).toLocaleString('es-AR')} % ${variacion > 0 ? 'más' : 'menos'} que al cierre del mes anterior`}
+                      </Text>
+                    </View> : null}
                   </View>
 
                   <View style={estilos.accionesRapidas}>
@@ -225,7 +236,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                           pressed && estilos.accionRapidaPresionada,
                         ]}
                       >
-                        <Ionicons color={tema.encabezado} name={accion.icono as NombreIcono} size={27} />
+                        <Ionicons color={tema.botonPrincipalTexto} name={accion.icono as NombreIcono} size={20} />
                         <Text style={estilos.textoAccionRapida}>{accion.etiqueta}</Text>
                       </Pressable>
                     ))}

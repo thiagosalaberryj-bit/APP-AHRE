@@ -694,9 +694,35 @@ async function eliminar(id: string, conexion: Conexion | null = null) {
   );
 }
 
+async function consultarSaldoCierreAnterior(usuarioId: string, inicioMes: string) {
+  if (!usuarioId || !validarMarcaTemporal(inicioMes)) throw new ErrorBaseDatos('integridad');
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async conexion => {
+    const fila = await conexion.getFirstAsync<{ saldo: number | null }>(`
+      SELECT ROUND(SUM(d.saldo_actual - COALESCE((
+        SELECT SUM(CASE WHEN m.tipo IN ('ingreso', 'transferencia_entrada') THEN m.monto ELSE -m.monto END)
+        FROM movimientos m
+        LEFT JOIN movimientos original ON original.id = m.reversion_de_id
+        LEFT JOIN transferencias t ON t.id = m.transferencia_id
+        LEFT JOIN transferencias transferencia_original ON transferencia_original.id = t.reversion_de_id
+        WHERE m.deposito_id = d.id AND m.anulado = 0
+          AND julianday(m.fecha_hora) >= julianday(?)
+          AND julianday(COALESCE(original.fecha_hora, transferencia_original.fecha_hora, m.fecha_hora)) >= julianday(d.fecha_creacion)
+      ), 0) - COALESCE((
+        SELECT SUM(h.saldo_informado - h.saldo_anterior)
+        FROM historial_saldos_deposito h WHERE h.deposito_id = d.id
+          AND julianday(h.fecha_hora) >= julianday(?)
+      ), 0)), 2) AS saldo
+      FROM depositos d
+      WHERE d.usuario_id = ? AND d.activo = 1 AND julianday(d.fecha_creacion) < julianday(?);
+    `, [inicioMes, inicioMes, usuarioId, inicioMes]);
+    return fila?.saldo ?? null;
+  }));
+}
+
 export const movimientosRepositorio = Object.freeze({
   ...repositorioBaseMovimientos,
   consultarHistorial,
+  consultarSaldoCierreAnterior,
   consultarOpcionesHistorial,
   consultarHistorialPorId,
   consultarResumenPorCategoria,

@@ -41,7 +41,7 @@ export default function FormularioRegistrarPago({
   return <>
     <View style={estilos.grupoCampo}>
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.encabezadoSeccion}>{esPago ? `Le pagás a ${nombreCompletoPersona(persona)}` : `Recibís de ${nombreCompletoPersona(persona)}`}</Text>
-      <TarjetaDeuda deuda={deuda} nombrePersona={nombreCompletoPersona(obtenerPersona(deuda.personaId))} compacta={false} soloLectura {...aspecto} />
+      <TarjetaDeuda deuda={deuda} nombrePersona={nombreCompletoPersona(obtenerPersona(deuda.personaId))} soloLectura {...aspecto} />
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{deuda.origen} · Original: {deuda.monto}</Text>
       {deuda.estado.startsWith('Pago parcial') ? <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{deuda.estado}</Text> : null}
     </View>

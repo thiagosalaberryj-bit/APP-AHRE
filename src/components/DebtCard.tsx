@@ -10,17 +10,16 @@ type PropiedadesTarjetaDeuda = {
   nombrePersona: string;
   alAbrir?: () => void;
   soloLectura?: boolean;
-  compacta?: boolean;
 };
 
-export default function TarjetaDeuda({ tema, deuda, nombrePersona, alAbrir, soloLectura = false, compacta = true }: PropiedadesTarjetaDeuda) {
-  const estilos = crearEstilosTarjetaDeuda(tema, compacta);
-  const colorEstado = deuda.saldada ? tema.exito : deuda.tipo === 'debo' ? tema.error : tema.foco;
+export default function TarjetaDeuda({ tema, deuda, nombrePersona, alAbrir, soloLectura = false }: PropiedadesTarjetaDeuda) {
+  const estilos = crearEstilosTarjetaDeuda(tema);
+  const colorEstado = deuda.saldada || deuda.tipo !== 'debo' ? tema.exito : tema.error;
   const importe = deuda.saldada ? deuda.monto : deuda.pendiente;
   const estado = deuda.saldada ? 'Saldada' : deuda.tipo === 'debo' ? 'Le debés' : 'Te debe';
   const contenido = <>
     <View style={[estilos.icono, { backgroundColor: colorEstado + '18' }]}>
-      <Ionicons color={colorEstado} name={deuda.saldada ? 'checkmark-circle-outline' : 'swap-horizontal-outline'} size={20} />
+      <Ionicons color={colorEstado} name={deuda.saldada ? 'checkmark-circle-outline' : 'swap-horizontal-outline'} size={18} />
     </View>
     <View style={estilos.contenido}>
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.titulo}>{deuda.descripcion}</Text>
@@ -30,11 +29,11 @@ export default function TarjetaDeuda({ tema, deuda, nombrePersona, alAbrir, solo
       </View>
     </View>
     <View style={estilos.franjaImporte}>
-      <View style={estilos.fila}>
-        <Text numberOfLines={1} style={[estilos.estado, { color: colorEstado }]}>{estado}</Text>
+      <View style={estilos.filaTipo}>
+        <Text numberOfLines={1} style={[estilos.tipo, { color: colorEstado }]}>{estado}</Text>
         {!soloLectura ? <Ionicons color={tema.textoSecundario} name="chevron-forward" size={16} /> : null}
       </View>
-      <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.titulo}>{importe}</Text>
+      <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.importe}>{importe}</Text>
     </View>
   </>;
   const etiqueta = deuda.descripcion + '. ' + nombrePersona + '. ' + (deuda.saldada ? 'Saldada' : 'Pendiente') + '. ' + importe;

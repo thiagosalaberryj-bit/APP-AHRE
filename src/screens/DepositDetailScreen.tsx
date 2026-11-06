@@ -4,7 +4,9 @@ import type { NombreIcono } from '../constants/movimientos';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import {
   ActivityIndicator,
+  AccessibilityInfo,
   Animated,
+  Easing,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
@@ -163,6 +165,38 @@ function SeccionFiltro({ titulo, resumen, abierta, alAlternar, colorAcento, esti
       {abierta ? <View style={estilos.contenidoSeccionFiltro}>{children}</View> : null}
     </View>
   );
+}
+
+function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: import('react-native').StyleProp<import('react-native').TextStyle> }) {
+  const desplazamiento = useRef(new Animated.Value(0)).current;
+  const [anchoVisible, establecerAnchoVisible] = useState(0);
+  const [anchoTexto, establecerAnchoTexto] = useState(0);
+  const [reducirMovimiento, establecerReducirMovimiento] = useState(true);
+  useEffect(() => {
+    let activo = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then(valor => { if (activo) establecerReducirMovimiento(valor); });
+    const suscripcion = AccessibilityInfo.addEventListener('reduceMotionChanged', establecerReducirMovimiento);
+    return () => { activo = false; suscripcion.remove(); };
+  }, []);
+  useFocusEffect(useCallback(() => {
+    desplazamiento.setValue(0);
+    const distancia = Math.max(0, anchoTexto - anchoVisible);
+    if (reducirMovimiento || anchoVisible === 0 || distancia <= 1) return;
+    const animacion = Animated.loop(Animated.sequence([
+      Animated.delay(1000),
+      Animated.timing(desplazamiento, { toValue: -distancia, duration: Math.max(1500, distancia / 25 * 1000), easing: Easing.linear, useNativeDriver: true }),
+      Animated.delay(3000),
+      Animated.timing(desplazamiento, { toValue: 0, duration: 0, useNativeDriver: true }),
+    ]));
+    animacion.start();
+    return () => { animacion.stop(); desplazamiento.setValue(0); };
+  }, [texto, anchoTexto, anchoVisible, reducirMovimiento, desplazamiento]));
+  return <ScrollView horizontal showsHorizontalScrollIndicator={false} scrollEnabled={reducirMovimiento}
+    style={{ flex: 1 }} onLayout={evento => establecerAnchoVisible(evento.nativeEvent.layout.width)}>
+    <Animated.Text accessibilityLabel={texto} numberOfLines={1}
+      onLayout={evento => establecerAnchoTexto(evento.nativeEvent.layout.width)}
+      style={[estilo, { flex: 0, transform: [{ translateX: desplazamiento }] }]}>{texto}</Animated.Text>
+  </ScrollView>;
 }
 
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
@@ -721,12 +755,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               <Text selectable style={estilos.descripcionDeposito}>{deposito.descripcion || 'Sin descripción'}</Text>
             </View>
             <View style={estilos.seccionComparacion}>
-              <View style={estilos.filaSaldo}>
+              <View style={estilos.resumenComparacion}>
                 <Text style={estilos.etiquetaSaldo}>Variación mensual</Text>
-                <Pressable accessibilityLabel="Opciones del depósito" accessibilityRole="button" onPress={() => establecerModalOpcionesVisible(true)} style={estilos.botonOpciones}>
-                  <Ionicons color={tema.textoSecundario} name="ellipsis-horizontal" size={22}/>
-                </Pressable>
-              </View>
               <View style={estilos.comparacionSaldo}>
                 {saldoVisible ? <>
                   <Ionicons
@@ -742,16 +772,14 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                         : 'remove-outline'}
                     size={16}
                   />
-                  <Text style={[
+                  <ComparacionDesplazable texto={formatearComparacionMensual(comparacionMensual)} estilo={[
                     estilos.textoComparacion,
                     direccionComparacion === 'positivo'
                       ? estilos.textoComparacionPositiva
                       : direccionComparacion === 'negativo'
                         ? estilos.textoComparacionNegativa
                         : estilos.textoComparacionNeutral,
-                  ]}>
-                    {formatearComparacionMensual(comparacionMensual)}
-                  </Text>
+                  ]} />
                 </> : <>
                   <Ionicons color={tema.textoSecundario} name="eye-off-outline" size={16} />
                   <Text style={[estilos.textoComparacion, estilos.textoComparacionNeutral]}>
@@ -759,6 +787,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   </Text>
                 </>}
               </View>
+              </View>
+              <Pressable accessibilityLabel="Opciones del depósito" accessibilityRole="button" onPress={() => establecerModalOpcionesVisible(true)} style={estilos.botonOpciones}>
+                <Ionicons color={tema.textoSecundario} name="ellipsis-horizontal" size={22}/>
+              </Pressable>
             </View>
           </View>
 

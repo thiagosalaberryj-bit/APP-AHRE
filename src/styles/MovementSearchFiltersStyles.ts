@@ -19,7 +19,7 @@ export function crearEstilosBusquedaFiltros(tema:Tema) {
     fila: { flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno },
     filtro: { minHeight:38,flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo,paddingHorizontal:ESPACIADO.medio,borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.campo / 2,backgroundColor:tema.superficie },
     filtroActivo: { backgroundColor:tema.encabezado },
-    textoFiltro: { color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.secundario,fontWeight:TIPOGRAFIA.pesos.medio },
+    textoFiltro: { color:tema.textoPrincipal,fontFamily:TIPOGRAFIA.familias.principal,fontSize:TIPOGRAFIA.tamanos.secundario,fontWeight:TIPOGRAFIA.pesos.medio,lineHeight:20 },
     textoActivo: { color:tema.encabezadoTexto },
   });
 }

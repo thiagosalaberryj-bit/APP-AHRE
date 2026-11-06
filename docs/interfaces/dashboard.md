@@ -25,9 +25,22 @@ No se muestra una sección de deudas en el Dashboard.
 
 El encabezado reutiliza `MainHeader.tsx` y muestra el nombre devuelto por la
 sesión local junto con los accesos a Notificaciones y Perfil. La tarjeta de
-balance se superpone al borde inferior del encabezado verde y mantiene sus
-cuatro esquinas redondeadas. Su franja superior centra «Balance» y la separa
-del monto con un borde fino.
+balance se superpone al borde inferior del encabezado verde. Su contenedor
+sigue las proporciones del resumen de deudas: radio de 12 puntos, relleno y
+separaciones de 12. «Balance» aparece a la izquierda junto a un ícono y el
+monto usa 24 puntos. Una línea fina separa el saldo de las acciones, que tienen
+74 puntos de altura, íconos de 20 y etiquetas de 12, igual que en Social.
+El saldo ocupa un recuadro con fondo del tema, radio de 10 y relleno de 12,
+como los totales de deudas. Su etiqueta «Saldo disponible» comparte fila con
+los controles de privacidad y acceso a Movimientos; el importe aparece debajo.
+
+Debajo del importe se muestra la variación porcentual frente al cierre del mes
+anterior, con flecha ascendente o descendente. La base se reconstruye para los
+depósitos activos existentes al cierre, descontando los movimientos y ajustes
+posteriores; los registros históricos anteriores al alta del depósito no afectan
+el saldo. El porcentaje usa una decimal y solo se calcula con base positiva.
+Sin base se informa que no hay saldo anterior para comparar; al ocultar el saldo
+también se oculta la comparación. No es una comparación de ingresos mensuales.
 
 El saldo general se calcula sumando `saldo_actual` de los depósitos consultados.
 No se guarda un balance separado. Si no hay depósitos, el monto es cero. El

@@ -6,6 +6,7 @@ import SelectorCategoria from '../components/CategorySelector';
 import SelectorDeposito from '../components/DepositSelector';
 import EntradaMonto from '../components/MoneyInput';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
+import { crearEstilosBusquedaFiltros } from '../styles/MovementSearchFiltersStyles';
 import { cargarOpcionesHistorialMovimientos } from '../movements/movementService';
 import { convertirSaldoInicial } from '../utils/depositValidation';
 import { formatearEntradaMonto } from '../utils/moneyInput';
@@ -611,6 +612,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const tamanoGrafico = Math.min(320, Math.max(248, anchoPantalla - 64));
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosEstadisticas(tema);
+  const estilosAccesos = crearEstilosBusquedaFiltros(tema);
   const [anchoSlider, establecerAnchoSlider] = useState(0);
   const [indiceGrafico, establecerIndiceGrafico] = useState(0);
   const [barraEnInteraccion, establecerBarraEnInteraccion] = useState(false);
@@ -985,11 +987,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
             <BuscadorFiltrosMovimientos tema={tema} mostrarBuscador={false} alAbrirFiltros={() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); establecerFiltroCategoriasAbierto(true); }} alLimpiar={limpiarFiltrosEstadistica} filtrosActivos={filtrosActivosEstadistica} cantidad={cantidadFiltrosActivos}>
               {preajustesCategorias.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: esPreajusteActivo(opcion) }}
                 onPress={() => { establecerCategoriasSeleccionadas(actuales => opcion.id === 'todos' ? todasLasCategorias : alternarGrupoCategorias(actuales, opcion.categorias, todasLasCategorias)); establecerCategoriaSeleccionada(null); }}
-                style={[estilos.filtroRapido, esPreajusteActivo(opcion) && estilos.filtroRapidoActivo]}>
-                <Text style={[estilos.textoFiltroRapido, esPreajusteActivo(opcion) && estilos.textoFiltroRapidoActivo]}>{opcion.nombre}</Text>
+                style={[estilosAccesos.filtro, esPreajusteActivo(opcion) && estilosAccesos.filtroActivo]}>
+                <Text style={[estilosAccesos.textoFiltro, esPreajusteActivo(opcion) && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
               </Pressable>)}
-              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: preajusteMontoId === opcion.id }} onPress={() => elegirRango(preajusteMontoId === opcion.id ? 'todos' : opcion.id)} style={[estilos.filtroRapido, preajusteMontoId === opcion.id && estilos.filtroRapidoActivo]}>
-                <Text style={[estilos.textoFiltroRapido, preajusteMontoId === opcion.id && estilos.textoFiltroRapidoActivo]}>{opcion.nombre}</Text>
+              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: preajusteMontoId === opcion.id }} onPress={() => elegirRango(preajusteMontoId === opcion.id ? 'todos' : opcion.id)} style={[estilosAccesos.filtro, preajusteMontoId === opcion.id && estilosAccesos.filtroActivo]}>
+                <Text style={[estilosAccesos.textoFiltro, preajusteMontoId === opcion.id && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
               </Pressable>)}
             </BuscadorFiltrosMovimientos>
             {errorMonto ? <Text style={estilosGlobales.textoError}>{errorMonto}</Text> : null}

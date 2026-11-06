@@ -34,7 +34,8 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     identidadDeposito:{flex:1.35,minWidth:0,flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno},
     encabezadoSaldo:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo},
     seccionDescripcion:{paddingHorizontal:ESPACIADO.grande,paddingBottom:ESPACIADO.medio,gap:ESPACIADO.minimo},
-    seccionComparacion:{marginHorizontal:ESPACIADO.grande,paddingVertical:ESPACIADO.medio,borderTopWidth:BORDES.anchos.fino,borderTopColor:tema.borde,gap:ESPACIADO.pequeno},
+    seccionComparacion:{marginHorizontal:ESPACIADO.grande,paddingVertical:ESPACIADO.medio,borderTopWidth:BORDES.anchos.fino,borderTopColor:tema.borde,gap:ESPACIADO.pequeno,flexDirection:'row',alignItems:'center'},
+    resumenComparacion:{flex:1,minWidth:0,gap:ESPACIADO.minimo},
     valorSaldoCompleto:{padding:ESPACIADO.medio,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo/2},
     saldoCompleto:{fontSize:TIPOGRAFIA.tamanos.titulo,fontWeight:TIPOGRAFIA.pesos.negrita,color:tema.textoPrincipal,paddingBottom:ESPACIADO.pequeno},
     datosDeposito: {

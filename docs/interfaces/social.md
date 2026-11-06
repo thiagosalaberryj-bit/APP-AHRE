@@ -69,11 +69,12 @@ mismo borde fino del tema. Los ajustes de resumen y acciones son locales al pane
 comparte la card compacta del panel. Se mantienen los temas claro y oscuro.
 
 La card de deuda se centraliza en `src/components/DebtCard.tsx`
-(`TarjetaDeuda`), con estilos propios en `src/styles/DebtCardStyles.ts`.
+(`TarjetaDeuda`), con estilos propios en `src/styles/DebtCardStyles.ts` que
+reutilizan la base de Movimientos en `FinancialRecordCardStyles.ts`.
 Recibe deuda, nombre de la persona, tema y acción, sin consultar el contexto
 social. Social y el historial usan el mismo diseño compacto por defecto.
-Eliminar deuda y Registrar pago reutilizan su modo de solo lectura con tamaño
-anterior, sin flecha ni acción. No se mantiene una segunda card de resumen.
+Eliminar deuda y Registrar pago reutilizan el mismo tamaño en modo de solo
+lectura, sin flecha ni acción. No se mantiene una segunda card de resumen.
 
 Debajo aparecen hasta cinco deudas pendientes recientes y hasta tres salas
 abiertas. Ver todas las deudas y Ver todas las salas conservan sus flechas.

@@ -21,6 +21,17 @@ selección mediante relleno, conservando dimensiones, rellenos internos,
 grosor de borde y peso tipográfico. El color del texto e icono puede cambiar
 para mantener contraste, sin desplazar los controles vecinos.
 
+Los filtros rápidos y activos de Movimientos, Estadísticas y el historial de
+deudas usan `MovementSearchFiltersStyles.ts`: altura mínima de 38 puntos,
+radio de 5, texto de 14 con peso medio y los mismos colores de selección.
+
+Las cards de movimientos y deudas comparten la base
+`FinancialRecordCardStyles.ts`: título de 16 con seminegrita, importe de 16
+en negrita y texto secundario de 12 regular. Comparten rellenos, bordes,
+ícono de 32 puntos y franja de importe de 112. Ingreso y «Te debe» usan el
+verde de éxito; Egreso y «Le debés» usan el rojo de error del tema. Los montos
+usan el texto principal y los metadatos el secundario en ambos tipos de card.
+
 Todos los importes editables usan `EntradaMonto` (`src/components/MoneyInput.tsx`):
 ingresos, egresos, total OCR, saldo inicial de depósitos, límites de filtros y
 los importes de Social (deudas, pagos, gastos y repartos manuales). La variante
