@@ -82,6 +82,8 @@ export interface Recurrencia {
   fecha_inicio: string;
   fecha_fin: string | null;
   proxima_ejecucion: string;
+  zona_horaria: string;
+  dia_ancla: number;
   activa: number;
   fecha_creacion: string;
   fecha_actualizacion: string;
@@ -112,6 +114,7 @@ export interface Movimiento {
   descripcion: string;
   fecha_hora: string;
   anulado: number;
+  fecha_eliminacion: string | null;
   reversion_de_id: string | null;
   fecha_creacion: string;
   fecha_actualizacion: string;
@@ -134,11 +137,11 @@ export interface Persona {
 }
 
 export interface Sala {
+  publicada: number;
   id: string;
   usuario_id: string;
   nombre: string;
   descripcion: string | null;
-  categoria: string;
   icono: string;
   color: string;
   fecha: string;
@@ -163,6 +166,7 @@ export interface GastoCompartido {
   usuario_id: string;
   sala_id: string;
   pagador_id: string;
+  categoria: string;
   descripcion: string;
   monto_total: number;
   fecha: string;
@@ -227,6 +231,7 @@ export interface Tablas {
   recurrencias: Recurrencia;
   transferencias: Transferencia;
   movimientos: Movimiento;
+  ejecuciones_recurrencia: EjecucionRecurrencia;
   personas: Persona;
   salas: Sala;
   personas_sala: PersonaSala;
@@ -234,4 +239,12 @@ export interface Tablas {
   participantes_gasto: ParticipanteGasto;
   deudas: Deuda;
   pagos_sociales: PagoSocial;
+}
+
+export interface EjecucionRecurrencia {
+  id: string;
+  usuario_id: string;
+  recurrencia_id: string;
+  movimiento_id: string;
+  fecha_programada: string;
 }

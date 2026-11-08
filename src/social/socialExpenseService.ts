@@ -1,9 +1,11 @@
+import {esSalaOnline,prepararGastoOnline,guardarGastoOnline,guardarListaOnline} from './online/onlineService';
 import type { ContextoSocial } from './socialStore';
 import { gastosCompartidosRepositorio, participantesGastoRepositorio } from '../database/repositories';
 import { conSocial, registroPropio, salaAbierta, idPersistente, leerSocial, exigirDepositoConDinero } from './socialStore';
 import { exigir, repartirGasto, textoSocial } from './socialValidation';
 import { validarFinanciacion } from './socialPaymentService';
 import { leerPlanGasto, operacionesGasto } from './socialRoomDraft';
+import { CATEGORIAS_EGRESO } from '../constants/movimientos';
 
 async function prepararGasto(datos: import('./types').BorradorGasto, contexto: ContextoSocial) {
   const sala = await salaAbierta(datos.salaId, contexto), registros = await leerSocial(contexto);
@@ -18,6 +20,7 @@ async function prepararGasto(datos: import('./types').BorradorGasto, contexto: C
   const pagadorId = idPersistente(datos.pagadorId, contexto);
   exigir(integrantes.includes(pagadorId) || previo?.pagador_id === pagadorId, 'El pagador ya no está disponible en la sala.');
   const descripcion = textoSocial(datos.descripcion);
+  exigir(CATEGORIAS_EGRESO.some(categoria => categoria.id === datos.categoriaId), 'Elegí una categoría para el gasto.');
   exigir(descripcion && descripcion.length <= 500, 'Ingresá qué se pagó, con hasta 500 caracteres.');
   const involucradas = datos.involucradas?.map((id) => idPersistente(id, contexto));
   const montosManuales = Object.fromEntries(Object.entries(datos.montosManuales || {}).map(([id, monto]) => [idPersistente(id, contexto), monto]));
@@ -28,14 +31,16 @@ async function prepararGasto(datos: import('./types').BorradorGasto, contexto: C
   return { sala, previo, anteriores, reparto, pagaron, gasto, operaciones: operacionesGasto(gasto, partes, contexto.propia.id, { pagaron }) };
 }
 
-export function previsualizarGasto(datos: import('./types').BorradorGasto) {
+export async function previsualizarGasto(datos: import('./types').BorradorGasto) {
+  if(await esSalaOnline(datos.salaId)){await prepararGastoOnline(datos);return {diferido:true,operaciones:[]};}
   return conSocial(async (contexto) => {
     const plan = await prepararGasto(datos, contexto);
     return { diferido: true, operaciones: plan.operaciones.filter(o => o.tipoMovimiento).map(o => ({ clave: o.clave, tipo: o.tipoMovimiento!, monto: o.monto, descripcion: o.descripcion })) };
   });
 }
 
-export function guardarGasto(datos: import('./types').BorradorGasto, financiaciones: import('./types').Financiaciones = {}) {
+export async function guardarGasto(datos: import('./types').BorradorGasto, financiaciones: import('./types').Financiaciones = {}) {
+  if(await esSalaOnline(datos.salaId))return guardarGastoOnline(datos);
   return conSocial((contexto) => guardarGastoEnContexto(datos, financiaciones, contexto));
 }
 
@@ -56,7 +61,7 @@ async function guardarGastoEnContexto(datos: import('./types').BorradorGasto, fi
       if (seleccion.movimientoId) reservas.add(seleccion.movimientoId);
       elegidas[operacion.clave] = seleccion;
     }
-    const campos = { pagador_id: valores.pagador_id, descripcion: valores.descripcion, monto_total: valores.monto_total,
+    const campos = { pagador_id: valores.pagador_id, categoria: datos.categoriaId, descripcion: valores.descripcion, monto_total: valores.monto_total,
       reparto: datos.reparto as 'iguales' | 'manual', plan_pagos: JSON.stringify({ pagaron, financiaciones: elegidas }) };
     const cambiaronPartes = anteriores.length !== reparto.partes.length || anteriores.some(a => !reparto.partes.some((p) => p.personaId === a.persona_id && p.centavos / 100 === a.monto_correspondiente && p.orden === a.orden));
     // Sin pagos confirmados, reemplazar el reparto no requiere compensaciones.
@@ -75,7 +80,9 @@ function validarListaGastos(lista: import('./types').BorradorGasto[]) {
   exigir(new Set(lista.map(g => g.id)).size === lista.length && lista.every(g => g.id && (!g.gastoId || g.gastoId === g.id) && g.salaId === lista[0].salaId), 'Revisá los identificadores y la sala de la lista.');
 }
 
-export function previsualizarListaGastos(lista: import('./types').BorradorGasto[]) {
+export async function previsualizarListaGastos(lista: import('./types').BorradorGasto[]) {
+  validarListaGastos(lista);
+  if(lista.length&&await esSalaOnline(lista[0].salaId)){validarListaGastos(lista);for(const datos of lista)await prepararGastoOnline(datos);return {operaciones:[]};}
   return conSocial(async (contexto) => {
     validarListaGastos(lista);
     const operaciones: {indice:number;clave:string;tipo:'ingreso'|'egreso';monto:number}[] = [];
@@ -87,7 +94,9 @@ export function previsualizarListaGastos(lista: import('./types').BorradorGasto[
   });
 }
 
-export function guardarListaGastos(lista: import('./types').BorradorGasto[], financiaciones: import('./types').Financiaciones[] = []) {
+export async function guardarListaGastos(lista: import('./types').BorradorGasto[], financiaciones: import('./types').Financiaciones[] = []) {
+  validarListaGastos(lista);
+  if(lista.length&&await esSalaOnline(lista[0].salaId)){validarListaGastos(lista);return guardarListaOnline(lista);}
   return conSocial(async (contexto) => {
     validarListaGastos(lista);
     const resultados: Awaited<ReturnType<typeof guardarGastoEnContexto>>[] = [];

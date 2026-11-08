@@ -10,8 +10,10 @@ el OCR Android reconoce comprobantes y permite confirmar egresos mediante el
 servicio existente. La sincronización envía lotes ordenados al backend MySQL,
 que recalcula saldos y valida las operaciones financieras y de Social antes de
 confirmarlas. La instalación autorizada conserva su funcionamiento offline;
-Social continúa trabajando con personas y salas de la cuenta, sin colaboración
-web entre cuentas en esta etapa.
+Social conserva la agenda y las finanzas privadas por cuenta y agrega salas
+compartidas mediante HTTP, WebSocket y caché SQLite. La web de invitados vive
+en SERVER-AHRE y no expone depósitos ni movimientos privados. El contrato vigente
+está en [Social online y recurrencias](social-online-recurrencias.md).
 
 El informe del proyecto define AHRE como una aplicación orientada inicialmente
 a Android y con un enfoque offline-first. Por eso la información local es el

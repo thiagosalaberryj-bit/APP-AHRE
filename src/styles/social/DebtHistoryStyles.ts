@@ -11,7 +11,7 @@ export default function crearEstilosHistorial(tema: Tema) {
     entradaBusqueda: { flex: 1, minWidth: 0, minHeight: 44, paddingVertical: ESPACIADO.pequeno, color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.secundario },
     accionBusqueda: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
     agregarDeuda: { width: 44, height: 44, backgroundColor: tema.botonPrincipal, borderRadius: BORDES.radios.campo, alignItems: 'center', justifyContent: 'center' },
-    filtrosEstado: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACIADO.pequeno },
+    filaFiltros:{flexDirection:'row',gap:ESPACIADO.pequeno},
     resultado: { lineHeight: 16, color: tema.textoSecundario, fontSize: TIPOGRAFIA.tamanos.auxiliar },
   });
 }

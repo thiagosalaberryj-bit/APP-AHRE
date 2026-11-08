@@ -84,10 +84,12 @@ export async function leerSocial(contexto: ContextoSocial) {
 export async function salaAbierta(id: string, contexto: ContextoSocial) {
   const sala = await registroPropio(salasRepositorio, id, contexto);
   exigir(sala.estado === 'abierta', 'La sala está cerrada y su reparto es de solo lectura.');
+  const publicacion=await contexto.conexion.getFirstAsync('SELECT clave FROM datos_sociales_online WHERE usuario_id=? AND clave=?',[contexto.usuario.id,'publicar:'+id]);
+  exigir(!sala.publicada&&!publicacion,'La publicación está pendiente de confirmar. Reconectá y reintentá Compartir sala antes de editar o cerrar.');
   return sala;
 }
 
 export async function exigirDepositoConDinero(contexto: ContextoSocial) {
-  const deposito = await contexto.conexion.getFirstAsync<Pick<Tablas['depositos'], 'id'>>('SELECT id FROM depositos WHERE usuario_id = ? AND activo = 1 AND saldo_actual > 0 LIMIT 1;', [contexto.usuario.id]);
-  exigir(deposito, 'Para crear registros en Social necesitás un depósito activo con dinero.');
+  // Las operaciones financieras validan el depósito, participar no requiere fondos.
+  exigir(contexto.usuario.activo, 'La cuenta no está disponible.');
 }

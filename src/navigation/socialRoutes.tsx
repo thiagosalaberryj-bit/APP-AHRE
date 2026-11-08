@@ -1,3 +1,4 @@
+import PantallaPersonaSala from '../screens/SocialRoomPersonScreen';
 import PantallaSalas from '../screens/SocialRoomsScreen';
 import PantallaSala from '../screens/SocialRoomScreen';
 import PantallaPersonas from '../screens/SocialPeopleScreen';
@@ -19,6 +20,7 @@ export function RutaPersonas(propiedades: import('./types').PropiedadesPantalla)
   return <Pantalla {...propiedades} />;
 }
 const REGISTROS = {
+  personaSala: PantallaPersonaSala,
   crear: PantallaCrearSala,
   persona: PantallaPersonas,
   deuda: PantallaRegistrarDeuda,

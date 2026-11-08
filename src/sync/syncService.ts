@@ -48,6 +48,32 @@ function validarVersiones(entrada:unknown):{lotes:VersionSync[];mas:boolean} {
   }
   return entrada as {lotes:VersionSync[];mas:boolean};
 }
+async function restaurarEstadoInicial(usuarioId:string,remota:NonNullable<Awaited<ReturnType<typeof obtenerSesionRemota>>>) {
+  if(!remota.revision)return;
+  const estado=await ejecutarLecturaConConexion(c=>c.getFirstAsync<{preparada:number;revision:number}>('SELECT preparada,revision FROM sync_state WHERE usuario_id=?',[usuarioId]));
+  if(estado?.preparada){
+    if(Number(estado.revision)>0)return;
+    const preferencias=await ejecutarLecturaConConexion(c=>c.getFirstAsync('SELECT id FROM preferencias WHERE usuario_id=? LIMIT 1',[usuarioId]));
+    if(preferencias)return;
+  }
+  const snapshot=await solicitarRemoto<{revision:number;cambios:CambioSync[]}>('/sync/snapshot',undefined,remota.token);
+  if(!Number.isSafeInteger(snapshot.revision)||snapshot.revision<0||!Array.isArray(snapshot.cambios))throw new Error('Estado inicial remoto inválido.');
+  if((await obtenerSesionActual()).usuario?.id!==usuarioId)throw new Error('La sesión cambió antes de recuperar la cuenta.');
+  await ejecutarConConexion(async c=>{
+    const negocios=await c.getFirstAsync<{n:number}>(`SELECT (SELECT COUNT(*) FROM depositos WHERE usuario_id=?)+(SELECT COUNT(*) FROM salas WHERE usuario_id=?)+(SELECT COUNT(*) FROM personas WHERE usuario_id=? AND es_usuario_actual=0) AS n`,[usuarioId,usuarioId,usuarioId]);
+    if(Number(negocios?.n))throw new ErrorRemoto(409,'Hay registros locales anteriores. Se conservan sin sobrescribirlos con el estado remoto.');
+    const preferencias=await c.getAllAsync<{id:string}>('SELECT id FROM preferencias WHERE usuario_id=?',[usuarioId]);
+    const personas=await c.getAllAsync<{id:string}>('SELECT id FROM personas WHERE usuario_id=?',[usuarioId]);
+    const limpiar:CambioSync[]=[...preferencias.map(p=>({tabla:'preferencias' as const,accion:'eliminar' as const,datos:{id:p.id}})),...personas.map(p=>({tabla:'personas' as const,accion:'eliminar' as const,datos:{id:p.id}}))];
+    // La instantánea puede traer reversiones antes de sus originales.
+    // Validar sus referencias al confirmar toda la transacción.
+    await c.execAsync('PRAGMA defer_foreign_keys = ON;');
+    await aplicarCambios(c,[...limpiar,...snapshot.cambios]);
+    await c.runAsync('DELETE FROM sync_outbox WHERE usuario_id=?',[usuarioId]);
+    await c.runAsync('DELETE FROM sync_batch_authorization WHERE usuario_id=?',[usuarioId]);
+    await c.runAsync('INSERT INTO sync_state(usuario_id,preparada,revision) VALUES(?,1,?) ON CONFLICT(usuario_id) DO UPDATE SET preparada=1,revision=excluded.revision',[usuarioId,snapshot.revision]);
+  });
+}
 async function ejecutar(usuarioId:string,silenciosa=false) {
   let pendientes=0;
   try {
@@ -60,6 +86,7 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
     const actual=await obtenerSesionActual();
     if(actual.usuario&&esPruebaLocal(autorizacion,actual.usuario.correo_electronico)){publicar({estado:'local',pendientes:0});return;}
     const remota=await obtenerSesionRemota(usuarioId);
+    if(remota)await restaurarEstadoInicial(usuarioId,remota);
     await ejecutarConConexion(c=>prepararCuentaLocal(c,usuarioId));
     const contar=()=>contarRegistrosPendientes(usuarioId);
     pendientes=await contar();
@@ -89,19 +116,19 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
           await ejecutarConConexion(c=>c.runAsync('INSERT OR REPLACE INTO sync_profile_rejection(usuario_id,lote,base,generacion,contenido) VALUES(?,?,?,?,?)',[usuarioId,fila.lote,datos.base,datos.generacion!,JSON.stringify(cambios)]));
         }
         if(error instanceof ErrorRemoto&&error.codigo==='lote_confirmado_otro_contenido'){
-          const restaurada=await ejecutarConConexion(async c=>{let cambio=false;await c.withTransactionAsync(async()=>{cambio=await restaurarReparacion(c,usuarioId,fila.lote);});return cambio;});
+          const restaurada=await ejecutarConConexion(c=>restaurarReparacion(c,usuarioId,fila.lote));
           if(restaurada)continue;
         }
         throw error;
       }
       if((await obtenerSesionActual()).usuario?.id!==usuarioId)return;
       if(!Number.isSafeInteger(respuesta.revision)||respuesta.revision!==datos.base+1)throw new ErrorRemoto(409,'La revisión del servidor no coincide.');
-      await ejecutarConConexion(c=>c.withTransactionAsync(async()=>{
+      await ejecutarConConexion(async c=>{
         await c.runAsync('DELETE FROM sync_outbox WHERE usuario_id=? AND lote=?',[usuarioId,fila.lote]);
         await c.runAsync('DELETE FROM sync_batch_authorization WHERE usuario_id=? AND lote=?',[usuarioId,fila.lote]);
         await c.runAsync('DELETE FROM sync_profile_rejection WHERE usuario_id=? AND lote=?',[usuarioId,fila.lote]);
         await c.runAsync('UPDATE sync_state SET revision=? WHERE usuario_id=?',[respuesta.revision,usuarioId]);
-      }));
+      });
       // Acota las agrupaciones y las recargas de la pantalla durante ráfagas de lotes.
       if(Date.now()>=proximoRecuento){
         pendientes=await contar();publicar({estado:'sincronizando',pendientes});
@@ -116,14 +143,14 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
       if(respuesta.lotes.length)publicar({estado:'sincronizando',pendientes});
       if((await obtenerSesionActual()).usuario?.id!==usuarioId)return;
       for(const version of respuesta.lotes) {
-        await ejecutarConConexion(c=>c.withTransactionAsync(async()=>{
+        await ejecutarConConexion(async c=>{
           // Si hubo una edición mientras esperábamos la red, no sobrescribirla.
           if(await c.getFirstAsync('SELECT secuencia FROM sync_outbox WHERE usuario_id=? LIMIT 1',[usuarioId]))throw new ErrorRemoto(409,'Hay nuevos cambios locales pendientes.','pendientes_nuevos');
           const actual=Number((await c.getFirstAsync<{revision:number}>('SELECT revision FROM sync_state WHERE usuario_id=?',[usuarioId]))?.revision||0);
           if(version.revision!==actual+1)throw new Error('Secuencia remota incompleta.');
           await aplicarCambios(c,version.lote.cambios);
           await c.runAsync('UPDATE sync_state SET revision=? WHERE usuario_id=?',[version.revision,usuarioId]);
-        }));
+        });
       }mas=respuesta.mas;
       if(mas&&!respuesta.lotes.length)throw new Error('Paginación remota inválida.');
     }
@@ -164,12 +191,12 @@ export function repararPerfilPendiente(vista:import('./protocol').ReparacionPerf
     if(!remota)throw new Error('Iniciá sesión con conexión antes de corregir pendientes.');
     const estado=await solicitarRemoto<{revision:number;generacion:number}>('/auth/status',undefined,remota.token);
     if((await obtenerSesionActual()).usuario?.id!==usuario.id)throw new Error('La sesión cambió. Revisá la sincronización.');
-    await ejecutarConConexion(c=>c.withTransactionAsync(async()=>{
+    await ejecutarConConexion(async c=>{
       const sesion=await c.getFirstAsync<{revocada:number;generacion:number}>('SELECT revocada,generacion FROM sync_authorization WHERE usuario_id=?',[usuario.id]);
       const rechazo=await c.getFirstAsync<{base:number}>('SELECT base FROM sync_profile_rejection WHERE usuario_id=?',[usuario.id]);
       if(!sesion||sesion.revocada||sesion.generacion!==estado.generacion||rechazo?.base!==estado.revision)throw new Error('La autorización o revisión cambió. Sincronizá antes de reparar.');
       await aplicarReparacion(c,vista);
-    }));
+    });
   })().finally(()=>{enCurso=null;});
   enCurso={usuarioId:vista.usuarioId,promesa};
   return promesa.then(()=>sincronizarCuenta(vista.usuarioId));

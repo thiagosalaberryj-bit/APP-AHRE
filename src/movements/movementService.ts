@@ -1,3 +1,5 @@
+import { siguienteEjecucion, partesCalendario } from '../recurrences/recurrenceCalendar';
+import { registrarEjecucion } from '../recurrences/recurrenceService';
 import type { Conexion } from '../database/types';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { ErrorBaseDatos } from '../database/errors';
@@ -184,13 +186,15 @@ export async function crearMovimiento(datos: import('../types/forms').DatosMovim
           frecuencia: datos.frecuencia as import('../database/types').Recurrencia['frecuencia'],
           fecha_inicio: fechaHoraRegistro,
           fecha_fin: null,
-          proxima_ejecucion: fechaHoraRegistro,
+          zona_horaria: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          dia_ancla: partesCalendario(fechaHoraRegistro, Intl.DateTimeFormat().resolvedOptions().timeZone).dia,
+          proxima_ejecucion: siguienteEjecucion({frecuencia: datos.frecuencia as import('../database/types').Recurrencia['frecuencia'], zona_horaria: Intl.DateTimeFormat().resolvedOptions().timeZone, dia_ancla: partesCalendario(fechaHoraRegistro, Intl.DateTimeFormat().resolvedOptions().timeZone).dia}, fechaHoraRegistro),
           activa: 1,
         }, baseDatos);
         recurrenciaId = recurrencia.id;
       }
 
-      return movimientosRepositorio.crear({
+      const movimiento = await movimientosRepositorio.crear({
         deposito_id: deposito.id,
         categoria: categoria.id,
         recurrencia_id: recurrenciaId,
@@ -202,10 +206,56 @@ export async function crearMovimiento(datos: import('../types/forms').DatosMovim
         anulado: 0,
         reversion_de_id: null,
       }, baseDatos);
+      if (recurrenciaId) await registrarEjecucion(baseDatos, usuario.id, recurrenciaId, movimiento.id, fechaHoraRegistro);
+      return movimiento;
     });
   } catch (error) {
     if (error instanceof ErrorMovimiento) throw error;
     if (error instanceof ErrorBaseDatos) throw error;
     throw new ErrorBaseDatos('transaccion');
   }
+}
+
+export async function eliminarMovimiento(movimientoId: string, desactivarRecurrencia = false) {
+  const usuario = await consultarUsuarioHistorial();
+  return ejecutarTransaccion(async conexion => {
+    const movimiento = await movimientosRepositorio.consultarPorId(movimientoId, conexion);
+    const deposito = movimiento && await depositosRepositorio.consultarPorId(movimiento.deposito_id, conexion);
+    if (!movimiento || deposito?.usuario_id !== usuario.id) throw new ErrorMovimiento('deposito_no_disponible');
+    const resultado = await movimientosRepositorio.eliminar(movimientoId, conexion);
+    if (desactivarRecurrencia && movimiento.recurrencia_id) await recurrenciasRepositorio.actualizar(movimiento.recurrencia_id, {activa: 0}, conexion);
+    return resultado;
+  });
+}
+
+export async function editarMovimiento(id:string,datos:{monto:string;descripcion:string;categoria:string;depositoId:string}){
+  const usuario=await consultarUsuarioHistorial(),monto=convertirMontoMovimiento(datos.monto),descripcion=datos.descripcion.trim();
+  if(!monto||monto<=0||!descripcion||descripcion.length>500)throw new ErrorMovimiento('datos_invalidos');
+  return ejecutarTransaccion(async conexion=>{
+    const original=await movimientosRepositorio.consultarPorId(id,conexion),deposito=original&&await depositosRepositorio.consultarPorId(original.deposito_id,conexion);
+    if(!original||deposito?.usuario_id!==usuario.id)throw new ErrorMovimiento('deposito_no_disponible');
+    await consultarDepositoDisponible(usuario.id,datos.depositoId,conexion);
+    consultarCategoriaDisponible(datos.categoria,original.tipo);
+    return movimientosRepositorio.actualizar(id,{monto,descripcion,categoria:datos.categoria,deposito_id:datos.depositoId},conexion);
+  });
+}
+
+export async function corregirMovimiento(id:string,datos:import('../types/forms').DatosMovimiento,tipo:'ingreso'|'egreso',clave:string){
+  const errores=validarDatosMovimiento(datos,tipo);
+  if(Object.keys(errores).length||datos.recurrente||!clave||clave.length>128)throw new ErrorMovimiento('datos_invalidos',errores);
+  const usuario=await consultarUsuarioHistorial(),monto=convertirMontoMovimiento(datos.monto)!,fecha=combinarFechaYHora(datos.fecha,datos.hora)!;
+  return ejecutarTransaccion(async c=>{
+    const original=await movimientosRepositorio.consultarPorId(id,c),depositoOriginal=original&&await depositosRepositorio.consultarPorId(original.deposito_id,c);
+    if(!original||depositoOriginal?.usuario_id!==usuario.id||original.tipo!==tipo)throw new ErrorMovimiento('deposito_no_disponible');
+    // La clave identifica este envío y conserva un ID acotado al corregir varias veces.
+    const nuevoId='edicion:'+clave,previo=await movimientosRepositorio.consultarPorId(nuevoId,c);
+    const fechaRegistro=Math.floor(Date.parse(fecha)/60000)===Math.floor(Date.parse(original.fecha_hora)/60000)?original.fecha_hora:fecha;
+    if(previo){if(previo.monto!==monto||previo.deposito_id!==datos.deposito_id||previo.categoria!==datos.categoria||previo.descripcion!==datos.descripcion.trim()||previo.fecha_hora!==fechaRegistro)throw new ErrorMovimiento('datos_invalidos');return previo;}
+    if(original.anulado||original.fecha_eliminacion||original.transferencia_id||original.reversion_de_id)throw new ErrorMovimiento('datos_invalidos');
+    await consultarDepositoDisponible(usuario.id,datos.deposito_id,c);consultarCategoriaDisponible(datos.categoria,tipo);
+    const borradores=await c.getAllAsync<{plan_pagos:string}>("SELECT g.plan_pagos FROM gastos_compartidos g JOIN salas s ON s.id=g.sala_id WHERE g.usuario_id=? AND s.estado='abierta' AND s.publicada=0",[usuario.id]);
+    for(const borrador of borradores){const plan=JSON.parse(borrador.plan_pagos||'{}') as {financiaciones?:Record<string,{movimientoId?:string}>};if(Object.values(plan.financiaciones||{}).some(f=>f.movimientoId===id))throw new Error('Desvinculá este movimiento de la sala abierta antes de corregirlo.');}
+    if(!await movimientosRepositorio.eliminar(id,c))throw new ErrorMovimiento('datos_invalidos');
+    return movimientosRepositorio.crear({id:nuevoId,deposito_id:datos.deposito_id!,tipo,categoria:datos.categoria!,monto,descripcion:datos.descripcion.trim(),fecha_hora:fechaRegistro,recurrencia_id:original.recurrencia_id},c);
+  });
 }

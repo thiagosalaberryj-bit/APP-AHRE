@@ -15,6 +15,8 @@ import type {ReparacionPerfil} from '../sync/protocol';
 import {consultarSaldoOculto} from '../profile/balanceVisibilityService';
 import {crearEstilosGlobales} from '../styles/globalStyles';
 import {crearEstilosSincronizacion} from '../styles/SyncScreenStyles';
+import {observarSocialOnline} from '../social/online/onlineStore';
+import {sincronizarSocialOnline} from '../social/online/onlineService';
 
 const fechaValida=(valor:string)=>{const fecha=new Date(valor);return Number.isNaN(fecha.getTime())?null:fecha;};
 const formatearFecha=(valor:string)=>fechaValida(valor)?.toLocaleString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})??'Fecha no disponible';
@@ -29,6 +31,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
   const [errorReparacion,establecerErrorReparacion]=useState('');
   const [reparacion,establecerReparacion]=useState<ReparacionPerfil|null>(null);
   const [reparando,establecerReparando]=useState(false);
+  const [enviando,establecerEnviando]=useState(false);
   const secuencia=useRef(0),datosActuales=useRef(datos),cargaActiva=useRef(false);
   const cargar=useCallback(async(reemplazar=true)=>{
     if(!reemplazar&&cargaActiva.current)return;
@@ -51,7 +54,8 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       if(activa)establecerOculto(privado);
     }).catch(()=>{if(activa)establecerOculto(true);});
     const dejar=observarSincronizacion(v=>{establecerVista(v);void cargar();});
-    return()=>{activa=false;secuencia.current++;cargaActiva.current=false;dejar();};
+    void cargar();const dejarSocial=observarSocialOnline(()=>{void cargar();});
+    return()=>{activa=false;secuencia.current++;cargaActiva.current=false;dejar();dejarSocial();};
   },[cargar]));
   const secciones=useMemo(()=>{
     const grupos=new Map<string,{titulo:string;data:RegistroPendiente[]}>();
@@ -63,7 +67,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
     }
     return [...grupos].map(([key,grupo])=>({key,titulo:grupo.titulo,data:mesesAbiertos.includes(key)?grupo.data:[]}));
   },[datos.registros,mesesAbiertos]);
-  const ocupado=reparando||['comprobando','sincronizando'].includes(vista.estado);
+  const ocupado=enviando||reparando||['comprobando','sincronizando'].includes(vista.estado);
   const deshabilitado=ocupado||datos.soloLocal;
   const confirmarReparacion=()=>{
     if(!reparacion)return;
@@ -84,7 +88,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
           <View style={estilos.iconoEstado}>{ocupado?<ActivityIndicator color={tema.foco}/>:<Ionicons name={datos.soloLocal?'phone-portrait-outline':vista.estado==='online'?'cloud-done-outline':vista.estado==='offline'?'cloud-offline-outline':'cloud-upload-outline'} size={24} color={tema.foco}/>}</View>
           <View style={estilos.flexible}>
             <Text style={estilos.etiqueta}>ESTADO ACTUAL</Text>
-            <Text accessibilityLiveRegion="polite" style={estilos.titulo}>{TEXTOS_SYNC[vista.estado]}</Text>
+            <Text accessibilityLiveRegion="polite" style={estilos.titulo}>{vista.estado==='online'&&datos.total?'Cambios pendientes de confirmar':TEXTOS_SYNC[vista.estado]}</Text>
           </View>
         </View>
         <View style={estilos.metricas}>
@@ -96,7 +100,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
         </View>
         {datos.soloLocal?<Text style={estilos.texto}>Esta cuenta contiene ejemplos locales y no se envía al servidor.</Text>:null}
         {vista.detalle&&vista.estado!=='offline'?<Text style={estilos.texto}>{vista.detalle}</Text>:null}
-        <Pressable accessibilityRole="button" accessibilityState={{disabled:deshabilitado,busy:ocupado}} disabled={deshabilitado} onPress={()=>{void sincronizarSesion().then(()=>cargar()).catch(()=>establecerError('No se pudo sincronizar. Volvé a intentar.'));}} style={[estilos.boton,deshabilitado&&estilos.deshabilitado]}>
+        <Pressable accessibilityRole="button" accessibilityState={{disabled:deshabilitado,busy:ocupado}} disabled={deshabilitado} onPress={()=>{establecerEnviando(true);void sincronizarSesion().then(()=>sincronizarSocialOnline()).then(()=>cargar()).catch(async fallo=>{await cargar();establecerError(fallo instanceof Error?fallo.message:'No se pudo sincronizar. Volvé a intentar.');}).finally(()=>establecerEnviando(false));}} style={[estilos.boton,deshabilitado&&estilos.deshabilitado]}>
           <Ionicons name="sync-outline" size={18} color={tema.botonPrincipalTexto}/><Text style={estilos.textoBoton}>{ocupado?'Sincronizando…':'Sincronizar ahora'}</Text>
         </Pressable>
         {reparacion?<View style={estilos.reparacion}>

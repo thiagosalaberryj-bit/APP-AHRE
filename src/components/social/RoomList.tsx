@@ -33,14 +33,14 @@ export default function ListaSalas(propiedades: import('../../social/types').Asp
   const [busqueda, establecerBusqueda] = useState('');
   const [estado, establecerEstado] = useState('todas');
   const consulta = normalizarNombrePersona(busqueda);
-  const activas = salasSociales.filter((sala) => sala.estado === 'abierta');
+  const activas = salasSociales.filter((sala) => sala.estado === 'abierta'&&sala.administrador);
   const salas = salasSociales.filter(sala => {
-    const categoria = CATEGORIAS_EGRESO.find(elemento => elemento.id === sala.categoriaId);
+    const categorias = sala.gastos.map(gasto => CATEGORIAS_EGRESO.find(elemento => elemento.id === gasto.categoriaId)?.nombre || '').join(' ');
     const personas = sala.participantes.map(id => {
       const persona = obtenerPersona(id);
       return `${nombreCompletoPersona(persona)} ${persona?.apodo}`;
     }).join(' ');
-    return (estado === 'todas' || sala.estado === estado) && normalizarNombrePersona(`${sala.nombre} ${categoria?.nombre} ${personas} ${sala.creadaEl} ${sala.creadaEl.split('-').reverse().join('/')}`).includes(consulta);
+    return (estado === 'todas' || sala.estado === estado) && normalizarNombrePersona(`${sala.nombre} ${categorias} ${personas} ${sala.creadaEl} ${sala.creadaEl.split('-').reverse().join('/')}`).includes(consulta);
   }).sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion) || b.id.localeCompare(a.id));
   const limpiar = () => {
     establecerBusqueda('');
@@ -72,7 +72,7 @@ export default function ListaSalas(propiedades: import('../../social/types').Asp
           checked: estado === opcion.id
         }} onPress={() => establecerEstado(opcion.id)} style={[estilos.opcionReparto, estado === opcion.id && estilos.pestanaActiva]}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, estado === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
         </View>
-        <View style={estilos.filaTitulo}><Text accessibilityLiveRegion="polite" style={estilosGlobales.textoSecundario}>{salas.length} de {salasSociales.length} salas</Text><Text style={estilosGlobales.textoSecundario}>{activas.length}/{LIMITE_SALAS_ACTIVAS} activas</Text></View>
+        <View style={estilos.filaTitulo}><Text accessibilityLiveRegion="polite" style={estilosGlobales.textoSecundario}>{salas.length} de {salasSociales.length} salas</Text><Text style={estilosGlobales.textoSecundario}>{activas.length}/{LIMITE_SALAS_ACTIVAS} propias activas</Text></View>
       </View>
       {salas.length ? [{
       id: 'abierta',

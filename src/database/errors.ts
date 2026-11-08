@@ -27,7 +27,7 @@ export function manejarErrorBaseDatos(etapa: string, error: unknown, contexto?: 
     return error;
   }
 
-  const fallo = error as {message?: unknown; code?: unknown; errcode?: unknown; extendedCode?: unknown} | null;
+  const fallo = error as {message?: unknown; code?: unknown; errcode?: unknown; extendedCode?: unknown; pasoSQLite?: unknown} | null;
   const mensajeTecnico = String(fallo?.message || '').toLowerCase();
   const codigoTecnico = String(fallo?.code || '').toUpperCase();
   const codigoExtendido = Number(fallo?.errcode ?? fallo?.extendedCode);
@@ -42,20 +42,19 @@ export function manejarErrorBaseDatos(etapa: string, error: unknown, contexto?: 
       etapa,
       codigo,
       codigoTecnico: fallo?.code || 'desconocido',
-      ...(contexto ? {
-        operacion: contexto.operacion,
-        mensajeTecnico: String(fallo?.message || error),
-      } : {}),
+      mensajeTecnico: String(fallo?.message || error),
+      ...(fallo?.pasoSQLite ? {pasoSQLite:fallo.pasoSQLite} : {}),
+      ...(contexto ? { operacion: contexto.operacion } : {}),
     });
   }
 
   return new ErrorBaseDatos(codigo);
 }
 
-export async function ejecutarConManejoDeErrores<Resultado>(etapa: string, operacion: () => Promise<Resultado>): Promise<Resultado> {
+export async function ejecutarConManejoDeErrores<Resultado>(etapa: string, operacion: () => Promise<Resultado>, contexto?: {operacion:string}): Promise<Resultado> {
   try {
     return await operacion();
   } catch (error) {
-    throw manejarErrorBaseDatos(etapa, error);
+    throw manejarErrorBaseDatos(etapa, error, contexto);
   }
 }

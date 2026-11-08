@@ -11,8 +11,8 @@ test('el acceso prepara cuenta, depósitos y movimientos con saldos reales y ses
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM usuarios').get()).n, 1);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM depositos').get()).n, 3);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, MOVIMIENTOS_PRUEBA.length);
-  assert.equal(MOVIMIENTOS_PRUEBA.length, 210);
-  assert.equal(new Set(MOVIMIENTOS_PRUEBA.map(movimiento => movimiento.clave)).size, 210);
+  assert.equal(MOVIMIENTOS_PRUEBA.length, 220);
+  assert.equal(new Set(MOVIMIENTOS_PRUEBA.map(movimiento => movimiento.clave)).size, MOVIMIENTOS_PRUEBA.length);
   assert.equal(new Set(MOVIMIENTOS_PRUEBA.filter(movimiento => movimiento.tipo === 'egreso').map(movimiento => movimiento.categoria)).size, 17);
   assert.equal(new Set(MOVIMIENTOS_PRUEBA.filter(movimiento => movimiento.tipo === 'ingreso').map(movimiento => movimiento.categoria)).size, 10);
   assert.ok(Math.max(...MOVIMIENTOS_PRUEBA.map(movimiento => movimiento.dias)) >= 150);

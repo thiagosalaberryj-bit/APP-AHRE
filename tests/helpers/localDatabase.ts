@@ -19,6 +19,7 @@ type ServiciosPrueba =
   & typeof import('../../src/database/initialization.ts')
   & typeof import('../../src/social/socialService.ts')
   & typeof import('../../src/statistics/statisticsService.ts');
+type ServiciosRecurrencias = typeof import('../../src/recurrences/recurrenceService.ts');
 type ServiciosSync = typeof import('../../src/sync/syncService.ts') & typeof import('../../src/sync/remote.ts') & typeof import('../../src/sync/deviceAuthorization.ts') & typeof import('../../src/sync/pendingService.ts') & Pick<typeof import('../../src/sync/journal.ts'),'observarCambiosLocales'> & typeof import('../../src/database/connectionQueue.ts') & typeof import('../../src/database/transactions.ts');
 
 export async function preparar(prueba: import('node:test').TestContext, desarrollo = true, remoto?:{url:string;fetch:typeof fetch;almacenamiento?:Map<string,string>;base?:DatabaseSync;registrarSql?:(sql:string)=>void;reloj?:(new () => Date) & Pick<typeof Date,'now'|'parse'|'UTC'>}) {
@@ -73,6 +74,7 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     export * from './src/database/initialization.ts';
     export * from './src/social/socialService.ts';
     export * from './src/statistics/statisticsService.ts';
+    export * from './src/recurrences/recurrenceService.ts';
     export * from './src/sync/syncService.ts';
     export * from './src/sync/remote.ts';
     export * from './src/sync/deviceAuthorization.ts';
@@ -87,5 +89,5 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     return cargar(resolverFuente(ruta));
   });
   await entrada.evaluate();
-  return { base, almacenamiento, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync) };
+  return { base, almacenamiento, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias) };
 }

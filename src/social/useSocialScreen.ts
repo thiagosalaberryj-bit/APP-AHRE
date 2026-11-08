@@ -7,6 +7,7 @@ import crearEstilosCompartidos from '../styles/social/SharedStyles';
 import crearEstilosMarco from '../styles/social/SocialScreenFrameStyles';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
 import { RUTAS } from '../constants/routes';
+import {observarSocialOnline} from './socialService';
 import { cargarSocial } from './socialService';
 export default function usePantallaSocial({
   navigation: navegacion,
@@ -56,11 +57,13 @@ export default function usePantallaSocial({
       if (montado.current && numero === solicitud.current) establecerCargando(false);
     }
   }, []);
-  useFocusEffect(useCallback(() => { recargar(); }, [recargar]));
+  useFocusEffect(useCallback(() => { recargar();return observarSocialOnline(()=>{void recargar();}); }, [recargar]));
   const social = registros ? {
     ...registros, recargar,
+    abrirMovimiento: (movimientoId:string) => raiz.push(RUTAS.DETALLE_MOVIMIENTO,{movimientoId}),
+    abrirPago: (deudaId:string,pagoId?:string,operacionClave?:string)=>raiz.push(RUTAS.REGISTRO_SOCIAL,{tipo:'pago',deudaId,pagoId,operacionClave}),
     personasActivas: registros.personas.filter(p => p.activa),
-    obtenerPersona: (id: string | undefined) => id === 'vos' ? registros.personaActual : registros.personas.find(p => p.id === id),
+    obtenerPersona: (id: string | undefined) => id === 'vos' ? registros.personaActual : registros.personas.find(p => p.id === id) || registros.personasOnline.find(p=>p.id===id),
     volver: () => navegacion.goBack(),
     irInicioSocial: () => raiz.popTo(RUTAS.PRINCIPAL, { screen: RUTAS.SOCIAL }),
     irAgenda: () => raiz.popTo(RUTAS.PERSONAS_SOCIAL, { todas: true }),
@@ -90,11 +93,12 @@ export default function usePantallaSocial({
     abrirRegistro
   };
   const titulosRegistro: Record<string, string[]> = {
+    personaSala: [persona?.nombre||'Integrante', 'Solicitudes y permisos en esta sala.'],
     crear: ['Crear sala', 'Una ocasión para compartir gastos.'],
     persona: ['Registrar persona', 'Agregá una persona a tu listado personal.'],
     deuda: ['Registrar deuda', 'Indicá quién debe y cuánto queda pendiente.'],
     gasto: [parametros.gastoId ? 'Editar gasto' : 'Agregar gasto', 'Elegí quién pagó y cómo se reparte.'],
-    eliminarDeuda: ['Eliminar deuda', 'Revisá la deuda antes de confirmar.'],
+    eliminarDeuda: ['Perdonar deuda', 'Cerrá el pendiente sin registrar un pago.'],
     detalleDeuda: ['Detalle de deuda', 'Información y acciones de esta deuda.'],
     pago: ['Registrar pago', 'Registrá dinero entregado o recibido.'],
     cerrar: ['Cerrar sala', 'Revisá el reparto antes de finalizar la ocasión.']

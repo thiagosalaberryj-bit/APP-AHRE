@@ -145,7 +145,7 @@ export async function consultarDetalleDeposito(depositoId: string) {
 
   const deposito = await consultarDepositoPropioActivo(depositoId);
   const movimientos = await movimientosRepositorio.consultar(
-    { deposito_id: deposito.id, anulado: 0 },
+    { deposito_id: deposito.id },
     { ordenarPor: 'fecha_hora', direccion: 'DESC' },
   );
   const historialSaldos = await depositosRepositorio.consultarHistorialSaldos(deposito.id);

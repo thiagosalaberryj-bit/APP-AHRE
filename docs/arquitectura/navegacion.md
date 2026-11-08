@@ -93,7 +93,10 @@ los nombres de ruta y eligen el destino según sus parámetros:
   el historial de deudas, disponible aunque haya menos de cinco pendientes.
 - `PersonaSocial`: datos, resumen y deudas de la persona seleccionada.
 - `RegistroSocial`: formularios y confirmaciones según `tipo`, incluido
-  `detalleDeuda` para consultar la deuda elegida desde una tarjeta.
+  `detalleDeuda` para consultar la deuda elegida desde una tarjeta y `personaSala`
+  para abrir `SocialRoomPersonScreen.tsx` con `salaId` y `personaId`. Este destino
+  muestra el historial de solicitudes, sus estados y las acciones permitidas para
+  esa persona; no expande la lista general ni agrega una ruta de Stack.
 - `GastoSocial`: detalle de un ítem y sus pagos, con acceso al formulario
   precargado de edición solo mientras la sala esté abierta.
 

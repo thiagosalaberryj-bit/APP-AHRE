@@ -14,7 +14,8 @@ base; la sesión se consulta recién cuando la persona completa el deslizador. S
 ocurre un error al preparar SQLite, se muestra el mensaje controlado y se puede
 volver a intentar.
 
-Al abrir la conexión se activa `PRAGMA foreign_keys = ON` y se comprueba que
+Al abrir la conexión se configura `busy_timeout`, se activa el diario WAL si el
+archivo todavía usa otro modo y luego se activa `PRAGMA foreign_keys = ON`. Se comprueba que
 SQLite lo haya aplicado. La aplicación nunca elimina la base para actualizar
 el esquema.
 
@@ -160,11 +161,26 @@ SQLite.
 
 ## Transacciones y concurrencia
 
-`ejecutarTransaccion()` utiliza `withTransactionAsync()` de `expo-sqlite`.
+`ejecutarConConexion()` abre una transacción con `BEGIN IMMEDIATE` antes de
+escribir el lote del diario. El callback, los cambios financieros, el diario y
+la limpieza del lote se confirman juntos. `ejecutarTransaccion()` reutiliza esta
+operación sin abrir una transacción anidada. Las escrituras de autenticación y
+sincronización utilizan la misma ruta. Los avisos de cambios se emiten después
+del `COMMIT`; una reversión no anuncia movimientos que no se guardaron.
+
 Todas las consultas de los repositorios pasan por una cola serial para que
 ninguna consulta ajena se intercale con la transacción en curso. La cola usa
-la misma conexión en la que se activaron las claves foráneas; la variante
-exclusiva de Expo abre otra conexión y no hereda ese `PRAGMA`.
+la misma conexión en la que se activaron las claves foráneas. WAL permite que
+otras conexiones mantengan lecturas mientras se confirma una escritura.
+Los bloqueos transitorios se reintentan solamente al reservar la escritura o
+al confirmar: nunca se repite el callback financiero. El fallo original se
+conserva aunque falle el `ROLLBACK`. El diagnóstico de desarrollo incluye el
+mensaje nativo, la operación y la fase cuando están disponibles.
+
+La revisión de recurrencias consulta primero si existen vencimientos. Cuando
+no los hay, no escribe el contexto de sincronización ni abre una transacción
+de escritura. Si encuentra trabajo, vuelve a comprobarlo dentro de la
+transacción antes de crear movimientos y ejecuciones.
 
 Las operaciones compuestas pasan la conexión recibida por la función de
 transacción como último argumento del repositorio. Si una operación falla,
@@ -353,3 +369,14 @@ La corrección pasó tipos, 155 pruebas de la app y 36 del backend con MySQL
 8.4.13 local aislado, sin fallos ni omisiones. Las dos regresiones del mismo
 minuto fallaban antes del cambio y pasaron después. El líder confirmó la comprobación manual
 en Expo Go con un depósito nuevo.
+
+La conexión preparada, su apertura pendiente y la cola de lecturas/escrituras
+se conservan por archivo durante el runtime JavaScript, incluso con Fast Refresh.
+El inicio comprueba tablas, índices, triggers y el contexto del diario mediante
+lecturas. Si ya están completos no reserva una escritura ni repite DDL. Cuando
+falta estructura, preparar el diario reserva la escritura con `BEGIN IMMEDIATE`
+y confirma todos sus pasos juntos mediante el mismo helper que las otras
+escrituras. Los reintentos de reserva y confirmación se centralizan allí;
+no se repite la preparación del diario tras un fallo intermedio;
+un fallo persistente conserva el diagnóstico y permite una nueva inicialización.
+Esto no elimina datos ni cambia la versión del esquema.

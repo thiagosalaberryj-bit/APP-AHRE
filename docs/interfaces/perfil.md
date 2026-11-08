@@ -149,6 +149,6 @@ Ante `perfil_correo_duplicado`, Sincronización ofrece Corregir en Perfil y lueg
 
 Solo se modifica el correo en eventos de perfil no confirmados. Se conservan nombres, IDs, secuencias y eventos financieros, y se respaldan los originales. Los rechazos financieros, las revocaciones y los timeouts sin rechazo definitivo no habilitan esta acción. Una respuesta perdida se reintenta con el mismo contenido.
 
-La versión fija de «Acerca de AHRE» no coincide con 0.5.0 de los manifiestos.
-Se registra como limitación en [Estado y validación](../estado-y-validacion.md);
-la etapa de documentación no modifica esa pantalla.
+«Acerca de AHRE» consulta `Constants.expoConfig.version`; la configuración actual
+es 0.7.0. Esa versión no demuestra qué revisión de JavaScript incluye una APK
+anterior ni acredita que se haya publicado otra build.

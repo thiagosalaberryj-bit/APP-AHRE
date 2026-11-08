@@ -1,9 +1,9 @@
+import {esSalaOnline,cambiarIntegrantesOnline,cerrarSalaOnline} from './online/onlineService';
 import { salasRepositorio, personasSalaRepositorio, personasRepositorio, pagosSocialesRepositorio, deudasRepositorio } from '../database/repositories';
 import { conSocial, registroPropio, idPersistente, salaAbierta, leerSocial, exigirDepositoConDinero } from './socialStore';
 import { exigir, textoSocial, unidades, sumaPagos } from './socialValidation';
 import { ICONOS_SALA, LIMITE_SALAS_ACTIVAS } from './socialConstants';
 import { COLORES_DEPOSITOS } from '../styles/colors';
-import { CATEGORIAS_EGRESO } from '../constants/movimientos';
 import { guardarOperacion } from './socialPaymentService';
 import { leerPlanGasto, operacionesGasto } from './socialRoomDraft';
 
@@ -16,21 +16,24 @@ export function crearSala(datos: import('./types').DatosSala) {
     await exigirDepositoConDinero(contexto);
     const nombre = textoSocial(datos.nombre);
     exigir(nombre && nombre.length <= 100 && textoSocial(datos.descripcion).length <= 500, 'Completá un nombre válido y una descripción de hasta 500 caracteres.');
-    exigir(CATEGORIAS_EGRESO.some(c => c.id === datos.categoriaId) && ICONOS_SALA.some(c => c.id === datos.icono) && COLORES_DEPOSITOS.includes(datos.color), 'Elegí categoría, icono y color de la sala.');
+    exigir(ICONOS_SALA.some(c => c.id === datos.icono) && COLORES_DEPOSITOS.includes(datos.color), 'Elegí icono y color de la sala.');
     const fecha = datos.fecha;
     exigir(typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha) && !Number.isNaN(Date.parse(fecha)), 'Elegí una fecha válida.');
     const abiertas = await salasRepositorio.consultar({ usuario_id: contexto.usuario.id, estado: 'abierta' }, {}, contexto.conexion);
-    exigir(abiertas.length < LIMITE_SALAS_ACTIVAS, 'Ya tenés tres salas abiertas. Cerrá una para crear otra.');
+    const compartidas=await contexto.conexion.getAllAsync<{datos:string}>('SELECT datos FROM salas_online_locales WHERE usuario_id=? AND administrador=1',[contexto.usuario.id]);
+    const cantidad=abiertas.filter(s=>!s.publicada).length+compartidas.filter(s=>JSON.parse(s.datos).sala.estado==='abierta').length;
+    exigir(cantidad < LIMITE_SALAS_ACTIVAS, 'Ya tenés tres salas abiertas. Cerrá una para crear otra.');
     const ids = [...new Set([contexto.propia.id, ...(datos.personasIds || []).map((id) => idPersistente(id, contexto))])];
     for (const id of ids) exigir((await registroPropio(personasRepositorio, id, contexto)).activa, 'Una persona seleccionada está desactivada.');
     const sala = await salasRepositorio.crear({ id: datos.id, usuario_id: contexto.usuario.id, nombre, descripcion: textoSocial(datos.descripcion),
-      categoria: datos.categoriaId, icono: datos.icono, color: datos.color, fecha, estado: 'abierta' }, contexto.conexion);
+      icono: datos.icono, color: datos.color, fecha, estado: 'abierta' }, contexto.conexion);
     for (const persona_id of ids) await personasSalaRepositorio.crear({ usuario_id: contexto.usuario.id, sala_id: sala.id, persona_id, activa: 1, fecha_alta: new Date().toISOString() }, contexto.conexion);
     return sala;
   });
 }
 
-export function cambiarPersonasSala(salaId: string, personasIds: string[]) {
+export async function cambiarPersonasSala(salaId: string, personasIds: string[]) {
+  if(await esSalaOnline(salaId))return cambiarIntegrantesOnline(salaId,personasIds);
   return conSocial(async (contexto) => {
     await salaAbierta(salaId, contexto);
     const ids = new Set([contexto.propia.id, ...personasIds.map((id) => idPersistente(id, contexto))]);
@@ -49,10 +52,12 @@ export function cambiarPersonasSala(salaId: string, personasIds: string[]) {
   });
 }
 
-export function cerrarSala(salaId: string) {
+export async function cerrarSala(salaId: string) {
+  if(await esSalaOnline(salaId))return cerrarSalaOnline(salaId);
   return conSocial(async (contexto) => {
     const sala = await registroPropio(salasRepositorio, salaId, contexto);
     if (sala.estado === 'cerrada') return sala;
+    await salaAbierta(salaId,contexto);
     let datos = await leerSocial(contexto);
     if (datos.gastos.some(g => g.sala_id === salaId && g.estado === 'vigente')) await exigirDepositoConDinero(contexto);
     for (const gasto of datos.gastos.filter(g => g.sala_id === salaId && g.estado === 'vigente')) {
@@ -61,7 +66,7 @@ export function cerrarSala(salaId: string) {
       for (const operacion of operacionesGasto(gasto, partes, contexto.propia.id, plan)) {
         const { clave, ...pago } = operacion;
         await guardarOperacion(contexto, { ...pago, fecha: gasto.fecha,
-          clave_operacion: `cierre:${gasto.id}:${gasto.version}:${clave}`, categoria: pago.tipoMovimiento === 'ingreso' ? 'devoluciones' : sala.categoria }, plan.financiaciones[clave]);
+          clave_operacion: `cierre:${gasto.id}:${gasto.version}:${clave}`, categoria: pago.tipoMovimiento === 'ingreso' ? 'devoluciones' : gasto.categoria }, plan.financiaciones[clave]);
       }
     }
     datos = await leerSocial(contexto);

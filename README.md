@@ -9,7 +9,7 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.7.0-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.8.0-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
@@ -24,7 +24,8 @@ Finanzas personales, gastos compartidos y comprobantes en una app Android con da
 | Área | Disponible |
 | --- | --- |
 | Finanzas | Depósitos, ingresos, egresos, ajustes y estadísticas locales. |
-| Social | Personas, salas, repartos, deudas y pagos asociados a movimientos. |
+| Social | Agenda privada, salas locales/online, invitados web, acuerdos y pagos con movimientos propios. |
+| Recurrencias | Generación local y gestión desde depósitos; ejecución Android con WorkManager en una build nativa. |
 | Comprobantes | OCR local con ML Kit y revisión antes de guardar; requiere APK Android. |
 | Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado y preferencias. |
 | Sincronización | Lotes ordenados, reintentos sin duplicados y corrección guiada de correo rechazado. |
@@ -60,9 +61,7 @@ npm test
 Las pruebas MySQL requieren un backend compilado y una instancia aislada;
 sin ese entorno se omiten explícitamente. Ver [comandos completos](docs/configuracion/entorno.md#pruebas).
 
-Última verificación de la etapa 7: **158 pruebas de la app y 45 del backend**
-aprobadas sin omisiones, más exportación Android con Hermes. El líder confirmó
-los recorridos manuales en Expo Go. El alcance y las limitaciones están en
+Los resultados actuales y los resultados históricos se distinguen en
 [Estado y validación](docs/estado-y-validacion.md).
 
 
@@ -74,8 +73,10 @@ los recorridos manuales en Expo Go. El alcance y las limitaciones están en
 
 ## Límites actuales
 
-La sincronización funciona con la app activa; Social todavía no colabora entre
-cuentas por web. Notificaciones muestra ejemplos y el idioma elegido no traduce
+La sincronización privada funciona con la app activa; Social compartido utiliza
+HTTP, eventos persistentes y WebSocket, con acceso web limitado a invitados.
+Expo Go permite probar la interfaz y las demos, pero no WorkManager ni OCR nativo.
+Notificaciones muestra ejemplos y el idioma elegido no traduce
 toda la interfaz. Los pendientes de una autorización revocada se conservan sin
 recuperación automática. La app es una versión de evaluación; ver los
 [límites y verificaciones](docs/estado-y-validacion.md).

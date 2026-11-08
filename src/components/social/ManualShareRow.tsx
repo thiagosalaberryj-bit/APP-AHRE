@@ -17,8 +17,7 @@ export default function FilaMontoManual(propiedades: import('../../social/types'
     }
   };
   const {
-    estilos,
-    estilosGlobales
+    estilos
   } = aspecto;
   return <View style={[estilos.filaReparto, estilos.filaRepartoManual]}><Text style={estilos.nombreReparto}>{nombreCompletoPersona(persona)}</Text><ImporteTicket etiqueta={`Parte de ${persona.nombre}`} valor={valor} alCambiar={alCambiar} {...aspecto} /></View>;
 }

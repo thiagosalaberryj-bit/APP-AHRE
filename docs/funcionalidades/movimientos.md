@@ -15,7 +15,7 @@ Desde Dashboard se abre Ingreso o Egreso, se cargan depósitos y categorías y s
 `src/screens/MovementsScreen.tsx` consulta el historial local del usuario de la
 sesión. `movimientosRepositorio.consultarHistorial()` relaciona cada movimiento
 con su depósito para limitar la consulta por `depositos.usuario_id`; incluye
-ingresos y egresos vigentes (`anulado = 0`) y obtiene la frecuencia desde la
+ingresos y egresos, incluidos los eliminados con su estado visible y obtiene la frecuencia desde la
 recurrencia relacionada cuando existe. El tipo proviene de `movimientos.tipo`,
 no del signo del monto. Los montos persistidos son positivos; el tipo determina
 si la tarjeta muestra ingreso o egreso.
@@ -270,3 +270,8 @@ escribir en la base.
 
 El formulario solo usa SQLite, la sesión local, catálogos internos y
 componentes de AHRE. Funciona sin conexión a Internet.
+
+
+## Correcciones y ejecución recurrente
+
+Eliminar desde el detalle conserva el movimiento como eliminado, lo excluye de saldos y estadísticas y permite detener su recurrencia. Crea una corrección inversa vinculada, ajusta el saldo una sola vez y conserva los acuerdos compartidos. Ver [reglas y ejecución Android](../arquitectura/social-online-recurrencias.md).

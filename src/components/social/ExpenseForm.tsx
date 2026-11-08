@@ -1,6 +1,8 @@
 import { repartirGasto } from '../../social/socialValidation';
 import { convertirMontoMovimiento } from '../../utils/movementValidation';
 import SelectorSegmentado from '../SegmentedSelector';
+import SelectorCategoria from '../CategorySelector';
+import { CATEGORIAS_EGRESO } from '../../constants/movimientos';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useEffect, useState } from 'react';
 import { montoParaEntrada, nombreCompletoPersona } from '../../social/socialHelpers';
@@ -35,6 +37,7 @@ export default function FormularioGasto(propiedades: import('../../social/types'
     estilosGlobales,
     tema
   } = aspecto;
+  const [categoriaId, establecerCategoriaId] = useState(borradorInicial?.categoriaId || gastoInicial?.categoriaId || 'alimentacion');
   const [monto, establecerMonto] = useState<string>(borradorInicial?.monto || (gastoInicial ? montoParaEntrada(gastoInicial.montoNumero) : ''));
   const [descripcion, establecerDescripcion] = useState(borradorInicial?.descripcion || gastoInicial?.descripcion || '');
   const [pagadorId, establecerPagadorId] = useState(borradorInicial?.pagadorId || gastoInicial?.pagadorId || 'vos');
@@ -42,8 +45,8 @@ export default function FormularioGasto(propiedades: import('../../social/types'
   const [involucradas, establecerInvolucradas] = useState(borradorInicial?.involucradas || (gastoInicial ? gastoInicial.partes.map(parte => parte.personaId) : participantes.map(persona => persona.id)));
   const [pagaron, establecerPagaron] = useState(borradorInicial?.pagaron || gastoInicial?.partes.filter((parte) => parte.tipo === 'saldado').map(parte => parte.personaId) || []);
   const [montosManuales, establecerMontosManuales] = useState(() => borradorInicial?.montosManuales || Object.fromEntries((gastoInicial?.partes || []).map(parte => [parte.personaId, montoParaEntrada(parte.montoNumero)])));
-  useEffect(() => { alCambiar({ monto, descripcion, pagadorId, reparto, involucradas, pagaron, montosManuales }); },
-    [alCambiar, monto, descripcion, pagadorId, reparto, involucradas, pagaron, montosManuales]);
+  useEffect(() => { alCambiar({ monto, descripcion, pagadorId, categoriaId, reparto, involucradas, pagaron, montosManuales }); },
+    [alCambiar, monto, descripcion, pagadorId, categoriaId, reparto, involucradas, pagaron, montosManuales]);
   const [mostrarPagos, establecerMostrarPagos] = useState(false);
   const personasGasto = participantes.filter(persona => involucradas.includes(persona.id));
   const montoNumero = convertirMontoMovimiento(monto);
@@ -68,6 +71,7 @@ export default function FormularioGasto(propiedades: import('../../social/types'
     return persona.id === 'vos' ? `Le debés tu parte a ${pagador.nombre}` : `Debe su parte a ${pagador.nombre}`;
   };
   return <View style={estilos.grupo}>
+      <SelectorCategoria categorias={CATEGORIAS_EGRESO} tipoMovimiento="egreso" seleccionadaId={categoriaId} alSeleccionar={establecerCategoriaId} {...aspecto} />
       <MontoSocial etiqueta="Importe del ítem" valor={monto} alCambiar={establecerMonto} {...aspecto} />
       <CampoFormulario etiqueta="Qué se pagó" ejemplo="Ej.: Pizzas, bebidas, taxi" valor={descripcion} limite={500} alCambiar={establecerDescripcion} {...aspecto} />
       <View style={estilos.filaCampos}>

@@ -27,7 +27,7 @@ export async function prepararSocialPrueba(usuario: Pick<Usuario, 'id' | 'nombre
     if (!id) throw new Error('El ejemplo social referencia una persona inexistente.');
     return id;
   };
-  await salasRepositorio.crear({ id: salaId, usuario_id: usuario.id, nombre: 'Encuentro de prueba', descripcion: 'Cena, compras, taxi y café para probar repartos, pagos y cierre.', categoria: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', fecha: fecha.slice(0, 10), estado: 'abierta' }, conexion);
+  await salasRepositorio.crear({ id: salaId, usuario_id: usuario.id, nombre: 'Encuentro de prueba', descripcion: 'Cena, compras, taxi y café para probar repartos, pagos y cierre.', icono: 'restaurant-outline', color: '#BED5C8', fecha: fecha.slice(0, 10), estado: 'abierta' }, conexion);
   for (const id of personas.values()) await personasSalaRepositorio.crear({ id: identificar('integrante', id), usuario_id: usuario.id, sala_id: salaId, persona_id: id, activa: 1, fecha_alta: fecha }, conexion);
   for (const ejemplo of GASTOS_SALA_PRUEBA) {
     const id = identificar('gasto', ejemplo.clave);
@@ -38,7 +38,7 @@ export async function prepararSocialPrueba(usuario: Pick<Usuario, 'id' | 'nombre
     const financiaciones: Record<string, Financiacion> = {};
     for (const operacion of operacionesGasto(valores, partes, propia.id, { pagaron }).filter(o => o.tipoMovimiento)) financiaciones[operacion.clave] = { depositoId: deposito.id, depositoNombre: deposito.nombre, fecha };
     const plan: PlanGasto = { pagaron, financiaciones };
-    await gastosCompartidosRepositorio.crear({ ...valores, usuario_id: usuario.id, sala_id: salaId, fecha, reparto: ejemplo.reparto, estado: 'vigente', version: 1, plan_pagos: JSON.stringify(plan) }, conexion);
+    await gastosCompartidosRepositorio.crear({ categoria: 'alimentacion', ...valores, usuario_id: usuario.id, sala_id: salaId, fecha, reparto: ejemplo.reparto, estado: 'vigente', version: 1, plan_pagos: JSON.stringify(plan) }, conexion);
     for (const parte of partes) await participantesGastoRepositorio.crear({ ...parte, usuario_id: usuario.id, gasto_compartido_id: id }, conexion);
   }
   // Una deuda manual pendiente permite probar pagos sin tener que cerrar la sala.

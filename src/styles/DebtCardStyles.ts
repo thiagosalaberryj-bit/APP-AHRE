@@ -7,5 +7,6 @@ export function crearEstilosTarjetaDeuda(tema: Tema) {
   return StyleSheet.create({
     ...comunes,
     persona: comunes.metadatos,
+    invitacion: { borderColor: tema.foco },
   });
 }

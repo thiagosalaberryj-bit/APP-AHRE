@@ -110,7 +110,7 @@ function obtenerTextoTipoDeposito(tipo: string) {
 }
 
 export default function PantallaMovimientos({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
-  const { height: altoVentana, width: anchoVentana } = useWindowDimensions();
+  const { width: anchoVentana } = useWindowDimensions();
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);

@@ -3,6 +3,48 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [v0.8.0] - 2026-11-08 - no estable
+
+### Añadido
+
+- Salas compartidas en tiempo real con caché SQLite, edición offline, comandos
+  idempotentes, control de versiones y recuperación HTTP de eventos WebSocket.
+- Acceso global con contraseña y QR, aprobación de ingresos, vínculos por correo
+  y continuidad de identidad entre invitado web y cuenta propia.
+- Acuerdos online con aceptación, historial de pagos informados/confirmados/
+  rechazados y perdón sin crear dinero. Cada cuenta utiliza depósitos propios.
+- Motor recurrente local, gestión desde depósitos y módulo Android WorkManager
+  sin requisito de red. Ocurrencias únicas y recuperación de fechas vencidas.
+- Demos sociales interactivas para creador y participante, restringidas a la
+  cuenta local de desarrollo; no usan el servidor ni se habilitan en release.
+
+### Cambiado
+
+- Categoría por gasto, cierre con obligaciones compartidas e incorporación
+  financiera independiente por cuenta, sin duplicar la compra del pagador.
+- Detalles, filtros, formularios e historial social reutilizan componentes y
+  estilos locales, con solicitudes por persona y soporte de ambos temas.
+- Eliminar movimientos conserva original y corrección vinculada, excluye ambos
+  de estadísticas y mantiene los acuerdos sociales sin cambios automáticos.
+- Menos descargas y escrituras sin novedades; reconciliación al reanudar y
+  comprobaciones transaccionales para evitar propuestas cruzadas duplicadas.
+- Versión 0.8.0 y código Android 11; documentación vigente separada de antecedentes.
+
+### Corregido
+
+- Recuperación inicial de cuentas, serialización SQLite y diagnóstico de bloqueos.
+- Publicación con depósitos/movimientos preparados y reintentos sin duplicados.
+- Aceptación independiente de avisos de pago y rechazo de cambios económicos.
+- Cierre del modal durante guardados y consistencia de partes/balances web.
+- Retirada de imports y estilos sin referencias.
+
+### Verificación
+
+- 343 pruebas de app y 60 de backend aprobadas, cero fallos y cero omisiones,
+  con SQLite real, MySQL temporal aislado, HTTP y WebSocket. TypeScript correcto.
+- Pendiente: revisión en dispositivos, enlaces/QR, WSS detrás del proxy real y
+  WorkManager con la app cerrada. Preparar una build no acredita esas pruebas.
+
 ## [v0.7.0] - 2026-11-05 - no estable
 
 ### Añadido

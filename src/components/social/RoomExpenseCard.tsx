@@ -1,3 +1,5 @@
+import {CATEGORIAS_EGRESO} from '../../constants/movimientos';
+import {obtenerColorCategoria,obtenerColorIconoCategoria} from '../../styles/categoryColors';
 import crearEstilosSala from '../../styles/social/RoomDetailsStyles';
 import { Pressable, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,8 +14,8 @@ export default function TarjetaGastoSala({ gasto, alAbrir, tema, estilosGlobales
     accessibilityHint="Abre el reparto y los pagos de este gasto." onPress={alAbrir}
     style={({ pressed: presionado }) => [estilosGlobales.tarjeta, estilos.tarjetaSala, estilos.deudaHistorial, presionado && estilos.deudaHistorialPresionada]}>
     <View style={estilos.filaCampos}>
-      <View style={[estilos.iconoHistorialDeuda, { backgroundColor: `${tema.foco}18` }]}>
-        <Ionicons color={tema.foco} name="receipt-outline" size={20} />
+      <View style={[estilos.iconoHistorialDeuda, { backgroundColor: obtenerColorCategoria(gasto.categoriaId,tema,'egreso')+'26' }]}>
+        <Ionicons color={obtenerColorIconoCategoria(gasto.categoriaId,tema,'egreso')} name={CATEGORIAS_EGRESO.find(c=>c.id===gasto.categoriaId)?.icono||'receipt-outline'} size={20} />
       </View>
       <View style={estilos.textoFlexible}>
         <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.encabezadoSeccion, estilos.tituloFila]}>{gasto.descripcion}</Text>

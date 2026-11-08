@@ -11,6 +11,27 @@ export function propietarioSql(tabla: TablaSync, alias: string) {
   return `${alias}.usuario_id`;
 }
 
+// Comprobar antes de reservar una escritura: IF NOT EXISTS / OR IGNORE
+// siguen necesitando acceso de escritura aunque la estructura ya exista.
+export async function estaPreparadoDiario(conexion: Conexion) {
+  const objetos = await conexion.getAllAsync<{name:string;type:string}>(
+    "SELECT name,type FROM sqlite_master WHERE name LIKE 'sync_%' OR name LIKE 'autorizacion_%'",
+  );
+  const presentes = new Set(objetos.map(objeto=>objeto.type+':'+objeto.name));
+  const tablas = ['sync_context','sync_state','sync_outbox','sync_local_dates','sync_last_success',
+    'sync_authorization','sync_batch_authorization','sync_profile_rejection','sync_profile_backup'];
+  const indices = ['sync_outbox_usuario','sync_outbox_usuario_lote'];
+  const triggers = ['sync_fecha_local','sync_limpiar_fecha','sync_autorizacion_lote',
+    ...TABLAS_SYNC.flatMap(tabla=>['INSERT','UPDATE','DELETE'].flatMap(evento=>[
+      'sync_'+tabla+'_'+evento,'autorizacion_'+tabla+'_'+evento,
+    ]))];
+  if(!tablas.every(nombre=>presentes.has('table:'+nombre))
+    || !indices.every(nombre=>presentes.has('index:'+nombre))
+    || !triggers.every(nombre=>presentes.has('trigger:'+nombre)))return false;
+  const contexto = await conexion.getFirstAsync<{id:number}>('SELECT id FROM sync_context WHERE id=1');
+  return contexto?.id===1;
+}
+
 export async function prepararDiario(conexion: Conexion) {
   await prepararEsquemaSincronizacion(conexion);
   for (const tabla of TABLAS_SYNC) {
@@ -35,16 +56,15 @@ export async function prepararCuentaLocal(conexion: Conexion, usuarioId: string)
   if (estado?.preparada) return;
   // Bootstrap sustituye el historial previo de esta cuenta por su estado actual.
   // Los eventos posteriores se siguen agregando en orden sin compactarlos.
-  await conexion.withTransactionAsync(async () => {
-    await conexion.runAsync('DELETE FROM sync_outbox WHERE usuario_id=?',[usuarioId]);
-    const lote = `inicial:${usuarioId}`;
-    for (const tabla of TABLAS_SYNC) {
-      const columnas = await conexion.getAllAsync<{name:string}>(`PRAGMA table_info(${tabla});`);
-      const objeto = `json_object(${columnas.map(c=>`'${c.name}',t."${c.name}"`).join(',')})`;
-      await conexion.runAsync(`INSERT INTO sync_outbox(lote,usuario_id,cambio) SELECT ?,?,json_object('tabla',?,'accion','guardar','datos',${objeto}) FROM ${tabla} t WHERE ${propietarioSql(tabla,'t')}=? ORDER BY t.id`,[lote,usuarioId,tabla,usuarioId]);
-    }
-    await conexion.runAsync('INSERT INTO sync_state(usuario_id,preparada) VALUES(?,1) ON CONFLICT(usuario_id) DO UPDATE SET preparada=1',[usuarioId]);
-  });
+  // La cola de escritura ya abrió la transacción de este bootstrap.
+  await conexion.runAsync('DELETE FROM sync_outbox WHERE usuario_id=?',[usuarioId]);
+  const lote = `inicial:${usuarioId}`;
+  for (const tabla of TABLAS_SYNC) {
+    const columnas = await conexion.getAllAsync<{name:string}>(`PRAGMA table_info(${tabla});`);
+    const objeto = `json_object(${columnas.map(c=>`'${c.name}',t."${c.name}"`).join(',')})`;
+    await conexion.runAsync(`INSERT INTO sync_outbox(lote,usuario_id,cambio) SELECT ?,?,json_object('tabla',?,'accion','guardar','datos',${objeto}) FROM ${tabla} t WHERE ${propietarioSql(tabla,'t')}=? ORDER BY t.id`,[lote,usuarioId,tabla,usuarioId]);
+  }
+  await conexion.runAsync('INSERT INTO sync_state(usuario_id,preparada) VALUES(?,1) ON CONFLICT(usuario_id) DO UPDATE SET preparada=1',[usuarioId]);
 }
 
 export async function aplicarCambios(conexion: Conexion, cambios: CambioSync[]) {

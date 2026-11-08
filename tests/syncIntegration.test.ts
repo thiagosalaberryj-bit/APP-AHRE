@@ -97,13 +97,13 @@ test('negocio MySQL: depósitos, ingresos, egresos, ajustes y transferencias se 
   assert.equal((await e.db.get('SELECT activo FROM depositos WHERE id=?',[b.id]))!.activo,0);
 });
 
-test('negocio MySQL: Social conserva borradores, cierres, repartos, deudas, pagos parciales y reversiones offline',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+test('negocio MySQL: Social conserva borradores, cierres, repartos, deudas, pagos parciales y eliminación privada offline',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
   const e=await escenarioNegocio(t);e.desconectar();
   const deposito=await e.depositosRepositorio.crear({usuario_id:e.usuario.id,nombre:'Social',tipo:'efectivo',saldo_inicial:100000,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'});
   const lucia=(await e.guardarPersona({nombre:'Lucía',apellido:'Prueba',apodo:'Lu'}))!;
   const tomas=(await e.guardarPersona({nombre:'Tomás',apellido:'Prueba',apodo:'Tom'}))!;
-  await e.crearSala({id:'sala-real',nombre:'Cena',descripcion:'Prueba completa',fecha:'2026-11-02',categoriaId:'alimentacion',icono:'restaurant-outline',color:'#BED5C8',personasIds:[lucia.id,tomas.id]});
-  const gasto={id:'gasto-real',claveOperacion:'gasto-real',salaId:'sala-real',descripcion:'Cena '+ 'A'.repeat(495),monto:'1000,01',reparto:'iguales' as const,pagadorId:'vos',involucradas:['vos',lucia.id,tomas.id],pagaron:[lucia.id],montosManuales:{}};
+  await e.crearSala({id:'sala-real',nombre:'Cena',descripcion:'Prueba completa',fecha:'2026-11-02',icono:'restaurant-outline',color:'#BED5C8',personasIds:[lucia.id,tomas.id]});
+  const gasto={ categoriaId: 'alimentacion',id:'gasto-real',claveOperacion:'gasto-real',salaId:'sala-real',descripcion:'Cena '+ 'A'.repeat(495),monto:'1000,01',reparto:'iguales' as const,pagadorId:'vos',involucradas:['vos',lucia.id,tomas.id],pagaron:[lucia.id],montosManuales:{}};
   const plan=await e.previsualizarGasto(gasto),fondos=Object.fromEntries(plan.operaciones.map(o=>[o.clave,{depositoId:deposito.id}]));
   await e.guardarGasto(gasto,fondos);await e.comprobar();
   const editado={...gasto,gastoId:gasto.id,version:1,monto:'1200,01'};
@@ -114,14 +114,14 @@ test('negocio MySQL: Social conserva borradores, cierres, repartos, deudas, pago
   const pago=await e.registrarPagoDeuda({deudaId:deuda.id,monto:'100,01',claveOperacion:'pago-parcial'},{depositoId:deposito.id});
   await e.comprobar();
   await e.movimientosRepositorio.eliminar(pago.movimiento_id!);await e.comprobar();
-  await e.registrarPagoDeuda({deudaId:deuda.id,monto:'400',claveOperacion:'pago-total'},{depositoId:deposito.id});await e.comprobar();
+  await e.registrarPagoDeuda({deudaId:deuda.id,monto:'299,99',claveOperacion:'pago-total'},{depositoId:deposito.id});await e.comprobar();
   const manual=await e.crearDeudaPersonal({personaId:lucia.id,direccion:'me_deben',monto:'500,05',descripcion:'A'.repeat(500)},{depositoId:deposito.id});
   await e.comprobar();
   const reintegro=await e.registrarPagoDeuda({deudaId:manual.id,monto:'200,02',claveOperacion:'reintegro'},{depositoId:deposito.id});await e.comprobar();
   await e.movimientosRepositorio.eliminar(reintegro.movimiento_id!);await e.comprobar();
   const origen=e.base.prepare("SELECT movimiento_id FROM pagos_sociales WHERE deuda_id=? AND clase='origen_deuda'").get(manual.id)!;
   await e.movimientosRepositorio.eliminar(String(origen.movimiento_id));await e.comprobar();
-  assert.equal((await e.db.get('SELECT estado FROM deudas WHERE id=?',[manual.id]))!.estado,'cancelada');
+  assert.equal((await e.db.get('SELECT estado FROM deudas WHERE id=?',[manual.id]))!.estado,'parcial');
   const debida=await e.crearDeudaPersonal({personaId:lucia.id,direccion:'debo',monto:'800,08',descripcion:'Debo'});await e.comprobar();
   await e.registrarPagoDeuda({deudaId:debida.id,monto:'300,03',claveOperacion:'debida-parcial'},{depositoId:deposito.id});await e.comprobar();
   await e.cancelarDeuda(debida.id);await e.comprobar();
@@ -155,8 +155,8 @@ test('negocio MySQL: lotes manipulados se rechazan completos y la cola válida p
   await rechazar(c=>c.filter(x=>!(x.tabla==='movimientos'&&x.datos.tipo==='transferencia_entrada')).map(x=>x.tabla==='depositos'&&x.datos.id===b.id?{...x,datos:{...x.datos,saldo_actual:0}}:x),/dos movimientos/);
   assert.equal((await e.db.get('SELECT COUNT(*) n FROM transferencias'))!.n,0);await e.comprobar();
   const persona=(await e.guardarPersona({nombre:'Contacto',apellido:'Prueba',apodo:'C'}))!;await e.comprobar();
-  await e.crearSala({id:'sala-invalidos',nombre:'Sala',descripcion:'',fecha:'2026-11-02',categoriaId:'alimentacion',icono:'restaurant-outline',color:'#BED5C8',personasIds:[persona.id]});await e.comprobar();
-  const gasto={id:'gasto-invalido',claveOperacion:'gasto-invalido',salaId:'sala-invalidos',descripcion:'Partes exactas',monto:'100',reparto:'iguales' as const,pagadorId:'vos',involucradas:['vos',persona.id],pagaron:[],montosManuales:{}};
+  await e.crearSala({id:'sala-invalidos',nombre:'Sala',descripcion:'',fecha:'2026-11-02',icono:'restaurant-outline',color:'#BED5C8',personasIds:[persona.id]});await e.comprobar();
+  const gasto={ categoriaId: 'alimentacion',id:'gasto-invalido',claveOperacion:'gasto-invalido',salaId:'sala-invalidos',descripcion:'Partes exactas',monto:'100',reparto:'iguales' as const,pagadorId:'vos',involucradas:['vos',persona.id],pagaron:[],montosManuales:{}};
   await e.guardarGasto(gasto,{compra:{depositoId:a.id}});
   await rechazar(c=>c.map(x=>x.tabla==='participantes_gasto'?{...x,datos:{...x.datos,monto_correspondiente:49.99}}:x),/sumar/);
   assert.equal((await e.db.get('SELECT COUNT(*) n FROM gastos_compartidos'))!.n,0);await e.comprobar();
@@ -181,8 +181,8 @@ test('negocio MySQL: importar historial completo reconstruye saldos y otra insta
   const {transferencia}=await e.transferenciasRepositorio.crearConMovimientos({usuario_id:e.usuario.id,deposito_origen_id:a.id,deposito_destino_id:b.id,monto:100.01});
   await e.transferenciasRepositorio.eliminar(transferencia.id);
   const persona=(await e.guardarPersona({nombre:'Histórica',apellido:'Prueba',apodo:'H'}))!;
-  await e.crearSala({id:'historial-sala',nombre:'Historial cerrado',descripcion:'',fecha:'2026-11-02',categoriaId:'alimentacion',icono:'restaurant-outline',color:'#BED5C8',personasIds:[persona.id]});
-  const gasto={id:'historial-gasto',claveOperacion:'historial-gasto',salaId:'historial-sala',descripcion:'Manual',monto:'300,03',reparto:'manual' as const,pagadorId:persona.id,involucradas:['vos',persona.id],pagaron:['vos'],montosManuales:{vos:'100,01',[persona.id]:'200,02'}};
+  await e.crearSala({id:'historial-sala',nombre:'Historial cerrado',descripcion:'',fecha:'2026-11-02',icono:'restaurant-outline',color:'#BED5C8',personasIds:[persona.id]});
+  const gasto={ categoriaId: 'alimentacion',id:'historial-gasto',claveOperacion:'historial-gasto',salaId:'historial-sala',descripcion:'Manual',monto:'300,03',reparto:'manual' as const,pagadorId:persona.id,involucradas:['vos',persona.id],pagaron:['vos'],montosManuales:{vos:'100,01',[persona.id]:'200,02'}};
   const plan=await e.previsualizarGasto(gasto);
   const existente=await e.movimientosRepositorio.crear({deposito_id:a.id,tipo:'egreso',categoria:'alimentacion',monto:100.01,descripcion:'Parte ya registrada',fecha_hora:'2026-11-01T00:00:00.000Z'});
   await e.guardarGasto(gasto,{[plan.operaciones[0].clave]:{movimientoId:existente.id}});
@@ -195,7 +195,8 @@ test('negocio MySQL: importar historial completo reconstruye saldos y otra insta
   assert.equal((await e.db.get('SELECT COUNT(*) n FROM depositos'))!.n,0);
   assert.equal((await e.solicitarRemoto<{revision:number}>('/sync',lote,remota.token)).revision,1);
   assert.equal((await e.solicitarRemoto<{revision:number}>('/sync',lote,remota.token)).revision,1);
-  const otra=await preparar(t,true,{url:e.url,fetch});
+  const transporte:typeof fetch=async(...args)=>{const respuesta=await fetch(...args);if(String(args[0]).endsWith('/sync/snapshot')&&respuesta.ok){const datos=await respuesta.json();datos.cambios.sort((a:CambioSync,b:CambioSync)=>Number(!!b.datos.reversion_de_id)-Number(!!a.datos.reversion_de_id));return new Response(JSON.stringify(datos),{status:200,headers:{'Content-Type':'application/json'}});}return respuesta;};
+  const otra=await preparar(t,true,{url:e.url,fetch:transporte});
   await otra.iniciarSesion({correo:'negocio@example.test',contrasena:'NegocioPrueba123!',recordar:false,reemplazarDispositivo:true});
   for(const tabla of TABLAS_SYNC)assert.equal(otra.base.prepare(`SELECT COUNT(*) n FROM ${tabla}`).get()!.n,e.base.prepare(`SELECT COUNT(*) n FROM ${tabla}`).get()!.n,tabla);
   assert.equal(otra.base.prepare('SELECT saldo_actual FROM depositos WHERE id=?').get(a.id)!.saldo_actual,e.base.prepare('SELECT saldo_actual FROM depositos WHERE id=?').get(a.id)!.saldo_actual);

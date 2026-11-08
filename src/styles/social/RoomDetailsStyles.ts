@@ -11,7 +11,6 @@ export default function crearEstilosPropios(tema: Tema) {
     textoSala: { color: tema.textoSecundario, fontSize: TIPOGRAFIA.tamanos.auxiliar, lineHeight: 18 },
     importeSala: { color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.monto, fontWeight: TIPOGRAFIA.pesos.negrita },
     tituloFila: { fontSize: TIPOGRAFIA.tamanos.cuerpo, lineHeight: 20 },
-    textoFila: { fontSize: TIPOGRAFIA.tamanos.secundario, lineHeight: 18 },
     metadatosFila: { fontSize: TIPOGRAFIA.tamanos.auxiliar, lineHeight: 18 },
     franjaImporteHistorial: { width: 108, alignSelf: 'stretch', gap: ESPACIADO.minimo, backgroundColor: tema.fondo, borderRadius: BORDES.radios.campo / 2, paddingHorizontal: ESPACIADO.pequeno, paddingVertical: ESPACIADO.minimo },
     iconoHistorialDeuda: { width: 28, height: 28, borderRadius: BORDES.radios.campo / 2, alignItems: 'center', justifyContent: 'center' },

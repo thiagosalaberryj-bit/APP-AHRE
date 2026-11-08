@@ -1,6 +1,6 @@
 # Documentación de APP-AHRE
 
-Guía vigente al 5 de noviembre de 2026, versión 0.7.0 (no estable). El [README](../README.md) presenta la app;
+Guía vigente al 8 de noviembre de 2026, versión 0.8.0 (no estable). El [README](../README.md) presenta la app;
 este índice enlaza el detalle. El [estado y las verificaciones](estado-y-validacion.md)
 separan lo implementado, las pruebas automáticas, las confirmaciones del líder y
 el trabajo pendiente. Los documentos históricos de TypeScript y dependencias
@@ -13,6 +13,7 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 - [Dependencias y auditoría](configuracion/dependencias.md).
 
 - [Revisión final e integración](revision-final.md).
+- [Auditoría de Social y salas](social-audit.md).
 
 ## Arquitectura
 
@@ -20,6 +21,7 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 | --- | --- |
 | Estructura base de la aplicación AHRE | [estructura-app](arquitectura/estructura-app.md) |
 | Navegación de AHRE | [navegacion](arquitectura/navegacion.md) |
+| Datos privados/compartidos, permisos, recurrencias y correcciones | [social-online-recurrencias](arquitectura/social-online-recurrencias.md) |
 
 ## Base de datos
 
@@ -83,3 +85,7 @@ corresponde al líder según [AGENTS.md](../AGENTS.md).
 
 El servidor tiene un índice equivalente en su carpeta `docs/`:
 [SERVER-AHRE](https://github.com/thiagosalaberryj-bit/SERVER-AHRE).
+
+- [Social online, recurrencias y correcciones](arquitectura/social-online-recurrencias.md): contrato de la nueva implementación.
+
+- [Recorrido completo de Social, build 10](social-validation.md).

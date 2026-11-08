@@ -73,6 +73,8 @@ export async function aplicarEsquemaInicial(baseDatos: Pick<Conexion, 'execAsync
       fecha_inicio TEXT NOT NULL,
       fecha_fin TEXT,
       proxima_ejecucion TEXT NOT NULL,
+      zona_horaria TEXT NOT NULL DEFAULT 'America/Argentina/Buenos_Aires',
+      dia_ancla INTEGER NOT NULL DEFAULT 1 CHECK (dia_ancla BETWEEN 1 AND 31),
       activa INTEGER NOT NULL DEFAULT 1 CHECK (activa IN (0, 1)),
       fecha_creacion TEXT NOT NULL,
       fecha_actualizacion TEXT NOT NULL,
@@ -111,6 +113,7 @@ export async function aplicarEsquemaInicial(baseDatos: Pick<Conexion, 'execAsync
       descripcion TEXT NOT NULL,
       fecha_hora TEXT NOT NULL,
       anulado INTEGER NOT NULL DEFAULT 0 CHECK (anulado IN (0, 1)),
+      fecha_eliminacion TEXT,
       reversion_de_id TEXT,
       fecha_creacion TEXT NOT NULL,
       fecha_actualizacion TEXT NOT NULL,
@@ -124,6 +127,25 @@ export async function aplicarEsquemaInicial(baseDatos: Pick<Conexion, 'execAsync
       FOREIGN KEY (transferencia_id) REFERENCES transferencias (id) ON DELETE RESTRICT,
       FOREIGN KEY (reversion_de_id) REFERENCES movimientos (id) ON DELETE RESTRICT
     );
+
+    CREATE TABLE IF NOT EXISTS ejecuciones_recurrencia (
+      id TEXT PRIMARY KEY NOT NULL,
+      usuario_id TEXT NOT NULL REFERENCES usuarios(id),
+      recurrencia_id TEXT NOT NULL REFERENCES recurrencias(id),
+      movimiento_id TEXT NOT NULL UNIQUE REFERENCES movimientos(id),
+      fecha_programada TEXT NOT NULL,
+      UNIQUE (recurrencia_id, fecha_programada)
+    );
+    CREATE TRIGGER IF NOT EXISTS trg_ejecucion_recurrencia_propiedad BEFORE INSERT ON ejecuciones_recurrencia
+    WHEN NOT EXISTS (SELECT 1 FROM recurrencias r JOIN depositos d ON d.id=r.deposito_id
+      JOIN movimientos m ON m.id=NEW.movimiento_id
+      WHERE r.id=NEW.recurrencia_id AND d.usuario_id=NEW.usuario_id AND m.recurrencia_id=r.id
+        AND m.deposito_id=r.deposito_id AND m.fecha_hora=NEW.fecha_programada)
+    BEGIN SELECT RAISE(ABORT, 'ejecucion de recurrencia incompatible'); END;
+    CREATE TRIGGER IF NOT EXISTS trg_ejecucion_recurrencia_inmutable BEFORE UPDATE ON ejecuciones_recurrencia
+    BEGIN SELECT RAISE(ABORT, 'conservar la ejecucion de recurrencia'); END;
+    CREATE TRIGGER IF NOT EXISTS trg_ejecucion_recurrencia_conservar BEFORE DELETE ON ejecuciones_recurrencia
+    BEGIN SELECT RAISE(ABORT, 'conservar la ejecucion de recurrencia'); END;
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_correo_electronico_unico
       ON usuarios (LOWER(correo_electronico));
@@ -237,6 +259,28 @@ export async function aplicarEsquemaInicial(baseDatos: Pick<Conexion, 'execAsync
 
   `);
   await aplicarEsquemaSocialInicial(baseDatos);
+  await baseDatos.execAsync(`
+    CREATE TABLE IF NOT EXISTS salas_online_locales (
+      usuario_id TEXT NOT NULL REFERENCES usuarios(id), sala_id TEXT NOT NULL,
+      datos TEXT NOT NULL, administrador INTEGER NOT NULL, persona_propia_id TEXT NOT NULL,
+      fecha_actualizacion TEXT NOT NULL, PRIMARY KEY(usuario_id,sala_id)
+    );
+    CREATE TABLE IF NOT EXISTS comandos_sociales_locales (
+      secuencia INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE,
+      usuario_id TEXT NOT NULL REFERENCES usuarios(id), sala_id TEXT NOT NULL,
+      datos TEXT NOT NULL, error TEXT, fecha_creacion TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_comandos_sociales_usuario ON comandos_sociales_locales(usuario_id,secuencia);
+    CREATE TABLE IF NOT EXISTS incorporaciones_sociales_locales (
+      usuario_id TEXT NOT NULL REFERENCES usuarios(id), clave TEXT NOT NULL,
+      movimiento_id TEXT NOT NULL UNIQUE REFERENCES movimientos(id), confirmada INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY(usuario_id,clave)
+    );
+    CREATE TABLE IF NOT EXISTS datos_sociales_online (
+      usuario_id TEXT NOT NULL REFERENCES usuarios(id), clave TEXT NOT NULL, datos TEXT NOT NULL,
+      PRIMARY KEY(usuario_id,clave)
+    );
+  `);
 }
 
 // Los servicios futuros deben completar las operaciones en una transacción.
@@ -272,10 +316,10 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
 
     CREATE TABLE IF NOT EXISTS salas (
       id TEXT PRIMARY KEY NOT NULL,
+      publicada INTEGER NOT NULL DEFAULT 0 CHECK (publicada IN (0,1)),
       usuario_id TEXT NOT NULL,
       nombre TEXT NOT NULL CHECK (LENGTH(TRIM(nombre)) > 0),
       descripcion TEXT,
-      categoria TEXT NOT NULL CHECK (LENGTH(TRIM(categoria)) > 0),
       icono TEXT NOT NULL CHECK (LENGTH(TRIM(icono)) > 0),
       color TEXT NOT NULL CHECK (LENGTH(TRIM(color)) > 0),
       fecha TEXT NOT NULL CHECK (LENGTH(fecha) = 10 AND DATE(fecha, '+0 days') IS NOT NULL AND DATE(fecha, '+0 days') = fecha),
@@ -307,6 +351,7 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
       usuario_id TEXT NOT NULL,
       sala_id TEXT NOT NULL,
       pagador_id TEXT NOT NULL,
+      categoria TEXT NOT NULL CHECK (LENGTH(TRIM(categoria)) > 0),
       descripcion TEXT NOT NULL CHECK (LENGTH(TRIM(descripcion)) > 0),
       monto_total REAL NOT NULL CHECK (${montoValido('monto_total')}),
       fecha TEXT NOT NULL,
@@ -416,7 +461,7 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
     await baseDatos.execAsync(`
       CREATE TRIGGER IF NOT EXISTS trg_salas_cupo_${sufijo}
       BEFORE ${accion} ON salas WHEN NEW.estado = 'abierta'
-      AND (SELECT COUNT(*) FROM salas WHERE usuario_id = NEW.usuario_id AND estado = 'abierta' AND id <> NEW.id) >= 3
+      AND (SELECT COUNT(*) FROM salas WHERE usuario_id = NEW.usuario_id AND estado = 'abierta' AND publicada=0 AND id <> NEW.id) >= 3
       BEGIN SELECT RAISE(ABORT, 'maximo de tres salas abiertas'); END;
 
       CREATE TRIGGER IF NOT EXISTS trg_pertenencia_valida_${sufijo}

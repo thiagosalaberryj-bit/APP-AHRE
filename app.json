@@ -2,24 +2,15 @@
   "expo": {
     "name": "AHRE",
     "slug": "APP-AHRE",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "orientation": "portrait",
     "icon": "./assets/ahre-mark.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/ahre-logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F4F4F4",
-      "dark": {
-        "image": "./assets/ahre-logo.png",
-        "backgroundColor": "#081C19"
-      }
-    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "versionCode": 5,
+      "versionCode": 11,
       "adaptiveIcon": {
         "backgroundColor": "#024C42",
         "foregroundImage": "./assets/ahre-mark.png"
@@ -40,7 +31,7 @@
           "cameraPermission": "Permití a AHRE acceder a la cámara para fotografiar comprobantes.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
-          "barcodeScannerEnabled": false
+          "barcodeScannerEnabled": true
         }
       ],
       "expo-sqlite",
@@ -73,6 +64,7 @@
       "eas": {
         "projectId": "bb770d78-0970-4c53-9bad-31c73a5c86fd"
       }
-    }
+    },
+    "scheme": "ahre"
   }
 }

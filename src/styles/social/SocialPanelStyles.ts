@@ -16,7 +16,6 @@ export default function crearEstilosPropios(tema: Tema) {
     iconoTarjetaPanel: { borderRadius: BORDES.radios.campo / 2 },
     franjaImportePanel: { borderRadius: BORDES.radios.campo / 2, paddingVertical: ESPACIADO.minimo },
     tituloTarjetaPanel: { fontSize: TIPOGRAFIA.tamanos.cuerpo, lineHeight: 20 },
-    textoTarjetaPanel: { fontSize: TIPOGRAFIA.tamanos.secundario, lineHeight: 18 },
     metadatosPanel: { fontSize: TIPOGRAFIA.tamanos.auxiliar, lineHeight: 18 },
     accionPanel: {
       flex: 1,
@@ -43,12 +42,6 @@ export default function crearEstilosPropios(tema: Tema) {
       borderTopWidth: BORDES.anchos.fino,
       borderTopColor: tema.borde,
       paddingTop: ESPACIADO.medio
-    },
-    detalleAccionPanel: {
-      color: tema.botonPrincipalTexto,
-      fontSize: TIPOGRAFIA.tamanos.auxiliar,
-      lineHeight: 14,
-      textAlign: 'center'
     },
     montoResumen: {
       fontSize: TIPOGRAFIA.tamanos.monto

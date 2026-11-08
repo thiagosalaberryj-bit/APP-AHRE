@@ -27,7 +27,7 @@ for(const tipo of ['ingreso','egreso'] as const)test(`${tipo} del formulario act
   assert.equal(movimiento.fecha_hora,deposito.fecha_creacion);
   const recurrencia=await e.recurrenciasRepositorio.consultarPorId(movimiento.recurrencia_id!);
   assert.equal(recurrencia!.fecha_inicio,movimiento.fecha_hora);
-  assert.equal(recurrencia!.proxima_ejecucion,movimiento.fecha_hora);
+  assert.ok(Date.parse(recurrencia!.proxima_ejecucion)>Date.parse(movimiento.fecha_hora));
   // Revertir usa la fecha efectiva del original y devuelve el saldo inicial.
   await e.movimientosRepositorio.eliminar(movimiento.id);
   assert.equal((await e.depositosRepositorio.consultarPorId(deposito.id))!.saldo_actual,1000);

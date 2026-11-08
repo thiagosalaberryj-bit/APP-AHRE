@@ -91,10 +91,10 @@ export async function prepararCambioDispositivo(){
   const remota=await obtenerSesionRemota(usuario.id);
   if(!remota||await contarPendientes(usuario.id))throw new ErrorAutenticacion('sincronizacion_pendiente');
   const revision=await ejecutarLecturaConConexion(async c=>Number((await c.getFirstAsync<{revision:number}>('SELECT revision FROM sync_state WHERE usuario_id=?',[usuario.id]))?.revision||0));
-  await ejecutarConConexion(c=>c.withTransactionAsync(async()=>{
+  await ejecutarConConexion(async c=>{
     if(await c.getFirstAsync('SELECT secuencia FROM sync_outbox WHERE usuario_id=? LIMIT 1',[usuario.id]))throw new ErrorAutenticacion('sincronizacion_pendiente');
     await c.runAsync('UPDATE sync_authorization SET revocada=1 WHERE usuario_id=?',[usuario.id]);
-  }));
+  });
   await solicitarRemoto('/auth/release',{revision},remota.token);
   await marcarRevocada(usuario.id);
   await cerrarSesion();

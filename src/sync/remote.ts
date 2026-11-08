@@ -16,7 +16,7 @@ export async function solicitarRemoto<T>(ruta:string,datos?:unknown,token?:strin
   if(url.protocol!=='https:' && !(typeof __DEV__!=='undefined'&&__DEV__&&url.protocol==='http:')) throw new ErrorRemoto(0,'El servidor requiere HTTPS.');
   const controlador=new AbortController(),temporizador=setTimeout(()=>controlador.abort(),tiempoEspera);
   try {
-    const respuesta=await fetch(URL_SERVIDOR+ruta,{method:datos===undefined?'GET':'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},...(datos===undefined?{}:{body:JSON.stringify(datos)}),signal:controlador.signal});
+    const respuesta=await fetch(URL_SERVIDOR+ruta,{method:datos===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-AHRE-Protocolo':'3',...(token?{Authorization:`Bearer ${token}`}:{})},...(datos===undefined?{}:{body:JSON.stringify(datos)}),signal:controlador.signal});
     disponible=true;
     if(!respuesta.ok) {
       if(respuesta.status>=500||[404,405,429].includes(respuesta.status)) {
@@ -40,7 +40,7 @@ export async function guardarSesionRemota(localId:string,datos:SesionRemota,reco
 }
 export async function comprobarProtocolo(){
   const salud=await solicitarRemoto<{protocolo?:number}>('/health');
-  if(!salud||salud.protocolo!==2)throw new ErrorRemoto(502,'El servidor necesita actualizarse para autorizar dispositivos.','protocolo_incompatible');
+  if(!salud||salud.protocolo!==3)throw new ErrorRemoto(502,'El servidor necesita actualizarse para autorizar dispositivos.','protocolo_incompatible');
 }
 export async function obtenerSesionRemota(localId:string) {
   if(sesion?.localId===localId)return sesion.datos;

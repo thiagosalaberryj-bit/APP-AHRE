@@ -22,7 +22,7 @@ export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntr
     establecerCargando(true);
     alCambiarCarga?.(true);
     try {
-      await prepararDatosPrueba();
+      await prepararDatosPrueba({vistaSocialOnline:true});
       try {
         const preferencias = await cargarPreferenciasActuales();
         establecerApariencia(preferencias.apariencia);

@@ -1,6 +1,9 @@
+import {obtenerColorCategoria,obtenerColorIconoCategoria} from '../../styles/categoryColors';
+import AccionesOnline from './ExpenseOnlineActions';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { CATEGORIAS_EGRESO } from '../../constants/movimientos';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/ExpenseDetailsStyles';
@@ -28,9 +31,9 @@ export default function DetalleGasto(propiedades: import('../../social/types').A
   return <>
       <View style={[estilos.resumenPrincipal, estilos.perfilCompacto]}>
         <View style={estilos.filaCampos}>
-          <View style={estilos.avatarAgenda}><Ionicons color={tema.foco} name="receipt-outline" size={22} /></View>
-          <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.encabezadoSeccion}>{gasto.descripcion}</Text><Text style={estilosGlobales.textoSecundario}>{gasto.fecha}</Text></View>
-          {sala.estado === 'abierta' ? <Pressable accessibilityRole="button" accessibilityLabel="Editar gasto" onPress={() => abrirRegistro('gasto', {
+          <View style={[estilos.iconoCategoria,{backgroundColor:obtenerColorCategoria(gasto.categoriaId,tema,'egreso')+'26'}]}><Ionicons color={obtenerColorIconoCategoria(gasto.categoriaId,tema,'egreso')} name={CATEGORIAS_EGRESO.find(c=>c.id===gasto.categoriaId)?.icono||'receipt-outline'} size={22} /></View>
+          <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.encabezadoSeccion}>{gasto.descripcion}</Text><Text style={estilosGlobales.textoSecundario}>{gasto.fecha} · {CATEGORIAS_EGRESO.find(c => c.id === gasto.categoriaId)?.nombre}</Text></View>
+          {sala.estado === 'abierta' && sala.puedeEditarGastos && !sala.cierrePendiente ? <Pressable accessibilityRole="button" accessibilityLabel="Editar gasto" onPress={() => abrirRegistro('gasto', {
           salaId: sala.id,
           gastoId: gasto.id
         })} style={estilos.editarPersona}><Ionicons color={tema.foco} name="create-outline" size={24} /></Pressable> : <Text style={estilosGlobales.textoSecundario}>Solo lectura</Text>}
@@ -45,7 +48,7 @@ export default function DetalleGasto(propiedades: import('../../social/types').A
       </View>
       <View style={estilos.ticket}>
         <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Partes y pagos</Text>
-        {gasto.partes.map(parte => <View key={parte.personaId} style={estilos.lineaDetalleGasto}>
+        {sala.online?<AccionesOnline sala={sala} gasto={gasto} seccion="partes" {...aspecto}/>:gasto.partes.map(parte => <View key={parte.personaId} style={estilos.lineaDetalleGasto}>
           <View style={estilos.filaCampos}>
             <Ionicons color={parte.tipo === 'saldado' ? tema.exito : tema.error} name={parte.tipo === 'saldado' ? 'checkmark-circle-outline' : 'time-outline'} size={20} />
             <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.textoFlexible]}>{nombreCompletoPersona(obtenerPersona(parte.personaId))}</Text>
@@ -54,5 +57,6 @@ export default function DetalleGasto(propiedades: import('../../social/types').A
           <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{parte.resumen}</Text>
         </View>)}
       </View>
+      <AccionesOnline sala={sala} gasto={gasto} seccion="movimientos" {...aspecto}/>
     </>;
 }

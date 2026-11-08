@@ -38,11 +38,11 @@ export interface OperacionSocial {
 
 export interface BorradorGasto {
   id?: string; claveOperacion?: string; salaId: string; gastoId?: string; version?: number;
-  descripcion: string; monto: string | number; pagadorId: string; reparto: string;
+  descripcion: string; monto: string | number; pagadorId: string; categoriaId: string; reparto: string;
   involucradas: string[]; pagaron: string[]; montosManuales?: Record<string, string | number>;
 }
 export interface DatosPersona { nombre: string; apellido: string; apodo: string; }
-export interface DatosSala { id?: string; nombre: string; descripcion?: string; categoriaId: string; icono: string; color: string; fecha: string; personasIds: string[]; }
+export interface DatosSala { id?: string; nombre: string; descripcion?: string; icono: string; color: string; fecha: string; personasIds: string[]; }
 export interface DatosDeuda { id?: string; personaId: string; direccion: string; monto: string | number; descripcion: string; }
 export interface DatosPago { deudaId: string; monto: string | number; claveOperacion: string; }
 export type Financiaciones = Record<string, Financiacion | null>;
@@ -61,7 +61,7 @@ export interface TicketSocial { id: string; items: { descripcion: string; monto:
 export interface FilaGasto { id: string; claveOperacion: string; descripcion: string; monto: string; ajustes?: EditorGasto; depositoId?: string | null; }
 export interface BorradorLista { filas: FilaGasto[]; depositoId: string | null; comun: EditorGasto; ultimoTicket?: string; }
 export interface PlanOperaciones { diferido?: boolean; operaciones: { clave: string; tipo: string; monto: number; descripcion: string }[]; }
-export interface ParametrosSociales { salaId?: string; personaId?: string; gastoId?: string; deudaId?: string; tipo?: string; todas?: boolean; modo?: string; ticketSocial?: TicketSocial; }
+export interface ParametrosSociales { salaId?: string; personaId?: string; gastoId?: string; deudaId?: string; pagoId?: string; operacionClave?: string; tipo?: string; todas?: boolean; modo?: string; ticketSocial?: TicketSocial; }
 export interface AccionesSociales {
   abrirSala: (id: string) => void; abrirPersona: (id: string) => void;
   abrirRegistro: (tipo: string, datos?: ParametrosSociales) => void;

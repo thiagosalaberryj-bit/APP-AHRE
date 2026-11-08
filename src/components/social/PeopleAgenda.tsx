@@ -1,3 +1,4 @@
+import SolicitudesVinculo from './AccountLinkRequests';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
@@ -33,6 +34,7 @@ export default function AgendaPersonas(propiedades: import('../../social/types')
   const personas = [...personasSociales].filter(persona => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo || ''}`).includes(normalizarNombrePersona(busqueda))).sort((a, b) => nombreCompletoPersona(a).localeCompare(nombreCompletoPersona(b), 'es'));
   const cerrarFormulario = (persona?: Pick<import('../../database/types').Persona,'id'> | null) => { if (persona?.id) establecerBusqueda(''); establecerMostrarFormulario(false); };
   return <>
+      <SolicitudesVinculo {...aspecto}/>
       <View style={estilos.filaTitulo}>
         <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Personas registradas</Text>
         <Text style={estilosGlobales.textoAyuda}>{personas.length} de {personasSociales.length}</Text>
