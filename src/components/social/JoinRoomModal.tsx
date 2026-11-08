@@ -49,4 +49,3 @@ export default function UnirseSala({alUnirse,alCerrar,enlaceInicial='',...aspect
     </DialogoInvitacion>
   </>;
 }
-

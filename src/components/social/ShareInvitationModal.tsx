@@ -44,4 +44,3 @@ export default function CompartirInvitacion({enlace,nombre,alCerrar,global:esGlo
     {error?<Text accessibilityRole="alert" style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
   </DialogoInvitacion>;
 }
-
