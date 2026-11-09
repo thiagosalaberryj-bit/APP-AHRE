@@ -1,4 +1,4 @@
-import { useCallback, useContext, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -142,7 +142,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
       if(movimientoEditarId)await corregirMovimiento(movimientoEditarId,datosFormulario,tipo,claveEdicion.current);
       else await crearMovimiento(datosFormulario, tipo);
       mostrarAviso(`El ${nombreMovimiento} se guardó correctamente.`, { tipo: 'exito' });
-      navegacion.goBack();
+      accionEnCurso.current=false;navegacion.goBack();
     } catch (error) {
       if (error instanceof ErrorMovimiento && error.errores) {
         establecerIntentoGuardar(true);
@@ -158,6 +158,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
     }
   };
 
+  useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(accionEnCurso.current)evento.preventDefault();}),[navegacion]);
   const volver = () => {
     if (!accionEnCurso.current) navegacion.goBack();
   };

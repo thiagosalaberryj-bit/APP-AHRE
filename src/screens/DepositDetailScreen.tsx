@@ -1,3 +1,4 @@
+import {operacionFinancieraEnCurso} from '../social/financialOperation';
 import {consultarRecurrenciasDeposito} from '../recurrences/recurrenceService';
 import SelectorSegmentado from '../components/SegmentedSelector';
 import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
@@ -186,6 +187,8 @@ function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: impo
 }
 
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const operacionDepositoEnCurso=useRef(false);
+  useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(operacionFinancieraEnCurso()||operacionDepositoEnCurso.current)evento.preventDefault();}),[navegacion]);
   const { width: anchoVentana } = useWindowDimensions();
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
@@ -516,7 +519,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   };
 
   const cerrarEdicion = () => {
-    if (guardandoEdicion) return;
+    if (guardandoEdicion||operacionDepositoEnCurso.current) return;
     establecerModalEdicionVisible(false);
     establecerModalIconosEdicionVisible(false);
     establecerBorrador({ ...deposito });
@@ -529,7 +532,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   };
 
   const guardarEdicion = async () => {
-    if (guardandoEdicion || !deposito) return;
+    if (guardandoEdicion || !deposito || operacionDepositoEnCurso.current) return;
+    operacionDepositoEnCurso.current=true;
     establecerGuardandoEdicion(true);
     establecerErroresEdicion({});
     try {
@@ -547,24 +551,25 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         ? error.message
         : 'No se pudieron guardar los cambios. Intentá nuevamente.', { tipo: 'error' });
     } finally {
-      establecerGuardandoEdicion(false);
+      operacionDepositoEnCurso.current=false;establecerGuardandoEdicion(false);
     }
   };
 
   const confirmarEliminacion = async () => {
-    if (eliminando || !deposito) return;
+    if (eliminando || !deposito || operacionDepositoEnCurso.current) return;
+    operacionDepositoEnCurso.current=true;
     establecerEliminando(true);
     try {
       await eliminarDeposito(deposito.id);
       establecerModalEliminacionVisible(false);
       mostrarAviso('El depósito se desactivó y su historial quedó conservado.', { tipo: 'exito' });
-      navegacion.goBack();
+      operacionDepositoEnCurso.current=false;navegacion.goBack();
     } catch (error) {
       mostrarAviso(error instanceof ErrorDeposito
         ? error.message
         : 'No se pudo eliminar el depósito. Intentá nuevamente.', { tipo: 'error' });
     } finally {
-      establecerEliminando(false);
+      operacionDepositoEnCurso.current=false;establecerEliminando(false);
     }
   };
 
@@ -1446,9 +1451,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         </Pressable>
       </Modal>
 
-      <Modal animationType="fade" onRequestClose={() => establecerModalEliminacionVisible(false)} transparent visible={modalEliminacionVisible && Boolean(deposito)}>
+      <Modal animationType="fade" onRequestClose={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} transparent visible={modalEliminacionVisible && Boolean(deposito)}>
         <View style={estilos.fondoModal}>
-          <Pressable style={estilos.fondoCierre} onPress={() => establecerModalEliminacionVisible(false)} />
+          <Pressable style={estilos.fondoCierre} disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} />
           <View accessibilityViewIsModal style={estilos.tarjetaConfirmacion}>
             <View style={estilos.encabezadoConfirmacion}>
               <View style={estilos.iconoEliminar}>
@@ -1457,7 +1462,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               <Pressable
                 accessibilityLabel="Cerrar confirmación"
                 accessibilityRole="button"
-                onPress={() => establecerModalEliminacionVisible(false)}
+                disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}}
                 style={estilos.botonCerrarModal}
               >
                 <Ionicons color={tema.textoSecundario} name="close" size={22} />
@@ -1487,7 +1492,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </Text>
             </View>
             <View style={estilos.accionesModal}>
-              <Pressable accessibilityRole="button" onPress={() => establecerModalEliminacionVisible(false)} style={estilos.botonSecundarioModal}>
+              <Pressable accessibilityRole="button" disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} style={estilos.botonSecundarioModal}>
                 <Text style={estilos.textoSecundarioModal}>Cancelar</Text>
               </Pressable>
               <Pressable

@@ -18,7 +18,7 @@ export default function TarjetaDeuda({ tema, deuda, nombrePersona, alAbrir, solo
   const descripcion = deuda.id.startsWith('demo-social:') ? deuda.descripcion.replace(/^Invitación · /, '') : deuda.descripcion;
   const colorEstado = invitacion || deuda.perdonadoNumero>0 ? tema.textoSecundario : deuda.saldada || deuda.tipo !== 'debo' ? tema.exito : tema.error;
   const importe = deuda.perdonadoNumero>0?deuda.pendiente:deuda.saldada ? deuda.monto : deuda.pendiente;
-  const estado = invitacion?'Invitación':deuda.estadoOnline==='rechazada'?'Rechazada':deuda.perdonadoNumero>0?(deuda.perdonadoNumero===deuda.montoNumero?'Perdonada':'Cerrada'):deuda.saldada ? 'Saldada' : deuda.tipo === 'debo' ? 'Le debés' : 'Te debe';
+  const estado = invitacion?'Invitación':deuda.estadoOnline==='rechazada'?'Rechazada':deuda.perdonadoNumero>0?'Perdonada':deuda.saldada ? 'Saldada' : deuda.tipo === 'debo' ? 'Le debés' : 'Te debe';
   const contenido = <>
     <View style={[estilos.icono, { backgroundColor: colorEstado + '18' }]}>
       <Ionicons color={colorEstado} name={invitacion ? 'mail-outline' : deuda.saldada ? 'checkmark-circle-outline' : 'swap-horizontal-outline'} size={18} />
@@ -38,7 +38,7 @@ export default function TarjetaDeuda({ tema, deuda, nombrePersona, alAbrir, solo
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.importe}>{importe}</Text>
     </View>
   </>;
-  const etiqueta = descripcion + '. ' + nombrePersona + '. ' + (invitacion ? estado : deuda.saldada ? 'Saldada' : 'Pendiente') + '. ' + importe;
+  const etiqueta = descripcion + '. ' + nombrePersona + '. ' + estado + '. ' + importe;
   return soloLectura ? <View accessible accessibilityLabel={etiqueta} style={[estilos.tarjeta,invitacion&&estilos.invitacion]}>{contenido}</View> : (
     <Pressable accessibilityRole="button" accessibilityLabel={etiqueta} accessibilityHint="Abre toda la información de esta deuda."
       onPress={alAbrir} style={({ pressed }) => [estilos.tarjeta,invitacion&&estilos.invitacion, pressed && estilos.presionada]}>{contenido}</Pressable>

@@ -50,7 +50,7 @@ export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial
     <Text accessibilityRole="header" style={aspecto.estilosGlobales.encabezadoSeccion}>Historial de la deuda</Text>
     {error?<Text style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
     {deuda.perdonadoNumero>0?registro('perdon',(deuda.tipo==='debo'?'Te perdonaron · ':'Perdonaste · ')+formatearMontoSocial(deuda.perdonadoNumero),deuda.fechaPerdon||deuda.fechaISO,deuda.tipo==='debo'?nombre+' te perdonó este importe. No generó ingresos ni egresos.':'Cerraste este importe sin cobrarlo. No generó ingresos ni egresos.'):null}
-    {pagos.map(p=>registro(p.id,(p.clase==='origen_deuda'?'Adelanto registrado':deuda.tipo==='debo'?'Pagaste':'Te pagó')+' · '+formatearMontoSocial(p.monto)+(p.estado==='anulado'?' · Anulado':''),p.fecha,p.descripcion||'',p.movimiento_id||undefined))}
+    {pagos.filter(p=>p.clase!=='origen_deuda').map(p=>registro(p.id,(deuda.tipo==='debo'?'Pagaste':'Te pagó')+' · '+formatearMontoSocial(p.monto)+(p.estado==='anulado'?' · Anulado':''),p.fecha,p.descripcion||'',p.movimiento_id||undefined))}
     {acuerdo?.estado==='aceptada'?[...acuerdo.pagos].sort((a,b)=>(b.fecha_decision||b.fecha).localeCompare(a.fecha_decision||a.fecha)).map(p=>{
       const operacion=operaciones.find(o=>o.pagoId===p.id&&(o.tipo==='egreso')===acuerdo.esDeudor),movimiento=operacion&&vinculos.find(v=>v.clave===operacion.clave)?.movimiento_id;
       const gestionar=p.estado!=='rechazado'&&(acuerdo.esAcreedor&&p.estado==='informado'||!!operacion&&!movimiento);
@@ -58,7 +58,7 @@ export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial
       return registro(p.id,'Pago · '+formatearMontoSocial(p.monto),p.fecha_decision||p.fecha,estado,movimiento,gestionar?()=>social.abrirPago(deuda.id,p.id,operacion&&!movimiento?operacion.clave:undefined):undefined,gestionar);
     }):null}
     {acuerdo?.estado==='aceptada'?operaciones.filter(o=>o.deudaId===acuerdo.id&&!o.pagoId).map(o=>{const movimiento=vinculos.find(v=>v.clave===o.clave)?.movimiento_id;return registro(o.clave,o.descripcion+' · '+formatearMontoSocial(o.monto),o.fecha,movimiento?'Registrado en tus movimientos.':'Elegí dónde registrarlo en tus movimientos.',movimiento,()=>social.abrirPago(deuda.id,undefined,o.clave),!movimiento);}):null}
-    {registro('creacion','Deuda registrada · '+deuda.monto,deuda.fechaISO,'',deuda.movimientoOrigen?.id)}
+    {registro('creacion','Deuda registrada · '+deuda.monto,deuda.fechaISO,deuda.movimientoOrigen?'Movimiento de origen vinculado · '+deuda.movimientoOrigen.deposito:'',deuda.movimientoOrigen?.id)}
     {esDemo&&acuerdo?.esDeudor&&acuerdo.estado==='aceptada'&&acuerdo.pendiente>0?<BotonSocial secundario texto={'Simular respuesta de '+nombre} alPresionar={()=>cambiarSimulando(true)} {...aspecto}/>:null}
     {simulando&&esDemo&&acuerdo?.esDeudor?<Dialogo titulo={'Simular respuesta de '+nombre} descripcion="Solo cambia esta cuenta de prueba; no se envía al servidor." icono="flask-outline" ocupado={ocupado} alCerrar={()=>cambiarSimulando(false)} {...aspecto}>
       {acuerdo.pagos.filter(p=>p.estado==='informado').map(p=><View key={p.id} style={estilos.registro}>

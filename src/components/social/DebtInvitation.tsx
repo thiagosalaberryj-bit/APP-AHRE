@@ -31,7 +31,7 @@ export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:
     bloqueo.current=true;cambiarDecision(valor);cambiarError('');
     try{
       await enviarAccionSocial('propuesta:'+invitacion.id,'/deudas/'+invitacion.id+'/decidir',{decision:valor,...(valor==='aceptada'&&asociacion?{deudaLocalId:asociacion,confirmarVinculo:true}:{})});
-      await sincronizarSocialOnline();await social.recargar();
+      await sincronizarSocialOnline();await social.recargar();if(valor==='rechazada'&&montado.current)social.volver();
     }catch(fallo){if(montado.current)cambiarError(fallo instanceof Error?fallo.message:'No se pudo responder la invitación.');}
     finally{bloqueo.current=false;if(montado.current)cambiarDecision('');}
   };
@@ -47,7 +47,7 @@ export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:
       <Text style={aspecto.estilosGlobales.textoSecundario}>Al aceptar, esta deuda quedará vinculada online. No se registra ningún pago.</Text>
       {compatibles.length?<View style={estilos.grupo}><Text style={aspecto.estilosGlobales.etiqueta}>¿Ya tenías anotada esta deuda?</Text><Text style={aspecto.estilosGlobales.textoSecundario}>Podés vincular tu registro para evitar duplicarla. Es opcional.</Text><OpcionesSeleccion opciones={compatibles.map(d=>({id:d.id,nombre:(social.obtenerPersona(d.personaId)?.nombre||'Persona')+' · '+d.descripcion+' · '+d.pendiente}))} elegida={asociacion} alElegir={id=>cambiarAsociacion(actual=>actual===id?'':id)} {...aspecto}/></View>:null}
       {sinConexion?<Text style={aspecto.estilosGlobales.textoAyuda}>Necesitás conexión para responder esta invitación.</Text>:null}
-      <View style={estilos.acciones}><View style={estilos.accion}><BotonSocial texto="Aceptar" deshabilitado={!!decision||sinConexion} alPresionar={()=>{void responder('aceptada');}} {...aspecto}/></View><View style={estilos.accion}><BotonSocial texto="Rechazar" secundario deshabilitado={!!decision||sinConexion} alPresionar={()=>{void responder('rechazada');}} {...aspecto}/></View></View>
+      <View style={estilos.acciones}><View style={estilos.accion}><BotonSocial texto={decision==='aceptada'?'Aceptando…':'Aceptar'} deshabilitado={!!decision||sinConexion} alPresionar={()=>{void responder('aceptada');}} {...aspecto}/></View><View style={estilos.accion}><BotonSocial texto={decision==='rechazada'?'Rechazando…':'Rechazar'} secundario deshabilitado={!!decision||sinConexion} alPresionar={()=>{void responder('rechazada');}} {...aspecto}/></View></View>
     </>:null}
   </View>;
 }

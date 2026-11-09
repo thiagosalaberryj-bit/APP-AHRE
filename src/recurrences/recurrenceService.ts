@@ -1,3 +1,5 @@
+import {ErrorBaseDatos} from '../database/errors';
+class ErrorRecurrencia extends ErrorBaseDatos{constructor(mensaje:string){super('integridad');this.message=mensaje;this.name='ErrorRecurrencia';}}
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { ejecutarLecturaConConexion } from '../database/connectionQueue';
 import { ejecutarTransaccion } from '../database/transactions';
@@ -11,72 +13,53 @@ export async function registrarEjecucion(conexion: Conexion, usuarioId: string, 
     [`ejecucion:${recurrenciaId}:${fecha}`, usuarioId, recurrenciaId, movimientoId, fecha]);
 }
 
-async function consultarSiguienteRecurrencia(conexion:Conexion, fecha:string) {
-  return conexion.getFirstAsync<Recurrencia & {usuario_id:string}>(`SELECT r.*,d.usuario_id FROM recurrencias r
-    JOIN depositos d ON d.id=r.deposito_id JOIN usuarios u ON u.id=d.usuario_id
-    JOIN sync_authorization a ON a.usuario_id=d.usuario_id
-    WHERE r.activa=1 AND d.activo=1 AND u.activo=1 AND a.revocada=0
-      AND r.proxima_ejecucion<=? ORDER BY r.proxima_ejecucion,r.id LIMIT 1`,[fecha]);
+// Compatibilidad con tareas antiguas: ninguna revisión automática registra dinero.
+export async function procesarRecurrencias(ahora = new Date(), _limite = 100) {
+  if (!Number.isFinite(ahora.getTime())) throw new ErrorRecurrencia('Fecha de ejecución inválida.');
+  return 0;
 }
-
-export async function procesarRecurrencias(ahora = new Date(), limite = 100) {
-  if (!Number.isFinite(ahora.getTime())) throw new Error('Fecha de ejecución inválida.');
-  const fechaRevision=ahora.toISOString();
-  // La revisión periódica no debe escribir sync_context ni abrir una transacción
-  // de escritura cuando no hay trabajo. Se revalida dentro de la transacción.
-  const vencida=await ejecutarLecturaConConexion(c=>consultarSiguienteRecurrencia(c,fechaRevision));
-  if(!vencida)return 0;
-  let generadas = 0;
-  for (let indice = 0; indice < Math.min(100, Math.max(1, limite)); indice++) {
-    const procesada = await ejecutarTransaccion(async conexion => {
-      const recurrencia = await consultarSiguienteRecurrencia(conexion,fechaRevision);
-      if (!recurrencia) return false;
-      const fecha = recurrencia.proxima_ejecucion;
-      if (recurrencia.fecha_fin && Date.parse(fecha) > Date.parse(recurrencia.fecha_fin)) {
-        await recurrenciasRepositorio.actualizar(recurrencia.id, {activa: 0}, conexion); return true;
-      }
-      const existente = await conexion.getFirstAsync('SELECT id FROM ejecuciones_recurrencia WHERE recurrencia_id=? AND fecha_programada=?', [recurrencia.id, fecha]);
-      if (!existente) {
-        const movimiento = await movimientosRepositorio.crear({id: `recurrente:${recurrencia.id}:${fecha}`, deposito_id: recurrencia.deposito_id, categoria: recurrencia.categoria,
-          recurrencia_id: recurrencia.id, tipo: recurrencia.tipo, monto: recurrencia.monto, descripcion: recurrencia.descripcion, fecha_hora: fecha}, conexion);
-        await registrarEjecucion(conexion, recurrencia.usuario_id, recurrencia.id, movimiento.id, fecha);
-        generadas++;
-      }
-      await recurrenciasRepositorio.actualizar(recurrencia.id, {proxima_ejecucion: siguienteEjecucion(recurrencia, fecha)}, conexion);
-      return true;
-    }, 'procesar-recurrencias');
-    if (!procesada) break;
-  }
-  return generadas;
+export async function aceptarOcurrenciaRecurrencia(id:string,fechaEsperada:string,ahora=new Date()){
+ const {usuario}=await obtenerSesionActual();if(!usuario)throw new ErrorRecurrencia('Iniciá sesión.');
+ return ejecutarTransaccion(async c=>{
+  const r=await c.getFirstAsync<Recurrencia>(`SELECT r.* FROM recurrencias r JOIN depositos d ON d.id=r.deposito_id JOIN sync_authorization a ON a.usuario_id=d.usuario_id WHERE r.id=? AND d.usuario_id=? AND d.activo=1 AND a.revocada=0`,[id,usuario.id]);
+  if(!r)throw new ErrorRecurrencia('La recurrencia no está disponible.');
+  const anterior=await c.getFirstAsync<{movimiento_id:string}>('SELECT movimiento_id FROM ejecuciones_recurrencia WHERE recurrencia_id=? AND fecha_programada=?',[id,fechaEsperada]);
+  if(anterior){if(r.proxima_ejecucion===fechaEsperada)await recurrenciasRepositorio.actualizar(id,{proxima_ejecucion:siguienteEjecucion(r,fechaEsperada)},c);return {id:anterior.movimiento_id};}
+  if(!r.activa||r.proxima_ejecucion!==fechaEsperada||!Number.isFinite(ahora.getTime())||Date.parse(fechaEsperada)>ahora.getTime()||(r.fecha_fin&&fechaEsperada>r.fecha_fin))throw new ErrorRecurrencia('Esta ocurrencia no está pendiente. Actualizá la programación.');
+  const movimiento=await movimientosRepositorio.crear({id:'recurrente:'+id+':'+fechaEsperada,deposito_id:r.deposito_id,categoria:r.categoria,recurrencia_id:id,tipo:r.tipo,monto:r.monto,descripcion:r.descripcion,fecha_hora:fechaEsperada},c);
+  await registrarEjecucion(c,usuario.id,id,movimiento.id,fechaEsperada);
+  await recurrenciasRepositorio.actualizar(id,{proxima_ejecucion:siguienteEjecucion(r,fechaEsperada)},c);
+  return movimiento;
+ });
 }
 
 export async function consultarRecurrenciasDeposito(depositoId: string) {
   const {usuario} = await obtenerSesionActual();
-  if (!usuario) throw new Error('Iniciá sesión para consultar las recurrencias.');
+  if (!usuario) throw new ErrorRecurrencia('Iniciá sesión para consultar las recurrencias.');
   return ejecutarLecturaConConexion(conexion => conexion.getAllAsync<Recurrencia>(`SELECT r.* FROM recurrencias r JOIN depositos d ON d.id=r.deposito_id
     WHERE d.id=? AND d.usuario_id=? ORDER BY r.activa DESC,r.proxima_ejecucion,r.id`, [depositoId, usuario.id]));
 }
 
 export async function actualizarRecurrencia(id: string, cambios: {activa: boolean; proximaEjecucion?: string; frecuencia?: Recurrencia['frecuencia'];monto?:string}) {
   const {usuario} = await obtenerSesionActual();
-  if (!usuario) throw new Error('Iniciá sesión para modificar la recurrencia.');
+  if (!usuario) throw new ErrorRecurrencia('Iniciá sesión para modificar la recurrencia.');
   const importe=cambios.monto===undefined?undefined:convertirMontoMovimiento(cambios.monto);
-  if(cambios.monto!==undefined&&(!importe||importe<=0||!Number.isFinite(importe)))throw new Error('Ingresá un importe válido mayor que cero.');
+  if(cambios.monto!==undefined&&(!importe||importe<=0||!Number.isFinite(importe)))throw new ErrorRecurrencia('Ingresá un importe válido mayor que cero.');
   return ejecutarTransaccion(async conexion => {
     const fila = await conexion.getFirstAsync<Recurrencia>(`SELECT r.* FROM recurrencias r JOIN depositos d ON d.id=r.deposito_id WHERE r.id=? AND d.usuario_id=? AND d.activo=1`, [id, usuario.id]);
-    if (!fila) throw new Error('La recurrencia o su depósito no están disponibles.');
+    if (!fila) throw new ErrorRecurrencia('La recurrencia o su depósito no están disponibles.');
     const proxima = cambios.proximaEjecucion || fila.proxima_ejecucion;
-    if (cambios.activa && (!Number.isFinite(Date.parse(proxima)) || Date.parse(proxima) <= Date.now())) throw new Error('Elegí una próxima fecha futura.');
-    if (cambios.frecuencia && !['diaria','semanal','mensual','anual'].includes(cambios.frecuencia)) throw new Error('Frecuencia inválida.');
+    if (cambios.activa && (!Number.isFinite(Date.parse(proxima)) || Date.parse(proxima) <= Date.now())) throw new ErrorRecurrencia('Elegí una próxima fecha futura.');
+    if (cambios.frecuencia && !['diaria','semanal','mensual','anual'].includes(cambios.frecuencia)) throw new ErrorRecurrencia('Frecuencia inválida.');
     return recurrenciasRepositorio.actualizar(id, {activa: cambios.activa ? 1 : 0,...(importe===undefined?{}:{monto:importe!}), proxima_ejecucion: proxima, dia_ancla: cambios.proximaEjecucion ? partesCalendario(proxima,fila.zona_horaria).dia : fila.dia_ancla, frecuencia: cambios.frecuencia || fila.frecuencia}, conexion);
   });
 }
 
 export async function consultarHistorialRecurrencia(id:string){
-  const {usuario}=await obtenerSesionActual();if(!usuario)throw new Error('Iniciá sesión para consultar el historial.');
+  const {usuario}=await obtenerSesionActual();if(!usuario)throw new ErrorRecurrencia('Iniciá sesión para consultar el historial.');
   return ejecutarLecturaConConexion(async c=>{
     const propia=await c.getFirstAsync('SELECT r.id FROM recurrencias r JOIN depositos d ON d.id=r.deposito_id WHERE r.id=? AND d.usuario_id=?',[id,usuario.id]);
-    if(!propia)throw new Error('La recurrencia no está disponible.');
+    if(!propia)throw new ErrorRecurrencia('La recurrencia no está disponible.');
     const resumen=await c.getFirstAsync<{total_centavos:number;cantidad:number}>(`SELECT COALESCE(SUM(ROUND(m.monto*100)),0) AS total_centavos,COUNT(*) AS cantidad FROM movimientos m
       WHERE m.recurrencia_id=? AND m.anulado=0 AND m.fecha_eliminacion IS NULL AND m.reversion_de_id IS NULL
       AND NOT EXISTS(SELECT 1 FROM movimientos correccion WHERE correccion.reversion_de_id=m.id)`,[id]);

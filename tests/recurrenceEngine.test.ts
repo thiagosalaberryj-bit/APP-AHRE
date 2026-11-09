@@ -26,8 +26,23 @@ async function escenario(t:import('node:test').TestContext){
   const {usuario}=await e.obtenerSesionActual();assert.ok(usuario);
   const deposito=await e.depositosRepositorio.crear({usuario_id:usuario.id,nombre:'Recurrencias',tipo:'efectivo',icono:'cash-outline',saldo_inicial:1000,fecha_creacion:'2020-01-01T00:00:00.000Z'});
   const movimiento=await e.crearMovimiento({monto:'100',descripcion:'Servicio',deposito_id:deposito.id,categoria:'servicios',fecha:new Date(2026,0,1,12),hora:'12:00',recurrente:true,frecuencia:'mensual'},'egreso');
-  return {...e,usuario,deposito,movimiento,recurrenciaId:movimiento.recurrencia_id!};
+  const aceptarVencidas=async(ahora:Date,limite=100)=>{const antes=Number(e.base.prepare('SELECT COUNT(*) n FROM ejecuciones_recurrencia').get()!.n);for(let i=0;i<limite;i++){const r=e.base.prepare('SELECT r.* FROM recurrencias r JOIN depositos d ON d.id=r.deposito_id JOIN sync_authorization a ON a.usuario_id=d.usuario_id WHERE r.id=? AND r.activa=1 AND d.activo=1 AND a.revocada=0 AND r.proxima_ejecucion<=?').get(movimiento.recurrencia_id!,ahora.toISOString());if(!r||r.fecha_fin&&String(r.proxima_ejecucion)>String(r.fecha_fin))break;await e.aceptarOcurrenciaRecurrencia(String(r.id),String(r.proxima_ejecucion),ahora);}return Number(e.base.prepare('SELECT COUNT(*) n FROM ejecuciones_recurrencia').get()!.n)-antes;};
+  return {...e,aceptarVencidas,usuario,deposito,movimiento,recurrenciaId:movimiento.recurrencia_id!};
 }
+
+test('revisar fechas vencidas no registra dinero; aceptar una fecha simultáneamente genera una sola ocurrencia',async t=>{
+ const e=await escenario(t),r=(await e.recurrenciasRepositorio.consultarPorId(e.recurrenciaId))!,saldo=(await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual;
+ const antes=e.base.prepare('SELECT COUNT(*) n FROM sync_outbox').get()!.n;
+ await e.procesarRecurrencias(new Date(2026,3,2));await e.procesarRecurrencias(new Date(2026,3,2));
+ assert.equal(e.base.prepare('SELECT COUNT(*) n FROM sync_outbox').get()!.n,antes);
+ assert.equal((await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual,saldo);
+ const resultados=await Promise.all([e.aceptarOcurrenciaRecurrencia(r.id,r.proxima_ejecucion,new Date(2026,3,2)),e.aceptarOcurrenciaRecurrencia(r.id,r.proxima_ejecucion,new Date(2026,3,2))]);
+ assert.equal(resultados[0].id,resultados[1].id);assert.equal((await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual,saldo-100);
+ await e.eliminarMovimiento(resultados[0].id);await e.aceptarOcurrenciaRecurrencia(r.id,r.proxima_ejecucion,new Date(2026,3,2));
+ assert.equal((await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual,saldo);
+ await e.actualizarRecurrencia(r.id,{activa:false});const siguiente=(await e.recurrenciasRepositorio.consultarPorId(r.id))!;
+ await assert.rejects(e.aceptarOcurrenciaRecurrencia(r.id,siguiente.proxima_ejecucion,new Date(2026,3,2)),/no está pendiente/);
+});
 
 test('editar el importe afecta solo registros futuros y conserva el inicial aunque se elimine',async t=>{
   const e=await escenario(t),proxima=new Date(Date.now()+86400000).toISOString();
@@ -35,7 +50,7 @@ test('editar el importe afecta solo registros futuros y conserva el inicial aunq
   assert.equal((await e.movimientosRepositorio.consultarPorId(e.movimiento.id))!.monto,100);
   assert.equal((await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual,900);
   assert.equal((await e.consultarHistorialRecurrencia(e.recurrenciaId)).montoInicial,100);
-  await e.procesarRecurrencias(new Date(proxima));
+  await e.aceptarVencidas(new Date(proxima));
   const resumen=await e.consultarHistorialRecurrencia(e.recurrenciaId);
   assert.equal(resumen.total,250.5);assert.equal(resumen.repeticiones,2);
   await e.eliminarMovimiento(e.movimiento.id);
@@ -46,41 +61,41 @@ test('editar el importe afecta solo registros futuros y conserva el inicial aunq
   assert.equal((await e.recurrenciasRepositorio.consultarPorId(e.recurrenciaId))!.monto,150.5);
 });
 test('recupera las fechas vencidas una sola vez y conserva las fechas previstas',async t=>{
-  const e=await escenario(t);assert.equal(await e.procesarRecurrencias(new Date(2026,3,2)),3);
-  assert.equal(await e.procesarRecurrencias(new Date(2026,3,2)),0);
+  const e=await escenario(t);assert.equal(await e.aceptarVencidas(new Date(2026,3,2)),3);
+  assert.equal(await e.aceptarVencidas(new Date(2026,3,2)),0);
   const filas=e.base.prepare('SELECT fecha_programada FROM ejecuciones_recurrencia WHERE recurrencia_id=? ORDER BY fecha_programada').all(e.recurrenciaId);
   assert.equal(filas.length,4);assert.ok(String(filas[1].fecha_programada).startsWith('2026-02-01'));
   assert.equal((await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual,600);
 });
 test('dos ejecuciones simultáneas no duplican movimientos ni saldos',async t=>{
-  const e=await escenario(t);await Promise.all([e.procesarRecurrencias(new Date(2026,2,2)),e.procesarRecurrencias(new Date(2026,2,2))]);
+  const e=await escenario(t);await Promise.all([e.aceptarVencidas(new Date(2026,2,2)),e.aceptarVencidas(new Date(2026,2,2))]);
   assert.equal(e.base.prepare('SELECT COUNT(*) AS n FROM ejecuciones_recurrencia WHERE recurrencia_id=?').get(e.recurrenciaId)!.n,3);
   assert.equal((await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual,700);
 });
 test('eliminar una ocurrencia no permite generarla de nuevo al reintentar su fecha',async t=>{
-  const e=await escenario(t);await e.procesarRecurrencias(new Date(2026,1,2));
+  const e=await escenario(t);await e.aceptarVencidas(new Date(2026,1,2));
   const ejecucion=e.base.prepare('SELECT * FROM ejecuciones_recurrencia WHERE recurrencia_id=? ORDER BY fecha_programada DESC LIMIT 1').get(e.recurrenciaId)!;
   await e.eliminarMovimiento(String(ejecucion.movimiento_id));
   await e.recurrenciasRepositorio.actualizar(e.recurrenciaId,{proxima_ejecucion:String(ejecucion.fecha_programada)});
-  assert.equal(await e.procesarRecurrencias(new Date(2026,1,2)),0);
+  assert.equal(await e.aceptarVencidas(new Date(2026,1,2)),0);
   assert.equal(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos WHERE recurrencia_id=?').get(e.recurrenciaId)!.n,2);
   assert.equal((await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual,900);
 });
 test('desactivar o revocar la instalación impide nuevas ocurrencias',async t=>{
   const e=await escenario(t);await e.recurrenciasRepositorio.actualizar(e.recurrenciaId,{activa:0});
-  assert.equal(await e.procesarRecurrencias(new Date(2026,2,2)),0);
+  assert.equal(await e.aceptarVencidas(new Date(2026,2,2)),0);
   await e.recurrenciasRepositorio.actualizar(e.recurrenciaId,{activa:1});await e.marcarRevocada(e.usuario.id);
-  assert.equal(await e.procesarRecurrencias(new Date(2026,2,2)),0);
+  assert.equal(await e.aceptarVencidas(new Date(2026,2,2)),0);
 });
 test('un fallo al registrar la ejecución revierte movimiento, saldo, próxima fecha y lote',async t=>{
   const e=await escenario(t),previa=(await e.recurrenciasRepositorio.consultarPorId(e.recurrenciaId))!.proxima_ejecucion;
   const pendientes=e.base.prepare('SELECT COUNT(*) AS n FROM sync_outbox').get()!.n;
   e.base.exec("CREATE TRIGGER fallo_ejecucion BEFORE INSERT ON ejecuciones_recurrencia BEGIN SELECT RAISE(ABORT,'fallo'); END");
-  await assert.rejects(e.procesarRecurrencias(new Date(2026,1,2)));
+  await assert.rejects(e.aceptarVencidas(new Date(2026,1,2)));
   assert.equal((await e.depositosRepositorio.consultarPorId(e.deposito.id))!.saldo_actual,900);
   assert.equal((await e.recurrenciasRepositorio.consultarPorId(e.recurrenciaId))!.proxima_ejecucion,previa);
   assert.equal(e.base.prepare('SELECT COUNT(*) AS n FROM sync_outbox').get()!.n,pendientes);
-  e.base.exec('DROP TRIGGER fallo_ejecucion');assert.equal(await e.procesarRecurrencias(new Date(2026,1,2)),1);
+  e.base.exec('DROP TRIGGER fallo_ejecucion');assert.equal(await e.aceptarVencidas(new Date(2026,1,2)),1);
 });
 test('eliminar y detener la recurrencia conserva el historial y excluye saldo y estadísticas',async t=>{
   const e=await escenario(t);await e.eliminarMovimiento(e.movimiento.id,true);await e.eliminarMovimiento(e.movimiento.id,true);
@@ -107,7 +122,7 @@ test('la eliminación conserva el original y crea una sola corrección vinculada
 });
 
 test('el historial recurrente acumula importes reales y excluye eliminados y correcciones',async t=>{
-  const e=await escenario(t);await e.procesarRecurrencias(new Date(2026,2,2));
+  const e=await escenario(t);await e.aceptarVencidas(new Date(2026,2,2));
   await e.editarMovimiento(e.movimiento.id,{monto:'150',descripcion:'Servicio corregido',categoria:'servicios',depositoId:e.deposito.id});
   let historial=await e.consultarHistorialRecurrencia(e.recurrenciaId);
   assert.equal(historial.total,350);assert.equal(historial.cantidad,3);

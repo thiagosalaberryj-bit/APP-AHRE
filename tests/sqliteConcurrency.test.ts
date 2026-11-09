@@ -34,7 +34,7 @@ test('la revisión de recurrencias sin vencimientos no escribe ni reserva una tr
   const reinicio=await preparar(prueba,true,{base:e.base,url:'https://ahre.test',fetch,registrarSql:sentencia=>sql.push(sentencia)});
   await reinicio.inicializarBaseDatos();sql.length=0;
   for(let i=0;i<3;i++)assert.equal(await reinicio.procesarRecurrencias(),0);
-  assert.ok(sql.length>0);
+  assert.equal(sql.length,0);
   assert.ok(sql.every(sentencia=>/^SELECT/i.test(sentencia)));
 });
 

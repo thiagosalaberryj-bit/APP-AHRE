@@ -158,28 +158,24 @@ a sus obligaciones y operaciones personales. Los invitados siguen limitados a su
 
 ## Recurrencias
 
-`src/recurrences/recurrenceService.ts` es el único motor TypeScript.
-Se ejecuta al iniciar/reanudar y durante el uso de la app; el módulo local
-`modules/recurrence-worker` lo invoca mediante Expo TaskManager y WorkManager.
-El trabajo periódico Android tiene intervalo de 15 minutos, sin requisito de red.
-Se guarda la identidad real de la tarea de Expo en WorkManager para restaurarla.
+La programación requiere confirmación manual desde Depósito → Recurrentes.
+Al abrir/reanudar o revisar el depósito se comparan las fechas previstas con la
+hora actual, sin generar movimientos ni modificar el saldo. Cada programación
+vencida muestra Pendiente de registro y Aceptar y registrar; también permite
+desactivarla. Si hay varias fechas vencidas, se presenta primero la más antigua.
 
-Cada ejecución guarda movimiento, clave única de recurrencia/fecha y próxima fecha
-en una transacción. El procesamiento se limita a 100 ocurrencias por pasada y recupera
-el resto después. La primera ocurrencia ya creada queda reconocida.
-La fecha prevista del movimiento y la fecha real de creación son distintas.
-Se conserva zona horaria y día ancla: 31 pasa al último día del mes corto y vuelve a 31.
+aceptarOcurrenciaRecurrencia valida sesión, propiedad, depósito activo,
+autorización y fecha esperada. Registra movimiento, ejecución y próxima fecha
+en una transacción. La clave recurrencia/fecha hace idempotentes los reintentos,
+incluso después de eliminar el movimiento generado. La primera ocurrencia que
+se creó explícitamente desde Ingreso/Egreso ya se considera registrada.
 
-El detalle del depósito permite desactivar, reactivar con fecha futura y editar
-la programación y el importe futuro. Modificar la regla no altera movimientos
-ya registrados. El resumen muestra total vigente, cantidad de ejecuciones y
-variación del importe respecto de la primera ejecución conservada.
-Las fechas se interpretan en la zona guardada de la recurrencia.
-No se generan ocurrencias del intervalo desactivado. Una revocación conocida o depósito
-desactivado suspende la generación.
-
-Android puede demorar el trabajo; apagar el teléfono o forzar su detención requiere
-recuperación posterior. La generación es local; se sincroniza al volver a abrir la app.
+Se conservan zona horaria y día ancla, programación e importe editables,
+reactivación con fecha futura y resumen acumulado. No se generan movimientos
+del intervalo desactivado. No hay cobros ni movimientos automáticos en segundo
+plano: la tarea WorkManager heredada se desregistra al abrir la nueva app y su
+callback conservado no escribe finanzas. No requiere cambios de dependencias
+ni de esquema SQLite. Las APK anteriores mantienen su implementación original.
 
 ## Eliminación lógica
 

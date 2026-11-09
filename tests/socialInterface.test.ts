@@ -690,7 +690,7 @@ for(const tema of ['claro','oscuro'] as const)test(`perdonar una deuda local con
   await vista.pulsar('Perdonar deuda');await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'eliminarDeuda',deudaId:deuda.id});
   await vista.pulsar('Confirmar perdón');await vista.pulsar('Sí, perdonar deuda');
   const cerrada=presente((await e.cargarSocial()).deudas.find(d=>d.id===deuda.id));
-  assert.equal(cerrada.pendienteNumero,0);assert.equal(cerrada.perdonadoNumero,75);assert.equal(cerrada.estado,'Cerrada con perdón');
+  assert.equal(cerrada.pendienteNumero,0);assert.equal(cerrada.perdonadoNumero,75);assert.equal(cerrada.estado,'Perdonada');
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
   assert.ok(vista.texto().includes('Perdonaste · $ 75'));assert.ok(vista.texto().includes('Te pagó · $ 25'));
   assert.deepEqual(vista.buscarBoton('Ver importe Recibiste').props.accessibilityValue,{text:'$ 25'});

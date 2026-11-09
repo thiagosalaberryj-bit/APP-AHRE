@@ -275,3 +275,21 @@ componentes de AHRE. Funciona sin conexión a Internet.
 ## Correcciones y ejecución recurrente
 
 Eliminar desde el detalle conserva el movimiento como eliminado, lo excluye de saldos y estadísticas y permite detener su recurrencia. Crea una corrección inversa vinculada, ajusta el saldo una sola vez y conserva los acuerdos compartidos. Ver [reglas y ejecución Android](../arquitectura/social-online-recurrencias.md).
+
+
+## Confirmación manual y claridad financiera
+
+Las recurrencias vencidas se aceptan desde Depósito → Recurrentes o se desactivan;
+no generan dinero automáticamente. La aceptación es única por fecha programada.
+En salas cerradas se indica cuántos movimientos propios faltan incorporar y qué
+gastos los originan. La incorporación local actualiza el aviso sin esperar la red.
+Las acciones financieras bloquean otros envíos y cancelaciones mientras guardan;
+solo el botón elegido muestra carga. Las deudas usan Te debe/Le debés mientras
+haya pendiente, Saldada cuando se pagó todo y Perdonada si se perdonó el resto.
+Cerrada corresponde a salas. Las propuestas rechazadas se retiran del destinatario
+y se conserva el registro privado del creador. Deuda registrada integra el
+movimiento de origen, sin repetir una fila Adelanto registrado ni otro cargo.
+
+Prueba física pendiente: nueva APK en Android, funcionamiento sin red, apertura
+tras fechas vencidas, doble toque, navegación Atrás y resumen después de aceptar.
+La APK build 11 anterior no incluye estos cambios; no se generó otra en esta revisión.

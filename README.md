@@ -25,7 +25,7 @@ Finanzas personales, gastos compartidos y comprobantes en una app Android con da
 | --- | --- |
 | Finanzas | Depósitos, ingresos, egresos, ajustes y estadísticas locales. |
 | Social | Agenda privada, salas locales/online, invitados web, acuerdos y pagos con movimientos propios. |
-| Recurrencias | Generación local y gestión desde depósitos; ejecución Android con WorkManager en una build nativa. |
+| Recurrencias | Programaciones locales con aceptación manual desde depósitos; no modifican el saldo hasta confirmar. |
 | Comprobantes | OCR local con ML Kit y revisión antes de guardar; requiere APK Android. |
 | Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado y preferencias. |
 | Sincronización | Lotes ordenados, reintentos sin duplicados y corrección guiada de correo rechazado. |

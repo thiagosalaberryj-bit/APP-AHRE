@@ -234,3 +234,21 @@ realizados sobre ese ejemplo. Sus fondos son ficticios y no cambian el saldo
 neto de los ejemplos existentes.
 
 Las tarjetas recurrentes reutilizan directamente los estilos de MovementCard. Tocar una abre un modal con importe, programación y acciones de edición, pausa o reactivación. El resumen acumulado reemplaza la lista de historial: Total gastado o Total recibido, veces registrado y, si cambió, variación del importe actual frente al primer importe registrado, en pesos y porcentaje. El primer importe se obtiene de la primera ejecución, incluso si después se elimina o corrige ese movimiento. El total excluye eliminados y correcciones; el contador conserva las ejecuciones realizadas. Las acciones y selectores quedan dentro del modal, sin botón Cancelar separado.
+
+
+## Confirmación manual y claridad financiera
+
+Las recurrencias vencidas se aceptan desde Depósito → Recurrentes o se desactivan;
+no generan dinero automáticamente. La aceptación es única por fecha programada.
+En salas cerradas se indica cuántos movimientos propios faltan incorporar y qué
+gastos los originan. La incorporación local actualiza el aviso sin esperar la red.
+Las acciones financieras bloquean otros envíos y cancelaciones mientras guardan;
+solo el botón elegido muestra carga. Las deudas usan Te debe/Le debés mientras
+haya pendiente, Saldada cuando se pagó todo y Perdonada si se perdonó el resto.
+Cerrada corresponde a salas. Las propuestas rechazadas se retiran del destinatario
+y se conserva el registro privado del creador. Deuda registrada integra el
+movimiento de origen, sin repetir una fila Adelanto registrado ni otro cargo.
+
+Prueba física pendiente: nueva APK en Android, funcionamiento sin red, apertura
+tras fechas vencidas, doble toque, navegación Atrás y resumen después de aceptar.
+La APK build 11 anterior no incluye estos cambios; no se generó otra en esta revisión.

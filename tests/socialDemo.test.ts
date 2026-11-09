@@ -28,7 +28,7 @@ for(const tema of ['claro','oscuro'] as const)test(`perdonar la deuda demo conse
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'eliminarDeuda',deudaId:deuda.id});assert.ok(vista.texto().includes('No se creará un ingreso ni un egreso'));
   await vista.pulsar('Confirmar perdón');await vista.pulsar('Sí, perdonar deuda');
   const despues=presente((await e.cargarSocial()).deudas.find(d=>d.id===deuda.id));
-  assert.equal(despues.pendienteNumero,0);assert.equal(despues.perdonadoNumero,800);assert.equal(despues.estado,'Cerrada con perdón');
+  assert.equal(despues.pendienteNumero,0);assert.equal(despues.perdonadoNumero,800);assert.equal(despues.estado,'Perdonada');
   assert.equal(e.base.prepare('SELECT SUM(saldo_actual) saldo FROM depositos').get()!.saldo,antes);
   assert.equal(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n,cantidad);
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
@@ -180,6 +180,44 @@ async function prepararDemo(prueba: import('node:test').TestContext) {
   const datos = await e.cargarSocial(), abierta = presente(datos.salas.find(s => s.nombre === 'Demo · Viaje con amigos'));
   return {e, datos, abierta, comprobarRed:() => assert.equal(solicitudes,0)};
 }
+
+test('rechazar la invitación demo la retira del historial del destinatario',async prueba=>{
+ const {e,datos}=await prepararDemo(prueba),invitacion=presente(datos.deudas.find(d=>d.invitacionOnline));
+ await e.enviarAccionSocial('rechazar-prueba','/deudas/'+invitacion.acuerdoOnlineId+'/decidir',{decision:'rechazada'});
+ assert.ok(!(await e.cargarSocial()).deudas.some(d=>d.id===invitacion.id));
+});
+
+test('la sala cerrada indica incorporaciones pendientes y las actualiza con el registro local',async prueba=>{
+ const {e,datos}=await prepararDemo(prueba);await e.sincronizarSocialOnline();
+ const operaciones=await e.leerDatosOnline<import('../src/social/online/types.ts').OperacionPersonal[]>(datos.usuarioId,'operaciones',[]);
+ const operacion=presente(operaciones.find(o=>o.salaId&&o.gastoId&&!o.incorporada)),salaId=operacion.salaId!;
+ const cantidad=operaciones.filter(o=>o.salaId===salaId&&!o.incorporada).length;
+ const vista=interfazSocial(e,'oscuro');await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId});
+ assert.ok(vista.texto().includes(cantidad+' movimientos por registrar'));
+ await e.incorporarOperacionPersonal(operacion,{depositoId:datos.depositos[0].id});await vista.asentar();
+ assert.ok(vista.texto().includes(cantidad===1?'Todos tus movimientos están incorporados':(cantidad-1)+' movimientos por registrar'));
+});
+
+test('confirmar un pago bloquea rechazar y solo muestra carga en la acción elegida',async prueba=>{
+ const {e,datos}=await prepararDemo(prueba),deuda=presente(datos.deudas.find(d=>d.descripcion==='Cena con pago parcial'));
+ let liberar!:()=>void,empezo!:()=>void,llamadas=0;
+ const espera=new Promise<void>(r=>{liberar=r;}),inicio=new Promise<void>(r=>{empezo=r;});prueba.after(()=>liberar());
+ const vista=interfazSocial({...e,confirmarPagoConSeleccion:async(...args:Parameters<typeof e.confirmarPagoConSeleccion>)=>{llamadas++;empezo();await espera;return e.confirmarPagoConSeleccion(...args);}},'oscuro');
+ await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'pago',deudaId:deuda.id,pagoId:deuda.id.replace(':deuda',':por-confirmar')});
+ await vista.pulsar('Depósito');await vista.pulsar('Efectivo de prueba',true);
+ const confirmar=vista.buscarBoton('Confirmar');(confirmar.props.onPress as ()=>void)();await inicio;await vista.asentar();
+ assert.equal(vista.buscarBoton('Rechazar').props.disabled,true);assert.ok(vista.texto().includes('Guardando…'));
+ (confirmar.props.onPress as ()=>void)();await vista.asentar();assert.equal(llamadas,1);
+ liberar();await vista.asentar();
+});
+
+test('el historial muestra una sola creación con su movimiento de origen, sin adelanto duplicado',async prueba=>{
+ const {e,datos}=await prepararDemo(prueba),persona=presente(datos.personas.find(p=>p.id!=='vos')),deposito=datos.depositos[0];
+ const deuda=await e.crearDeudaPersonal({personaId:persona.id,direccion:'me_deben',monto:'200',descripcion:'Préstamo único'},{depositoId:deposito.id});
+ const vista=interfazSocial(e,'oscuro');await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
+ assert.ok(!vista.texto().includes('Adelanto registrado'));assert.ok(vista.texto().includes('Movimiento de origen vinculado'));
+ assert.equal(vista.todos().filter(n=>n.type==='Pressable'&&String(n.props.accessibilityLabel).startsWith('Ver movimiento: Deuda registrada')).length,1);
+});
 
 test('aceptar un aviso demo actualiza su gasto y persiste sin HTTP ni comandos pendientes', async prueba => {
   const {e,abierta,comprobarRed} = await prepararDemo(prueba);

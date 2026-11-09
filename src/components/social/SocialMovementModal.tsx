@@ -1,3 +1,4 @@
+import {operacionFinancieraEnCurso} from '../../social/financialOperation';
 import type { Financiacion } from '../../social/types';
 import { useEffect, useState } from 'react';
 import { Modal, View, Text, Pressable, ScrollView } from 'react-native';
@@ -33,7 +34,7 @@ export default function ModalMovimientoSocial({ plan, guardando, alCerrar, alCon
       .catch((fallo: unknown) => { if (vigente) establecerError(fallo instanceof Error ? fallo.message : 'No se pudieron consultar los movimientos.'); }).finally(() => { if (vigente) establecerCargando(false); });
     return () => { vigente = false; };
   }, [indice, modo, operacion]);
-  const cerrar = () => { if (!guardando) alCerrar(); };
+  const cerrar = () => { if (!guardando&&!operacionFinancieraEnCurso()) alCerrar(); };
   const avanzar = () => {
     const datos = operacion ? { ...selecciones, [operacion.clave]: modo === 'nuevo' ? { depositoId, fecha: combinarFechaYHora(fecha, hora) } : { movimientoId } } : selecciones;
     if (!operacion || indice === plan.operaciones.length - 1) alConfirmar(datos);

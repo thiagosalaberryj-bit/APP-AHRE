@@ -304,6 +304,9 @@ test('online: rechazar la propuesta de una deuda anterior conserva su registro y
   assert.equal((await e.juan.deudasRepositorio.consultarPorId(deuda.id))!.estado,'pendiente');
   assert.equal((await e.db.get('SELECT estado FROM deudas WHERE id=?',[deuda.id]))!.estado,'pendiente');
   assert.equal((await e.db.get('SELECT estado FROM deudas_online WHERE id=?',[propuestaId]))!.estado,'rechazada');
+  const recibidas=await e.sofi.solicitarSocial<{deudas:{id:string}[]}>('/deudas');
+  assert.ok(!recibidas.deudas.some(d=>d.id===propuestaId));
+  assert.ok((await e.juan.solicitarSocial<{deudas:{id:string}[]}>('/deudas')).deudas.some(d=>d.id===propuestaId));
 });
 
 test('online: invitaciones guardan solo hashes, vencen, se revocan y no permiten tomar otra identidad',{skip:!disponible},async t=>{

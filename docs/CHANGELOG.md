@@ -28,7 +28,7 @@ documentación se registran en este archivo.
   de estadísticas y mantiene los acuerdos sociales sin cambios automáticos.
 - Menos descargas y escrituras sin novedades; reconciliación al reanudar y
   comprobaciones transaccionales para evitar propuestas cruzadas duplicadas.
-- Versión 0.8.0 y código Android 11; documentación vigente separada de antecedentes.
+- Versión 0.8.0 y código Android 12; documentación vigente separada de antecedentes.
 
 ### Corregido
 
@@ -37,13 +37,17 @@ documentación se registran en este archivo.
 - Aceptación independiente de avisos de pago y rechazo de cambios económicos.
 - Cierre del modal durante guardados y consistencia de partes/balances web.
 - Retirada de imports y estilos sin referencias.
+- Pendientes de incorporación visibles por sala/gasto, bloqueo inmediato de envíos
+  y cancelación durante operaciones, carga solo en el botón elegido, propuestas
+  rechazadas ocultas al destinatario y origen de deuda sin adelanto duplicado.
+- Etiquetas y filtros Saldada/Perdonada separados; Cerrada reservado a salas.
 
 ### Verificación
 
-- 343 pruebas de app y 60 de backend aprobadas, cero fallos y cero omisiones,
+- 349 pruebas de app y 60 de backend aprobadas, cero fallos y cero omisiones,
   con SQLite real, MySQL temporal aislado, HTTP y WebSocket. TypeScript correcto.
 - Pendiente: revisión en dispositivos, enlaces/QR, WSS detrás del proxy real y
-  WorkManager con la app cerrada. Preparar una build no acredita esas pruebas.
+  aceptación manual sin red y navegación nativa. Preparar una build no acredita esas pruebas.
 
 ## [v0.7.0] - 2026-11-05 - no estable
 

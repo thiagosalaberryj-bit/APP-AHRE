@@ -7,7 +7,7 @@ import type {AspectoSocial,GastoVista,SalaVista} from '../../social/types';
 import type {OperacionPersonal} from '../../social/online/types';
 import useSalaOnline from '../../social/online/useRoomOnline';
 import {useDatosSociales} from '../../social/SocialDataContext';
-import {marcarPartePagada,informarPartePagada,enviarAccionSocial,sincronizarSocialOnline,leerDatosOnline,observarSocialOnline} from '../../social/socialService';
+import {marcarPartePagada,informarPartePagada,enviarAccionSocial,sincronizarSocialOnline,leerDatosOnline,observarSocialOnline,consultarMovimientosSociales} from '../../social/socialService';
 import BotonSocial from './SocialButton';
 import Dialogo from './InvitationDialog';
 import Seleccion from './RoomFinanceSelection';
@@ -17,7 +17,7 @@ export default function AccionesGastoOnline({sala,gasto,seccion,...aspecto}:Aspe
   const estilosPago=crearEstilosGasto(aspecto.tema);
   const detalle=useSalaOnline(sala.id,sala.online),social=useDatosSociales(),estilos=crearEstilosDetalle(aspecto.tema),compartidos=crearEstilosCompartidos(aspecto.tema),bloqueo=useRef(false);
   const [seleccion,abrirSeleccion]=useState<OperacionPersonal|null>(null),[intencion,cambiarIntencion]=useState<'asociar'|'informar'|'marcar'>('asociar'),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[ocupado,cambiarOcupado]=useState(false),[error,cambiarError]=useState('');
-  useEffect(()=>{let activo=true;const cargar=()=>{void leerDatosOnline<OperacionPersonal[]>(social.usuarioId,'operaciones',[]).then(o=>{if(activo)cambiarOperaciones(o);}).catch(()=>{if(activo)cambiarError('No se pudieron cargar tus movimientos.');});};cargar();const dejar=observarSocialOnline(cargar);return()=>{activo=false;dejar();};},[social.usuarioId]);
+  useEffect(()=>{let activo=true;const cargar=()=>{void leerDatosOnline<OperacionPersonal[]>(social.usuarioId,'operaciones',[]).then(async o=>{const locales=await consultarMovimientosSociales();if(activo)cambiarOperaciones(o.map(p=>({...p,incorporada:p.incorporada||locales.some(l=>l.clave===p.clave)})));}).catch(()=>{if(activo)cambiarError('No se pudieron cargar tus movimientos.');});};cargar();const dejar=observarSocialOnline(cargar);return()=>{activo=false;dejar();};},[social.usuarioId]);
   if(!sala.online||!detalle)return null;
   const remoto=detalle.sala.gastos.find(g=>g.id===gasto.id);if(!remoto)return null;
   const propia=detalle.personaPropiaId,pedido=detalle.solicitudes.find(s=>s.gasto_id===gasto.id&&s.personaId===propia&&s.tipo==='parte_pagada'&&s.estado==='pendiente'),abierta=sala.estado==='abierta';

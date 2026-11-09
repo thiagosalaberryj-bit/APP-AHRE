@@ -46,7 +46,7 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
   const consulta = normalizarNombrePersona(busqueda);
   const deudas = deudasSociales.filter(deuda => {
     const persona = obtenerPersona(deuda.personaId);
-    const coincideEstado = estado === 'todas' || (estado === 'invitaciones' ? !!deuda.invitacionOnline : estado === 'saldadas' ? deuda.saldada : !deuda.saldada&&deuda.tipo===estado);
+    const coincideEstado = estado === 'todas' || (estado === 'invitaciones' ? !!deuda.invitacionOnline : estado === 'perdonadas' ? deuda.perdonadoNumero>0 : estado === 'saldadas' ? deuda.saldada&&!deuda.perdonadoNumero : !deuda.saldada&&deuda.tipo===estado);
     return (origen==='todas'||(origen==='online'?!!deuda.acuerdoOnlineId:!deuda.acuerdoOnlineId))&&coincideEstado && normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona?.apodo || ''} ${deuda.descripcion} ${deuda.origen}`).includes(consulta);
   }).sort((a, b) => (b.ultimaActividad||b.fechaISO).localeCompare(a.ultimaActividad||a.fechaISO) || b.id.localeCompare(a.id));
   const grupos: {clave:string;deudas:import('../../social/types').DeudaVista[]}[] = [];
@@ -70,7 +70,7 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
         </View>
         <SelectorSegmentado tema={tema} opciones={[{id:'todas',nombre:'Todas'},{id:'locales',nombre:'Locales'},{id:'online',nombre:'Online'}]} valor={origen} alSeleccionar={valor=>{cambiarOrigen(valor);if(estado==='invitaciones')cambiarEstado('todas');}} etiqueta="Origen de deudas"/>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.filaFiltros}>
-          {[{id:'todas',nombre:'Todas'},...(origen==='online'?[{id:'invitaciones',nombre:'Invitaciones'}]:[]),{id:'saldadas',nombre:'Saldadas'},{id:'me_deben',nombre:'Me deben'},{id:'debo',nombre:'Debo'}].map(opcion=><Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{checked:estado===opcion.id}} onPress={()=>cambiarEstado(opcion.id)} style={[estilosFiltros.filtro,estado===opcion.id&&estilosFiltros.filtroActivo]}><Text numberOfLines={1} style={[estilosFiltros.textoFiltro,estado===opcion.id&&estilosFiltros.textoActivo]}>{opcion.nombre}{opcion.id==='invitaciones'?' · '+deudasSociales.filter(d=>d.invitacionOnline).length:''}</Text></Pressable>)}
+          {[{id:'todas',nombre:'Todas'},...(origen==='online'?[{id:'invitaciones',nombre:'Invitaciones'}]:[]),{id:'saldadas',nombre:'Saldadas'},{id:'perdonadas',nombre:'Perdonadas'},{id:'me_deben',nombre:'Me deben'},{id:'debo',nombre:'Debo'}].map(opcion=><Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{checked:estado===opcion.id}} onPress={()=>cambiarEstado(opcion.id)} style={[estilosFiltros.filtro,estado===opcion.id&&estilosFiltros.filtroActivo]}><Text numberOfLines={1} style={[estilosFiltros.textoFiltro,estado===opcion.id&&estilosFiltros.textoActivo]}>{opcion.nombre}{opcion.id==='invitaciones'?' · '+deudasSociales.filter(d=>d.invitacionOnline).length:''}</Text></Pressable>)}
         </ScrollView>
         <Text accessibilityLiveRegion="polite" style={estilos.resultado}>{deudas.length} de {deudasSociales.length} deudas</Text>
       </View>
@@ -81,13 +81,13 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
         const [anio, mes] = grupo.clave.split('-');
         const nombre = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][Number(mes) - 1] + ' ' + anio;
         return <View key={grupo.clave} style={estilos.grupo}>
-              <EncabezadoSeccionPlegable tema={tema} titulo={nombre} resumen={`${grupo.deudas.filter(deuda => deuda.saldada).length} de ${grupo.deudas.length} deudas saldadas`} expandido={abierto}
+              <EncabezadoSeccionPlegable tema={tema} titulo={nombre} resumen={`${grupo.deudas.filter(deuda => deuda.saldada).length} de ${grupo.deudas.length} deudas sin pendiente`} expandido={abierto}
                 alAlternar={() => establecerMesesCerrados(anteriores => abierto ? [...anteriores, grupo.clave] : anteriores.filter(clave => clave !== grupo.clave))}/>
               {abierto ? grupo.deudas.map(deuda => <TarjetaDeuda key={deuda.id} deuda={deuda} nombrePersona={nombreCompletoPersona(obtenerPersona(deuda.personaId))} alAbrir={() => abrirRegistro('detalleDeuda', {
             deudaId: deuda.id
           })} {...aspecto} />) : null}
             </View>;
-      }) : <EstadoVacio icono="search-outline" titulo={consulta ? 'No encontramos deudas' : estado === 'invitaciones' ? 'No hay invitaciones pendientes' : estado === 'saldadas' ? 'No hay deudas saldadas' : 'No hay deudas pendientes'} descripcion="Probá con otra persona o cambiá el estado seleccionado." {...aspecto} />}
+      }) : <EstadoVacio icono="search-outline" titulo={consulta ? 'No encontramos deudas' : estado === 'invitaciones' ? 'No hay invitaciones pendientes' : estado === 'perdonadas' ? 'No hay deudas perdonadas' : estado === 'saldadas' ? 'No hay deudas saldadas' : 'No hay deudas pendientes'} descripcion="Probá con otra persona o cambiá el estado seleccionado." {...aspecto} />}
       </View>
     </View>;
 }

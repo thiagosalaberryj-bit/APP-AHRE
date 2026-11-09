@@ -1,5 +1,4 @@
 import * as TaskManager from 'expo-task-manager';
-import ModuloRecurrencias from '../../modules/recurrence-worker';
 import { procesarRecurrencias } from './recurrenceService';
 
 TaskManager.defineTask('ahre-recurrences', async () => {
@@ -8,5 +7,5 @@ TaskManager.defineTask('ahre-recurrences', async () => {
 });
 
 export async function registrarTareaRecurrencias() {
-  if (ModuloRecurrencias && await TaskManager.isAvailableAsync()) await ModuloRecurrencias.registrar();
+  if(await TaskManager.isAvailableAsync()&&await TaskManager.isTaskRegisteredAsync('ahre-recurrences'))await TaskManager.unregisterTaskAsync('ahre-recurrences');
 }

@@ -36,7 +36,7 @@ El comando envía el código local a EAS y devuelve el seguimiento. Descargar el
 APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
-entrega. El estado actual declara versión 0.8.0 y `android.versionCode` 11;
+entrega. El estado actual declara versión 0.8.0 y `android.versionCode` 12;
 la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
 `Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
@@ -81,3 +81,12 @@ merge y enviar la build Android a EAS. La configuración de versión local es
 0.8.0/11 y el backend coordinado es 0.2.0. Se usa el perfil interno APK existente
 `ocr-comparison`; no se publica automáticamente en la landing ni en Google Play.
 El resultado de EAS y la revisión en dispositivo se verifican por separado.
+
+
+## Build 12: recurrencias manuales y bloqueos financieros
+
+La entrega interna 0.8.0/12 incluye aceptación manual de recurrencias, pendientes
+de incorporación por sala, bloqueo de acciones y navegación durante operaciones,
+historial de origen unificado y etiquetas Saldada/Perdonada. Actualiza el mismo
+PR sin mergearlo. La compilación en EAS no despliega el servidor ni publica el
+APK en la landing. La build 11 anterior conserva su comportamiento original.

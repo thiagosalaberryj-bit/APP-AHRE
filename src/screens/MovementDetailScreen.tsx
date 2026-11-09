@@ -1,5 +1,5 @@
 import {useFocusEffect} from '@react-navigation/native';
-import { useCallback,useContext, useEffect, useState } from 'react';
+import { useCallback,useContext, useEffect, useRef,useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -47,6 +47,9 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   const { mostrarAviso } = useContext(ContextoAvisos);
   const [confirmandoEliminacion, establecerConfirmandoEliminacion] = useState(false);
   const [eliminando, establecerEliminando] = useState(false);
+  const bloqueoEliminacion=useRef(false);
+  const [accionEliminar,cambiarAccionEliminar]=useState(false);
+  useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(bloqueoEliminacion.current)evento.preventDefault();}),[navegacion]);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleMovimiento(tema);
   const movimientoId = ruta.params?.movimientoId || ruta.params?.movimiento?.id;
@@ -102,7 +105,8 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
     : DEPOSITOS_SIMULADOS.find((item) => item.id === movimiento.deposito_id);
   const esAnulado = Boolean(movimiento.anulado||movimiento.fecha_eliminacion);
   const confirmarEliminacion = async (desactivar = false) => {
-    if (!movimientoId || eliminando) return;
+    if (!movimientoId || bloqueoEliminacion.current) return;
+    bloqueoEliminacion.current=true;cambiarAccionEliminar(desactivar);
     establecerEliminando(true);
     try {
       await eliminarMovimiento(movimientoId, desactivar);
@@ -110,7 +114,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
       establecerIntentoConsulta(valor => valor + 1);
       mostrarAviso('Movimiento eliminado. Se conserva en el historial.');
     } catch (error) { mostrarAviso(error instanceof Error ? error.message : 'No se pudo eliminar el movimiento.', {tipo:'error'}); }
-    finally { establecerEliminando(false); }
+    finally { bloqueoEliminacion.current=false;establecerEliminando(false); }
   };
   const esRecurrente = Boolean(movimiento.recurrente);
   const nombresFrecuencia = Object.freeze({ diaria: 'Diaria', semanal: 'Semanal', mensual: 'Mensual', anual: 'Anual' });
@@ -127,7 +131,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
       <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
         <View style={estilosGlobales.pantalla}>
           <EncabezadoSeccion
-            alVolver={() => navegacion.goBack()}
+            alVolver={() => {if(!bloqueoEliminacion.current)navegacion.goBack();}}
             descripcion="Consultá la descripción, el depósito, la fecha y el importe."
             tema={tema}
             titulo="Detalle de movimiento"
@@ -244,16 +248,16 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
           </View>:null}
           {movimiento.reversion_de_id?<Pressable accessibilityRole="button" onPress={()=>navegacion.push(RUTAS.DETALLE_MOVIMIENTO,{movimientoId:movimiento.reversion_de_id!})} style={[estilos.botonCancelar,estilos.enlaceOriginal]}><Text style={estilos.textoCancelar}>Ver movimiento original</Text></Pressable>:null}
         </ScrollView>
-        <Modal transparent animationType="fade" visible={confirmandoEliminacion} onRequestClose={()=>!eliminando&&establecerConfirmandoEliminacion(false)}>
+        <Modal transparent animationType="fade" visible={confirmandoEliminacion} onRequestClose={()=>!bloqueoEliminacion.current&&establecerConfirmandoEliminacion(false)}>
           <SafeAreaView style={estilos.fondoModalImporte}>
             <View accessibilityViewIsModal style={estilos.tarjetaConfirmacion}>
               <Ionicons color={tema.error} name="trash-outline" size={30}/>
               <Text accessibilityRole="header" style={estilos.tituloConfirmacion}>¿Eliminar este movimiento?</Text>
               <Text style={estilos.nombreMovimiento}>{movimiento.descripcion}</Text>
               <Text style={estilos.ayudaModalImporte}>Se conservará el original como eliminado y se registrará una corrección vinculada. El saldo se ajustará una sola vez y ambos quedarán fuera de las estadísticas. Los acuerdos de Social conservarán su estado.</Text>
-              <Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>confirmarEliminacion()} style={estilos.botonEliminar}><Ionicons name="trash-outline" size={20} color="#FFFFFF"/><Text style={estilos.textoEliminar}>{eliminando?'Eliminando…':'Eliminar movimiento'}</Text></Pressable>
-              {movimiento.recurrencia_id?<Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>confirmarEliminacion(true)} style={estilos.botonCancelar}><Text style={[estilos.textoCancelar,{color:tema.error}]}>Eliminar y desactivar recurrencia</Text></Pressable>:null}
-              <Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>establecerConfirmandoEliminacion(false)} style={estilos.botonCancelar}><Text style={estilos.textoCancelar}>Cancelar</Text></Pressable>
+              <Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>confirmarEliminacion()} style={estilos.botonEliminar}><Ionicons name="trash-outline" size={20} color="#FFFFFF"/><Text style={estilos.textoEliminar}>{eliminando&&!accionEliminar?'Eliminando…':'Eliminar movimiento'}</Text></Pressable>
+              {movimiento.recurrencia_id?<Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>confirmarEliminacion(true)} style={estilos.botonCancelar}><Text style={[estilos.textoCancelar,{color:tema.error}]}>{eliminando&&accionEliminar?'Eliminando…':'Eliminar y desactivar recurrencia'}</Text></Pressable>:null}
+              <Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>{if(!bloqueoEliminacion.current)establecerConfirmandoEliminacion(false);}} style={estilos.botonCancelar}><Text style={estilos.textoCancelar}>Cancelar</Text></Pressable>
             </View>
           </SafeAreaView>
         </Modal>

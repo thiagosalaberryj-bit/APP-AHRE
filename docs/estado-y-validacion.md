@@ -1,11 +1,25 @@
 # Estado y validación de AHRE
 
 Referencia vigente: **8 de noviembre de 2026**, rama
-`codex/social-online-recurrencias`, versión configurada 0.8.0 y código Android 11.
+`codex/social-online-recurrencias`, versión configurada 0.8.0 y código Android 12.
 Este estado corresponde al código local; no identifica una APK instalada ni
 la revisión que corre en producción. El changelog queda a cargo de la revisión.
 
 ## Estado actual
+
+La revisión posterior agrega confirmación manual de recurrencias, bloqueo financiero
+compartido, pendientes visibles de incorporación y etiquetas de deuda unificadas.
+Esta revisión completó **349 pruebas de app y 60 de backend, cero fallos y cero
+omisiones**, con SQLite real, MySQL temporal aislado y HTTP/WebSocket. Pasaron
+TypeScript y la comprobación de elementos sin uso. La instancia MySQL se apagó.
+Las regresiones cubren revisión sin escrituras, aceptación manual simultánea,
+conservación de ocurrencias eliminadas, bloqueo inmediato entre acciones,
+pendientes de sala actualizados localmente y propuestas rechazadas ocultas.
+Los resultados 343/60 siguientes corresponden a la auditoría anterior.
+
+No se generó otra APK, no se subieron cambios ni se desplegó el servidor en esta
+revisión. Falta comprobar en teléfono la nueva aceptación manual y la navegación
+nativa. La APK build 11 preparada antes mantiene el comportamiento anterior.
 
 | Área | Comportamiento implementado |
 | --- | --- |
@@ -14,7 +28,7 @@ la revisión que corre en producción. El changelog queda a cargo de la revisió
 | Acceso | Enlace global con contraseña/admisión, QR y enlaces individuales heredados; identidad conservada al registrar una cuenta. |
 | Deudas | Propuestas con aceptación, pagos informados/confirmados/rechazados y perdón sin movimientos ficticios. |
 | Tiempo real | HTTP autenticado, eventos persistentes, WebSocket y recuperación periódica. |
-| Recurrencias | Motor local idempotente, pausa/reactivación/reprogramación y tarea Android WorkManager sin red. |
+| Recurrencias | Confirmación manual idempotente desde depósitos; pausa/reactivación/reprogramación, sin generación automática. |
 | Demos | Cuenta local autorizada y modo desarrollo, sin solicitudes al servidor; no disponibles en release. |
 
 ## Correcciones de la auditoría
@@ -38,7 +52,7 @@ No se reparan automáticamente selecciones ausentes de salas publicadas antes
 de la corrección ni acuerdos duplicados históricos: requieren revisión explícita
 de sus datos, sin inventar asociaciones ni fusionar deudas reales.
 
-## Evidencia automatizada vigente
+## Evidencia automatizada anterior a la confirmación manual
 
 | Verificación | Resultado |
 | --- | --- |
