@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
+
   Text,
   TextInput,
   View,
@@ -350,18 +352,18 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
           tema={tema}
           titulo={`${movimientoEditarId?'Corregir':'Nuevo'} ${nombreMovimiento}`}
           descripcion={esEgreso ? 'Registra el dinero que gastas.' : 'Registra el dinero que recibes.'}
           alVolver={volver}
-        />
+        />}>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <ScrollView
+          <DesplazamientoEncabezado
             contentContainerStyle={[
               mostrandoEstado && estilosMovimiento.formulario,
               { paddingBottom: insets.bottom + ESPACIADO.grande },
@@ -371,9 +373,9 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
             keyboardShouldPersistTaps="handled"
           >
             {renderizarEstado()}
-          </ScrollView>
+          </DesplazamientoEncabezado>
         </KeyboardAvoidingView>
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

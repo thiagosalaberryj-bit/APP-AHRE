@@ -211,6 +211,17 @@ de AHRE, título, descripción y accesos a notificaciones y perfil.
 `SectionHeader.tsx` define el encabezado reutilizable de las pantallas
 secundarias, con el título junto a la flecha de regreso y una descripción
 alineada a la izquierda y centrada verticalmente debajo.
+`ScreenHeaderFrame.tsx` aloja cualquiera de esos encabezados fuera del scroll,
+coordina su plegado automático y presenta las flechas para alternarlo y volver
+al inicio cuando se está abajo. El contexto es local a cada pantalla.
+`HeaderCompactActions.tsx` presenta los accesos de sincronización, notificaciones
+y perfil cuando el encabezado está plegado, reutilizando sus callbacks y la
+variante `soloIcono` de `SyncStatus.tsx`, sin fondos de botón.
+`HeaderScrollView.tsx` conserva la API de los ScrollView y SectionList nativos,
+incluidos sus refs y callbacks, y añade la comunicación con el marco. El
+controlador puro `src/navigation/headerScrollController.ts` gestiona dirección,
+inercia, elección manual, rebotes y regreso al inicio. Movimientos detiene su
+carga automática y las restauraciones pendientes antes del regreso programático.
 `ToastNotification.tsx` dibuja avisos superiores con una barra de tiempo, cierre
 manual y gesto horizontal. El estado compartido entre pantallas vive en
 `src/contexts/ToastContext.tsx`. Las pantallas usan `mostrarAviso` para errores

@@ -39,16 +39,6 @@ export default function crearEstilosPropios(tema: Tema) {
       borderRadius: BORDES.radios.campo,
       backgroundColor: tema.errorFondo
     },
-    cancelarQuitarPersona: {
-      flex: 1,
-      minHeight: 48,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: BORDES.radios.boton,
-      borderWidth: BORDES.anchos.fino,
-      borderColor: tema.borde,
-      padding: ESPACIADO.pequeno
-    },
     confirmarQuitarPersona: {
       flex: 1,
       minHeight: 48,

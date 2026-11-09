@@ -99,7 +99,6 @@ export default function PersonasSala(propiedades: import('../../social/types').A
               </View>
             </ScrollView>
             <View style={estilos.filaCampos}>
-              <Pressable accessibilityRole="button" onPress={() => establecerPersonaAQuitar(null)} style={estilos.cancelarQuitarPersona}><Text style={estilosGlobales.etiqueta}>Cancelar</Text></Pressable>
               <Pressable accessibilityRole="button" disabled={guardando} onPress={() => cambiar(personasSala.filter(id => id !== personaAQuitar?.id), () => {
               establecerPersonaQuitada(personaAQuitar); establecerPersonaAQuitar(null);
             })} style={estilos.confirmarQuitarPersona}><Text style={[estilosGlobales.etiqueta, {

@@ -184,6 +184,29 @@ Los encabezados principales y secundarios comparten una altura de `120` puntos.
 Las descripciones se alinean a la izquierda y quedan centradas verticalmente
 debajo de la fila del título.
 
+Los encabezados existentes se alojan en `ScreenHeaderFrame.tsx`, fuera del
+contenido desplazable. Al bajar con un gesto más de 144 puntos se pliegan
+automáticamente; queda una barra del mismo color `tema.encabezado`, con dos
+flechas a la izquierda y los íconos de sincronización, notificaciones y perfil
+a la derecha. Todos conservan áreas táctiles de 44 puntos, sin fondos individuales
+y sin superponerse a los registros. La primera flecha
+despliega o pliega el encabezado y la segunda vuelve al inicio de la pantalla.
+Una elección manual se mantiene durante la inercia del mismo gesto. Al llegar
+arriba se muestra de nuevo el encabezado y desaparecen ambas flechas.
+
+Los accesos compactos conservan los íconos, colores y acciones del encabezado;
+sincronización también mantiene sus estados e insignias. Al desplegar el
+encabezado manualmente se ocultan los accesos compactos para evitar duplicarlos.
+La pantalla de Sincronización conserva su opción de no mostrar ese acceso.
+
+El cambio de altura dura 180 ms y se desactiva con reducir movimiento. Volver
+al inicio también respeta esa preferencia y cierra el teclado sin borrar los
+campos. `HeaderScrollView.tsx` conecta el desplazamiento vertical principal y
+la lista de Sincronización; conserva referencias, eventos y opciones existentes.
+Los desplazamientos horizontales, listas flotantes y contenidos de modales
+conservan su comportamiento. Los estilos viven en `ScreenHeaderFrameStyles.ts`
+y el controlador de estado en `src/navigation/headerScrollController.ts`.
+
 ## Tema claro y oscuro
 
 Los dos temas están definidos en `src/styles/colors.ts` dentro de `TEMAS.claro`

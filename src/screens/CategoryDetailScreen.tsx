@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -144,10 +146,10 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion alVolver={() => navegacion.goBack()} descripcion="Consultá la evolución y los movimientos de esta categoría." tema={tema} titulo="Detalle de categoría" />
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion alVolver={() => navegacion.goBack()} descripcion="Consultá la evolución y los movimientos de esta categoría." tema={tema} titulo="Detalle de categoría" />}>
+
         <View ref={raizContenido} collapsable={false} style={estilos.cuerpo}>
-          <ScrollView contentContainerStyle={estilos.contenidoCategoria} showsVerticalScrollIndicator={false} onScrollBeginDrag={() => establecerSelectorPeriodo(null)}>
+          <DesplazamientoEncabezado contentContainerStyle={estilos.contenidoCategoria} showsVerticalScrollIndicator={false} onScrollBeginDrag={() => establecerSelectorPeriodo(null)}>
             <View style={estilos.resumenCategoria}>
               <View style={estilos.encabezadoCategoria}>
                 <View style={[estilos.iconoCategoria, { backgroundColor: categoria.color }]}>
@@ -232,7 +234,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                 )}
               </View>
             ) : null}
-          </ScrollView>
+          </DesplazamientoEncabezado>
           {selectorPeriodo ? <View style={estilos.capaSelector}>
             <Pressable accessibilityRole="button" accessibilityLabel="Cerrar selección del período" onPress={() => establecerSelectorPeriodo(null)} style={StyleSheet.absoluteFill} />
             <View style={[estilos.menuPeriodo, anclaSelector]}>
@@ -250,7 +252,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
             </View>
           </View> : null}
         </View>
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

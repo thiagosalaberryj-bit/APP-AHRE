@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import {
   FiltroTipoMovimientos,
   FiltroFechaMovimientos,
@@ -17,7 +19,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
+
   Text,
   useWindowDimensions,
   View,
@@ -455,15 +457,15 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoPrincipal
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoPrincipal
           tema={tema}
           titulo="Movimientos"
           descripcion="Consulta el historial general de tus operaciones."
           alAbrirNotificaciones={() => abrirPantallaSecundaria(RUTAS.NOTIFICACIONES)}
           alAbrirPerfil={() => abrirPantallaSecundaria(RUTAS.PERFIL)}
-        />
-        <ScrollView ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        />}>
+
+        <DesplazamientoEncabezado ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} alVolverAlInicio={datosMeses.detenerDesplazamiento} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={estilos.contenido}>
             <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={establecerBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosAplicados} cantidad={cantidadFiltros}>
               <FiltrosRapidosMovimientos estilosAccesos={estilosAccesos}
@@ -507,7 +509,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
               <ListaMesesMovimientos datos={datosMeses} tema={tema} alPresionar={abrirDetalle}/>
             )}
           </View>
-        </ScrollView>
+        </DesplazamientoEncabezado>
 
         <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={() => establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
                 <View style={estilos.listaSeccionesFiltro}>
@@ -564,7 +566,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                   />
                 </View>
         </PanelFiltrosMovimientos>
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

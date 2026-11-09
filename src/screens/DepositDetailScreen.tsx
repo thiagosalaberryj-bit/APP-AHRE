@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import FormularioDeposito from '../components/DepositForm';
 import ModalIconosDeposito from '../components/DepositIconModal';
 import { TIPOS_DEPOSITO } from '../constants/deposits';
@@ -602,14 +604,14 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
           tema={tema}
           titulo="Detalle de depósito"
           descripcion="Consultá el saldo y los movimientos de este depósito."
           alVolver={() => navegacion.goBack()}
-        />
-        <ScrollView ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        />}>
+
+        <DesplazamientoEncabezado ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} alVolverAlInicio={datosMeses.detenerDesplazamiento} contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {cargando ? (
             <View style={estilos.estadoVacio}>
               <ActivityIndicator color={tema.foco} size="large" />
@@ -720,8 +722,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           </View>
           </>
           )}
-        </ScrollView>
-      </View>
+        </DesplazamientoEncabezado>
+      </MarcoEncabezado>
 
       <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={()=>establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
               <View style={estilosFiltros.listaSeccionesFiltro}>

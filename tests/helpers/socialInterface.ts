@@ -32,6 +32,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
   let temas: typeof TEMAS, propiedades: {route:{name:string;params:ParametrosSociales};navigation:unknown}, arbol: Nodo;
   const iguales = (a?: readonly unknown[], b?: readonly unknown[]) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
   const react = {
+    isValidElement: (valor: unknown) => !!valor && typeof valor === 'object' && 'props' in valor,
     createContext(valor: unknown) { const contexto: Contexto = { valor }; contexto.Provider = { contexto }; return contexto; },
     useContext: (contexto: Contexto) => contexto === apariencia ? { tema: temas[nombreTema] } : contexto === notificaciones ? { mostrarAviso: (mensaje: string) => avisos.push(mensaje) } : contexto.valor,
     useState<T>(inicial: T | (() => T)): [T, (valor: T | ((anterior: T) => T)) => void] {
@@ -82,6 +83,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       valor: number;
       constructor(valor: number) { this.valor = valor; }
       setValue(valor: number) { this.valor = valor; }
+      stopAnimation() {}
       interpolate(opciones: unknown) { return opciones; }
     },
     View: 'AnimatedView',
@@ -111,7 +113,8 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       if (nombre === 'react-native-svg') return {__esModule:true,default:'Svg',Path:'Path',Rect:'Rect'};
       if (nombre === 'expo-clipboard') return {setStringAsync:async(texto:string)=>{copias.push(texto);return opciones.copiarTexto?opciones.copiarTexto(texto):true;}};
       if (nombre === 'expo-secure-store') return {getItemAsync:async()=>null,deleteItemAsync:async()=>{}};
-      if (nombre === '@react-navigation/native') return { useFocusEffect: (callback:()=>void|(()=>void)) => react.useEffect(callback, [callback]) };
+      if (nombre === '@react-navigation/native') return { useFocusEffect: (callback:()=>void|(()=>void)) => react.useEffect(callback, [callback]), useNavigation: () => propiedades.navigation };
+      if (nombre.endsWith('/SyncStatus')) return { __esModule: true, default: 'SyncStatus' };
       if (nombre === 'react-native-safe-area-context') return { SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ bottom: 24 }) };
       if (nombre.endsWith('/MainHeader') || nombre.endsWith('/SectionHeader')) return { __esModule: true, default: 'Header' };
       if (nombre.endsWith('/AppearanceContext')) return { ContextoApariencia: apariencia };

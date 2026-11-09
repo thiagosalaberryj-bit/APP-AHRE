@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import FormularioDeposito from '../components/DepositForm';
 import ModalIconosDeposito from '../components/DepositIconModal';
 import { useContext, useEffect,useRef, useState } from 'react';
@@ -5,7 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
+
   Text,
   View,
 } from 'react-native';
@@ -96,18 +98,18 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
           tema={tema}
           titulo="Nuevo depósito"
           descripcion="Organiza una nueva fuente de dinero."
           alVolver={volver}
-        />
+        />}>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={estilos.contenedorTeclado}
         >
-          <ScrollView
+          <DesplazamientoEncabezado
             contentContainerStyle={[estilos.formulario, { paddingBottom: insets.bottom + ESPACIADO.enorme }]}
             keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             keyboardShouldPersistTaps="handled"
@@ -166,9 +168,9 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
               </Pressable>
             </View>
 
-          </ScrollView>
+          </DesplazamientoEncabezado>
         </KeyboardAvoidingView>
-      </View>
+      </MarcoEncabezado>
       <ModalIconosDeposito
         tema={tema} estilos={estilos} variante="creacion" visible={iconosAdicionalesVisibles}
         icono={icono} alCerrar={() => establecerIconosAdicionalesVisibles(false)}

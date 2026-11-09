@@ -7,6 +7,16 @@ documentación se registran en este archivo.
 
 ### Cambiado
 
+- Encabezados fuera del desplazamiento en todas las pantallas que los usan,
+  con plegado automático al bajar, controles para desplegar y volver arriba,
+  animación y soporte de reducir movimiento.
+- Barra compacta del mismo color del encabezado, con íconos de sincronización,
+  notificaciones y perfil sin fondos individuales, conservando acciones y estados.
+- Inicio describe su contenido como «Tu balance, depósitos y movimientos.».
+- Social elimina los botones Cancelar de Nueva persona y de la confirmación
+  para quitar integrantes, y el regreso duplicado «Volver a integrantes» del
+  historial. Se conservan los cierres y el regreso del encabezado.
+
 - Filtros y accesos rápidos compartidos entre Movimientos y Detalle de depósito.
 - Campos y selector de íconos compartidos entre creación y edición de depósitos.
 - Marco común de los siete modales de Perfil y lista común de idioma/apariencia.
@@ -18,6 +28,10 @@ documentación se registran en este archivo.
 
 ### Verificación
 
+- Encabezados y ajustes de Social: tipos correctos y suite local con 399 pruebas
+  aprobadas, cero fallos y 39 integraciones MySQL omitidas. Se comprueban los
+  controles compactos en ambos temas y el regreso del historial por el encabezado.
+  No se repitió MySQL para estos cambios de presentación.
 - Tipos y comprobación de declaraciones sin uso aprobados. Suite completa
   con MySQL 8.4.3 temporal de Laragon: 395 pruebas de app y 60 de backend
   aprobadas, cero fallos y cero omisiones. Las 39 integraciones anteriormente

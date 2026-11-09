@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import ModalPerfil from '../components/ProfileModal';
 import ListaOpcionesPerfil from '../components/ProfileOptionsList';
 import { useContext, useEffect, useRef, useState } from 'react';
@@ -12,7 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
+
   Text,
   TextInput,
   View,
@@ -432,18 +434,18 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
           tema={tema}
           titulo="Perfil"
           descripcion="Consultá los datos de tu cuenta y personalizá AHRE a tu gusto."
           alVolver={() => navegacion.goBack()}
-        />
+        />}>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <DesplazamientoEncabezado keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={estilos.contenido}>
               {cargandoInfo ? null : errorCarga ? (
                 <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
@@ -660,7 +662,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                 </>
               )}
             </View>
-          </ScrollView>
+          </DesplazamientoEncabezado>
         </KeyboardAvoidingView>
 
         <ModalPerfil
@@ -987,7 +989,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
             <Text style={estilos.textoBotonPeligro}>{cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión'}</Text>
           </Pressable>
         </ModalPerfil>
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

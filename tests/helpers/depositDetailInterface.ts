@@ -77,6 +77,8 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
   };
   const adaptadores: Record<string, unknown> = {
     react,
+    '../components/ScreenHeaderFrame': { __esModule: true, default: 'View' },
+    '../components/HeaderScrollView': { DesplazamientoEncabezado: 'ScrollView' },
     'react-native': {
       ...Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'Modal', 'KeyboardAvoidingView', 'ActivityIndicator'].map(n => [n, n])),
       Platform: { OS: 'android' }, StyleSheet: { create: (valor: unknown) => valor },

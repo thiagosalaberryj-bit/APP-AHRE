@@ -53,7 +53,7 @@ for(const tema of ['claro','oscuro'] as const)test(`el administrador ve las soli
   assert.equal(vista.buscarBoton('Aceptar').props.disabled,false);
   assert.equal(vista.buscarBoton('Rechazar').props.disabled,false);
   assert.equal(actualizaciones,0);
-  await vista.pulsar('Volver a integrantes');await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');
+  assert.ok(!vista.texto().includes('Volver a integrantes'));(vista.todos().find(n=>n.type==='Header')!.props.alVolver as ()=>void)();await vista.asentar();await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');
   await vista.pulsar('Agregar personas a la sala');
   assert.ok(!vista.texto().includes('Enlace personal y QR'));
   assert.ok(vista.todos().some(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Buscar personas para agregar'));

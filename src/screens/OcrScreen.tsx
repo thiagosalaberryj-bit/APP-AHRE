@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +13,7 @@ import {
   PanResponder,
   Pressable,
   Platform,
-  ScrollView,
+
   Text,
   View,
 } from 'react-native';
@@ -362,18 +364,18 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
           tema={tema}
           titulo="Escanear comprobante"
           descripcion="Tomá o elegí una foto del ticket."
           alVolver={() => { if (!guardandoEgresoRef.current) navegacion.goBack(); }}
-        />
+        />}>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <ScrollView
+          <DesplazamientoEncabezado
             contentContainerStyle={[
               estilos.contenedorDesplazamiento,
               { paddingBottom: insets.bottom + ESPACIADO.grande },
@@ -628,9 +630,9 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
               </View>
             ) : null}
           </View>
-          </ScrollView>
+          </DesplazamientoEncabezado>
         </KeyboardAvoidingView>
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

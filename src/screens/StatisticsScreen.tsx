@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import GraficoCircular from '../components/StatisticsPieChart';
 import GraficoColumnas from '../components/StatisticsBarChart';
 import ResumenColumna from '../components/StatisticsBarSummary';
@@ -391,16 +393,16 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View ref={raizSelectores} collapsable={false} style={estilosGlobales.pantalla}>
-        <EncabezadoPrincipal
+      <MarcoEncabezado ref={raizSelectores} collapsable={false} style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoPrincipal
           alAbrirNotificaciones={() => abrirPantallaRaiz(RUTAS.NOTIFICACIONES)}
           alAbrirPerfil={() => abrirPantallaRaiz(RUTAS.PERFIL)}
           descripcion="Analiza tus ingresos y gastos."
           tema={tema}
           titulo="Estadísticas"
-        />
+        />}>
 
-        <ScrollView
+
+        <DesplazamientoEncabezado
           keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
           contentContainerStyle={estilos.contenidoDesplazable}
           showsVerticalScrollIndicator={false}
@@ -613,7 +615,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
               </View>
             )}
           </View>
-        </ScrollView>
+        </DesplazamientoEncabezado>
 
 
         {anclaSelector && (selectorActual || selectorFechaActual) ? <View pointerEvents="box-none" style={estilos.capaSelectores}>
@@ -664,7 +666,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
           </SeccionFiltro>
         </PanelFiltrosMovimientos>
 
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

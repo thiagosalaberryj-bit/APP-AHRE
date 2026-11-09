@@ -43,6 +43,17 @@ debajo. Ambos encabezados tienen una altura compacta de `120` puntos. Como las
 pantallas secundarias se apilan fuera del navegador de pestañas, tampoco
 muestran la barra inferior.
 
+`ScreenHeaderFrame.tsx` mantiene los encabezados fuera del contenido vertical
+en todas las pantallas que los utilizan, incluido el marco de Social. Al bajar
+se pliegan y se muestran dos flechas compactas: alternar el encabezado y volver
+al inicio. La barra comparte el color del encabezado y, cuando está plegado,
+incluye accesos sin fondos individuales a sincronización, notificaciones y perfil,
+con las mismas acciones. Arriba vuelve a mostrarse el encabezado completo y se ocultan los
+controles. Se conectan únicamente el scroll principal o la SectionList de
+Sincronización mediante `HeaderScrollView.tsx`; modales y carruseles mantienen
+sus controles. Este comportamiento no cambia las rutas ni las acciones de los
+encabezados. Ver [reglas visuales](../interfaces/sistema-visual.md#encabezados-de-pantalla).
+
 La barra inferior contiene:
 
 ```text

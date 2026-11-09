@@ -134,6 +134,7 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
     }));
   };
   const cancelarAncla = () => { revisionAncla.current++; ancla.current = null; };
+  const detenerDesplazamiento = () => { cancelarAncla(); cargaVisible.current?.terminar(); };
   const cargarActual = useRef(cargarMes); cargarActual.current = cargarMes;
   if (!cargaVisible.current) cargaVisible.current = crearCargaVisible(
     recibir => {
@@ -147,7 +148,7 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
     }) : [],
   );
   useEffect(() => () => { cargaVisible.current?.terminar(); }, []);
-  return { meses, abiertos, paginas, cargando, consultaResuelta: contextoResuelto === contextoConsulta, error, alternarMes, cargarMes,
+  return { meses, abiertos, paginas, cargando, consultaResuelta: contextoResuelto === contextoConsulta, error, alternarMes, cargarMes, detenerDesplazamiento,
     reintentar: () => establecerIntento(valor => valor + 1), referenciaScroll,
     referenciaBoton: (mes: string, nodo: View | null) => { if (nodo) botones.current.set(mes, nodo); else botones.current.delete(mes); },
     referenciaEncabezado: (mes: string, nodo: View | null) => { if (nodo) encabezados.current.set(mes, nodo); else encabezados.current.delete(mes); },

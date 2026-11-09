@@ -185,3 +185,26 @@ repetición. `npm run typecheck` y el chequeo de variables sin uso de la app pas
 La prueba nueva observó todos los renders y detectó el parpadeo antes del cambio.
 Después comprueba entrada, reenfoque y limpieza de criterios sin vacíos prematuros,
 además de casos legítimos sin coincidencias y cuenta vacía una vez respondidos.
+
+## Encabezados plegables
+
+El marco compartido mantiene fuera del scroll todos los encabezados existentes.
+La suite local pasó con 399 pruebas aprobadas, cero fallos y 39 integraciones
+MySQL omitidas. Los nueve casos nuevos comprueban plegado por gesto descendente,
+inercia y elección manual, regreso al inicio, rebotes en contenido corto, ambos
+temas, referencias y callbacks nativos, cancelación de paginación y reducción
+de movimiento. También comprueban el color de la barra compacta, las acciones
+de perfil y notificaciones y la ausencia de fondos individuales. Se conserva
+la paginación y la suite de formularios de Social.
+
+En el teléfono, revisar Inicio, Movimientos, Estadísticas, Social, un formulario,
+un detalle y Sincronización. Arriba no deben aparecer flechas; al bajar debe
+plegarse el encabezado y quedar una barra del mismo verde, con dos flechas y los
+íconos de sincronización, notificaciones y perfil, sin tapar contenido ni
+mostrar fondos individuales. Comprobar sus acciones y estados de sincronización;
+al desplegar el encabezado no deben duplicarse los accesos.
+Alternar manualmente, seguir subiendo y bajando, y usar la segunda flecha para
+volver al inicio. Repetir con teclado abierto y reducir movimiento. En
+Movimientos, comprobar que el regreso no dispara más páginas ni una restauración
+antigua de posición. Inicio debe describir «Tu balance, depósitos y movimientos.».
+Esta verificación no mide FPS ni reemplaza la comprobación visual en el dispositivo.

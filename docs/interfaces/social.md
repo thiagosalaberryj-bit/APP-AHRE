@@ -728,3 +728,12 @@ movimiento de origen, sin repetir una fila Adelanto registrado ni otro cargo.
 Prueba física pendiente: nueva APK en Android, funcionamiento sin red, apertura
 tras fechas vencidas, doble toque, navegación Atrás y resumen después de aceptar.
 La APK build 11 anterior no incluye estos cambios; no se generó otra en esta revisión.
+
+## Cierres y regreso
+
+Nueva persona utiliza la flecha del encabezado para salir, sin un botón Cancelar
+adicional. La confirmación para quitar a alguien de una sala conserva la cruz,
+el toque fuera del modal y el regreso del sistema, sin un botón Cancelar inferior.
+El historial de solicitudes de un integrante vuelve mediante el encabezado, sin
+repetir «Volver a integrantes» dentro del contenido. «Cancelar solicitud de vínculo»
+se conserva porque retira una solicitud enviada.
