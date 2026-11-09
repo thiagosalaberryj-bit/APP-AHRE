@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useContext } from 'react';
 import { Button, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,22 +17,22 @@ export default function PantallaNuevo({ navigation: navegacion }: import('../nav
 
   return (
     <SafeAreaView edges={['top']} style={estilos.areaSegura}>
-      <View style={estilos.pantalla}>
-      <EncabezadoPrincipal
+      <MarcoEncabezado style={estilos.pantalla} tema={tema} encabezado={<EncabezadoPrincipal
         tema={tema}
         titulo="Nuevo"
         descripcion="Registra ingresos, egresos o crea un depósito."
         alAbrirNotificaciones={() => abrirPantalla(RUTAS.NOTIFICACIONES)}
         alAbrirPerfil={() => abrirPantalla(RUTAS.PERFIL)}
-      />
-      <View style={estilos.contenido}>
+      />}>
+
+      <DesplazamientoEncabezado><View style={estilos.contenido}>
         <Text style={estilos.subtitulo}>Nuevo</Text>
         <Text style={estilos.textoSecundario}>Acciones nuevas de AHRE.</Text>
         <Button color={tema.botonSecundario} title="Registrar ingreso" onPress={() => abrirPantalla(RUTAS.INGRESO)} />
         <Button color={tema.botonSecundario} title="Registrar egreso" onPress={() => abrirPantalla(RUTAS.EGRESO)} />
         <Button color={tema.botonSecundario} title="Crear depósito" onPress={() => abrirPantalla(RUTAS.DEPOSITO)} />
-      </View>
-      </View>
+      </View></DesplazamientoEncabezado>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

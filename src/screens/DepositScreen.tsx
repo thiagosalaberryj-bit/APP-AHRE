@@ -1,23 +1,18 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
+import FormularioDeposito from '../components/DepositForm';
+import ModalIconosDeposito from '../components/DepositIconModal';
 import { useContext, useEffect,useRef, useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
-  ScrollView,
+
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  ICONOS_ADICIONALES_DEPOSITO,
-  ICONOS_DEPOSITO,
-  ICONOS_PRINCIPALES_DEPOSITO,
-  TIPOS_DEPOSITO,
-} from '../constants/deposits';
 import { ErrorBaseDatos } from '../database/errors';
 import { crearDeposito, ErrorDeposito } from '../deposits/depositService';
 import { ContextoAvisos } from '../contexts/ToastContext';
@@ -25,26 +20,10 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import BotonPrincipal from '../components/PrimaryButton';
 import EntradaMonto from '../components/MoneyInput';
 import EncabezadoSeccion from '../components/SectionHeader';
-import { COLOR_DEPOSITO_PREDETERMINADO, COLORES_DEPOSITOS } from '../styles/colors';
 import { crearEstilosDeposito } from '../styles/DepositScreenStyles';
 import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
 import { validarDatosDeposito } from '../utils/depositValidation';
 
-const NOMBRES_COLORES_DEPOSITO = Object.freeze([
-  'Verde suave',
-  'Violeta',
-  'Rosa',
-  'Amarillo suave',
-]);
-
-const COLORES_SELECTOR = Object.freeze(
-  COLORES_DEPOSITOS
-    .filter((color) => color !== COLOR_DEPOSITO_PREDETERMINADO)
-    .map((color, indice) => ({
-      valor: color,
-      nombre: NOMBRES_COLORES_DEPOSITO[indice],
-    })),
-);
 export default function PantallaDeposito({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
   const insets = useSafeAreaInsets();
   const { tema } = useContext(ContextoApariencia);
@@ -73,21 +52,8 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
   const errorColor = intentoGuardar ? erroresFormulario.color : null;
   const errorDescripcion = intentoGuardar ? erroresFormulario.descripcion : null;
   const formularioInvalido = Object.keys(erroresFormulario).length > 0;
-  const iconoFueraDeVista = Boolean(
-    icono && !ICONOS_PRINCIPALES_DEPOSITO.some((opcion) => opcion.id === icono),
-  );
-  const iconoAdicionalSeleccionado = ICONOS_ADICIONALES_DEPOSITO.find((opcion) => opcion.id === icono);
-  const opcionColorSeleccionado = COLORES_SELECTOR.find((opcion) => opcion.valor === color);
-  const cambiarNombre = (valor: string) => {
-    establecerNombre(valor);
-  };
-
   const cambiarSaldo = (valor: string) => {
     establecerSaldoInicial(valor);
-  };
-
-  const cambiarDescripcion = (valor: string) => {
-    establecerDescripcion(valor);
   };
 
   const guardarDeposito = async () => {
@@ -130,24 +96,20 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
     establecerIconosAdicionalesVisibles(false);
   };
 
-  const seleccionarColor = (valorColor: string) => {
-    establecerColor(valorColor);
-  };
-
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
           tema={tema}
           titulo="Nuevo depósito"
           descripcion="Organiza una nueva fuente de dinero."
           alVolver={volver}
-        />
+        />}>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={estilos.contenedorTeclado}
         >
-          <ScrollView
+          <DesplazamientoEncabezado
             contentContainerStyle={[estilos.formulario, { paddingBottom: insets.bottom + ESPACIADO.enorme }]}
             keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             keyboardShouldPersistTaps="handled"
@@ -165,277 +127,21 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
               </Text>
             </View>
 
-            <View style={estilos.grupo}>
-              <View style={estilos.encabezadoCampo}>
-                <Text style={estilosGlobales.etiqueta}>Nombre del depósito *</Text>
-                <Text style={estilos.contador}>{`${nombre.length}/30`}</Text>
-              </View>
-              <View
-                style={[
-                  estilosGlobales.campo,
-                  estilos.filaEntrada,
-                  errorNombre
-                    ? estilosGlobales.campoError
-                    : nombreEnfocado
-                      ? estilosGlobales.campoEnfocado
-                      : null,
-                ]}
-              >
-                <Ionicons color={tema.textoSecundario} name="wallet-outline" size={21} />
-                <TextInput
-                  accessibilityLabel="Nombre del depósito"
-                  accessibilityHint={errorNombre || undefined}
-                  editable={!guardando}
-                  maxLength={30}
-                  onBlur={() => establecerNombreEnfocado(false)}
-                  onChangeText={cambiarNombre}
-                  onFocus={() => establecerNombreEnfocado(true)}
-                  placeholder="Ej: Efectivo, Cuenta BNA"
-                  placeholderTextColor={tema.textoSecundario}
-                  returnKeyType="next"
-                  selectionColor={tema.foco}
-                  style={estilos.entradaTexto}
-                  value={nombre}
-                />
-                {nombre ? (
-                  <Pressable
-                    accessibilityLabel="Limpiar nombre"
-                    accessibilityRole="button"
-                    disabled={guardando}
-                    onPress={() => cambiarNombre('')}
-                    style={estilos.botonLimpiar}
-                  >
-                    <Ionicons color={tema.textoSecundario} name="close-circle" size={22} />
-                  </Pressable>
-                ) : null}
-              </View>
-              {errorNombre ? <Text style={estilosGlobales.textoError}>{errorNombre}</Text> : null}
-            </View>
-
-            <View style={estilos.grupo}>
-              <Text style={estilosGlobales.etiqueta}>Tipo de depósito *</Text>
-              <View style={estilos.listaTipos}>
-                {TIPOS_DEPOSITO.map((opcion) => {
-                  const seleccionada = tipo === opcion.id;
-                  return (
-                    <Pressable
-                      accessibilityLabel={opcion.nombre}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: seleccionada }}
-                      disabled={guardando}
-                      key={opcion.id}
-                      onPress={() => {
-                        establecerTipo(opcion.id);
-                      }}
-                      style={({ pressed }) => [
-                        estilos.tarjetaTipo,
-                        seleccionada && estilos.tarjetaTipoSeleccionada,
-                        errorTipo && estilos.tarjetaTipoError,
-                        pressed && estilos.elementoPresionado,
-                      ]}
-                    >
-                      <View style={[estilos.iconoTipo, seleccionada && estilos.iconoTipoSeleccionado]}>
-                        <Ionicons
-                          color={seleccionada ? tema.botonPrincipalTexto : tema.foco}
-                          name={opcion.icono}
-                          size={25}
-                        />
-                      </View>
-                      <Text style={[estilos.nombreTipo, seleccionada && estilos.nombreTipoSeleccionado]}>
-                        {opcion.nombre}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              {errorTipo ? <Text style={estilosGlobales.textoError}>{errorTipo}</Text> : null}
-            </View>
-
-            <View style={estilos.grupo}>
-              <Text style={estilosGlobales.etiqueta}>Ícono</Text>
-              <View style={estilos.listaIconos}>
-                {ICONOS_PRINCIPALES_DEPOSITO.map((opcion) => {
-                  const seleccionado = icono === opcion.id;
-                  return (
-                    <Pressable
-                      accessibilityLabel={`Ícono ${opcion.nombre}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: seleccionado }}
-                      disabled={guardando}
-                      key={opcion.id}
-                      onPress={() => seleccionarIcono(opcion.id)}
-                      style={({ pressed }) => [
-                        estilos.botonIcono,
-                        seleccionado && estilos.botonIconoSeleccionado,
-                        pressed && estilos.elementoPresionado,
-                      ]}
-                    >
-                      <Ionicons
-                        color={seleccionado ? tema.foco : tema.textoPrincipal}
-                        name={opcion.id}
-                        size={23}
-                      />
-                      <Text numberOfLines={1} style={estilos.nombreIcono}>
-                        {('nombreCorto' in opcion ? opcion.nombreCorto : opcion.nombre)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-                <Pressable
-                  accessibilityLabel={iconoAdicionalSeleccionado ? `Ícono ${iconoAdicionalSeleccionado.nombre}. Ver más íconos` : 'Ver más íconos'}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: iconosAdicionalesVisibles, selected: Boolean(iconoAdicionalSeleccionado) }}
-                  disabled={guardando}
-                  onPress={() => establecerIconosAdicionalesVisibles(true)}
-                  style={({ pressed }) => [
-                    estilos.botonIcono,
-                    iconoAdicionalSeleccionado ? estilos.botonIconoSeleccionado : estilos.botonMasIconos,
-                    pressed && estilos.elementoPresionado,
-                  ]}
-                >
-                  <Ionicons color={tema.foco} name={iconoAdicionalSeleccionado?.id || 'add-outline'} size={23} />
-                  <Text numberOfLines={1} style={estilos.nombreIcono}>{iconoAdicionalSeleccionado?.nombre || 'Más'}</Text>
-                </Pressable>
-              </View>
-              {iconoFueraDeVista ? (
-                <Text style={estilosGlobales.textoAyuda}>
-                  Ícono seleccionado: {ICONOS_DEPOSITO.find((opcion) => opcion.id === icono)?.nombre}
-                </Text>
-              ) : null}
-              {errorIcono ? <Text style={estilosGlobales.textoError}>{errorIcono}</Text> : null}
-            </View>
-
-            <View style={estilos.grupo}>
-              <View style={estilos.encabezadoColor}>
-                <Text style={estilosGlobales.etiqueta}>Color</Text>
-                <Text style={estilos.textoOpcional}>Opcional</Text>
-              </View>
-              <View style={estilos.listaColores}>
-                <Pressable
-                  accessibilityLabel="Color azul suave predeterminado"
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: color === null }}
-                  disabled={guardando}
-                  onPress={() => {
-                    establecerColor(null);
-                  }}
-                  style={({ pressed }) => [
-                    estilos.opcionColor,
-                    pressed && estilos.elementoPresionado,
-                  ]}
-                >
-                  <View style={[
-                    estilos.muestraColor,
-                    estilos.colorPredeterminado,
-                    color === null && estilos.muestraColorSeleccionada,
-                  ]}>
-                    {color === null ? (
-                      <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} />
-                    ) : null}
-                  </View>
-                  <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.nombreColor, color === null && estilos.nombreColorSeleccionado]}>
-                    Azul
-                  </Text>
-                </Pressable>
-                {COLORES_SELECTOR.map(({ nombre, valor }) => {
-                  const seleccionado = color === valor;
-                  return (
-                    <Pressable
-                      accessibilityLabel={`Color ${nombre}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: seleccionado }}
-                      disabled={guardando}
-                      key={valor}
-                      onPress={() => seleccionarColor(valor)}
-                      style={({ pressed }) => [
-                        estilos.opcionColor,
-                        pressed && estilos.elementoPresionado,
-                      ]}
-                    >
-                      <View
-                        style={[
-                          estilos.muestraColor,
-                          { backgroundColor: valor },
-                          seleccionado && estilos.muestraColorSeleccionada,
-                        ]}
-                      >
-                        {seleccionado ? (
-                          <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} />
-                        ) : null}
-                      </View>
-                      <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.nombreColor, seleccionado && estilos.nombreColorSeleccionado]}>
-                        {nombre.replace(/ suave$/, '')}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <View style={estilos.colorSeleccionadoInfo}>
-                <View
-                  style={[
-                    estilos.indicadorColorSeleccionado,
-                    {
-                      backgroundColor:
-                        opcionColorSeleccionado?.valor || COLOR_DEPOSITO_PREDETERMINADO,
-                    },
-                  ]}
-                />
-                <Text style={estilosGlobales.textoAyuda}>
-                  {opcionColorSeleccionado
-                    ? `Color: ${opcionColorSeleccionado.nombre}`
-                    : 'Color: Azul suave (predeterminado)'}
-                </Text>
-              </View>
-              {errorColor ? <Text style={estilosGlobales.textoError}>{errorColor}</Text> : null}
-            </View>
-
-            <View style={estilos.grupo}>
-              <View style={estilos.encabezadoCampo}>
-                <Text style={estilosGlobales.etiqueta}>Descripción</Text>
-                <View style={estilos.detalleEncabezadoCampo}>
-                  <Text style={estilos.textoOpcional}>Opcional ·</Text>
-                  <Text style={estilos.contador}>{`${descripcion.length}/60`}</Text>
-                </View>
-              </View>
-              <View
-                style={[
-                  estilosGlobales.campo,
-                  estilos.filaDescripcion,
-                  descripcionEnfocada ? estilosGlobales.campoEnfocado : null,
-                ]}
-              >
-                <Ionicons color={tema.textoSecundario} name="document-text-outline" size={20} />
-                <TextInput
-                  accessibilityLabel="Descripción opcional"
-                  editable={!guardando}
-                  maxLength={60}
-                  multiline
-                  onBlur={() => establecerDescripcionEnfocada(false)}
-                  onChangeText={cambiarDescripcion}
-                  onFocus={() => establecerDescripcionEnfocada(true)}
-                  placeholder="Agregá un detalle para identificarlo"
-                  placeholderTextColor={tema.textoSecundario}
-                  selectionColor={tema.foco}
-                  style={estilos.entradaDescripcion}
-                  value={descripcion}
-                />
-                {descripcion ? (
-                  <Pressable
-                    accessibilityLabel="Limpiar descripción"
-                    accessibilityRole="button"
-                    disabled={guardando}
-                    onPress={() => cambiarDescripcion('')}
-                    style={estilos.botonLimpiar}
-                  >
-                    <Ionicons color={tema.textoSecundario} name="close-circle" size={22} />
-                  </Pressable>
-                ) : null}
-              </View>
-              {errorDescripcion ? <Text style={estilosGlobales.textoError}>{errorDescripcion}</Text> : null}
-              <Text style={estilosGlobales.textoAyuda}>
-                Si la dejás vacía, se genera automáticamente con el nombre y el tipo.
-              </Text>
-            </View>
+            <FormularioDeposito
+              tema={tema} estilos={estilos} estilosGlobales={estilosGlobales} variante="creacion"
+              valores={datosFormulario} errores={{ nombre: errorNombre, tipo: errorTipo, icono: errorIcono, color: errorColor, descripcion: errorDescripcion }}
+              alCambiar={(campo, valor) => {
+                if (campo === 'nombre') establecerNombre(valor || '');
+                else if (campo === 'tipo') establecerTipo(valor);
+                else if (campo === 'icono') seleccionarIcono(valor || '');
+                else if (campo === 'color') establecerColor(valor);
+                else establecerDescripcion(valor || '');
+              }}
+              focoNombre={{ enfocado: nombreEnfocado, alCambiar: establecerNombreEnfocado }}
+              focoDescripcion={{ enfocado: descripcionEnfocada, alCambiar: establecerDescripcionEnfocada }}
+              iconosAdicionalesVisibles={iconosAdicionalesVisibles}
+              alAbrirIconos={() => establecerIconosAdicionalesVisibles(true)} deshabilitado={guardando}
+            />
 
             <View style={estilos.acciones}>
               <BotonPrincipal
@@ -462,61 +168,14 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
               </Pressable>
             </View>
 
-          </ScrollView>
+          </DesplazamientoEncabezado>
         </KeyboardAvoidingView>
-      </View>
-      <Modal
-        animationType="fade"
-        onRequestClose={() => establecerIconosAdicionalesVisibles(false)}
-        transparent
-        visible={iconosAdicionalesVisibles}
-      >
-        <Pressable
-          accessibilityLabel="Cerrar selector de íconos"
-          onPress={() => establecerIconosAdicionalesVisibles(false)}
-          style={estilos.fondoModal}
-        >
-          <Pressable onPress={() => {}} style={estilos.tarjetaModal}>
-            <View style={estilos.encabezadoModal}>
-              <Text style={estilos.tituloModal}>Más íconos</Text>
-              <Pressable
-                accessibilityLabel="Cerrar"
-                accessibilityRole="button"
-                hitSlop={8}
-                onPress={() => establecerIconosAdicionalesVisibles(false)}
-                style={estilos.botonCerrarModal}
-              >
-                <Ionicons color={tema.textoPrincipal} name="close" size={22} />
-              </Pressable>
-            </View>
-            {ICONOS_ADICIONALES_DEPOSITO.map((opcion) => {
-              const seleccionado = icono === opcion.id;
-              return (
-                <Pressable
-                  key={opcion.id}
-                  accessibilityLabel={`Ícono ${opcion.nombre}`}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: seleccionado }}
-                  disabled={guardando}
-                  onPress={() => seleccionarIcono(opcion.id)}
-                  style={[
-                    estilos.opcionIconoModal,
-                    seleccionado && estilos.opcionIconoModalSeleccionada,
-                  ]}
-                >
-                  <Ionicons color={tema.foco} name={opcion.id} size={22} />
-                  <Text style={estilos.nombreOpcionIcono}>{opcion.nombre}</Text>
-                  <Ionicons
-                    color={seleccionado ? tema.foco : tema.borde}
-                    name={seleccionado ? 'radio-button-on' : 'radio-button-off'}
-                    size={20}
-                  />
-                </Pressable>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      </Modal>
+      </MarcoEncabezado>
+      <ModalIconosDeposito
+        tema={tema} estilos={estilos} variante="creacion" visible={iconosAdicionalesVisibles}
+        icono={icono} alCerrar={() => establecerIconosAdicionalesVisibles(false)}
+        alSeleccionar={seleccionarIcono} deshabilitado={guardando}
+      />
     </SafeAreaView>
   );
 }

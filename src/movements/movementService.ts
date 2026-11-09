@@ -109,6 +109,11 @@ export async function cargarPaginaHistorialMovimientos(usuarioId: string, filtro
   );
 }
 
+export async function cargarMesesHistorialMovimientos(usuarioId: string, filtros: import('../types/forms').FiltrosHistorial) {
+  await consultarUsuarioHistorial(usuarioId);
+  return movimientosRepositorio.consultarMesesHistorial(usuarioId, filtros);
+}
+
 export async function consultarDetalleHistorialMovimiento(movimientoId: string) {
   const usuario = await consultarUsuarioHistorial();
   return movimientosRepositorio.consultarHistorialPorId(usuario.id, movimientoId);

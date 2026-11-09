@@ -1,9 +1,11 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import type { NombreIcono } from '../constants/movimientos';
 import { useCallback, useContext, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   Pressable,
-  ScrollView,
+
   Text,
   View,
 } from 'react-native';
@@ -172,22 +174,21 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <ScrollView
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoPrincipal
+          tema={tema}
+          titulo="Bienvenido"
+          descripcion="Tu balance, depósitos y movimientos."
+          alAbrirNotificaciones={() => abrirPantalla(RUTAS.NOTIFICACIONES)}
+          alAbrirPerfil={() => abrirPantalla(RUTAS.PERFIL)}
+          altura={120}
+        />}>
+
+        <DesplazamientoEncabezado
           contentContainerStyle={estilos.contenidoDesplazable}
           showsVerticalScrollIndicator={false}
         >
-          <EncabezadoPrincipal
-            tema={tema}
-            titulo="Bienvenido"
-            descripcion={usuario?.nombre}
-            alAbrirNotificaciones={() => abrirPantalla(RUTAS.NOTIFICACIONES)}
-            alAbrirPerfil={() => abrirPantalla(RUTAS.PERFIL)}
-            altura={120}
-          />
-
           <View style={estilos.contenidoDashboard}>
-            <View style={estilos.contenedorTarjetaBalance}>
+            <View>
               <View style={[estilosGlobales.tarjeta, estilos.tarjetaBalance]}>
                 <View style={estilos.encabezadoBalance}>
                   <Ionicons color={tema.foco} name="wallet-outline" size={20} />
@@ -395,8 +396,8 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
               )}
             </View>
           </View>
-        </ScrollView>
-      </View>
+        </DesplazamientoEncabezado>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

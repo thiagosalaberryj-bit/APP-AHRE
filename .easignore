@@ -46,3 +46,9 @@ yarn-error.*
 .env.*
 !.env.example
 *.apk
+
+# Documentación y pruebas locales: no se necesitan para compilar la app
+/docs/
+/tests/
+/README.md
+/AGENTS.md

@@ -12,10 +12,12 @@ import {recurrenciasRepositorio} from '../database/repositories/recurrencesRepos
 import {registrarEjecucion} from '../recurrences/recurrenceService';
 import {partesCalendario,siguienteEjecucion} from '../recurrences/recurrenceCalendar';
 import {consultarAutorizacion,registrarAutorizacion} from '../sync/deviceAuthorization';
+import { prepararVolumenMovimientos } from './seedMovementVolume';
 
 let preparacionEnCurso: Promise<void> | null = null;
+let volumenEnCurso = false;
 
-async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean,vistaSocialOnline:boolean) {
+async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean,vistaSocialOnline:boolean,volumenMovimientos:boolean) {
   const cuenta = await autenticacionRepositorio.consultarCredencialesPorCorreo(CUENTA_PRUEBA.correo);
   let usuario: Pick<import('../database/types').Usuario,'id'|'nombre'>;
   if (cuenta) {
@@ -74,15 +76,19 @@ async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean,v
     }
     if (incluirSocial) await prepararSocialPrueba(usuario, conexion, depositos, diasAntes(1));
     if(incluirSocial&&vistaSocialOnline&&!sincronizar)await prepararVistaSocialOnline(usuario.id,conexion,depositos);
+    if (volumenMovimientos) await prepararVolumenMovimientos(usuario.id, conexion);
   });
 
   await iniciarSesion({ ...CUENTA_PRUEBA, recordar: false,localPruebas:!sincronizar });
 }
 
-export function prepararDatosPrueba({ incluirSocial = true,sincronizar=false,vistaSocialOnline=false }: { incluirSocial?: boolean;sincronizar?:boolean;vistaSocialOnline?:boolean } = {}) {
+export function prepararDatosPrueba({ incluirSocial = true,sincronizar=false,vistaSocialOnline=false,volumenMovimientos=false }: { incluirSocial?: boolean;sincronizar?:boolean;vistaSocialOnline?:boolean;volumenMovimientos?:boolean } = {}) {
   if (!__DEV__) return Promise.reject(new Error('Los datos de prueba solo están disponibles en desarrollo.'));
+  if (volumenMovimientos && sincronizar) return Promise.reject(new Error('La carga masiva es exclusivamente local y no puede sincronizarse.'));
+  if (preparacionEnCurso && volumenEnCurso !== volumenMovimientos) return Promise.reject(new Error('Ya se están preparando otros datos de prueba. Esperá y volvé a intentar.'));
   if (!preparacionEnCurso) {
-    preparacionEnCurso = prepararCuentaYDatos(incluirSocial,sincronizar,vistaSocialOnline).finally(() => { preparacionEnCurso = null; });
+    volumenEnCurso = volumenMovimientos;
+    preparacionEnCurso = prepararCuentaYDatos(incluirSocial,sincronizar,vistaSocialOnline,volumenMovimientos).finally(() => { preparacionEnCurso = null; });
   }
   return preparacionEnCurso;
 }

@@ -72,7 +72,7 @@ function validarMarcaTemporal(valor: unknown) {
     && Number.isFinite(Date.parse(valor));
 }
 
-function construirConsultaHistorial(usuarioId: string, filtros: import('../../types/forms').FiltrosHistorial, opciones: {limite?:number; cursor?:{fecha_hora:string;id:string}|null}) {
+function construirConsultaHistorial(usuarioId: string, filtros: import('../../types/forms').FiltrosHistorial, opciones: {limite?:number; cursor?:{fecha_hora:string;id:string}|null;agruparMeses?:boolean}, detalleDeposito = false) {
   if (
     typeof usuarioId !== 'string'
     || !usuarioId
@@ -88,7 +88,7 @@ function construirConsultaHistorial(usuarioId: string, filtros: import('../../ty
 
   const clausulas = [
     'd.usuario_id = ?',
-    "m.tipo IN ('ingreso', 'egreso')",
+    detalleDeposito ? "m.tipo IN ('ingreso', 'egreso', 'transferencia_entrada', 'transferencia_salida')" : "m.tipo IN ('ingreso', 'egreso')",
   ];
   const parametros: import('expo-sqlite').SQLiteBindValue[] = [usuarioId];
 
@@ -96,8 +96,13 @@ function construirConsultaHistorial(usuarioId: string, filtros: import('../../ty
     if (!['ingreso', 'egreso'].includes(filtros.tipo)) {
       throw new ErrorBaseDatos('integridad');
     }
-    clausulas.push('m.tipo = ?');
-    parametros.push(filtros.tipo);
+    if (detalleDeposito) {
+      clausulas.push('m.tipo IN (?, ?)');
+      parametros.push(filtros.tipo, filtros.tipo === 'ingreso' ? 'transferencia_entrada' : 'transferencia_salida');
+    } else {
+      clausulas.push('m.tipo = ?');
+      parametros.push(filtros.tipo);
+    }
   }
 
   if (filtros.categoriaIds !== undefined && filtros.categoriaIds !== null) {
@@ -174,7 +179,14 @@ function construirConsultaHistorial(usuarioId: string, filtros: import('../../ty
     if (typeof filtros.busqueda !== 'string') throw new ErrorBaseDatos('integridad');
     const termino = filtros.busqueda.trim();
     if (termino) {
-      clausulas.push("LOWER(m.descripcion) LIKE ? ESCAPE '!'");
+      let expresion = 'm.descripcion';
+      if (detalleDeposito) {
+        const categorias = [...new Map([...CATEGORIAS_EGRESO, ...CATEGORIAS_INGRESO].map(c => [c.id, c])).values()];
+        expresion = `m.descripcion || ' ' || CASE m.categoria ${categorias.map(() => 'WHEN ? THEN ?').join(' ')} ELSE '' END || ' ' || m.categoria`;
+        parametros.push(...categorias.flatMap(c => [c.id, c.nombre.toLocaleLowerCase('es-AR')]));
+        for (const letra of 'ÁÉÍÓÚÜÑ') expresion = `REPLACE(${expresion}, '${letra}', '${letra.toLocaleLowerCase('es-AR')}')`;
+      }
+      clausulas.push(`LOWER(${expresion}) LIKE ? ESCAPE '!'`);
       const terminoEscapado = termino
         .toLocaleLowerCase()
         .replace(/!/g, '!!')
@@ -184,6 +196,12 @@ function construirConsultaHistorial(usuarioId: string, filtros: import('../../ty
     }
   }
 
+  if (opciones.agruparMeses) return {
+    sql: `SELECT strftime('%Y-%m', m.fecha_hora, 'localtime') AS mes, COUNT(*) AS cantidad
+      FROM movimientos m INNER JOIN depositos d ON d.id = m.deposito_id
+      WHERE ${clausulas.join(' AND ')} AND julianday(m.fecha_hora) IS NOT NULL
+      GROUP BY mes ORDER BY mes DESC`, parametros,
+  };
   const limite = opciones.limite === undefined ? LIMITE_HISTORIAL : Number(opciones.limite);
   if (!Number.isInteger(limite) || limite < 1 || limite > 100) {
     throw new ErrorBaseDatos('consulta');
@@ -225,6 +243,36 @@ async function consultarHistorial(usuarioId: string, filtros: import('../../type
     const consulta = construirConsultaHistorial(usuarioId, filtros, opciones);
     return baseDatos.getAllAsync<Tablas['movimientos'] & { deposito_nombre: string }>(consulta.sql, consulta.parametros);
   }, conexion));
+}
+
+async function consultarPaginaDeposito(usuarioId: string, depositoId: string, filtros: import('../../types/forms').FiltrosHistorial = {}, cursor: {fecha_hora:string;id:string}|null = null) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(baseDatos => {
+    const consulta = construirConsultaHistorial(usuarioId, { ...filtros, depositoIds: [depositoId] }, { limite: 50, cursor }, true);
+    return baseDatos.getAllAsync<import('../types').MovimientoHistorial>(consulta.sql, consulta.parametros);
+  }));
+}
+
+async function consultarMesesHistorial(usuarioId: string, filtros: import('../../types/forms').FiltrosHistorial = {}, detalleDeposito = false) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(baseDatos => {
+    const consulta = construirConsultaHistorial(usuarioId, filtros, { agruparMeses: true }, detalleDeposito);
+    return baseDatos.getAllAsync<import('../../types/forms').MesHistorial>(consulta.sql, consulta.parametros);
+  }));
+}
+
+async function consultarResumenDeposito(depositoId: string, inicioMes: string) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async baseDatos => {
+    const resumen = await baseDatos.getFirstAsync<{ cantidad: number; impacto: number }>(`
+      SELECT COUNT(*) AS cantidad, COALESCE(SUM(CASE WHEN julianday(fecha_hora) >= julianday(?)
+        THEN CASE WHEN tipo IN ('ingreso', 'transferencia_entrada') THEN monto ELSE -monto END ELSE 0 END), 0) AS impacto
+      FROM movimientos WHERE deposito_id = ?`, [inicioMes, depositoId]);
+    const ajustes = await baseDatos.getFirstAsync<{ impacto: number }>(`
+      SELECT COALESCE(SUM(saldo_informado - saldo_anterior), 0) AS impacto
+      FROM historial_saldos_deposito WHERE deposito_id = ? AND julianday(fecha_hora) >= julianday(?)`, [depositoId, inicioMes]);
+    const categorias = await baseDatos.getAllAsync<{ categoria: string }>(
+      'SELECT DISTINCT categoria FROM movimientos WHERE deposito_id = ?', [depositoId]);
+    return { cantidad: Number(resumen?.cantidad || 0), impactoMovimientos: Number(resumen?.impacto || 0),
+      impactoAjustes: Number(ajustes?.impacto || 0), categorias: categorias.map(fila => fila.categoria) };
+  }));
 }
 
 async function consultarOpcionesHistorial(usuarioId: string, conexion: Conexion | null = null) {
@@ -703,6 +751,9 @@ async function consultarSaldoCierreAnterior(usuarioId: string, inicioMes: string
 export const movimientosRepositorio = Object.freeze({
   ...repositorioBaseMovimientos,
   consultarHistorial,
+  consultarPaginaDeposito,
+  consultarMesesHistorial,
+  consultarResumenDeposito,
   consultarSaldoCierreAnterior,
   consultarOpcionesHistorial,
   consultarHistorialPorId,

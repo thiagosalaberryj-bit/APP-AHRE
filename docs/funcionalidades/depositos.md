@@ -106,6 +106,30 @@ requiere red.
 
 ## Búsqueda y filtros del detalle
 
+`consultarDetalleDeposito` devuelve el depósito, la cantidad y categorías del
+historial y la comparación mensual mediante agregaciones SQLite. No devuelve
+todo el historial. La comparación sigue usando todos los movimientos y ajustes
+del mes, independientemente de la página o los filtros visibles.
+`consultarPaginaMovimientosDeposito` verifica sesión y propiedad del depósito
+activo y devuelve hasta 50 filas ordenadas por fecha e identificador descendentes.
+El cursor usa ambos campos para no perder movimientos con la misma fecha.
+Se incluyen transferencias y se conserva la búsqueda por descripción, nombre e
+identificador de categoría, con caracteres de búsqueda tratados literalmente.
+`consultarMesesMovimientosDeposito` consulta únicamente los meses y cantidades,
+agrupados en horario local con los mismos filtros de las páginas. La pantalla
+comienza sin filtro de fecha; solo abre automáticamente el mes actual, si existe.
+`src/movements/useMonthlyMovements.ts`, compartido con Movimientos, coordina la
+consulta inicial de encabezados, páginas por mes abierto, caché limitada a la primera página al plegar,
+reintentos, bloqueo de doble envío y descarte de respuestas vencidas.
+`visibleLoadMore.ts` exige arrastre descendente o su inercia e intersección real
+entre el botón y el área visible del ScrollView antes de pedir la siguiente
+página. Invalida mediciones al detenerse, subir, salir o cambiar los criterios.
+Cada mes tiene una revisión de solicitud: plegarlo descarta tanto la respuesta
+pendiente como las filas posteriores a las primeras 50. La apertura deja dibujar
+el estado de carga mediante `src/utils/renderFrame.ts` antes de preparar sus
+tarjetas. El hook también fija la referencia del encabezado durante los cambios
+de altura.
+
 La búsqueda se aplica sobre la descripción y categoría de los movimientos del
 depósito. Al vaciar el texto vuelve a mostrarse el conjunto que cumpla los
 filtros seleccionados. La búsqueda funciona al mismo tiempo que los filtros.

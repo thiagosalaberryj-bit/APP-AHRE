@@ -10,14 +10,8 @@ export function crearEstilosDashboard(tema: Tema) {
     },
     contenidoDashboard: {
       gap: ESPACIADO.grande,
-      marginTop: -ESPACIADO.pequeno,
+      paddingTop: ESPACIADO.pantalla,
       paddingHorizontal: MARGEN_LATERAL_PANTALLA,
-      position: 'relative',
-      zIndex: 1,
-    },
-    contenedorTarjetaBalance: {
-      marginTop: -(ESPACIADO.enorme + ESPACIADO.pequeno),
-      position: 'relative',
     },
     encabezadoBalance: {
       alignItems: 'center',

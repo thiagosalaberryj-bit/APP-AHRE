@@ -1,5 +1,7 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { SeccionesEncabezado } from '../components/HeaderScrollView';
 import {useCallback,useContext,useMemo,useRef,useState} from 'react';
-import {Alert,ActivityIndicator,Pressable,SectionList,Text,View} from 'react-native';
+import {Alert,ActivityIndicator,Pressable,Text,View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect} from '@react-navigation/native';
 import {SafeAreaView,useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -80,9 +82,9 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       }},
     ]);
   };
-  return <SafeAreaView edges={['top']} style={globales.areaSegura}><View style={globales.pantalla}>
-    <EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>navegacion.goBack()} mostrarSincronizacion={false}/>
-    <SectionList sections={secciones} keyExtractor={r=>r.id} contentContainerStyle={estilos.contenido} stickySectionHeadersEnabled={false}
+  return <SafeAreaView edges={['top']} style={globales.areaSegura}><MarcoEncabezado style={globales.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>navegacion.goBack()} mostrarSincronizacion={false}/>}>
+
+    <SeccionesEncabezado sections={secciones} keyExtractor={r=>r.id} contentContainerStyle={estilos.contenido} stickySectionHeadersEnabled={false}
       ListHeaderComponent={<View style={estilos.resumen}>
         <View style={estilos.fila}>
           <View style={estilos.iconoEstado}>{ocupado?<ActivityIndicator color={tema.foco}/>:<Ionicons name={datos.soloLocal?'phone-portrait-outline':vista.estado==='online'?'cloud-done-outline':vista.estado==='offline'?'cloud-offline-outline':'cloud-upload-outline'} size={24} color={tema.foco}/>}</View>
@@ -132,5 +134,5 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       ListEmptyComponent={!cargando&&!error?<View style={estilos.vacio}><View style={estilos.iconoEstado}><Ionicons name={datos.soloLocal?'phone-portrait-outline':'checkmark-done-outline'} size={28} color={tema.foco}/></View><Text style={estilos.titulo}>{datos.soloLocal?'Datos de prueba':'Sin pendientes'}</Text><Text style={estilos.texto}>{datos.soloLocal?'Los ejemplos se guardan solo en este teléfono.':'Todos los cambios locales están confirmados.'}</Text></View>:null}
       ListFooterComponent={cargando?<ActivityIndicator style={estilos.carga} color={tema.foco}/>:!error&&datos.registros.length<datos.total?<Pressable accessibilityRole="button" onPress={()=>{void cargar(false);}} style={estilos.reintentar}><Text style={estilos.valor}>Cargar más pendientes</Text></Pressable>:null}
     />
-  </View></SafeAreaView>;
+  </MarcoEncabezado></SafeAreaView>;
 }

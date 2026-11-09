@@ -23,6 +23,19 @@ necesitó reintentarse con permisos para el temporal de Hermes en Windows.
 
 ## APK interno con EAS
 
+`.easignore` excluye `/docs/`, `/tests/`, `/README.md` y `/AGENTS.md` del
+archivo enviado a EAS. Los archivos permanecen en Git y disponibles localmente.
+Se conservan código, recursos, plugins, módulos nativos, sus avisos legales,
+configuración y lockfile. Esta exclusión reduce el envío de fuentes; no implica
+una reducción del APK instalado. No se excluyen todos los Markdown mediante un
+patrón global porque los módulos nativos pueden requerir avisos y licencias.
+
+La verificación local del 9 de noviembre exportó Android con Metro/Hermes desde
+una copia filtrada por estas reglas, sin `docs/` ni `tests/`, reutilizando las
+dependencias instaladas. Se conservaron recursos, plugins y módulos nativos.
+La exportación terminó correctamente; no se generó un APK ni se inició una
+compilación remota de EAS para este ajuste.
+
 El líder necesita EAS CLI disponible, sesión de Expo y acceso al proyecto
 configurado en `app.json`. El perfil verificado en [eas.json](../../eas.json)
 se llama `ocr-comparison`: usa distribución interna y genera un APK, aunque el

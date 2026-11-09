@@ -475,7 +475,7 @@ for(const tema of ['claro','oscuro'] as const)test(`unirse a la sala demo como p
   assert.ok(!vista.texto().includes('Compartir sala'));assert.ok(!vista.texto().includes('Ingresos'));assert.ok(!vista.texto().includes('Cerrar sala'));
   await vista.pulsar('Solicitudes de Vos');await vista.abrir(vista.rutas.REGISTRO_SOCIAL,vista.destinos.at(-1)![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Simular rechazo');assert.ok(vista.texto().includes('Rechazada'));
   await vista.llenar('Solicitud de cambio','Revisar mi pago');await vista.pulsar('Enviar solicitud');await vista.pulsar('Simular aceptación');assert.ok(vista.texto().includes('Aceptada'));
-  await vista.pulsar('Volver a integrantes');await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');await vista.pulsar('Simular permiso para editar gastos');assert.ok(vista.texto().includes('Agregar gasto'));
+  assert.ok(!vista.texto().includes('Volver a integrantes'));(vista.todos().find(n=>n.type==='Header')!.props.alVolver as ()=>void)();await vista.asentar();await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');await vista.pulsar('Simular permiso para editar gastos');assert.ok(vista.texto().includes('Agregar gasto'));
   await vista.pulsar('Simular retiro del permiso de gastos');assert.ok(!vista.texto().includes('Agregar gasto'));
   await assert.rejects(e.simularIngresoDemo(salaId,'Ajeno'));
   await assert.rejects(e.cambiarPersonasSala(salaId,[]));await assert.rejects(e.configurarAccesoSala(salaId,'Demo1234'));
@@ -529,7 +529,7 @@ for(const tema of ['claro','oscuro'] as const)test(`el gasto integra checks, tar
   await vista.pulsar('Permitir ingresos');assert.equal((await e.obtenerSalaOnline(abierta.id)).acceso?.habilitado,1);
   await vista.pulsar('Cerrar invitación');await vista.pulsar('Sección de sala: Personas');await vista.pulsar('Solicitudes de Bruno');await vista.abrir(vista.rutas.REGISTRO_SOCIAL,vista.destinos.at(-1)![1] as import('../src/social/types.ts').ParametrosSociales);
   assert.ok(vista.texto().includes('Historial de solicitudes'));assert.ok(!vista.todos().some(n=>n.type==='Modal'));
-  await vista.pulsar('Volver a integrantes');await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');assert.ok(!vista.texto().includes('Historial de solicitudes'));comprobarRed();
+  assert.ok(!vista.texto().includes('Volver a integrantes'));(vista.todos().find(n=>n.type==='Header')!.props.alVolver as ()=>void)();await vista.asentar();await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');assert.ok(!vista.texto().includes('Historial de solicitudes'));comprobarRed();
 });
 
 for(const tema of ['claro','oscuro'] as const)test(`cada integrante abre una pantalla propia con estados y bordes en ${tema}`,async prueba=>{

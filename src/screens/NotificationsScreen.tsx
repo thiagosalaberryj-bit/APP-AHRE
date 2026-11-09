@@ -1,6 +1,8 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useContext, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable,  Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -116,14 +118,14 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
           tema={tema}
           titulo="Notificaciones"
           descripcion="Consulta los avisos importantes de AHRE."
           alVolver={() => navegacion.goBack()}
-        />
-        <ScrollView showsVerticalScrollIndicator={false}>
+        />}>
+
+        <DesplazamientoEncabezado showsVerticalScrollIndicator={false}>
           <View style={estilos.contenido}>
             <View style={estilos.filaEncabezado}>
               <Text style={estilos.textoNuevas}>
@@ -171,7 +173,7 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
               </View>
             )}
           </View>
-        </ScrollView>
+        </DesplazamientoEncabezado>
 
         <Modal
           animationType="fade"
@@ -213,7 +215,7 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
             </Pressable>
           </Pressable>
         </Modal>
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

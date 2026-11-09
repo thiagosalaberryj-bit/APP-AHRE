@@ -20,7 +20,10 @@ recurrencia relacionada cuando existe. El tipo proviene de `movimientos.tipo`,
 no del signo del monto. Los montos persistidos son positivos; el tipo determina
 si la tarjeta muestra ingreso o egreso.
 
-La primera página trae hasta 50 movimientos y las siguientes usan un cursor con
+La consulta inicial obtiene solo los meses con resultados y sus cantidades,
+agrupados en horario local y filtrados en SQLite. La pantalla comienza sin
+filtros, con el mes actual abierto y los demás plegados; un mes sin abrir no
+consulta sus movimientos. La primera página de cada mes trae hasta 50 movimientos y las siguientes usan un cursor con
 `fecha_hora` e `id`. SQLite aplica los filtros antes de devolver cada página.
 El orden estable es `fecha_hora DESC, id DESC`, por lo que los registros más
 recientes aparecen primero y los empates mantienen un orden determinista. La
@@ -75,11 +78,23 @@ pestaña estaba fuera de foco.
 - **Error:** mensaje seguro y acción para volver a consultar. Un error al cargar
   una página posterior conserva las filas ya obtenidas y permite reintentar.
 
-La lista carga páginas de 50 registros y pide la siguiente solo cuando la
-persona elige «Cargar más movimientos». Los filtros de tipo, fechas, monto,
+La lista carga páginas de 50 registros por mes abierto. Pide la siguiente cuando
+la persona elige «Cargar más movimientos» o ve el botón mientras continúa bajando
+con un arrastre o su inercia. El indicador de carga es animado. No se descargan
+filas de meses plegados ni se encadenan cargas sin otro desplazamiento. El hook
+`src/movements/useMonthlyMovements.ts` y el controlador `visibleLoadMore.ts` se
+comparten con Detalle de depósito. Los filtros de tipo, fechas, monto,
 categoría y depósito se procesan en la consulta parametrizada de SQLite; la
 pantalla no descarga de una vez todo el historial ni aplica esos filtros a una
 copia completa en memoria.
+
+Plegar un mes recorta su caché a 50 filas e invalida sus solicitudes pendientes;
+al reabrirlo vuelve a la primera página, con feedback antes de preparar tarjetas.
+El encabezado se usa como referencia para restaurar la posición después del
+cambio de altura. La pantalla distingue opciones pendientes, consulta mensual
+pendiente y resultados respondidos. El hook expone `consultaResuelta` para el
+contexto actual (criterios, revisión y consultas); la pantalla conserva la carga
+hasta recibir esa respuesta y evita vacíos transitorios al entrar o reenfocar.
 
 ## Funcionamiento offline del historial
 

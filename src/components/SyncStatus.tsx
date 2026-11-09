@@ -58,7 +58,7 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
   return <ControladorSocialOnline/>;
 }
 
-export default function EstadoSincronizacion(){
+export default function EstadoSincronizacion({soloIcono=false}:{soloIcono?:boolean}={}){
   const {tema}=useContext(ContextoApariencia);
   const navegacion=useNavigation<import('../navigation/types').NavegacionRaiz>();
   const [vistaPrivada,establecerVista]=useState(obtenerVistaSincronizacion);
@@ -100,16 +100,17 @@ export default function EstadoSincronizacion(){
   const estadoMostrado=reconectando?'comprobando':vista.estado;
   const error=['conflicto','sesion','revocado'].includes(vista.estado);
   const arcos=['M9.17 14.92 A4 4 0 0 1 14.83 14.92','M6.34 12.09 A8 8 0 0 1 17.66 12.09','M3.51 9.26 A12 12 0 0 1 20.49 9.26'];
+  const fondoMarca=soloIcono?tema.encabezado:tema.contenedorVerde;
   return <Pressable accessibilityRole="button" accessibilityLabel={`${TEXTOS_SYNC[vista.estado]}. ${vista.pendientes} registros pendientes. Ver sincronización.`}
-    onPress={()=>navegacion.navigate(RUTAS.SINCRONIZACION)} style={[estilos.boton,{backgroundColor:tema.contenedorVerde}]}>
+    onPress={()=>navegacion.navigate(RUTAS.SINCRONIZACION)} style={[estilos.boton,soloIcono&&estilos.soloIcono,{backgroundColor:soloIcono?'transparent':tema.contenedorVerde}]}>
     <View style={estilos.icono}>
       <Svg width={24} height={24} viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
         {arcos.map((d,i)=><ArcoAnimado key={d} d={d} fill="none" stroke={tema.botonPrincipal} strokeWidth={2} strokeLinecap="round" strokeOpacity={reconectando?progreso.interpolate({inputRange:[i,i+1],outputRange:[0.15,1],extrapolate:'clamp'}):1}/>)}
         <Circle cx={12} cy={17.75} r={1.5} fill={tema.botonPrincipal}/>
       </Svg>
       {estadoMostrado==='sincronizando'?<ActivityIndicator style={[StyleSheet.absoluteFill,estilos.centrar]} size={32} color={tema.botonPrincipal}/>:null}
-      {estadoMostrado==='online'&&vista.pendientes===0?<Ionicons name="checkmark-circle" size={14} color={tema.botonPrincipal} style={[estilos.marca,{backgroundColor:tema.contenedorVerde}]}/>:null}
-      {!reconectando&&error?<Ionicons name="close-circle" size={14} color={tema.error} style={[estilos.marca,{backgroundColor:tema.contenedorVerde}]}/>:null}
+      {estadoMostrado==='online'&&vista.pendientes===0?<Ionicons name="checkmark-circle" size={14} color={tema.botonPrincipal} style={[estilos.marca,{backgroundColor:fondoMarca}]}/>:null}
+      {!reconectando&&error?<Ionicons name="close-circle" size={14} color={tema.error} style={[estilos.marca,{backgroundColor:fondoMarca}]}/>:null}
       {['offline','local'].includes(estadoMostrado)?<View style={[estilos.tachado,{backgroundColor:tema.botonPrincipal}]}/>:null}
     </View>
     {vista.pendientes>0?<View style={[estilos.insignia,{backgroundColor:tema.botonPrincipal,borderColor:tema.encabezado}]}><Text numberOfLines={1} style={[estilos.cantidad,{color:tema.botonPrincipalTexto}]}>{formatearCantidadPendientes(vista.pendientes)}</Text></View>:null}
@@ -117,6 +118,7 @@ export default function EstadoSincronizacion(){
 }
 const estilos=StyleSheet.create({
   boton:{width:40,height:40,alignItems:'center',justifyContent:'center',borderRadius:BORDES.radios.boton,flexShrink:0},
+  soloIcono:{width:44,height:44,borderRadius:0},
   icono:{height:32,width:32,alignItems:'center',justifyContent:'center'},
   centrar:{alignItems:'center',justifyContent:'center'},
   marca:{position:'absolute',right:0,bottom:0,borderRadius:BORDES.radios.circular},

@@ -17,4 +17,5 @@ export interface FiltrosHistorial {
   desde?: string | null; hasta?: string | null; montoMinimo?: number | null; montoMaximo?: number | null;
   texto?: string; busqueda?: string; cursor?: { fecha_hora: string; id: string } | null;
 }
+export interface MesHistorial { mes: string; cantidad: number; }
 export type MovimientoVisible = Movimiento & { deposito_nombre?: string; deposito?: string };

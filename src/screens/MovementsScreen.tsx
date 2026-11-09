@@ -1,31 +1,37 @@
-import { obtenerPreajustesMovimientos, PREAJUSTES_MONTOS, alternarGrupoCategorias, agruparCategoriasSeleccionadas } from '../utils/statisticsFilters';
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
+import {
+  FiltroTipoMovimientos,
+  FiltroFechaMovimientos,
+  FiltroCategoriasMovimientos,
+  FiltroMontoMovimientos,
+} from '../components/MovementFilterSections';
+import FiltrosRapidosMovimientos from '../components/MovementQuickFilters';
+import { OPCIONES_TIPO, MESES } from '../constants/movementFilters';
+import { obtenerPreajustesMovimientos, agruparCategoriasSeleccionadas } from '../utils/statisticsFilters';
 import { crearEstilosBusquedaFiltros } from '../styles/MovementSearchFiltersStyles';
 import PanelFiltrosMovimientos, { SeccionFiltro } from '../components/MovementFiltersPanel';
 import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
 import { formatearEntradaMonto } from '../utils/moneyInput';
-import EntradaMonto from '../components/MoneyInput';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
+
   Text,
   useWindowDimensions,
   View,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
-import SelectorCategoria from '../components/CategorySelector';
-import SelectorFecha from '../components/DateSelector';
 import SelectorDeposito from '../components/DepositSelector';
 import EncabezadoPrincipal from '../components/MainHeader';
-import TarjetaMovimiento from '../components/MovementCard';
-import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
+import ListaMesesMovimientos from '../components/MovementMonthList';
+import { useMovimientosPorMes } from '../movements/useMonthlyMovements';
 import { RUTAS } from '../constants/routes';
 import {
   CATEGORIAS_EGRESO,
@@ -34,31 +40,11 @@ import {
 import {
   cargarOpcionesHistorialMovimientos,
   cargarPaginaHistorialMovimientos,
+  cargarMesesHistorialMovimientos,
 } from '../movements/movementService';
 
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
-
-const TAMANO_PAGINA = 50;
-
-const OPCIONES_TIPO = Object.freeze([
-  Object.freeze({ id: 'todos', nombre: 'Todos' }),
-  Object.freeze({ id: 'ingreso', nombre: 'Ingresos' }),
-  Object.freeze({ id: 'egreso', nombre: 'Egresos' }),
-]);
-
-const OPCIONES_FECHA = Object.freeze([
-  Object.freeze({ id: 'todos', nombre: 'Todo' }),
-  Object.freeze({ id: 'dia', nombre: 'Día' }),
-  Object.freeze({ id: 'semana', nombre: 'Semana' }),
-  Object.freeze({ id: 'mes', nombre: 'Mes' }),
-  Object.freeze({ id: 'personalizado', nombre: 'Personalizado' }),
-]);
-
-const MESES = Object.freeze([
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]);
 
 function crearFechaSinHora(fecha: Date) {
   return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
@@ -116,8 +102,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosMovimientos(tema, anchoVentana);
   const estilosAccesos = crearEstilosBusquedaFiltros(tema);
-  const abrirPantallaSecundaria = (ruta: string, parametros: import('../navigation/types').ParametrosPantalla | undefined = undefined) => navegacion.getParent()?.navigate(ruta, parametros);
-  const [mesesAbiertos, establecerMesesAbiertos] = useState<Record<string,boolean>>({});
+  const abrirPantallaSecundaria = useCallback((ruta: string, parametros: import('../navigation/types').ParametrosPantalla | undefined = undefined) => navegacion.getParent()?.navigate(ruta, parametros), [navegacion]);
   const [busqueda, establecerBusqueda] = useState('');
   const [busquedaAplicada, establecerBusquedaAplicada] = useState('');
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
@@ -135,28 +120,13 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   const [depositosHistorial, establecerDepositosHistorial] = useState<(Awaited<ReturnType<typeof cargarOpcionesHistorialMovimientos>>['depositos'][number] & {saldoTexto:string})[]>([]);
   const [usuarioId, establecerUsuarioId] = useState<string | null>(null);
   const [cantidadTotal, establecerCantidadTotal] = useState<number | null>(null);
-  const [movimientosHistorial, establecerMovimientosHistorial] = useState<(import("../database/types").Movimiento & { deposito_nombre: string; })[]>([]);
   const [errorConsulta, establecerErrorConsulta] = useState<string | null>(null);
-  const [errorCargaMas, establecerErrorCargaMas] = useState<string | null>(null);
-  const [cargandoMas, establecerCargandoMas] = useState(false);
-  const [hayMas, establecerHayMas] = useState(false);
   const [enfocada, establecerEnfocada] = useState(false);
   const [revisionHistorial, establecerRevisionHistorial] = useState(0);
   const [intentoCargaOpciones, establecerIntentoCargaOpciones] = useState(0);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
-  const [bordesDesplazamientoFecha, establecerBordesDesplazamientoFecha] = useState({
-    izquierda: false,
-    derecha: false,
-  });
-  const medidasDesplazamientoFecha = useRef({
-    anchoContenido: 0,
-    anchoVisible: 0,
-    desplazamiento: 0,
-  });
   const [seccionesFiltrosAbiertas, establecerSeccionesFiltrosAbiertas] = useState(['tipo', 'fecha']);
   const [cargando, establecerCargando] = useState(true);
-  const secuenciaConsulta = useRef(0);
-  const bloqueoCargaMas = useRef(false);
   const depositosHistorialRef = useRef<typeof depositosHistorial>([]);
   const depositoFiltroIdsRef = useRef<string[]>([]);
   useEffect(() => {
@@ -172,7 +142,10 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
   useEffect(() => {
     const idsDisponibles = new Set(categoriasHistorial.map((categoria) => categoria.id));
-    establecerCategoriaFiltroIds((ids) => ids.filter((id) => idsDisponibles.has(id)));
+    establecerCategoriaFiltroIds((ids) => {
+      const vigentes = ids.filter((id) => idsDisponibles.has(id));
+      return vigentes.length === ids.length ? ids : vigentes;
+    });
   }, [categoriasHistorial]);
 
   const cambiarTipoFiltro = (tipo: SetStateAction<string>) => {
@@ -224,6 +197,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
           : idsSeleccionadosAntes.filter((id) => idsDepositos.includes(id)));
         depositosHistorialRef.current = depositos;
         establecerRevisionHistorial((revision) => revision + 1);
+        establecerCargando(false);
       })
       .catch((error: unknown) => {
         if (!vigente) return;
@@ -234,7 +208,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
     return () => {
       vigente = false;
-      secuenciaConsulta.current += 1;
       establecerEnfocada(false);
     };
   }, [mostrarAviso, intentoCargaOpciones]));
@@ -244,24 +217,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
       ? abiertas.filter((elemento) => elemento !== seccion)
       : [...abiertas, seccion]));
   };
-
-  const actualizarBordesDesplazamientoFecha = useCallback((cambios: Partial<typeof medidasDesplazamientoFecha.current>) => {
-    const medidas = { ...medidasDesplazamientoFecha.current, ...cambios };
-    medidasDesplazamientoFecha.current = medidas;
-    const contenidoDesborda = medidas.anchoContenido > medidas.anchoVisible + 1;
-    const nuevosBordes = {
-      izquierda: contenidoDesborda && medidas.desplazamiento > 1,
-      derecha: contenidoDesborda
-        && medidas.desplazamiento + medidas.anchoVisible < medidas.anchoContenido - 1,
-    };
-
-    establecerBordesDesplazamientoFecha((anteriores) => (
-      anteriores.izquierda === nuevosBordes.izquierda
-      && anteriores.derecha === nuevosBordes.derecha
-        ? anteriores
-        : nuevosBordes
-    ));
-  }, []);
 
   const abrirFiltros = () => {
     establecerFiltrosVisibles(true);
@@ -297,7 +252,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   };
 
   useEffect(() => {
-    establecerCargando(true);
     const temporizador = setTimeout(() => establecerBusquedaAplicada(busqueda.trim()), 250);
     return () => clearTimeout(temporizador);
   }, [busqueda]);
@@ -338,44 +292,10 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     rangoFechaConsulta,
   ]);
 
-  useEffect(() => {
-    if (!enfocada || !usuarioId || !revisionHistorial) return undefined;
-    const secuencia = ++secuenciaConsulta.current;
-    if (errorMontoFiltro) {
-      establecerMovimientosHistorial([]);
-      establecerCargando(false);
-      establecerHayMas(false);
-      establecerErrorConsulta(null);
-      return undefined;
-    }
-
-    establecerCargando(true);
-    establecerCargandoMas(false);
-    bloqueoCargaMas.current = false;
-    establecerErrorConsulta(null);
-    establecerErrorCargaMas(null);
-
-    cargarPaginaHistorialMovimientos(usuarioId, filtrosConsulta)
-      .then((movimientos) => {
-        if (secuencia !== secuenciaConsulta.current) return;
-        establecerMovimientosHistorial(movimientos);
-        establecerHayMas(movimientos.length === TAMANO_PAGINA);
-      })
-      .catch((error: unknown) => {
-        if (secuencia !== secuenciaConsulta.current) return;
-        establecerMovimientosHistorial([]);
-        establecerHayMas(false);
-        establecerErrorConsulta((error instanceof Error ? error.message : '') || 'No se pudo cargar el historial. Intentá nuevamente.');
-        mostrarAviso('No se pudo consultar el historial de movimientos.', { tipo: 'error' });
-      })
-      .finally(() => {
-        if (secuencia === secuenciaConsulta.current) establecerCargando(false);
-      });
-
-    return () => {
-      if (secuencia === secuenciaConsulta.current) secuenciaConsulta.current += 1;
-    };
-  }, [enfocada, usuarioId, revisionHistorial, filtrosConsulta, errorMontoFiltro, mostrarAviso]);
+  const consultarMeses = useCallback((criterios: import('../types/forms').FiltrosHistorial) => cargarMesesHistorialMovimientos(usuarioId || '', criterios), [usuarioId]);
+  const consultarPagina = useCallback((criterios: import('../types/forms').FiltrosHistorial, cursor: {fecha_hora:string;id:string}|null) => cargarPaginaHistorialMovimientos(usuarioId || '', criterios, cursor), [usuarioId]);
+  const datosMeses = useMovimientosPorMes({ habilitado: enfocada && !!usuarioId && !!revisionHistorial && !cargando,
+    revision: revisionHistorial, filtros: filtrosConsulta, invalido: !!errorMontoFiltro, consultarMeses, consultarPagina });
 
   const filtrosAplicados = useMemo(() => {
     const filtros: {id:string;etiqueta:string;alQuitar:()=>void;bloqueado?:boolean}[] = [];
@@ -470,16 +390,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     return filtros;
   }, [busqueda, tipoFiltro, fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal, montoMinimo, montoMaximo, categoriaFiltroIds, depositoFiltroIds, categoriasDisponiblesFiltro, categoriasHistorial, depositosHistorial, filtraPorDepositos, cambiarFechaFiltro]);
   const cantidadFiltros = filtrosAplicados.length;
-  const gruposMovimientos = useMemo(() => {
-    const meses = new Map<string,{clave:string;titulo:string;movimientos:typeof movimientosHistorial}>();
-    for (const movimiento of movimientosHistorial) {
-      const fecha = new Date(movimiento.fecha_hora);
-      const clave = fecha.getFullYear()+'-'+fecha.getMonth();
-      if (!meses.has(clave)) meses.set(clave,{clave,titulo:fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^./,letra=>letra.toUpperCase()),movimientos:[]});
-      meses.get(clave)!.movimientos.push(movimiento);
-    }
-    return [...meses.values()];
-  },[movimientosHistorial]);
   const resumenTipo = OPCIONES_TIPO.find((opcion) => opcion.id === tipoFiltro)?.nombre || 'Todos';
   const resumenFecha = fechaFiltro === 'dia'
     ? (fechaDia ? formatearFechaCorta(fechaDia) : 'Elegí un día')
@@ -534,102 +444,42 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     establecerIntentoCargaOpciones((intento) => intento + 1);
   };
 
-  const abrirDetalle = (movimiento: import('../types/forms').MovimientoVisible) => {
+  const abrirDetalle = useCallback((movimiento: import('../types/forms').MovimientoVisible) => {
     abrirPantallaSecundaria(RUTAS.DETALLE_MOVIMIENTO, { movimientoId: movimiento.id });
-  };
-
-  const cargarMasMovimientos = useCallback(async () => {
-    const ultimoMovimiento = movimientosHistorial[movimientosHistorial.length - 1];
-    if (
-      !usuarioId
-      || !enfocada
-      || cargando
-      || cargandoMas
-      || !hayMas
-      || !ultimoMovimiento
-      || bloqueoCargaMas.current
-      || errorMontoFiltro
-    ) return;
-
-    const secuencia = secuenciaConsulta.current;
-    bloqueoCargaMas.current = true;
-    establecerCargandoMas(true);
-    establecerErrorCargaMas(null);
-    try {
-      const nuevosMovimientos = await cargarPaginaHistorialMovimientos(
-        usuarioId,
-        filtrosConsulta,
-        { fecha_hora: ultimoMovimiento.fecha_hora, id: ultimoMovimiento.id },
-      );
-      if (secuencia !== secuenciaConsulta.current) return;
-      establecerMovimientosHistorial((anteriores) => {
-        const idsCargados = new Set(anteriores.map((movimiento) => movimiento.id));
-        return [
-          ...anteriores,
-          ...nuevosMovimientos.filter((movimiento) => !idsCargados.has(movimiento.id)),
-        ];
-      });
-      establecerHayMas(nuevosMovimientos.length === TAMANO_PAGINA);
-    } catch (error) {
-      if (secuencia !== secuenciaConsulta.current) return;
-      establecerErrorCargaMas((error instanceof Error ? error.message : '') || 'No se pudieron cargar más movimientos. Intentá nuevamente.');
-      mostrarAviso('No se pudieron cargar más movimientos.', { tipo: 'error' });
-    } finally {
-      if (secuencia === secuenciaConsulta.current) {
-        bloqueoCargaMas.current = false;
-        establecerCargandoMas(false);
-      }
-    }
-  }, [movimientosHistorial, usuarioId, enfocada, cargando, cargandoMas, hayMas, errorMontoFiltro, filtrosConsulta, mostrarAviso]);
+  }, [abrirPantallaSecundaria]);
 
   const preajustesCategorias = obtenerPreajustesMovimientos(tipoFiltro, categoriasHistorial);
 
   const sinMovimientos = !cargando && cantidadTotal === 0;
-  const sinResultados = !cargando && (cantidadTotal || 0) > 0 && movimientosHistorial.length === 0;
+  const sinResultados = !cargando && (cantidadTotal || 0) > 0 && datosMeses.meses.length === 0;
+  const esperandoHistorial = cargando || (!errorConsulta && !errorMontoFiltro
+    && (!enfocada || !usuarioId || !revisionHistorial || !datosMeses.consultaResuelta || datosMeses.cargando));
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoPrincipal
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoPrincipal
           tema={tema}
           titulo="Movimientos"
           descripcion="Consulta el historial general de tus operaciones."
           alAbrirNotificaciones={() => abrirPantallaSecundaria(RUTAS.NOTIFICACIONES)}
           alAbrirPerfil={() => abrirPantallaSecundaria(RUTAS.PERFIL)}
-        />
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        />}>
+
+        <DesplazamientoEncabezado ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} alVolverAlInicio={datosMeses.detenerDesplazamiento} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={estilos.contenido}>
             <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={establecerBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosAplicados} cantidad={cantidadFiltros}>
-              {OPCIONES_TIPO.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: tipoFiltro === opcion.id }} onPress={() => cambiarTipoFiltro(opcion.id)} style={[estilosAccesos.filtro, tipoFiltro === opcion.id && estilosAccesos.filtroActivo]}>
-                <Text style={[estilosAccesos.textoFiltro, tipoFiltro === opcion.id && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
-              </Pressable>)}
-              {preajustesCategorias.map(opcion => {
-                const disponible = opcion.categorias.length > 0;
-                const activo = disponible && tipoFiltro === opcion.tipo && opcion.categorias.every(id => categoriaFiltroIds.includes(id));
-                return <Pressable key={opcion.tipo + ':' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo, disabled: !disponible }} disabled={!disponible} accessibilityHint={disponible ? undefined : 'No hay movimientos de estas categorías.'}
-                  onPress={() => {
-                    establecerTipoFiltro(opcion.tipo);
-                    establecerCategoriaFiltroIds(actuales => alternarGrupoCategorias(tipoFiltro === opcion.tipo || tipoFiltro === 'todos' ? actuales : [], opcion.categorias));
-                  }}
-                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo, !disponible && { opacity: 0.5 }]}>
-                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
-                </Pressable>;
-              })}
-              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => {
-                const activo = !errorMontoFiltro && (montoMinimoNumerico ?? undefined) === opcion.rango.minimo && (montoMaximoNumerico ?? undefined) === opcion.rango.maximo;
-                return <Pressable key={'monto:' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo }}
-                  onPress={() => { establecerMontoMinimo(activo || opcion.rango.minimo === undefined ? '' : String(opcion.rango.minimo).replace('.', ',')); establecerMontoMaximo(activo || opcion.rango.maximo === undefined ? '' : String(opcion.rango.maximo).replace('.', ',')); }}
-                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo]}>
-                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
-                </Pressable>;
-              })}
+              <FiltrosRapidosMovimientos estilosAccesos={estilosAccesos}
+                tipoFiltro={tipoFiltro} cambiarTipoFiltro={cambiarTipoFiltro} establecerTipoFiltro={establecerTipoFiltro}
+                preajustesCategorias={preajustesCategorias} categoriaFiltroIds={categoriaFiltroIds} establecerCategoriaFiltroIds={establecerCategoriaFiltroIds}
+                montoMinimoNumerico={montoMinimoNumerico} montoMaximoNumerico={montoMaximoNumerico}
+                errorMontoFiltro={errorMontoFiltro} establecerMontoMinimo={establecerMontoMinimo} establecerMontoMaximo={establecerMontoMaximo}/>
             </BuscadorFiltrosMovimientos>
 
-            {cargando && movimientosHistorial.length === 0 ? null : errorConsulta ? (
+            {esperandoHistorial ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses"/> : errorConsulta || datosMeses.error ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.error} name="alert-circle-outline" size={32} />
-                <Text style={estilos.textoEstadoVacio}>{errorConsulta}</Text>
-                <Pressable accessibilityRole="button" onPress={reintentarHistorial} style={estilos.botonLimpiar}>
+                <Text style={estilos.textoEstadoVacio}>{errorConsulta || datosMeses.error}</Text>
+                <Pressable accessibilityRole="button" onPress={errorConsulta ? reintentarHistorial : datosMeses.reintentar} style={estilos.botonLimpiar}>
                   <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
                 </Pressable>
               </View>
@@ -656,257 +506,37 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                 </Pressable>
               </View>
             ) : (
-              <View style={estilos.listaMovimientos}>
-                {gruposMovimientos.map((mes,indice) => <View key={mes.clave} style={estilos.grupoMes}>
-                  <EncabezadoSeccionPlegable tema={tema} titulo={mes.titulo} expandido={(mesesAbiertos[mes.clave] ?? indice === 0)}
-                    alAlternar={()=>establecerMesesAbiertos(anteriores=>({...anteriores,[mes.clave]:!(anteriores[mes.clave] ?? indice === 0)}))}/>
-                  {(mesesAbiertos[mes.clave] ?? indice === 0)?<View style={estilos.movimientosMes}>
-                    {mes.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalle}/>)}
-                  </View>:null}
-                </View>)}
-                {errorCargaMas ? (
-                  <View style={estilos.estadoVacio}>
-                    <Text style={estilos.textoEstadoVacio}>{errorCargaMas}</Text>
-                    <Pressable accessibilityRole="button" onPress={cargarMasMovimientos} style={estilos.botonLimpiar}>
-                      <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
-                    </Pressable>
-                  </View>
-                ) : hayMas || cargandoMas ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    disabled={cargandoMas}
-                    onPress={cargarMasMovimientos}
-                    style={estilos.botonCargarMas}
-                  >
-                    {cargandoMas ? <ActivityIndicator color={tema.foco} /> : null}
-                    <Text style={estilos.textoBotonCargarMas}>
-                      {cargandoMas ? 'Cargando más movimientos…' : 'Cargar más movimientos'}
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
+              <ListaMesesMovimientos datos={datosMeses} tema={tema} alPresionar={abrirDetalle}/>
             )}
           </View>
-        </ScrollView>
+        </DesplazamientoEncabezado>
 
         <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={() => establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
                 <View style={estilos.listaSeccionesFiltro}>
-                  <SeccionFiltro
-                    titulo="Tipo"
-                    resumen={resumenTipo}
-                    abierta={seccionesFiltrosAbiertas.includes('tipo')}
-                    alAlternar={() => alternarSeccionFiltro('tipo')}
-                    colorAcento={tema.foco}
-                    estilos={estilos}
-                  >
-                    <View style={estilos.filaOpcionesTipo}>
-                      {OPCIONES_TIPO.map((opcion) => {
-                        const activa = tipoFiltro === opcion.id;
-                        return (
-                          <Pressable
-                            key={opcion.id}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: activa }}
-                            onPress={() => cambiarTipoFiltro(opcion.id)}
-                            style={[estilos.chip, estilos.chipTipo, activa ? estilos.chipActivo : null]}
-                          >
-                            <Text numberOfLines={1} style={[estilos.textoChip, activa ? estilos.textoChipActivo : null]}>
-                              {opcion.nombre}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-                  </SeccionFiltro>
+                  <FiltroTipoMovimientos tema={tema} estilos={estilos} resumen={resumenTipo}
+                    abierta={seccionesFiltrosAbiertas.includes('tipo')} alAlternar={() => alternarSeccionFiltro('tipo')}
+                    tipoFiltro={tipoFiltro} cambiarTipoFiltro={cambiarTipoFiltro}
+                  />
 
-                  <SeccionFiltro
-                    titulo="Fecha"
-                    resumen={resumenFecha}
-                    abierta={seccionesFiltrosAbiertas.includes('fecha')}
-                    alAlternar={() => alternarSeccionFiltro('fecha')}
-                    colorAcento={tema.botonPrincipal}
-                    estilos={estilos}
-                  >
-                    <View style={estilos.contenedorOpcionesFecha}>
-                      <ScrollView
-                        contentContainerStyle={estilos.filaOpcionesFecha}
-                        horizontal
-                        nestedScrollEnabled
-                        onContentSizeChange={(anchoContenido) => actualizarBordesDesplazamientoFecha({ anchoContenido })}
-                        onLayout={(evento) => actualizarBordesDesplazamientoFecha({
-                          anchoVisible: evento.nativeEvent.layout.width,
-                        })}
-                        onScroll={(evento) => actualizarBordesDesplazamientoFecha({
-                          desplazamiento: evento.nativeEvent.contentOffset.x,
-                        })}
-                        scrollEventThrottle={16}
-                        showsHorizontalScrollIndicator={false}
-                        style={estilos.scrollOpcionesFecha}
-                      >
-                        {OPCIONES_FECHA.map((opcion) => {
-                          const activa = fechaFiltro === opcion.id;
-                          return (
-                            <Pressable
-                              key={opcion.id}
-                              accessibilityRole="button"
-                              accessibilityState={{ selected: activa }}
-                              onPress={() => cambiarFechaFiltro(opcion.id)}
-                              style={[estilos.chip, estilos.chipFecha, activa ? estilos.chipActivo : null]}
-                            >
-                              <Text style={[estilos.textoChip, activa ? estilos.textoChipActivo : null]}>
-                                {opcion.nombre}
-                              </Text>
-                            </Pressable>
-                          );
-                        })}
-                      </ScrollView>
-                      {bordesDesplazamientoFecha.izquierda ? (
-                        <Svg
-                          height="100%"
-                          pointerEvents="none"
-                          style={[estilos.sombraBordeFecha, estilos.sombraBordeFechaIzquierda]}
-                          width={36}
-                        >
-                          <Defs>
-                            <LinearGradient id="desvanecidoFechaIzquierda" x1="0%" x2="100%" y1="0%" y2="0%">
-                              <Stop offset="0" stopColor={tema.superficie} stopOpacity="1" />
-                              <Stop offset="1" stopColor={tema.superficie} stopOpacity="0" />
-                            </LinearGradient>
-                          </Defs>
-                          <Rect fill="url(#desvanecidoFechaIzquierda)" height="100%" width="100%" />
-                        </Svg>
-                      ) : null}
-                      {bordesDesplazamientoFecha.derecha ? (
-                        <Svg
-                          height="100%"
-                          pointerEvents="none"
-                          style={[estilos.sombraBordeFecha, estilos.sombraBordeFechaDerecha]}
-                          width={36}
-                        >
-                          <Defs>
-                            <LinearGradient id="desvanecidoFechaDerecha" x1="0%" x2="100%" y1="0%" y2="0%">
-                              <Stop offset="0" stopColor={tema.superficie} stopOpacity="0" />
-                              <Stop offset="1" stopColor={tema.superficie} stopOpacity="1" />
-                            </LinearGradient>
-                          </Defs>
-                          <Rect fill="url(#desvanecidoFechaDerecha)" height="100%" width="100%" />
-                        </Svg>
-                      ) : null}
-                    </View>
-                    {fechaFiltro === 'dia' ? (
-                      <View style={estilos.grupoCalendarioFiltro}>
-                        <Text style={estilos.textoAyudaFiltro}>Elegí un día</Text>
-                        <SelectorFecha
-                          tema={tema}
-                          estilosMovimiento={estilos}
-                          etiqueta="Día"
-                          valor={fechaDia || new Date()}
-                          alSeleccionar={establecerFechaDia}
-                          enLinea
-                        />
-                      </View>
-                    ) : null}
-                    {fechaFiltro === 'semana' ? (
-                      <View style={estilos.grupoCalendarioFiltro}>
-                        <Text style={estilos.textoAyudaFiltro}>Elegí una fecha de la semana</Text>
-                        <SelectorFecha
-                          tema={tema}
-                          estilosMovimiento={estilos}
-                          etiqueta="Semana que incluye"
-                          valor={fechaDia || new Date()}
-                          alSeleccionar={establecerFechaDia}
-                          enLinea
-                        />
-                      </View>
-                    ) : null}
-                    {fechaFiltro === 'mes' ? (
-                      <View style={estilos.grupoCalendarioFiltro}>
-                        <View style={estilos.encabezadoCalendario}>
-                          <Pressable
-                            accessibilityLabel="Año anterior"
-                            accessibilityRole="button"
-                            onPress={() => establecerAnioMesVisible((anio) => anio - 1)}
-                            style={estilos.botonMes}
-                          >
-                            <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
-                          </Pressable>
-                          <Text style={estilos.mesCalendario}>{anioMesVisible}</Text>
-                          <Pressable
-                            accessibilityLabel="Año siguiente"
-                            accessibilityRole="button"
-                            onPress={() => establecerAnioMesVisible((anio) => anio + 1)}
-                            style={estilos.botonMes}
-                          >
-                            <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
-                          </Pressable>
-                        </View>
-                        <View style={estilos.grillaMeses}>
-                          {MESES.map((mes, indice) => {
-                            const activo = mesSeleccionado
-                              && mesSeleccionado.getMonth() === indice
-                              && mesSeleccionado.getFullYear() === anioMesVisible;
-                            return (
-                              <Pressable
-                                accessibilityRole="button"
-                                accessibilityState={{ selected: Boolean(activo) }}
-                                key={mes}
-                                onPress={() => establecerMesSeleccionado(new Date(anioMesVisible, indice, 1))}
-                                style={[estilos.opcionMes, activo ? estilos.opcionMesActiva : null]}
-                              >
-                                <Text style={[estilos.textoOpcionMes, activo ? estilos.textoOpcionMesActivo : null]}>
-                                  {mes}
-                                </Text>
-                              </Pressable>
-                            );
-                          })}
-                        </View>
-                      </View>
-                    ) : null}
-                    {fechaFiltro === 'personalizado' ? (
-                      <View style={estilos.grupoCalendarioFiltro}>
-                        <SelectorFecha
-                          tema={tema}
-                          estilosMovimiento={estilos}
-                          etiqueta="Rango"
-                          valor={fechaFinal || fechaInicial || new Date()}
-                          textoValor={fechaInicial && fechaFinal
-                            ? `${formatearFechaCorta(fechaInicial)} – ${formatearFechaCorta(fechaFinal)}`
-                            : fechaInicial
-                              ? `${formatearFechaCorta(fechaInicial)} · Elegí el final`
-                              : 'Elegí fecha inicial'}
-                          alSeleccionar={seleccionarFechaPersonalizada}
-                          mantenerAbiertoAlSeleccionar
-                          resaltarExtremosRango
-                          enLinea
-                          rangoInicio={fechaInicial}
-                          rangoFin={fechaFinal}
-                        />
-                      </View>
-                    ) : null}
-                  </SeccionFiltro>
+                  <FiltroFechaMovimientos tema={tema} estilos={estilos} resumen={resumenFecha}
+                    abierta={seccionesFiltrosAbiertas.includes('fecha')} alAlternar={() => alternarSeccionFiltro('fecha')}
+                    estilosSelectores={estilos} estilosGlobales={estilosGlobales}
+                    fechaFiltro={fechaFiltro} cambiarFechaFiltro={cambiarFechaFiltro}
+                    fechaDia={fechaDia} establecerFechaDia={establecerFechaDia}
+                    anioMesVisible={anioMesVisible} establecerAnioMesVisible={establecerAnioMesVisible}
+                    mesSeleccionado={mesSeleccionado} establecerMesSeleccionado={establecerMesSeleccionado}
+                    fechaInicial={fechaInicial} fechaFinal={fechaFinal}
+                    seleccionarFechaPersonalizada={seleccionarFechaPersonalizada}
+                    mostrarSelectorSemana
+                  />
 
-                  <SeccionFiltro
-                    titulo="Categorías"
-                    resumen={resumenCategorias}
-                    abierta={seccionesFiltrosAbiertas.includes('categorias')}
-                    alAlternar={() => alternarSeccionFiltro('categorias')}
-                    colorAcento={tema.foco}
-                    estilos={estilos}
-                  >
-                    <SelectorCategoria
-                      tema={tema}
-                      estilosGlobales={estilosGlobales}
-                      estilosMovimiento={estilos}
-                      estiloTarjeta={estilos.tarjetaCategoriaFiltro}
-                      etiqueta=""
-                      categorias={categoriasDisponiblesFiltro}
+                  <FiltroCategoriasMovimientos tema={tema} estilos={estilos} resumen={resumenCategorias}
+                    abierta={seccionesFiltrosAbiertas.includes('categorias')} alAlternar={() => alternarSeccionFiltro('categorias')}
+                    estilosSelectores={estilos} estilosGlobales={estilosGlobales}
+                    categoriasDisponiblesFiltro={categoriasDisponiblesFiltro}
                     tipoMovimiento={tipoFiltro === 'todos' ? undefined : tipoFiltro}
-                      variante="grilla"
-                      seleccionMultiple
-                      seleccionadasIds={categoriaFiltroIds}
-                      alCambiarMulti={establecerCategoriaFiltroIds}
-                    />
-                  </SeccionFiltro>
+                    categoriaFiltroIds={categoriaFiltroIds} establecerCategoriaFiltroIds={establecerCategoriaFiltroIds}
+                  />
 
                   <SeccionFiltro
                     titulo="Depósitos"
@@ -929,43 +559,14 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                     />
                   </SeccionFiltro>
 
-                  <SeccionFiltro
-                    titulo="Monto"
-                    resumen={resumenMonto}
-                    abierta={seccionesFiltrosAbiertas.includes('monto')}
-                    alAlternar={() => alternarSeccionFiltro('monto')}
-                    colorAcento={tema.error}
-                    estilos={estilos}
-                  >
-                    <View style={estilos.filaRango}>
-                      <View style={estilos.grupoCampoRango}>
-                        <View style={estilos.etiquetaCampoRango}>
-                          <Ionicons color={tema.textoSecundario} name="arrow-down-outline" size={16} />
-                          <Text style={estilos.textoEtiquetaCampoRango}>Mínimo</Text>
-                        </View>
-                        <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
-                          etiqueta="Monto mínimo" valor={montoMinimo} alCambiarTexto={establecerMontoMinimo}
-                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
-                          estiloContenedor={estilos.campoRango}/>
-                      </View>
-                      <View style={estilos.grupoCampoRango}>
-                        <View style={estilos.etiquetaCampoRango}>
-                          <Ionicons color={tema.textoSecundario} name="arrow-up-outline" size={16} />
-                          <Text style={estilos.textoEtiquetaCampoRango}>Máximo</Text>
-                        </View>
-                        <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
-                          etiqueta="Monto máximo" valor={montoMaximo} alCambiarTexto={establecerMontoMaximo}
-                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
-                          estiloContenedor={estilos.campoRango}/>
-                      </View>
-                    </View>
-                    {errorMontoFiltro ? (
-                      <Text style={estilosGlobales.textoError}>{errorMontoFiltro}</Text>
-                    ) : null}
-                  </SeccionFiltro>
+                  <FiltroMontoMovimientos tema={tema} estilos={estilos} resumen={resumenMonto}
+                    abierta={seccionesFiltrosAbiertas.includes('monto')} alAlternar={() => alternarSeccionFiltro('monto')}
+                    estilosGlobales={estilosGlobales} montoMinimo={montoMinimo} establecerMontoMinimo={establecerMontoMinimo}
+                    montoMaximo={montoMaximo} establecerMontoMaximo={establecerMontoMaximo} errorMontoFiltro={errorMontoFiltro}
+                  />
                 </View>
         </PanelFiltrosMovimientos>
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

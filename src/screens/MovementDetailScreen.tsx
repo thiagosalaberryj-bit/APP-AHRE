@@ -1,3 +1,5 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import {useFocusEffect} from '@react-navigation/native';
 import { useCallback,useContext, useEffect, useRef,useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -129,18 +131,18 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   if (movimientoId && cargandoHistorial) {
     return (
       <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
-        <View style={estilosGlobales.pantalla}>
-          <EncabezadoSeccion
+        <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
             alVolver={() => {if(!bloqueoEliminacion.current)navegacion.goBack();}}
             descripcion="Consultá la descripción, el depósito, la fecha y el importe."
             tema={tema}
             titulo="Detalle de movimiento"
-          />
+          />}>
+
           <View style={estilos.estadoHistorial}>
             <ActivityIndicator color={tema.foco} size="large" />
             <Text style={estilos.textoEstadoHistorial}>Cargando el movimiento…</Text>
           </View>
-        </View>
+        </MarcoEncabezado>
       </SafeAreaView>
     );
   }
@@ -149,13 +151,13 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
     const noEncontrado = !errorHistorial && !movimientoHistorial;
     return (
       <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
-        <View style={estilosGlobales.pantalla}>
-          <EncabezadoSeccion
+        <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
             alVolver={() => navegacion.goBack()}
             descripcion="Consultá la descripción, el depósito, la fecha y el importe."
             tema={tema}
             titulo="Detalle de movimiento"
-          />
+          />}>
+
           <View style={estilos.estadoHistorial}>
             <Ionicons
               color={noEncontrado ? tema.textoSecundario : tema.error}
@@ -184,22 +186,22 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
               <Text style={estilos.textoBotonEstadoHistorial}>Volver</Text>
             </Pressable>
           </View>
-        </View>
+        </MarcoEncabezado>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
-      <View style={estilosGlobales.pantalla}>
-        <EncabezadoSeccion
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
           alVolver={() => navegacion.goBack()}
           descripcion="Consultá la descripción, el depósito, la fecha y el importe."
           tema={tema}
           titulo="Detalle de movimiento"
-        />
+        />}>
 
-        <ScrollView contentContainerStyle={estilos.contenido} showsVerticalScrollIndicator={false}>
+
+        <DesplazamientoEncabezado contentContainerStyle={estilos.contenido} showsVerticalScrollIndicator={false}>
           <View style={estilos.resumen}>
             <View style={estilos.filaResumen}>
               <View style={estilos.identidad}>
@@ -247,7 +249,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
             <Pressable accessibilityRole="button" onPress={()=>establecerConfirmandoEliminacion(true)} style={estilos.botonEliminar}><Ionicons name="trash-outline" size={21} color="#FFFFFF"/><Text style={estilos.textoEliminar}>Eliminar movimiento</Text></Pressable>
           </View>:null}
           {movimiento.reversion_de_id?<Pressable accessibilityRole="button" onPress={()=>navegacion.push(RUTAS.DETALLE_MOVIMIENTO,{movimientoId:movimiento.reversion_de_id!})} style={[estilos.botonCancelar,estilos.enlaceOriginal]}><Text style={estilos.textoCancelar}>Ver movimiento original</Text></Pressable>:null}
-        </ScrollView>
+        </DesplazamientoEncabezado>
         <Modal transparent animationType="fade" visible={confirmandoEliminacion} onRequestClose={()=>!bloqueoEliminacion.current&&establecerConfirmandoEliminacion(false)}>
           <SafeAreaView style={estilos.fondoModalImporte}>
             <View accessibilityViewIsModal style={estilos.tarjetaConfirmacion}>
@@ -284,7 +286,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
             </View>
           </SafeAreaView>
         </Modal>
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }

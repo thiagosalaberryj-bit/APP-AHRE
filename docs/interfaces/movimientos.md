@@ -241,6 +241,14 @@ botones y modales.
 
 ## Historial y detalle de movimientos
 
+Movimientos y Detalle de depósito reutilizan `MovementQuickFilters.tsx` para
+los accesos rápidos y `MovementFilterSections.tsx` para las secciones Tipo,
+Fecha, Categorías y Monto. Las opciones comunes están en
+`src/constants/movementFilters.ts`. Cada pantalla conserva sus estilos,
+catálogos, resúmenes, validaciones y aplicación de los filtros; solo Movimientos
+incluye la sección Depósitos. El selector de semana del historial y el manejo
+de rangos personalizados conservan las diferencias existentes entre pantallas.
+
 `src/screens/MovementsScreen.tsx` es pestaña con `MainHeader` («Movimientos») y
 consulta SQLite para el usuario de la sesión y agrupa los movimientos vigentes
 por mes y año, con el primer mes abierto inicialmente y los demás plegados, usando el encabezado compartido
@@ -278,6 +286,31 @@ reciben el nombre real del depósito relacionado. SQLite ordena por
 `fecha_hora DESC, id DESC`. La pantalla carga 50 filas por página; «Cargar más
 movimientos» solicita la siguiente página usando la fecha, hora e ID de la
 última fila como cursor.
+
+La lista usa `MovementMonthList.tsx`, `MovementMonthListStyles.ts` y
+`useMonthlyMovements.ts`, compartidos con Detalle de depósito. Comienza sin
+filtros y consulta los encabezados de todos los meses con resultados, sin traer
+sus movimientos. Solo el mes actual comienza abierto, si existe; los demás
+permanecen plegados hasta que se abren. Cada mes tiene sus propias páginas de
+50 filas y conserva solo la primera página al plegarlo. Reabrirlo comienza de
+nuevo con hasta 50 tarjetas, no con las 300 que se hubieran acumulado. Las páginas
+pendientes del mes cerrado se invalidan. Se muestra «Cargando movimientos…»
+debajo del encabezado antes de preparar la lista, incluso al reutilizar esa
+primera página. Se conserva el encabezado como referencia de posición para
+evitar saltos al cambiar la altura. Las tarjetas ya mostradas se
+memorizan para no renderizarlas de nuevo al agregar otra página.
+El botón muestra un indicador animado mientras carga. Además de tocarlo, se
+puede llegar a él desplazándose hacia abajo: solo carga automáticamente si
+está visible y el movimiento proviene de un arrastre o su inercia. No carga
+por aparecer, subir, permanecer quieto ni mostrar un error; tampoco descarga
+filas de meses plegados. Las mediciones pendientes se invalidan al detener
+el gesto o cambiar filtros. Los errores conservan los datos y permiten reintento manual.
+
+El estado de carga continúa mientras se consultan las opciones y los meses de
+los criterios actuales, incluso en el render anterior a iniciar esa consulta.
+«Sin resultados» y «Todavía no hay movimientos» se muestran solo después de
+recibir la respuesta correspondiente. Esto evita el parpadeo al entrar, volver
+a la pestaña o limpiar filtros. La flecha y la franja de volver arriba se retiraron.
 
 ### Buscador
 

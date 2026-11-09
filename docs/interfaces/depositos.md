@@ -10,6 +10,13 @@ lógica de depósitos y el repositorio; no requiere conexión a Internet. Si se
 completa correctamente, vuelve a la pantalla anterior. La flecha y «Cancelar»
 regresan sin guardar.
 
+Crear y editar utilizan `src/components/DepositForm.tsx` para nombre, tipo,
+ícono, color y descripción, y `DepositIconModal.tsx` para los íconos adicionales.
+Ambos consumen el catálogo de `src/constants/deposits.ts`. Las variantes
+conservan sus textos, contadores, estilos de error y presentación del modal.
+El saldo inicial permanece únicamente en creación; cada pantalla conserva
+su estado, validación, acciones, navegación y guardado.
+
 ## Campos
 
 | Campo | Requerido | Presentación |
@@ -171,6 +178,44 @@ número de criterios activos y el botón «Filtros» abre la hoja.
 El detalle no muestra un filtro de depósitos porque la lista ya está limitada
 al depósito seleccionado. Los resultados se agrupan por mes y año y se ordenan por
 fecha y hora descendente.
+
+Los accesos rápidos se comparten mediante `MovementQuickFilters.tsx` y las
+secciones del panel mediante `MovementFilterSections.tsx`, también utilizados
+en Movimientos. Se conservan los estilos propios del detalle y la validación
+del orden del rango personalizado. No se aplica un filtro de fecha inicial.
+Semana mantiene su selección actual sin agregar un calendario al detalle.
+La búsqueda, los criterios activos y el filtrado de recurrencias permanecen
+coordinados por esta pantalla.
+
+El detalle comienza sin filtros y muestra los encabezados de todos los meses
+que tienen resultados. El mes actual comienza abierto, con hasta 50 movimientos;
+los otros permanecen plegados, sin consultar sus filas hasta desplegarlos. Si
+no hay movimientos del mes actual, todos quedan plegados. Abrir un mes carga
+su primera página. Al plegarlo se conservan solo las primeras 50 filas; reabrirlo
+vuelve a esa página, aunque antes se hayan mostrado 300. Las páginas en curso
+del mes cerrado se descartan para que no repongan filas después.
+La apertura muestra «Cargando movimientos…» justo debajo del título y deja
+dibujar ese estado antes de consultar o montar las tarjetas. El encabezado
+permanece como referencia de posición al cambiar la altura del mes y se detiene
+la carga automática del gesto anterior.
+«Cargar más movimientos» incorpora otras 50 filas de ese mes. Se muestra un
+indicador animado mientras carga. También se activa si el botón está visible
+y la persona sigue desplazándose hacia abajo, incluida la inercia de ese gesto.
+No se activa por aparecer, subir, quedarse quieto ni cambiar filtros. Un error
+requiere reintento manual. El botón conserva su acción táctil y accesible.
+
+La consulta aplica búsqueda, tipo, categorías, montos y fechas antes de paginar;
+las categorías disponibles se obtienen del historial completo del depósito.
+Cambiar un criterio reinicia los meses; cambiar tema, abrir un modal o plegar
+un mes no vuelve a consultar. Las respuestas anteriores se descartan al cambiar
+filtros o salir. Una carga adicional fallida conserva las filas y permite
+reintentar. El filtro de Recurrentes mantiene su aplicación sobre la próxima ejecución.
+
+El texto del buscador se muestra inmediatamente y se aplica después de
+250 ms sin escribir, igual que en Movimientos. La pausa se reinicia con cada
+cambio y se cancela al salir de la pantalla. Borrar el texto o usar Limpiar
+restablece la búsqueda aplicada inmediatamente; una búsqueda anterior pendiente
+no vuelve a aparecer. La pausa también se aplica en la pestaña Recurrentes.
 
 Los meses usan `EncabezadoSeccionPlegable`, el mismo componente de Movimientos,
 Social y Sincronización. El primer mes comienza abierto y los demás plegados;

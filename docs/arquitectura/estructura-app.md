@@ -183,6 +183,22 @@ Ver [organización de Social](../interfaces/social.md#organización-del-código)
 
 ### `src/components/`
 
+`DepositForm.tsx` comparte los campos editables entre creación y edición de
+depósitos. `DepositIconModal.tsx` comparte el selector de íconos adicionales.
+Reciben valores, errores y callbacks de cada pantalla y conservan sus variantes
+de presentación; no ejecutan persistencia ni agregan contenedores al formulario.
+
+`ProfileModal.tsx` comparte el marco y encabezado de los siete modales de
+Perfil, con desplazamiento solo en sus formularios. `ProfileOptionsList.tsx`
+comparte las opciones de idioma y apariencia. Los estados y las operaciones
+permanecen en `ProfileScreen.tsx`, con los estilos de Perfil existentes.
+
+Estadísticas delega los gráficos a `StatisticsPieChart.tsx` y
+`StatisticsBarChart.tsx`, y los controles de fecha a
+`StatisticsDateControls.tsx`. `src/statistics/statisticsPresentation.ts`
+contiene los cálculos y formatos de presentación, separados del servicio de
+consultas. El carrusel, filtros y navegación siguen en la pantalla existente.
+
 Contiene componentes visuales reutilizables entre dos o más pantallas. Los
 componentes utilizan PascalCase y un nombre relacionado con su responsabilidad,
 como `MoneyInput.tsx` o `MovementCard.tsx`. Login y Registro reutilizan
@@ -195,6 +211,17 @@ de AHRE, título, descripción y accesos a notificaciones y perfil.
 `SectionHeader.tsx` define el encabezado reutilizable de las pantallas
 secundarias, con el título junto a la flecha de regreso y una descripción
 alineada a la izquierda y centrada verticalmente debajo.
+`ScreenHeaderFrame.tsx` aloja cualquiera de esos encabezados fuera del scroll,
+coordina su plegado automático y presenta las flechas para alternarlo y volver
+al inicio cuando se está abajo. El contexto es local a cada pantalla.
+`HeaderCompactActions.tsx` presenta los accesos de sincronización, notificaciones
+y perfil cuando el encabezado está plegado, reutilizando sus callbacks y la
+variante `soloIcono` de `SyncStatus.tsx`, sin fondos de botón.
+`HeaderScrollView.tsx` conserva la API de los ScrollView y SectionList nativos,
+incluidos sus refs y callbacks, y añade la comunicación con el marco. El
+controlador puro `src/navigation/headerScrollController.ts` gestiona dirección,
+inercia, elección manual, rebotes y regreso al inicio. Movimientos detiene su
+carga automática y las restauraciones pendientes antes del regreso programático.
 `ToastNotification.tsx` dibuja avisos superiores con una barra de tiempo, cierre
 manual y gesto horizontal. El estado compartido entre pantallas vive en
 `src/contexts/ToastContext.tsx`. Las pantallas usan `mostrarAviso` para errores

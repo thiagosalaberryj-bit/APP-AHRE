@@ -126,6 +126,10 @@ casos MySQL se omiten explícitamente: informar aprobadas, fallidas y omitidas.
 
 ## Datos locales y diagnóstico
 
+La [guía de pruebas de optimización](pruebas-optimizacion.md) incluye una
+instancia MySQL descartable, los comandos de integración y la comprobación
+automatizada con 10.000 movimientos, con sus límites frente a una prueba nativa.
+
 En desarrollo se permiten bases Expo de prueba descartables cuando el esquema
 inicial cambia. No limpiar datos de personas ni del servidor para aplicar una
 modificación. La preparación de índices y tablas auxiliares de las etapas 3 y 4
@@ -139,6 +143,15 @@ normaliza el mismo minuto de creación según la [regla de movimientos](../funci
 
 Para exportar o distribuir, seguir [Publicación](publicacion.md). El estado de
 las comprobaciones se mantiene en [Estado y validación](../estado-y-validacion.md).
+
+## Tipos de las pruebas en el editor
+
+`tests/tsconfig.json` extiende la configuración de herramientas para que el
+servicio TypeScript del editor reconozca los tipos de Node y los imports `.ts`
+de los tests. El comando `npm run typecheck` comprueba tanto la app como las
+herramientas; `npm test` ejecuta los casos. Si el editor conservó diagnósticos
+anteriores, reiniciar su servidor TypeScript y usar la versión del workspace.
+Esta configuración no desactiva errores ni cambia la compilación de la app.
 
 ## Base de desarrollo Social
 

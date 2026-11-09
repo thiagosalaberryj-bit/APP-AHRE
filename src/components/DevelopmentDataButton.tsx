@@ -13,16 +13,18 @@ export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntr
   const { mostrarAviso } = useContext(ContextoAvisos);
   const accionEnCurso = useRef(false);
   const [cargando, establecerCargando] = useState(false);
+  const [volumenEnCurso, establecerVolumenEnCurso] = useState(false);
   const estilos = crearEstilosDatosPrueba();
   const estilosGlobales = crearEstilosGlobales(tema);
 
-  const entrar = async () => {
+  const entrar = async (volumenMovimientos = false) => {
     if (!__DEV__ || accionEnCurso.current || deshabilitado) return;
     accionEnCurso.current = true;
     establecerCargando(true);
+    establecerVolumenEnCurso(volumenMovimientos);
     alCambiarCarga?.(true);
     try {
-      await prepararDatosPrueba({vistaSocialOnline:true});
+      await prepararDatosPrueba({vistaSocialOnline:true,volumenMovimientos});
       try {
         const preferencias = await cargarPreferenciasActuales();
         establecerApariencia(preferencias.apariencia);
@@ -44,11 +46,19 @@ export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntr
     <Pressable accessibilityRole="button" accessibilityLabel="Entrar con datos de prueba"
       accessibilityHint="Abre una cuenta de desarrollo independiente con depósitos y movimientos."
       accessibilityState={{ disabled: deshabilitado || cargando, busy: cargando }}
-      disabled={deshabilitado || cargando} onPress={entrar}
+      disabled={deshabilitado || cargando} onPress={() => entrar()}
       style={[estilosGlobales.botonSecundario, estilos.boton, (deshabilitado || cargando) && estilosGlobales.botonDeshabilitado]}>
       <Ionicons name="flask-outline" size={20} color={deshabilitado || cargando ? tema.deshabilitado : tema.botonSecundarioTexto} />
-      <Text style={[deshabilitado || cargando ? estilosGlobales.textoDeshabilitado : estilosGlobales.textoBotonSecundario, estilos.texto]}>{cargando ? 'Preparando datos…' : 'Entrar con datos de prueba'}</Text>
+      <Text style={[deshabilitado || cargando ? estilosGlobales.textoDeshabilitado : estilosGlobales.textoBotonSecundario, estilos.texto]}>{cargando && !volumenEnCurso ? 'Preparando datos…' : 'Entrar con datos de prueba'}</Text>
     </Pressable>
-    <Text style={[estilosGlobales.textoAyuda, estilos.texto]}>Solo desarrollo · Cuenta independiente</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel="Entrar con 10.000 movimientos"
+      accessibilityHint="Carga un depósito ficticio en la cuenta local de pruebas, sin sincronizar con el servidor."
+      accessibilityState={{ disabled: deshabilitado || cargando, busy: cargando && volumenEnCurso }}
+      disabled={deshabilitado || cargando} onPress={() => entrar(true)}
+      style={[estilosGlobales.botonSecundario, estilos.boton, (deshabilitado || cargando) && estilosGlobales.botonDeshabilitado]}>
+      <Ionicons name="bar-chart-outline" size={20} color={deshabilitado || cargando ? tema.deshabilitado : tema.botonSecundarioTexto} />
+      <Text style={[deshabilitado || cargando ? estilosGlobales.textoDeshabilitado : estilosGlobales.textoBotonSecundario, estilos.texto]}>{cargando && volumenEnCurso ? 'Preparando 10.000 movimientos…' : 'Entrar con 10.000 movimientos'}</Text>
+    </Pressable>
+    <Text style={[estilosGlobales.textoAyuda, estilos.texto]}>Solo desarrollo · Cuenta local independiente</Text>
   </View>;
 }

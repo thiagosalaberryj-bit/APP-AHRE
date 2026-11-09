@@ -35,15 +35,7 @@ function generarDescripcionAutomatica(nombre: string, tipoId: string) {
   return `Fuente «${nombre}» · ${tipo!.nombre}`;
 }
 
-function calcularImpactoMovimiento(movimiento: Pick<import('../database/types').Movimiento,'monto'|'tipo'> & {fecha_hora: string | number | Date}) {
-  const monto = Number(movimiento.monto);
-  if (!Number.isFinite(monto)) return 0;
-  if (movimiento.tipo === 'ingreso' || movimiento.tipo === 'transferencia_entrada') return monto;
-  if (movimiento.tipo === 'egreso' || movimiento.tipo === 'transferencia_salida') return -monto;
-  return 0;
-}
-
-function calcularComparacionMensual(deposito: import('../database/types').Deposito, movimientos: import('../database/types').Movimiento[], historialSaldos: import('../database/types').HistorialSaldoDeposito[]) {
+function calcularComparacionMensual(deposito: import('../database/types').Deposito, impactoMovimientos: number, impactoAjustes: number) {
   const ahora = new Date();
   const inicioMesActual = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
   const fechaCierreAnterior = new Date(ahora.getFullYear(), ahora.getMonth(), 0);
@@ -58,23 +50,6 @@ function calcularComparacionMensual(deposito: import('../database/types').Deposi
     };
   }
 
-  const impactoMovimientos = movimientos.reduce((total, movimiento) => {
-    const fecha = new Date(movimiento.fecha_hora);
-    return Number.isFinite(fecha.getTime()) && fecha >= inicioMesActual
-      ? total + calcularImpactoMovimiento(movimiento)
-      : total;
-  }, 0);
-  const impactoAjustes = historialSaldos.reduce((total, ajuste) => {
-    const fecha = new Date(ajuste.fecha_hora);
-    const anterior = Number(ajuste.saldo_anterior);
-    const informado = Number(ajuste.saldo_informado);
-    return Number.isFinite(fecha.getTime())
-      && fecha >= inicioMesActual
-      && Number.isFinite(anterior)
-      && Number.isFinite(informado)
-      ? total + informado - anterior
-      : total;
-  }, 0);
   const saldoActual = Number(deposito.saldo_actual);
   const saldoAnterior = Number((saldoActual - impactoMovimientos - impactoAjustes).toFixed(2));
   const diferencia = Number((saldoActual - saldoAnterior).toFixed(2));
@@ -144,17 +119,25 @@ export async function consultarDetalleDeposito(depositoId: string) {
   }
 
   const deposito = await consultarDepositoPropioActivo(depositoId);
-  const movimientos = await movimientosRepositorio.consultar(
-    { deposito_id: deposito.id },
-    { ordenarPor: 'fecha_hora', direccion: 'DESC' },
-  );
-  const historialSaldos = await depositosRepositorio.consultarHistorialSaldos(deposito.id);
+  const ahora = new Date();
+  const resumen = await movimientosRepositorio.consultarResumenDeposito(deposito.id, new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString());
 
   return {
     deposito,
-    movimientos,
-    comparacionMensual: calcularComparacionMensual(deposito, movimientos, historialSaldos),
+    cantidadMovimientos: resumen.cantidad,
+    categoriasMovimientos: resumen.categorias,
+    comparacionMensual: calcularComparacionMensual(deposito, resumen.impactoMovimientos, resumen.impactoAjustes),
   };
+}
+
+export async function consultarPaginaMovimientosDeposito(depositoId: string, filtros: import('../types/forms').FiltrosHistorial = {}, cursor: {fecha_hora:string;id:string}|null = null) {
+  const deposito = await consultarDepositoPropioActivo(depositoId);
+  return movimientosRepositorio.consultarPaginaDeposito(deposito.usuario_id, deposito.id, filtros, cursor);
+}
+
+export async function consultarMesesMovimientosDeposito(depositoId: string, filtros: import('../types/forms').FiltrosHistorial) {
+  const deposito = await consultarDepositoPropioActivo(depositoId);
+  return movimientosRepositorio.consultarMesesHistorial(deposito.usuario_id, { ...filtros, depositoIds: [deposito.id] }, true);
 }
 
 export async function actualizarDeposito(depositoId: string, datos: import('../types/forms').DatosDeposito) {

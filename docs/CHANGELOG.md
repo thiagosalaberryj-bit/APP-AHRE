@@ -3,6 +3,45 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [Sin publicar]
+
+### Cambiado
+
+- Encabezados fuera del desplazamiento en todas las pantallas que los usan,
+  con plegado automático al bajar, controles para desplegar y volver arriba,
+  animación y soporte de reducir movimiento.
+- Barra compacta del mismo color del encabezado, con íconos de sincronización,
+  notificaciones y perfil sin fondos individuales, conservando acciones y estados.
+- Inicio describe su contenido como «Tu balance, depósitos y movimientos.».
+- Social elimina los botones Cancelar de Nueva persona y de la confirmación
+  para quitar integrantes, y el regreso duplicado «Volver a integrantes» del
+  historial. Se conservan los cierres y el regreso del encabezado.
+
+- Filtros y accesos rápidos compartidos entre Movimientos y Detalle de depósito.
+- Campos y selector de íconos compartidos entre creación y edición de depósitos.
+- Marco común de los siete modales de Perfil y lista común de idioma/apariencia.
+- Gráficos y controles de fecha de Estadísticas separados de la pantalla;
+  cálculos y formatos de presentación organizados en un módulo propio.
+- Detalle de depósito reutiliza el filtrado, orden y agrupación mensual cuando
+  no cambian los datos ni los criterios. Su buscador aplica una pausa de 250 ms
+  y limpia inmediatamente la búsqueda, también en Recurrentes.
+
+### Verificación
+
+- Encabezados y ajustes de Social: tipos correctos y suite local con 399 pruebas
+  aprobadas, cero fallos y 39 integraciones MySQL omitidas. Se comprueban los
+  controles compactos en ambos temas y el regreso del historial por el encabezado.
+  No se repitió MySQL para estos cambios de presentación.
+- Tipos y comprobación de declaraciones sin uso aprobados. Suite completa
+  con MySQL 8.4.3 temporal de Laragon: 395 pruebas de app y 60 de backend
+  aprobadas, cero fallos y cero omisiones. Las 39 integraciones anteriormente
+  omitidas quedaron ejecutadas. Cero bases temporales restantes; instancia
+  detenida, puerto cerrado y carpeta de datos de prueba eliminada.
+- Pruebas de callbacks, selección, fechas, temas, cancelación de búsquedas y
+  reutilización de cálculos; escenario adicional con 10.000 movimientos.
+- La persona usuaria indicó que los recorridos revisados se ven y funcionan
+  igual. No se midieron tamaño del APK ni tiempos de respuesta nativos.
+
 ## [v0.8.0] - 2026-11-08 - no estable
 
 ### Añadido

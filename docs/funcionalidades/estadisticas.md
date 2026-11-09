@@ -39,6 +39,14 @@ un gráfico de ceros.
 
 ## Categorías, totales y porcentajes
 
+La preparación para la interfaz está en
+`src/statistics/statisticsPresentation.ts`: conserva los límites locales de
+período, las series de siete días o doce meses, los formatos y la geometría
+del gráfico circular. `calcularResumenVisible` limita y suma las categorías
+seleccionadas; `obtenerDetalleColumna` prepara la columna activa y su desglose.
+Estas funciones no consultan ni modifican SQLite. Las consultas permanecen
+en `statisticsService.ts` y el repositorio existente.
+
 SQLite agrupa por `categoria` y devuelve `ROUND(SUM(m.monto), 2)` y
 `COUNT(m.id)`. El total general se calcula sumando los totales agrupados del
 tipo y período actuales, aplicando primero el rango de importe a cada movimiento.

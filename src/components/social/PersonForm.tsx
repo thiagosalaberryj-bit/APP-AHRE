@@ -50,6 +50,5 @@ export default function FormularioPersona(propiedades: import('../../social/type
       <AccionesFormulario texto={personaInicial ? "Guardar cambios" : "Registrar persona"}
         deshabilitado={!nombreNormalizado || !apellidoNormalizado || !apodoNormalizado || Boolean(existente)}
         recargarAntesDeCerrar alGuardar={() => guardarPersona({ nombre, apellido, apodo }, personaInicial?.id)} alExito={alCerrar} {...aspecto} />
-      {!personaInicial ? <BotonSocial texto="Cancelar" simple alPresionar={() => alCerrar()} {...aspecto} /> : null}
     </View></RequisitoCreacionSocial>;
 }

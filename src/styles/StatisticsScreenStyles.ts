@@ -312,34 +312,41 @@ export function crearEstilosEstadisticas(tema: Tema) {
       width: '100%',
     },
     detalleColumna: {
+      marginTop: ESPACIADO.medio,
+    },
+    resumenColumna: {
+      alignItems: 'center',
       backgroundColor: tema.superficie,
       borderColor: tema.borde,
       borderRadius: BORDES.radios.tarjeta,
       borderWidth: BORDES.anchos.fino,
-      marginTop: ESPACIADO.medio,
+      gap: ESPACIADO.minimo,
       padding: ESPACIADO.medio,
     },
-    resumenColumna: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      minHeight: 32,
+    periodoDetalleColumna: {
+      color: tema.textoSecundario,
+      fontFamily: TIPOGRAFIA.familias.principal,
+      fontSize: TIPOGRAFIA.tamanos.secundario,
+      textTransform: 'capitalize',
+      textAlign: 'center',
     },
     totalColumna: {
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
-      fontSize: TIPOGRAFIA.tamanos.secundario,
+      fontSize: TIPOGRAFIA.tamanos.subtitulo,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     listaDetalleColumna: {
       gap: ESPACIADO.minimo,
-      paddingTop: ESPACIADO.pequeno,
+      paddingTop: ESPACIADO.medio,
     },
     filaDetalleColumna: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: ESPACIADO.pequeno,
-      minHeight: 28,
+      paddingVertical: ESPACIADO.pequeno,
+    },
+    importesDetalleColumna: {
+      alignItems: 'flex-end',
+      gap: ESPACIADO.minimo,
+      flexShrink: 0,
     },
     fondoModal: {
       alignItems: 'center',

@@ -19,6 +19,15 @@ vuelve atrás. Los estilos locales están en
 `globalStyles.ts`; el contenido usa 12 puntos de margen por lado, igual que Inicio, y acompaña los
 temas claro y oscuro, incluidos modales y controles.
 
+Los siete modales usan `src/components/ProfileModal.tsx` para el fondo, la
+tarjeta y el encabezado con cierre. Confirmación de identidad, cambio de
+contraseña y edición conservan su `ScrollView`, formulario y separador; los
+otros cuatro conservan el contenido directamente dentro de la tarjeta.
+Idioma y Apariencia reutilizan `ProfileOptionsList.tsx` para sus opciones.
+La pantalla mantiene los campos, referencias de foco, estados, validaciones,
+guardado y callbacks de cierre, incluida la etiqueta propia del fondo de la
+confirmación de cierre de sesión.
+
 ## Información del usuario
 
 Tarjeta superior compacta en dos columnas: avatar circular a la izquierda

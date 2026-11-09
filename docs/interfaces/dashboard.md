@@ -13,7 +13,7 @@ disponible.
 
 La pantalla se compone de:
 
-1. encabezado con marca, bienvenida, nombre y accesos a Notificaciones y Perfil;
+1. encabezado con marca, bienvenida, descripción financiera y accesos a Notificaciones y Perfil;
 2. tarjeta de balance con título «Balance», recuadro de saldo y variación mensual,
    control para ocultar el monto y acciones rápidas;
 3. lista local de depósitos y acceso para crear uno;
@@ -23,10 +23,15 @@ No se muestra una sección de deudas en el Dashboard.
 
 ## Encabezado y balance
 
-El encabezado reutiliza `MainHeader.tsx` y muestra el nombre devuelto por la
-sesión local junto con los accesos a Notificaciones y Perfil. La tarjeta de
-balance se superpone al borde inferior del encabezado verde. Su contenedor
-sigue las proporciones del resumen de deudas: radio de 12 puntos, relleno y
+El encabezado reutiliza `MainHeader.tsx` y muestra «Tu balance, depósitos y
+movimientos.» junto con los accesos a Notificaciones y Perfil. La tarjeta de
+balance queda debajo del encabezado verde, separada por 24 puntos como el
+contenido de Deudas. El encabezado permanece fijo fuera del desplazamiento;
+se desplaza el contenido inferior, sin márgenes negativos ni superposición.
+El marco compartido permite plegarlo al bajar y ofrece las flechas de alternar
+y volver al inicio. Al llegar arriba recupera la altura completa y oculta esos
+controles, como en las demás pantallas con encabezado.
+Su contenedor sigue las proporciones del resumen de deudas: radio de 12 puntos, relleno y
 separaciones de 12. «Balance» aparece a la izquierda junto a un ícono y el
 monto usa 24 puntos. Una línea fina separa el saldo de las acciones, que tienen
 74 puntos de altura, íconos de 20 y etiquetas de 12, igual que en Social.

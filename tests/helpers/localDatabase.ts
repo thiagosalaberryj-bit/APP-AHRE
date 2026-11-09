@@ -15,6 +15,7 @@ type ServiciosPrueba =
   & typeof import('../../src/authentication/sessionService.ts')
   & typeof import('../../src/profile/profileService.ts')
   & typeof import('../../src/movements/movementService.ts')
+  & typeof import('../../src/deposits/depositService.ts')
   & typeof import('../../src/database/repositories/index.ts')
   & typeof import('../../src/database/initialization.ts')
   & typeof import('../../src/social/socialService.ts')
@@ -70,6 +71,7 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     export * from './src/authentication/sessionService.ts';
     export * from './src/profile/profileService.ts';
     export * from './src/movements/movementService.ts';
+    export * from './src/deposits/depositService.ts';
     export * from './src/database/repositories/index.ts';
     export * from './src/database/initialization.ts';
     export * from './src/social/socialService.ts';

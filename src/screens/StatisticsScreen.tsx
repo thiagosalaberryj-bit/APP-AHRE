@@ -1,3 +1,25 @@
+import MarcoEncabezado from '../components/ScreenHeaderFrame';
+import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
+import GraficoCircular from '../components/StatisticsPieChart';
+import GraficoColumnas from '../components/StatisticsBarChart';
+import ResumenColumna from '../components/StatisticsBarSummary';
+import { SelectorDesplegable, CalendarioDesplegable } from '../components/StatisticsDateControls';
+import { PERIODOS_RESUMEN, MODOS_COLUMNAS, MESES, ANIO_ACTUAL, ANIOS_DISPONIBLES } from '../constants/statistics';
+import {
+  normalizarFecha,
+  formatearRangoSemana,
+  formatearDiaSeleccionado,
+  formatearDiaSelector,
+  formatearSemanaSelector,
+  obtenerCategorias,
+  formatearMonto,
+  formatearPorcentaje,
+  obtenerRangoPeriodo,
+  crearDatosResumen,
+  crearDatosColumnas,
+  calcularResumenVisible,
+  obtenerDetalleColumna,
+} from '../statistics/statisticsPresentation';
 import SelectorSegmentado from '../components/SegmentedSelector';
 import FilaFiltrosHorizontal from '../components/HorizontalFilterRow';
 import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
@@ -11,7 +33,6 @@ import { cargarOpcionesHistorialMovimientos } from '../movements/movementService
 import { convertirSaldoInicial } from '../utils/depositValidation';
 import { formatearEntradaMonto } from '../utils/moneyInput';
 import { PREAJUSTES_CATEGORIAS, PREAJUSTES_MONTOS, coincidenCategorias, alternarGrupoCategorias, agruparCategoriasSeleccionadas } from '../utils/statisticsFilters';
-import type { Tema } from '../styles/colors';
 import { Fragment, useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
@@ -24,7 +45,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import EncabezadoPrincipal from '../components/MainHeader';
@@ -33,574 +53,10 @@ import {
   CATEGORIAS_INGRESO,
 } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
-import { obtenerColorIconoCategoria, ordenarCategoriasPorColor, obtenerColorCategoria, obtenerFamiliaCategoria } from '../styles/categoryColors';
-import { crearEstilosGlobales, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from '../styles/globalStyles';
+import { obtenerColorIconoCategoria, obtenerFamiliaCategoria } from '../styles/categoryColors';
+import { crearEstilosGlobales, MARGEN_LATERAL_PANTALLA } from '../styles/globalStyles';
 import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
 import { cargarEstadisticas } from '../statistics/statisticsService';
-
-const PERIODOS_RESUMEN = Object.freeze([
-  { id: 'dia', nombre: 'Día' },
-  { id: 'semana', nombre: 'Semana' },
-  { id: 'mes', nombre: 'Mes' },
-  { id: 'anio', nombre: 'Año' },
-]);
-
-const MODOS_COLUMNAS = Object.freeze([
-  { id: 'semana', nombre: 'Semana' },
-  { id: 'anio', nombre: 'Año' },
-]);
-
-const DIAS_SEMANA = Object.freeze(['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']);
-const MESES = Object.freeze([
-  { id: 0, corto: 'Ene', nombre: 'Enero' },
-  { id: 1, corto: 'Feb', nombre: 'Febrero' },
-  { id: 2, corto: 'Mar', nombre: 'Marzo' },
-  { id: 3, corto: 'Abr', nombre: 'Abril' },
-  { id: 4, corto: 'May', nombre: 'Mayo' },
-  { id: 5, corto: 'Jun', nombre: 'Junio' },
-  { id: 6, corto: 'Jul', nombre: 'Julio' },
-  { id: 7, corto: 'Ago', nombre: 'Agosto' },
-  { id: 8, corto: 'Sep', nombre: 'Septiembre' },
-  { id: 9, corto: 'Oct', nombre: 'Octubre' },
-  { id: 10, corto: 'Nov', nombre: 'Noviembre' },
-  { id: 11, corto: 'Dic', nombre: 'Diciembre' },
-]);
-const ANIO_ACTUAL = new Date().getFullYear();
-const ANIOS_DISPONIBLES = Object.freeze(Array.from({ length: 6 }, (_, indice) => ANIO_ACTUAL - indice));
-
-function normalizarFecha(fecha: Date) {
-  return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
-}
-
-function obtenerInicioSemana(fecha: Date) {
-  const inicio = normalizarFecha(fecha);
-  inicio.setDate(inicio.getDate() - ((inicio.getDay() + 6) % 7));
-  return inicio;
-}
-
-function formatearFecha(fecha: Date, opciones?: Intl.DateTimeFormatOptions) {
-  return fecha.toLocaleDateString('es-AR', opciones);
-}
-
-function formatearRangoSemana(fecha: Date) {
-  const inicio = obtenerInicioSemana(fecha);
-  const fin = new Date(inicio);
-  fin.setDate(fin.getDate() + 6);
-  const mesInicio = MESES[inicio.getMonth()].nombre.toLowerCase();
-  const mesFin = MESES[fin.getMonth()].nombre.toLowerCase();
-  const anioInicio = inicio.getFullYear();
-  const anioFin = fin.getFullYear();
-
-  if (inicio.getMonth() === fin.getMonth() && anioInicio === anioFin) {
-    return `${inicio.getDate()}–${fin.getDate()} de ${mesFin} ${anioFin}`;
-  }
-
-  if (anioInicio === anioFin) {
-    return `${inicio.getDate()} de ${mesInicio}–${fin.getDate()} de ${mesFin} ${anioFin}`;
-  }
-
-  return `${inicio.getDate()} de ${mesInicio} ${anioInicio}–${fin.getDate()} de ${mesFin} ${anioFin}`;
-}
-
-function formatearDiaSeleccionado(fecha: Date) {
-  const hoy = normalizarFecha(new Date());
-  const seleccion = normalizarFecha(fecha);
-  const fechaVisible = formatearFecha(fecha, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-  return hoy.getTime() === seleccion.getTime()
-    ? `Hoy · ${fechaVisible}`
-    : fechaVisible;
-}
-
-function formatearDiaSelector(fecha: Date) {
-  const hoy = normalizarFecha(new Date());
-  const seleccion = normalizarFecha(fecha);
-
-  return hoy.getTime() === seleccion.getTime()
-    ? `Hoy · ${fecha.getFullYear()}`
-    : `${fecha.getDate()} ${MESES[fecha.getMonth()].corto.toLowerCase()} ${fecha.getFullYear()}`;
-}
-
-function formatearSemanaSelector(fecha: Date) {
-  const inicio = obtenerInicioSemana(fecha);
-  const fin = new Date(inicio);
-  fin.setDate(fin.getDate() + 6);
-
-  if (inicio.getMonth() === fin.getMonth()) {
-    return `${inicio.getDate()}–${fin.getDate()} ${MESES[fin.getMonth()].corto.toLowerCase()} ${fin.getFullYear()}`;
-  }
-
-  if (inicio.getFullYear() === fin.getFullYear()) {
-    return `${inicio.getDate()} ${MESES[inicio.getMonth()].corto.toLowerCase()}–${fin.getDate()} ${MESES[fin.getMonth()].corto.toLowerCase()} ${fin.getFullYear()}`;
-  }
-
-  return `${inicio.getDate()} ${MESES[inicio.getMonth()].corto.toLowerCase()} ${inicio.getFullYear()}–${fin.getDate()} ${MESES[fin.getMonth()].corto.toLowerCase()} ${fin.getFullYear()}`;
-}
-
-function obtenerCategorias(tipoMovimiento: string, tema: Tema) {
-  const catalogo = tipoMovimiento === 'ingreso' ? CATEGORIAS_INGRESO : CATEGORIAS_EGRESO;
-
-  return ordenarCategoriasPorColor(catalogo, tema, tipoMovimiento).map((categoria, indice) => ({
-    ...categoria,
-    indiceCategoria: indice,
-    color: obtenerColorCategoria(categoria.id, tema, tipoMovimiento),
-  }));
-}
-
-function formatearMonto(monto: number) {
-  return `$ ${new Intl.NumberFormat('es-AR', {
-    maximumFractionDigits: 2,
-  }).format(Number(monto) || 0)}`;
-}
-
-function formatearPorcentaje(porcentaje: number) {
-  const valor = Math.round((Number(porcentaje) + Number.EPSILON) * 10) / 10;
-  return `${valor.toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`;
-}
-
-function crearRutaSector(inicio: number, fin: number, radio = 140) {
-  const centro = 180;
-  const punto = (angulo: number) => ({
-    x: centro + radio * Math.cos((angulo * Math.PI) / 180),
-    y: centro + radio * Math.sin((angulo * Math.PI) / 180),
-  });
-  const primero = punto(inicio);
-  const segundo = punto(fin);
-  const arcoGrande = fin - inicio > 180 ? 1 : 0;
-
-  return `M ${centro} ${centro} L ${primero.x} ${primero.y} A ${radio} ${radio} 0 ${arcoGrande} 1 ${segundo.x} ${segundo.y} Z`;
-}
-
-function obtenerRangoPeriodo(periodo: string, fechaDia: Date, fechaSemana: Date, mes: number, anio: number) {
-  if (periodo === 'dia') {
-    const inicio = normalizarFecha(fechaDia);
-    const fin = new Date(inicio);
-    fin.setDate(fin.getDate() + 1);
-    return { inicio, fin };
-  }
-  if (periodo === 'semana') {
-    const inicio = obtenerInicioSemana(fechaSemana);
-    const fin = new Date(inicio);
-    fin.setDate(fin.getDate() + 7);
-    return { inicio, fin };
-  }
-  if (periodo === 'mes') {
-    return { inicio: new Date(anio, mes, 1), fin: new Date(anio, mes + 1, 1) };
-  }
-  return { inicio: new Date(anio, 0, 1), fin: new Date(anio + 1, 0, 1) };
-}
-
-function crearDatosResumen(categorias: (import('../constants/movimientos').Categoria & {color:string})[], filas: { categoria: string; total: number; cantidad: number }[], totalGeneral: number) {
-  const agregados = new Map(filas.map((fila) => [fila.categoria, fila]));
-  return categorias.flatMap((categoria) => {
-    const fila = agregados.get(categoria.id);
-    if (!fila) return [];
-    return [{
-      ...categoria,
-      monto: Number(fila.total) || 0,
-      cantidad: Number(fila.cantidad) || 0,
-      participacion: totalGeneral > 0 ? (Number(fila.total) / totalGeneral) * 100 : 0,
-    }];
-  });
-}
-
-function formatearClaveDia(fecha: Date) {
-  const anio = fecha.getFullYear();
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const dia = String(fecha.getDate()).padStart(2, '0');
-  return `${anio}-${mes}-${dia}`;
-}
-
-function crearDatosColumnas(categorias: (import('../constants/movimientos').Categoria & {color:string})[], modo: string, filas: {periodo:string;categoria:string;total:number}[], fechaSemana: Date, anio: number) {
-  const periodos = modo === 'semana'
-    ? DIAS_SEMANA.map((etiqueta, indice) => {
-      const inicio = obtenerInicioSemana(fechaSemana);
-      inicio.setDate(inicio.getDate() + indice);
-      const fin = new Date(inicio);
-      fin.setDate(fin.getDate() + 1);
-      return { id: `dia-${indice}`, etiqueta, inicio, fin };
-    })
-    : MESES.map((mes) => ({
-      id: `mes-${mes.id}`,
-      etiqueta: mes.corto,
-      inicio: new Date(anio, mes.id, 1),
-      fin: new Date(anio, mes.id + 1, 1),
-    }));
-
-  const agrupados = new Map(filas.map((fila) => [
-    `${fila.periodo}:${fila.categoria}`,
-    Number(fila.total) || 0,
-  ]));
-  const totalesGenerales = new Map<string, number>();
-  filas.forEach((fila) => {
-    if (!categorias.some(categoria => categoria.id === fila.categoria)) return;
-    totalesGenerales.set(
-      fila.periodo,
-      (totalesGenerales.get(fila.periodo) || 0) + (Number(fila.total) || 0),
-    );
-  });
-
-  return periodos.map((periodo) => {
-    const clavePeriodo = modo === 'semana'
-      ? formatearClaveDia(periodo.inicio)
-      : `${periodo.inicio.getFullYear()}-${String(periodo.inicio.getMonth() + 1).padStart(2, '0')}`;
-    return {
-      id: periodo.id,
-      etiqueta: periodo.etiqueta,
-      totalGeneral: totalesGenerales.get(clavePeriodo) || 0,
-      segmentos: categorias.map((categoria) => ({
-        ...categoria,
-        monto: agrupados.get(`${clavePeriodo}:${categoria.id}`) || 0,
-      })),
-    };
-  });
-}
-
-function SelectorDesplegable({
-  visible,
-  titulo,
-  opciones,
-  valorSeleccionado,
-  tema,
-  estilos,
-  alSeleccionar,
-  altoMaximo = 224,
-}: {altoMaximo?:number;visible:boolean;titulo:string;opciones:readonly {id:string|number;nombre:string}[];valorSeleccionado:string|number|null;tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;alCerrar:()=>void;alSeleccionar:(id:string|number)=>void}) {
-  if (!visible) return null;
-  return (
-          <ScrollView style={[estilos.listaDesplegableFecha, { maxHeight:Math.min(184, altoMaximo) }]} nestedScrollEnabled keyboardShouldPersistTaps="handled" contentContainerStyle={estilos.contenidoOpcionesFecha} showsVerticalScrollIndicator>
-            {opciones.map((opcion) => {
-              const seleccionada = opcion.id === valorSeleccionado;
-
-              return (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={titulo + ': ' + opcion.nombre}
-                  accessibilityState={{ selected: seleccionada }}
-                  key={opcion.id}
-                  onPress={() => alSeleccionar(opcion.id)}
-                  style={[
-                    estilos.opcionFechaCompacta,
-                    seleccionada && { backgroundColor: tema.nombre === 'oscuro' ? '#1B443C' : '#EDF5E8' },
-                  ]}
-                >
-                  <Text numberOfLines={1} adjustsFontSizeToFit style={estilos.textoOpcionFechaCompacta}>
-                    {opcion.nombre}
-                  </Text>
-                  <Ionicons
-                    color={seleccionada ? tema.foco : tema.borde}
-                    name="checkmark"
-                    size={16}
-                    style={{ opacity: seleccionada ? 1 : 0 }}
-                  />
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-  );
-}
-
-function CalendarioDesplegable({ visible, fecha, tema, estilos, alCerrar, alSeleccionar }: {visible:boolean;fecha:Date;tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;alCerrar:()=>void;alSeleccionar:(fecha:Date)=>void}) {
-  const [mesVisible, establecerMesVisible] = useState(
-    () => new Date(fecha.getFullYear(), fecha.getMonth(), 1),
-  );
-  const primerDia = (new Date(mesVisible.getFullYear(), mesVisible.getMonth(), 1).getDay() + 6) % 7;
-  const cantidadDias = new Date(mesVisible.getFullYear(), mesVisible.getMonth() + 1, 0).getDate();
-  const diasCalendario = Array.from({ length: Math.ceil((primerDia + cantidadDias) / 7) * 7 }, (_, indice) => {
-    const dia = indice - primerDia + 1;
-    return dia > 0 && dia <= cantidadDias ? dia : null;
-  });
-
-  useEffect(() => {
-    if (visible) establecerMesVisible(new Date(fecha.getFullYear(), fecha.getMonth(), 1));
-  }, [fecha, visible]);
-
-  const cambiarMes = (desplazamiento: number) => {
-    establecerMesVisible((mesActual) => new Date(
-      mesActual.getFullYear(),
-      mesActual.getMonth() + desplazamiento,
-      1,
-    ));
-  };
-
-  if (!visible) return null;
-  return (
-        <View style={estilos.contenidoCalendarioFecha}>
-          <View style={estilos.encabezadoModal}>
-            <Text style={[estilos.tituloModal, { color: tema.textoPrincipal }]}>Elegí una fecha</Text>
-            <Pressable accessibilityLabel="Cerrar calendario" accessibilityRole="button" onPress={alCerrar} style={estilos.botonCerrarModal}>
-              <Ionicons color={tema.textoPrincipal} name="close" size={22} />
-            </Pressable>
-          </View>
-          <View style={estilos.encabezadoCalendario}>
-            <Pressable accessibilityLabel="Mes anterior" accessibilityRole="button" onPress={() => cambiarMes(-1)} style={estilos.botonMesCalendario}>
-              <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
-            </Pressable>
-            <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.mesCalendario, estilos.nombreMesCompacto, { color: tema.textoPrincipal }]}>
-              {MESES[mesVisible.getMonth()].nombre} {mesVisible.getFullYear()}
-            </Text>
-            <Pressable accessibilityLabel="Mes siguiente" accessibilityRole="button" onPress={() => cambiarMes(1)} style={estilos.botonMesCalendario}>
-              <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
-            </Pressable>
-          </View>
-          <View style={estilos.cuadriculaCalendario}>
-            {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((dia, indice) => (
-              <Text key={`${dia}-${indice}`} style={[estilos.nombreDiaCalendario, { color: tema.textoSecundario }]}>
-                {dia}
-              </Text>
-            ))}
-            {diasCalendario.map((dia, indice) => {
-              if (!dia) return <View key={`vacio-${indice}`} style={estilos.celdaCalendario} />;
-
-              const fechaDia = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), dia);
-              const seleccionada = fechaDia.getTime() === normalizarFecha(fecha).getTime();
-              const esHoy = fechaDia.getTime() === normalizarFecha(new Date()).getTime();
-              return (
-                <View key={dia} style={estilos.celdaCalendario}>
-                  <Pressable
-                    accessibilityLabel={formatearFecha(fechaDia, { day: 'numeric', month: 'long', year: 'numeric' })}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: seleccionada }}
-                    onPress={() => alSeleccionar(fechaDia)}
-                    style={[
-                      estilos.diaCalendario,
-                      esHoy && estilos.diaCalendarioHoy,
-                      seleccionada && estilos.diaCalendarioSeleccionado,
-                    ]}
-                  >
-                    <Text style={[
-                      estilos.textoDiaCalendario,
-                      { color: tema.textoPrincipal },
-                      seleccionada && { color: tema.nombre === 'oscuro' ? tema.encabezado : tema.encabezadoTexto },
-                      seleccionada && estilos.textoDiaCalendarioSeleccionado,
-                    ]}>
-                      {dia}
-                    </Text>
-                  </Pressable>
-                </View>
-              );
-            })}
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => alSeleccionar(normalizarFecha(new Date()))}
-            style={estilos.botonHoyCalendario}
-          >
-            <Text style={[estilos.textoBotonHoyCalendario, { color: tema.foco }]}>Ir a hoy</Text>
-          </Pressable>
-        </View>
-  );
-}
-
-function GraficoCircular({
-  categorias,
-  totalGeneral,
-  tamano,
-  tema,
-  seleccionadaId,
-  alSeleccionar,
-}: {categorias:ReturnType<typeof crearDatosResumen>;totalGeneral:number;tamano:number;tema:import('../styles/colors').Tema;seleccionadaId:string|null;alSeleccionar:(id:string)=>void}) {
-  let angulo = -90;
-  const sectores = categorias.map((categoria) => {
-    const amplitud = totalGeneral ? (categoria.monto / totalGeneral) * 360 : 0;
-    const sector = {
-      ...categoria,
-      ruta: crearRutaSector(angulo, angulo + amplitud),
-    };
-    angulo += amplitud;
-    return sector;
-  });
-  const sectoresDibujados = [
-    ...sectores.filter((sector) => sector.id !== seleccionadaId),
-    ...sectores.filter((sector) => sector.id === seleccionadaId),
-  ];
-
-  return (
-    <View style={[estilosGraficoCircular.contenedor, { height: tamano, width: tamano }]}>
-      <Svg height={tamano} width={tamano} viewBox="0 0 360 360">
-        {sectores.length === 1 && Math.abs(sectores[0].monto - totalGeneral) < 0.005 ? (
-          <Circle
-            accessibilityLabel={`${sectores[0].nombre}, ${formatearMonto(sectores[0].monto)}, 100%`}
-            {...{ accessibilityRole: 'button' as const }}
-            cx={180}
-            cy={180}
-            fill={sectores[0].color}
-            onPress={() => alSeleccionar(sectores[0].id)}
-            r={140}
-            stroke={seleccionadaId === sectores[0].id ? tema.foco : tema.superficie}
-            strokeWidth={seleccionadaId === sectores[0].id ? 4 : 2}
-          />
-        ) : sectoresDibujados.map((sector) => (
-          <Path
-            accessibilityLabel={`${sector.nombre}, ${formatearPorcentaje((sector.monto / (totalGeneral || 1)) * 100)}`}
-            {...{ accessibilityRole: 'button' as const }}
-            d={sector.ruta}
-            fill={sector.color}
-            key={sector.id}
-            onPress={() => alSeleccionar(sector.id)}
-            stroke={seleccionadaId === sector.id ? tema.foco : tema.superficie}
-            strokeLinejoin="round"
-            strokeWidth={seleccionadaId === sector.id ? 4 : 2}
-          />
-        ))}
-        <Circle cx={180} cy={180} fill={tema.superficie} r={70} />
-      </Svg>
-      <View pointerEvents="none" style={estilosGraficoCircular.centro}>
-        <Text style={[estilosGraficoCircular.etiquetaCentro, { color: tema.textoSecundario }]}>Total</Text>
-        <Text numberOfLines={1} style={[estilosGraficoCircular.totalCentro, { color: tema.textoPrincipal }]}>
-          {formatearMonto(totalGeneral)}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-const estilosGraficoCircular: Record<string, import('react-native').ViewStyle & import('react-native').TextStyle> = {
-  contenedor: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  centro: {
-    alignItems: 'center',
-    bottom: 0,
-    justifyContent: 'center',
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-  },
-  etiquetaCentro: {
-    fontFamily: TIPOGRAFIA.familias.principal,
-    fontSize: TIPOGRAFIA.tamanos.auxiliar,
-  },
-  totalCentro: {
-    fontFamily: TIPOGRAFIA.familias.principal,
-    fontSize: TIPOGRAFIA.tamanos.secundario,
-    fontWeight: TIPOGRAFIA.pesos.negrita,
-    maxWidth: 128,
-  },
-};
-
-function GraficoColumnas({
-  barras,
-  tema,
-  estilos,
-  tamano,
-  graficoActivo,
-  indiceSeleccionado,
-  alSeleccionar,
-  alIniciarSeleccion,
-  alFinalizarSeleccion,
-}: {barras:ReturnType<typeof crearDatosColumnas>;tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;tamano:number;graficoActivo:boolean;indiceSeleccionado:number;alSeleccionar:(indice:number)=>void;alIniciarSeleccion:()=>void;alFinalizarSeleccion:()=>void}) {
-  const referenciaGrafico = useRef<View | null>(null);
-  const medidasGrafico = useRef({ x: 0, ancho: 0 });
-  const inicioToqueX = useRef<number>(0);
-  const arrastreIniciado = useRef(false);
-  const montoMaximo = Math.max(0, ...barras.map((barra) => (
-    barra.segmentos.reduce((suma, segmento) => suma + segmento.monto, 0)
-  )));
-  const altoContenedor = Math.max(288, tamano + (ESPACIADO.pequeno * 2));
-  const altoMaximoBarra = altoContenedor - ESPACIADO.grande - ESPACIADO.minimo - 20;
-
-  const medirGrafico = useCallback(() => {
-    referenciaGrafico.current?.measureInWindow((x, _y, ancho) => {
-      medidasGrafico.current = { x, ancho };
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!graficoActivo) return undefined;
-
-    const marco = requestAnimationFrame(medirGrafico);
-    return () => cancelAnimationFrame(marco);
-  }, [graficoActivo, medirGrafico]);
-
-  const seleccionarDesdeToque = (evento: import('react-native').GestureResponderEvent) => {
-    const { pageX } = evento.nativeEvent;
-    const { x, ancho } = medidasGrafico.current;
-    if (!ancho || !barras.length) return;
-    const indice = Math.min(
-      barras.length - 1,
-      Math.max(0, Math.floor(((pageX - x) / ancho) * barras.length)),
-    );
-    alSeleccionar(indice);
-  };
-
-  const actualizarSeleccionDuranteArrastre = (evento: import('react-native').GestureResponderEvent) => {
-    const { pageX } = evento.nativeEvent;
-    if (!arrastreIniciado.current) {
-      if (Math.abs(pageX - inicioToqueX.current) < 8) return;
-      arrastreIniciado.current = true;
-    }
-
-    seleccionarDesdeToque(evento);
-  };
-
-  const terminarSeleccion = () => {
-    alFinalizarSeleccion();
-  };
-
-  return (
-    <View
-      ref={referenciaGrafico}
-      onLayout={(evento) => {
-        medidasGrafico.current.ancho = evento.nativeEvent.layout.width;
-        medirGrafico();
-      }}
-      onTouchCancel={terminarSeleccion}
-      onTouchEnd={terminarSeleccion}
-      onTouchMove={actualizarSeleccionDuranteArrastre}
-      onTouchStart={(evento) => {
-        alIniciarSeleccion();
-        medirGrafico();
-        inicioToqueX.current = evento.nativeEvent.pageX;
-        arrastreIniciado.current = false;
-      }}
-      style={[estilos.contenedorColumnas, { height: altoContenedor }]}
-    >
-      {barras.map((barra, indice) => {
-        const total = barra.segmentos.reduce((suma, segmento) => suma + segmento.monto, 0);
-        const altura = montoMaximo ? Math.max(2, (total / montoMaximo) * altoMaximoBarra) : 2;
-
-        return (
-          <Pressable
-            accessibilityLabel={`${barra.etiqueta}, ${formatearMonto(total)}`}
-            accessibilityRole="button"
-            accessibilityState={{ selected: indice === indiceSeleccionado }}
-            key={barra.id}
-            onPress={() => {
-              if (arrastreIniciado.current) {
-                arrastreIniciado.current = false;
-                return;
-              }
-              alSeleccionar(indice);
-            }}
-            style={estilos.columna}
-          >
-            <View
-              style={[
-                estilos.barra,
-                {
-                  height: altura,
-                  borderColor: indice === indiceSeleccionado ? tema.foco : 'transparent',
-                },
-              ]}
-            >
-              {barra.segmentos.filter((segmento) => segmento.monto > 0).map((segmento) => (
-                <View
-                  key={`${barra.id}-${segmento.id}`}
-                  style={[estilos.segmentoBarra, { backgroundColor: segmento.color, flex: segmento.monto || 0.01 }]}
-                />
-              ))}
-            </View>
-            <Text numberOfLines={1} style={estilos.etiquetaColumna}>{barra.etiqueta}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 export default function PantallaEstadisticas({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
   const raizSelectores = useRef<View>(null);
@@ -714,8 +170,9 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
     };
   }, [tipoMovimiento, rangoResumen, rangoColumnas, modoColumnas, rangoMonto, errorMonto, intentoCarga]));
 
-  const filasResumenVisibles = (estadisticas?.resumen.categorias || []).filter(fila => categoriasSeleccionadas.includes(fila.categoria));
-  const totalResumen = Math.round((filasResumenVisibles.reduce((total, fila) => total + fila.total, 0) + Number.EPSILON) * 100) / 100;
+  const { totalResumen, hayMovimientosResumen, hayDatosResumen } = calcularResumenVisible(
+    estadisticas?.resumen.categorias || [], categoriasSeleccionadas,
+  );
   const datosResumen = useMemo(
     () => crearDatosResumen(
       categoriasVisibles,
@@ -736,16 +193,8 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   );
   const periodoResumenSeleccionado = PERIODOS_RESUMEN.find((periodo) => periodo.id === periodoResumen);
   const categoriaActiva = datosResumen.find((categoria) => categoria.id === categoriaSeleccionada);
-  const barraSeleccionada = datosColumnas[Math.min(indiceColumnaSeleccionada, datosColumnas.length - 1)];
-  const indiceColumnaVisible = Math.min(indiceColumnaSeleccionada, datosColumnas.length - 1);
-  const filasDetalleColumna = barraSeleccionada?.segmentos.filter((segmento) => segmento.monto > 0) || [];
-  const totalBarraSeleccionada = filasDetalleColumna.reduce((suma, segmento) => suma + segmento.monto, 0);
-  const hayMovimientosResumen = filasResumenVisibles.some(fila => fila.cantidad > 0);
-  const hayDatosResumen = Boolean(hayMovimientosResumen && totalResumen > 0);
+  const { barraSeleccionada, indiceColumnaVisible, filasDetalleColumna, totalBarraSeleccionada, hayDatosColumnasVisibles } = obtenerDetalleColumna(datosColumnas, indiceColumnaSeleccionada);
   const hayDatosColumnas = Boolean(estadisticas?.columnas.length);
-  const hayDatosColumnasVisibles = datosColumnas.some((barra) => (
-    barra.segmentos.some((segmento) => segmento.monto > 0)
-  ));
 
   const abrirPantallaRaiz = (ruta: string, parametros: import('../navigation/types').ParametrosPantalla | undefined = undefined) => {
     const navegadorSuperior = navegacion.getParent();
@@ -944,16 +393,16 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
-      <View ref={raizSelectores} collapsable={false} style={estilosGlobales.pantalla}>
-        <EncabezadoPrincipal
+      <MarcoEncabezado ref={raizSelectores} collapsable={false} style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoPrincipal
           alAbrirNotificaciones={() => abrirPantallaRaiz(RUTAS.NOTIFICACIONES)}
           alAbrirPerfil={() => abrirPantallaRaiz(RUTAS.PERFIL)}
           descripcion="Analiza tus ingresos y gastos."
           tema={tema}
           titulo="Estadísticas"
-        />
+        />}>
 
-        <ScrollView
+
+        <DesplazamientoEncabezado
           keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
           contentContainerStyle={estilos.contenidoDesplazable}
           showsVerticalScrollIndicator={false}
@@ -1158,36 +607,15 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                 ) : !hayDatosColumnasVisibles ? (
                   <Text style={estilos.textoDetalleSeleccion}>Seleccioná categorías para ver el detalle.</Text>
                 ) : barraSeleccionada ? (
-                  <>
-                    <View style={estilos.resumenColumna}>
-                      <Text style={estilos.tituloDetalleSeleccion}>{barraSeleccionada.etiqueta}</Text>
-                      <Text style={estilos.totalColumna}>{formatearMonto(totalBarraSeleccionada)}</Text>
-                    </View>
-                    {filasDetalleColumna.length ? (
-                      <View style={estilos.listaDetalleColumna}>
-                        {filasDetalleColumna.map((segmento) => (
-                          <View key={segmento.id} style={estilos.filaDetalleColumna}>
-                            <View style={[estilos.muestraColor, { backgroundColor: segmento.color }]} />
-                            <Text numberOfLines={1} style={estilos.nombreCategoria}>{segmento.nombre}</Text>
-                            <Text style={estilos.montoCategoria}>{formatearMonto(segmento.monto)}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    ) : (
-                      <Text style={estilos.textoDetalleSeleccion}>
-                        {barraSeleccionada.totalGeneral > 0
-                          ? 'El período tiene movimientos en categorías ocultas.'
-                          : 'Este día o mes no tuvo movimientos.'}
-                      </Text>
-                    )}
-                  </>
+                  <ResumenColumna barra={barraSeleccionada} segmentos={filasDetalleColumna} total={totalBarraSeleccionada}
+                    tipo={tipoMovimiento} tema={tema} estilos={estilos}/>
                 ) : (
                   <Text style={estilos.textoDetalleSeleccion}>No hay datos para este período.</Text>
                 )}
               </View>
             )}
           </View>
-        </ScrollView>
+        </DesplazamientoEncabezado>
 
 
         {anclaSelector && (selectorActual || selectorFechaActual) ? <View pointerEvents="box-none" style={estilos.capaSelectores}>
@@ -1238,7 +666,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
           </SeccionFiltro>
         </PanelFiltrosMovimientos>
 
-      </View>
+      </MarcoEncabezado>
     </SafeAreaView>
   );
 }
