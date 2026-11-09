@@ -18,9 +18,11 @@ documentación se registran en este archivo.
 
 ### Verificación
 
-- Tipos y comprobación de declaraciones sin uso aprobados. Suite completa:
-  356 pruebas aprobadas, cero fallos y 39 integraciones
-  omitidas por no contar con un MySQL aislado configurado.
+- Tipos y comprobación de declaraciones sin uso aprobados. Suite completa
+  con MySQL 8.4.3 temporal de Laragon: 395 pruebas de app y 60 de backend
+  aprobadas, cero fallos y cero omisiones. Las 39 integraciones anteriormente
+  omitidas quedaron ejecutadas. Cero bases temporales restantes; instancia
+  detenida, puerto cerrado y carpeta de datos de prueba eliminada.
 - Pruebas de callbacks, selección, fechas, temas, cancelación de búsquedas y
   reutilización de cálculos; escenario adicional con 10.000 movimientos.
 - La persona usuaria indicó que los recorridos revisados se ven y funcionan

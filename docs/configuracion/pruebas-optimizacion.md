@@ -19,6 +19,14 @@ Se necesita MySQL 8.4 exclusivamente para pruebas y el backend de SERVER-AHRE
 con sus dependencias ya preparadas. La instalación de herramientas corresponde
 al líder. No usar credenciales ni instancias de producción.
 
+También se puede usar el binario MySQL 8.4 de Laragon sin iniciar su instancia
+habitual. Se inicializa una carpeta nueva con `--no-defaults --initialize-insecure`
+y un `--datadir` exclusivo. El proceso de pruebas usa `--no-defaults`, ese mismo
+`--datadir`, `--bind-address=127.0.0.1`, `--port=13307` y `--mysqlx=OFF`.
+Debe verificarse `@@datadir` antes de crear el usuario de pruebas o escribir
+datos. No se usan `my.ini`, servicios ni carpetas de datos existentes de Laragon.
+Las variables y comandos de las suites indicados debajo son los mismos.
+
 Si Docker ya está disponible, esta opción crea una instancia descartable,
 publicada solo en loopback y sin montar datos del proyecto:
 
@@ -95,3 +103,21 @@ esta rama en el mismo teléfono, con el mismo conjunto y configuración:
 
 Una prueba rápida con pocos registros confirma el recorrido, pero no demuestra
 fluidez con grandes volúmenes. El tamaño del APK debe medirse por separado.
+
+## Resultado de la ejecución del 9 de noviembre de 2026
+
+Se utilizó MySQL Community 8.4.3 incluido en Laragon, sin Docker ni instalaciones.
+La instancia recibió una carpeta nueva bajo `.expo/validation/` y escuchó solo
+en `127.0.0.1:13307`. Se comprobó su ruta de datos y se creó un usuario temporal
+con permisos para las bases sintéticas `ahre_test_*`, con contraseña aleatoria
+conservada solo en el entorno del proceso de pruebas.
+
+- Backend: tipos correctos y 60 pruebas aprobadas, cero fallos y cero omisiones.
+- App: 395 pruebas aprobadas, cero fallos y cero omisiones, incluido el escenario
+  de 10.000 movimientos. Se ejecutaron las 39 integraciones antes omitidas.
+- Limpieza: cero bases sintéticas restantes; proceso detenido, puerto cerrado
+  y carpeta de datos temporal eliminada. Los logs locales se conservan bajo
+  `.expo/validation/`, fuera de Git. No hubo cambios en los archivos del servidor.
+
+Esta ejecución valida integración MySQL/HTTP/WebSocket y los escenarios de las
+suites. La medición de fluidez con datos masivos en Android sigue pendiente.
