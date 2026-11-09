@@ -183,6 +183,22 @@ Ver [organización de Social](../interfaces/social.md#organización-del-código)
 
 ### `src/components/`
 
+`DepositForm.tsx` comparte los campos editables entre creación y edición de
+depósitos. `DepositIconModal.tsx` comparte el selector de íconos adicionales.
+Reciben valores, errores y callbacks de cada pantalla y conservan sus variantes
+de presentación; no ejecutan persistencia ni agregan contenedores al formulario.
+
+`ProfileModal.tsx` comparte el marco y encabezado de los siete modales de
+Perfil, con desplazamiento solo en sus formularios. `ProfileOptionsList.tsx`
+comparte las opciones de idioma y apariencia. Los estados y las operaciones
+permanecen en `ProfileScreen.tsx`, con los estilos de Perfil existentes.
+
+Estadísticas delega los gráficos a `StatisticsPieChart.tsx` y
+`StatisticsBarChart.tsx`, y los controles de fecha a
+`StatisticsDateControls.tsx`. `src/statistics/statisticsPresentation.ts`
+contiene los cálculos y formatos de presentación, separados del servicio de
+consultas. El carrusel, filtros y navegación siguen en la pantalla existente.
+
 Contiene componentes visuales reutilizables entre dos o más pantallas. Los
 componentes utilizan PascalCase y un nombre relacionado con su responsabilidad,
 como `MoneyInput.tsx` o `MovementCard.tsx`. Login y Registro reutilizan

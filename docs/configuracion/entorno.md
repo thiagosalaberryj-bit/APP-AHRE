@@ -126,6 +126,10 @@ casos MySQL se omiten explícitamente: informar aprobadas, fallidas y omitidas.
 
 ## Datos locales y diagnóstico
 
+La [guía de pruebas de optimización](pruebas-optimizacion.md) incluye una
+instancia MySQL descartable, los comandos de integración y la comprobación
+automatizada con 10.000 movimientos, con sus límites frente a una prueba nativa.
+
 En desarrollo se permiten bases Expo de prueba descartables cuando el esquema
 inicial cambia. No limpiar datos de personas ni del servidor para aplicar una
 modificación. La preparación de índices y tablas auxiliares de las etapas 3 y 4

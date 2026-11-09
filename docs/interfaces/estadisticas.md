@@ -1,5 +1,15 @@
 # Estadísticas
 
+La pantalla coordina consultas, filtros, selecciones y navegación. Los gráficos
+viven en `src/components/StatisticsPieChart.tsx` y `StatisticsBarChart.tsx`;
+el calendario y la lista flotante, en `StatisticsDateControls.tsx`.
+`src/statistics/statisticsPresentation.ts` prepara períodos, categorías,
+series, totales visibles, porcentajes y formatos. Los catálogos de períodos,
+meses y años están en `src/constants/statistics.ts`. El estilo propio del
+gráfico circular se conserva en `src/styles/StatisticsChartsStyles.ts`;
+los demás estilos siguen en `StatisticsScreenStyles.ts`. Esta organización
+mantiene los mismos elementos, gestos y callbacks de la pantalla existente.
+
 ## Controles y navegación entre gráficos
 
 El primer control es Egresos/Ingresos, con radio exterior de 10 puntos y el
@@ -183,8 +193,9 @@ Estadísticas.
 El detalle de categoría y el de movimiento son rutas secundarias del Stack
 principal, fuera de las pestañas. Al abrirlos se oculta la barra inferior y la
 flecha vuelve a la pantalla anterior. Los archivos de la pantalla de
-estadísticas son `src/screens/StatisticsScreen.tsx` y
-`src/styles/StatisticsScreenStyles.ts`. Las pantallas de detalle y sus estilos
+estadísticas incluyen `src/screens/StatisticsScreen.tsx`, los componentes y el
+módulo de presentación indicados arriba, y `src/styles/StatisticsScreenStyles.ts`.
+Las pantallas de detalle y sus estilos
 son `src/screens/CategoryDetailScreen.tsx`,
 `src/styles/CategoryDetailScreenStyles.ts`,
 `src/screens/MovementDetailScreen.tsx` y

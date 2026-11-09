@@ -1,13 +1,23 @@
+import FormularioDeposito from '../components/DepositForm';
+import ModalIconosDeposito from '../components/DepositIconModal';
+import { TIPOS_DEPOSITO } from '../constants/deposits';
+import {
+  FiltroTipoMovimientos,
+  FiltroFechaMovimientos,
+  FiltroCategoriasMovimientos,
+  FiltroMontoMovimientos,
+} from '../components/MovementFilterSections';
+import FiltrosRapidosMovimientos from '../components/MovementQuickFilters';
+import { OPCIONES_TIPO, MESES } from '../constants/movementFilters';
 import {operacionFinancieraEnCurso} from '../social/financialOperation';
 import {consultarRecurrenciasDeposito} from '../recurrences/recurrenceService';
 import SelectorSegmentado from '../components/SegmentedSelector';
 import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
-import PanelFiltrosMovimientos,{SeccionFiltro} from '../components/MovementFiltersPanel';
+import PanelFiltrosMovimientos from '../components/MovementFiltersPanel';
 import {crearEstilosMovimientos} from '../styles/MovementsScreenStyles';
 import {crearEstilosBusquedaFiltros} from '../styles/MovementSearchFiltersStyles';
-import {obtenerPreajustesMovimientos,PREAJUSTES_MONTOS,alternarGrupoCategorias} from '../utils/statisticsFilters';
+import {obtenerPreajustesMovimientos} from '../utils/statisticsFilters';
 import { formatearEntradaMonto } from '../utils/moneyInput';
-import EntradaMonto from '../components/MoneyInput';
 import PanelRecurrencias from '../components/RecurrencePanel';
 import type { NombreIcono } from '../constants/movimientos';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
@@ -22,20 +32,16 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import BotonPrincipal from '../components/PrimaryButton';
-import SelectorCategoria from '../components/CategorySelector';
-import SelectorFecha from '../components/DateSelector';
 import EncabezadoSeccion from '../components/SectionHeader';
 import TarjetaMovimiento from '../components/MovementCard';
 import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
@@ -44,51 +50,14 @@ import { RUTAS } from '../constants/routes';
 import { actualizarDeposito, consultarDetalleDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
 import { consultarSaldoOculto } from '../profile/balanceVisibilityService';
 import { convertirSaldoInicial } from '../utils/depositValidation';
-import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO, COLORES_DEPOSITOS } from '../styles/colors';
+import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosDetalleDeposito } from '../styles/DepositDetailScreenStyles';
 import { crearEstilosDeposito } from '../styles/DepositScreenStyles';
 
-const TIPOS_DEPOSITO = Object.freeze([
-  Object.freeze({ id: 'efectivo', nombre: 'Efectivo', icono: 'cash-outline' }),
-  Object.freeze({ id: 'banco', nombre: 'Banco', icono: 'business-outline' }),
-  Object.freeze({ id: 'billetera_virtual', nombre: 'Billetera virtual', icono: 'phone-portrait-outline' }),
-]);
-const ICONOS_DEPOSITO = Object.freeze([
-  { nombre: 'cash-outline', etiqueta: 'Efectivo' },
-  { nombre: 'business-outline', etiqueta: 'Banco' },
-  { nombre: 'phone-portrait-outline', etiqueta: 'Virtual' },
-  { nombre: 'wallet-outline', etiqueta: 'Billetera' },
-  { nombre: 'card-outline', etiqueta: 'Tarjeta' },
-  { nombre: 'briefcase-outline', etiqueta: 'Ahorros' },
-]);
-const ICONOS_PRINCIPALES = ICONOS_DEPOSITO.slice(0, 4);
-const ICONOS_ADICIONALES = ICONOS_DEPOSITO.slice(4);
-const NOMBRES_COLORES_DEPOSITO = Object.freeze(['Verde suave', 'Violeta', 'Rosa', 'Amarillo suave']);
-const COLORES_SELECTOR = Object.freeze(
-  COLORES_DEPOSITOS
-    .filter((color) => color !== COLOR_DEPOSITO_PREDETERMINADO)
-    .map((valor, indice) => ({ valor, nombre: NOMBRES_COLORES_DEPOSITO[indice] })),
-);
-const OPCIONES_TIPO = Object.freeze([
-  Object.freeze({ id: 'todos', nombre: 'Todos' }),
-  Object.freeze({ id: 'ingreso', nombre: 'Ingresos' }),
-  Object.freeze({ id: 'egreso', nombre: 'Egresos' }),
-]);
-const OPCIONES_FECHA = Object.freeze([
-  Object.freeze({ id: 'todos', nombre: 'Todo' }),
-  Object.freeze({ id: 'dia', nombre: 'Día' }),
-  Object.freeze({ id: 'semana', nombre: 'Semana' }),
-  Object.freeze({ id: 'mes', nombre: 'Mes' }),
-  Object.freeze({ id: 'personalizado', nombre: 'Personalizado' }),
-]);
 const IDS_INGRESO = new Set(CATEGORIAS_INGRESO.map((categoria) => categoria.id));
 const IDS_EGRESO = new Set(CATEGORIAS_EGRESO.map((categoria) => categoria.id));
 const IDS_TRANSFERENCIA = new Set(['transferencias']);
-const MESES = Object.freeze([
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]);
 const CATEGORIAS_FILTRO = Object.freeze([
   ...CATEGORIAS_INGRESO,
   ...CATEGORIAS_EGRESO.filter((categoria) => !IDS_INGRESO.has(categoria.id)),
@@ -103,7 +72,6 @@ function crearFechaSinHora(fecha: Date) {
 function formatearFechaCorta(fecha: Date) {
   return fecha.toLocaleDateString('es-AR');
 }
-
 
 function formatearSaldo(monto: number) {
   const saldo = Number(monto);
@@ -151,8 +119,6 @@ function formatearRangoSemana(fecha: Date) {
 function esMovimientoDeIngreso(tipo: string) {
   return tipo === 'ingreso' || tipo === 'transferencia_entrada';
 }
-
-
 
 function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: import('react-native').StyleProp<import('react-native').TextStyle> }) {
   const desplazamiento = useRef(new Animated.Value(0)).current;
@@ -207,9 +173,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   useEffect(()=>{establecerSaldoAmpliado(false);},[saldoVisible,depositoId]);
   const [seccionDeposito,establecerSeccionDeposito]=useState('movimientos');
   const [cantidadRecurrencias,establecerCantidadRecurrencias]=useState(0);
-  const comunesFiltros=crearEstilosMovimientos(tema,anchoVentana);
-  const accesosFiltros=crearEstilosBusquedaFiltros(tema);
-  const estilosFiltros={...comunesFiltros,chipFiltro:accesosFiltros.filtro,chipFiltroActivo:accesosFiltros.filtroActivo,textoChipFiltro:accesosFiltros.textoFiltro,textoChipFiltroActivo:accesosFiltros.textoActivo};
+  const estilosFiltros = crearEstilosMovimientos(tema, anchoVentana);
   const estilosAccesos=crearEstilosBusquedaFiltros(tema);
   const [movimientos, establecerMovimientos] = useState<(import('../database/types').Movimiento & {deposito_nombre:string})[]>([]);
   const [comparacionMensual, establecerComparacionMensual] = useState<Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null>(null);
@@ -220,16 +184,16 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
   const [mesesAbiertos, establecerMesesAbiertos] = useState<Record<string,boolean>>({});
   const [busqueda, establecerBusqueda] = useState('');
+  const [busquedaAplicada, establecerBusquedaAplicada] = useState('');
+  useEffect(() => {
+    const temporizador = setTimeout(() => establecerBusquedaAplicada(busqueda.trim()), 250);
+    return () => clearTimeout(temporizador);
+  }, [busqueda]);
+  const cambiarBusqueda = (texto: string) => {
+    establecerBusqueda(texto);
+    if (!texto.trim()) establecerBusquedaAplicada('');
+  };
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
-  const [bordesDesplazamientoFecha, establecerBordesDesplazamientoFecha] = useState({
-    izquierda: false,
-    derecha: false,
-  });
-  const medidasDesplazamientoFecha = useRef({
-    anchoContenido: 0,
-    anchoVisible: 0,
-    desplazamiento: 0,
-  });
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
   const [fechaFiltro, establecerFechaFiltro] = useState('todos');
   const [fechaDia, establecerFechaDia] = useState<Date | null>(null);
@@ -252,11 +216,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const [erroresEdicion, establecerErroresEdicion] = useState<Partial<Record<string, string>>>({});
   const [guardandoEdicion, establecerGuardandoEdicion] = useState(false);
   const [eliminando, establecerEliminando] = useState(false);
-  const tipoSeleccionado = TIPOS_DEPOSITO.find((opcion) => opcion.id === borrador.tipo)?.id;
-  const colorBorrador = borrador.color || COLOR_DEPOSITO_PREDETERMINADO;
-  const opcionColorSeleccionado = COLORES_SELECTOR.find((opcion) => opcion.valor === colorBorrador);
-  const iconoAdicionalSeleccionado = ICONOS_ADICIONALES.find((opcion) => opcion.nombre === borrador.icono);
-  const iconoFueraDeVista = !ICONOS_PRINCIPALES.some((opcion) => opcion.nombre === borrador.icono);
   const estilosFormularioEdicion = {
     ...estilosFormularioDeposito,
     botonPrincipal: {
@@ -341,24 +300,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       ? abiertas.filter((elemento) => elemento !== seccion)
       : [...abiertas, seccion]));
   };
-
-  const actualizarBordesDesplazamientoFecha = useCallback((cambios: Partial<typeof medidasDesplazamientoFecha.current>) => {
-    const medidas = { ...medidasDesplazamientoFecha.current, ...cambios };
-    medidasDesplazamientoFecha.current = medidas;
-    const contenidoDesborda = medidas.anchoContenido > medidas.anchoVisible + 1;
-    const nuevosBordes = {
-      izquierda: contenidoDesborda && medidas.desplazamiento > 1,
-      derecha: contenidoDesborda
-        && medidas.desplazamiento + medidas.anchoVisible < medidas.anchoContenido - 1,
-    };
-
-    establecerBordesDesplazamientoFecha((anteriores) => (
-      anteriores.izquierda === nuevosBordes.izquierda
-      && anteriores.derecha === nuevosBordes.derecha
-        ? anteriores
-        : nuevosBordes
-    ));
-  }, []);
 
   const abrirFiltros = () => {
     establecerFiltrosVisibles(true);
@@ -473,6 +414,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
   const limpiarFiltros = () => {
     establecerBusqueda('');
+    establecerBusquedaAplicada('');
     establecerTipoFiltro('todos');
     establecerFechaFiltro('todos');
     establecerFechaDia(null);
@@ -577,9 +519,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     navegacion.push(RUTAS.DETALLE_MOVIMIENTO, { movimientoId:movimiento.id, categoria, movimiento, deposito_nombre: deposito?.nombre });
   };
 
-  const cumpleFiltros=(movimiento:Pick<import('../database/types').Movimiento,'tipo'|'descripcion'|'categoria'|'monto'|'fecha_hora'>)=>{
+  const cumpleFiltros = useCallback((movimiento: Pick<import('../database/types').Movimiento, 'tipo' | 'descripcion' | 'categoria' | 'monto' | 'fecha_hora'>) => {
     if(errorMontoFiltro||errorFechaFiltro)return false;
-    const texto=busqueda.trim().toLocaleLowerCase('es-AR');
+    const texto=busquedaAplicada.trim().toLocaleLowerCase('es-AR');
     const minimo=montoMinimo.trim()?montoMinimoNumero:null,maximo=montoMaximo.trim()?montoMaximoNumero:null;
       if (tipoFiltro === 'ingreso' && !esMovimientoDeIngreso(movimiento.tipo)) return false;
       if (tipoFiltro === 'egreso' && esMovimientoDeIngreso(movimiento.tipo)) return false;
@@ -610,8 +552,15 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         if (fecha < inicio || fecha > fin) return false;
       }
       return true;
-  };
-  const movimientosFiltrados=movimientos.filter(cumpleFiltros).sort((a,b)=>Date.parse(b.fecha_hora)-Date.parse(a.fecha_hora));
+  }, [
+    errorMontoFiltro, errorFechaFiltro, busquedaAplicada, montoMinimo, montoMaximo,
+    montoMinimoNumero, montoMaximoNumero, tipoFiltro, categoriaFiltroIds,
+    fechaFiltro, fechaDia, fechaSemana, mesSeleccionado, fechaInicial, fechaFinal,
+  ]);
+  const movimientosFiltrados = useMemo(
+    () => movimientos.filter(cumpleFiltros).sort((a, b) => Date.parse(b.fecha_hora) - Date.parse(a.fecha_hora)),
+    [movimientos, cumpleFiltros],
+  );
   const categoriasContexto=seccionDeposito==='recurrentes'?CATEGORIAS_FILTRO:categoriasDisponiblesFiltro;
   const preajustesCategorias=obtenerPreajustesMovimientos(tipoFiltro,categoriasContexto.map(c=>({...c,tipo:IDS_INGRESO.has(c.id)?'ingreso':'egreso'})));
 
@@ -732,30 +681,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
           <View style={estilos.seccionMovimientos}>
             <SelectorSegmentado tema={tema} opciones={[{id:'movimientos',nombre:'Movimientos'},{id:'recurrentes',nombre:'Recurrentes'+(cantidadRecurrencias?' · '+cantidadRecurrencias:'')}]} valor={seccionDeposito} alSeleccionar={establecerSeccionDeposito} etiqueta="Sección del depósito"/>
-            <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={establecerBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosActivos} cantidad={cantidadFiltros}>
-              {OPCIONES_TIPO.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: tipoFiltro === opcion.id }} onPress={() => cambiarTipoFiltro(opcion.id)} style={[estilosAccesos.filtro, tipoFiltro === opcion.id && estilosAccesos.filtroActivo]}>
-                <Text style={[estilosAccesos.textoFiltro, tipoFiltro === opcion.id && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
-              </Pressable>)}
-              {preajustesCategorias.map(opcion => {
-                const disponible = opcion.categorias.length > 0;
-                const activo = disponible && tipoFiltro === opcion.tipo && opcion.categorias.every(id => categoriaFiltroIds.includes(id));
-                return <Pressable key={opcion.tipo + ':' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo, disabled: !disponible }} disabled={!disponible} accessibilityHint={disponible ? undefined : 'No hay movimientos de estas categorías.'}
-                  onPress={() => {
-                    establecerTipoFiltro(opcion.tipo);
-                    establecerCategoriaFiltroIds(actuales => alternarGrupoCategorias(tipoFiltro === opcion.tipo || tipoFiltro === 'todos' ? actuales : [], opcion.categorias));
-                  }}
-                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo, !disponible && { opacity: 0.5 }]}>
-                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
-                </Pressable>;
-              })}
-              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => {
-                const activo = !errorMontoFiltro && (montoMinimoNumero ?? undefined) === opcion.rango.minimo && (montoMaximoNumero ?? undefined) === opcion.rango.maximo;
-                return <Pressable key={'monto:' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo }}
-                  onPress={() => { establecerMontoMinimo(activo || opcion.rango.minimo === undefined ? '' : String(opcion.rango.minimo).replace('.', ',')); establecerMontoMaximo(activo || opcion.rango.maximo === undefined ? '' : String(opcion.rango.maximo).replace('.', ',')); }}
-                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo]}>
-                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
-                </Pressable>;
-              })}
+            <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={cambiarBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosActivos} cantidad={cantidadFiltros}>
+              <FiltrosRapidosMovimientos estilosAccesos={estilosAccesos}
+                tipoFiltro={tipoFiltro} cambiarTipoFiltro={cambiarTipoFiltro} establecerTipoFiltro={establecerTipoFiltro}
+                preajustesCategorias={preajustesCategorias} categoriaFiltroIds={categoriaFiltroIds} establecerCategoriaFiltroIds={establecerCategoriaFiltroIds}
+                montoMinimoNumerico={montoMinimoNumero} montoMaximoNumerico={montoMaximoNumero}
+                errorMontoFiltro={errorMontoFiltro} establecerMontoMinimo={establecerMontoMinimo} establecerMontoMaximo={establecerMontoMaximo}/>
             </BuscadorFiltrosMovimientos>
             {seccionDeposito==='recurrentes'&&depositoId?<PanelRecurrencias depositoId={depositoId} tema={tema} alCambiar={()=>{void cargarDetalle();}} alCambiarCantidad={establecerCantidadRecurrencias} filtrar={fila=>cumpleFiltros({...fila,fecha_hora:fila.proxima_ejecucion})}/>:null}
             {seccionDeposito==='movimientos'?<>
@@ -779,10 +710,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             ) : (
               <View style={estilos.estadoVacio}>
                 <View style={estilos.iconoEstadoVacio}>
-                  <Ionicons color={tema.foco} name={busqueda.trim() ? 'search-outline' : 'receipt-outline'} size={26} />
+                  <Ionicons color={tema.foco} name={busquedaAplicada.trim() ? 'search-outline' : 'receipt-outline'} size={26} />
                 </View>
                 <Text style={estilosGlobales.etiqueta}>
-                  {busqueda.trim() ? `Sin resultados para “${busqueda.trim()}”.` : 'Sin resultados para los filtros elegidos.'}
+                  {busquedaAplicada.trim() ? `Sin resultados para “${busquedaAplicada.trim()}”.` : 'Sin resultados para los filtros elegidos.'}
                 </Text>
                 <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
                   <Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text>
@@ -798,242 +729,34 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
       <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={()=>establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
               <View style={estilosFiltros.listaSeccionesFiltro}>
-                <SeccionFiltro
-                  titulo="Tipo"
-                  resumen={resumenTipo}
-                  abierta={seccionesFiltrosAbiertas.includes('tipo')}
-                  alAlternar={() => alternarSeccionFiltro('tipo')}
-                  colorAcento={tema.foco}
-                  estilos={estilosFiltros}
-                >
-                  <View style={estilosFiltros.filaOpcionesTipo}>
-                    {OPCIONES_TIPO.map((opcion) => {
-                      const activa = tipoFiltro === opcion.id;
-                      return (
-                        <Pressable
-                          key={opcion.id}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: activa }}
-                          onPress={() => cambiarTipoFiltro(opcion.id)}
-                          style={[estilosFiltros.chipFiltro, estilosFiltros.chipTipo, activa ? estilosFiltros.chipFiltroActivo : null]}
-                        >
-                          <Text numberOfLines={1} style={[estilosFiltros.textoChipFiltro, activa ? estilosFiltros.textoChipFiltroActivo : null]}>
-                            {opcion.nombre}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </SeccionFiltro>
-
-                <SeccionFiltro
-                  titulo="Fecha"
-                  resumen={resumenFecha}
-                  abierta={seccionesFiltrosAbiertas.includes('fecha')}
-                  alAlternar={() => alternarSeccionFiltro('fecha')}
-                  colorAcento={tema.botonPrincipal}
-                  estilos={estilosFiltros}
-                >
-                  <View style={estilosFiltros.contenedorOpcionesFecha}>
-                    <ScrollView
-                      contentContainerStyle={estilosFiltros.filaOpcionesFecha}
-                      horizontal
-                      nestedScrollEnabled
-                      onContentSizeChange={(anchoContenido) => actualizarBordesDesplazamientoFecha({ anchoContenido })}
-                      onLayout={(evento) => actualizarBordesDesplazamientoFecha({
-                        anchoVisible: evento.nativeEvent.layout.width,
-                      })}
-                      onScroll={(evento) => actualizarBordesDesplazamientoFecha({
-                        desplazamiento: evento.nativeEvent.contentOffset.x,
-                      })}
-                      scrollEventThrottle={16}
-                      showsHorizontalScrollIndicator={false}
-                      style={estilosFiltros.scrollOpcionesFecha}
-                    >
-                      {OPCIONES_FECHA.map((opcion) => {
-                        const activa = fechaFiltro === opcion.id;
-                        return (
-                          <Pressable
-                            key={opcion.id}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: activa }}
-                            onPress={() => cambiarFechaFiltro(opcion.id)}
-                            style={[estilosFiltros.chipFiltro, estilosFiltros.chipFecha, activa ? estilosFiltros.chipFiltroActivo : null]}
-                          >
-                            <Text style={[estilosFiltros.textoChipFiltro, activa ? estilosFiltros.textoChipFiltroActivo : null]}>
-                              {opcion.nombre}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                    </ScrollView>
-                    {bordesDesplazamientoFecha.izquierda ? (
-                      <Svg
-                        height="100%"
-                        pointerEvents="none"
-                        style={[estilosFiltros.sombraBordeFecha, estilosFiltros.sombraBordeFechaIzquierda]}
-                        width={36}
-                      >
-                        <Defs>
-                          <LinearGradient id="desvanecidoFechaIzquierda" x1="0%" x2="100%" y1="0%" y2="0%">
-                            <Stop offset="0" stopColor={tema.superficie} stopOpacity="1" />
-                            <Stop offset="1" stopColor={tema.superficie} stopOpacity="0" />
-                          </LinearGradient>
-                        </Defs>
-                        <Rect fill="url(#desvanecidoFechaIzquierda)" height="100%" width="100%" />
-                      </Svg>
-                    ) : null}
-                    {bordesDesplazamientoFecha.derecha ? (
-                      <Svg
-                        height="100%"
-                        pointerEvents="none"
-                        style={[estilosFiltros.sombraBordeFecha, estilosFiltros.sombraBordeFechaDerecha]}
-                        width={36}
-                      >
-                        <Defs>
-                          <LinearGradient id="desvanecidoFechaDerecha" x1="0%" x2="100%" y1="0%" y2="0%">
-                            <Stop offset="0" stopColor={tema.superficie} stopOpacity="0" />
-                            <Stop offset="1" stopColor={tema.superficie} stopOpacity="1" />
-                          </LinearGradient>
-                        </Defs>
-                        <Rect fill="url(#desvanecidoFechaDerecha)" height="100%" width="100%" />
-                      </Svg>
-                    ) : null}
-                  </View>
-                  {fechaFiltro === 'dia' ? (
-                    <View style={estilosFiltros.grupoCalendarioFiltro}>
-                      <Text style={estilosFiltros.textoAyudaFiltro}>Elegí un día</Text>
-                      <SelectorFecha
-                        tema={tema}
-                        estilosMovimiento={estilos}
-                        etiqueta="Día"
-                        valor={fechaDia || new Date()}
-                        alSeleccionar={establecerFechaDia}
-                        enLinea
-                      />
-                    </View>
-                  ) : null}
-                  {fechaFiltro === 'mes' ? (
-                    <View style={estilosFiltros.grupoCalendarioFiltro}>
-                      <View style={estilosFiltros.encabezadoCalendario}>
-                        <Pressable
-                          accessibilityLabel="Año anterior"
-                          accessibilityRole="button"
-                          onPress={() => establecerAnioMesVisible((anio) => anio - 1)}
-                          style={estilosFiltros.botonMes}
-                        >
-                          <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
-                        </Pressable>
-                        <Text style={estilosFiltros.mesCalendario}>{anioMesVisible}</Text>
-                        <Pressable
-                          accessibilityLabel="Año siguiente"
-                          accessibilityRole="button"
-                          onPress={() => establecerAnioMesVisible((anio) => anio + 1)}
-                          style={estilosFiltros.botonMes}
-                        >
-                          <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
-                        </Pressable>
-                      </View>
-                      <View style={estilosFiltros.grillaMeses}>
-                        {MESES.map((mes, indice) => {
-                          const activo = mesSeleccionado
-                            && mesSeleccionado.getMonth() === indice
-                            && mesSeleccionado.getFullYear() === anioMesVisible;
-                          return (
-                            <Pressable
-                              accessibilityRole="button"
-                              accessibilityState={{ selected: Boolean(activo) }}
-                              key={mes}
-                              onPress={() => establecerMesSeleccionado(new Date(anioMesVisible, indice, 1))}
-                              style={[estilosFiltros.opcionMes, activo ? estilosFiltros.opcionMesActiva : null]}
-                            >
-                              <Text style={[estilosFiltros.textoOpcionMes, activo ? estilosFiltros.textoOpcionMesActivo : null]}>
-                                {mes}
-                              </Text>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  ) : null}
-                  {fechaFiltro === 'personalizado' ? (
-                    <View style={estilosFiltros.grupoCalendarioFiltro}>
-                      <SelectorFecha
-                        tema={tema}
-                        estilosMovimiento={estilos}
-                        etiqueta="Rango"
-                        valor={fechaFinal || fechaInicial || new Date()}
-                        textoValor={fechaInicial && fechaFinal
-                          ? `${formatearFechaCorta(fechaInicial)} – ${formatearFechaCorta(fechaFinal)}`
-                          : fechaInicial
-                            ? `${formatearFechaCorta(fechaInicial)} · Elegí el final`
-                            : 'Elegí fecha inicial'}
-                        alSeleccionar={seleccionarFechaPersonalizada}
-                        mantenerAbiertoAlSeleccionar
-                        resaltarExtremosRango
-                        enLinea
-                        rangoInicio={fechaInicial}
-                        rangoFin={fechaFinal}
-                      />
-                      {errorFechaFiltro ? <Text style={estilosGlobales.textoError}>{errorFechaFiltro}</Text> : null}
-                    </View>
-                  ) : null}
-                </SeccionFiltro>
-
-                <SeccionFiltro
-                  titulo="Categorías"
-                  resumen={resumenCategorias}
-                  abierta={seccionesFiltrosAbiertas.includes('categorias')}
-                  alAlternar={() => alternarSeccionFiltro('categorias')}
-                  colorAcento={tema.foco}
-                  estilos={estilosFiltros}
-                >
-                  <SelectorCategoria
-                    tema={tema}
-                    estilosGlobales={estilosGlobales}
-                    estilosMovimiento={estilos}
-                    estiloTarjeta={estilosFiltros.tarjetaCategoriaFiltro}
-                    etiqueta=""
-                    categorias={categoriasDisponiblesFiltro}
-                    variante="grilla"
-                    seleccionMultiple
-                    seleccionadasIds={categoriaFiltroIds}
-                    alCambiarMulti={establecerCategoriaFiltroIds}
+                <FiltroTipoMovimientos tema={tema} estilos={estilosFiltros} estilosChips={estilosAccesos} resumen={resumenTipo}
+                    abierta={seccionesFiltrosAbiertas.includes('tipo')} alAlternar={() => alternarSeccionFiltro('tipo')}
+                    tipoFiltro={tipoFiltro} cambiarTipoFiltro={cambiarTipoFiltro}
                   />
-                </SeccionFiltro>
 
-                <SeccionFiltro
-                  titulo="Monto"
-                  resumen={resumenMonto}
-                  abierta={seccionesFiltrosAbiertas.includes('monto')}
-                  alAlternar={() => alternarSeccionFiltro('monto')}
-                  colorAcento={tema.error}
-                  estilos={estilosFiltros}
-                >
-                  <View style={estilosFiltros.filaRango}>
-                    <View style={estilosFiltros.grupoCampoRango}>
-                      <View style={estilosFiltros.etiquetaCampoRango}>
-                        <Ionicons color={tema.textoSecundario} name="arrow-down-outline" size={16} />
-                        <Text style={estilosFiltros.textoEtiquetaCampoRango}>Mínimo</Text>
-                      </View>
-                      <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
-                          etiqueta="Monto mínimo" valor={montoMinimo} alCambiarTexto={establecerMontoMinimo}
-                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
-                          estiloContenedor={estilosFiltros.campoRango}/>
-                    </View>
-                    <View style={estilosFiltros.grupoCampoRango}>
-                      <View style={estilosFiltros.etiquetaCampoRango}>
-                        <Ionicons color={tema.textoSecundario} name="arrow-up-outline" size={16} />
-                        <Text style={estilosFiltros.textoEtiquetaCampoRango}>Máximo</Text>
-                      </View>
-                      <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
-                          etiqueta="Monto máximo" valor={montoMaximo} alCambiarTexto={establecerMontoMaximo}
-                          mostrarEtiqueta={false} mostrarLimpiar={false} compacto
-                          estiloContenedor={estilosFiltros.campoRango}/>
-                    </View>
-                  </View>
-                  {errorMontoFiltro ? <Text style={estilosGlobales.textoError}>{errorMontoFiltro}</Text> : null}
-                </SeccionFiltro>
+                <FiltroFechaMovimientos tema={tema} estilos={estilosFiltros} estilosChips={estilosAccesos} resumen={resumenFecha}
+                    abierta={seccionesFiltrosAbiertas.includes('fecha')} alAlternar={() => alternarSeccionFiltro('fecha')}
+                    estilosSelectores={estilos} estilosGlobales={estilosGlobales}
+                    fechaFiltro={fechaFiltro} cambiarFechaFiltro={cambiarFechaFiltro}
+                    fechaDia={fechaDia} establecerFechaDia={establecerFechaDia}
+                    anioMesVisible={anioMesVisible} establecerAnioMesVisible={establecerAnioMesVisible}
+                    mesSeleccionado={mesSeleccionado} establecerMesSeleccionado={establecerMesSeleccionado}
+                    fechaInicial={fechaInicial} fechaFinal={fechaFinal}
+                    seleccionarFechaPersonalizada={seleccionarFechaPersonalizada} errorFechaFiltro={errorFechaFiltro}
+                  />
+
+                <FiltroCategoriasMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenCategorias}
+                    abierta={seccionesFiltrosAbiertas.includes('categorias')} alAlternar={() => alternarSeccionFiltro('categorias')}
+                    estilosSelectores={estilos} estilosGlobales={estilosGlobales}
+                    categoriasDisponiblesFiltro={categoriasDisponiblesFiltro}
+                    categoriaFiltroIds={categoriaFiltroIds} establecerCategoriaFiltroIds={establecerCategoriaFiltroIds}
+                  />
+
+                <FiltroMontoMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenMonto}
+                    abierta={seccionesFiltrosAbiertas.includes('monto')} alAlternar={() => alternarSeccionFiltro('monto')}
+                    estilosGlobales={estilosGlobales} montoMinimo={montoMinimo} establecerMontoMinimo={establecerMontoMinimo}
+                    montoMaximo={montoMaximo} establecerMontoMaximo={establecerMontoMaximo} errorMontoFiltro={errorMontoFiltro}
+                  />
               </View>
       </PanelFiltrosMovimientos>
 
@@ -1133,256 +856,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               showsVerticalScrollIndicator={false}
               style={estilos.contenidoModal}
             >
-              <View style={estilosFormularioDeposito.grupo}>
-                <View style={estilosGlobales.encabezadoCampo}>
-                  <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Nombre del depósito *</Text>
-                  <Text style={estilosGlobales.contadorCampo}>{(borrador.nombre || '').length}/30</Text>
-                </View>
-                <View style={[
-                  estilosGlobales.campo,
-                  estilosFormularioDeposito.filaEntrada,
-                  nombreEdicionEnfocado ? estilosGlobales.campoEnfocado : null,
-                  erroresEdicion.nombre ? estilosGlobales.campoError : null,
-                ]}>
-                  <Ionicons color={tema.textoSecundario} name="wallet-outline" size={21} />
-                  <TextInput
-                    accessibilityLabel="Nombre del depósito"
-                    maxLength={30}
-                    onBlur={() => establecerNombreEdicionEnfocado(false)}
-                    onChangeText={(valor) => actualizarBorrador('nombre', valor)}
-                    onFocus={() => establecerNombreEdicionEnfocado(true)}
-                    placeholder="Ej: Efectivo, Cuenta BNA"
-                    placeholderTextColor={tema.textoSecundario}
-                    returnKeyType="next"
-                    selectionColor={tema.foco}
-                    style={estilosFormularioDeposito.entradaTexto}
-                    value={borrador.nombre || ''}
-                  />
-                  {borrador.nombre ? (
-                    <Pressable
-                      accessibilityLabel="Limpiar nombre"
-                      accessibilityRole="button"
-                      onPress={() => actualizarBorrador('nombre', '')}
-                      style={estilosFormularioDeposito.botonLimpiar}
-                    >
-                      <Ionicons color={tema.textoSecundario} name="close-circle" size={22} />
-                    </Pressable>
-                  ) : null}
-                </View>
-                {erroresEdicion.nombre ? <Text style={estilosGlobales.textoError}>{erroresEdicion.nombre}</Text> : null}
-              </View>
-
-              <View style={estilosFormularioDeposito.grupo}>
-                <Text style={estilosGlobales.etiqueta}>Tipo de depósito *</Text>
-                <View style={estilosFormularioDeposito.listaTipos}>
-                  {TIPOS_DEPOSITO.map((opcion) => {
-                    const seleccionado = tipoSeleccionado === opcion.id;
-                    return (
-                      <Pressable
-                        accessibilityLabel={opcion.nombre}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: seleccionado }}
-                        key={opcion.id}
-                        onPress={() => actualizarBorrador('tipo', opcion.id)}
-                        style={({ pressed }) => [
-                          estilosFormularioDeposito.tarjetaTipo,
-                          seleccionado && estilosFormularioDeposito.tarjetaTipoSeleccionada,
-                          pressed && estilosFormularioDeposito.elementoPresionado,
-                        ]}
-                      >
-                        <View style={[
-                          estilosFormularioDeposito.iconoTipo,
-                          seleccionado && estilosFormularioDeposito.iconoTipoSeleccionado,
-                        ]}>
-                          <Ionicons
-                            color={seleccionado ? tema.botonPrincipalTexto : tema.foco}
-                            name={opcion.icono}
-                            size={25}
-                          />
-                        </View>
-                        <Text style={[
-                          estilosFormularioDeposito.nombreTipo,
-                          seleccionado && estilosFormularioDeposito.nombreTipoSeleccionado,
-                        ]}>
-                          {opcion.nombre}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-                {erroresEdicion.tipo ? <Text style={estilosGlobales.textoError}>{erroresEdicion.tipo}</Text> : null}
-              </View>
-
-              <View style={estilosFormularioDeposito.grupo}>
-                <Text style={estilosGlobales.etiqueta}>Ícono</Text>
-                <View style={estilosFormularioDeposito.listaIconos}>
-                  {ICONOS_PRINCIPALES.map((opcion) => {
-                    const seleccionado = borrador.icono === opcion.nombre;
-                    return (
-                      <Pressable
-                        accessibilityLabel={`Ícono ${opcion.etiqueta}`}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: seleccionado }}
-                        key={opcion.nombre}
-                        onPress={() => actualizarBorrador('icono', opcion.nombre)}
-                        style={({ pressed }) => [
-                          estilosFormularioDeposito.botonIcono,
-                          seleccionado && estilosFormularioDeposito.botonIconoSeleccionado,
-                          pressed && estilosFormularioDeposito.elementoPresionado,
-                        ]}
-                      >
-                        <Ionicons
-                          color={seleccionado ? tema.foco : tema.textoPrincipal}
-                          name={opcion.nombre as NombreIcono}
-                          size={23}
-                        />
-                        <Text numberOfLines={1} style={estilosFormularioDeposito.nombreIcono}>
-                          {opcion.etiqueta}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                  <Pressable
-                    accessibilityLabel={iconoAdicionalSeleccionado ? `Ícono ${iconoAdicionalSeleccionado.etiqueta}. Ver más íconos` : 'Ver más íconos'}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded: modalIconosEdicionVisible, selected: Boolean(iconoAdicionalSeleccionado) }}
-                    onPress={() => establecerModalIconosEdicionVisible(true)}
-                    style={({ pressed }) => [
-                      estilosFormularioDeposito.botonIcono,
-                      iconoAdicionalSeleccionado ? estilosFormularioDeposito.botonIconoSeleccionado : estilosFormularioDeposito.botonMasIconos,
-                      pressed && estilosFormularioDeposito.elementoPresionado,
-                    ]}
-                  >
-                    <Ionicons color={tema.foco} name={(iconoAdicionalSeleccionado?.nombre || 'add-outline') as NombreIcono} size={23} />
-                    <Text numberOfLines={1} style={estilosFormularioDeposito.nombreIcono}>{iconoAdicionalSeleccionado?.etiqueta || 'Más'}</Text>
-                  </Pressable>
-                </View>
-                {iconoFueraDeVista ? (
-                  <Text style={estilosGlobales.textoAyuda}>
-                    Ícono seleccionado: {ICONOS_DEPOSITO.find((opcion) => opcion.nombre === borrador.icono)?.etiqueta}
-                  </Text>
-                ) : null}
-                {erroresEdicion.icono ? <Text style={estilosGlobales.textoError}>{erroresEdicion.icono}</Text> : null}
-              </View>
-
-              <View style={estilosFormularioDeposito.grupo}>
-                <View style={estilosFormularioDeposito.encabezadoColor}>
-                  <Text style={estilosGlobales.etiqueta}>Color</Text>
-                  <Text style={estilosFormularioDeposito.textoOpcional}>Opcional</Text>
-                </View>
-                <View style={estilosFormularioDeposito.listaColores}>
-                  <Pressable
-                    accessibilityLabel="Color azul suave predeterminado"
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: colorBorrador === COLOR_DEPOSITO_PREDETERMINADO }}
-                    onPress={() => actualizarBorrador('color', COLOR_DEPOSITO_PREDETERMINADO)}
-                    style={({ pressed }) => [
-                      estilosFormularioDeposito.opcionColor,
-                      pressed && estilosFormularioDeposito.elementoPresionado,
-                    ]}
-                  >
-                    <View style={[
-                      estilosFormularioDeposito.muestraColor,
-                      estilosFormularioDeposito.colorPredeterminado,
-                      colorBorrador === COLOR_DEPOSITO_PREDETERMINADO && estilosFormularioDeposito.muestraColorSeleccionada,
-                    ]}>
-                      {colorBorrador === COLOR_DEPOSITO_PREDETERMINADO ? (
-                        <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} />
-                      ) : null}
-                    </View>
-                    <Text numberOfLines={1} adjustsFontSizeToFit style={[
-                      estilosFormularioDeposito.nombreColor,
-                      colorBorrador === COLOR_DEPOSITO_PREDETERMINADO && estilosFormularioDeposito.nombreColorSeleccionado,
-                    ]}>
-                      Azul
-                    </Text>
-                  </Pressable>
-                  {COLORES_SELECTOR.map(({ nombre, valor }) => {
-                    const seleccionado = colorBorrador === valor;
-                    return (
-                      <Pressable
-                        accessibilityLabel={`Color ${nombre}`}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: seleccionado }}
-                        key={valor}
-                        onPress={() => actualizarBorrador('color', valor)}
-                        style={({ pressed }) => [
-                          estilosFormularioDeposito.opcionColor,
-                          pressed && estilosFormularioDeposito.elementoPresionado,
-                        ]}
-                      >
-                        <View style={[
-                          estilosFormularioDeposito.muestraColor,
-                          { backgroundColor: valor },
-                          seleccionado && estilosFormularioDeposito.muestraColorSeleccionada,
-                        ]}>
-                          {seleccionado ? <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} /> : null}
-                        </View>
-                        <Text numberOfLines={1} adjustsFontSizeToFit style={[
-                          estilosFormularioDeposito.nombreColor,
-                          seleccionado && estilosFormularioDeposito.nombreColorSeleccionado,
-                        ]}>
-                          {nombre.replace(/ suave$/, '')}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-                <View style={estilosFormularioDeposito.colorSeleccionadoInfo}>
-                  <View style={[estilosFormularioDeposito.indicadorColorSeleccionado, { backgroundColor: colorBorrador }]} />
-                  <Text style={estilosGlobales.textoAyuda}>
-                    {opcionColorSeleccionado
-                      ? `Color: ${opcionColorSeleccionado.nombre}`
-                      : 'Color: Azul suave (predeterminado)'}
-                  </Text>
-                </View>
-                {erroresEdicion.color ? <Text style={estilosGlobales.textoError}>{erroresEdicion.color}</Text> : null}
-              </View>
-
-              <View style={estilosFormularioDeposito.grupo}>
-                <View style={estilosFormularioDeposito.encabezadoColor}>
-                  <Text style={estilosGlobales.etiqueta}>Descripción</Text>
-                  <View style={estilosFormularioDeposito.detalleEncabezadoCampo}>
-                    <Text style={estilosFormularioDeposito.textoOpcional}>Opcional ·</Text>
-                    <Text style={estilosGlobales.contadorCampo}>{(borrador.descripcion || '').length}/60</Text>
-                  </View>
-                </View>
-                <View style={[
-                  estilosGlobales.campo,
-                  estilosFormularioDeposito.filaDescripcion,
-                  descripcionEdicionEnfocada ? estilosGlobales.campoEnfocado : null,
-                  erroresEdicion.descripcion ? estilosGlobales.campoError : null,
-                ]}>
-                  <Ionicons color={tema.textoSecundario} name="document-text-outline" size={20} />
-                  <TextInput
-                    accessibilityLabel="Descripción opcional"
-                    maxLength={60}
-                    multiline
-                    onBlur={() => establecerDescripcionEdicionEnfocada(false)}
-                    onChangeText={(valor) => actualizarBorrador('descripcion', valor)}
-                    onFocus={() => establecerDescripcionEdicionEnfocada(true)}
-                    placeholder="Agregá un detalle para identificarlo"
-                    placeholderTextColor={tema.textoSecundario}
-                    selectionColor={tema.foco}
-                    style={estilosFormularioDeposito.entradaDescripcion}
-                    value={borrador.descripcion || ''}
-                  />
-                  {borrador.descripcion ? (
-                    <Pressable
-                      accessibilityLabel="Limpiar descripción"
-                      accessibilityRole="button"
-                      onPress={() => actualizarBorrador('descripcion', '')}
-                      style={estilosFormularioDeposito.botonLimpiar}
-                    >
-                      <Ionicons color={tema.textoSecundario} name="close-circle" size={22} />
-                    </Pressable>
-                  ) : null}
-                </View>
-                <Text style={estilosGlobales.textoAyuda}>
-                  Si la dejás vacía, se generará automáticamente con el nombre y el tipo.
-                </Text>
-                {erroresEdicion.descripcion ? <Text style={estilosGlobales.textoError}>{erroresEdicion.descripcion}</Text> : null}
-              </View>
+              <FormularioDeposito
+                tema={tema} estilos={estilosFormularioDeposito} estilosGlobales={estilosGlobales} variante="edicion"
+                valores={borrador} errores={erroresEdicion} alCambiar={(campo, valor) => actualizarBorrador(campo, valor || '')}
+                focoNombre={{ enfocado: nombreEdicionEnfocado, alCambiar: establecerNombreEdicionEnfocado }}
+                focoDescripcion={{ enfocado: descripcionEdicionEnfocada, alCambiar: establecerDescripcionEdicionEnfocada }}
+                iconosAdicionalesVisibles={modalIconosEdicionVisible} alAbrirIconos={() => establecerModalIconosEdicionVisible(true)}
+              />
             </ScrollView>
             <View style={estilos.accionesEdicion}>
               <Pressable accessibilityRole="button" onPress={cerrarEdicion} style={estilos.botonSecundarioModal}>
@@ -1401,55 +881,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         </KeyboardAvoidingView>
       </Modal>
 
-      <Modal
-        animationType="fade"
-        onRequestClose={() => establecerModalIconosEdicionVisible(false)}
-        transparent
-        visible={modalIconosEdicionVisible}
-      >
-        <Pressable
-          accessibilityLabel="Cerrar selector de íconos"
-          onPress={() => establecerModalIconosEdicionVisible(false)}
-          style={estilos.fondoModal}
-        >
-          <Pressable onPress={() => {}} style={estilosFormularioDeposito.tarjetaModal}>
-            <View style={estilosFormularioDeposito.encabezadoModal}>
-              <Text style={estilosFormularioDeposito.tituloModal}>Más íconos</Text>
-              <Pressable
-                accessibilityLabel="Cerrar selector de íconos"
-                accessibilityRole="button"
-                hitSlop={8}
-                onPress={() => establecerModalIconosEdicionVisible(false)}
-                style={estilosFormularioDeposito.botonCerrarModal}
-              >
-                <Ionicons color={tema.textoPrincipal} name="close" size={22} />
-              </Pressable>
-            </View>
-            {ICONOS_ADICIONALES.map((opcion) => {
-              const seleccionado = borrador.icono === opcion.nombre;
-              return (
-                <Pressable
-                  key={opcion.nombre}
-                  accessibilityLabel={`Ícono ${opcion.etiqueta}`}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: seleccionado }}
-                  onPress={() => {
-                    actualizarBorrador('icono', opcion.nombre);
-                    establecerModalIconosEdicionVisible(false);
-                  }}
-                  style={[
-                    estilosFormularioDeposito.opcionIconoModal,
-                    seleccionado && estilosFormularioDeposito.opcionIconoModalSeleccionada,
-                  ]}
-                >
-                  <Ionicons color={tema.foco} name={opcion.nombre as NombreIcono} size={22} />
-                  <Text style={estilosFormularioDeposito.nombreOpcionIcono}>{opcion.etiqueta}</Text>
-                </Pressable>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <ModalIconosDeposito
+        tema={tema} estilos={estilosFormularioDeposito} estiloFondo={estilos.fondoModal} variante="edicion"
+        visible={modalIconosEdicionVisible} icono={borrador.icono}
+        alCerrar={() => establecerModalIconosEdicionVisible(false)}
+        alSeleccionar={icono => { actualizarBorrador('icono', icono); establecerModalIconosEdicionVisible(false); }}
+      />
 
       <Modal animationType="fade" onRequestClose={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} transparent visible={modalEliminacionVisible && Boolean(deposito)}>
         <View style={estilos.fondoModal}>

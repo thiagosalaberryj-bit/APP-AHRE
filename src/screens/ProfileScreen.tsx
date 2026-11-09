@@ -1,3 +1,5 @@
+import ModalPerfil from '../components/ProfileModal';
+import ListaOpcionesPerfil from '../components/ProfileOptionsList';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import Constantes from 'expo-constants';
@@ -8,7 +10,6 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -56,31 +57,6 @@ const OPCIONES_AVANZADAS_FUTURAS = Object.freeze([
   Object.freeze({ id: 'seguridad', nombre: 'Seguridad', icono: 'shield-checkmark-outline' }),
   Object.freeze({ id: 'registro', nombre: 'Registro', icono: 'document-text-outline' }),
 ]);
-
-function EncabezadoModalPerfil({ alCerrar, colorIcono = undefined, descripcion, etiquetaCerrar, estilos, icono, tema, titulo }: {alCerrar:()=>void;colorIcono?:string;descripcion:string;etiquetaCerrar:string;estilos:ReturnType<typeof crearEstilosPerfil>;icono:import('../constants/movimientos').NombreIcono;tema:import('../styles/colors').Tema;titulo:string}) {
-  return (
-    <View style={estilos.encabezadoFormularioModal}>
-      <View style={estilos.iconoEncabezadoFormularioModal}>
-        <Ionicons color={colorIcono ?? tema.foco} name={icono} size={23} />
-      </View>
-      <View style={estilos.cuerpoEncabezadoFormularioModal}>
-        <Text style={estilos.tituloFormularioModal}>{titulo}</Text>
-        <Text style={estilos.descripcionFormularioModal}>{descripcion}</Text>
-      </View>
-      <Pressable
-        accessibilityLabel={etiquetaCerrar}
-        accessibilityRole="button"
-        onPress={alCerrar}
-        style={({ pressed: presionado }) => [
-          estilos.botonCerrarFormularioModal,
-          presionado && estilos.botonCerrarFormularioModalPresionado,
-        ]}
-      >
-        <Ionicons color={tema.textoSecundario} name="close" size={22} />
-      </Pressable>
-    </View>
-  );
-}
 
 function obtenerIniciales(nombre: string) {
   return nombre
@@ -687,509 +663,330 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           </ScrollView>
         </KeyboardAvoidingView>
 
-        <Modal
-          animationType="fade"
-          onRequestClose={() => establecerModalContrasena(false)}
-          transparent
+        <ModalPerfil
           visible={modalContrasena}
+          desplazable
+          alCerrar={() => establecerModalContrasena(false)}
+          descripcion="Ingresá tu contraseña y presioná Listo para continuar."
+          etiquetaCerrar="Cerrar confirmación de contraseña"
+          estilos={estilos}
+          icono="shield-checkmark-outline"
+          tema={tema}
+          titulo="Confirmá tu identidad"
         >
-          <Pressable
-            accessibilityLabel="Cerrar confirmación de contraseña"
-            onPress={() => establecerModalContrasena(false)}
-            style={estilos.fondoSuperpuesto}
-          >
-            <Pressable style={estilos.tarjetaSuperpuesta}>
-              <ScrollView
-                contentContainerStyle={estilos.contenidoScrollModal}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                style={estilos.desplazamientoModal}
+          <View style={estilos.grupoCampoModal}>
+            <Text style={estilosGlobales.etiqueta}>Contraseña</Text>
+            <View style={[estilos.campoEdicion, errorContrasena ? estilosGlobales.campoError : null]}>
+              <TextInput
+                accessibilityLabel="Contraseña actual"
+                autoCapitalize="none"
+                onChangeText={(valor) => {
+                  establecerContrasenaConfirmacion(valor);
+                  establecerErrorContrasena(null);
+                }}
+                onSubmitEditing={confirmarContrasena}
+                placeholder="Tu contraseña"
+                placeholderTextColor={tema.textoSecundario}
+                returnKeyType="done"
+                secureTextEntry={!mostrarContrasenaConfirmacion}
+                selectionColor={tema.foco}
+                style={estilos.entradaEdicion}
+                value={contrasenaConfirmacion}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={mostrarContrasenaConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                onPress={() => establecerMostrarContrasenaConfirmacion((visibilidadActual) => !visibilidadActual)}
+                style={estilos.botonVisibilidad}
               >
-                <View style={estilos.formularioModal}>
-                  <EncabezadoModalPerfil
-                    alCerrar={() => establecerModalContrasena(false)}
-                    descripcion="Ingresá tu contraseña y presioná Listo para continuar."
-                    etiquetaCerrar="Cerrar confirmación de contraseña"
-                    estilos={estilos}
-                    icono="shield-checkmark-outline"
-                    tema={tema}
-                    titulo="Confirmá tu identidad"
-                  />
-                  <View style={estilos.separadorModal} />
-                  <View style={estilos.grupoCampoModal}>
-                    <Text style={estilosGlobales.etiqueta}>Contraseña</Text>
-                    <View style={[estilos.campoEdicion, errorContrasena ? estilosGlobales.campoError : null]}>
-                      <TextInput
-                        accessibilityLabel="Contraseña actual"
-                        autoCapitalize="none"
-                        onChangeText={(valor) => {
-                          establecerContrasenaConfirmacion(valor);
-                          establecerErrorContrasena(null);
-                        }}
-                        onSubmitEditing={confirmarContrasena}
-                        placeholder="Tu contraseña"
-                        placeholderTextColor={tema.textoSecundario}
-                        returnKeyType="done"
-                        secureTextEntry={!mostrarContrasenaConfirmacion}
-                        selectionColor={tema.foco}
-                        style={estilos.entradaEdicion}
-                        value={contrasenaConfirmacion}
-                      />
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={mostrarContrasenaConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                        onPress={() => establecerMostrarContrasenaConfirmacion((visibilidadActual) => !visibilidadActual)}
-                        style={estilos.botonVisibilidad}
-                      >
-                        <Ionicons
-                          color={tema.textoSecundario}
-                          name={mostrarContrasenaConfirmacion ? 'eye-off-outline' : 'eye-outline'}
-                          size={21}
-                        />
-                      </Pressable>
-                      {verificandoContrasena ? <ActivityIndicator color={tema.foco} size="small" /> : null}
-                    </View>
-                    {errorContrasena ? (
-                      <Text style={estilosGlobales.textoError}>{errorContrasena}</Text>
-                    ) : null}
-                  </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityState={{ busy: verificandoHuella, disabled: verificandoHuella || verificandoContrasena }}
-                    disabled={verificandoHuella || verificandoContrasena}
-                    onPress={confirmarHuella}
-                    style={({ pressed: presionado }) => [
-                      estilos.botonBiometria,
-                      presionado && !verificandoHuella && estilos.botonPresionado,
-                      (verificandoHuella || verificandoContrasena) && estilos.botonBiometriaDeshabilitado,
-                    ]}
-                  >
-                    <Ionicons color={tema.foco} name="finger-print-outline" size={23} />
-                    <Text style={estilos.textoBotonBiometria}>
-                      {verificandoHuella ? 'Verificando huella…' : 'Usar huella'}
-                    </Text>
-                    {verificandoHuella ? <ActivityIndicator color={tema.foco} size="small" /> : null}
-                  </Pressable>
-                </View>
-              </ScrollView>
-            </Pressable>
+                <Ionicons
+                  color={tema.textoSecundario}
+                  name={mostrarContrasenaConfirmacion ? 'eye-off-outline' : 'eye-outline'}
+                  size={21}
+                />
+              </Pressable>
+              {verificandoContrasena ? <ActivityIndicator color={tema.foco} size="small" /> : null}
+            </View>
+            {errorContrasena ? (
+              <Text style={estilosGlobales.textoError}>{errorContrasena}</Text>
+            ) : null}
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ busy: verificandoHuella, disabled: verificandoHuella || verificandoContrasena }}
+            disabled={verificandoHuella || verificandoContrasena}
+            onPress={confirmarHuella}
+            style={({ pressed: presionado }) => [
+              estilos.botonBiometria,
+              presionado && !verificandoHuella && estilos.botonPresionado,
+              (verificandoHuella || verificandoContrasena) && estilos.botonBiometriaDeshabilitado,
+            ]}
+          >
+            <Ionicons color={tema.foco} name="finger-print-outline" size={23} />
+            <Text style={estilos.textoBotonBiometria}>
+              {verificandoHuella ? 'Verificando huella…' : 'Usar huella'}
+            </Text>
+            {verificandoHuella ? <ActivityIndicator color={tema.foco} size="small" /> : null}
           </Pressable>
-        </Modal>
+        </ModalPerfil>
 
-        <Modal
-          animationType="fade"
-          onRequestClose={() => establecerModalCambioContrasena(false)}
-          transparent
+        <ModalPerfil
           visible={modalCambioContrasena}
+          desplazable
+          alCerrar={() => establecerModalCambioContrasena(false)}
+          descripcion="Ingresá la actual y elegí una nueva."
+          etiquetaCerrar="Cerrar cambio de contraseña"
+          estilos={estilos}
+          icono="key-outline"
+          tema={tema}
+          titulo="Cambiar contraseña"
         >
-          <Pressable
-            accessibilityLabel="Cerrar cambio de contraseña"
-            onPress={() => establecerModalCambioContrasena(false)}
-            style={estilos.fondoSuperpuesto}
-          >
-            <Pressable style={estilos.tarjetaSuperpuesta}>
-              <ScrollView
-                contentContainerStyle={estilos.contenidoScrollModal}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                style={estilos.desplazamientoModal}
+          <View style={estilos.grupoCampoModal}>
+            <Text style={estilosGlobales.etiqueta}>Contraseña actual</Text>
+            <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'actual' && estilosGlobales.campoError]}>
+              <TextInput
+                accessibilityLabel="Contraseña actual"
+                autoCapitalize="none"
+                onChangeText={(valor) => {
+                  establecerContrasenaActualCambio(valor);
+                  establecerErrorCambioContrasena(null);
+                }}
+                onSubmitEditing={() => referenciaContrasenaNueva.current?.focus()}
+                placeholder="Ingresá tu contraseña actual"
+                placeholderTextColor={tema.textoSecundario}
+                returnKeyType="next"
+                secureTextEntry={!mostrarContrasenaActualCambio}
+                selectionColor={tema.foco}
+                style={estilos.entradaEdicion}
+                value={contrasenaActualCambio}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={mostrarContrasenaActualCambio ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'}
+                onPress={() => establecerMostrarContrasenaActualCambio((visibilidadActual) => !visibilidadActual)}
+                style={estilos.botonVisibilidad}
               >
-                <View style={estilos.formularioModal}>
-                  <EncabezadoModalPerfil
-                    alCerrar={() => establecerModalCambioContrasena(false)}
-                    descripcion="Ingresá la actual y elegí una nueva."
-                    etiquetaCerrar="Cerrar cambio de contraseña"
-                    estilos={estilos}
-                    icono="key-outline"
-                    tema={tema}
-                    titulo="Cambiar contraseña"
-                  />
-                  <View style={estilos.separadorModal} />
-                  <View style={estilos.grupoCampoModal}>
-                    <Text style={estilosGlobales.etiqueta}>Contraseña actual</Text>
-                    <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'actual' && estilosGlobales.campoError]}>
-                      <TextInput
-                        accessibilityLabel="Contraseña actual"
-                        autoCapitalize="none"
-                        onChangeText={(valor) => {
-                          establecerContrasenaActualCambio(valor);
-                          establecerErrorCambioContrasena(null);
-                        }}
-                        onSubmitEditing={() => referenciaContrasenaNueva.current?.focus()}
-                        placeholder="Ingresá tu contraseña actual"
-                        placeholderTextColor={tema.textoSecundario}
-                        returnKeyType="next"
-                        secureTextEntry={!mostrarContrasenaActualCambio}
-                        selectionColor={tema.foco}
-                        style={estilos.entradaEdicion}
-                        value={contrasenaActualCambio}
-                      />
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={mostrarContrasenaActualCambio ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'}
-                        onPress={() => establecerMostrarContrasenaActualCambio((visibilidadActual) => !visibilidadActual)}
-                        style={estilos.botonVisibilidad}
-                      >
-                        <Ionicons color={tema.textoSecundario} name={mostrarContrasenaActualCambio ? 'eye-off-outline' : 'eye-outline'} size={21} />
-                      </Pressable>
-                    </View>
-                    {errorCambioContrasena?.campo === 'actual' ? <Text style={estilosGlobales.textoError}>{errorCambioContrasena.mensaje}</Text> : null}
-                  </View>
-                  <View style={estilos.grupoCampoModal}>
-                    <Text style={estilosGlobales.etiqueta}>Nueva contraseña</Text>
-                    <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'nueva' && estilosGlobales.campoError]}>
-                      <TextInput
-                        accessibilityLabel="Nueva contraseña"
-                        autoCapitalize="none"
-                        onChangeText={(valor) => {
-                          establecerContrasenaNueva(valor);
-                          establecerErrorCambioContrasena(null);
-                        }}
-                        onSubmitEditing={() => referenciaConfirmacionContrasenaNueva.current?.focus()}
-                        placeholder="Ingresá una nueva contraseña"
-                        placeholderTextColor={tema.textoSecundario}
-                        ref={referenciaContrasenaNueva}
-                        returnKeyType="next"
-                        secureTextEntry={!mostrarContrasenaNueva}
-                        selectionColor={tema.foco}
-                        style={estilos.entradaEdicion}
-                        value={contrasenaNueva}
-                      />
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={mostrarContrasenaNueva ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'}
-                        onPress={() => establecerMostrarContrasenaNueva((visibilidadActual) => !visibilidadActual)}
-                        style={estilos.botonVisibilidad}
-                      >
-                        <Ionicons color={tema.textoSecundario} name={mostrarContrasenaNueva ? 'eye-off-outline' : 'eye-outline'} size={21} />
-                      </Pressable>
-                    </View>
-                    {errorCambioContrasena?.campo === 'nueva' ? <Text style={estilosGlobales.textoError}>{errorCambioContrasena.mensaje}</Text> : null}
-                  </View>
-                  <View style={estilos.grupoCampoModal}>
-                    <Text style={estilosGlobales.etiqueta}>Confirmar nueva contraseña</Text>
-                    <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'confirmacion' && estilosGlobales.campoError]}>
-                      <TextInput
-                        accessibilityLabel="Confirmar nueva contraseña"
-                        autoCapitalize="none"
-                        onChangeText={(valor) => {
-                          establecerConfirmacionContrasenaNueva(valor);
-                          establecerErrorCambioContrasena(null);
-                        }}
-                        onSubmitEditing={guardarCambioContrasena}
-                        placeholder="Repetí la nueva contraseña"
-                        placeholderTextColor={tema.textoSecundario}
-                        ref={referenciaConfirmacionContrasenaNueva}
-                        returnKeyType="done"
-                        secureTextEntry={!mostrarConfirmacionContrasenaNueva}
-                        selectionColor={tema.foco}
-                        style={estilos.entradaEdicion}
-                        value={confirmacionContrasenaNueva}
-                      />
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={mostrarConfirmacionContrasenaNueva ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
-                        onPress={() => establecerMostrarConfirmacionContrasenaNueva((visibilidadActual) => !visibilidadActual)}
-                        style={estilos.botonVisibilidad}
-                      >
-                        <Ionicons color={tema.textoSecundario} name={mostrarConfirmacionContrasenaNueva ? 'eye-off-outline' : 'eye-outline'} size={21} />
-                      </Pressable>
-                    </View>
-                    {errorCambioContrasena?.campo === 'confirmacion' ? <Text style={estilosGlobales.textoError}>{errorCambioContrasena.mensaje}</Text> : null}
-                  </View>
-                  <BotonPrincipal
-                    estilosAutenticacion={estilos}
-                    estilosGlobales={estilosGlobales}
-                    titulo="Actualizar contraseña"
-                    cargando={guardandoContrasena}
-                    alPresionar={guardarCambioContrasena}
-                  />
-                </View>
-              </ScrollView>
-            </Pressable>
-          </Pressable>
-        </Modal>
+                <Ionicons color={tema.textoSecundario} name={mostrarContrasenaActualCambio ? 'eye-off-outline' : 'eye-outline'} size={21} />
+              </Pressable>
+            </View>
+            {errorCambioContrasena?.campo === 'actual' ? <Text style={estilosGlobales.textoError}>{errorCambioContrasena.mensaje}</Text> : null}
+          </View>
+          <View style={estilos.grupoCampoModal}>
+            <Text style={estilosGlobales.etiqueta}>Nueva contraseña</Text>
+            <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'nueva' && estilosGlobales.campoError]}>
+              <TextInput
+                accessibilityLabel="Nueva contraseña"
+                autoCapitalize="none"
+                onChangeText={(valor) => {
+                  establecerContrasenaNueva(valor);
+                  establecerErrorCambioContrasena(null);
+                }}
+                onSubmitEditing={() => referenciaConfirmacionContrasenaNueva.current?.focus()}
+                placeholder="Ingresá una nueva contraseña"
+                placeholderTextColor={tema.textoSecundario}
+                ref={referenciaContrasenaNueva}
+                returnKeyType="next"
+                secureTextEntry={!mostrarContrasenaNueva}
+                selectionColor={tema.foco}
+                style={estilos.entradaEdicion}
+                value={contrasenaNueva}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={mostrarContrasenaNueva ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'}
+                onPress={() => establecerMostrarContrasenaNueva((visibilidadActual) => !visibilidadActual)}
+                style={estilos.botonVisibilidad}
+              >
+                <Ionicons color={tema.textoSecundario} name={mostrarContrasenaNueva ? 'eye-off-outline' : 'eye-outline'} size={21} />
+              </Pressable>
+            </View>
+            {errorCambioContrasena?.campo === 'nueva' ? <Text style={estilosGlobales.textoError}>{errorCambioContrasena.mensaje}</Text> : null}
+          </View>
+          <View style={estilos.grupoCampoModal}>
+            <Text style={estilosGlobales.etiqueta}>Confirmar nueva contraseña</Text>
+            <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'confirmacion' && estilosGlobales.campoError]}>
+              <TextInput
+                accessibilityLabel="Confirmar nueva contraseña"
+                autoCapitalize="none"
+                onChangeText={(valor) => {
+                  establecerConfirmacionContrasenaNueva(valor);
+                  establecerErrorCambioContrasena(null);
+                }}
+                onSubmitEditing={guardarCambioContrasena}
+                placeholder="Repetí la nueva contraseña"
+                placeholderTextColor={tema.textoSecundario}
+                ref={referenciaConfirmacionContrasenaNueva}
+                returnKeyType="done"
+                secureTextEntry={!mostrarConfirmacionContrasenaNueva}
+                selectionColor={tema.foco}
+                style={estilos.entradaEdicion}
+                value={confirmacionContrasenaNueva}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={mostrarConfirmacionContrasenaNueva ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+                onPress={() => establecerMostrarConfirmacionContrasenaNueva((visibilidadActual) => !visibilidadActual)}
+                style={estilos.botonVisibilidad}
+              >
+                <Ionicons color={tema.textoSecundario} name={mostrarConfirmacionContrasenaNueva ? 'eye-off-outline' : 'eye-outline'} size={21} />
+              </Pressable>
+            </View>
+            {errorCambioContrasena?.campo === 'confirmacion' ? <Text style={estilosGlobales.textoError}>{errorCambioContrasena.mensaje}</Text> : null}
+          </View>
+          <BotonPrincipal
+            estilosAutenticacion={estilos}
+            estilosGlobales={estilosGlobales}
+            titulo="Actualizar contraseña"
+            cargando={guardandoContrasena}
+            alPresionar={guardarCambioContrasena}
+          />
+        </ModalPerfil>
 
-        <Modal
-          animationType="fade"
-          onRequestClose={() => establecerModalEdicion(false)}
-          transparent
+        <ModalPerfil
           visible={modalEdicion}
+          desplazable
+          alCerrar={() => establecerModalEdicion(false)}
+          descripcion="Los cambios se guardan en este teléfono. Si cambiás el correo, usá el anterior para ingresar con conexión hasta que se sincronice."
+          etiquetaCerrar="Cerrar edición de perfil"
+          estilos={estilos}
+          icono="person-outline"
+          tema={tema}
+          titulo="Editar perfil"
         >
-          <Pressable
-            accessibilityLabel="Cerrar edición de perfil"
-            onPress={() => establecerModalEdicion(false)}
-            style={estilos.fondoSuperpuesto}
-          >
-            <Pressable style={estilos.tarjetaSuperpuesta}>
-              <ScrollView
-                contentContainerStyle={estilos.contenidoScrollModal}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                style={estilos.desplazamientoModal}
-              >
-                <View style={estilos.formularioModal}>
-                  <EncabezadoModalPerfil
-                    alCerrar={() => establecerModalEdicion(false)}
-                    descripcion="Los cambios se guardan en este teléfono. Si cambiás el correo, usá el anterior para ingresar con conexión hasta que se sincronice."
-                    etiquetaCerrar="Cerrar edición de perfil"
-                    estilos={estilos}
-                    icono="person-outline"
-                    tema={tema}
-                    titulo="Editar perfil"
-                  />
-                  <View style={estilos.separadorModal} />
-                  <View style={estilos.grupoCampoModal}>
-                    <View style={estilosGlobales.encabezadoCampo}>
-                      <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Nombre</Text>
-                      <Text style={estilosGlobales.contadorCampo}>{nombreEdicion.length}/80</Text>
-                    </View>
-                    <View style={[estilos.campoEdicion, errorEdicion ? estilosGlobales.campoError : null]}>
-                      <TextInput
-                        accessibilityLabel="Nombre"
-                        maxLength={80}
-                        onChangeText={(valor) => {
-                          establecerNombreEdicion(valor);
-                          establecerIntentoGuardar(false);
-                        }}
-                        onSubmitEditing={() => referenciaCorreoEdicion.current?.focus()}
-                        placeholder="Tu nombre"
-                        placeholderTextColor={tema.textoSecundario}
-                        returnKeyType="next"
-                        selectionColor={tema.foco}
-                        style={estilos.entradaEdicion}
-                        value={nombreEdicion}
-                      />
-                    </View>
-                    {errorEdicion ? <Text style={estilosGlobales.textoError}>{errorEdicion}</Text> : null}
-                  </View>
-                  <View style={estilos.grupoCampoModal}>
-                    <View style={estilosGlobales.encabezadoCampo}>
-                      <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Correo electrónico</Text>
-                      <Text style={estilosGlobales.contadorCampo}>{correoEdicion.length}/120</Text>
-                    </View>
-                    <View style={[estilos.campoEdicion, errorCorreoEdicion ? estilosGlobales.campoError : null]}>
-                      <TextInput
-                        accessibilityLabel="Correo electrónico"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        keyboardType="email-address"
-                        maxLength={120}
-                        onChangeText={(valor) => {
-                          establecerCorreoEdicion(valor);
-                          establecerIntentoGuardar(false);
-                        }}
-                        onSubmitEditing={guardarCambios}
-                        placeholder="tu@ejemplo.com"
-                        placeholderTextColor={tema.textoSecundario}
-                        ref={referenciaCorreoEdicion}
-                        returnKeyType="done"
-                        selectionColor={tema.foco}
-                        style={estilos.entradaEdicion}
-                        value={correoEdicion}
-                      />
-                    </View>
-                    {errorCorreoEdicion ? (
-                      <Text style={estilosGlobales.textoError}>{errorCorreoEdicion}</Text>
-                    ) : null}
-                  </View>
-                  <BotonPrincipal
-                    estilosAutenticacion={estilos}
-                    estilosGlobales={estilosGlobales}
-                    titulo="Guardar cambios"
-                    cargando={guardando}
-                    alPresionar={guardarCambios}
-                  />
-                </View>
-              </ScrollView>
-            </Pressable>
-          </Pressable>
-        </Modal>
+          <View style={estilos.grupoCampoModal}>
+            <View style={estilosGlobales.encabezadoCampo}>
+              <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Nombre</Text>
+              <Text style={estilosGlobales.contadorCampo}>{nombreEdicion.length}/80</Text>
+            </View>
+            <View style={[estilos.campoEdicion, errorEdicion ? estilosGlobales.campoError : null]}>
+              <TextInput
+                accessibilityLabel="Nombre"
+                maxLength={80}
+                onChangeText={(valor) => {
+                  establecerNombreEdicion(valor);
+                  establecerIntentoGuardar(false);
+                }}
+                onSubmitEditing={() => referenciaCorreoEdicion.current?.focus()}
+                placeholder="Tu nombre"
+                placeholderTextColor={tema.textoSecundario}
+                returnKeyType="next"
+                selectionColor={tema.foco}
+                style={estilos.entradaEdicion}
+                value={nombreEdicion}
+              />
+            </View>
+            {errorEdicion ? <Text style={estilosGlobales.textoError}>{errorEdicion}</Text> : null}
+          </View>
+          <View style={estilos.grupoCampoModal}>
+            <View style={estilosGlobales.encabezadoCampo}>
+              <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Correo electrónico</Text>
+              <Text style={estilosGlobales.contadorCampo}>{correoEdicion.length}/120</Text>
+            </View>
+            <View style={[estilos.campoEdicion, errorCorreoEdicion ? estilosGlobales.campoError : null]}>
+              <TextInput
+                accessibilityLabel="Correo electrónico"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                maxLength={120}
+                onChangeText={(valor) => {
+                  establecerCorreoEdicion(valor);
+                  establecerIntentoGuardar(false);
+                }}
+                onSubmitEditing={guardarCambios}
+                placeholder="tu@ejemplo.com"
+                placeholderTextColor={tema.textoSecundario}
+                ref={referenciaCorreoEdicion}
+                returnKeyType="done"
+                selectionColor={tema.foco}
+                style={estilos.entradaEdicion}
+                value={correoEdicion}
+              />
+            </View>
+            {errorCorreoEdicion ? (
+              <Text style={estilosGlobales.textoError}>{errorCorreoEdicion}</Text>
+            ) : null}
+          </View>
+          <BotonPrincipal
+            estilosAutenticacion={estilos}
+            estilosGlobales={estilosGlobales}
+            titulo="Guardar cambios"
+            cargando={guardando}
+            alPresionar={guardarCambios}
+          />
+        </ModalPerfil>
 
-        <Modal
-          animationType="fade"
-          onRequestClose={() => establecerModalIdioma(false)}
-          transparent
+        <ModalPerfil
           visible={modalIdioma}
+          alCerrar={() => establecerModalIdioma(false)}
+          descripcion="Elegí el idioma que querés guardar."
+          etiquetaCerrar="Cerrar selección de idioma"
+          estilos={estilos}
+          icono="language-outline"
+          tema={tema}
+          titulo="Idioma"
         >
-          <Pressable
-            accessibilityLabel="Cerrar selección de idioma"
-            onPress={() => establecerModalIdioma(false)}
-            style={estilos.fondoSuperpuesto}
-          >
-            <Pressable style={estilos.tarjetaSuperpuesta}>
-              <EncabezadoModalPerfil
-                alCerrar={() => establecerModalIdioma(false)}
-                descripcion="Elegí el idioma que querés guardar."
-                etiquetaCerrar="Cerrar selección de idioma"
-                estilos={estilos}
-                icono="language-outline"
-                tema={tema}
-                titulo="Idioma"
-              />
-              <View style={estilos.listaOpcionesModal}>
-                {IDIOMAS.map((opcion) => {
-                  const activo = idioma === opcion.id;
-                  return (
-                    <View key={opcion.id} style={estilos.contenedorOpcionModal}>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: activo }}
-                        onPress={() => seleccionarIdioma(opcion.id)}
-                        style={[estilos.opcionSelector, activo && estilos.opcionSelectorActiva]}
-                      >
-                        <View style={[estilos.iconoSelectorModal, activo && estilos.iconoSelectorModalActivo]}>
-                          <Ionicons
-                            color={activo ? tema.contenedorVerdeTexto : tema.textoSecundario}
-                            name={opcion.icono}
-                            size={21}
-                          />
-                        </View>
-                        <View style={estilos.contenidoOpcionSelector}>
-                          <Text style={estilos.textoOpcionSelector}>{opcion.nombre}</Text>
-                          <Text style={estilos.descripcionOpcionSelector}>{opcion.descripcion}</Text>
-                        </View>
-                        <Ionicons
-                          color={activo ? tema.foco : tema.textoSecundario}
-                          name={activo ? 'checkmark-circle' : 'ellipse-outline'}
-                          size={22}
-                        />
-                      </Pressable>
-                    </View>
-                  );
-                })}
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
+          <ListaOpcionesPerfil tema={tema} estilos={estilos} opciones={IDIOMAS} valor={idioma} alSeleccionar={seleccionarIdioma} />
+        </ModalPerfil>
 
-        <Modal
-          animationType="fade"
-          onRequestClose={() => establecerModalApariencia(false)}
-          transparent
+        <ModalPerfil
           visible={modalApariencia}
+          alCerrar={() => establecerModalApariencia(false)}
+          descripcion="Elegí cómo se ve AHRE en este dispositivo."
+          etiquetaCerrar="Cerrar selección de apariencia"
+          estilos={estilos}
+          icono="contrast-outline"
+          tema={tema}
+          titulo="Apariencia"
         >
-          <Pressable
-            accessibilityLabel="Cerrar selección de apariencia"
-            onPress={() => establecerModalApariencia(false)}
-            style={estilos.fondoSuperpuesto}
-          >
-            <Pressable style={estilos.tarjetaSuperpuesta}>
-              <EncabezadoModalPerfil
-                alCerrar={() => establecerModalApariencia(false)}
-                descripcion="Elegí cómo se ve AHRE en este dispositivo."
-                etiquetaCerrar="Cerrar selección de apariencia"
-                estilos={estilos}
-                icono="contrast-outline"
-                tema={tema}
-                titulo="Apariencia"
-              />
-              <View style={estilos.listaOpcionesModal}>
-                {APARIENCIAS.map((opcion) => {
-                  const activo = apariencia === opcion.id;
-                  return (
-                    <View key={opcion.id} style={estilos.contenedorOpcionModal}>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: activo }}
-                        onPress={() => seleccionarApariencia(opcion.id)}
-                        style={[estilos.opcionSelector, activo && estilos.opcionSelectorActiva]}
-                      >
-                        <View style={[estilos.iconoSelectorModal, activo && estilos.iconoSelectorModalActivo]}>
-                          <Ionicons
-                            color={activo ? tema.contenedorVerdeTexto : tema.textoSecundario}
-                            name={opcion.icono}
-                            size={21}
-                          />
-                        </View>
-                        <View style={estilos.contenidoOpcionSelector}>
-                          <Text style={estilos.textoOpcionSelector}>{opcion.nombre}</Text>
-                          <Text style={estilos.descripcionOpcionSelector}>{opcion.descripcion}</Text>
-                        </View>
-                        <Ionicons
-                          color={activo ? tema.foco : tema.textoSecundario}
-                          name={activo ? 'checkmark-circle' : 'ellipse-outline'}
-                          size={22}
-                        />
-                      </Pressable>
-                    </View>
-                  );
-                })}
-              </View>
-              <Text style={[estilosGlobales.textoAyuda, estilos.textoAyudaModal]}>
-                La selección se guarda en este dispositivo y se aplica en toda AHRE.
-              </Text>
-            </Pressable>
-          </Pressable>
-        </Modal>
+          <ListaOpcionesPerfil tema={tema} estilos={estilos} opciones={APARIENCIAS} valor={apariencia} alSeleccionar={seleccionarApariencia} />
+          <Text style={[estilosGlobales.textoAyuda, estilos.textoAyudaModal]}>
+            La selección se guarda en este dispositivo y se aplica en toda AHRE.
+          </Text>
+        </ModalPerfil>
 
-        <Modal
-          animationType="fade"
-          onRequestClose={() => establecerModalAcercaDe(false)}
-          transparent
+        <ModalPerfil
           visible={modalAcercaDe}
+          alCerrar={() => establecerModalAcercaDe(false)}
+          descripcion="Organizá tus finanzas, registrá movimientos y seguí tus depósitos, incluso sin conexión."
+          etiquetaCerrar="Cerrar acerca de AHRE"
+          estilos={estilos}
+          icono="information-circle-outline"
+          tema={tema}
+          titulo="Acerca de AHRE"
         >
-          <Pressable
-            accessibilityLabel="Cerrar acerca de AHRE"
-            onPress={() => establecerModalAcercaDe(false)}
-            style={estilos.fondoSuperpuesto}
-          >
-            <Pressable style={estilos.tarjetaSuperpuesta}>
-              <EncabezadoModalPerfil
-                alCerrar={() => establecerModalAcercaDe(false)}
-                descripcion="Organizá tus finanzas, registrá movimientos y seguí tus depósitos, incluso sin conexión."
-                etiquetaCerrar="Cerrar acerca de AHRE"
-                estilos={estilos}
-                icono="information-circle-outline"
-                tema={tema}
-                titulo="Acerca de AHRE"
-              />
-              <Text style={estilos.valorOpcion}>Versión {Constantes.expoConfig?.version ?? 'no disponible'}</Text>
-            </Pressable>
-          </Pressable>
-        </Modal>
+          <Text style={estilos.valorOpcion}>Versión {Constantes.expoConfig?.version ?? 'no disponible'}</Text>
+        </ModalPerfil>
 
-        <Modal
-          animationType="fade"
-          onRequestClose={() => establecerModalCierre(false)}
-          transparent
+        <ModalPerfil
           visible={modalCierre}
+          etiquetaCerrarFondo="Cerrar confirmación"
+          alCerrar={() => establecerModalCierre(false)}
+          colorIcono={tema.error}
+          descripcion="Podés cerrar la sesión aquí o sincronizar los pendientes y desvincular esta instalación para usar otra. La desvinculación requiere conexión."
+          etiquetaCerrar="Cerrar confirmación de cierre de sesión"
+          estilos={estilos}
+          icono="log-out-outline"
+          tema={tema}
+          titulo="Cerrar sesión"
         >
           <Pressable
-            accessibilityLabel="Cerrar confirmación"
-            onPress={() => establecerModalCierre(false)}
-            style={estilos.fondoSuperpuesto}
+            accessibilityRole="button"
+            disabled={cerrandoSesion}
+            onPress={cambiarDispositivoLocal}
+            style={estilos.botonPeligro}
           >
-            <Pressable style={estilos.tarjetaSuperpuesta}>
-              <EncabezadoModalPerfil
-                alCerrar={() => establecerModalCierre(false)}
-                colorIcono={tema.error}
-                descripcion="Podés cerrar la sesión aquí o sincronizar los pendientes y desvincular esta instalación para usar otra. La desvinculación requiere conexión."
-                etiquetaCerrar="Cerrar confirmación de cierre de sesión"
-                estilos={estilos}
-                icono="log-out-outline"
-                tema={tema}
-                titulo="Cerrar sesión"
-              />
-              <Pressable
-                accessibilityRole="button"
-                disabled={cerrandoSesion}
-                onPress={cambiarDispositivoLocal}
-                style={estilos.botonPeligro}
-              >
-                <Text style={estilos.textoBotonPeligro}>{cerrandoSesion?'Preparando…':'Sincronizar y desvincular'}</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                disabled={cerrandoSesion}
-                onPress={cerrarSesionLocal}
-                style={estilos.botonPeligro}
-              >
-                <Text style={estilos.textoBotonPeligro}>{cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión'}</Text>
-              </Pressable>
-            </Pressable>
+            <Text style={estilos.textoBotonPeligro}>{cerrandoSesion?'Preparando…':'Sincronizar y desvincular'}</Text>
           </Pressable>
-        </Modal>
+          <Pressable
+            accessibilityRole="button"
+            disabled={cerrandoSesion}
+            onPress={cerrarSesionLocal}
+            style={estilos.botonPeligro}
+          >
+            <Text style={estilos.textoBotonPeligro}>{cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión'}</Text>
+          </Pressable>
+        </ModalPerfil>
       </View>
     </SafeAreaView>
   );

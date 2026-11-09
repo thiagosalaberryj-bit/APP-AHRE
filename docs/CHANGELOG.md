@@ -3,6 +3,29 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [Sin publicar]
+
+### Cambiado
+
+- Filtros y accesos rápidos compartidos entre Movimientos y Detalle de depósito.
+- Campos y selector de íconos compartidos entre creación y edición de depósitos.
+- Marco común de los siete modales de Perfil y lista común de idioma/apariencia.
+- Gráficos y controles de fecha de Estadísticas separados de la pantalla;
+  cálculos y formatos de presentación organizados en un módulo propio.
+- Detalle de depósito reutiliza el filtrado, orden y agrupación mensual cuando
+  no cambian los datos ni los criterios. Su buscador aplica una pausa de 250 ms
+  y limpia inmediatamente la búsqueda, también en Recurrentes.
+
+### Verificación
+
+- Tipos y comprobación de declaraciones sin uso aprobados. Suite completa:
+  356 pruebas aprobadas, cero fallos y 39 integraciones
+  omitidas por no contar con un MySQL aislado configurado.
+- Pruebas de callbacks, selección, fechas, temas, cancelación de búsquedas y
+  reutilización de cálculos; escenario adicional con 10.000 movimientos.
+- La persona usuaria indicó que los recorridos revisados se ven y funcionan
+  igual. No se midieron tamaño del APK ni tiempos de respuesta nativos.
+
 ## [v0.8.0] - 2026-11-08 - no estable
 
 ### Añadido

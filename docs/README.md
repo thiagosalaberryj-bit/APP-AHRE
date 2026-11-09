@@ -9,6 +9,7 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 ## Empezar
 
 - [Entorno, Expo Go y pruebas](configuracion/entorno.md).
+- [Integraciones MySQL y pruebas con muchos movimientos](configuracion/pruebas-optimizacion.md).
 - [Compilar y publicar Android](configuracion/publicacion.md).
 - [Dependencias y auditoría](configuracion/dependencias.md).
 

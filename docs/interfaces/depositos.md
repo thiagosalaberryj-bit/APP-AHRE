@@ -10,6 +10,13 @@ lógica de depósitos y el repositorio; no requiere conexión a Internet. Si se
 completa correctamente, vuelve a la pantalla anterior. La flecha y «Cancelar»
 regresan sin guardar.
 
+Crear y editar utilizan `src/components/DepositForm.tsx` para nombre, tipo,
+ícono, color y descripción, y `DepositIconModal.tsx` para los íconos adicionales.
+Ambos consumen el catálogo de `src/constants/deposits.ts`. Las variantes
+conservan sus textos, contadores, estilos de error y presentación del modal.
+El saldo inicial permanece únicamente en creación; cada pantalla conserva
+su estado, validación, acciones, navegación y guardado.
+
 ## Campos
 
 | Campo | Requerido | Presentación |
@@ -171,6 +178,26 @@ número de criterios activos y el botón «Filtros» abre la hoja.
 El detalle no muestra un filtro de depósitos porque la lista ya está limitada
 al depósito seleccionado. Los resultados se agrupan por mes y año y se ordenan por
 fecha y hora descendente.
+
+Los accesos rápidos se comparten mediante `MovementQuickFilters.tsx` y las
+secciones del panel mediante `MovementFilterSections.tsx`, también utilizados
+en Movimientos. Se conservan los estilos propios del detalle, la selección
+inicial del mes actual y la validación del orden del rango personalizado.
+Semana mantiene su selección actual sin agregar un calendario al detalle.
+La búsqueda, los criterios activos y el filtrado de recurrencias permanecen
+coordinados por esta pantalla.
+
+El detalle memoriza la función de filtrado y la lista ordenada según los
+movimientos y los criterios activos. Cambiar el tema, abrir un modal o plegar
+un mes reutiliza esa lista y la agrupación mensual. Modificar búsqueda, tipo,
+categorías, montos o fechas, o recargar los movimientos, actualiza el resultado.
+El filtro de Recurrentes mantiene su aplicación sobre la próxima ejecución.
+
+El texto del buscador se muestra inmediatamente y se aplica después de
+250 ms sin escribir, igual que en Movimientos. La pausa se reinicia con cada
+cambio y se cancela al salir de la pantalla. Borrar el texto o usar Limpiar
+restablece la búsqueda aplicada inmediatamente; una búsqueda anterior pendiente
+no vuelve a aparecer. La pausa también se aplica en la pestaña Recurrentes.
 
 Los meses usan `EncabezadoSeccionPlegable`, el mismo componente de Movimientos,
 Social y Sincronización. El primer mes comienza abierto y los demás plegados;

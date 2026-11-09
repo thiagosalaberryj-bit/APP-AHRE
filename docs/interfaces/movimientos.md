@@ -241,6 +241,14 @@ botones y modales.
 
 ## Historial y detalle de movimientos
 
+Movimientos y Detalle de depósito reutilizan `MovementQuickFilters.tsx` para
+los accesos rápidos y `MovementFilterSections.tsx` para las secciones Tipo,
+Fecha, Categorías y Monto. Las opciones comunes están en
+`src/constants/movementFilters.ts`. Cada pantalla conserva sus estilos,
+catálogos, resúmenes, validaciones y aplicación de los filtros; solo Movimientos
+incluye la sección Depósitos. El selector de semana del historial y el manejo
+de rangos personalizados conservan las diferencias existentes entre pantallas.
+
 `src/screens/MovementsScreen.tsx` es pestaña con `MainHeader` («Movimientos») y
 consulta SQLite para el usuario de la sesión y agrupa los movimientos vigentes
 por mes y año, con el primer mes abierto inicialmente y los demás plegados, usando el encabezado compartido
