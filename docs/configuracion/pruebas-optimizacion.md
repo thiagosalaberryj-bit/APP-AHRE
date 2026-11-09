@@ -84,7 +84,10 @@ node --experimental-vm-modules --test --test-name-pattern="10.000 movimientos" t
 Entrega 10.000 movimientos sintéticos al servicio simulado de la pantalla y
 comprueba que monta solo 50 tarjetas y agrega otras 50 al pedir más, sin duplicar
 un doble toque. Se ejecuta en ambas pantallas: valida meses plegados sin consultas
-de filas, apertura con carga y reutilización al reabrir. Comprueba también el
+de filas, apertura con carga y reapertura limitada a las primeras 50 filas,
+incluso después de mostrar 300. Verifica feedback previo a la consulta, descarte
+de páginas al cerrar, posición del encabezado y flecha fuera de los registros,
+incluida la preferencia de reducir movimiento. Comprueba también el
 indicador animado y la carga automática solo con botón visible y desplazamiento
 descendente. `tests/visibleLoadMore.test.ts` cubre mediciones pendientes, dirección,
 inercia y ausencia de cargas al detenerse. Otros casos cubren debounce, filtros, reintentos y respuestas
@@ -109,6 +112,11 @@ desde esta rama y seguir estos pasos:
    cargar solo su primera página. Llegar al botón mientras se baja debe agregar
    otras 50 con indicador animado; quedarse quieto, subir o no ver el botón no
    debe cargar. Verificar también el toque manual y el reintento tras un error.
+   Acumular 300 filas, plegar y reabrir el mes: debe mostrar feedback debajo del
+   título y volver a 50 filas. Repetir mientras hay una página pendiente para
+   confirmar que no reaparece al terminar. Comprobar que el encabezado no salta
+   al final al cambiar la altura y que la flecha de volver arriba queda fuera
+   de los registros, también con reducir movimiento activado.
    Cambiar búsqueda o filtros debe reiniciar los meses e incluir coincidencias
    que no estaban en la primera página, sin descargar meses plegados.
 5. Cerrar la sesión de pruebas y volver a ingresar a la cuenta habitual al terminar.
@@ -147,7 +155,7 @@ con permisos para las bases sintéticas `ahre_test_*`, con contraseña aleatoria
 conservada solo en el entorno del proceso de pruebas.
 
 - Backend: tipos correctos y 60 pruebas aprobadas, cero fallos y cero omisiones.
-- App: 421 pruebas aprobadas, cero fallos y cero omisiones, incluidos el escenario
+- App: 429 pruebas aprobadas, cero fallos y cero omisiones, incluidos el escenario
   de pantalla con 10.000 movimientos y los seis casos nuevos del generador SQLite.
   Se ejecutaron las 39 integraciones antes omitidas. Los casos nuevos comprueban
   aislamiento de la cuenta habitual, carga sin HTTP, distribución, saldo,
@@ -159,6 +167,9 @@ conservada solo en el entorno del proceso de pruebas.
   La última ejecución cubre además ambas listas sin filtros iniciales, meses
   históricos plegados sin descargar filas, caché al reabrir y carga automática
   condicionada por botón visible y desplazamiento descendente, con indicador animado.
+  Se agregaron ocho casos para feedback antes de preparar filas, reapertura de
+  300 a 50 movimientos, descarte de páginas al cerrar, restauración de posición
+  y flecha fuera de los registros con soporte para reducir movimiento.
 - Limpieza: cero bases sintéticas restantes; proceso detenido, puerto cerrado
   y carpeta de datos temporal eliminada. Los logs locales se conservan bajo
   `.expo/validation/`, fuera de Git. No hubo cambios en los archivos del servidor.

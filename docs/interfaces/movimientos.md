@@ -292,7 +292,12 @@ La lista usa `MovementMonthList.tsx`, `MovementMonthListStyles.ts` y
 filtros y consulta los encabezados de todos los meses con resultados, sin traer
 sus movimientos. Solo el mes actual comienza abierto, si existe; los demás
 permanecen plegados hasta que se abren. Cada mes tiene sus propias páginas de
-50 filas y conserva lo cargado al plegarlo. Las tarjetas ya mostradas se
+50 filas y conserva solo la primera página al plegarlo. Reabrirlo comienza de
+nuevo con hasta 50 tarjetas, no con las 300 que se hubieran acumulado. Las páginas
+pendientes del mes cerrado se invalidan. Se muestra «Cargando movimientos…»
+debajo del encabezado antes de preparar la lista, incluso al reutilizar esa
+primera página. Se conserva el encabezado como referencia de posición para
+evitar saltos al cambiar la altura. Las tarjetas ya mostradas se
 memorizan para no renderizarlas de nuevo al agregar otra página.
 El botón muestra un indicador animado mientras carga. Además de tocarlo, se
 puede llegar a él desplazándose hacia abajo: solo carga automáticamente si
@@ -300,6 +305,11 @@ está visible y el movimiento proviene de un arrastre o su inercia. No carga
 por aparecer, subir, permanecer quieto ni mostrar un error; tampoco descarga
 filas de meses plegados. Las mediciones pendientes se invalidan al detener
 el gesto o cambiar filtros. Los errores conservan los datos y permiten reintento manual.
+
+Al bajar más de una pantalla aparece una flecha «Volver arriba» en una franja
+separada bajo el área desplazable: no tapa registros ni captura sus toques.
+Vuelve al inicio con desplazamiento animado, salvo que el sistema solicite
+reducir movimiento, y cancela cualquier carga automática del gesto previo.
 
 ### Buscador
 

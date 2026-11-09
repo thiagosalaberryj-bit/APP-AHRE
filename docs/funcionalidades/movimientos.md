@@ -88,6 +88,12 @@ categoría y depósito se procesan en la consulta parametrizada de SQLite; la
 pantalla no descarga de una vez todo el historial ni aplica esos filtros a una
 copia completa en memoria.
 
+Plegar un mes recorta su caché a 50 filas e invalida sus solicitudes pendientes;
+al reabrirlo vuelve a la primera página, con feedback antes de preparar tarjetas.
+El encabezado se usa como referencia para restaurar la posición después del
+cambio de altura. «Volver arriba» aparece al superar una pantalla de distancia,
+fuera del contenido desplazable, y cancela la intención de carga automática.
+
 ## Funcionamiento offline del historial
 
 La sesión, los movimientos, los depósitos, las categorías disponibles y las

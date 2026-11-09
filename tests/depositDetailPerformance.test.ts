@@ -80,6 +80,71 @@ probar('meses anteriores con muchos movimientos solo consultan filas al desplega
   e.invocar(anterior, 'alAlternar'); await e.asentar(); assert.equal(e.recuentos.filas, 100); assert.equal(tarjetas(e).length, 100);
 });
 
+probar('la apertura dibuja la carga antes de consultar y reabrir 300 filas vuelve a 50', async prueba => {
+  const cuadros: (() => void)[] = [];
+  const volumen = Array.from({ length: 600 }, (_, i) => movimiento(String(i).padStart(5,'0'), fecha(1)));
+  const e = iniciar(prueba, volumen, { esperarDibujo: () => new Promise<void>(resolver => cuadros.push(resolver)) });
+  await e.asentar();
+  assert.equal(e.consultas.length, 0); assert.equal(tarjetas(e).length, 0);
+  assert.ok(e.nodos().some(n => n.props.accessibilityRole === 'progressbar' && String(n.props.accessibilityLabel).startsWith('Cargando movimientos de')));
+  cuadros.shift()!(); await e.asentar(); assert.equal(tarjetas(e).length, 50);
+  for (let i = 0; i < 5; i++) { e.invocar(boton(e, 'Cargar más movimientos'), 'onPress'); await e.asentar(); }
+  assert.equal(tarjetas(e).length, 300); assert.equal(e.consultas.length, 6);
+  e.invocar(e.buscar('CollapsibleSectionHeader'), 'alAlternar'); await e.asentar(); assert.equal(tarjetas(e).length, 0);
+  e.invocar(e.buscar('CollapsibleSectionHeader'), 'alAlternar');
+  assert.equal(tarjetas(e).length, 0); assert.ok(e.nodos().some(n => n.props.accessibilityRole === 'progressbar'));
+  await e.asentar(); assert.equal(e.consultas.length, 6);
+  cuadros.shift()!(); await e.asentar(); assert.equal(tarjetas(e).length, 50);
+  e.invocar(boton(e, 'Cargar más movimientos'), 'onPress'); await e.asentar();
+  assert.equal(tarjetas(e).length, 100); assert.equal(e.consultas.at(-1)?.cursor?.id, '00550');
+});
+
+probar('cerrar un mes descarta la página pendiente y no repone sus filas al reabrir', async prueba => {
+  const volumen = Array.from({ length: 200 }, (_, i) => movimiento(String(i).padStart(5,'0'), fecha(1)));
+  let completar: ((filas: MovimientoHistorial[]) => void) | undefined;
+  const filas = [...volumen].reverse().map(fila => ({ ...fila, deposito_nombre: 'Cuenta' } as MovimientoHistorial));
+  const e = iniciar(prueba, volumen, { consultarPagina: async (_id, _filtros, cursor) => cursor
+    ? new Promise<MovimientoHistorial[]>(resolver => { completar = resolver; }) : filas.slice(0,50) });
+  await e.asentar(); e.invocar(boton(e, 'Cargar más movimientos'), 'onPress'); await e.asentar();
+  assert.ok(completar); e.invocar(e.buscar('CollapsibleSectionHeader'), 'alAlternar');
+  e.invocar(e.buscar('CollapsibleSectionHeader'), 'alAlternar'); await e.asentar();
+  assert.equal(tarjetas(e).length, 50); completar!(filas.slice(50,100)); await e.asentar();
+  assert.equal(tarjetas(e).length, 50); assert.equal(e.consultas.length, 2);
+});
+
+probar('volver arriba aparece al bajar, queda fuera de los registros y respeta reducir movimiento', async prueba => {
+  for (const reducirMovimiento of [false, true]) {
+    const e = iniciar(prueba, datos, { reducirMovimiento }); await e.asentar(); e.prepararScroll();
+    assert.ok(!e.nodos().some(n => n.props.accessibilityLabel === 'Volver arriba'));
+    const scroll = e.buscar('ScrollView');
+    e.invocar(scroll, 'onScroll', { nativeEvent: { contentOffset: { y: 900 }, layoutMeasurement: { height: 600 } } });
+    const subir = e.nodos().find(n => n.props.accessibilityLabel === 'Volver arriba')!; assert.ok(subir);
+    assert.ok(!e.nodos(scroll.props.children).some(n => n.props.accessibilityLabel === 'Volver arriba'));
+    e.invocar(subir, 'onPress');
+    assert.deepEqual(e.posicionesScroll.at(-1), { y: 0, animated: !reducirMovimiento });
+    assert.ok(!e.nodos().some(n => n.props.accessibilityLabel === 'Volver arriba'));
+    assert.equal(e.consultas.length, 1);
+  }
+});
+
+probar('plegar y desplegar conserva la posición y detiene la carga automática anterior', async prueba => {
+  const volumen = Array.from({ length: 600 }, (_, i) => movimiento(String(i).padStart(5,'0'), fecha(1)));
+  const e = iniciar(prueba, volumen); await e.asentar(); e.prepararScroll(550,100);
+  const scroll = e.buscar('ScrollView'), evento = (y: number) => ({ nativeEvent: { contentOffset: { y }, layoutMeasurement: { height: 600 } } });
+  e.invocar(scroll, 'onScroll', evento(1200)); e.invocar(scroll, 'onScrollBeginDrag', evento(1200));
+  e.invocar(e.buscar('CollapsibleSectionHeader'), 'alAlternar');
+  e.invocar(scroll, 'onContentSizeChange', 360, 600); await e.asentar();
+  assert.deepEqual(e.posicionesScroll.at(-1), { y: 1200, animated: false });
+  e.invocar(e.buscar('CollapsibleSectionHeader'), 'alAlternar');
+  e.invocar(scroll, 'onContentSizeChange', 360, 700); await e.asentar();
+  e.invocar(scroll, 'onContentSizeChange', 360, 7000);
+  assert.deepEqual(e.posicionesScroll.at(-1), { y: 1200, animated: false });
+  e.invocar(scroll, 'onScroll', evento(1300)); await e.asentar(); assert.equal(e.consultas.length, 1);
+  const subir = e.nodos().find(n => n.props.accessibilityLabel === 'Volver arriba')!;
+  e.invocar(subir, 'onPress'); e.invocar(scroll, 'onContentSizeChange', 360, 7000);
+  assert.equal(e.posicionesScroll.at(-1)?.y, 0);
+});
+
 probar('debounce consulta coincidencias fuera de la página y limpiar cancela la búsqueda pendiente', async prueba => {
   prueba.mock.timers.enable({ apis: ['setTimeout'] });
   const filas = Array.from({ length: 120 }, (_, i) => movimiento(String(i).padStart(3,'0'), fecha(1), { descripcion: i === 0 ? 'Objetivo remoto' : 'Compra' }));

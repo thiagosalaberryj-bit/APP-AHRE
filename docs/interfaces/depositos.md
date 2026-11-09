@@ -191,12 +191,23 @@ El detalle comienza sin filtros y muestra los encabezados de todos los meses
 que tienen resultados. El mes actual comienza abierto, con hasta 50 movimientos;
 los otros permanecen plegados, sin consultar sus filas hasta desplegarlos. Si
 no hay movimientos del mes actual, todos quedan plegados. Abrir un mes carga
-su primera página; plegarlo oculta sus tarjetas y reabrirlo reutiliza lo cargado.
+su primera página. Al plegarlo se conservan solo las primeras 50 filas; reabrirlo
+vuelve a esa página, aunque antes se hayan mostrado 300. Las páginas en curso
+del mes cerrado se descartan para que no repongan filas después.
+La apertura muestra «Cargando movimientos…» justo debajo del título y deja
+dibujar ese estado antes de consultar o montar las tarjetas. El encabezado
+permanece como referencia de posición al cambiar la altura del mes y se detiene
+la carga automática del gesto anterior.
 «Cargar más movimientos» incorpora otras 50 filas de ese mes. Se muestra un
 indicador animado mientras carga. También se activa si el botón está visible
 y la persona sigue desplazándose hacia abajo, incluida la inercia de ese gesto.
 No se activa por aparecer, subir, quedarse quieto ni cambiar filtros. Un error
 requiere reintento manual. El botón conserva su acción táctil y accesible.
+
+Después de bajar más de una altura visible aparece «Volver arriba», con una
+flecha de 44 puntos de área táctil. Está en una franja fuera del ScrollView,
+sin superponerse a registros. Vuelve al inicio sin activar nuevas cargas y
+respeta la preferencia del sistema para reducir movimiento.
 La consulta aplica búsqueda, tipo, categorías, montos y fechas antes de paginar;
 las categorías disponibles se obtienen del historial completo del depósito.
 Cambiar un criterio reinicia los meses; cambiar tema, abrir un modal o plegar

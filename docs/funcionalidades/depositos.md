@@ -119,11 +119,17 @@ identificador de categoría, con caracteres de búsqueda tratados literalmente.
 agrupados en horario local con los mismos filtros de las páginas. La pantalla
 comienza sin filtro de fecha; solo abre automáticamente el mes actual, si existe.
 `src/movements/useMonthlyMovements.ts`, compartido con Movimientos, coordina la
-consulta inicial de encabezados, páginas por mes abierto, caché al plegar,
+consulta inicial de encabezados, páginas por mes abierto, caché limitada a la primera página al plegar,
 reintentos, bloqueo de doble envío y descarte de respuestas vencidas.
 `visibleLoadMore.ts` exige arrastre descendente o su inercia e intersección real
 entre el botón y el área visible del ScrollView antes de pedir la siguiente
 página. Invalida mediciones al detenerse, subir, salir o cambiar los criterios.
+Cada mes tiene una revisión de solicitud: plegarlo descarta tanto la respuesta
+pendiente como las filas posteriores a las primeras 50. La apertura deja dibujar
+el estado de carga mediante `src/utils/renderFrame.ts` antes de preparar sus
+tarjetas. El hook también fija la referencia del encabezado durante los cambios
+de altura y gestiona la acción «Volver arriba», separada del contenido mediante
+`MovementScrollTopButton.tsx` para no cubrir filas.
 
 La búsqueda se aplica sobre la descripción y categoría de los movimientos del
 depósito. Al vaciar el texto vuelve a mostrarse el conjunto que cumpla los

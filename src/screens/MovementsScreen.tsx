@@ -29,6 +29,7 @@ import { ContextoAvisos } from '../contexts/ToastContext';
 import SelectorDeposito from '../components/DepositSelector';
 import EncabezadoPrincipal from '../components/MainHeader';
 import ListaMesesMovimientos from '../components/MovementMonthList';
+import BotonSubirMovimientos from '../components/MovementScrollTopButton';
 import { useMovimientosPorMes } from '../movements/useMonthlyMovements';
 import { RUTAS } from '../constants/routes';
 import {
@@ -506,6 +507,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
             )}
           </View>
         </ScrollView>
+        <BotonSubirMovimientos visible={datosMeses.mostrarSubir} alSubir={datosMeses.volverArriba} tema={tema}/>
 
         <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={() => establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
                 <View style={estilos.listaSeccionesFiltro}>

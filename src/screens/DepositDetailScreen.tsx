@@ -48,6 +48,7 @@ import { RUTAS } from '../constants/routes';
 import { actualizarDeposito, consultarDetalleDeposito, consultarMesesMovimientosDeposito, consultarPaginaMovimientosDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
 import { useMovimientosPorMes } from '../movements/useMonthlyMovements';
 import ListaMesesMovimientos from '../components/MovementMonthList';
+import BotonSubirMovimientos from '../components/MovementScrollTopButton';
 import { consultarSaldoOculto } from '../profile/balanceVisibilityService';
 import { convertirSaldoInicial } from '../utils/depositValidation';
 import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../styles/colors';
@@ -721,6 +722,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           </>
           )}
         </ScrollView>
+        <BotonSubirMovimientos visible={datosMeses.mostrarSubir} alSubir={datosMeses.volverArriba} tema={tema}/>
       </View>
 
       <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={()=>establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
