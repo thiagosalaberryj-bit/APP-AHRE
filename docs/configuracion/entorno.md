@@ -144,6 +144,15 @@ normaliza el mismo minuto de creación según la [regla de movimientos](../funci
 Para exportar o distribuir, seguir [Publicación](publicacion.md). El estado de
 las comprobaciones se mantiene en [Estado y validación](../estado-y-validacion.md).
 
+## Tipos de las pruebas en el editor
+
+`tests/tsconfig.json` extiende la configuración de herramientas para que el
+servicio TypeScript del editor reconozca los tipos de Node y los imports `.ts`
+de los tests. El comando `npm run typecheck` comprueba tanto la app como las
+herramientas; `npm test` ejecuta los casos. Si el editor conservó diagnósticos
+anteriores, reiniciar su servidor TypeScript y usar la versión del workspace.
+Esta configuración no desactiva errores ni cambia la compilación de la app.
+
 ## Base de desarrollo Social
 
 Expo Go y las builds de desarrollo usan ahre-desarrollo-social-v3.db para no abrir bases de pruebas anteriores incompatibles con el esquema actual. El archivo anterior ahre.db se conserva sin migrarlo ni borrarlo. Las builds release siguen usando ahre.db. Al cambiar al archivo de desarrollo actual es necesario ingresar otra vez para descargar los datos sincronizados del servidor. Los pendientes que solo existían en el archivo viejo no se transfieren automáticamente.
