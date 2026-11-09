@@ -28,8 +28,8 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import SelectorDeposito from '../components/DepositSelector';
 import EncabezadoPrincipal from '../components/MainHeader';
-import TarjetaMovimiento from '../components/MovementCard';
-import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
+import ListaMesesMovimientos from '../components/MovementMonthList';
+import { useMovimientosPorMes } from '../movements/useMonthlyMovements';
 import { RUTAS } from '../constants/routes';
 import {
   CATEGORIAS_EGRESO,
@@ -38,12 +38,11 @@ import {
 import {
   cargarOpcionesHistorialMovimientos,
   cargarPaginaHistorialMovimientos,
+  cargarMesesHistorialMovimientos,
 } from '../movements/movementService';
 
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
-
-const TAMANO_PAGINA = 50;
 
 function crearFechaSinHora(fecha: Date) {
   return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
@@ -101,8 +100,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosMovimientos(tema, anchoVentana);
   const estilosAccesos = crearEstilosBusquedaFiltros(tema);
-  const abrirPantallaSecundaria = (ruta: string, parametros: import('../navigation/types').ParametrosPantalla | undefined = undefined) => navegacion.getParent()?.navigate(ruta, parametros);
-  const [mesesAbiertos, establecerMesesAbiertos] = useState<Record<string,boolean>>({});
+  const abrirPantallaSecundaria = useCallback((ruta: string, parametros: import('../navigation/types').ParametrosPantalla | undefined = undefined) => navegacion.getParent()?.navigate(ruta, parametros), [navegacion]);
   const [busqueda, establecerBusqueda] = useState('');
   const [busquedaAplicada, establecerBusquedaAplicada] = useState('');
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
@@ -120,19 +118,13 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   const [depositosHistorial, establecerDepositosHistorial] = useState<(Awaited<ReturnType<typeof cargarOpcionesHistorialMovimientos>>['depositos'][number] & {saldoTexto:string})[]>([]);
   const [usuarioId, establecerUsuarioId] = useState<string | null>(null);
   const [cantidadTotal, establecerCantidadTotal] = useState<number | null>(null);
-  const [movimientosHistorial, establecerMovimientosHistorial] = useState<(import("../database/types").Movimiento & { deposito_nombre: string; })[]>([]);
   const [errorConsulta, establecerErrorConsulta] = useState<string | null>(null);
-  const [errorCargaMas, establecerErrorCargaMas] = useState<string | null>(null);
-  const [cargandoMas, establecerCargandoMas] = useState(false);
-  const [hayMas, establecerHayMas] = useState(false);
   const [enfocada, establecerEnfocada] = useState(false);
   const [revisionHistorial, establecerRevisionHistorial] = useState(0);
   const [intentoCargaOpciones, establecerIntentoCargaOpciones] = useState(0);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
   const [seccionesFiltrosAbiertas, establecerSeccionesFiltrosAbiertas] = useState(['tipo', 'fecha']);
   const [cargando, establecerCargando] = useState(true);
-  const secuenciaConsulta = useRef(0);
-  const bloqueoCargaMas = useRef(false);
   const depositosHistorialRef = useRef<typeof depositosHistorial>([]);
   const depositoFiltroIdsRef = useRef<string[]>([]);
   useEffect(() => {
@@ -148,7 +140,10 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
   useEffect(() => {
     const idsDisponibles = new Set(categoriasHistorial.map((categoria) => categoria.id));
-    establecerCategoriaFiltroIds((ids) => ids.filter((id) => idsDisponibles.has(id)));
+    establecerCategoriaFiltroIds((ids) => {
+      const vigentes = ids.filter((id) => idsDisponibles.has(id));
+      return vigentes.length === ids.length ? ids : vigentes;
+    });
   }, [categoriasHistorial]);
 
   const cambiarTipoFiltro = (tipo: SetStateAction<string>) => {
@@ -200,6 +195,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
           : idsSeleccionadosAntes.filter((id) => idsDepositos.includes(id)));
         depositosHistorialRef.current = depositos;
         establecerRevisionHistorial((revision) => revision + 1);
+        establecerCargando(false);
       })
       .catch((error: unknown) => {
         if (!vigente) return;
@@ -210,7 +206,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
     return () => {
       vigente = false;
-      secuenciaConsulta.current += 1;
       establecerEnfocada(false);
     };
   }, [mostrarAviso, intentoCargaOpciones]));
@@ -255,7 +250,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   };
 
   useEffect(() => {
-    establecerCargando(true);
     const temporizador = setTimeout(() => establecerBusquedaAplicada(busqueda.trim()), 250);
     return () => clearTimeout(temporizador);
   }, [busqueda]);
@@ -296,44 +290,10 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     rangoFechaConsulta,
   ]);
 
-  useEffect(() => {
-    if (!enfocada || !usuarioId || !revisionHistorial) return undefined;
-    const secuencia = ++secuenciaConsulta.current;
-    if (errorMontoFiltro) {
-      establecerMovimientosHistorial([]);
-      establecerCargando(false);
-      establecerHayMas(false);
-      establecerErrorConsulta(null);
-      return undefined;
-    }
-
-    establecerCargando(true);
-    establecerCargandoMas(false);
-    bloqueoCargaMas.current = false;
-    establecerErrorConsulta(null);
-    establecerErrorCargaMas(null);
-
-    cargarPaginaHistorialMovimientos(usuarioId, filtrosConsulta)
-      .then((movimientos) => {
-        if (secuencia !== secuenciaConsulta.current) return;
-        establecerMovimientosHistorial(movimientos);
-        establecerHayMas(movimientos.length === TAMANO_PAGINA);
-      })
-      .catch((error: unknown) => {
-        if (secuencia !== secuenciaConsulta.current) return;
-        establecerMovimientosHistorial([]);
-        establecerHayMas(false);
-        establecerErrorConsulta((error instanceof Error ? error.message : '') || 'No se pudo cargar el historial. Intentá nuevamente.');
-        mostrarAviso('No se pudo consultar el historial de movimientos.', { tipo: 'error' });
-      })
-      .finally(() => {
-        if (secuencia === secuenciaConsulta.current) establecerCargando(false);
-      });
-
-    return () => {
-      if (secuencia === secuenciaConsulta.current) secuenciaConsulta.current += 1;
-    };
-  }, [enfocada, usuarioId, revisionHistorial, filtrosConsulta, errorMontoFiltro, mostrarAviso]);
+  const consultarMeses = useCallback((criterios: import('../types/forms').FiltrosHistorial) => cargarMesesHistorialMovimientos(usuarioId || '', criterios), [usuarioId]);
+  const consultarPagina = useCallback((criterios: import('../types/forms').FiltrosHistorial, cursor: {fecha_hora:string;id:string}|null) => cargarPaginaHistorialMovimientos(usuarioId || '', criterios, cursor), [usuarioId]);
+  const datosMeses = useMovimientosPorMes({ habilitado: enfocada && !!usuarioId && !!revisionHistorial && !cargando,
+    revision: revisionHistorial, filtros: filtrosConsulta, invalido: !!errorMontoFiltro, consultarMeses, consultarPagina });
 
   const filtrosAplicados = useMemo(() => {
     const filtros: {id:string;etiqueta:string;alQuitar:()=>void;bloqueado?:boolean}[] = [];
@@ -428,16 +388,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     return filtros;
   }, [busqueda, tipoFiltro, fechaFiltro, fechaDia, mesSeleccionado, fechaInicial, fechaFinal, montoMinimo, montoMaximo, categoriaFiltroIds, depositoFiltroIds, categoriasDisponiblesFiltro, categoriasHistorial, depositosHistorial, filtraPorDepositos, cambiarFechaFiltro]);
   const cantidadFiltros = filtrosAplicados.length;
-  const gruposMovimientos = useMemo(() => {
-    const meses = new Map<string,{clave:string;titulo:string;movimientos:typeof movimientosHistorial}>();
-    for (const movimiento of movimientosHistorial) {
-      const fecha = new Date(movimiento.fecha_hora);
-      const clave = fecha.getFullYear()+'-'+fecha.getMonth();
-      if (!meses.has(clave)) meses.set(clave,{clave,titulo:fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^./,letra=>letra.toUpperCase()),movimientos:[]});
-      meses.get(clave)!.movimientos.push(movimiento);
-    }
-    return [...meses.values()];
-  },[movimientosHistorial]);
   const resumenTipo = OPCIONES_TIPO.find((opcion) => opcion.id === tipoFiltro)?.nombre || 'Todos';
   const resumenFecha = fechaFiltro === 'dia'
     ? (fechaDia ? formatearFechaCorta(fechaDia) : 'Elegí un día')
@@ -492,58 +442,14 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     establecerIntentoCargaOpciones((intento) => intento + 1);
   };
 
-  const abrirDetalle = (movimiento: import('../types/forms').MovimientoVisible) => {
+  const abrirDetalle = useCallback((movimiento: import('../types/forms').MovimientoVisible) => {
     abrirPantallaSecundaria(RUTAS.DETALLE_MOVIMIENTO, { movimientoId: movimiento.id });
-  };
-
-  const cargarMasMovimientos = useCallback(async () => {
-    const ultimoMovimiento = movimientosHistorial[movimientosHistorial.length - 1];
-    if (
-      !usuarioId
-      || !enfocada
-      || cargando
-      || cargandoMas
-      || !hayMas
-      || !ultimoMovimiento
-      || bloqueoCargaMas.current
-      || errorMontoFiltro
-    ) return;
-
-    const secuencia = secuenciaConsulta.current;
-    bloqueoCargaMas.current = true;
-    establecerCargandoMas(true);
-    establecerErrorCargaMas(null);
-    try {
-      const nuevosMovimientos = await cargarPaginaHistorialMovimientos(
-        usuarioId,
-        filtrosConsulta,
-        { fecha_hora: ultimoMovimiento.fecha_hora, id: ultimoMovimiento.id },
-      );
-      if (secuencia !== secuenciaConsulta.current) return;
-      establecerMovimientosHistorial((anteriores) => {
-        const idsCargados = new Set(anteriores.map((movimiento) => movimiento.id));
-        return [
-          ...anteriores,
-          ...nuevosMovimientos.filter((movimiento) => !idsCargados.has(movimiento.id)),
-        ];
-      });
-      establecerHayMas(nuevosMovimientos.length === TAMANO_PAGINA);
-    } catch (error) {
-      if (secuencia !== secuenciaConsulta.current) return;
-      establecerErrorCargaMas((error instanceof Error ? error.message : '') || 'No se pudieron cargar más movimientos. Intentá nuevamente.');
-      mostrarAviso('No se pudieron cargar más movimientos.', { tipo: 'error' });
-    } finally {
-      if (secuencia === secuenciaConsulta.current) {
-        bloqueoCargaMas.current = false;
-        establecerCargandoMas(false);
-      }
-    }
-  }, [movimientosHistorial, usuarioId, enfocada, cargando, cargandoMas, hayMas, errorMontoFiltro, filtrosConsulta, mostrarAviso]);
+  }, [abrirPantallaSecundaria]);
 
   const preajustesCategorias = obtenerPreajustesMovimientos(tipoFiltro, categoriasHistorial);
 
   const sinMovimientos = !cargando && cantidadTotal === 0;
-  const sinResultados = !cargando && (cantidadTotal || 0) > 0 && movimientosHistorial.length === 0;
+  const sinResultados = !cargando && (cantidadTotal || 0) > 0 && datosMeses.meses.length === 0;
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
@@ -555,7 +461,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
           alAbrirNotificaciones={() => abrirPantallaSecundaria(RUTAS.NOTIFICACIONES)}
           alAbrirPerfil={() => abrirPantallaSecundaria(RUTAS.PERFIL)}
         />
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={estilos.contenido}>
             <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={establecerBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosAplicados} cantidad={cantidadFiltros}>
               <FiltrosRapidosMovimientos estilosAccesos={estilosAccesos}
@@ -565,11 +471,11 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                 errorMontoFiltro={errorMontoFiltro} establecerMontoMinimo={establecerMontoMinimo} establecerMontoMaximo={establecerMontoMaximo}/>
             </BuscadorFiltrosMovimientos>
 
-            {cargando && movimientosHistorial.length === 0 ? null : errorConsulta ? (
+            {cargando || datosMeses.cargando ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses"/> : errorConsulta || datosMeses.error ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.error} name="alert-circle-outline" size={32} />
-                <Text style={estilos.textoEstadoVacio}>{errorConsulta}</Text>
-                <Pressable accessibilityRole="button" onPress={reintentarHistorial} style={estilos.botonLimpiar}>
+                <Text style={estilos.textoEstadoVacio}>{errorConsulta || datosMeses.error}</Text>
+                <Pressable accessibilityRole="button" onPress={errorConsulta ? reintentarHistorial : datosMeses.reintentar} style={estilos.botonLimpiar}>
                   <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
                 </Pressable>
               </View>
@@ -596,35 +502,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                 </Pressable>
               </View>
             ) : (
-              <View style={estilos.listaMovimientos}>
-                {gruposMovimientos.map((mes,indice) => <View key={mes.clave} style={estilos.grupoMes}>
-                  <EncabezadoSeccionPlegable tema={tema} titulo={mes.titulo} expandido={(mesesAbiertos[mes.clave] ?? indice === 0)}
-                    alAlternar={()=>establecerMesesAbiertos(anteriores=>({...anteriores,[mes.clave]:!(anteriores[mes.clave] ?? indice === 0)}))}/>
-                  {(mesesAbiertos[mes.clave] ?? indice === 0)?<View style={estilos.movimientosMes}>
-                    {mes.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalle}/>)}
-                  </View>:null}
-                </View>)}
-                {errorCargaMas ? (
-                  <View style={estilos.estadoVacio}>
-                    <Text style={estilos.textoEstadoVacio}>{errorCargaMas}</Text>
-                    <Pressable accessibilityRole="button" onPress={cargarMasMovimientos} style={estilos.botonLimpiar}>
-                      <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
-                    </Pressable>
-                  </View>
-                ) : hayMas || cargandoMas ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    disabled={cargandoMas}
-                    onPress={cargarMasMovimientos}
-                    style={estilos.botonCargarMas}
-                  >
-                    {cargandoMas ? <ActivityIndicator color={tema.foco} /> : null}
-                    <Text style={estilos.textoBotonCargarMas}>
-                      {cargandoMas ? 'Cargando más movimientos…' : 'Cargar más movimientos'}
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
+              <ListaMesesMovimientos datos={datosMeses} tema={tema} alPresionar={abrirDetalle}/>
             )}
           </View>
         </ScrollView>

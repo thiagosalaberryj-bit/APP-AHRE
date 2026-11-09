@@ -181,20 +181,25 @@ fecha y hora descendente.
 
 Los accesos rápidos se comparten mediante `MovementQuickFilters.tsx` y las
 secciones del panel mediante `MovementFilterSections.tsx`, también utilizados
-en Movimientos. Se conservan los estilos propios del detalle, la selección
-inicial del mes actual y la validación del orden del rango personalizado.
+en Movimientos. Se conservan los estilos propios del detalle y la validación
+del orden del rango personalizado. No se aplica un filtro de fecha inicial.
 Semana mantiene su selección actual sin agregar un calendario al detalle.
 La búsqueda, los criterios activos y el filtrado de recurrencias permanecen
 coordinados por esta pantalla.
 
-El detalle abre con el mes actual seleccionado y consulta solo 50 movimientos
-en SQLite. «Cargar más movimientos» incorpora la siguiente página del mismo
-período y filtros, como en Movimientos. Quitar el criterio de fecha o usar
-«Limpiar filtros» permite consultar otros meses; también se puede elegir uno
-desde el panel. No se montan todas las tarjetas del mes de una vez.
+El detalle comienza sin filtros y muestra los encabezados de todos los meses
+que tienen resultados. El mes actual comienza abierto, con hasta 50 movimientos;
+los otros permanecen plegados, sin consultar sus filas hasta desplegarlos. Si
+no hay movimientos del mes actual, todos quedan plegados. Abrir un mes carga
+su primera página; plegarlo oculta sus tarjetas y reabrirlo reutiliza lo cargado.
+«Cargar más movimientos» incorpora otras 50 filas de ese mes. Se muestra un
+indicador animado mientras carga. También se activa si el botón está visible
+y la persona sigue desplazándose hacia abajo, incluida la inercia de ese gesto.
+No se activa por aparecer, subir, quedarse quieto ni cambiar filtros. Un error
+requiere reintento manual. El botón conserva su acción táctil y accesible.
 La consulta aplica búsqueda, tipo, categorías, montos y fechas antes de paginar;
 las categorías disponibles se obtienen del historial completo del depósito.
-Cambiar un criterio reinicia la página; cambiar tema, abrir un modal o plegar
+Cambiar un criterio reinicia los meses; cambiar tema, abrir un modal o plegar
 un mes no vuelve a consultar. Las respuestas anteriores se descartan al cambiar
 filtros o salir. Una carga adicional fallida conserva las filas y permite
 reintentar. El filtro de Recurrentes mantiene su aplicación sobre la próxima ejecución.

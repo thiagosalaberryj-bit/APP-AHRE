@@ -43,12 +43,11 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import BotonPrincipal from '../components/PrimaryButton';
 import EncabezadoSeccion from '../components/SectionHeader';
-import TarjetaMovimiento from '../components/MovementCard';
-import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
-import { actualizarDeposito, consultarDetalleDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
-import { useMovimientosDeposito } from '../deposits/useDepositMovements';
+import { actualizarDeposito, consultarDetalleDeposito, consultarMesesMovimientosDeposito, consultarPaginaMovimientosDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
+import { useMovimientosPorMes } from '../movements/useMonthlyMovements';
+import ListaMesesMovimientos from '../components/MovementMonthList';
 import { consultarSaldoOculto } from '../profile/balanceVisibilityService';
 import { convertirSaldoInicial } from '../utils/depositValidation';
 import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../styles/colors';
@@ -186,7 +185,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const depositoActual = useRef(deposito);
   const secuenciaCarga = useRef(0);
 
-  const [mesesAbiertos, establecerMesesAbiertos] = useState<Record<string,boolean>>({});
   const [busqueda, establecerBusqueda] = useState('');
   const [busquedaAplicada, establecerBusquedaAplicada] = useState('');
   useEffect(() => {
@@ -199,10 +197,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   };
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
-  const [fechaFiltro, establecerFechaFiltro] = useState('mes');
+  const [fechaFiltro, establecerFechaFiltro] = useState('todos');
   const [fechaDia, establecerFechaDia] = useState<Date | null>(null);
   const [fechaSemana, establecerFechaSemana] = useState<Date | null>(null);
-  const [mesSeleccionado, establecerMesSeleccionado] = useState<Date | null>(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [mesSeleccionado, establecerMesSeleccionado] = useState<Date | null>(null);
   const [anioMesVisible, establecerAnioMesVisible] = useState(() => new Date().getFullYear());
   const [fechaInicial, establecerFechaInicial] = useState<Date | null>(null);
   const [fechaFinal, establecerFechaFinal] = useState<Date | null>(null);
@@ -374,9 +372,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       ...(inicio && fin ? { desde: inicio.toISOString(), hasta: fin.toISOString() } : {}) };
   }, [busquedaAplicada, tipoFiltro, categoriaFiltroIds, montoMinimoNumero, montoMaximoNumero,
     fechaFiltro, fechaDia, fechaSemana, mesSeleccionado, fechaInicial, fechaFinal]);
-  const { movimientos, cargando: cargandoMovimientos, cargandoMas, hayMas, error: errorMovimientos, cargarMas, reintentar } =
-    useMovimientosDeposito(depositoId, enfocada && deposito?.id === depositoId && seccionDeposito === 'movimientos', revisionMovimientos,
-      filtrosConsulta, !!errorMontoFiltro || !!errorFechaFiltro);
+  const consultarMeses = useCallback((criterios: import('../types/forms').FiltrosHistorial) => consultarMesesMovimientosDeposito(depositoId || '', criterios), [depositoId]);
+  const consultarPagina = useCallback((criterios: import('../types/forms').FiltrosHistorial, cursor: {fecha_hora:string;id:string}|null) => consultarPaginaMovimientosDeposito(depositoId || '', criterios, cursor), [depositoId]);
+  const datosMeses = useMovimientosPorMes({ habilitado: enfocada && deposito?.id === depositoId && seccionDeposito === 'movimientos',
+    revision: revisionMovimientos, filtros: filtrosConsulta, invalido: !!errorMontoFiltro || !!errorFechaFiltro, consultarMeses, consultarPagina });
 
   const filtrosActivos = useMemo(() => {
     const filtros: {id:string;etiqueta:string;alQuitar:()=>void}[] = [];
@@ -545,9 +544,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     }
   };
 
-  const abrirDetalleMovimiento = (movimiento: import('../types/forms').MovimientoVisible, categoria: Partial<import('../constants/movimientos').Categoria>) => {
+  const abrirDetalleMovimiento = useCallback((movimiento: import('../types/forms').MovimientoVisible, categoria: Partial<import('../constants/movimientos').Categoria>) => {
     navegacion.push(RUTAS.DETALLE_MOVIMIENTO, { movimientoId:movimiento.id, categoria, movimiento, deposito_nombre: deposito?.nombre });
-  };
+  }, [navegacion, deposito?.nombre]);
 
   const cumpleFiltros = useCallback((movimiento: Pick<import('../database/types').Movimiento, 'tipo' | 'descripcion' | 'categoria' | 'monto' | 'fecha_hora'>) => {
     if(errorMontoFiltro||errorFechaFiltro)return false;
@@ -587,20 +586,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     montoMinimoNumero, montoMaximoNumero, tipoFiltro, categoriaFiltroIds,
     fechaFiltro, fechaDia, fechaSemana, mesSeleccionado, fechaInicial, fechaFinal,
   ]);
-  const movimientosFiltrados = movimientos;
   const categoriasContexto=seccionDeposito==='recurrentes'?CATEGORIAS_FILTRO:categoriasDisponiblesFiltro;
   const preajustesCategorias=obtenerPreajustesMovimientos(tipoFiltro,categoriasContexto.map(c=>({...c,tipo:IDS_INGRESO.has(c.id)?'ingreso':'egreso'})));
 
-  const gruposMovimientos = useMemo(() => {
-    const meses = new Map<string,{clave:string;titulo:string;movimientos:typeof movimientosFiltrados}>();
-    for (const movimiento of movimientosFiltrados) {
-      const fecha = new Date(movimiento.fecha_hora);
-      const clave = fecha.getFullYear()+'-'+fecha.getMonth();
-      if (!meses.has(clave)) meses.set(clave,{clave,titulo:fecha.toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^./,letra=>letra.toUpperCase()),movimientos:[]});
-      meses.get(clave)!.movimientos.push(movimiento);
-    }
-    return [...meses.values()];
-  },[movimientosFiltrados]);
   const direccionComparacion = comparacionMensual?.disponible
     ? comparacionMensual.diferencia > 0
       ? 'positivo'
@@ -621,7 +609,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           descripcion="Consultá el saldo y los movimientos de este depósito."
           alVolver={() => navegacion.goBack()}
         />
-        <ScrollView contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {cargando ? (
             <View style={estilos.estadoVacio}>
               <ActivityIndicator color={tema.foco} size="large" />
@@ -717,48 +705,17 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             </BuscadorFiltrosMovimientos>
             {seccionDeposito==='recurrentes'&&depositoId?<PanelRecurrencias depositoId={depositoId} tema={tema} alCambiar={()=>{void cargarDetalle();}} alCambiarCantidad={establecerCantidadRecurrencias} filtrar={fila=>cumpleFiltros({...fila,fecha_hora:fila.proxima_ejecucion})}/>:null}
             {seccionDeposito==='movimientos'?<>
-            {cargandoMovimientos ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando movimientos del depósito" /> : errorMovimientos && movimientos.length === 0 ? (
-              <View style={estilos.estadoVacio}>
-                <Text style={estilosGlobales.textoError}>{errorMovimientos}</Text>
-                <Pressable accessibilityRole="button" onPress={reintentar} style={estilos.botonLimpiar}>
-                  <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
-                </Pressable>
-              </View>
-            ) : cantidadMovimientos === 0 ? (
-              <View style={estilos.estadoVacio}>
-                <Ionicons color={tema.textoSecundario} name="receipt-outline" size={32} />
-                <Text style={[estilosGlobales.textoSecundario, estilos.textoEstadoVacio]}>
-                  Este depósito todavía no tiene movimientos.
-                </Text>
-              </View>
-            ) : movimientosFiltrados.length > 0 ? (
-              <View style={estilos.listaMovimientos}>
-                {gruposMovimientos.map((mes,indice) => <View key={mes.clave} style={estilos.grupoMes}>
-                  <EncabezadoSeccionPlegable tema={tema} titulo={mes.titulo} expandido={mesesAbiertos[mes.clave] ?? indice === 0}
-                    alAlternar={()=>establecerMesesAbiertos(anteriores=>({...anteriores,[mes.clave]:!(anteriores[mes.clave] ?? indice === 0)}))}/>
-                  {(mesesAbiertos[mes.clave] ?? indice === 0)?<View style={estilos.movimientosMes}>
-                    {mes.movimientos.map(movimiento=><TarjetaMovimiento key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={abrirDetalleMovimiento}/>)}
-                  </View>:null}
-                </View>)}
-              </View>
-            ) : (
-              <View style={estilos.estadoVacio}>
-                <View style={estilos.iconoEstadoVacio}>
-                  <Ionicons color={tema.foco} name={busquedaAplicada.trim() ? 'search-outline' : 'receipt-outline'} size={26} />
+              {datosMeses.cargando ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses del depósito"/> : datosMeses.error ? (
+                <View style={estilos.estadoVacio}>
+                  <Text style={estilosGlobales.textoError}>{datosMeses.error}</Text>
+                  <Pressable accessibilityRole="button" onPress={datosMeses.reintentar} style={estilos.botonLimpiar}><Text style={estilos.textoBotonLimpiar}>Reintentar</Text></Pressable>
                 </View>
-                <Text style={estilosGlobales.etiqueta}>
-                  {busquedaAplicada.trim() ? `Sin resultados para “${busquedaAplicada.trim()}”.` : 'Sin resultados para los filtros elegidos.'}
-                </Text>
-                <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
-                  <Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text>
-                </Pressable>
-              </View>
-            )}
-            {movimientos.length > 0 && errorMovimientos ? <Text style={estilosGlobales.textoError}>{errorMovimientos}</Text> : null}
-            {hayMas ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: cargandoMas, busy: cargandoMas }}
-              disabled={cargandoMas} onPress={cargarMas} style={estilos.botonLimpiar}>
-              <Text style={estilos.textoBotonLimpiar}>{cargandoMas ? 'Cargando más movimientos…' : errorMovimientos ? 'Reintentar cargar más' : 'Cargar más movimientos'}</Text>
-            </Pressable> : null}
+              ) : datosMeses.meses.length ? <ListaMesesMovimientos datos={datosMeses} tema={tema} alPresionar={abrirDetalleMovimiento}/> : (
+                <View style={estilos.estadoVacio}>
+                  <Text style={estilosGlobales.textoSecundario}>{cantidadMovimientos === 0 ? 'Este depósito todavía no tiene movimientos.' : busquedaAplicada.trim() ? 'Sin resultados para la búsqueda.' : 'Sin resultados para los filtros elegidos.'}</Text>
+                  {cantidadMovimientos > 0 ? <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}><Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text></Pressable> : null}
+                </View>
+              )}
             </>:null}
           </View>
           </>
@@ -777,7 +734,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     abierta={seccionesFiltrosAbiertas.includes('fecha')} alAlternar={() => alternarSeccionFiltro('fecha')}
                     estilosSelectores={estilos} estilosGlobales={estilosGlobales}
                     fechaFiltro={fechaFiltro} cambiarFechaFiltro={cambiarFechaFiltro}
-                    fechaDia={fechaDia} establecerFechaDia={establecerFechaDia}
+                    fechaDia={fechaFiltro === 'semana' ? fechaSemana : fechaDia} establecerFechaDia={fechaFiltro === 'semana' ? establecerFechaSemana : establecerFechaDia}
                     anioMesVisible={anioMesVisible} establecerAnioMesVisible={establecerAnioMesVisible}
                     mesSeleccionado={mesSeleccionado} establecerMesSeleccionado={establecerMesSeleccionado}
                     fechaInicial={fechaInicial} fechaFinal={fechaFinal}

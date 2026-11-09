@@ -135,6 +135,11 @@ export async function consultarPaginaMovimientosDeposito(depositoId: string, fil
   return movimientosRepositorio.consultarPaginaDeposito(deposito.usuario_id, deposito.id, filtros, cursor);
 }
 
+export async function consultarMesesMovimientosDeposito(depositoId: string, filtros: import('../types/forms').FiltrosHistorial) {
+  const deposito = await consultarDepositoPropioActivo(depositoId);
+  return movimientosRepositorio.consultarMesesHistorial(deposito.usuario_id, { ...filtros, depositoIds: [deposito.id] }, true);
+}
+
 export async function actualizarDeposito(depositoId: string, datos: import('../types/forms').DatosDeposito) {
   const errores = validarDatosEdicionDeposito(datos);
   if (Object.keys(errores).length > 0) {

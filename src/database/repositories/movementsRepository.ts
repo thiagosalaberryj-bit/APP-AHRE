@@ -72,7 +72,7 @@ function validarMarcaTemporal(valor: unknown) {
     && Number.isFinite(Date.parse(valor));
 }
 
-function construirConsultaHistorial(usuarioId: string, filtros: import('../../types/forms').FiltrosHistorial, opciones: {limite?:number; cursor?:{fecha_hora:string;id:string}|null}, detalleDeposito = false) {
+function construirConsultaHistorial(usuarioId: string, filtros: import('../../types/forms').FiltrosHistorial, opciones: {limite?:number; cursor?:{fecha_hora:string;id:string}|null;agruparMeses?:boolean}, detalleDeposito = false) {
   if (
     typeof usuarioId !== 'string'
     || !usuarioId
@@ -196,6 +196,12 @@ function construirConsultaHistorial(usuarioId: string, filtros: import('../../ty
     }
   }
 
+  if (opciones.agruparMeses) return {
+    sql: `SELECT strftime('%Y-%m', m.fecha_hora, 'localtime') AS mes, COUNT(*) AS cantidad
+      FROM movimientos m INNER JOIN depositos d ON d.id = m.deposito_id
+      WHERE ${clausulas.join(' AND ')} AND julianday(m.fecha_hora) IS NOT NULL
+      GROUP BY mes ORDER BY mes DESC`, parametros,
+  };
   const limite = opciones.limite === undefined ? LIMITE_HISTORIAL : Number(opciones.limite);
   if (!Number.isInteger(limite) || limite < 1 || limite > 100) {
     throw new ErrorBaseDatos('consulta');
@@ -243,6 +249,13 @@ async function consultarPaginaDeposito(usuarioId: string, depositoId: string, fi
   return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(baseDatos => {
     const consulta = construirConsultaHistorial(usuarioId, { ...filtros, depositoIds: [depositoId] }, { limite: 50, cursor }, true);
     return baseDatos.getAllAsync<import('../types').MovimientoHistorial>(consulta.sql, consulta.parametros);
+  }));
+}
+
+async function consultarMesesHistorial(usuarioId: string, filtros: import('../../types/forms').FiltrosHistorial = {}, detalleDeposito = false) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(baseDatos => {
+    const consulta = construirConsultaHistorial(usuarioId, filtros, { agruparMeses: true }, detalleDeposito);
+    return baseDatos.getAllAsync<import('../../types/forms').MesHistorial>(consulta.sql, consulta.parametros);
   }));
 }
 
@@ -739,6 +752,7 @@ export const movimientosRepositorio = Object.freeze({
   ...repositorioBaseMovimientos,
   consultarHistorial,
   consultarPaginaDeposito,
+  consultarMesesHistorial,
   consultarResumenDeposito,
   consultarSaldoCierreAnterior,
   consultarOpcionesHistorial,

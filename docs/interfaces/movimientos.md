@@ -287,6 +287,20 @@ reciben el nombre real del depósito relacionado. SQLite ordena por
 movimientos» solicita la siguiente página usando la fecha, hora e ID de la
 última fila como cursor.
 
+La lista usa `MovementMonthList.tsx`, `MovementMonthListStyles.ts` y
+`useMonthlyMovements.ts`, compartidos con Detalle de depósito. Comienza sin
+filtros y consulta los encabezados de todos los meses con resultados, sin traer
+sus movimientos. Solo el mes actual comienza abierto, si existe; los demás
+permanecen plegados hasta que se abren. Cada mes tiene sus propias páginas de
+50 filas y conserva lo cargado al plegarlo. Las tarjetas ya mostradas se
+memorizan para no renderizarlas de nuevo al agregar otra página.
+El botón muestra un indicador animado mientras carga. Además de tocarlo, se
+puede llegar a él desplazándose hacia abajo: solo carga automáticamente si
+está visible y el movimiento proviene de un arrastre o su inercia. No carga
+por aparecer, subir, permanecer quieto ni mostrar un error; tampoco descarga
+filas de meses plegados. Las mediciones pendientes se invalidan al detener
+el gesto o cambiar filtros. Los errores conservan los datos y permiten reintento manual.
+
 ### Buscador
 
 El buscador ocupa una fila completa; debajo aparece una fila horizontal con

@@ -4,17 +4,19 @@ import { crearCargadorComponentes } from './componentInterface.ts';
 import type { Movimiento } from '../../src/database/types.ts';
 
 export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opciones: {
+  pantalla?: 'deposito' | 'movimientos';
   consultarPagina?: typeof import('../../src/deposits/depositService.ts').consultarPaginaMovimientosDeposito;
 } = {}) {
   const casillas: { valor?: unknown; current?: unknown; deps?: readonly unknown[]; limpiar?: () => void }[] = [];
   let indice = 0, efectos: (() => unknown)[] = [], arbol: unknown;
-  const recuentos = { consultas: 0, filas: 0 };
+  const recuentos = { consultas: 0, filas: 0, meses: 0 };
   const consultas: { filtros: import('../../src/types/forms.ts').FiltrosHistorial; cursor?: { fecha_hora: string; id: string } | null }[] = [];
   let movimientos = movimientosIniciales;
   const iguales = (a?: readonly unknown[], b?: readonly unknown[]) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
   const apariencia = {}, avisos = {}, mostrarAviso = () => {};
   let tema: typeof import('../../src/styles/colors.ts').TEMAS[keyof typeof import('../../src/styles/colors.ts').TEMAS];
   const react = {
+    memo: (componente: unknown) => componente,
     useState(inicial: unknown) {
       const posicion = indice++;
       if (!(posicion in casillas)) casillas[posicion] = { valor: typeof inicial === 'function' ? inicial() : inicial };
@@ -44,6 +46,29 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
   };
   let enfocada = true;
   const deposito = { id: 'deposito', usuario_id: 'usuario', nombre: 'Cuenta', tipo: 'banco', saldo_actual: 1000, descripcion: 'Cuenta de prueba' };
+  const filtrar = (filtros: import('../../src/types/forms.ts').FiltrosHistorial) => movimientos.filter(m =>
+    (!filtros.desde || m.fecha_hora >= filtros.desde) && (!filtros.hasta || m.fecha_hora < filtros.hasta)
+    && (!filtros.busqueda || m.descripcion.toLocaleLowerCase('es-AR').includes(filtros.busqueda.toLocaleLowerCase('es-AR')))
+    && (filtros.tipo === 'todos' || !filtros.tipo || (filtros.tipo === 'ingreso' ? ['ingreso','transferencia_entrada'].includes(m.tipo) : ['egreso','transferencia_salida'].includes(m.tipo)))
+    && (!filtros.categoriaIds || filtros.categoriaIds.includes(m.categoria))
+    && (filtros.montoMinimo == null || m.monto >= filtros.montoMinimo) && (filtros.montoMaximo == null || m.monto <= filtros.montoMaximo));
+  const consultarMeses = async (_id: string, filtros: import('../../src/types/forms.ts').FiltrosHistorial) => {
+    recuentos.meses++;
+    const meses = new Map<string, number>();
+    for (const fila of filtrar(filtros)) {
+      const fecha = new Date(fila.fecha_hora), mes = fecha.getFullYear() + '-' + String(fecha.getMonth() + 1).padStart(2, '0');
+      meses.set(mes, (meses.get(mes) || 0) + 1);
+    }
+    return [...meses].sort(([a], [b]) => b.localeCompare(a)).map(([mes, cantidad]) => ({ mes, cantidad }));
+  };
+  const consultarPagina = async (id: string, filtros: import('../../src/types/forms.ts').FiltrosHistorial, cursor?: {fecha_hora:string;id:string}|null) => {
+    recuentos.consultas++; consultas.push({ filtros, cursor });
+    const filas = opciones.consultarPagina ? await opciones.consultarPagina(id, filtros, cursor) : filtrar(filtros)
+      .filter(m => !cursor || m.fecha_hora < cursor.fecha_hora || (m.fecha_hora === cursor.fecha_hora && m.id < cursor.id))
+      .sort((a,b) => b.fecha_hora.localeCompare(a.fecha_hora) || b.id.localeCompare(a.id)).slice(0,50)
+      .map(m => ({ ...m, deposito_nombre: deposito.nombre }));
+    recuentos.filas += filas.length; return filas;
+  };
   const adaptadores: Record<string, unknown> = {
     react,
     'react-native': {
@@ -61,35 +86,27 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     '../deposits/depositService': {
       ErrorDeposito: class extends Error {},
       consultarDetalleDeposito: async () => ({ deposito, cantidadMovimientos: movimientos.length, categoriasMovimientos: [...new Set(movimientos.map(m => m.categoria))], comparacionMensual: null }),
+      consultarMesesMovimientosDeposito: consultarMeses,
+      consultarPaginaMovimientosDeposito: consultarPagina,
     },
-    './depositService': {
-      consultarPaginaMovimientosDeposito: async (id: string, filtros: import('../../src/types/forms.ts').FiltrosHistorial, cursor?: {fecha_hora:string;id:string}|null) => {
-        recuentos.consultas++;
-        consultas.push({ filtros, cursor });
-        const filas = opciones.consultarPagina ? await opciones.consultarPagina(id, filtros, cursor) : movimientos
-          .filter(m => (!filtros.desde || m.fecha_hora >= filtros.desde) && (!filtros.hasta || m.fecha_hora < filtros.hasta)
-            && (!filtros.busqueda || m.descripcion.toLocaleLowerCase('es-AR').includes(filtros.busqueda.toLocaleLowerCase('es-AR')))
-            && (filtros.tipo === 'todos' || !filtros.tipo || (filtros.tipo === 'ingreso' ? ['ingreso','transferencia_entrada'].includes(m.tipo) : ['egreso','transferencia_salida'].includes(m.tipo)))
-            && (!filtros.categoriaIds || filtros.categoriaIds.includes(m.categoria))
-            && (filtros.montoMinimo == null || m.monto >= filtros.montoMinimo) && (filtros.montoMaximo == null || m.monto <= filtros.montoMaximo)
-            && (!cursor || m.fecha_hora < cursor.fecha_hora || (m.fecha_hora === cursor.fecha_hora && m.id < cursor.id)))
-          .sort((a,b) => b.fecha_hora.localeCompare(a.fecha_hora) || b.id.localeCompare(a.id)).slice(0,50)
-          .map(m => ({ ...m, deposito_nombre: deposito.nombre }));
-        recuentos.filas += filas.length;
-        return filas;
-      },
+    '../movements/movementService': {
+      cargarMesesHistorialMovimientos: consultarMeses, cargarPaginaHistorialMovimientos: consultarPagina,
+      cargarOpcionesHistorialMovimientos: async () => ({ usuarioId: 'usuario', cantidad: movimientos.length,
+        categorias: [...new Map(movimientos.map(m => [m.tipo + m.categoria, { tipo: m.tipo, categoria: m.categoria }])).values()], depositos: [deposito] }),
     },
+    './MovementCard': { __esModule: true, default: 'MovementCard' },
+    './CollapsibleSectionHeader': { __esModule: true, default: 'CollapsibleSectionHeader' },
     '../components/MovementFilterSections': Object.fromEntries(['FiltroTipoMovimientos', 'FiltroFechaMovimientos', 'FiltroCategoriasMovimientos', 'FiltroMontoMovimientos'].map(n => [n, n])),
   };
-  for (const nombre of ['DepositForm', 'DepositIconModal', 'MovementQuickFilters', 'SegmentedSelector', 'MovementSearchFilters', 'MovementFiltersPanel', 'RecurrencePanel', 'PrimaryButton', 'SectionHeader', 'MovementCard', 'CollapsibleSectionHeader']) {
+  for (const nombre of ['DepositForm', 'DepositIconModal', 'MovementQuickFilters', 'SegmentedSelector', 'MovementSearchFilters', 'MovementFiltersPanel', 'RecurrencePanel', 'PrimaryButton', 'SectionHeader', 'MainHeader', 'MovementCard', 'CollapsibleSectionHeader']) {
     adaptadores['../components/' + nombre] = { __esModule: true, default: nombre };
   }
   const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
   const { cargar } = crearCargadorComponentes(raiz, adaptadores);
   const { TEMAS } = cargar<typeof import('../../src/styles/colors.ts')>('src/styles/colors.ts');
   tema = TEMAS.claro;
-  const pantalla = cargar<typeof import('../../src/screens/DepositDetailScreen.tsx')>('src/screens/DepositDetailScreen.tsx').default;
-  const propiedades = { route: { params: { depositoId: 'deposito' } }, navigation: { addListener: () => () => {}, goBack() {}, push() {} } };
+  const pantalla = cargar<typeof import('../../src/screens/DepositDetailScreen.tsx')>(opciones.pantalla === 'movimientos' ? 'src/screens/MovementsScreen.tsx' : 'src/screens/DepositDetailScreen.tsx').default;
+  const propiedades = { route: { params: { depositoId: 'deposito' } }, navigation: { getParent: () => ({ navigate() {} }), addListener: () => () => {}, goBack() {}, push() {} } };
   function renderizar() {
     indice = 0; efectos = [];
     arbol = pantalla(propiedades as unknown as Parameters<typeof pantalla>[0]);
@@ -100,6 +117,8 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
   function nodos(nodo: unknown): { type: string; props: Record<string, unknown> }[] {
     if (Array.isArray(nodo)) return nodo.flatMap(nodos);
     if (!nodo || typeof nodo !== 'object' || !('props' in nodo)) return [];
+    const componente = nodo as { type: unknown; props: Record<string, unknown> };
+    if (typeof componente.type === 'function' && componente.type.name === 'ListaMesesMovimientos') return nodos(componente.type(componente.props));
     const elemento = nodo as { type: string; props: Record<string, unknown> };
     return [elemento, ...nodos(elemento.props.children)];
   }
@@ -115,6 +134,21 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
   }
   return {
     renderizar, asentar, buscar, nodos: () => nodos(arbol), invocar, recuentos, consultas,
+    prepararScroll(posicionBoton = 550) {
+      const componente = (arbol: unknown): Record<string, unknown> | null => {
+        if (Array.isArray(arbol)) { for (const hijo of arbol) { const encontrado = componente(hijo); if (encontrado) return encontrado; } return null; }
+        if (!arbol || typeof arbol !== 'object' || !('props' in arbol)) return null;
+        const nodo = arbol as { type: unknown; props: Record<string, unknown> };
+        return typeof nodo.type === 'function' && nodo.type.name === 'ListaMesesMovimientos' ? nodo.props : componente(nodo.props.children);
+      };
+      const propiedadesLista = componente(arbol);
+      if (!propiedadesLista) throw new Error('No se encontró la lista mensual');
+      const datos = propiedadesLista.datos as ReturnType<typeof import('../../src/movements/useMonthlyMovements.ts').useMovimientosPorMes>;
+      datos.referenciaScroll.current = { getNativeScrollRef: () => ({ measureInWindow: (recibir: (...valores: number[]) => void) => recibir(0,0,360,600) }) } as unknown as import('react-native').ScrollView;
+      for (const nodo of nodos(arbol)) if (nodo.props.collapsable === false && typeof nodo.props.ref === 'function') {
+        nodo.props.ref({ measureInWindow: (recibir: (...valores: number[]) => void) => recibir(0,posicionBoton,360,48) });
+      }
+    },
     cambiarEnfoque(valor: boolean) { enfocada = valor; renderizar(); },
     desmontar() { casillas.forEach(casilla => casilla.limpiar?.()); },
     cambiarTema() { tema = tema === TEMAS.claro ? TEMAS.oscuro : TEMAS.claro; renderizar(); },

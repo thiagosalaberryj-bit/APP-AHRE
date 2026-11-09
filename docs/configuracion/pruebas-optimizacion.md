@@ -83,7 +83,11 @@ node --experimental-vm-modules --test --test-name-pattern="10.000 movimientos" t
 
 Entrega 10.000 movimientos sintéticos al servicio simulado de la pantalla y
 comprueba que monta solo 50 tarjetas y agrega otras 50 al pedir más, sin duplicar
-un doble toque. Otros casos cubren debounce, filtros, reintentos y respuestas
+un doble toque. Se ejecuta en ambas pantallas: valida meses plegados sin consultas
+de filas, apertura con carga y reutilización al reabrir. Comprueba también el
+indicador animado y la carga automática solo con botón visible y desplazamiento
+descendente. `tests/visibleLoadMore.test.ts` cubre mediciones pendientes, dirección,
+inercia y ausencia de cargas al detenerse. Otros casos cubren debounce, filtros, reintentos y respuestas
 vencidas. `tests/depositPagination.test.ts` ejecuta además el generador y las
 consultas reales de SQLite: verifica resumen sin historial completo, recorrido
 de los 7.000 registros del mes mediante cursor y búsquedas fuera de la página.
@@ -100,10 +104,13 @@ desde esta rama y seguir estos pasos:
    del mes de la carga y 3.000 repartidos en los 23 meses anteriores.
 4. Buscar `Volumen 00001`, probar filtros, limpiar, desplazarse y desplegar meses.
    Luego revisar Movimientos y Estadísticas con este depósito seleccionado.
-   En Detalle, comprobar que abre con el mes actual y 50 filas, y que «Cargar más
-   movimientos» agrega otras 50. Para consultar otros meses, quitar el filtro
-   de fecha o elegir otro mes desde Filtros. Cambiar búsqueda o filtros debe
-   reiniciar la lista, incluyendo coincidencias que no estaban en la primera página.
+   En ambas pantallas, comprobar que no hay filtros iniciales, que el mes actual
+   abre con 50 filas y que los anteriores están plegados. Desplegar uno debe
+   cargar solo su primera página. Llegar al botón mientras se baja debe agregar
+   otras 50 con indicador animado; quedarse quieto, subir o no ver el botón no
+   debe cargar. Verificar también el toque manual y el reintento tras un error.
+   Cambiar búsqueda o filtros debe reiniciar los meses e incluir coincidencias
+   que no estaban en la primera página, sin descargar meses plegados.
 5. Cerrar la sesión de pruebas y volver a ingresar a la cuenta habitual al terminar.
 
 El acceso aparece solo en desarrollo. Usa la cuenta local independiente
@@ -140,7 +147,7 @@ con permisos para las bases sintéticas `ahre_test_*`, con contraseña aleatoria
 conservada solo en el entorno del proceso de pruebas.
 
 - Backend: tipos correctos y 60 pruebas aprobadas, cero fallos y cero omisiones.
-- App: 407 pruebas aprobadas, cero fallos y cero omisiones, incluidos el escenario
+- App: 421 pruebas aprobadas, cero fallos y cero omisiones, incluidos el escenario
   de pantalla con 10.000 movimientos y los seis casos nuevos del generador SQLite.
   Se ejecutaron las 39 integraciones antes omitidas. Los casos nuevos comprueban
   aislamiento de la cuenta habitual, carga sin HTTP, distribución, saldo,
@@ -149,6 +156,9 @@ conservada solo en el entorno del proceso de pruebas.
   real de SQLite y la pantalla limitada a 50 tarjetas, así como el nuevo desglose
   de barras en ambos temas. La nueva presentación y la fluidez nativa del detalle
   deben comprobarse nuevamente en el dispositivo.
+  La última ejecución cubre además ambas listas sin filtros iniciales, meses
+  históricos plegados sin descargar filas, caché al reabrir y carga automática
+  condicionada por botón visible y desplazamiento descendente, con indicador animado.
 - Limpieza: cero bases sintéticas restantes; proceso detenido, puerto cerrado
   y carpeta de datos temporal eliminada. Los logs locales se conservan bajo
   `.expo/validation/`, fuera de Git. No hubo cambios en los archivos del servidor.

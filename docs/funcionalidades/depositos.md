@@ -115,9 +115,15 @@ activo y devuelve hasta 50 filas ordenadas por fecha e identificador descendente
 El cursor usa ambos campos para no perder movimientos con la misma fecha.
 Se incluyen transferencias y se conserva la búsqueda por descripción, nombre e
 identificador de categoría, con caracteres de búsqueda tratados literalmente.
-`src/deposits/useDepositMovements.ts` coordina primera página, cargas adicionales,
-reintentos, bloqueo de doble envío y descarte de respuestas vencidas. Al abrir se
-consulta el mes actual; limpiar o cambiar fecha habilita el resto del historial.
+`consultarMesesMovimientosDeposito` consulta únicamente los meses y cantidades,
+agrupados en horario local con los mismos filtros de las páginas. La pantalla
+comienza sin filtro de fecha; solo abre automáticamente el mes actual, si existe.
+`src/movements/useMonthlyMovements.ts`, compartido con Movimientos, coordina la
+consulta inicial de encabezados, páginas por mes abierto, caché al plegar,
+reintentos, bloqueo de doble envío y descarte de respuestas vencidas.
+`visibleLoadMore.ts` exige arrastre descendente o su inercia e intersección real
+entre el botón y el área visible del ScrollView antes de pedir la siguiente
+página. Invalida mediciones al detenerse, subir, salir o cambiar los criterios.
 
 La búsqueda se aplica sobre la descripción y categoría de los movimientos del
 depósito. Al vaciar el texto vuelve a mostrarse el conjunto que cumpla los
