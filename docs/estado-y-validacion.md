@@ -1,8 +1,107 @@
 # Estado y validación de AHRE
 
-Referencia actualizada al 3 de noviembre de 2026. Este documento concentra el
-estado operativo que antes se repetía en el README. Los changelogs mantienen
-el historial de sus entregas; no se reescriben desde una implementación.
+Referencia vigente: **8 de noviembre de 2026**, rama
+`codex/social-online-recurrencias`, versión configurada 0.8.0 y código Android 12.
+Este estado corresponde al código local; no identifica una APK instalada ni
+la revisión que corre en producción. El changelog queda a cargo de la revisión.
+
+## Estado actual
+
+La revisión posterior agrega confirmación manual de recurrencias, bloqueo financiero
+compartido, pendientes visibles de incorporación y etiquetas de deuda unificadas.
+Esta revisión completó **349 pruebas de app y 60 de backend, cero fallos y cero
+omisiones**, con SQLite real, MySQL temporal aislado y HTTP/WebSocket. Pasaron
+TypeScript y la comprobación de elementos sin uso. La instancia MySQL se apagó.
+Las regresiones cubren revisión sin escrituras, aceptación manual simultánea,
+conservación de ocurrencias eliminadas, bloqueo inmediato entre acciones,
+pendientes de sala actualizados localmente y propuestas rechazadas ocultas.
+Los resultados 343/60 siguientes corresponden a la auditoría anterior.
+
+No se generó otra APK, no se subieron cambios ni se desplegó el servidor en esta
+revisión. Falta comprobar en teléfono la nueva aceptación manual y la navegación
+nativa. La APK build 11 preparada antes mantiene el comportamiento anterior.
+
+| Área | Comportamiento implementado |
+| --- | --- |
+| Finanzas privadas | SQLite y sincronización por cuenta, saldos en centavos, depósitos propios y correcciones con historial. |
+| Salas | Locales hasta publicarse; categorías por gasto, administración del creador y permisos limitados de edición. |
+| Acceso | Enlace global con contraseña/admisión, QR y enlaces individuales heredados; identidad conservada al registrar una cuenta. |
+| Deudas | Propuestas con aceptación, pagos informados/confirmados/rechazados y perdón sin movimientos ficticios. |
+| Tiempo real | HTTP autenticado, eventos persistentes, WebSocket y recuperación periódica. |
+| Recurrencias | Confirmación manual idempotente desde depósitos; pausa/reactivación/reprogramación, sin generación automática. |
+| Demos | Cuenta local autorizada y modo desarrollo, sin solicitudes al servidor; no disponibles en release. |
+
+## Correcciones de la auditoría
+
+- Publicar conserva depósitos y movimientos preparados en la misma transacción
+  que crea la sala. Un reintento no duplica selecciones ni incorporaciones.
+- Los avisos nuevos guardan huella económica. Aceptar uno no invalida a otras
+  personas; cambiar importe, pagador o reparto sí exige revisión. MySQL agrega
+  `huella_gasto` de forma aditiva; los avisos anteriores siguen validando versión.
+- Las asociaciones de deudas privadas se bloquean y verifican al aceptar.
+  No se ocultan conflictos de propuestas cruzadas ni se fusionan registros.
+- El modal financiero bloquea su cierre hasta completar el guardado y su acción
+  posterior. La web usa las obligaciones actuales para el balance y las partes.
+- La app evita descargar y reescribir todo sin novedades: consulta eventos cada
+  15 segundos y reconcilia al iniciar/reanudar, ante pendientes y cada 60 segundos.
+  El backend agrupa las consultas de relaciones de deudas.
+- Se retiraron cuatro imports/tipos del servidor, 18 estilos de filtros antiguos
+  de depósito y un estilo de sala sin referencias. No se cambian estilos globales.
+
+No se reparan automáticamente selecciones ausentes de salas publicadas antes
+de la corrección ni acuerdos duplicados históricos: requieren revisión explícita
+de sus datos, sin inventar asociaciones ni fusionar deudas reales.
+
+## Evidencia automatizada anterior a la confirmación manual
+
+| Verificación | Resultado |
+| --- | --- |
+| TypeScript habitual, app/herramientas y servidor/pruebas | Correcto. |
+| Comprobación adicional `noUnusedLocals`/`noUnusedParameters` | Correcta en las fuentes de ambos repositorios. |
+| Suite completa APP | **343 aprobadas, 0 fallos, 0 omisiones**. |
+| Suite completa backend | **60 aprobadas, 0 fallos, 0 omisiones**. |
+| Integración | SQLite real, MySQL 8.4.13 aislado, HTTP y WebSocket. |
+
+Las integraciones usaron una instancia temporal en `127.0.0.1:13317`, bases
+`ahre_test_*` y credenciales sintéticas en memoria. Se apagó al terminar y no
+se accedió a producción. La suite comprueba además rollback de publicación
+inválida, respuestas perdidas, dos avisos independientes, cambio de pagador,
+propuestas cruzadas y ampliación repetida del esquema sobre avisos heredados.
+Sin el entorno MySQL, esas integraciones se omiten; no deben contarse como aprobadas.
+
+## Validación manual y entrega pendientes
+
+- Recorrer las interfaces actuales en Expo Go y navegador real, con ambos temas,
+  nombres largos, escalado de texto, teclado y navegación Atrás.
+- Probar cámara/QR, portapapeles, compartir por otra app, WhatsApp y apertura de
+  la invitación en Android. Las demos locales no validan esos enlaces reales.
+- Verificar WSS detrás de Nginx y recuperación entre dispositivos con la entrega
+  actualizada. Las pruebas automatizadas usan un servidor HTTP/WebSocket local.
+- Comprobar WorkManager sin red con una build nativa y la app cerrada. Expo Go
+  no incluye el módulo propio ni ML Kit; las pruebas Node no validan su ejecución.
+- Con autorización posterior, coordinar despliegue con respaldo y copia aislada,
+  build Android, revisión de PR y publicación. **Esta revisión no genera APK,
+  no hace commit/push ni despliega cambios.**
+
+Notificaciones/push, traducción integral y recuperación general de pendientes
+de una instalación revocada siguen fuera de esta entrega. Se conservan los datos
+pendientes y las restricciones de autorización existentes.
+
+El [contrato técnico](arquitectura/social-online-recurrencias.md) reúne roles,
+conectividad y fronteras financieras. La [guía de pruebas](social-validation.md)
+separa demos locales del recorrido real A/B/C.
+
+## Antecedentes históricos
+
+<details>
+<summary>Ver evidencia anterior, etapas y builds de noviembre de 2026</summary>
+
+Las secciones siguientes conservan la evidencia y las limitaciones de cada
+etapa, no el estado vigente. Sus expresiones «actual» o «más reciente» se refieren
+a la fecha original. Los resultados y pendientes vigentes son los de arriba.
+
+Referencia histórica del 3 de noviembre de 2026. Este documento concentraba el
+estado operativo que antes se repetía en el README.
 
 ## Estado por etapa
 
@@ -117,3 +216,92 @@ Android/Hermes (2157 módulos y 38 recursos). Incluye los últimos cambios de
 creación de salas, colores de categorías y contraste de íconos. Los escenarios
 de interfaz cubren búsqueda, confirmación y reapertura de participantes y
 persistencia del color de la sala en ambos temas. No se generó un APK 0.7.0.
+
+## Rama Social online y recurrencias · 6 de noviembre de 2026
+
+La implementación agrega categorías por gasto, eliminación lógica, motor recurrente,
+salas compartidas, identidades, invitados y eventos WebSocket.
+Ver [contrato técnico](arquitectura/social-online-recurrencias.md).
+
+La verificación conjunta más reciente pasó 215 pruebas de la app y 46 del backend,
+sin fallos ni omisiones, con SQLite real y MySQL temporal aislado.
+Incluye permisos, respuestas perdidas, conflictos, reconocimiento de deudas privadas,
+registro de invitados, carga inicial de otra instalación y HTTP/WebSocket.
+La actualización MySQL se probó dos veces sobre un esquema heredado aislado:
+conservó categorías, lotes originales, saldos y la primera ocurrencia recurrente.
+
+Se verificó la web de invitados en ambos temas y a ancho de teléfono con datos ficticios.
+La compilación Android está en validación en EAS; la prueba de WorkManager con
+la app cerrada en un dispositivo físico sigue pendiente y no se da por verificada.
+El despliegue remoto no se ejecutó: SSH rechazó el acceso del alias documentado.
+No se modificaron datos de producción ni el changelog.
+
+## Corrección de recuperación inicial de cuentas
+
+La cuenta existente se creaba localmente sin preferencias pero marcada como preparada, omitiendo su carga inicial. Se mantiene pendiente hasta descargar la instantánea y se recupera también el estado vacío ya marcado preparado con revisión cero y sin preferencias. No modifica datos del servidor ni descarta finanzas locales existentes. La regresión reproduce una descarga fallida, reintenta y comprueba depósitos y perfil. Verificación: 216 pruebas de app y 46 de backend, sin fallos ni omisiones. Build Android 7.
+
+## Detalles de movimientos y recurrencias
+
+El panel recurrente ahora se renderiza en el detalle del depósito. El detalle permite editar y presenta una eliminación roja con confirmación. Por pedido actualizado, eliminar crea una corrección inversa vinculada y conserva el original con fecha_eliminacion; ambos se excluyen de estadísticas. Se verifican idempotencia, saldo, acuerdos y ocurrencias futuras. La recuperación de instantáneas difiere FK hasta el commit para admitir originales y reversiones fuera de orden. Verificación: 218 pruebas de app y 46 del backend, cero fallos y cero omisiones. No se compiló otro APK para estos ajustes; se prueban desde Expo Go, y el servidor requiere actualizar las reglas de corrección privada.
+
+## Pestañas y filtros del detalle de depósito
+
+Se reutilizan los componentes de búsqueda y filtros de Movimientos. Recurrentes tiene contador y contenedor plegado inicialmente, tiempo restante actualizado cada minuto y fechas sin identificador técnico de zona. El acceso desde el depósito pasa movimientoId; el detalle también acepta el ID de la copia recibida como respaldo para consultar el registro real. TypeScript y verificación conjunta: 224 pruebas de app y 46 de servidor, todas aprobadas y sin omisiones. Los recorridos visuales en Expo Go requieren la revisión en el dispositivo.
+
+## Revisión del flujo Social online · 7 de noviembre de 2026
+
+La revisión actual pasa TypeScript en ambos repositorios y las suites completas:
+281 pruebas de app y 53 de servidor, sin fallos ni omisiones. Las integraciones
+usan SQLite real y MySQL 8.4.13 temporal, con bases independientes por escenario;
+no se conectan a producción. Se comprobó también la sintaxis Bash de los scripts
+y el empaquetado local del servidor sin enviar archivos por SSH.
+
+El recorrido nuevo vincula dos cuentas por correo sin publicar una sala, reconoce
+sus anotaciones privadas como un único acuerdo y registra pagos parciales desde
+el depósito propio. Pierde respuestas de solicitud, aceptación, pago y recepción
+para comprobar los reintentos. El pendiente cambia solo al confirmar; rechazar
+otro pago conserva el egreso del remitente y no crea un ingreso del destinatario.
+La prueba de sobrepago ahora confirma dos pagos en paralelo: solo uno prospera.
+
+Se corrigieron tres casos detectados durante la revisión:
+
+- Una solicitud de actualización durante otra descarga social programa otra
+  pasada serial antes de resolver. Evita mostrar el pendiente anterior después
+  de confirmar un pago y conserva la exclusión mutua de las descargas.
+- Crear una invitación confirma primero la sincronización privada de la ficha.
+  Una persona recién agregada obtiene así su vínculo al aceptar la invitación.
+- El registro o ingreso del invitado conserva decisiones previas de vínculos.
+  La primera asociación emite eventos de sala y de sus propietarios; volver a
+  ingresar no devuelve un vínculo confirmado al estado pendiente.
+
+Las integraciones cubren publicación, permisos y delegación, invitados, cambios
+offline, conflictos, cierre, incorporación en depósitos propios, correcciones
+privadas, tickets WebSocket y recuperación HTTP de eventos tras reiniciar el
+transporte. Los escenarios de navegador ejecutan el JavaScript de invitados con
+un adaptador de DOM; no sustituyen una prueba visual de navegador y teléfono.
+
+Los cambios de esta revisión permanecen locales: no se desplegó el servidor, no
+se generó otro APK ni se publicaron commits. Para cerrar la validación de uso
+falta recorrer app y navegador contra el despliegue actualizado, incluyendo
+escaneo QR, apertura del enlace en Android, WSS detrás de Nginx y ambos temas.
+Los ajustes de la app se prueban recargando Expo Go; un APK anterior no los incluye.
+
+## Rediseño de Social · build 10
+
+La app pasa 285 pruebas con SQLite real y MySQL temporal aislado, cero fallos y
+cero omisiones. TypeScript y la exportación Android/Hermes pasan. Los escenarios
+nuevos cubren contraseña incorrecta, múltiples ingresos con enlace global,
+protección de fichas vinculadas, corrección de una decisión rechazada, selección
+de depósito sin efecto inmediato, incorporación única al cierre y revisión de
+selecciones ante cambios de importe. Una parte pagada sin depósito no genera
+deuda. El recorrido físico queda en [la guía manual](social-validation.md).
+
+La entrada global web se revisó localmente en ambos temas. La nueva imagen
+frontend conserva la corrección de permisos Nginx. No se desplegaron cambios ni
+se modificaron datos de producción desde esta sesión.
+
+El backend completó 54 pruebas, cero fallos y cero omisiones. EAS recibió la build 10
+con ID 38745167-d8f9-463e-9c6a-2598b694980f; el envío confirmó estado NEW.
+No equivale a compilación finalizada ni a APK probada en un dispositivo.
+
+</details>

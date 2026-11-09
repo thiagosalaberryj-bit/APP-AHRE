@@ -36,6 +36,35 @@ no actualizar el SDK por ese motivo sin revisar compatibilidad.
 El registro y primer ingreso de una instalación requieren servidor. Los ingresos
 offline posteriores necesitan cuenta, verificador y autorización locales previos.
 «Entrar con datos de prueba» es un acceso de desarrollo independiente del servidor.
+Incluye ejemplos locales de Social: una sala abierta como administrador, otra
+cerrada con un pago parcial y una vista como participante. Las salas cuyo nombre
+empieza por «Demo» permiten recorrer gastos, personas, solicitudes, admisiones y
+selecciones de depósito. También hay deudas con invitación y pagos pendientes de
+confirmar, y vínculos en distintos estados. Las salas demo son interactivas:
+permiten agregar y editar gastos, marcar partes pagadas, resolver solicitudes e
+ingresos, cambiar permisos, configurar el enlace y cerrar la sala. Desde las
+deudas demo se pueden aceptar o rechazar propuestas e informar o confirmar pagos.
+Elegir un depósito crea movimientos reales dentro de esa cuenta ficticia local;
+no envía cambios al servidor. Los enlaces y QR usan `demo.ahre.test` y sirven para
+revisar el modal de compartir; no abren una sala real en otro dispositivo.
+La vista como participante conserva sus permisos limitados y permite avisar el
+pago de su propia parte; no permite administrar ni cerrar.
+Los ejemplos se preparan una sola vez; volver a entrar no los duplica ni cambia
+los saldos iniciales. Los cambios hechos al probar se conservan al volver a entrar.
+Para verlos en Expo Go, cerrar sesión y usar ese acceso de desarrollo; si ya se
+ingresó a esa cuenta, basta recargar JavaScript para habilitar las acciones.
+La deuda «Demo · Pagos y perdón» permite probar un pago nuevo desde el botón de
+registro, confirmar/rechazar el aviso de $150, asociar los $200 ya confirmados o
+perdonar los $800 pendientes. Para cargar ejemplos nuevos en una cuenta de prueba
+ya abierta, volver a entrar mediante «Entrar con datos de prueba».
+También se incluyen cuatro deudas vistas desde quien debe: «Demo · Me perdonaron
+la deuda», «Demo · Rechazaron mi pago», «Demo · Mi pago espera confirmación» y
+«Demo · Confirmaron mi pago». Se consultan en Deudas, origen Online; usar Todas
+o Saldadas para ver también las ya cerradas. La sala cerrada «Demo · Del lado de
+quien debe» reúne esos ejemplos como participante, con Bruno como administrador.
+Un rechazo mantiene el pendiente y los movimientos privados; un perdón cierra
+el pendiente sin registrar dinero. Preparar estos ejemplos no cambia saldos ni
+duplica registros al volver a entrar.
 Para cortar la red en una prueba, cargar primero el proyecto y mantenerlo abierto:
 sin acceso a Metro, una recarga puede impedir volver a cargar el JavaScript.
 
@@ -110,3 +139,43 @@ normaliza el mismo minuto de creación según la [regla de movimientos](../funci
 
 Para exportar o distribuir, seguir [Publicación](publicacion.md). El estado de
 las comprobaciones se mantiene en [Estado y validación](../estado-y-validacion.md).
+
+## Base de desarrollo Social
+
+Expo Go y las builds de desarrollo usan ahre-desarrollo-social-v3.db para no abrir bases de pruebas anteriores incompatibles con el esquema actual. El archivo anterior ahre.db se conserva sin migrarlo ni borrarlo. Las builds release siguen usando ahre.db. Al cambiar al archivo de desarrollo actual es necesario ingresar otra vez para descargar los datos sincronizados del servidor. Los pendientes que solo existían en el archivo viejo no se transfieren automáticamente.
+
+### Respuestas de la otra persona en las demos
+
+En Deudas > Online > Todas, abrir «Demo · Compra compartida con Bruno».
+Registrar un pago propio y volver al detalle. «Simular respuesta de Bruno» permite
+aceptar o rechazar ese pago. Se pueden registrar varios importes sobre la misma
+deuda, resolverlos por separado y luego elegir «Perdonarme» para cerrar el resto.
+El rechazo conserva el pendiente y el egreso que ya se registró; la aceptación
+reduce el pendiente; el perdón no crea movimientos. Los cambios persisten al
+volver a entrar y se reflejan también en la sala «Demo · Del lado de quien debe».
+
+## Salas online simuladas sin servidor
+
+La cuenta «Entrar con datos de prueba» permite crear una sala y activar Compartir
+online con contraseña sin conectarse al backend. Publicarla conserva su ID y sus
+gastos; no aparece una segunda sala. El enlace y QR demo se reutilizan y pueden
+renovarse o deshabilitarse. Estos enlaces son exclusivamente locales; no publican
+una web ni una sala accesible desde otro teléfono.
+
+- Creador: crear una sala con Compartir online, abrir Personas y usar «Simular
+  ingreso de un invitado». En Ingresos, tocar la tarjeta y asignarla a una ficha
+  o crear una persona. Admitir, rechazar, agregar desde agenda y administrar
+  permisos usan los mismos controles que una sala compartida real.
+- Participante: Salas → Unirme a sala → «Usar sala demo como participante».
+  El formulario completa el enlace y la contraseña de la sala precargada;
+  confirmar Solicitar ingreso abre la participación ya autorizada. También se
+  puede abrir «Demo · Como participante» desde el listado de salas.
+- Dentro de un gasto ajeno, «Ya pagué mi parte» permite preparar el depósito sin
+  alterar el saldo. En Personas → Vos se puede simular la aceptación o rechazo
+  del administrador. La misma ficha permite enviar observaciones.
+- En Personas de la sala participante, simular permiso o retiro de permiso para
+  gastos permite revisar ambos casos. Ser editor no permite administrar personas,
+  acceso ni cierre. Las simulaciones están limitadas a la cuenta demo autorizada.
+
+El informe de revisión y sus límites está en
+[Auditoría de Social](../social-audit.md).

@@ -2,7 +2,7 @@ import { useDatosSociales } from '../../social/SocialDataContext';
 import AccionesFormulario from './SocialFormActions';
 import { useRef, useState } from 'react';
 import { generarIdentificador } from '../../database/identifiers';
-import { crearSala } from '../../social/socialService';
+import { crearSala,publicarSalaOnline,configurarAccesoSala } from '../../social/socialService';
 import { COLORES_DEPOSITOS } from '../../styles/colors';
 import CampoFormulario from './SocialTextField';
 import PersonalizacionSala from './RoomAppearanceForm';
@@ -37,8 +37,9 @@ export default function FormularioCrearSala(propiedades: import('../../social/ty
   const [seleccionandoPersonas, establecerSeleccionandoPersonas] = useState(false);
   const id = useRef(generarIdentificador());
   const [nombre, establecerNombre] = useState('');
+  const [compartir,cambiarCompartir]=useState(false),[contrasena,cambiarContrasena]=useState('');
   const [descripcion, establecerDescripcion] = useState('');
-  const [apariencia, establecerApariencia] = useState({ categoriaId: 'alimentacion', icono: 'restaurant-outline', color: COLORES_DEPOSITOS[0] });
+  const [apariencia, establecerApariencia] = useState({ icono: 'restaurant-outline', color: COLORES_DEPOSITOS[0] });
   const registrarPersona = () => abrirRegistro('persona');
   const etiqueta = 'Crear sala';
   return <>
@@ -56,9 +57,11 @@ export default function FormularioCrearSala(propiedades: import('../../social/ty
             alCrear={() => { establecerSeleccionandoPersonas(false); registrarPersona(); }} {...aspecto} /> : null}
           <Text style={estilosGlobales.textoAyuda}>Vos ya estás incluido. Elegí del listado o registrá una persona desde el selector.</Text>
           <PersonalizacionSala alCambiar={establecerApariencia} {...aspecto} />
+          <Pressable accessibilityRole="checkbox" accessibilityState={{checked:compartir}} onPress={()=>cambiarCompartir(!compartir)} style={aspecto.estilos.filaCampos}><Ionicons name={compartir?'checkbox':'square-outline'} size={24} color={tema.foco}/><Text style={estilosGlobales.etiqueta}>Compartir online</Text></Pressable>
+          {compartir?<><CampoFormulario secreto etiqueta="Contraseña de la sala" valor={contrasena} alCambiar={cambiarContrasena} limite={128} {...aspecto}/><Text style={estilosGlobales.textoAyuda}>Mínimo 8 caracteres. Tendrás un enlace y QR para todas las personas; cada ingreso requiere aprobación y conexión.</Text></>:null}
           <View style={estilosMovimiento.tarjetaInformacion}><SelectorFecha etiqueta="Fecha de la ocasión" valor={fecha} alSeleccionar={establecerFecha} tema={tema} estilosMovimiento={estilosMovimiento} /></View>
           <Text style={estilosGlobales.textoAyuda}>Máximo de {LIMITE_SALAS_ACTIVAS} salas activas por vez.</Text>
-      <AccionesFormulario texto={etiqueta} alGuardar={() => crearSala({ id: id.current, nombre, descripcion, ...apariencia, personasIds: seleccionadas,
-        fecha: `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}` })} alExito={alCrearSala} {...aspecto} />
+      <AccionesFormulario texto={compartir?'Crear y compartir sala':etiqueta} alGuardar={async() => {if(compartir&&contrasena.length<8)throw new Error('La contraseña requiere al menos 8 caracteres.');const sala=await crearSala({ id: id.current, nombre, descripcion, ...apariencia, personasIds: seleccionadas,
+        fecha: `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}` });if(compartir){await publicarSalaOnline(sala.id);await configurarAccesoSala(sala.id,contrasena);}return sala;}} alExito={alCrearSala} {...aspecto} />
     </>;
 }

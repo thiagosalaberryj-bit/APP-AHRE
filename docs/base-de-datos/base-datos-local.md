@@ -175,6 +175,7 @@ Representa ingresos, egresos y los movimientos generados por una transferencia.
 | `descripcion` | `TEXT` | Descripción del movimiento. |
 | `fecha_hora` | `TEXT` | Momento en que ocurrió. |
 | `anulado` | `INTEGER` | Indica si el movimiento fue anulado. |
+| `fecha_eliminacion` | `TEXT` | Fecha de eliminación lógica; conserva el original y sus referencias. |
 | `reversion_de_id` | `TEXT` | Movimiento original que compensa, si corresponde. |
 | `fecha_creacion` | `TEXT` | Fecha de creación. |
 | `fecha_actualizacion` | `TEXT` | Última modificación. |
@@ -182,9 +183,10 @@ Representa ingresos, egresos y los movimientos generados por una transferencia.
 Al eliminar un ingreso o egreso, el movimiento original se conserva y se crea
 otro movimiento del mismo monto y depósito, con el tipo opuesto. `reversion_de_id`
 lo vincula al original; ambos movimientos actualizan el saldo y su efecto neto
-es cero. La compensación usa `devoluciones` para un egreso revertido y
-`otros_gastos` para un ingreso revertido, según las categorías válidas del tipo.
-No se elimina físicamente el movimiento original.
+es cero. La corrección usa `otros_ingresos` para un egreso eliminado y
+`otros_gastos` para un ingreso eliminado. El original se identifica mediante
+`fecha_eliminacion`; ambos quedan excluidos de estadísticas. La acción es
+idempotente y no modifica automáticamente un acuerdo social ni borra el original.
 
 Las categorías no son una tabla. Son valores predefinidos por AHRE y se
 definen en `src/constants/movimientos.ts` como `CATEGORIAS_INGRESO` y
@@ -276,11 +278,17 @@ Define la configuración de movimientos repetitivos.
 | `fecha_inicio` | `TEXT` | Inicio de la recurrencia. |
 | `fecha_fin` | `TEXT` | Final opcional. |
 | `proxima_ejecucion` | `TEXT` | Próxima fecha prevista. |
+| `zona_horaria` | `TEXT` | Zona de la programación, independiente de cambios del dispositivo. |
+| `dia_ancla` | `INTEGER` | Día de referencia para recuperar el 29, 30 o 31 tras meses cortos. |
 | `activa` | `INTEGER` | Indica si continúa activa. |
 | `fecha_creacion` | `TEXT` | Fecha de creación. |
 | `fecha_actualizacion` | `TEXT` | Última modificación. |
 
-En este Issue no se implementa la ejecución automática de recurrencias.
+El motor TypeScript genera ocurrencias vencidas de forma transaccional.
+`ejecuciones_recurrencia` conserva recurrencia, movimiento y fecha programada con
+clave única, incluso si el movimiento se elimina; así no se genera nuevamente.
+La app ejecuta el motor al iniciar/reanudar y el módulo WorkManager lo ejecuta
+sin red en builds Android nativas. Expo Go no incluye ese módulo propio.
 
 ## Entidades sociales y deudas
 
@@ -399,8 +407,9 @@ Las categorías predefinidas se mantienen en `src/constants/` porque no son
 datos almacenados en una tabla.
 
 Los repositorios financieros conservan sus reglas de saldo. Social los utiliza
-para crear o vincular movimientos; las reversiones mantienen el pago y la deuda
-coherentes mediante `socialMovementReversal.ts`.
+para crear o vincular movimientos; corregir finanzas privadas conserva el acuerdo
+y sus referencias. `socialMovementReversal.ts` fue retirado: no se coordina una
+cancelación automática de deudas o pagos al eliminar un movimiento.
 
 ## Implementación
 

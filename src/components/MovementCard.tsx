@@ -33,8 +33,9 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar }: imp
   const tipo = esTransferencia ? esIngreso ? 'Transferencia recibida' : 'Transferencia enviada' : esIngreso ? 'Ingreso' : 'Egreso';
   const fecha = formatearFechaLista(movimiento.fecha_hora);
   const deposito = movimiento.deposito_nombre || movimiento.deposito;
-  const metadatos = [nombreCategoria, deposito].filter(Boolean).join(' · ');
-  const colorTipo = esIngreso ? tema.exito : tema.error;
+  const eliminado=Boolean(movimiento.anulado||movimiento.fecha_eliminacion),correccion=Boolean(movimiento.reversion_de_id);
+  const metadatos = [eliminado ? 'ELIMINADO · No se contabiliza' : correccion?'CORRECCIÓN · No se contabiliza':nombreCategoria, deposito].filter(Boolean).join(' · ');
+  const colorTipo = eliminado?tema.textoSecundario:correccion?tema.foco:esIngreso?tema.exito:tema.error;
   const importe = formatearMontoLista(movimiento.monto, movimiento.tipo);
   const contenido = <>
     <View style={[estilos.icono,{backgroundColor:colorTipo+'18'}]}>
@@ -42,7 +43,7 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar }: imp
     </View>
     <View style={estilos.contenido}>
       <View style={estilos.filaTitulo}>
-        <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.titulo}>{movimiento.descripcion || nombreCategoria}</Text>
+        <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.titulo,eliminado&&{textDecorationLine:'line-through',color:tema.textoSecundario}]}>{movimiento.descripcion || nombreCategoria}</Text>
         <Text numberOfLines={1} style={estilos.fecha}>{fecha.dia}</Text>
       </View>
       <View style={estilos.filaMetadatos}>
@@ -52,10 +53,10 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar }: imp
     </View>
     <View style={estilos.franjaImporte}>
       <View style={estilos.filaTipo}>
-        <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.tipo,{color:colorTipo}]}>{esTransferencia?esIngreso?'Recibida':'Enviada':tipo}</Text>
+        <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.tipo,{color:colorTipo}]}>{eliminado?'Eliminado':correccion?'Corrección':esTransferencia?esIngreso?'Recibida':'Enviada':tipo}</Text>
         {alPresionar?<Ionicons color={tema.textoSecundario} name="chevron-forward" size={16}/>:null}
       </View>
-      <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.importe}>{importe}</Text>
+      <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.importe,eliminado&&{textDecorationLine:'line-through',color:tema.textoSecundario}]}>{importe}</Text>
     </View>
   </>;
   const etiqueta = tipo+': '+movimiento.descripcion+'. '+importe+'. '+metadatos+'. '+fecha.dia+' · '+fecha.hora;

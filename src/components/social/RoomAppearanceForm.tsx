@@ -3,13 +3,11 @@ import { useEffect, useState } from 'react';
 import { COLORES_DEPOSITOS, COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../../styles/colors';
 import { crearEstilosDeposito } from '../../styles/DepositScreenStyles';
 import { View, Text, Pressable, Modal, ScrollView } from 'react-native';
-import SelectorCategoria from '../CategorySelector';
-import { CATEGORIAS_EGRESO } from '../../constants/movimientos';
 import { ICONOS_SALA, NOMBRES_COLORES_SALA } from "../../social/socialConstants";
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/RoomAppearanceFormStyles';
-export default function PersonalizacionSala(propiedades: import('../../social/types').AspectoSocial & ({alCambiar:(datos:{categoriaId:string;icono:string;color:string})=>void})) {
+export default function PersonalizacionSala(propiedades: import('../../social/types').AspectoSocial & ({alCambiar:(datos:{icono:string;color:string})=>void})) {
   const {
     alCambiar,
     ...aspecto
@@ -26,15 +24,13 @@ export default function PersonalizacionSala(propiedades: import('../../social/ty
     estilosMovimiento,
     tema
   } = aspecto;
-  const [categoriaId, establecerCategoriaId] = useState('alimentacion');
   const [icono, establecerIcono] = useState('restaurant-outline');
   const [color, establecerColor] = useState(COLORES_DEPOSITOS[0]);
   const [mostrarIconos, establecerMostrarIconos] = useState(false);
   const estilosColor = crearEstilosDeposito(tema);
   const colores = [COLOR_DEPOSITO_PREDETERMINADO, ...COLORES_DEPOSITOS.filter(valor => valor !== COLOR_DEPOSITO_PREDETERMINADO)];
-  useEffect(() => { alCambiar?.({ categoriaId, icono, color }); }, [alCambiar, categoriaId, icono, color]);
+  useEffect(() => { alCambiar?.({ icono, color }); }, [alCambiar, icono, color]);
   return <View style={estilos.grupo}>
-      <SelectorCategoria categorias={CATEGORIAS_EGRESO} tipoMovimiento="egreso" categoriasPrincipalesIds={['alimentacion', 'compras', 'hogar', 'servicios']} seleccionadaId={categoriaId} alSeleccionar={establecerCategoriaId} {...aspecto} />
       <View style={estilos.grupoCampo}>
         <Text style={estilosGlobales.etiqueta}>Icono de la sala</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Elegir icono de la sala" accessibilityState={{

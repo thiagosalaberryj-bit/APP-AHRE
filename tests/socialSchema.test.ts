@@ -37,14 +37,14 @@ async function preparar(prueba: import('node:test').TestContext) {
   }
   for (const id of ['lucia', 'tomas', 'ana']) persona(id);
   const sala = (id = 's', usuario_id = 'u') => {
-    insertar('salas', { id, usuario_id, nombre: 'Cena', categoria: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', fecha: '2026-10-30', ...marcas });
+    insertar('salas', { id, usuario_id, nombre: 'Cena', icono: 'restaurant-outline', color: '#BED5C8', fecha: '2026-10-30', ...marcas });
     for (const persona_id of usuario_id === 'u' ? ['u-vos', 'lucia', 'tomas', 'ana'] : ['ajeno-vos']) {
       insertar('personas_sala', { id: `${id}-${persona_id}`, usuario_id, sala_id: id, persona_id, fecha_alta: fecha });
     }
   };
   sala();
   const gasto = (id = 'g', pagador_id = 'lucia', monto_total: number | string = 12000, sala_id = 's') => insertar('gastos_compartidos', {
-    id, usuario_id: 'u', sala_id, pagador_id, descripcion: 'Pizzas', monto_total, reparto: 'iguales', fecha, ...marcas,
+    id, usuario_id: 'u', sala_id, pagador_id, categoria: 'alimentacion', descripcion: 'Pizzas', monto_total, reparto: 'iguales', fecha, ...marcas,
   });
   const parte = (id: string, persona_id: string, monto_correspondiente = 4000, orden = 0, gasto_compartido_id = 'g') => insertar('participantes_gasto', {
     id, usuario_id: 'u', gasto_compartido_id, persona_id, monto_correspondiente, orden,
@@ -63,9 +63,9 @@ async function preparar(prueba: import('node:test').TestContext) {
   return { base, adaptador, insertar, marcas, persona, sala, gasto, parte, movimiento, pago, deuda, cerrar };
 }
 
-test('el esquema inicial completo crea quince tablas sin ejemplos y es repetible', async prueba => {
+test('el esquema inicial completo crea las tablas de dominio y copias sociales sin ejemplos y es repetible', async prueba => {
   const { base, adaptador } = await preparar(prueba);
-  assert.equal(presente(base.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").get()).n, 15);
+  assert.equal(presente(base.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").get()).n, 20);
   await (inicial.namespace as unknown as typeof import('../src/database/migrations/001_initialSchema.ts')).aplicarEsquemaInicial(adaptador);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM gastos_compartidos').get()).n, 0);
   assert.deepEqual(base.prepare('PRAGMA foreign_key_check').all(), []);

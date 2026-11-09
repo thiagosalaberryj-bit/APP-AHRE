@@ -4,6 +4,101 @@ import test from 'node:test';
 import { preparar } from './helpers/localDatabase.ts';
 import { interfazSocial } from './helpers/socialInterface.ts';
 
+test('los filtros exclusivos separan pendientes de saldadas y un pago sube la deuda por actividad',async prueba=>{
+ const e=await preparar(prueba);await e.prepararDatosPrueba();
+ const datos=await e.cargarSocial(),persona=datos.personas[0],deposito=datos.depositos[0];
+ const antigua=await e.crearDeudaPersonal({personaId:persona.id,direccion:'debo',monto:100,descripcion:'Antigua recién pagada'});
+ const saldada=await e.crearDeudaPersonal({personaId:persona.id,direccion:'debo',monto:50,descripcion:'Deuda terminada'});
+ e.base.prepare('UPDATE deudas SET fecha=?,fecha_actualizacion=? WHERE id=?').run('2020-01-01T12:00:00.000Z','2020-01-01T12:00:00.000Z',antigua.id);
+ await e.registrarPagoDeuda({deudaId:saldada.id,monto:50,claveOperacion:'saldada-filtro'},{depositoId:deposito.id});
+ await e.registrarPagoDeuda({deudaId:antigua.id,monto:10,claveOperacion:'actividad-filtro'},{depositoId:deposito.id});
+ const vista=interfazSocial(e,'claro');await vista.abrir(vista.rutas.PERSONAS_SOCIAL);
+ assert.ok(!vista.texto().includes('Todas las direcciones'));assert.ok(!vista.todos().some(n=>n.type==='Pressable'&&n.props.accessibilityLabel==='Pendientes'));
+ assert.ok(vista.todos().some(n=>n.type==='ScrollView'&&n.props.horizontal===true));
+ await vista.pulsar('Debo');
+ assert.ok(vista.texto().includes('Antigua recién pagada'));assert.ok(!vista.texto().includes('Deuda terminada'));
+ const tarjetas=vista.todos().filter(n=>n.type==='Pressable'&&String(n.props.accessibilityHint||'').includes('Abre toda'));
+ assert.ok(String(tarjetas[0].props.accessibilityLabel).includes('Antigua recién pagada'));
+ await vista.pulsar('Saldadas');assert.ok(vista.texto().includes('Deuda terminada'));assert.ok(!vista.texto().includes('Antigua recién pagada'));
+});
+
+for(const tema of ['claro','oscuro'] as const)test(`la invitación copia el enlace completo y compartir abre una acción separada en ${tema}`,async prueba=>{
+  const e=await preparar(prueba),vista=interfazSocial(e,tema),enlace='https://ahre.example.test/invitacion/#'+'a'.repeat(64);
+  await vista.abrirInvitacion({enlace,nombre:'Sofi',alCerrar:()=>{}});
+  const campo=presente(vista.todos().find(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Enlace personal para compartir'));
+  assert.equal(campo.props.multiline,false);assert.equal(campo.props.value,enlace);
+  assert.ok(!vista.texto().includes('Enlace copiado'));
+  await vista.pulsar('Copiar enlace de invitación');
+  assert.deepEqual(vista.copias,[enlace]);assert.ok(vista.texto().includes('Enlace copiado'));
+  assert.equal(vista.compartidos.length,0);
+  await vista.pulsar('Compartir por una app');
+  assert.equal(vista.compartidos.length,1);assert.ok(vista.compartidos[0].message.includes(enlace));
+});
+
+for(const tema of ['claro','oscuro'] as const)test(`el administrador ve las solicitudes pendientes desde la sala en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();
+  const datos=await e.cargarSocial(),sala=datos.salas[0];
+  const propia=presente(e.base.prepare('SELECT id FROM personas WHERE es_usuario_actual=1').get());
+  const respuesta={sala:{id:sala.id,nombre:sala.nombre,descripcion:'',icono:sala.icono,color:sala.color,fecha:sala.fechaISO,estado:'abierta',revision:1,participantes:[{id:propia.id,nombre:'Vos',activa:true},{id:datos.personas[0].id,nombre:datos.personas[0].nombre,activa:true}],gastos:[]},personaPropiaId:propia.id,administrador:true,solicitudes:[{id:'pedido-1',personaId:datos.personas[0].id,gasto_id:null,texto:'Cambiar la descripción a Cena',estado:'pendiente',fecha:new Date().toISOString()}]};
+  e.base.prepare('INSERT INTO salas_online_locales(usuario_id,sala_id,datos,administrador,persona_propia_id,fecha_actualizacion) VALUES(?,?,?,?,?,?)').run(datos.usuarioId,sala.id,JSON.stringify(respuesta),1,propia.id,new Date().toISOString());
+  let actualizaciones=0;
+  const vista=interfazSocial({...e,sincronizarSocialOnline:async()=>{actualizaciones++;}},tema);
+  await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:sala.id});
+  assert.ok(!vista.texto().includes('Solicitudes por persona'));
+  await vista.pulsar('Sección de sala: Personas');
+  assert.ok(vista.todos().some(n=>n.type==='Pressable'&&n.props.accessibilityLabel==='Solicitudes de '+datos.personas[0].nombre&&vista.texto(n).includes('1')));
+  assert.ok(!vista.texto().includes('Cambiar la descripción a Cena'));
+  await vista.pulsar('Solicitudes de '+datos.personas[0].nombre);await vista.abrir(vista.rutas.REGISTRO_SOCIAL,vista.destinos.at(-1)![1] as import('../src/social/types.ts').ParametrosSociales);
+  assert.ok(vista.texto().includes('Cambiar la descripción a Cena'));
+  assert.equal(vista.buscarBoton('Aceptar').props.disabled,false);
+  assert.equal(vista.buscarBoton('Rechazar').props.disabled,false);
+  assert.equal(actualizaciones,0);
+  await vista.pulsar('Volver a integrantes');await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');
+  await vista.pulsar('Agregar personas a la sala');
+  assert.ok(!vista.texto().includes('Enlace personal y QR'));
+  assert.ok(vista.todos().some(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Buscar personas para agregar'));
+});
+
+for(const fallo of ['rechazo','error'] as const)test(`la copia con ${fallo} muestra el fallo y permite seguir compartiendo`,async prueba=>{
+  const e=await preparar(prueba),vista=interfazSocial(e,'claro',{copiarTexto:async()=>{if(fallo==='error')throw new Error('sin portapapeles');return false;}});
+  await vista.abrirInvitacion({enlace:'https://ahre.example.test/invitacion/#'+'a'.repeat(64),nombre:'Sofi',alCerrar:()=>{}});
+  await vista.pulsar('Copiar enlace de invitación');
+  assert.ok(vista.texto().includes('No se pudo copiar'));assert.ok(!vista.texto().includes('Enlace copiado'));
+  assert.equal(vista.buscarBoton('Compartir por una app').props.disabled,false);
+});
+
+test('aceptar un enlace abre directamente la sala y las invitaciones ajenas no consumen el cupo propio',async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();
+  const datos=await e.cargarSocial(),sala=datos.salas[0];
+  let aceptaciones=0;
+  const vista=interfazSocial({...e,
+    cargarSocial:async()=>({...datos,salas:[sala,...Array.from({length:3},(_,i)=>({...sala,id:'invitada-'+i,administrador:false,online:true}))]}),
+    aceptarInvitacionOnline:async(token:string)=>{assert.equal(token,'a'.repeat(64));aceptaciones++;return {salaId:sala.id};},
+  },'claro');
+  await vista.abrir();await vista.pulsar('Salas');assert.equal(vista.buscarBoton('Crear sala').props.disabled,false);
+  await vista.pulsar('Unirme a sala');
+  await vista.llenar('Enlace de invitación','https://ahre.example.test/invitacion/#'+'a'.repeat(64));
+  await vista.pulsar('Aceptar invitación');
+  assert.equal(aceptaciones,1);
+  assert.ok(vista.destinos.some(d=>d[0]===vista.rutas.SALA_SOCIAL&&(d[1] as {salaId?:string})?.salaId===sala.id));
+});
+
+for(const tema of ['claro','oscuro'] as const)test(`Social ubica los acuerdos en deudas y permite revisar un enlace inválido en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();
+  const vista=interfazSocial(e,tema);await vista.abrir();
+  assert.ok(!vista.texto().includes('Actualizar acuerdos'));
+  assert.ok(!vista.texto().includes('Acuerdos online'));
+  assert.ok(!vista.texto().includes('Unirme a sala'));
+  assert.ok(!vista.texto().includes('Compartir deuda'));
+  await vista.pulsar('Salas');
+  await vista.pulsar('Unirme a sala');
+  await vista.llenar('Enlace de invitación','https://otro.test/no-valido');
+  await vista.pulsar('Aceptar invitación');
+  assert.ok(vista.texto().includes('no es una invitación válida'));
+  await vista.pulsar('Cerrar invitación');
+  assert.ok(!vista.texto().includes('Aceptar invitación'));
+});
+
 for (const tema of ['claro','oscuro'] as const) {
   test(`el selector común de depósitos permite selección individual y múltiple sin perder la última opción en ${tema}`, async prueba => {
     const e = await preparar(prueba);
@@ -44,7 +139,7 @@ for (const tema of ['claro','oscuro'] as const) {
     const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
     const ana = presente(await e.guardarPersona({ nombre: 'Ana', apellido: 'Pérez', apodo: 'Ani' }));
     const bruno = presente(await e.guardarPersona({ nombre: 'Bruno', apellido: 'Díaz', apodo: 'Bru' }));
-    const sala = await e.crearSala({ nombre: 'Reparto', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [ana.id, bruno.id] });
+    const sala = await e.crearSala({ nombre: 'Reparto', fecha: '2026-10-30',  icono: 'restaurant-outline', color: '#BED5C8', personasIds: [ana.id, bruno.id] });
     const vista = interfazSocial(e, tema);
     await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id });
     await vista.llenar('Importe del ítem', '100');
@@ -91,9 +186,9 @@ for (const tema of ['claro','oscuro'] as const) {
 
 test('Gastos omite el acceso de edición rápida y conserva la edición individual sin duplicar ítems', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
-  const sala = await e.crearSala({ nombre: 'Edición', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
+  const sala = await e.crearSala({ nombre: 'Edición', fecha: '2026-10-30',  icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
   const deposito = (await e.cargarSocial()).depositos[0];
-  await e.guardarGasto({ id: 'original', claveOperacion: 'original', salaId: sala.id, descripcion: 'Cena', monto: '100', reparto: 'iguales', pagadorId: 'vos', involucradas: ['vos'], pagaron: [] }, { compra: { depositoId: deposito.id } });
+  await e.guardarGasto({ categoriaId: 'alimentacion', id: 'original', claveOperacion: 'original', salaId: sala.id, descripcion: 'Cena', monto: '100', reparto: 'iguales', pagadorId: 'vos', involucradas: ['vos'], pagaron: [] }, { compra: { depositoId: deposito.id } });
   const vista = interfazSocial(e, 'claro');
   await vista.abrir(vista.rutas.SALA_SOCIAL, { salaId: sala.id }); await vista.pulsar('Gastos');
   assert.ok(!vista.texto().includes('Edición rápida'));
@@ -108,21 +203,22 @@ test('Gastos omite el acceso de edición rápida y conserva la edición individu
   assert.equal(gastos.length, 1); assert.equal(gastos[0].descripcion, 'Cena corregida'); assert.equal(gastos[0].montoNumero, 200);
 });
 
-test('el panel y las rutas de alta muestran el requisito de depósito con fondos', async prueba => {
+test('la participación social permite altas sin saldo positivo', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
   e.base.exec('UPDATE depositos SET saldo_actual = 0');
   const vista = interfazSocial(e, 'oscuro'); await vista.abrir();
-  assert.ok(vista.texto().includes('Primero, un depósito con dinero'));
-  assert.equal(vista.buscarBoton('Registrar deuda').props.disabled, true);
-  assert.equal(vista.buscarBoton('Crear sala').props.disabled, true);
+  assert.ok(!vista.texto().includes('Primero, un depósito con dinero'));
+  assert.ok(!vista.buscarBoton('Registrar deuda').props.disabled);
+  await vista.pulsar('Salas');
+  assert.ok(!vista.buscarBoton('Crear sala').props.disabled);
+  await vista.pulsar('Cerrar opciones');
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'persona' });
-  assert.ok(vista.texto().includes('Ir a Depósitos'));
-  assert.ok(!vista.todos().some(n => n.type === 'TextInput' && n.props.accessibilityLabel === 'Nombre'));
+  assert.ok(vista.todos().some(n => n.type === 'TextInput' && n.props.accessibilityLabel === 'Nombre'));
 });
 
 test('lista manual conserva filas, permite ajustes y guarda borradores con un depósito común', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
-  const sala = await e.crearSala({ nombre: 'Lista', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
+  const sala = await e.crearSala({ nombre: 'Lista', fecha: '2026-10-30',  icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
   const vista = interfazSocial(e, 'claro');
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id });
   await vista.pulsar('Registrar lista');
@@ -157,7 +253,7 @@ test('lista manual conserva filas, permite ajustes y guarda borradores con un de
 
 test('Social abre el OCR existente y recibe sus ítems en una lista editable sin egresos', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
-  const sala = await e.crearSala({ nombre: 'Ticket', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
+  const sala = await e.crearSala({ nombre: 'Ticket', fecha: '2026-10-30',  icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
   const vista = interfazSocial(e, 'oscuro');
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id });
   assert.ok(!vista.texto().includes('Escanear'));
@@ -190,7 +286,7 @@ for (const tema of ['claro', 'oscuro'] as const) test(`interfaces principales gu
   assert.ok(vista.texto().includes('Lucía Gómez'));
   const persona = (await servicios.cargarSocial()).personas[0];
   await vista.abrir(rutas.PERSONA_SOCIAL, { personaId: persona.id });
-  await vista.pulsar('Editar persona'); await vista.llenar('Apodo', 'Lucita'); await vista.pulsar('Guardar cambios');
+  await vista.pulsar('Opciones de persona'); await vista.pulsar('Editar persona'); await vista.llenar('Apodo', 'Lucita'); await vista.pulsar('Guardar cambios');
   assert.ok(vista.texto().includes('Lucita'));
   await vista.abrir(rutas.REGISTRO_SOCIAL, { tipo: 'crear' });
   await vista.llenar('Nombre de la ocasión', 'Cena real');
@@ -246,18 +342,19 @@ for (const tema of ['claro', 'oscuro'] as const) test(`interfaces principales gu
   await vista.llenar('Buscar deudas por persona', 'lucita');
   assert.ok(vista.texto().includes('Pizzas reales'));
   await vista.abrir(rutas.REGISTRO_SOCIAL, { tipo: 'eliminarDeuda', deudaId: deuda.id });
-  await vista.pulsar('Eliminar deuda');
+  await vista.pulsar('Confirmar perdón');
   assert.equal((await servicios.cargarSocial()).deudas.length, 1);
-  await vista.pulsar('Sí, eliminar deuda');
+  await vista.pulsar('Sí, perdonar deuda');
   assert.deepEqual(vista.destinos.at(-1), ['Atrás']);
-  assert.equal((await servicios.cargarSocial()).deudas.length, 0);
-  assert.ok(vista.avisos.every(m => ['Cambios guardados.', 'Pago registrado.'].includes(m)));
+  assert.equal((await servicios.cargarSocial()).deudas.length, 1);
+  assert.equal((await servicios.cargarSocial()).deudas[0].perdonadoNumero,499.5);
+  assert.ok(vista.avisos.every(m => ['Cambios guardados.', 'Pago registrado.', 'Deuda perdonada.'].includes(m)));
 });
 
 test('agenda, selección de integrantes y baja de personas persisten sin borrar deudas', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
   const persona = await e.guardarPersona({ nombre: 'Ana', apellido: 'Pérez', apodo: 'Ani' });
-  const sala = await e.crearSala({ nombre: 'Prueba', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
+  const sala = await e.crearSala({ nombre: 'Prueba', fecha: '2026-10-30',  icono: 'restaurant-outline', color: '#BED5C8', personasIds: [] });
   const vista = interfazSocial(e, 'oscuro'), rutas = vista.rutas;
   await vista.abrir(rutas.SALA_SOCIAL, { salaId: sala.id });
   await vista.pulsar('Personas'); await vista.pulsar('Agregar personas a la sala');
@@ -272,13 +369,13 @@ test('agenda, selección de integrantes y baja de personas persisten sin borrar 
   assert.equal((await e.cargarSocial()).deudas.length, 0);
   await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
   assert.equal((await e.cargarSocial()).deudas[0].pendienteNumero, 123.45);
-  await vista.abrir(rutas.PERSONA_SOCIAL, { personaId: presente(persona).id }); await vista.pulsar('Editar persona');
-  await vista.pulsar('Eliminar persona'); await vista.pulsar('Sí, eliminar persona');
+  await vista.abrir(rutas.PERSONA_SOCIAL, { personaId: presente(persona).id });
+  await vista.pulsar('Opciones de persona'); await vista.pulsar('Eliminar persona'); await vista.pulsar('Sí, eliminar persona');
   assert.deepEqual(vista.destinos.at(-1), [rutas.PERSONAS_SOCIAL, { todas: true }]);
   const snapshot = await e.cargarSocial();
   assert.equal(snapshot.personas[0].activa, false); assert.equal(snapshot.deudas.length, 1);
   await vista.abrir(rutas.PERSONAS_SOCIAL, { todas: true }); assert.ok(!vista.texto().includes('Ana Pérez'));
-  await vista.abrir(rutas.PERSONA_SOCIAL, { personaId: presente(persona).id }); await vista.pulsar('Editar persona'); await vista.pulsar('Reactivar persona');
+  await vista.abrir(rutas.PERSONA_SOCIAL, { personaId: presente(persona).id }); await vista.pulsar('Opciones de persona'); await vista.pulsar('Reactivar persona');
   assert.equal((await e.cargarSocial()).personas[0].activa, true);
 });
 
@@ -299,7 +396,7 @@ test('la interfaz vincula un movimiento existente y conserva el saldo', async pr
 test('todos pagaron solicita cada movimiento propio y cierra sin generar deudas', async prueba => {
   const e = await preparar(prueba); await e.prepararDatosPrueba({ incluirSocial: false });
   const personas = await Promise.all(['Ana', 'Lucía'].map(nombre => e.guardarPersona({ nombre, apellido: 'Pérez', apodo: nombre })));
-  const sala = await e.crearSala({ nombre: 'Cena saldada', fecha: '2026-10-30', categoriaId: 'alimentacion', icono: 'restaurant-outline', color: '#BED5C8', personasIds: personas.map(p => presente(p).id) });
+  const sala = await e.crearSala({ nombre: 'Cena saldada', fecha: '2026-10-30',  icono: 'restaurant-outline', color: '#BED5C8', personasIds: personas.map(p => presente(p).id) });
   const saldoAnterior = Number(presente(e.base.prepare('SELECT SUM(saldo_actual) AS saldo FROM depositos').get()).saldo);
   const vista = interfazSocial(e, 'oscuro');
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'gasto', salaId: sala.id });
@@ -397,4 +494,209 @@ test('las cards y el detalle de deuda mantienen el truncado de textos largos', a
   assert.equal(String(presente(titulo).children), descripcion);
   assert.equal(presente(titulo).props.numberOfLines, 1);
   assert.equal(presente(titulo).props.ellipsizeMode, 'tail');
+});
+
+for(const tema of ['claro','oscuro'] as const)test(`los acuerdos se administran en el detalle de la deuda de cada persona en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();
+  const inicial=await e.cargarSocial();await e.crearDeudaPersonal({personaId:inicial.personas[0].id,direccion:'me_deben',monto:100,descripcion:'Deuda propia a cobrar'},{depositoId:inicial.depositos[0].id});
+  const datos=await e.cargarSocial(),deuda=presente(datos.deudas.find(d=>d.tipo==='me_deben'&&!d.salaId&&!d.saldada));
+  const acuerdos=[{id:'acuerdo-personal',origenLocalId:deuda.id,salaId:null,descripcion:'Acuerdo elegido',monto:deuda.montoNumero,pendiente:deuda.pendienteNumero,estado:'aceptada',esDeudor:false,esAcreedor:true,puedeDecidir:false,pagos:[{id:'pago-recibido',monto:10,estado:'informado',fecha:new Date().toISOString()}]},
+    {id:'otra-propuesta',origenLocalId:null,salaId:null,descripcion:'Otra propuesta sin asociar',monto:20,pendiente:20,estado:'propuesta',esDeudor:true,esAcreedor:false,puedeDecidir:true,pagos:[]}];
+  e.base.prepare('INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,?,?)').run(datos.usuarioId,'deudas',JSON.stringify(acuerdos));
+  const decisiones:unknown[][]=[];
+  const vista=interfazSocial({...e,obtenerVistaSincronizacion:()=>({estado:'online',pendientes:0}),confirmarPagoConSeleccion:async(id,depositoId)=>{decisiones.push([id,depositoId]);return {pagoId:id};},sincronizarSocialOnline:async()=>{}},tema);
+  await vista.abrir(vista.rutas.PERSONAS_SOCIAL);
+  assert.ok(vista.texto().includes('Otra propuesta sin asociar'));
+  assert.ok(!vista.texto().includes('Acuerdo elegido'));
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
+  assert.ok(vista.texto().includes('Historial de la deuda'));assert.ok(!vista.texto().includes('Acuerdo con esta persona'));
+  assert.ok(vista.texto().includes('Por confirmar. Revisá si recibiste el dinero.'));
+  assert.ok(!vista.texto().includes('Otra propuesta sin asociar'));
+  assert.ok(!vista.texto().includes('Confirmar'));
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'pago',deudaId:deuda.id,pagoId:'pago-recibido'});
+  await vista.pulsar('Depósito');await vista.pulsar('Efectivo de prueba',true);await vista.pulsar('Confirmar');
+  assert.equal(decisiones.length,1);assert.equal(decisiones[0][0],'pago-recibido');
+});
+
+
+
+for(const tema of ['claro','oscuro'] as const)test(`Social conserva Unirme solo en inicio y las deudas de persona se pliegan con su cantidad en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();
+  const datos=await e.cargarSocial(),deuda=presente(datos.deudas.find(d=>!d.saldada));
+  const vista=interfazSocial(e,tema);await vista.abrir();
+  assert.equal(vista.buscarBoton('Salas').props.disabled,undefined);assert.ok(!vista.texto().includes('Unirme a sala'));assert.ok(!vista.texto().includes('Compartir deuda'));
+  await vista.abrir(vista.rutas.SALA_SOCIAL);
+  assert.ok(!vista.texto().includes('Mis salas'));assert.ok(!vista.texto().includes('Unirme a sala'));
+  await vista.abrir(vista.rutas.PERSONA_SOCIAL,{personaId:deuda.personaId});
+  assert.ok(!vista.texto().includes('Ver sala de origen'));
+  assert.ok(!vista.todos().some(n=>n.type==='Pressable'&&['Registrar mi pago','Registrar pago recibido','Eliminar deuda'].includes(String(n.props.accessibilityLabel))));
+  const titulo=deuda.tipo==='debo'?'Lo que le debés':'Lo que te debe';
+  assert.equal((vista.buscarBoton(titulo).props.accessibilityState as {expanded:boolean}).expanded,true);
+  await vista.pulsar(titulo);assert.equal((vista.buscarBoton(titulo).props.accessibilityState as {expanded:boolean}).expanded,false);
+  assert.ok(!vista.texto().includes(deuda.descripcion));
+  assert.ok(vista.texto().includes('Sin deudas')||vista.texto().includes('deudas'));
+  await vista.pulsar(titulo);
+  const tarjeta=presente(vista.todos().find(n=>n.type==='Pressable'&&String(n.props.accessibilityLabel||'').startsWith(deuda.descripcion+'.')));
+  await vista.pulsar(String(tarjeta.props.accessibilityLabel));
+  assert.deepEqual(vista.destinos.at(-1),[vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id}]);
+});
+
+for(const tema of ['claro','oscuro'] as const)for(const fallo of [false,true])test(`Nueva deuda ofrece compartir antes de guardar y conserva el registro ante fallo=${fallo} en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();
+  const datos=await e.cargarSocial(),persona=datos.personas[0];
+  e.base.prepare('INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,?,?)').run(datos.usuarioId,'vinculos',JSON.stringify([{id:'vinculo',persona_id:persona.id,cuenta_id:'cuenta',nombre:persona.nombre,estado:'confirmado'}]));
+  const propuestas:string[]=[];
+  const vista=interfazSocial({...e,
+    obtenerVistaSincronizacion:()=>({...e.obtenerVistaSincronizacion(),estado:'online'}),
+    observarSincronizacion:f=>{f({...e.obtenerVistaSincronizacion(),estado:'online'});return()=>{};},
+    sesionOnline:async()=>{const {usuario}=await e.obtenerSesionActual();assert.ok(usuario);return {usuario,token:'prueba'};},
+    proponerDeudaOnline:async id=>{assert.ok(await e.deudasRepositorio.consultarPorId(id));propuestas.push(id);if(fallo)throw new Error('sin conexión de prueba');},
+  },tema);
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'deuda',personaId:persona.id});
+  await vista.pulsar('Le debo');await vista.llenar('Monto de la deuda','123');await vista.llenar('Descripción','Nueva deuda compartida');
+  assert.equal(vista.buscarBoton('Proponer deuda online al registrar').props.disabled,false);
+  await vista.pulsar('Proponer deuda online al registrar');
+  assert.equal(propuestas.length,0);
+  await vista.pulsar('Registrar deuda');
+  const posteriores=(await e.cargarSocial()).deudas;
+  assert.equal(posteriores.length,datos.deudas.length+1);
+  const creada=presente(posteriores.find(d=>d.descripcion==='Nueva deuda compartida'));
+  assert.deepEqual(propuestas,[creada.id]);
+  if(fallo){
+    assert.ok(vista.avisos.some(m=>m.includes('La deuda quedó guardada')));
+    assert.deepEqual(vista.destinos.at(-1),[vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:creada.id}]);
+  }
+});
+
+
+for(const tema of ['claro','oscuro'] as const)test(`el perfil solicita un vínculo sin salas, muestra el pendiente y permite cancelarlo en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();const datos=await e.cargarSocial(),persona=datos.personas[0];
+  const observadores=new Set<()=>void>(),enviadas:unknown[][]=[];
+  const cache=(estado:string)=>{e.base.prepare('INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,?,?) ON CONFLICT(usuario_id,clave) DO UPDATE SET datos=excluded.datos').run(datos.usuarioId,'vinculos',JSON.stringify([{id:'vinculo-prueba',persona_id:persona.id,cuenta_id:'cuenta-sofi',nombre:'Sofi Cuenta',estado}]));for(const f of observadores)f();};
+  const vista=interfazSocial({...e,
+    obtenerVistaSincronizacion:()=>({...e.obtenerVistaSincronizacion(),estado:'online'}),
+    observarSincronizacion:f=>{f({...e.obtenerVistaSincronizacion(),estado:'online'});return()=>{};},
+    observarSocialOnline:f=>{observadores.add(f);return()=>{observadores.delete(f);};},
+    solicitarVinculoOnline:async(id,correo)=>{enviadas.push([id,correo]);cache('solicitado');return {id:'vinculo-prueba'};},
+    cancelarVinculoOnline:async id=>{assert.equal(id,'vinculo-prueba');cache('cancelado');},
+  },tema);
+  await vista.abrir(vista.rutas.PERSONA_SOCIAL,{personaId:persona.id});
+  assert.ok(vista.texto().includes('Sin cuenta vinculada'));
+  assert.ok(!vista.texto().includes('Vincular cuenta'));
+  await vista.pulsar('Opciones de persona');await vista.pulsar('Vincular cuenta');await vista.llenar('Correo de la cuenta a vincular','sofi@example.test');
+  await vista.pulsar('Enviar solicitud de vínculo');
+  assert.deepEqual(enviadas,[[persona.id,'sofi@example.test']]);
+  assert.ok(vista.texto().includes('Vínculo pendiente'));
+  await vista.pulsar('Opciones de persona');await vista.pulsar('Gestionar vínculo');
+  assert.ok(vista.texto().includes('Espera su aceptación'));
+  assert.ok(!vista.texto().includes('Cuenta vinculada:'));
+  await vista.pulsar('Cancelar solicitud de vínculo');assert.ok(vista.texto().includes('Sin cuenta vinculada'));
+  cache('confirmado');await vista.asentar();
+  assert.ok(vista.texto().includes('Cuenta vinculada'));
+  assert.ok(!vista.todos().some(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Correo de la cuenta a vincular'));
+  await vista.pulsar('Opciones de persona');await vista.pulsar('Ver cuenta vinculada');
+  assert.ok(vista.texto().includes('Cuenta vinculada: Sofi Cuenta'));
+  await vista.pulsar('Cerrar vínculo de cuenta');
+  await vista.pulsar('Opciones de persona'); await vista.pulsar('Editar persona');
+  const modal=presente(vista.todos().filter(n=>n.type==='Modal').at(-1));
+  assert.ok(!vista.texto(modal).includes('Eliminar persona'));
+  await vista.pulsar('Cerrar edición de persona');await vista.pulsar('Opciones de persona');assert.ok(!vista.buscarBoton('Eliminar persona').props.disabled);
+  const despues=await e.cargarSocial();assert.deepEqual(despues.deudas,datos.deudas);assert.deepEqual(despues.salas,datos.salas);
+});
+
+for(const decision of ['aceptado','rechazado'] as const)test(`Personas permite responder un vínculo recibido: ${decision}, sin crear fichas ni deudas`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();const datos=await e.cargarSocial();
+  const solicitudes=[{id:'solicitud-directa',persona_id:'',cuenta_id:'otra-cuenta',nombre:'Juan',estado:'solicitado',direccion:'recibida'}];
+  e.base.prepare('INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,?,?)').run(datos.usuarioId,'vinculos',JSON.stringify(solicitudes));
+  const respondidas:unknown[][]=[],observadores=new Set<()=>void>();
+  const vista=interfazSocial({...e,
+    obtenerVistaSincronizacion:()=>({...e.obtenerVistaSincronizacion(),estado:'online'}),
+    observarSincronizacion:f=>{f({...e.obtenerVistaSincronizacion(),estado:'online'});return()=>{};},
+    observarSocialOnline:f=>{observadores.add(f);return()=>{observadores.delete(f);};},
+    responderVinculoOnline:async(id,respuesta)=>{respondidas.push([id,respuesta]);e.base.prepare("UPDATE datos_sociales_online SET datos='[]' WHERE usuario_id=? AND clave='vinculos'").run(datos.usuarioId);for(const f of observadores)f();},
+  },'claro');
+  await vista.abrir(vista.rutas.PERSONAS_SOCIAL,{todas:true});
+  assert.ok(vista.texto().includes('Solicitudes de vínculo'));
+  await vista.pulsar(decision==='aceptado'?'Aceptar vínculo':'Rechazar vínculo');
+  assert.deepEqual(respondidas,[['solicitud-directa',decision]]);
+  assert.ok(!vista.texto().includes('Solicitudes de vínculo'));
+  const despues=await e.cargarSocial();assert.deepEqual(despues.deudas,datos.deudas);assert.deepEqual(despues.personas,datos.personas);
+});
+
+
+for(const tema of ['claro','oscuro'] as const)test(`el menú Salas separa creación e invitación y permite unirse con el cupo completo en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();const datos=await e.cargarSocial();
+  const vista=interfazSocial(e,tema);await vista.abrir();
+  assert.ok(!vista.texto().includes('Nueva sala'));assert.ok(!vista.texto().includes('Unirme a sala'));
+  await vista.pulsar('Salas');await vista.pulsar('Cerrar opciones');assert.equal(vista.destinos.length,0);
+  await vista.pulsar('Salas');await vista.pulsar('Crear sala');
+  assert.deepEqual(vista.destinos.at(-1),[vista.rutas.REGISTRO_SOCIAL,{tipo:'crear'}]);
+  const llena=interfazSocial({...e,cargarSocial:async()=>({...datos,salas:Array.from({length:3},(_,i)=>({...datos.salas[0],id:'propia-'+i,administrador:true,estado:'abierta' as const}))})},tema);
+  await llena.abrir();await llena.pulsar('Salas');
+  assert.equal(llena.buscarBoton('Crear sala').props.disabled,true);
+  assert.ok(!llena.buscarBoton('Unirme a sala').props.disabled);
+  await llena.pulsar('Unirme a sala');
+  assert.ok(llena.todos().some(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Enlace de invitación'));
+  assert.ok(!llena.texto().includes('Crear sala'));
+  await llena.pulsar('Cerrar invitación');await llena.pulsar('Salas');
+  assert.ok(llena.texto().includes('Crear sala'));assert.ok(llena.texto().includes('Unirme a sala'));
+});
+
+for(const tema of ['claro','oscuro'] as const)test(`los tres puntos separan edición y eliminación y cancelar conserva el perfil en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();const datos=await e.cargarSocial(),persona=datos.personas[0];
+  const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.PERSONA_SOCIAL,{personaId:persona.id});
+  assert.ok(!vista.texto().includes('Eliminar persona'));
+  await vista.pulsar('Opciones de persona');await vista.pulsar('Cerrar opciones tocando fuera');
+  assert.ok(!vista.texto().includes('Editar persona'));
+  await vista.pulsar('Opciones de persona');await vista.pulsar('Eliminar persona');
+  assert.ok(vista.texto().includes('Sí, eliminar persona'));
+  await vista.pulsar('Cerrar confirmación');
+  assert.deepEqual((await e.cargarSocial()).personas,datos.personas);
+  assert.deepEqual((await e.cargarSocial()).deudas,datos.deudas);
+});
+
+
+for(const tema of ['claro','oscuro'] as const)test(`filtros por dirección y resumen ampliable con historial de pagos en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba();const inicial=await e.cargarSocial(),persona=inicial.personas[0],deposito=inicial.depositos[0];
+  await e.crearDeudaPersonal({personaId:persona.id,direccion:'debo',monto:'70',descripcion:'Debo de prueba'});
+  const creada=await e.crearDeudaPersonal({personaId:persona.id,direccion:'me_deben',monto:'60',descripcion:'Me deben de prueba'},{depositoId:deposito.id});
+  await e.registrarPagoDeuda({deudaId:creada.id,monto:'15',claveOperacion:'pago-historial'},{depositoId:deposito.id});
+  const datos=await e.cargarSocial();
+  const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.PERSONAS_SOCIAL);
+  await vista.pulsar('Debo');assert.equal(vista.buscarBoton('Debo').props.accessibilityState!==undefined,true);
+  for(const deuda of datos.deudas.filter(d=>d.tipo==='me_deben'))assert.ok(!vista.todos().some(n=>n.type==='Pressable'&&String(n.props.accessibilityLabel||'').startsWith(deuda.descripcion+'.')));
+  await vista.pulsar('Me deben');
+  for(const deuda of datos.deudas.filter(d=>d.tipo==='debo'))assert.ok(!vista.todos().some(n=>n.type==='Pressable'&&String(n.props.accessibilityLabel||'').startsWith(deuda.descripcion+'.')));
+  const deuda=presente(datos.deudas.find(d=>d.tipo==='me_deben'));
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
+  await vista.pulsar('Ver importe Original');assert.ok(vista.texto().includes('Importe completo'));assert.ok(vista.texto().includes(deuda.monto));await vista.pulsar('Cerrar importe');
+  assert.ok(vista.texto().includes('Historial de la deuda'));assert.ok(vista.texto().includes('Deuda registrada'));assert.ok(vista.texto().includes('Te pagó · $ 15'));
+  await vista.pulsar('Ver persona');assert.deepEqual(vista.destinos.at(-1),[vista.rutas.PERSONA_SOCIAL,{personaId:deuda.personaId}]);
+});
+
+for(const tema of ['claro','oscuro'] as const)test(`perdonar una deuda local conserva historial y usa las mismas acciones de la online en ${tema}`,async prueba=>{
+  const e=await preparar(prueba);await e.prepararDatosPrueba({vistaSocialOnline:true});
+  const datos=await e.cargarSocial(),persona=datos.personas[0],deposito=datos.depositos[0];
+  const deuda=await e.crearDeudaPersonal({personaId:persona.id,direccion:'me_deben',monto:100,descripcion:'Adelanto para perdonar'},{depositoId:deposito.id});
+  await e.registrarPagoDeuda({deudaId:deuda.id,monto:25,claveOperacion:'abono-antes-perdon'},{depositoId:deposito.id});
+  const saldo=e.base.prepare('SELECT SUM(saldo_actual) saldo FROM depositos').get()!.saldo;
+  const cantidad=e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n;
+  await assert.rejects(e.perdonarDeudaPersonal(deuda.id,100),/pendiente cambió/);
+  const vista=interfazSocial(e,tema);
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
+  const pago=vista.buscarBoton('Registrar pago recibido'),perdon=vista.buscarBoton('Perdonar deuda');
+  const fila=presente(vista.todos().find(n=>n.type==='View'&&Array.isArray(n.children)&&n.children.includes(pago)&&n.children.includes(perdon)));
+  assert.ok(fila);assert.ok(!vista.texto().includes('Eliminar deuda'));
+  await vista.pulsar('Perdonar deuda');await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'eliminarDeuda',deudaId:deuda.id});
+  await vista.pulsar('Confirmar perdón');await vista.pulsar('Sí, perdonar deuda');
+  const cerrada=presente((await e.cargarSocial()).deudas.find(d=>d.id===deuda.id));
+  assert.equal(cerrada.pendienteNumero,0);assert.equal(cerrada.perdonadoNumero,75);assert.equal(cerrada.estado,'Perdonada');
+  await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
+  assert.ok(vista.texto().includes('Perdonaste · $ 75'));assert.ok(vista.texto().includes('Te pagó · $ 25'));
+  assert.deepEqual(vista.buscarBoton('Ver importe Recibiste').props.accessibilityValue,{text:'$ 25'});
+  await e.perdonarDeudaPersonal(deuda.id,75);await vista.asentar();
+  assert.equal(e.base.prepare('SELECT SUM(saldo_actual) saldo FROM depositos').get()!.saldo,saldo);
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n,cantidad);
+  const propia=await e.crearDeudaPersonal({personaId:persona.id,direccion:'debo',monto:50,descripcion:'No puedo perdonarme solo'});
+  await assert.rejects(e.perdonarDeudaPersonal(propia.id,50),/Solo quien cobra/);
 });

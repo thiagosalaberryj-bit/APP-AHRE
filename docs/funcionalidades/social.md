@@ -1,4 +1,4 @@
-# Funcionamiento local de Social
+# Funcionamiento de Social
 
 ## Alcance actual
 
@@ -7,10 +7,12 @@ local de AHRE. Funciona sin conexión, con los depósitos y movimientos del usua
 actual. Se mantuvo la identidad visual de la maqueta del Issue #18; el usuario
 autorizó integrar la lógica en esa misma rama sin abrir otro Issue.
 
-No hay invitaciones, sincronización ni comunicación entre cuentas. El OCR de
-Social reutiliza el reconocimiento existente; ML Kit no está disponible en Expo Go.
-La lista manual sí funciona en Expo Go. La preparación temporal
-de Inicio solo carga depósitos y movimientos; Social comienza vacío.
+Las salas pueden publicarse para colaborar entre cuentas y con invitados web.
+Las finanzas privadas siguen separadas de las obligaciones compartidas; la
+[guía online](../arquitectura/social-online-recurrencias.md) define roles,
+conectividad y contratos. El OCR reutiliza el reconocimiento existente; ML Kit
+no está disponible en Expo Go. La lista manual sí funciona allí. El acceso
+explícito de desarrollo prepara también ejemplos sociales interactivos locales.
 
 La [guía de interfaz](../interfaces/social.md) describe las pantallas y el
 [contrato del esquema](../base-de-datos/social.md) enumera las restricciones SQL.
@@ -118,6 +120,8 @@ El parser conserva productos y total existentes y agrega items con descripción 
 un importe candidato por línea. Los campos dudosos permanecen revisables; no se
 reparte el total automáticamente ni se inventan importes faltantes.
 
+La siguiente tabla describe las operaciones locales. En las salas publicadas, el cierre fija el acuerdo y cada cuenta incorpora sus movimientos por separado.
+
 | Operación | Efecto en tus depósitos |
 | --- | --- |
 | Registrar persona o sala | Ninguno. |
@@ -127,7 +131,7 @@ reparte el total automáticamente ni se inventan importes faltantes.
 | Cerrar sala con un ítem pagado por Vos | Egreso por el total en el depósito asociado. |
 | Otra persona paga el ítem | Ninguno hasta que entregues tu parte. |
 | Parte marcada como recibida durante la sala | Ingreso al cerrar, categoría devoluciones. |
-| Parte propia marcada como entregada | Egreso al cerrar, categoría de la sala. |
+| Parte propia marcada como entregada | Egreso al cerrar, categoría del gasto. |
 | Pago entre otras personas | Solo registro en la sala, sin movimiento propio. |
 | Pagar deuda manual | Egreso, categoría deudas. |
 | Cobrar deuda manual | Ingreso, categoría devoluciones. |
@@ -202,21 +206,22 @@ Su estado se actualiza a parcial o pagada junto con el movimiento y el pago.
 Al saldar muestra Deuda saldada y regresa directamente al inicio de Social.
 Los pagos parciales muestran Pago registrado y regresan a la vista anterior.
 
-Eliminar deuda pide confirmación y marca cancelada con fecha. No registra pago,
-no devuelve dinero ni borra persona, origen o movimientos. Se retira de los
-pendientes y del listado visible, conservando su historial en SQLite.
-Una deuda saldada conserva su historial y no puede eliminarse: se oculta la
-acción y se rechaza la cancelación tanto en el servicio como en SQLite.
+Perdonar deuda pide confirmación y solo está disponible para quien cobra.
+No registra pago ni devuelve dinero: conserva persona, origen y movimientos.
+La deuda permanece visible como perdonada, con pendiente cero y separando lo
+perdonado de los pagos recibidos. Una deuda saldada no ofrece esta acción.
+Las eliminaciones históricas anteriores siguen retiradas del listado.
 
-La anulación desde Movimientos de un pago propio vinculado coordina la
-compensación financiera, la anulación del pago y el estado de su deuda. Una
-compra de sala cerrada no puede anularse. La edición de un borrador abierto
-no utiliza reversiones: todavía no generó movimientos.
+Eliminar desde Movimientos conserva el original y crea su corrección financiera
+inversa una sola vez. Ambos quedan fuera de estadísticas; el saldo se ajusta en
+la misma transacción. La acción modifica las finanzas privadas y conserva las
+referencias de Social: no anula automáticamente un pago, una deuda ni un acuerdo
+confirmado, tampoco si el movimiento corresponde a una sala cerrada.
 
-Revertir el movimiento de origen de una deuda manual requiere corregir primero
-sus devoluciones vigentes. Después compensa el movimiento y cancela la obligación
-en la misma transacción, conservando el historial. Eliminar solamente la deuda
-no compensa el adelanto.
+Corregir un movimiento tampoco reescribe el importe del acuerdo compartido.
+Perdonar una deuda es una decisión distinta: cierra el pendiente sin generar
+dinero ni compensar el adelanto original. Editar un borrador de sala abierta
+sigue sin crear reversiones, porque todavía no generó movimientos.
 
 ## Consultas y errores
 
@@ -314,3 +319,8 @@ La etapa 6 pasó `npm run typecheck`, 158 pruebas de la app y 45 del backend
 con MySQL 8.4.13 temporal local, sin fallos ni omisiones. El líder confirmó después la revisión manual de
 esta etapa en Expo Go, con consulta de registros y pago parcial. Se conservaron esquema, dependencias
 y los cambios de las etapas anteriores.
+
+
+## Integración online y recurrencias
+
+La [guía de la implementación](../arquitectura/social-online-recurrencias.md) define el contrato actual de categorías por gasto, identidades, conectividad, recurrencias y eliminación lógica.

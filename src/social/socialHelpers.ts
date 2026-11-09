@@ -8,3 +8,6 @@ export function nombreCompletoPersona(persona: {nombre?:string;apellido?:string|
 const formatoMonto = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 export const formatearMontoSocial = (monto: number) => `$ ${formatoMonto.format(monto || 0)}`;
 export const montoParaEntrada = (monto: number) => Number(monto || 0).toFixed(2).replace(/\.00$/, '').replace('.', ',');
+export function mensajeErrorSocial(error:unknown,respaldo:string) {
+  return error&&typeof error==='object'&&'message' in error&&typeof error.message==='string'&&error.message.trim()?error.message:respaldo;
+}

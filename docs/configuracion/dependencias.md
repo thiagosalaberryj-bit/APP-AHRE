@@ -76,7 +76,11 @@ La dependencia utiliza la interfaz del sistema para seleccionar una imagen o tom
 
 ### `expo-camera`
 
-La dependencia muestra la vista en vivo y captura la foto directamente desde el visor de OCR. Su plugin configura el permiso de cámara en iOS y Android; no se solicita acceso al micrófono ni se habilita el escaneo de códigos porque esta pantalla solo toma fotografías. Si cambia esta configuración nativa, hay que regenerar o reconstruir la aplicación para que se aplique.
+La dependencia muestra la vista en vivo y captura la foto desde el visor de OCR.
+Su plugin configura el permiso de cámara sin acceso al micrófono y habilita
+`barcodeScannerEnabled` para el escáner QR de Social. OCR sigue tomando fotos;
+Social reutiliza la cámara para códigos. Cambiar esa configuración nativa requiere
+reconstruir la aplicación; recargar JavaScript no actualiza una APK instalada.
 
 ### `expo-image-manipulator`
 
@@ -410,3 +414,20 @@ el reintento con permisos suficientes terminó correctamente. Esta exportación
 comprueba el empaquetado, no sustituye instalar y probar un APK en dispositivo.
 La auditoría posterior conserva 14 paquetes afectados del árbol de Expo
 (3 altos, 9 moderados, 2 bajos); la retirada no corrige esos cuatro avisos.
+
+
+## Integración online y recurrencias
+
+La [guía de la implementación](../arquitectura/social-online-recurrencias.md) define el contrato actual de categorías por gasto, identidades, conectividad, recurrencias y eliminación lógica.
+
+El líder autorizó para esta tarea `expo-task-manager` y WorkManager 2.10.1 en el módulo local. SERVER-AHRE incorpora `ws` y `@types/ws`. No se aplicaron actualizaciones generales de dependencias.
+
+El líder autorizó `qrcode` y `@types/qrcode` para las invitaciones. Se usa el
+núcleo JavaScript para crear una matriz y dibujarla con el `react-native-svg`
+existente, sin canvas ni servicios externos. El escáner utiliza `expo-camera`,
+ya disponible; los QR contienen el mismo enlace HTTPS de invitación de la web.
+
+El líder autorizó instalar `expo-clipboard` con `expo install` para SDK 57.
+El ícono de copia de las invitaciones utiliza `setStringAsync` para copiar el
+enlace completo, con confirmación y manejo de fallos. Compartir por una app
+conserva el menú nativo de React Native; no se envían mensajes automáticamente.

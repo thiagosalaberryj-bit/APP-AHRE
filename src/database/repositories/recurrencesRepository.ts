@@ -12,6 +12,8 @@ export const recurrenciasRepositorio = crearRepositorio({
     'fecha_inicio',
     'fecha_fin',
     'proxima_ejecucion',
+    'zona_horaria',
+    'dia_ancla',
     'activa',
     'fecha_creacion',
     'fecha_actualizacion',

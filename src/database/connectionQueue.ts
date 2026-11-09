@@ -1,21 +1,20 @@
 import type { Conexion } from './types';
-import { obtenerBaseDatos } from './initialization';
+import { estadoConexion, obtenerBaseDatos } from './initialization';
 import { generarIdentificador } from './identifiers';
+import { enTransaccionSQLite } from './sqliteTransaction';
 import { avisarCambiosLocales } from '../sync/journal';
-
-let colaOperaciones = Promise.resolve();
 
 function encolarOperacion<Resultado>(operacion: (conexion: Conexion) => Promise<Resultado>, conexion: Conexion | null): Promise<Resultado> {
   if (conexion) {
     return operacion(conexion);
   }
 
-  const tarea = colaOperaciones.then(async () => {
+  const tarea = estadoConexion.colaOperaciones.then(async () => {
     const baseDatos = await obtenerBaseDatos();
     return operacion(baseDatos);
   });
 
-  colaOperaciones = tarea.then(
+  estadoConexion.colaOperaciones = tarea.then(
     () => undefined,
     () => undefined,
   );
@@ -31,13 +30,17 @@ export function ejecutarLecturaConConexion<Resultado>(operacion: (conexion: Cone
 export function ejecutarConConexion<Resultado>(operacion: (conexion: Conexion) => Promise<Resultado>, conexion: Conexion | null = null): Promise<Resultado> {
   if (conexion) return operacion(conexion);
   return encolarOperacion(async baseDatos => {
-    const antes=Number((await baseDatos.getFirstAsync<{n:number}>('SELECT MAX(secuencia) AS n FROM sync_outbox'))?.n||0);
-    await baseDatos.runAsync('UPDATE sync_context SET lote=? WHERE id=1',[generarIdentificador()]);
-    try { return await operacion(baseDatos); }
-    finally {
+    let hayCambios=false;
+    const resultado=await enTransaccionSQLite(baseDatos,async()=>{
+      const antes=Number((await baseDatos.getFirstAsync<{n:number}>('SELECT MAX(secuencia) AS n FROM sync_outbox'))?.n||0);
+      await baseDatos.runAsync('UPDATE sync_context SET lote=? WHERE id=1',[generarIdentificador()]);
+      const salida=await operacion(baseDatos);
       await baseDatos.runAsync('UPDATE sync_context SET lote=NULL WHERE id=1');
       const despues=Number((await baseDatos.getFirstAsync<{n:number}>('SELECT MAX(secuencia) AS n FROM sync_outbox'))?.n||0);
-      if(despues>antes)avisarCambiosLocales();
-    }
+      hayCambios=despues>antes;
+      return salida;
+    });
+    if(hayCambios)avisarCambiosLocales();
+    return resultado;
   }, null);
 }

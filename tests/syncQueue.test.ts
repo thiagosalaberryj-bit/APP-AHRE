@@ -13,7 +13,7 @@ async function escenarioCorreo(prueba:TestContext,recordar:boolean) {
   const transporte:typeof fetch=async(url,opciones)=>{
     if(offline)throw new Error('sin red');
     const ruta=String(url),datos=opciones?.body?JSON.parse(String(opciones.body)):{};
-    if(ruta.endsWith('/health'))return Response.json({protocolo:2});
+    if(ruta.endsWith('/health'))return Response.json({protocolo:3});
     if(ruta.endsWith('/auth/register')){
       const fecha=new Date().toISOString();
       usuario={id:datos.id,nombre:datos.nombre,correo_electronico:datos.correo,activo:1,fecha_creacion:fecha,fecha_actualizacion:fecha};

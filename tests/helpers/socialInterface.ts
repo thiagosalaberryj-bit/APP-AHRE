@@ -20,13 +20,14 @@ type Rutas = typeof RUTAS;
 
 // Ejecuta los componentes y callbacks reales; sustituye únicamente React/native.
 // No es un motor de layout ni una comprobación visual en dispositivo.
-export function interfazSocial(servicios: typeof import('../../src/social/socialService.ts'), nombreTema: keyof typeof TEMAS) {
+export function interfazSocial(servicios: typeof import('../../src/social/socialService.ts'), nombreTema: keyof typeof TEMAS,opciones:{copiarTexto?:(texto:string)=>Promise<boolean>}={}) {
   let componentePrueba: Componente | undefined;
   let tecladoVisible = false;
   const eventosTeclado = new Map<string, Set<() => void>>();
   let instancias = new Map<string, Casilla[]>(), actual: Casilla[] = [], indice = 0;
   let efectos: (() => void)[] = [], usados = new Set<string>();
   const avisos: string[] = [], destinos: unknown[][] = [], cache = new Map<string, unknown>();
+  const copias:string[]=[],compartidos:{title?:string;message:string}[]=[];
   const apariencia: Contexto = {}, notificaciones: Contexto = {};
   let temas: typeof TEMAS, propiedades: {route:{name:string;params:ParametrosSociales};navigation:unknown}, arbol: Nodo;
   const iguales = (a?: readonly unknown[], b?: readonly unknown[]) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
@@ -59,8 +60,9 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     },
   };
   const elemento = (type: Elemento['type'], props: Propiedades | null, key?: string | number): Elemento => ({ type, props: props || {}, key });
-  const nativo: Record<string, unknown> = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'Modal', 'TextInput', 'KeyboardAvoidingView'].map(n => [n, n]));
+  const nativo: Record<string, unknown> = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'Modal', 'TextInput', 'KeyboardAvoidingView','ActivityIndicator'].map(n => [n, n]));
   nativo.Platform = { OS: 'android' };
+  nativo.Share={share:async(contenido:{title?:string;message:string})=>{compartidos.push(contenido);return {action:'sharedAction'};}};
   nativo.Keyboard = {
     isVisible: () => tecladoVisible,
     dismiss() {},
@@ -80,6 +82,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       valor: number;
       constructor(valor: number) { this.valor = valor; }
       setValue(valor: number) { this.valor = valor; }
+      interpolate(opciones: unknown) { return opciones; }
     },
     View: 'AnimatedView',
     timing: (valor: { setValue: (destino: number) => void }, opciones: { toValue: number }) => ({
@@ -105,12 +108,16 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       if (nombre === 'react/jsx-runtime') return { jsx: elemento, jsxs: elemento, Fragment: 'Fragment' };
       if (nombre === 'react-native') return nativo;
       if (nombre === '@expo/vector-icons') return { Ionicons: 'Icon' };
+      if (nombre === 'react-native-svg') return {__esModule:true,default:'Svg',Path:'Path',Rect:'Rect'};
+      if (nombre === 'expo-clipboard') return {setStringAsync:async(texto:string)=>{copias.push(texto);return opciones.copiarTexto?opciones.copiarTexto(texto):true;}};
+      if (nombre === 'expo-secure-store') return {getItemAsync:async()=>null,deleteItemAsync:async()=>{}};
       if (nombre === '@react-navigation/native') return { useFocusEffect: (callback:()=>void|(()=>void)) => react.useEffect(callback, [callback]) };
       if (nombre === 'react-native-safe-area-context') return { SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ bottom: 24 }) };
       if (nombre.endsWith('/MainHeader') || nombre.endsWith('/SectionHeader')) return { __esModule: true, default: 'Header' };
       if (nombre.endsWith('/AppearanceContext')) return { ContextoApariencia: apariencia };
       if (nombre.endsWith('/ToastContext')) return { ContextoAvisos: notificaciones };
       if (nombre.endsWith('/socialService')) return servicios;
+      if (nombre.endsWith('/sync/remote')) return {URL_SERVIDOR:'https://ahre.example.test/api/v1'};
       if (nombre.startsWith('.')) return cargar(resolverFuente(path.resolve(path.dirname(archivo), nombre)));
       return require(nombre);
     };
@@ -212,6 +219,12 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     await abrir();
   }
   const mostrarTeclado = () => { tecladoVisible = true; };
+  async function abrirInvitacion(datos:{enlace:string;nombre:string;alCerrar:()=>void}){
+    const modal=cargar<{default:Componente}>(path.join(raiz,'src/components/social/ShareInvitationModal.tsx')).default;
+    const globales=cargar<{crearEstilosGlobales:(tema:typeof TEMAS[keyof typeof TEMAS])=>unknown}>(path.join(raiz,'src/styles/globalStyles.ts'));
+    componentePrueba=()=>elemento(modal,{...datos,tema:temas[nombreTema],estilosGlobales:globales.crearEstilosGlobales(temas[nombreTema])});
+    await abrir();
+  }
   const ocultarTeclado = async () => { tecladoVisible = false; eventosTeclado.get('keyboardDidHide')?.forEach(callback => callback()); await asentar(); };
-  return { abrir, abrirSelectorDepositos, mostrarTeclado, ocultarTeclado, pulsar, llenar, texto, todos, buscarBoton, avisos, destinos, rutas, asentar };
+  return { abrir, abrirSelectorDepositos,abrirInvitacion,copias,compartidos, mostrarTeclado, ocultarTeclado, pulsar, llenar, texto, todos, buscarBoton, avisos, destinos, rutas, asentar };
 }

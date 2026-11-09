@@ -1,3 +1,4 @@
+import {observarSocialOnline} from '../social/online/onlineStore';
 import {useContext,useEffect,useRef,useState} from 'react';
 import {ActivityIndicator,AccessibilityInfo,Animated,AppState,Pressable,StyleSheet,Text,View} from 'react-native';
 import Svg,{Circle,Path} from 'react-native-svg';
@@ -6,11 +7,14 @@ import {useNavigation} from '@react-navigation/native';
 import {ContextoApariencia} from '../contexts/AppearanceContext';
 import {ContextoAvisos} from '../contexts/ToastContext';
 import {observarSincronizacion,obtenerVistaSincronizacion,sincronizarSesion,actualizarCantidadPendientes,comprobarConexionServidor} from '../sync/syncService';
-import {formatearCantidadPendientes} from '../sync/pendingService';
+import {consultarPendientes,formatearCantidadPendientes} from '../sync/pendingService';
 import {observarCambiosLocales} from '../sync/journal';
 import {RUTAS} from '../constants/routes';
 import {BORDES,TIPOGRAFIA} from '../styles/globalStyles';
 import {crearProgramadorSincronizacion} from '../sync/syncScheduler';
+import ControladorSocialOnline from '../social/online/onlineController';
+import {procesarRecurrencias} from '../recurrences/recurrenceService';
+import {registrarTareaRecurrencias} from '../recurrences/recurrenceTask';
 const ArcoAnimado=Animated.createAnimatedComponent(Path);
 
 export const TEXTOS_SYNC={local:'Solo local',comprobando:'Comprobando conexión',sincronizando:'Sincronizando',offline:'Sin conexión con el servidor',online:'Sincronizado',sesion:'Iniciá sesión para sincronizar',conflicto:'Error de sincronización',revocado:'Instalación desvinculada'};
@@ -19,6 +23,10 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
   const {mostrarAviso}=useContext(ContextoAvisos);
   useEffect(()=>{
     let anterior='',activo=true;
+    let procesandoRecurrencias=false;
+    const procesar=async()=>{if(procesandoRecurrencias)return;procesandoRecurrencias=true;try{await procesarRecurrencias();}catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudieron registrar las recurrencias.',{tipo:'error'});}finally{procesandoRecurrencias=false;}};
+    void registrarTareaRecurrencias().catch(()=>{});
+    void procesar();
     const programador=crearProgramadorSincronizacion({sincronizar:sincronizarSesion,obtenerVista:obtenerVistaSincronizacion,estaActiva:()=>AppState.currentState==='active'});
     const dejar=observarSincronizacion(v=>{
       if(v.estado==='revocado'&&anterior!=='revocado'){
@@ -35,10 +43,11 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
       programador.solicitar(false);
     });
     const escucha=AppState.addEventListener('change',estado=>{
-      if(estado==='active')programador.activar();else programador.suspender();
+      if(estado==='active'){void procesar().then(()=>programador.activar());}else programador.suspender();
     });
     const conexion=setInterval(()=>{
       if(AppState.currentState!=='active')return;
+      void procesar();
       void comprobarConexionServidor().then(recuperada=>{
         if(activo&&recuperada&&AppState.currentState==='active')programador.solicitar(false,0);
       }).catch(()=>{});
@@ -46,13 +55,16 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
     programador.activar();
     return()=>{activo=false;clearInterval(conexion);dejar();dejarCambios();escucha.remove();programador.cerrar();};
   },[mostrarAviso,alRevocar]);
-  return null;
+  return <ControladorSocialOnline/>;
 }
 
 export default function EstadoSincronizacion(){
   const {tema}=useContext(ContextoApariencia);
   const navegacion=useNavigation<import('../navigation/types').NavegacionRaiz>();
-  const [vista,establecerVista]=useState(obtenerVistaSincronizacion);
+  const [vistaPrivada,establecerVista]=useState(obtenerVistaSincronizacion);
+  const [cantidadVisible,establecerCantidad]=useState<number|null>(null);
+  const vista={...vistaPrivada,pendientes:cantidadVisible??vistaPrivada.pendientes};
+  useEffect(()=>{let activo=true,consulta=0;const recargar=()=>{const numero=++consulta;void consultarPendientes(1).then(d=>{if(activo&&numero===consulta)establecerCantidad(d.total);}).catch(()=>{});};recargar();const dejar=observarSocialOnline(recargar),dejarPrivado=observarSincronizacion(recargar);return()=>{activo=false;dejar();dejarPrivado();};},[]);
   const progreso=useRef(new Animated.Value(3)).current;
   const [reducirMovimiento,establecerReducirMovimiento]=useState(false);
   const [reconectando,establecerReconectando]=useState(false);

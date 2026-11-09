@@ -4,6 +4,16 @@ import {BORDES,ESPACIADO,TIPOGRAFIA,MARGEN_LATERAL_PANTALLA} from './globalStyle
 
 export function crearEstilosDetalleMovimiento(tema:Tema){
   return StyleSheet.create({
+    accionesMovimiento:{gap:ESPACIADO.medio,marginTop:ESPACIADO.grande},
+    enlaceOriginal:{marginTop:ESPACIADO.grande},
+    botonEliminar:{minHeight:50,flexDirection:'row',gap:ESPACIADO.pequeno,alignItems:'center',justifyContent:'center',backgroundColor:tema.error,borderRadius:BORDES.radios.boton,padding:ESPACIADO.medio},
+    textoEliminar:{color:'#FFFFFF',fontWeight:TIPOGRAFIA.pesos.seminegrita,fontSize:TIPOGRAFIA.tamanos.boton},
+    botonCancelar:{minHeight:48,alignItems:'center',justifyContent:'center',borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.boton,padding:ESPACIADO.medio},
+    textoCancelar:{color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.boton},
+    tarjetaConfirmacion:{width:'100%',maxWidth:480,maxHeight:'85%',backgroundColor:tema.superficie,borderRadius:BORDES.radios.boton,padding:ESPACIADO.grande,gap:ESPACIADO.medio},
+    tituloConfirmacion:{color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.encabezado,fontWeight:TIPOGRAFIA.pesos.seminegrita},
+    formularioEdicion:{gap:ESPACIADO.medio,paddingBottom:ESPACIADO.medio},
+    entradaEdicion:{color:tema.textoPrincipal,backgroundColor:tema.fondo,borderColor:tema.borde,borderWidth:BORDES.anchos.fino,borderRadius:BORDES.radios.campo,padding:ESPACIADO.medio,minHeight:48},
     contenido:{flexGrow:1,paddingHorizontal:MARGEN_LATERAL_PANTALLA,paddingTop:ESPACIADO.extraGrande,paddingBottom:ESPACIADO.enorme},
     resumen:{overflow:'hidden',backgroundColor:tema.superficie,borderColor:tema.borde,borderWidth:BORDES.anchos.fino,borderRadius:BORDES.radios.campo},
     filaResumen:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio,paddingHorizontal:ESPACIADO.grande,paddingTop:ESPACIADO.grande,paddingBottom:ESPACIADO.pequeno,backgroundColor:tema.superficie},

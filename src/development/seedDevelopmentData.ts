@@ -1,3 +1,4 @@
+import {prepararVistaSocialOnline} from './seedSocialOnlinePreview';
 import type { Deposito } from '../database/types';
 import { iniciarSesion, registrarUsuario } from '../authentication/authenticationService';
 import { verificarContrasena } from '../authentication/passwordSecurity';
@@ -7,11 +8,14 @@ import { movimientosRepositorio } from '../database/repositories/movementsReposi
 import { ejecutarTransaccion } from '../database/transactions';
 import { CUENTA_PRUEBA, DEPOSITOS_PRUEBA, MOVIMIENTOS_PRUEBA } from './developmentData';
 import { prepararSocialPrueba } from './seedSocialDevelopmentData';
+import {recurrenciasRepositorio} from '../database/repositories/recurrencesRepository';
+import {registrarEjecucion} from '../recurrences/recurrenceService';
+import {partesCalendario,siguienteEjecucion} from '../recurrences/recurrenceCalendar';
 import {consultarAutorizacion,registrarAutorizacion} from '../sync/deviceAuthorization';
 
 let preparacionEnCurso: Promise<void> | null = null;
 
-async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean) {
+async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean,vistaSocialOnline:boolean) {
   const cuenta = await autenticacionRepositorio.consultarCredencialesPorCorreo(CUENTA_PRUEBA.correo);
   let usuario: Pick<import('../database/types').Usuario,'id'|'nombre'>;
   if (cuenta) {
@@ -50,25 +54,35 @@ async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean) 
       }
       depositos.set(clave, deposito);
     }
+    const recurrenciaId=`prueba:${usuario.id}:recurrencia:streaming-v1`;
+    if(depositos.get('billetera')?.activo&&!await recurrenciasRepositorio.consultarPorId(recurrenciaId,conexion)){
+      const ultima=diasAntes(4),zona='America/Argentina/Buenos_Aires';
+      const programacion={frecuencia:'mensual' as const,zona_horaria:zona,dia_ancla:partesCalendario(ultima,zona).dia};
+      await recurrenciasRepositorio.crear({id:recurrenciaId,deposito_id:idDeposito('billetera'),categoria:'suscripciones',tipo:'egreso',monto:12000,descripcion:'Streaming · recurrencia de prueba',...programacion,fecha_inicio:diasAntes(124),proxima_ejecucion:siguienteEjecucion(programacion,ultima),activa:1},conexion);
+    }
     for (const { clave, deposito, dias, ...datos } of MOVIMIENTOS_PRUEBA) {
       const id = `prueba:${usuario.id}:movimiento:${clave}`;
       const existente = await movimientosRepositorio.consultarPorId(id, conexion);
       // No repetir movimientos anulados ni reactivar depósitos que se quitaron.
       if (existente || !depositos.get(deposito)?.activo) continue;
+      const esRecurrencia=clave.startsWith('recurrencia-v1-');
       await movimientosRepositorio.crear({
         ...datos, id, deposito_id: idDeposito(deposito), fecha_hora: diasAntes(dias),
+        ...(esRecurrencia?{recurrencia_id:recurrenciaId}:{}),
       }, conexion);
+      if(esRecurrencia)await registrarEjecucion(conexion,usuario.id,recurrenciaId,id,diasAntes(dias));
     }
     if (incluirSocial) await prepararSocialPrueba(usuario, conexion, depositos, diasAntes(1));
+    if(incluirSocial&&vistaSocialOnline&&!sincronizar)await prepararVistaSocialOnline(usuario.id,conexion,depositos);
   });
 
   await iniciarSesion({ ...CUENTA_PRUEBA, recordar: false,localPruebas:!sincronizar });
 }
 
-export function prepararDatosPrueba({ incluirSocial = true,sincronizar=false }: { incluirSocial?: boolean;sincronizar?:boolean } = {}) {
+export function prepararDatosPrueba({ incluirSocial = true,sincronizar=false,vistaSocialOnline=false }: { incluirSocial?: boolean;sincronizar?:boolean;vistaSocialOnline?:boolean } = {}) {
   if (!__DEV__) return Promise.reject(new Error('Los datos de prueba solo están disponibles en desarrollo.'));
   if (!preparacionEnCurso) {
-    preparacionEnCurso = prepararCuentaYDatos(incluirSocial,sincronizar).finally(() => { preparacionEnCurso = null; });
+    preparacionEnCurso = prepararCuentaYDatos(incluirSocial,sincronizar,vistaSocialOnline).finally(() => { preparacionEnCurso = null; });
   }
   return preparacionEnCurso;
 }

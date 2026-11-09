@@ -160,7 +160,7 @@ export default function PantallaInicio({ navigation: navegacion }: import('../na
     }
 
     const inicioCarga = Date.now();
-    let temporizadorFinal: number|null|undefined = null;
+    let temporizadorFinal: ReturnType<typeof setTimeout>|null = null;
     const animacion = Animated.timing(progresoCargaAnimado, {
       toValue: 1,
       duration: DURACION_MINIMA_CARGA_MS,

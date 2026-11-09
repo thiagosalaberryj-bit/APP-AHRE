@@ -4,6 +4,7 @@ import { useDatosSociales } from '../../social/SocialDataContext';
 import BotonSocial from './SocialButton';
 import ModalConfirmacionSocial from './SocialConfirmationModal';
 import ModalMovimientoSocial from './SocialMovementModal';
+import {iniciarOperacionFinanciera} from '../../social/financialOperation';
 
 export default function AccionesFormulario<Resultado>({ texto, peligro = false, deshabilitado = false, confirmacion = undefined,
   alGuardar, preparar = undefined, alExito = undefined, recargarAntesDeCerrar = false, mensajeExito = 'Cambios guardados.', ...aspecto }: import('../../social/types').AccionesFormularioProps<Resultado>) {
@@ -16,6 +17,7 @@ export default function AccionesFormulario<Resultado>({ texto, peligro = false, 
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
   const guardar = async (financiaciones: import('../../social/types').Financiaciones) => {
     if (ocupada.current || !solicitud.current) return;
+    const liberar=iniciarOperacionFinanciera();if(!liberar)return;
     const accion = solicitud.current;
     ocupada.current = true; establecerGuardando(true);
     try {
@@ -25,14 +27,15 @@ export default function AccionesFormulario<Resultado>({ texto, peligro = false, 
         mostrarAviso(typeof mensajeExito === 'function' ? mensajeExito(resultado) : mensajeExito, { tipo: 'exito' });
         if (accion.exito) {
           if (recargarAntesDeCerrar) await social.recargar();
-          if (montado.current) await accion.exito(resultado);
+          liberar();if (montado.current) await accion.exito(resultado);
         }
-        else social.volver();
+        else {liberar();social.volver();}
       }
     } catch (error) {
       if (montado.current) mostrarAviso((error instanceof Error ? error.message : "") || 'No se pudo guardar. Intentá nuevamente.', { tipo: 'error' });
     } finally {
       ocupada.current = false;
+      liberar();
       if (montado.current) establecerGuardando(false);
     }
   };

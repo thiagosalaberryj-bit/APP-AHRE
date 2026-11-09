@@ -27,7 +27,7 @@ export default function FormularioListaGastos({ sala, participantes, ticket, bor
   const [depositoId, establecerDepositoId] = useState(borrador.current?.depositoId || null);
   const [editando, establecerEditando] = useState<import('../../social/types').FilaGasto | null>(null);
   const [opciones, establecerOpciones] = useState(false);
-  const comun = useRef<import('../../social/types').EditorGasto>(borrador.current?.comun || { monto:'',descripcion:'',pagadorId: 'vos', reparto: 'iguales', involucradas: participantes.map(p => p.id), pagaron: [], montosManuales: {} }), individual = useRef<import('../../social/types').EditorGasto>(comun.current), solicitud = useRef<{lista:import('../../social/types').BorradorGasto[];fondos:import('../../social/types').Financiaciones[]} | null>(null), ultimoTicket = useRef(borrador.current?.ultimoTicket);
+  const comun = useRef<import('../../social/types').EditorGasto>(borrador.current?.comun || { categoriaId:'alimentacion',monto:'',descripcion:'',pagadorId: 'vos', reparto: 'iguales', involucradas: participantes.map(p => p.id), pagaron: [], montosManuales: {} }), individual = useRef<import('../../social/types').EditorGasto>(comun.current), solicitud = useRef<{lista:import('../../social/types').BorradorGasto[];fondos:import('../../social/types').Financiaciones[]} | null>(null), ultimoTicket = useRef(borrador.current?.ultimoTicket);
   useEffect(() => { borrador.current = { filas, depositoId, comun: comun.current, ultimoTicket: ultimoTicket.current }; }, [filas, depositoId, borrador]);
   useEffect(() => {
     if (!ticket || ultimoTicket.current === ticket.id) return;

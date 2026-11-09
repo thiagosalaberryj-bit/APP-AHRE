@@ -263,7 +263,6 @@ function SelectorDesplegable({
   valorSeleccionado,
   tema,
   estilos,
-  alCerrar,
   alSeleccionar,
   altoMaximo = 224,
 }: {altoMaximo?:number;visible:boolean;titulo:string;opciones:readonly {id:string|number;nombre:string}[];valorSeleccionado:string|number|null;tema:import('../styles/colors').Tema;estilos:ReturnType<typeof crearEstilosEstadisticas>;alCerrar:()=>void;alSeleccionar:(id:string|number)=>void}) {

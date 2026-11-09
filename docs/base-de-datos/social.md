@@ -54,7 +54,7 @@ tener apellido, apodo y sus claves correspondientes en `NULL`. Eliminar signific
 
 | Tabla | Campos |
 | --- | --- |
-| `salas` | `id`, `usuario_id`, `nombre`, `descripcion`, `categoria`, `icono`, `color`, `fecha`, `estado`, `fecha_cierre`, `fecha_creacion`, `fecha_actualizacion`. |
+| `salas` | `id`, `usuario_id`, `nombre`, `descripcion`, `publicada`, `icono`, `color`, `fecha`, `estado`, `fecha_cierre`, `fecha_creacion`, `fecha_actualizacion`. |
 | `personas_sala` | `id`, `usuario_id`, `sala_id`, `persona_id`, `activa`, `fecha_alta`, `fecha_baja`. |
 
 La sala está `abierta` sin fecha de cierre o `cerrada` con fecha de cierre.
@@ -72,7 +72,7 @@ El servicio incluye a Vos al crear cada sala; la base no lo inserta sola.
 
 | Tabla | Campos |
 | --- | --- |
-| `gastos_compartidos` | `id`, `usuario_id`, `sala_id`, `pagador_id`, `descripcion`, `monto_total`, `fecha`, `reparto`, `plan_pagos`, `estado`, `version`, `fecha_creacion`, `fecha_actualizacion`. |
+| `gastos_compartidos` | `id`, `usuario_id`, `sala_id`, `pagador_id`, `categoria`, `descripcion`, `monto_total`, `fecha`, `reparto`, `plan_pagos`, `estado`, `version`, `fecha_creacion`, `fecha_actualizacion`. |
 | `participantes_gasto` | `id`, `usuario_id`, `gasto_compartido_id`, `persona_id`, `monto_correspondiente`, `orden`. |
 
 Un ítem es `vigente` o `cancelado`, con reparto `iguales` o `manual` y versión
@@ -182,14 +182,12 @@ social. No se calculan ni actualizan saldos mediante los triggers de Social.
 
 Crear un movimiento, usar uno existente y verificar un depósito activo se
 coordinan en `socialPaymentService.ts`. Vincular un movimiento no vuelve a mover
-el saldo. `socialMovementReversal.ts` integra la compensación financiera con la
-anulación del pago y el estado de su deuda en la misma transacción. Una compra
-cerrada no se revierte; una compra abierta con entregas exige corregirlas antes.
-Las pantallas recargan sus consultas al recuperar el foco.
-
-Revertir un origen manual con devoluciones vigentes se rechaza hasta corregirlas.
-Sin ellas, la reversión anula el origen y cancela su deuda, conservando las filas.
-Cancelar la deuda desde Social no revierte el movimiento de origen.
+el saldo. La corrección de movimientos es privada y conserva el acuerdo social.
+El archivo histórico `socialMovementReversal.ts` se retiró al comprobar que ya no
+tenía consumidores y que implementaba un comportamiento anterior distinto.
+Eliminar un movimiento conserva el original y su corrección vinculada; no anula
+pagos ni modifica automáticamente la deuda. Las pantallas recargan sus consultas
+al recuperar el foco. Ver las reglas actuales de Movimientos.
 
 Una clave única evita insertar dos pagos de la misma operación. Reconocer un
 reintento, devolver el resultado anterior y mantener esa clave al reintentar
@@ -235,3 +233,34 @@ mutaciones de Social mantienen sus transacciones y el diario de sincronización.
 `tests/socialQueries.test.ts` comprueba apertura concurrente, lecturas sin
 escrituras ni avisos, rollback, reintento, adelantos y actualización de la vista
 sin una caché persistente.
+
+
+## Integración online y recurrencias
+
+La [guía de la implementación](../arquitectura/social-online-recurrencias.md) define el contrato actual de categorías por gasto, identidades, conectividad, recurrencias y eliminación lógica.
+
+## Perdón de una deuda personal
+
+Se conservan las columnas existentes, sin modificar el esquema local ni el
+contrato de sincronización. El cierre por perdón se guarda como `estado=cancelada`,
+con `fecha_cancelacion` y `motivo_cancelacion=perdon:<importe en centavos>`.
+`perdonLocal` reconoce exclusivamente ese motivo, valida el importe y conserva
+esas deudas en la proyección con pendiente cero. Las cancelaciones anteriores
+sin ese motivo mantienen su comportamiento original. El historial muestra la
+fecha y el importe perdonado, separado de los pagos, sin generar movimientos.
+El servicio revalida acreedor, pendiente y ausencia de un acuerdo online activo
+antes de guardar; repetir el mismo perdón no cambia dinero ni registros.
+
+## Caché y publicación de salas compartidas
+
+Las siete tablas privadas conservan su contrato. La colaboración utiliza
+`salas_online_locales` para la copia autorizada, `comandos_sociales_locales` para
+ediciones pendientes, `datos_sociales_online` para propuestas/selecciones y
+cursores, e `incorporaciones_sociales_locales` para reconocer el movimiento
+privado de cada operación sin duplicarlo. No son copias editables independientes
+del registro compartido.
+
+La instantánea local de publicación contiene también las financiaciones de los
+gastos vigentes. El servidor las confirma con la sala en una transacción; la
+cuenta conserva el mismo envío cuando se pierde la respuesta. La corrección de
+esta revisión no agrega columnas SQLite ni requiere recrear la base local.

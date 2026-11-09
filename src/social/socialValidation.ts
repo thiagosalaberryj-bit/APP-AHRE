@@ -19,6 +19,11 @@ export function centavos(valor: unknown) {
 
 export const unidades = (valor: unknown) => Math.round(Number(valor || 0) * 100);
 export const sumaPagos = (pagos: import('../database/types').PagoSocial[]) => pagos.filter((p) => p.estado === 'vigente' && p.clase !== 'origen_deuda').reduce((total, p) => total + unidades(p.monto), 0);
+export function perdonLocal(deuda: Pick<import('../database/types').Deuda, 'estado'|'motivo_cancelacion'|'monto'>) {
+  const importe = deuda.estado === 'cancelada' && /^perdon:\d+$/.test(deuda.motivo_cancelacion || '')
+    ? Number(deuda.motivo_cancelacion!.slice(7)) : 0;
+  return Number.isSafeInteger(importe) && importe > 0 && importe <= unidades(deuda.monto) ? importe : 0;
+}
 export const textoSocial = (valor: unknown) => String(valor || '').trim().replace(/\s+/g, ' ');
 
 export function validarPersona(datos: import('./types').DatosPersona) {

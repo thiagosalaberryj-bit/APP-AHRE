@@ -6,7 +6,6 @@ import { ejecutarTransaccion } from '../transactions';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../../constants/movimientos';
 import { ajustarSaldoActual } from './depositsRepository';
 import { crearRepositorio } from './repositoryFactory';
-import { prepararReversionSocial } from '../socialMovementReversal';
 
 const TIPOS_MOVIMIENTO = Object.freeze([
   'ingreso',
@@ -14,16 +13,6 @@ const TIPOS_MOVIMIENTO = Object.freeze([
   'transferencia_salida',
   'transferencia_entrada',
 ]);
-
-const TIPOS_INVERSOS = Object.freeze({
-  ingreso: 'egreso',
-  egreso: 'ingreso',
-});
-
-const CATEGORIAS_INVERSAS = Object.freeze({
-  ingreso: 'otros_gastos',
-  egreso: 'devoluciones',
-});
 
 const CATEGORIAS_INGRESO_VALIDAS = new Set(CATEGORIAS_INGRESO.map(({ id }) => id));
 const CATEGORIAS_EGRESO_VALIDAS = new Set(CATEGORIAS_EGRESO.map(({ id }) => id));
@@ -50,6 +39,7 @@ const repositorioBaseMovimientos = crearRepositorio({
     'descripcion',
     'fecha_hora',
     'anulado',
+    'fecha_eliminacion',
     'reversion_de_id',
     'fecha_creacion',
     'fecha_actualizacion',
@@ -99,7 +89,6 @@ function construirConsultaHistorial(usuarioId: string, filtros: import('../../ty
   const clausulas = [
     'd.usuario_id = ?',
     "m.tipo IN ('ingreso', 'egreso')",
-    'm.anulado = 0',
   ];
   const parametros: import('expo-sqlite').SQLiteBindValue[] = [usuarioId];
 
@@ -249,8 +238,7 @@ async function consultarOpcionesHistorial(usuarioId: string, conexion: Conexion 
        FROM movimientos m
        INNER JOIN depositos d ON d.id = m.deposito_id
        WHERE d.usuario_id = ?
-         AND m.tipo IN ('ingreso', 'egreso')
-         AND m.anulado = 0;`,
+         AND m.tipo IN ('ingreso', 'egreso');`,
       [usuarioId],
     );
     const categorias = await baseDatos.getAllAsync<Pick<Tablas['movimientos'], 'tipo'|'categoria'>>(
@@ -259,7 +247,6 @@ async function consultarOpcionesHistorial(usuarioId: string, conexion: Conexion 
        INNER JOIN depositos d ON d.id = m.deposito_id
        WHERE d.usuario_id = ?
          AND m.tipo IN ('ingreso', 'egreso')
-         AND m.anulado = 0
        ORDER BY m.tipo ASC, m.categoria ASC;`,
       [usuarioId],
     );
@@ -269,7 +256,6 @@ async function consultarOpcionesHistorial(usuarioId: string, conexion: Conexion 
        INNER JOIN movimientos m ON m.deposito_id = d.id
        WHERE d.usuario_id = ?
          AND m.tipo IN ('ingreso', 'egreso')
-         AND m.anulado = 0
        ORDER BY d.nombre COLLATE NOCASE ASC, d.id ASC;`,
       [usuarioId],
     );
@@ -304,7 +290,6 @@ async function consultarHistorialPorId(usuarioId: string, movimientoId: string, 
        WHERE m.id = ?
          AND d.usuario_id = ?
          AND m.tipo IN ('ingreso', 'egreso')
-         AND m.anulado = 0
        LIMIT 1;`,
       [movimientoId, usuarioId],
     );
@@ -326,7 +311,8 @@ function construirFiltrosEstadistica(usuarioId: string, tipo: string, desde: str
   }
 
   const filtros: { clausula: string; parametros: (string | number)[] } = {
-    clausula: `d.usuario_id = ? AND m.tipo = ? AND m.anulado = 0
+    clausula: `d.usuario_id = ? AND m.tipo = ? AND m.anulado = 0 AND m.reversion_de_id IS NULL
+      AND NOT EXISTS (SELECT 1 FROM movimientos correccion WHERE correccion.reversion_de_id=m.id)
       AND m.fecha_hora >= ? AND m.fecha_hora < ?${categoria === null ? '' : ' AND m.categoria = ?'}`,
     parametros: categoria === null
       ? [usuarioId, tipo, desde, hasta]
@@ -566,6 +552,8 @@ async function actualizar(id: string, cambios: Partial<import('../types').Movimi
     }
     if (
       Object.prototype.hasOwnProperty.call(cambios, 'anulado') ||
+      Object.prototype.hasOwnProperty.call(cambios, 'fecha_eliminacion') ||
+      Object.prototype.hasOwnProperty.call(cambios, 'recurrencia_id') ||
       Object.prototype.hasOwnProperty.call(cambios, 'transferencia_id') ||
       Object.prototype.hasOwnProperty.call(cambios, 'reversion_de_id')
     ) {
@@ -577,7 +565,7 @@ async function actualizar(id: string, cambios: Partial<import('../types').Movimi
       if (!movimientoAnterior) {
         return null;
       }
-      if (movimientoAnterior.transferencia_id || movimientoAnterior.reversion_de_id) {
+      if (movimientoAnterior.fecha_eliminacion || movimientoAnterior.anulado || movimientoAnterior.transferencia_id || movimientoAnterior.reversion_de_id) {
         throw new ErrorBaseDatos('integridad');
       }
 
@@ -660,7 +648,8 @@ async function eliminar(id: string, conexion: Conexion | null = null) {
       if (!movimiento) {
         return false;
       }
-      if (movimiento.transferencia_id || Number(movimiento.anulado) === 1) {
+      if (Number(movimiento.anulado) === 1 || movimiento.fecha_eliminacion) return true;
+      if (movimiento.transferencia_id) {
         throw new ErrorBaseDatos('integridad');
       }
 
@@ -672,22 +661,14 @@ async function eliminar(id: string, conexion: Conexion | null = null) {
         return false;
       }
 
-      await prepararReversionSocial(id, baseDatos);
-
-      const tipoInverso = TIPOS_INVERSOS[movimiento.tipo as keyof typeof TIPOS_INVERSOS];
-      if (!tipoInverso) {
-        throw new ErrorBaseDatos('integridad');
-      }
-
+      if (movimiento.reversion_de_id) throw new ErrorBaseDatos('integridad');
+      await repositorioBaseMovimientos.actualizar(id, {fecha_eliminacion: new Date().toISOString()}, baseDatos);
       await crearEnTransaccion({
-        deposito_id: movimiento.deposito_id,
-        categoria: CATEGORIAS_INVERSAS[movimiento.tipo as keyof typeof CATEGORIAS_INVERSAS],
-        tipo: tipoInverso,
-        monto: movimiento.monto,
-        descripcion: `Reversión de movimiento: ${movimiento.descripcion || movimiento.id}`,
-        fecha_hora: new Date().toISOString(),
-        reversion_de_id: movimiento.id,
-      }, baseDatos);
+        deposito_id: movimiento.deposito_id, tipo: movimiento.tipo==='ingreso'?'egreso':'ingreso',
+        categoria: movimiento.tipo==='ingreso'?'otros_gastos':'otros_ingresos',monto:movimiento.monto,
+        descripcion:'Corrección por eliminación: '+movimiento.descripcion,
+        fecha_hora:new Date().toISOString(),reversion_de_id:id,
+      },baseDatos);
 
       return true;
     }, conexion),

@@ -5,8 +5,7 @@
 Este documento registra los formularios de egreso e ingreso. Ambos reutilizan
 el mismo formulario y sus componentes; consultan depósitos y categorías
 locales, validan y persisten el movimiento junto con su impacto en el saldo.
-La ejecución automática de recurrencias y la actualización de estadísticas
-quedan fuera de este alcance.
+La ejecución automática utiliza el motor local y WorkManager en Android. La eliminación lógica conserva el historial y excluye el registro de saldos y estadísticas.
 
 ## Estructura del formulario de egreso
 
@@ -177,7 +176,7 @@ Inicio de Sesión, con transición animada, tamaño `56 × 32` y valor `No/Sí`.
 activarlo, permite seleccionar una frecuencia diaria, semanal, mensual o anual.
 Las opciones ocupan todo el ancho de la tarjeta y aparecen sin animación de
 expansión. Al guardar un movimiento recurrente se crea su configuración local;
-la ejecución automática de recurrencias queda pendiente.
+la ejecución automática utiliza el motor local y WorkManager en Android.
 
 ## Formulario y componentes compartidos
 
@@ -403,3 +402,20 @@ usan tamaño de texto adaptable. Fecha y hora usan el formato compacto
 La pantalla consulta sesión, movimientos, depósitos, categorías y recurrencias
 locales. Búsqueda, filtros, detalle y paginación no requieren Internet ni
 invocan servicios externos.
+
+## Edición y corrección desde el detalle
+
+Editar abre el formulario existente de ingreso o egreso con importe, descripción,
+categoría, depósito, fecha y hora precargados. Guardar corrección conserva el
+original como eliminado, registra su inversa y crea el movimiento actualizado
+en una sola transacción: pasar de 100 a 150 descuenta solo 50 adicionales.
+Los reintentos no duplican la operación y corregir una ocurrencia no cambia
+la programación futura. Eliminar tiene ícono de papelera, fondo rojo y confirmación
+con acción secundaria de cancelar. Una ocurrencia permite desactivar su recurrencia.
+El original se muestra como eliminado, con texto e importe tachados, y se registra
+una corrección vinculada identificada como tal. No se cuentan en las estadísticas.
+
+El reemplazo mantiene la categoría precargada salvo que se elija otra. La inversa
+usa Otros ingresos u Otros gastos porque su tipo es opuesto; su finalidad es
+neutralizar el original y no representa una nueva fuente de ingreso o consumo.
+El botón para consultar el original queda separado del resumen del detalle.

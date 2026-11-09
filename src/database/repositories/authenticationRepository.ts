@@ -106,7 +106,7 @@ async function crearCuenta({ nombre, correo, contrasenaVerificador, id, omitirPr
 
       // La cuenta nació con el diario activo: conservar cada evento original,
       // incluso si estuvo offline antes del primer intento de sincronización.
-      await baseDatos.runAsync('INSERT OR IGNORE INTO sync_state(usuario_id,preparada) VALUES(?,1)',[usuarioId]);
+      await baseDatos.runAsync('INSERT OR IGNORE INTO sync_state(usuario_id,preparada) VALUES(?,?)',[usuarioId,omitirPreferencias?0:1]);
       if(omitirPreferencias)await baseDatos.runAsync('UPDATE sync_context SET importando=0 WHERE id=1');
       return {
         id: usuarioId,

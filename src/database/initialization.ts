@@ -1,6 +1,7 @@
 import type { Conexion } from './types';
 import * as SQLite from 'expo-sqlite';
-import { prepararDiario } from '../sync/journal';
+import {ejecutarControlSQLite, enTransaccionSQLite} from './sqliteTransaction';
+import { estaPreparadoDiario, prepararDiario } from '../sync/journal';
 
 import { ErrorBaseDatos, manejarErrorBaseDatos } from './errors';
 import {
@@ -8,34 +9,40 @@ import {
   VERSION_ESQUEMA_INICIAL,
 } from './migrations/001_initialSchema';
 
-const NOMBRE_BASE_DATOS = 'ahre.db';
+// Las bases de desarrollo anteriores no se migran ni se borran: se conservan
+// en su archivo original. Las builds instalables mantienen su nombre estable.
+const NOMBRE_BASE_DATOS = typeof __DEV__ !== 'undefined' && __DEV__
+  ? 'ahre-desarrollo-social-v3.db'
+  : 'ahre.db';
 const MIGRACIONES = Object.freeze([
   Object.freeze({ version: VERSION_ESQUEMA_INICIAL, aplicar: aplicarEsquemaInicial }),
 ]);
 
-let baseDatosPreparada: Conexion | null = null;
-let promesaPreparacion: Promise<Conexion> | null = null;
-
-function esBloqueoSQLite(error: unknown) {
-  const fallo = error as { message?: unknown; code?: unknown; errcode?: unknown; extendedCode?: unknown } | null;
-  const codigo = Number(fallo?.errcode ?? fallo?.extendedCode);
-  return /database (?:is |table is )?(?:locked|busy)/i.test(String(fallo?.message || ''))
-    || /SQLITE_(?:BUSY|LOCKED)/i.test(String(fallo?.code || ''))
-    || (Number.isInteger(codigo) && [5, 6].includes(codigo & 0xff));
+interface EstadoConexion {
+  baseDatosPreparada: Conexion | null;
+  promesaPreparacion: Promise<Conexion> | null;
+  colaOperaciones: Promise<void>;
 }
 
-async function prepararDiarioConReintentos(baseDatos: Conexion) {
-  for (let intento = 0; ; intento++) {
-    try {
-      await prepararDiario(baseDatos);
-      return;
-    } catch (error) {
-      if (intento >= 2 || !esBloqueoSQLite(error)) throw error;
-      // El diario usa CREATE IF NOT EXISTS e INSERT OR IGNORE: se puede retomar
-      // sin duplicar registros si una escritura de otra conexión lo bloqueó.
-      await new Promise<void>(resolver => setTimeout(resolver, 200 * (intento + 1)));
-    }
-  }
+// Fast Refresh puede reevaluar este módulo mientras sigue activa una operación.
+// La conexión y su cola deben sobrevivir juntas durante todo el runtime JS.
+const entorno = globalThis as typeof globalThis & { __ahreConexionesSQLite?: Record<string, EstadoConexion> };
+const conexiones = entorno.__ahreConexionesSQLite ??= {};
+export const estadoConexion = conexiones[NOMBRE_BASE_DATOS] ??= {
+  baseDatosPreparada: null,
+  promesaPreparacion: null,
+  colaOperaciones: Promise.resolve(),
+};
+
+async function prepararDiarioSiHaceFalta(baseDatos: Conexion, informarOperacion:(operacion:string)=>void) {
+  informarOperacion('comprobar-diario-sincronizacion');
+  if(await estaPreparadoDiario(baseDatos))return;
+  informarOperacion('reservar-diario-sincronizacion');
+  await enTransaccionSQLite(baseDatos,async()=>{
+    informarOperacion('preparar-diario-sincronizacion');
+    await prepararDiario(baseDatos);
+    informarOperacion('confirmar-diario-sincronizacion');
+  });
 }
 
 async function abrirYPrepararBaseDatos() {
@@ -46,6 +53,11 @@ async function abrirYPrepararBaseDatos() {
     baseDatos = await SQLite.openDatabaseAsync(NOMBRE_BASE_DATOS);
     operacion = 'configurar-espera-bloqueo';
     await baseDatos.execAsync('PRAGMA busy_timeout = 2000;');
+    operacion = 'configurar-diario-wal';
+    const modo=await baseDatos.getFirstAsync<{journal_mode:string}>('PRAGMA journal_mode;');
+    if(modo?.journal_mode!=='wal' && modo?.journal_mode!=='memory') {
+      await ejecutarControlSQLite(baseDatos,'PRAGMA journal_mode = WAL;');
+    }
     operacion = 'activar-claves-foraneas';
     await baseDatos.execAsync('PRAGMA foreign_keys = ON;');
 
@@ -81,7 +93,7 @@ async function abrirYPrepararBaseDatos() {
     }
 
     operacion = 'preparar-diario-sincronizacion';
-    await prepararDiarioConReintentos(baseDatos);
+    await prepararDiarioSiHaceFalta(baseDatos, paso=>{operacion=paso;});
     return baseDatos;
   } catch (error) {
     if (baseDatos) {
@@ -101,21 +113,21 @@ export async function inicializarBaseDatos() {
 }
 
 export function obtenerBaseDatos() {
-  if (baseDatosPreparada) {
-    return Promise.resolve(baseDatosPreparada);
+  if (estadoConexion.baseDatosPreparada) {
+    return Promise.resolve(estadoConexion.baseDatosPreparada);
   }
 
-  if (!promesaPreparacion) {
-    promesaPreparacion = abrirYPrepararBaseDatos()
+  if (!estadoConexion.promesaPreparacion) {
+    estadoConexion.promesaPreparacion = abrirYPrepararBaseDatos()
       .then((baseDatos) => {
-        baseDatosPreparada = baseDatos;
+        estadoConexion.baseDatosPreparada = baseDatos;
         return baseDatos;
       })
       .catch((error: unknown) => {
-        promesaPreparacion = null;
+        estadoConexion.promesaPreparacion = null;
         throw error;
       });
   }
 
-  return promesaPreparacion;
+  return estadoConexion.promesaPreparacion;
 }

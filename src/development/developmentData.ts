@@ -43,7 +43,13 @@ const movimientosEstadisticas = Array.from({ length: 6 }, (_, mes) =>
   }),
 ).flat();
 
-export const MOVIMIENTOS_PRUEBA = Object.freeze([...MOVIMIENTOS_BASE_PRUEBA, ...movimientosEstadisticas]);
+// Cinco cobros y sus fondos ficticios permiten explorar el historial recurrente
+// sin cambiar el saldo neto de la cuenta de pruebas.
+export const MOVIMIENTOS_RECURRENCIA_PRUEBA = [8000,8500,9000,10000,12000].flatMap((monto,indice)=>[
+  {clave:`recurrencia-v1-${indice}`,deposito:'billetera',tipo:'egreso' as const,categoria:'suscripciones',monto,descripcion:'Streaming · recurrencia de prueba',dias:(4-indice)*30+4},
+  {clave:`fondos-recurrencia-v1-${indice}`,deposito:'billetera',tipo:'ingreso' as const,categoria:'otros_ingresos',monto,descripcion:'Fondos ficticios para suscripción de prueba',dias:(4-indice)*30+4},
+]);
+export const MOVIMIENTOS_PRUEBA = Object.freeze([...MOVIMIENTOS_BASE_PRUEBA, ...movimientosEstadisticas,...MOVIMIENTOS_RECURRENCIA_PRUEBA]);
 
 export const PERSONAS_PRUEBA = [
   { clave: 'ana', nombre: 'Ana', apellido: 'García', apodo: 'Ani' },

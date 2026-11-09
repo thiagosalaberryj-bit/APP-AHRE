@@ -4,7 +4,7 @@ import type { Tema } from '../styles/colors';
 import { crearEstilosSelectorSegmentado } from '../styles/SegmentedSelectorStyles';
 
 export default function SelectorSegmentado({ tema, opciones, valor, alSeleccionar, etiqueta }: {
-  tema:Tema; opciones:readonly {id:string;nombre:string}[]; valor:string; alSeleccionar:(id:string)=>void; etiqueta:string;
+  tema:Tema; opciones:readonly {id:string;nombre:string;contador?:number}[]; valor:string; alSeleccionar:(id:string)=>void; etiqueta:string;
 }) {
   const estilos = crearEstilosSelectorSegmentado(tema);
   const [ancho, establecerAncho] = useState(0);
@@ -40,7 +40,7 @@ export default function SelectorSegmentado({ tema, opciones, valor, alSelecciona
         style={[estilos.indicador, { width:anchoOpcion, transform:[{ translateX:desplazamiento }] }]}/> : null}
       {opciones.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityLabel={etiqueta + ': ' + opcion.nombre}
         accessibilityState={{ selected:valor === opcion.id }} onPress={() => alSeleccionar(opcion.id)} style={estilos.opcion}>
-        <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.texto, valor === opcion.id && estilos.textoActivo]}>{opcion.nombre}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.texto, valor === opcion.id && estilos.textoActivo]}>{opcion.nombre}{opcion.contador?' · '+opcion.contador:''}</Text>
       </Pressable>)}
     </View>
   </View>;

@@ -1,5 +1,14 @@
+import {operacionFinancieraEnCurso} from '../social/financialOperation';
+import {consultarRecurrenciasDeposito} from '../recurrences/recurrenceService';
+import SelectorSegmentado from '../components/SegmentedSelector';
+import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
+import PanelFiltrosMovimientos,{SeccionFiltro} from '../components/MovementFiltersPanel';
+import {crearEstilosMovimientos} from '../styles/MovementsScreenStyles';
+import {crearEstilosBusquedaFiltros} from '../styles/MovementSearchFiltersStyles';
+import {obtenerPreajustesMovimientos,PREAJUSTES_MONTOS,alternarGrupoCategorias} from '../utils/statisticsFilters';
 import { formatearEntradaMonto } from '../utils/moneyInput';
 import EntradaMonto from '../components/MoneyInput';
+import PanelRecurrencias from '../components/RecurrencePanel';
 import type { NombreIcono } from '../constants/movimientos';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import {
@@ -9,7 +18,6 @@ import {
   Easing,
   KeyboardAvoidingView,
   Modal,
-  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -144,28 +152,7 @@ function esMovimientoDeIngreso(tipo: string) {
   return tipo === 'ingreso' || tipo === 'transferencia_entrada';
 }
 
-function SeccionFiltro({ titulo, resumen, abierta, alAlternar, colorAcento, estilos, children }: {titulo:string;resumen:string;abierta:boolean;alAlternar:()=>void;colorAcento:string;estilos:ReturnType<typeof crearEstilosDetalleDeposito>;children:import('react').ReactNode}) {
-  return (
-    <View style={estilos.seccionFiltro}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded: abierta }}
-        onPress={alAlternar}
-        style={estilos.encabezadoSeccionFiltro}
-      >
-        <View style={estilos.detalleEncabezadoSeccionFiltro}>
-          <View style={[estilos.acentoSeccionFiltro, { backgroundColor: colorAcento }]} />
-          <View style={estilos.textosEncabezadoSeccionFiltro}>
-            <Text numberOfLines={1} style={estilos.tituloSeccionFiltro}>{titulo}</Text>
-            {!abierta ? <Text numberOfLines={1} style={estilos.resumenSeccionFiltro}>{resumen}</Text> : null}
-          </View>
-        </View>
-        <Ionicons color={colorAcento} name={abierta ? 'chevron-up' : 'chevron-down'} size={20} />
-      </Pressable>
-      {abierta ? <View style={estilos.contenidoSeccionFiltro}>{children}</View> : null}
-    </View>
-  );
-}
+
 
 function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: import('react-native').StyleProp<import('react-native').TextStyle> }) {
   const desplazamiento = useRef(new Animated.Value(0)).current;
@@ -200,7 +187,9 @@ function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: impo
 }
 
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
-  const { height: altoVentana, width: anchoVentana } = useWindowDimensions();
+  const operacionDepositoEnCurso=useRef(false);
+  useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(operacionFinancieraEnCurso()||operacionDepositoEnCurso.current)evento.preventDefault();}),[navegacion]);
+  const { width: anchoVentana } = useWindowDimensions();
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
@@ -216,7 +205,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const [saldoVisible, establecerSaldoVisible] = useState(false);
   const [saldoAmpliado, establecerSaldoAmpliado] = useState(false);
   useEffect(()=>{establecerSaldoAmpliado(false);},[saldoVisible,depositoId]);
-  const [movimientos, establecerMovimientos] = useState<{ deposito_nombre: string; id: string; deposito_id: string; categoria: string; recurrencia_id: string | null; transferencia_id: string | null; tipo: "ingreso" | "egreso" | "transferencia_salida" | "transferencia_entrada"; monto: number; descripcion: string; fecha_hora: string; anulado: number; reversion_de_id: string | null; fecha_creacion: string; fecha_actualizacion: string; }[]>([]);
+  const [seccionDeposito,establecerSeccionDeposito]=useState('movimientos');
+  const [cantidadRecurrencias,establecerCantidadRecurrencias]=useState(0);
+  const comunesFiltros=crearEstilosMovimientos(tema,anchoVentana);
+  const accesosFiltros=crearEstilosBusquedaFiltros(tema);
+  const estilosFiltros={...comunesFiltros,chipFiltro:accesosFiltros.filtro,chipFiltroActivo:accesosFiltros.filtroActivo,textoChipFiltro:accesosFiltros.textoFiltro,textoChipFiltroActivo:accesosFiltros.textoActivo};
+  const estilosAccesos=crearEstilosBusquedaFiltros(tema);
+  const [movimientos, establecerMovimientos] = useState<(import('../database/types').Movimiento & {deposito_nombre:string})[]>([]);
   const [comparacionMensual, establecerComparacionMensual] = useState<Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null>(null);
   const [cargando, establecerCargando] = useState(true);
   const [errorCarga, establecerErrorCarga] = useState<string | null>(null);
@@ -225,7 +220,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
   const [mesesAbiertos, establecerMesesAbiertos] = useState<Record<string,boolean>>({});
   const [busqueda, establecerBusqueda] = useState('');
-  const [buscadorEnfocado, establecerBuscadorEnfocado] = useState(false);
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
   const [bordesDesplazamientoFecha, establecerBordesDesplazamientoFecha] = useState({
     izquierda: false,
@@ -270,8 +264,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       ...estilos.botonPrincipalModal,
     },
   };
-  const opacidadOverlay = useRef(new Animated.Value(0)).current;
-  const desplazamientoPanel = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     depositoActual.current = deposito;
@@ -285,7 +277,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     if (!depositoActual.current) establecerCargando(true);
 
     try {
-      const detalle = await consultarDetalleDeposito(depositoId || '');
+      const [detalle,recurrencias]=await Promise.all([consultarDetalleDeposito(depositoId||''),consultarRecurrenciasDeposito(depositoId||'').catch(()=>[])]);
       if (secuencia !== secuenciaCarga.current) return;
       let saldoOculto = true;
       try {
@@ -297,6 +289,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       establecerSaldoVisible(!saldoOculto);
       establecerDeposito(detalle.deposito);
       establecerComparacionMensual(detalle.comparacionMensual);
+      establecerCantidadRecurrencias(recurrencias.length);
       establecerMovimientos(detalle.movimientos.map((movimiento) => ({
         ...movimiento,
         deposito_nombre: detalle.deposito.nombre,
@@ -331,8 +324,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       : tipoFiltro === 'egreso'
         ? CATEGORIAS_EGRESO
         : CATEGORIAS_FILTRO;
-    return categoriasPorTipo.filter((categoria) => idsDisponibles.has(categoria.id));
-  }, [movimientos, tipoFiltro]);
+    return categoriasPorTipo.filter((categoria) => seccionDeposito==='recurrentes'||idsDisponibles.has(categoria.id));
+  }, [movimientos, tipoFiltro,seccionDeposito]);
 
   const cambiarTipoFiltro = (tipo: SetStateAction<string>) => {
     establecerTipoFiltro(tipo);
@@ -370,64 +363,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const abrirFiltros = () => {
     establecerFiltrosVisibles(true);
   };
-
-  const cerrarFiltros = useCallback(() => {
-    Animated.parallel([
-      Animated.timing(opacidadOverlay, { toValue: 0, duration: 160, useNativeDriver: true }),
-      Animated.timing(desplazamientoPanel, {
-        toValue: altoVentana,
-        duration: 190,
-        useNativeDriver: true,
-      }),
-    ]).start(({ finished }) => {
-      if (finished) establecerFiltrosVisibles(false);
-    });
-  }, [altoVentana, desplazamientoPanel, opacidadOverlay]);
-
-  const responderManija = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_evento, gesto) => gesto.dy > 6 && Math.abs(gesto.dy) > Math.abs(gesto.dx),
-    onPanResponderTerminationRequest: () => false,
-    onPanResponderMove: (_evento, gesto) => {
-      if (gesto.dy > 0) desplazamientoPanel.setValue(gesto.dy);
-    },
-    onPanResponderRelease: (_evento, gesto) => {
-      if (gesto.dy > 90 || gesto.vy > 0.8) {
-        cerrarFiltros();
-        return;
-      }
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 240,
-      }).start();
-    },
-    onPanResponderTerminate: () => {
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 240,
-      }).start();
-    },
-  }), [cerrarFiltros, desplazamientoPanel]);
-
-  useEffect(() => {
-    if (!filtrosVisibles) return undefined;
-    opacidadOverlay.setValue(0);
-    desplazamientoPanel.setValue(altoVentana);
-    Animated.parallel([
-      Animated.timing(opacidadOverlay, { toValue: 1, duration: 190, useNativeDriver: true }),
-      Animated.spring(desplazamientoPanel, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 24,
-        stiffness: 210,
-      }),
-    ]).start();
-    return undefined;
-  }, [altoVentana, desplazamientoPanel, filtrosVisibles, opacidadOverlay]);
 
   const cambiarFechaFiltro = useCallback((modo: string) => {
     if (modo === fechaFiltro) return;
@@ -584,7 +519,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   };
 
   const cerrarEdicion = () => {
-    if (guardandoEdicion) return;
+    if (guardandoEdicion||operacionDepositoEnCurso.current) return;
     establecerModalEdicionVisible(false);
     establecerModalIconosEdicionVisible(false);
     establecerBorrador({ ...deposito });
@@ -597,7 +532,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   };
 
   const guardarEdicion = async () => {
-    if (guardandoEdicion || !deposito) return;
+    if (guardandoEdicion || !deposito || operacionDepositoEnCurso.current) return;
+    operacionDepositoEnCurso.current=true;
     establecerGuardandoEdicion(true);
     establecerErroresEdicion({});
     try {
@@ -615,38 +551,36 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         ? error.message
         : 'No se pudieron guardar los cambios. Intentá nuevamente.', { tipo: 'error' });
     } finally {
-      establecerGuardandoEdicion(false);
+      operacionDepositoEnCurso.current=false;establecerGuardandoEdicion(false);
     }
   };
 
   const confirmarEliminacion = async () => {
-    if (eliminando || !deposito) return;
+    if (eliminando || !deposito || operacionDepositoEnCurso.current) return;
+    operacionDepositoEnCurso.current=true;
     establecerEliminando(true);
     try {
       await eliminarDeposito(deposito.id);
       establecerModalEliminacionVisible(false);
       mostrarAviso('El depósito se desactivó y su historial quedó conservado.', { tipo: 'exito' });
-      navegacion.goBack();
+      operacionDepositoEnCurso.current=false;navegacion.goBack();
     } catch (error) {
       mostrarAviso(error instanceof ErrorDeposito
         ? error.message
         : 'No se pudo eliminar el depósito. Intentá nuevamente.', { tipo: 'error' });
     } finally {
-      establecerEliminando(false);
+      operacionDepositoEnCurso.current=false;establecerEliminando(false);
     }
   };
 
   const abrirDetalleMovimiento = (movimiento: import('../types/forms').MovimientoVisible, categoria: Partial<import('../constants/movimientos').Categoria>) => {
-    navegacion.push(RUTAS.DETALLE_MOVIMIENTO, { categoria, movimiento, deposito_nombre: deposito?.nombre });
+    navegacion.push(RUTAS.DETALLE_MOVIMIENTO, { movimientoId:movimiento.id, categoria, movimiento, deposito_nombre: deposito?.nombre });
   };
 
-  const movimientosFiltrados = useMemo(() => {
-    if (errorMontoFiltro || errorFechaFiltro) return [];
-    const texto = busqueda.trim().toLocaleLowerCase('es-AR');
-    const minimo = montoMinimo.trim() ? montoMinimoNumero : null;
-    const maximo = montoMaximo.trim() ? montoMaximoNumero : null;
-
-    return movimientos.filter((movimiento) => {
+  const cumpleFiltros=(movimiento:Pick<import('../database/types').Movimiento,'tipo'|'descripcion'|'categoria'|'monto'|'fecha_hora'>)=>{
+    if(errorMontoFiltro||errorFechaFiltro)return false;
+    const texto=busqueda.trim().toLocaleLowerCase('es-AR');
+    const minimo=montoMinimo.trim()?montoMinimoNumero:null,maximo=montoMaximo.trim()?montoMaximoNumero:null;
       if (tipoFiltro === 'ingreso' && !esMovimientoDeIngreso(movimiento.tipo)) return false;
       if (tipoFiltro === 'egreso' && esMovimientoDeIngreso(movimiento.tipo)) return false;
       const categoria = CATEGORIAS_POR_ID.get(movimiento.categoria);
@@ -676,8 +610,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         if (fecha < inicio || fecha > fin) return false;
       }
       return true;
-    }).slice().sort((a, b) => new Date(b.fecha_hora).getTime() - new Date(a.fecha_hora).getTime());
-  }, [busqueda, categoriaFiltroIds, errorFechaFiltro, errorMontoFiltro, fechaDia, fechaFinal, fechaFiltro, fechaInicial, fechaSemana, mesSeleccionado, montoMaximo, montoMaximoNumero, montoMinimo, montoMinimoNumero, movimientos, tipoFiltro]);
+  };
+  const movimientosFiltrados=movimientos.filter(cumpleFiltros).sort((a,b)=>Date.parse(b.fecha_hora)-Date.parse(a.fecha_hora));
+  const categoriasContexto=seccionDeposito==='recurrentes'?CATEGORIAS_FILTRO:categoriasDisponiblesFiltro;
+  const preajustesCategorias=obtenerPreajustesMovimientos(tipoFiltro,categoriasContexto.map(c=>({...c,tipo:IDS_INGRESO.has(c.id)?'ingreso':'egreso'})));
 
   const gruposMovimientos = useMemo(() => {
     const meses = new Map<string,{clave:string;titulo:string;movimientos:typeof movimientosFiltrados}>();
@@ -795,85 +731,34 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           </View>
 
           <View style={estilos.seccionMovimientos}>
-            <Text style={estilosGlobales.encabezadoSeccion}>Movimientos</Text>
-            <View style={estilos.filaBusqueda}>
-              <View style={[
-                estilosGlobales.campo,
-                estilos.buscador,
-                buscadorEnfocado ? estilosGlobales.campoEnfocado : null,
-              ]}>
-                <Ionicons color={tema.textoSecundario} name="search" size={22} />
-                <TextInput
-                  accessibilityLabel="Buscar movimientos"
-                  onBlur={() => establecerBuscadorEnfocado(false)}
-                  onChangeText={establecerBusqueda}
-                  onFocus={() => establecerBuscadorEnfocado(true)}
-                  placeholder="Buscar"
-                  placeholderTextColor={tema.textoSecundario}
-                  returnKeyType="search"
-                  selectionColor={tema.botonPrincipal}
-                  style={estilos.entradaBusqueda}
-                  value={busqueda}
-                />
-                {busqueda ? (
-                  <Pressable
-                    accessibilityLabel="Limpiar búsqueda"
-                    accessibilityRole="button"
-                    onPress={() => establecerBusqueda('')}
-                    style={estilos.botonLimpiarBusqueda}
-                  >
-                    <Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} />
-                  </Pressable>
-                ) : null}
-              </View>
-              <Pressable
-                accessibilityLabel="Filtros"
-                accessibilityRole="button"
-                onPress={abrirFiltros}
-                style={({ pressed }) => [
-                  estilosGlobales.botonSecundario,
-                  estilos.botonFiltros,
-                  pressed ? estilos.botonPresionado : null,
-                ]}
-              >
-                <Ionicons color={tema.botonSecundarioTexto} name="list" size={20} />
-                <Text style={estilosGlobales.textoBotonSecundario}>Filtros</Text>
-              </Pressable>
-            </View>
-
-            <View style={estilos.filtrosAplicados}>
-              <View style={estilos.encabezadoFiltrosAplicados}>
-                <Text style={estilos.textoFiltrosActivos}>
-                  {cantidadFiltros === 0 ? 'Sin filtros aplicados' : `Filtros aplicados (${cantidadFiltros})`}
-                </Text>
-                {cantidadFiltros > 0 ? (
-                  <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
-                    <Text style={estilos.textoBotonLimpiar}>Limpiar todo</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-              {cantidadFiltros > 0 ? (
-                <ScrollView
-                  contentContainerStyle={estilos.filaFiltrosAplicados}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                >
-                  {filtrosActivos.map((filtro) => (
-                    <Pressable
-                      accessibilityLabel={`Quitar ${filtro.etiqueta}`}
-                      accessibilityRole="button"
-                      key={filtro.id}
-                      onPress={filtro.alQuitar}
-                      style={estilos.chipFiltroAplicado}
-                    >
-                      <Text numberOfLines={1} style={estilos.textoChipFiltroAplicado}>{filtro.etiqueta}</Text>
-                      <Ionicons color={tema.textoSecundario} name="close" size={16} />
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              ) : null}
-            </View>
-
+            <SelectorSegmentado tema={tema} opciones={[{id:'movimientos',nombre:'Movimientos'},{id:'recurrentes',nombre:'Recurrentes'+(cantidadRecurrencias?' · '+cantidadRecurrencias:'')}]} valor={seccionDeposito} alSeleccionar={establecerSeccionDeposito} etiqueta="Sección del depósito"/>
+            <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={establecerBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosActivos} cantidad={cantidadFiltros}>
+              {OPCIONES_TIPO.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: tipoFiltro === opcion.id }} onPress={() => cambiarTipoFiltro(opcion.id)} style={[estilosAccesos.filtro, tipoFiltro === opcion.id && estilosAccesos.filtroActivo]}>
+                <Text style={[estilosAccesos.textoFiltro, tipoFiltro === opcion.id && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+              </Pressable>)}
+              {preajustesCategorias.map(opcion => {
+                const disponible = opcion.categorias.length > 0;
+                const activo = disponible && tipoFiltro === opcion.tipo && opcion.categorias.every(id => categoriaFiltroIds.includes(id));
+                return <Pressable key={opcion.tipo + ':' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo, disabled: !disponible }} disabled={!disponible} accessibilityHint={disponible ? undefined : 'No hay movimientos de estas categorías.'}
+                  onPress={() => {
+                    establecerTipoFiltro(opcion.tipo);
+                    establecerCategoriaFiltroIds(actuales => alternarGrupoCategorias(tipoFiltro === opcion.tipo || tipoFiltro === 'todos' ? actuales : [], opcion.categorias));
+                  }}
+                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo, !disponible && { opacity: 0.5 }]}>
+                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+                </Pressable>;
+              })}
+              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => {
+                const activo = !errorMontoFiltro && (montoMinimoNumero ?? undefined) === opcion.rango.minimo && (montoMaximoNumero ?? undefined) === opcion.rango.maximo;
+                return <Pressable key={'monto:' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo }}
+                  onPress={() => { establecerMontoMinimo(activo || opcion.rango.minimo === undefined ? '' : String(opcion.rango.minimo).replace('.', ',')); establecerMontoMaximo(activo || opcion.rango.maximo === undefined ? '' : String(opcion.rango.maximo).replace('.', ',')); }}
+                  style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo]}>
+                  <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
+                </Pressable>;
+              })}
+            </BuscadorFiltrosMovimientos>
+            {seccionDeposito==='recurrentes'&&depositoId?<PanelRecurrencias depositoId={depositoId} tema={tema} alCambiar={()=>{void cargarDetalle();}} alCambiarCantidad={establecerCantidadRecurrencias} filtrar={fila=>cumpleFiltros({...fila,fecha_hora:fila.proxima_ejecucion})}/>:null}
+            {seccionDeposito==='movimientos'?<>
             {movimientos.length === 0 ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.textoSecundario} name="receipt-outline" size={32} />
@@ -904,51 +789,24 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                 </Pressable>
               </View>
             )}
+            </>:null}
           </View>
           </>
           )}
         </ScrollView>
       </View>
 
-      <Modal animationType="none" onRequestClose={cerrarFiltros} transparent visible={filtrosVisibles}>
-        <View style={estilos.fondoFiltros}>
-          <Animated.View pointerEvents="none" style={[estilos.overlayFiltros, { opacity: opacidadOverlay }]} />
-          <Pressable accessibilityLabel="Cerrar filtros" onPress={cerrarFiltros} style={estilos.fondoTactilFiltros} />
-          <Animated.View
-            style={[estilos.panelFiltros, { transform: [{ translateY: desplazamientoPanel }] }]}
-          >
-            <View style={estilos.encabezadoPanelFiltros}>
-              <View style={estilos.zonaManijaFiltros} {...responderManija.panHandlers}>
-                <View style={estilos.manijaFiltros} />
-              </View>
-              <View style={estilos.encabezadoPanelContenido}>
-                <Text style={estilos.tituloPanelFiltros}>Filtros</Text>
-                <Pressable
-                  accessibilityLabel="Cerrar filtros"
-                  accessibilityRole="button"
-                  onPress={cerrarFiltros}
-                  style={estilos.botonCerrarFiltros}
-                >
-                  <Ionicons color={tema.textoPrincipal} name="close" size={24} />
-                </Pressable>
-              </View>
-            </View>
-            <ScrollView
-              contentContainerStyle={estilos.contenidoFiltrosScroll}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              style={estilos.scrollFiltros}
-            >
-              <View style={estilos.listaSeccionesFiltro}>
+      <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={()=>establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
+              <View style={estilosFiltros.listaSeccionesFiltro}>
                 <SeccionFiltro
                   titulo="Tipo"
                   resumen={resumenTipo}
                   abierta={seccionesFiltrosAbiertas.includes('tipo')}
                   alAlternar={() => alternarSeccionFiltro('tipo')}
                   colorAcento={tema.foco}
-                  estilos={estilos}
+                  estilos={estilosFiltros}
                 >
-                  <View style={estilos.filaOpcionesTipo}>
+                  <View style={estilosFiltros.filaOpcionesTipo}>
                     {OPCIONES_TIPO.map((opcion) => {
                       const activa = tipoFiltro === opcion.id;
                       return (
@@ -957,9 +815,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                           accessibilityRole="button"
                           accessibilityState={{ selected: activa }}
                           onPress={() => cambiarTipoFiltro(opcion.id)}
-                          style={[estilos.chipFiltro, estilos.chipTipo, activa ? estilos.chipFiltroActivo : null]}
+                          style={[estilosFiltros.chipFiltro, estilosFiltros.chipTipo, activa ? estilosFiltros.chipFiltroActivo : null]}
                         >
-                          <Text numberOfLines={1} style={[estilos.textoChipFiltro, activa ? estilos.textoChipFiltroActivo : null]}>
+                          <Text numberOfLines={1} style={[estilosFiltros.textoChipFiltro, activa ? estilosFiltros.textoChipFiltroActivo : null]}>
                             {opcion.nombre}
                           </Text>
                         </Pressable>
@@ -974,11 +832,11 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   abierta={seccionesFiltrosAbiertas.includes('fecha')}
                   alAlternar={() => alternarSeccionFiltro('fecha')}
                   colorAcento={tema.botonPrincipal}
-                  estilos={estilos}
+                  estilos={estilosFiltros}
                 >
-                  <View style={estilos.contenedorOpcionesFecha}>
+                  <View style={estilosFiltros.contenedorOpcionesFecha}>
                     <ScrollView
-                      contentContainerStyle={estilos.filaOpcionesFecha}
+                      contentContainerStyle={estilosFiltros.filaOpcionesFecha}
                       horizontal
                       nestedScrollEnabled
                       onContentSizeChange={(anchoContenido) => actualizarBordesDesplazamientoFecha({ anchoContenido })}
@@ -990,7 +848,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                       })}
                       scrollEventThrottle={16}
                       showsHorizontalScrollIndicator={false}
-                      style={estilos.scrollOpcionesFecha}
+                      style={estilosFiltros.scrollOpcionesFecha}
                     >
                       {OPCIONES_FECHA.map((opcion) => {
                         const activa = fechaFiltro === opcion.id;
@@ -1000,9 +858,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                             accessibilityRole="button"
                             accessibilityState={{ selected: activa }}
                             onPress={() => cambiarFechaFiltro(opcion.id)}
-                            style={[estilos.chipFiltro, estilos.chipFecha, activa ? estilos.chipFiltroActivo : null]}
+                            style={[estilosFiltros.chipFiltro, estilosFiltros.chipFecha, activa ? estilosFiltros.chipFiltroActivo : null]}
                           >
-                            <Text style={[estilos.textoChipFiltro, activa ? estilos.textoChipFiltroActivo : null]}>
+                            <Text style={[estilosFiltros.textoChipFiltro, activa ? estilosFiltros.textoChipFiltroActivo : null]}>
                               {opcion.nombre}
                             </Text>
                           </Pressable>
@@ -1013,7 +871,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                       <Svg
                         height="100%"
                         pointerEvents="none"
-                        style={[estilos.sombraBordeFecha, estilos.sombraBordeFechaIzquierda]}
+                        style={[estilosFiltros.sombraBordeFecha, estilosFiltros.sombraBordeFechaIzquierda]}
                         width={36}
                       >
                         <Defs>
@@ -1029,7 +887,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                       <Svg
                         height="100%"
                         pointerEvents="none"
-                        style={[estilos.sombraBordeFecha, estilos.sombraBordeFechaDerecha]}
+                        style={[estilosFiltros.sombraBordeFecha, estilosFiltros.sombraBordeFechaDerecha]}
                         width={36}
                       >
                         <Defs>
@@ -1043,8 +901,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     ) : null}
                   </View>
                   {fechaFiltro === 'dia' ? (
-                    <View style={estilos.grupoCalendarioFiltro}>
-                      <Text style={estilos.textoAyudaFiltro}>Elegí un día</Text>
+                    <View style={estilosFiltros.grupoCalendarioFiltro}>
+                      <Text style={estilosFiltros.textoAyudaFiltro}>Elegí un día</Text>
                       <SelectorFecha
                         tema={tema}
                         estilosMovimiento={estilos}
@@ -1056,27 +914,27 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     </View>
                   ) : null}
                   {fechaFiltro === 'mes' ? (
-                    <View style={estilos.grupoCalendarioFiltro}>
-                      <View style={estilos.encabezadoCalendario}>
+                    <View style={estilosFiltros.grupoCalendarioFiltro}>
+                      <View style={estilosFiltros.encabezadoCalendario}>
                         <Pressable
                           accessibilityLabel="Año anterior"
                           accessibilityRole="button"
                           onPress={() => establecerAnioMesVisible((anio) => anio - 1)}
-                          style={estilos.botonMes}
+                          style={estilosFiltros.botonMes}
                         >
                           <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
                         </Pressable>
-                        <Text style={estilos.mesCalendario}>{anioMesVisible}</Text>
+                        <Text style={estilosFiltros.mesCalendario}>{anioMesVisible}</Text>
                         <Pressable
                           accessibilityLabel="Año siguiente"
                           accessibilityRole="button"
                           onPress={() => establecerAnioMesVisible((anio) => anio + 1)}
-                          style={estilos.botonMes}
+                          style={estilosFiltros.botonMes}
                         >
                           <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
                         </Pressable>
                       </View>
-                      <View style={estilos.grillaMeses}>
+                      <View style={estilosFiltros.grillaMeses}>
                         {MESES.map((mes, indice) => {
                           const activo = mesSeleccionado
                             && mesSeleccionado.getMonth() === indice
@@ -1087,9 +945,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                               accessibilityState={{ selected: Boolean(activo) }}
                               key={mes}
                               onPress={() => establecerMesSeleccionado(new Date(anioMesVisible, indice, 1))}
-                              style={[estilos.opcionMes, activo ? estilos.opcionMesActiva : null]}
+                              style={[estilosFiltros.opcionMes, activo ? estilosFiltros.opcionMesActiva : null]}
                             >
-                              <Text style={[estilos.textoOpcionMes, activo ? estilos.textoOpcionMesActivo : null]}>
+                              <Text style={[estilosFiltros.textoOpcionMes, activo ? estilosFiltros.textoOpcionMesActivo : null]}>
                                 {mes}
                               </Text>
                             </Pressable>
@@ -1099,7 +957,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     </View>
                   ) : null}
                   {fechaFiltro === 'personalizado' ? (
-                    <View style={estilos.grupoCalendarioFiltro}>
+                    <View style={estilosFiltros.grupoCalendarioFiltro}>
                       <SelectorFecha
                         tema={tema}
                         estilosMovimiento={estilos}
@@ -1128,13 +986,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   abierta={seccionesFiltrosAbiertas.includes('categorias')}
                   alAlternar={() => alternarSeccionFiltro('categorias')}
                   colorAcento={tema.foco}
-                  estilos={estilos}
+                  estilos={estilosFiltros}
                 >
                   <SelectorCategoria
                     tema={tema}
                     estilosGlobales={estilosGlobales}
                     estilosMovimiento={estilos}
-                    estiloTarjeta={estilos.tarjetaCategoriaFiltro}
+                    estiloTarjeta={estilosFiltros.tarjetaCategoriaFiltro}
                     etiqueta=""
                     categorias={categoriasDisponiblesFiltro}
                     variante="grilla"
@@ -1150,44 +1008,34 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   abierta={seccionesFiltrosAbiertas.includes('monto')}
                   alAlternar={() => alternarSeccionFiltro('monto')}
                   colorAcento={tema.error}
-                  estilos={estilos}
+                  estilos={estilosFiltros}
                 >
-                  <View style={estilos.filaRango}>
-                    <View style={estilos.grupoCampoRango}>
-                      <View style={estilos.etiquetaCampoRango}>
+                  <View style={estilosFiltros.filaRango}>
+                    <View style={estilosFiltros.grupoCampoRango}>
+                      <View style={estilosFiltros.etiquetaCampoRango}>
                         <Ionicons color={tema.textoSecundario} name="arrow-down-outline" size={16} />
-                        <Text style={estilos.textoEtiquetaCampoRango}>Mínimo</Text>
+                        <Text style={estilosFiltros.textoEtiquetaCampoRango}>Mínimo</Text>
                       </View>
                       <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
                           etiqueta="Monto mínimo" valor={montoMinimo} alCambiarTexto={establecerMontoMinimo}
                           mostrarEtiqueta={false} mostrarLimpiar={false} compacto
-                          estiloContenedor={estilos.campoRango}/>
+                          estiloContenedor={estilosFiltros.campoRango}/>
                     </View>
-                    <View style={estilos.grupoCampoRango}>
-                      <View style={estilos.etiquetaCampoRango}>
+                    <View style={estilosFiltros.grupoCampoRango}>
+                      <View style={estilosFiltros.etiquetaCampoRango}>
                         <Ionicons color={tema.textoSecundario} name="arrow-up-outline" size={16} />
-                        <Text style={estilos.textoEtiquetaCampoRango}>Máximo</Text>
+                        <Text style={estilosFiltros.textoEtiquetaCampoRango}>Máximo</Text>
                       </View>
                       <EntradaMonto tema={tema} estilosGlobales={estilosGlobales}
                           etiqueta="Monto máximo" valor={montoMaximo} alCambiarTexto={establecerMontoMaximo}
                           mostrarEtiqueta={false} mostrarLimpiar={false} compacto
-                          estiloContenedor={estilos.campoRango}/>
+                          estiloContenedor={estilosFiltros.campoRango}/>
                     </View>
                   </View>
                   {errorMontoFiltro ? <Text style={estilosGlobales.textoError}>{errorMontoFiltro}</Text> : null}
                 </SeccionFiltro>
               </View>
-            </ScrollView>
-            {cantidadFiltros > 0 ? (
-              <View style={estilos.piePanelFiltros}>
-                <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
-                  <Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text>
-                </Pressable>
-              </View>
-            ) : null}
-          </Animated.View>
-        </View>
-      </Modal>
+      </PanelFiltrosMovimientos>
 
       <Modal animationType="fade" transparent visible={saldoAmpliado && saldoVisible && Boolean(deposito)} onRequestClose={()=>establecerSaldoAmpliado(false)}>
         <SafeAreaView style={estilos.fondoModalOpciones}>
@@ -1603,9 +1451,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         </Pressable>
       </Modal>
 
-      <Modal animationType="fade" onRequestClose={() => establecerModalEliminacionVisible(false)} transparent visible={modalEliminacionVisible && Boolean(deposito)}>
+      <Modal animationType="fade" onRequestClose={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} transparent visible={modalEliminacionVisible && Boolean(deposito)}>
         <View style={estilos.fondoModal}>
-          <Pressable style={estilos.fondoCierre} onPress={() => establecerModalEliminacionVisible(false)} />
+          <Pressable style={estilos.fondoCierre} disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} />
           <View accessibilityViewIsModal style={estilos.tarjetaConfirmacion}>
             <View style={estilos.encabezadoConfirmacion}>
               <View style={estilos.iconoEliminar}>
@@ -1614,7 +1462,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               <Pressable
                 accessibilityLabel="Cerrar confirmación"
                 accessibilityRole="button"
-                onPress={() => establecerModalEliminacionVisible(false)}
+                disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}}
                 style={estilos.botonCerrarModal}
               >
                 <Ionicons color={tema.textoSecundario} name="close" size={22} />
@@ -1644,7 +1492,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </Text>
             </View>
             <View style={estilos.accionesModal}>
-              <Pressable accessibilityRole="button" onPress={() => establecerModalEliminacionVisible(false)} style={estilos.botonSecundarioModal}>
+              <Pressable accessibilityRole="button" disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} style={estilos.botonSecundarioModal}>
                 <Text style={estilos.textoSecundarioModal}>Cancelar</Text>
               </Pressable>
               <Pressable

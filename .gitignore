@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Capturas adjuntas del chat, fuera del código y de las entregas
+.codex-attachments/

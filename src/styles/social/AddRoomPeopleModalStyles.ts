@@ -5,7 +5,11 @@ import { BORDES, ESPACIADO, TIPOGRAFIA } from '../globalStyles';
 export default function crearEstilosModal(tema: Tema) {
   const boton = { flex: 1, minWidth: 0, minHeight: 44, flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'center' as const, gap: ESPACIADO.minimo, paddingHorizontal: ESPACIADO.pequeno, borderRadius: BORDES.radios.campo };
   return StyleSheet.create({
-    tarjetaModal: { width: '100%', maxWidth: 480, maxHeight: '85%', backgroundColor: tema.superficie, borderWidth: BORDES.anchos.fino, borderColor: tema.borde, borderRadius: BORDES.radios.boton, padding: ESPACIADO.grande, gap: ESPACIADO.pequeno },
+    tarjetaModal: { width: '100%', maxWidth: 480, maxHeight: '85%', backgroundColor: tema.superficie, borderWidth: BORDES.anchos.fino, borderColor: tema.borde, borderRadius: BORDES.radios.tarjeta, padding: ESPACIADO.grande, gap: ESPACIADO.medio },
+    iconoTitulo:{width:44,height:44,backgroundColor:tema.fondo,borderRadius:BORDES.radios.boton,alignItems:'center',justifyContent:'center'},
+    listaPersonas:{gap:ESPACIADO.pequeno,paddingBottom:ESPACIADO.minimo},
+    avatarPersona:{width:36,height:36,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo,alignItems:'center',justifyContent:'center'},
+    inicialesPersona:{color:tema.foco,fontSize:TIPOGRAFIA.tamanos.auxiliar,fontWeight:TIPOGRAFIA.pesos.seminegrita},
     buscador: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.pequeno, paddingHorizontal: ESPACIADO.pequeno, borderWidth: BORDES.anchos.fino, borderColor: tema.borde, borderRadius: BORDES.radios.campo, backgroundColor: tema.superficie },
     buscadorEnfocado: { borderColor: tema.foco },
     entradaBusqueda: { flex: 1, minWidth: 0, minHeight: 44, color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.secundario, paddingVertical: ESPACIADO.pequeno },

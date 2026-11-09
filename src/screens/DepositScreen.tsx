@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from 'react';
+import { useContext, useEffect,useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   KeyboardAvoidingView,
@@ -52,6 +52,7 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDeposito(tema);
   const guardandoRef = useRef(false);
+  useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(guardandoRef.current)evento.preventDefault();}),[navegacion]);
   const [nombre, establecerNombre] = useState('');
   const [saldoInicial, establecerSaldoInicial] = useState('');
   const [tipo, establecerTipo] = useState<string | null>(null);

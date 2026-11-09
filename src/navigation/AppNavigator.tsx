@@ -1,3 +1,4 @@
+import ControladorInvitaciones,{referenciaNavegacion} from './invitationNavigation';
 import { useContext, useState } from 'react';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -117,11 +118,13 @@ export default function NavegadorAplicacion({ rutaInicial }: {rutaInicial: impor
   return (
     <View style={{ flex: 1, backgroundColor: tema.fondo }}>
       <NavigationContainer
+        ref={referenciaNavegacion}
         theme={temaNavegacion}
         onStateChange={(estadoNavegacion) => {
           establecerBarraInferior(estadoNavegacion?.routes?.[estadoNavegacion.index]?.name === RUTAS.PRINCIPAL);
         }}
       >
+        <ControladorInvitaciones/>
         <PilaNavegacion.Navigator
           initialRouteName={rutaInicial}
           screenOptions={{

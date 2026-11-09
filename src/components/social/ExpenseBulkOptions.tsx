@@ -5,6 +5,8 @@ import { Animated, Modal, View, Text, Pressable, ScrollView, KeyboardAvoidingVie
 import { Ionicons } from '@expo/vector-icons';
 import SelectorPersonas from './PeopleSelector';
 import SelectorDeposito from '../DepositSelector';
+import SelectorCategoria from '../CategorySelector';
+import { CATEGORIAS_EGRESO } from '../../constants/movimientos';
 import OpcionesSeleccion from './SocialChoiceGroup';
 import BotonSocial from './SocialButton';
 import { crearEstilosEditorGastos } from '../../styles/social/ExpenseEditorStyles';
@@ -17,7 +19,7 @@ export default function OpcionesRapidasGastos({ valores, depositoId, depositos, 
     establecerDatos(actual => ({ ...actual, [campo]: valor }));
     establecerCampos(actual => actual.includes(campo) ? actual : [...actual, campo]);
   };
-  const titulos = { pagadorId: 'Pagador', involucradas: 'Personas', reparto: 'Reparto', depositoId: 'Depósito', pago: 'Pagos' };
+  const titulos = { categoriaId: 'Categoría', pagadorId: 'Pagador', involucradas: 'Personas', reparto: 'Reparto', depositoId: 'Depósito', pago: 'Pagos' };
   const puedeAplicar = campos.length > 0 && (!campos.includes('depositoId') || !!datos.depositoId) && (!campos.includes('involucradas') || datos.involucradas.length > 0);
   return <Modal visible transparent animationType="none" onRequestClose={cerrarPanel}>
     <KeyboardAvoidingView style={estilos.teclado} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -35,7 +37,7 @@ export default function OpcionesRapidasGastos({ valores, depositoId, depositos, 
           <Pressable accessibilityRole="checkbox" accessibilityLabel={`Aplicar ${titulo.toLowerCase()} a todos`} accessibilityState={{ checked: campos.includes(campo) }} style={estilos.activar} onPress={() => establecerCampos(actual => actual.includes(campo) ? actual.filter(c => c !== campo) : [...actual, campo])}>
             <Ionicons name={campos.includes(campo) ? 'checkbox' : 'square-outline'} size={22} color={aspecto.tema.foco} /><Text style={estilos.nombreCampo}>{titulo}</Text><Text style={estilos.estadoCampo}>{campos.includes(campo) ? 'Se aplicará' : 'Sin cambios'}</Text>
           </Pressable>
-          {campo === 'pagadorId' ? <SelectorPersonas compacto desplegable etiqueta="Quién pagó" personas={participantes} seleccionadas={[datos.pagadorId]} alCambiar={ids => cambiar(campo, ids[0])} {...aspecto} />
+          {campo === 'categoriaId' ? <SelectorCategoria categorias={CATEGORIAS_EGRESO} tipoMovimiento="egreso" seleccionadaId={datos.categoriaId} alSeleccionar={id => cambiar(campo, id)} {...aspecto} /> : campo === 'pagadorId' ? <SelectorPersonas compacto desplegable etiqueta="Quién pagó" personas={participantes} seleccionadas={[datos.pagadorId]} alCambiar={ids => cambiar(campo, ids[0])} {...aspecto} />
             : campo === 'involucradas' ? <SelectorPersonas compacto desplegable multiple etiqueta="Personas involucradas" personas={participantes} seleccionadas={datos.involucradas} alCambiar={ids => cambiar(campo, ids)} {...aspecto} />
             : campo === 'depositoId' ? <SelectorDeposito depositos={depositos} seleccionadoId={datos.depositoId} alSeleccionar={id => cambiar(campo, id)} {...aspecto} />
             : campo === 'reparto' ? <SelectorSegmentado tema={aspecto.tema} opciones={[{ id: 'iguales', nombre: 'Iguales' }, { id: 'manual', nombre: 'Manual' }]} valor={datos.reparto} alSeleccionar={valor => cambiar(campo, valor)} etiqueta="Cómo se reparte" />

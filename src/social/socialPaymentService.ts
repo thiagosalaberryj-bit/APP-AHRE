@@ -1,8 +1,8 @@
 import type { ContextoSocial } from './socialStore';
 import type { Tablas } from '../database/types';
-import { deudasRepositorio, pagosSocialesRepositorio, movimientosRepositorio, depositosRepositorio, personasRepositorio, participantesGastoRepositorio, gastosCompartidosRepositorio, salasRepositorio } from '../database/repositories';
-import { conSocial, registroPropio, exigirDepositoConDinero } from './socialStore';
-import { centavos, unidades, sumaPagos, exigir, textoSocial } from './socialValidation';
+import { deudasRepositorio, pagosSocialesRepositorio, movimientosRepositorio, depositosRepositorio, personasRepositorio, participantesGastoRepositorio, gastosCompartidosRepositorio } from '../database/repositories';
+import { conSocial, conLecturaSocial, registroPropio, exigirDepositoConDinero } from './socialStore';
+import { centavos, unidades, sumaPagos, exigir, textoSocial, perdonLocal } from './socialValidation';
 import { movimientosReservados } from './socialRoomDraft';
 
 export async function validarFinanciacion(contexto: ContextoSocial, operacion: import('./types').DatosOperacion, financiacion: import('./types').Financiacion | null | undefined, gastoReservadoId?: string) {
@@ -21,7 +21,7 @@ export async function validarFinanciacion(contexto: ContextoSocial, operacion: i
       && !movimiento.anulado && !movimiento.transferencia_id && !movimiento.reversion_de_id && !reverso,
     'El movimiento debe ser propio, vigente y coincidir con el importe y la dirección del pago.');
     const vinculos = await pagosSocialesRepositorio.consultar({ usuario_id: contexto.usuario.id, movimiento_id: movimiento.id }, {}, contexto.conexion);
-    exigir(!vinculos.length, 'Ese movimiento ya está vinculado a Social.');
+    exigir(!vinculos.length&&!await contexto.conexion.getFirstAsync('SELECT clave FROM incorporaciones_sociales_locales WHERE movimiento_id=?',[movimiento.id]), 'Ese movimiento ya está vinculado a Social.');
     const gastoId = gastoReservadoId || operacion.gasto_compartido_id || (operacion.participante_gasto_id ? (await participantesGastoRepositorio.consultarPorId(operacion.participante_gasto_id, contexto.conexion))?.gasto_compartido_id : null);
     exigir(!(await movimientosReservados(contexto, gastoId)).has(movimiento.id), 'Ese movimiento ya está asociado a otro gasto de una sala abierta.');
     return { movimientoId: movimiento.id, depositoNombre: deposito.nombre, fecha: movimiento.fecha_hora };
@@ -122,7 +122,7 @@ export function registrarPagoDeuda(datos: import('./types').DatosPago, financiac
     if (esPago && deuda.participante_gasto_id) {
       const parte = await registroPropio(participantesGastoRepositorio, deuda.participante_gasto_id, contexto);
       const gasto = await registroPropio(gastosCompartidosRepositorio, parte.gasto_compartido_id, contexto);
-      categoria = (await registroPropio(salasRepositorio, gasto.sala_id, contexto)).categoria;
+      categoria = gasto.categoria;
     }
     const resultado = await guardarOperacion(contexto, {
       clase: deuda.participante_gasto_id ? 'parte' : 'deuda', participante_gasto_id: deuda.participante_gasto_id,
@@ -152,8 +152,33 @@ export function consultarMovimientosCompatibles(tipo: string, monto: string | nu
       AND m.transferencia_id IS NULL AND m.reversion_de_id IS NULL
       AND NOT EXISTS (SELECT 1 FROM movimientos r WHERE r.reversion_de_id = m.id)
       AND NOT EXISTS (SELECT 1 FROM pagos_sociales p WHERE p.movimiento_id = m.id)
+      AND NOT EXISTS (SELECT 1 FROM incorporaciones_sociales_locales i WHERE i.movimiento_id = m.id)
     ORDER BY m.fecha_hora DESC, m.id DESC;`, [contexto.usuario.id, tipo, centavos(monto)]);
     const reservados = await movimientosReservados(contexto);
     return movimientos.filter(m => !reservados.has(m.id));
+  });
+}
+
+export function perdonarDeudaPersonal(id: string, pendienteEsperado: number) {
+  return conSocial(async contexto => {
+    const deuda = await registroPropio(deudasRepositorio, id, contexto);
+    exigir(deuda.acreedor_id === contexto.propia.id, 'Solo quien cobra puede perdonar una deuda.');
+    const fila = await contexto.conexion.getFirstAsync<{datos:string}>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='deudas'", [contexto.usuario.id]);
+    const acuerdos: import('./online/types').DeudaOnline[] = fila ? JSON.parse(fila.datos) : [];
+    exigir(!acuerdos.some(a => a.origenLocalId === id && a.estado !== 'rechazada'), 'Esta deuda tiene una propuesta online. Revisá su acuerdo antes de perdonarla.');
+    if (perdonLocal(deuda) === unidades(pendienteEsperado) && perdonLocal(deuda) > 0) return deuda;
+    exigir(deuda.estado !== 'cancelada', 'La deuda ya fue cerrada.');
+    const pagos = await pagosSocialesRepositorio.consultar({usuario_id:contexto.usuario.id, deuda_id:id}, {}, contexto.conexion);
+    const pendiente = unidades(deuda.monto) - sumaPagos(pagos);
+    exigir(pendiente > 0 && pendiente === unidades(pendienteEsperado), 'El pendiente cambió. Revisá la deuda.');
+    return deudasRepositorio.actualizar(id, {estado:'cancelada', fecha_cancelacion:new Date().toISOString(), motivo_cancelacion:'perdon:' + pendiente}, contexto.conexion);
+  });
+}
+
+
+export function consultarHistorialDeuda(deudaId:string){
+  return conLecturaSocial(async contexto=>{
+    await registroPropio(deudasRepositorio,deudaId,contexto);
+    return contexto.conexion.getAllAsync<Tablas['pagos_sociales']>('SELECT * FROM pagos_sociales WHERE usuario_id=? AND deuda_id=? ORDER BY fecha DESC,id DESC',[contexto.usuario.id,deudaId]);
   });
 }

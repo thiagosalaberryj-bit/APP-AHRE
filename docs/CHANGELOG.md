@@ -3,6 +3,62 @@
 Todos los cambios relevantes realizados en la aplicación AHRE y en su
 documentación se registran en este archivo.
 
+## [v0.8.0] - 2026-11-08 - no estable
+
+### Añadido
+
+- Salas compartidas en tiempo real con caché SQLite, edición offline, comandos
+  idempotentes, control de versiones y recuperación HTTP de eventos WebSocket.
+- Acceso global con contraseña y QR, aprobación de ingresos, vínculos por correo
+  y continuidad de identidad entre invitado web y cuenta propia.
+- Acuerdos online con aceptación, historial de pagos informados/confirmados/
+  rechazados y perdón sin crear dinero. Cada cuenta utiliza depósitos propios.
+- Recurrencias con aceptación manual desde depósitos, pendientes por fecha y
+  registros únicos. La tarea automática heredada se desregistra y su callback
+  conservado no genera movimientos financieros.
+- Demos sociales interactivas para creador y participante, restringidas a la
+  cuenta local de desarrollo; no usan el servidor ni se habilitan en release.
+- Iconos de estado en el historial de deudas para pagos pendientes, confirmados,
+  rechazados y anulados, perdón y movimientos por incorporar, en ambos temas.
+
+### Cambiado
+
+- Categoría por gasto, cierre con obligaciones compartidas e incorporación
+  financiera independiente por cuenta, sin duplicar la compra del pagador.
+- Detalles, filtros, formularios e historial social reutilizan componentes y
+  estilos locales, con solicitudes por persona y soporte de ambos temas.
+- Eliminar movimientos conserva original y corrección vinculada, excluye ambos
+  de estadísticas y mantiene los acuerdos sociales sin cambios automáticos.
+- Menos descargas y escrituras sin novedades; reconciliación al reanudar y
+  comprobaciones transaccionales para evitar propuestas cruzadas duplicadas.
+- Inicio de Social sin límite de tarjetas: muestra todas las salas abiertas y las
+  cerradas con movimientos propios por registrar. Las tarjetas muestran el
+  contador, que descuenta incorporaciones locales sin esperar la sincronización.
+  Al completar los registros, las cerradas permanecen en Ver todas las salas.
+- Versión 0.8.0 y código Android 13; documentación vigente separada de antecedentes.
+
+### Corregido
+
+- Recuperación inicial de cuentas, serialización SQLite y diagnóstico de bloqueos.
+- Publicación con depósitos/movimientos preparados y reintentos sin duplicados.
+- Aceptación independiente de avisos de pago y rechazo de cambios económicos.
+- Cierre del modal durante guardados y consistencia de partes/balances web.
+- Retirada de imports y estilos sin referencias.
+- Pendientes de incorporación visibles por sala/gasto, bloqueo inmediato de envíos
+  y cancelación durante operaciones, carga solo en el botón elegido, propuestas
+  rechazadas ocultas al destinatario y origen de deuda sin adelanto duplicado.
+- Etiquetas y filtros Saldada/Perdonada separados; Cerrada reservado a salas.
+
+### Verificación
+
+- 349 pruebas de app y 60 de backend aprobadas, cero fallos y cero omisiones,
+  con SQLite real, MySQL temporal aislado, HTTP y WebSocket. TypeScript correcto.
+- Tras los ajustes de iconos y visibilidad de salas: 127 pruebas sociales
+  aprobadas, incluidas las nuevas comprobaciones en ambos temas, y TypeScript
+  correcto. Esta verificación específica complementa la ejecución conjunta anterior.
+- Pendiente: revisión en dispositivos, enlaces/QR, WSS detrás del proxy real y
+  aceptación manual sin red y navegación nativa. Preparar una build no acredita esas pruebas.
+
 ## [v0.7.0] - 2026-11-05 - no estable
 
 ### Añadido

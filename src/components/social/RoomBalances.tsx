@@ -47,7 +47,7 @@ export default function BalancesSala(propiedades: import('../../social/types').A
     }) => {
       const tePagan = gasto.pagadorId === 'vos';
       const pagasVos = parte.personaId === 'vos';
-      const persona = obtenerPersona(pagasVos ? gasto.pagadorId : parte.personaId);
+
       const color = pagasVos ? tema.error : tema.foco;
       const estado = tePagan ? provisional ? 'Te pagaría' : 'Te debe' : pagasVos ? provisional ? 'Pagarías' : 'Le debés' : 'Pendiente';
       return <Pressable key={`${gasto.id}-${parte.personaId}`} accessibilityRole="button" accessibilityLabel={`${nombreCompletoPersona(obtenerPersona(parte.personaId))} a ${nombreCompletoPersona(obtenerPersona(gasto.pagadorId))}, ${parte.pendiente || parte.monto}, por ${gasto.descripcion}`} accessibilityHint="Abre el ítem y sus pagos." onPress={() => alAbrirGasto(gasto.id)} style={({
@@ -58,8 +58,7 @@ export default function BalancesSala(propiedades: import('../../social/types').A
             backgroundColor: `${color}18`
           }]}><Ionicons color={color} name="swap-horizontal-outline" size={20} /></View>
               <View style={estilos.textoFlexible}>
-                <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.encabezadoSeccion, estilos.tituloFila]}>{nombreCompletoPersona(persona)}</Text>
-                {!tePagan && !pagasVos ? <Text ellipsizeMode="tail" numberOfLines={1} style={[estilosGlobales.texto, estilos.textoFila]}>A {nombreCompletoPersona(obtenerPersona(gasto.pagadorId))}</Text> : null}
+                <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.encabezadoSeccion, estilos.tituloFila]}>{nombreCompletoPersona(obtenerPersona(parte.personaId))} a {nombreCompletoPersona(obtenerPersona(gasto.pagadorId))}</Text>
                 <Text ellipsizeMode="tail" numberOfLines={1} style={[estilosGlobales.textoSecundario, estilos.metadatosFila]}>{gasto.descripcion}</Text>
               </View>
               <View style={estilos.franjaImporteHistorial}>

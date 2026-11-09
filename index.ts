@@ -1,4 +1,5 @@
 import { registerRootComponent } from 'expo';
+import './src/recurrences/recurrenceTask';
 
 import Aplicacion from './App';
 

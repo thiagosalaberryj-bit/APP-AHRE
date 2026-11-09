@@ -1,5 +1,5 @@
 import { useDatosSociales } from '../../social/SocialDataContext';
-import { cerrarSala } from '../../social/socialService';
+import { obtenerVistaSincronizacion, cerrarSala } from '../../social/socialService';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AccionesFormulario from './SocialFormActions';
@@ -24,7 +24,7 @@ export default function FormularioCerrarSala({
     ...crearEstilosCompartidos(tema),
     ...crearEstilosPropios(tema)
   };
-  if (!sala || sala.estado === 'cerrada') return <RegistroNoDisponible {...aspecto} />;
+  if (!sala || !sala.administrador || sala.estado === 'cerrada') return <RegistroNoDisponible {...aspecto} />;
   const partes = sala.gastos.flatMap(gasto => gasto.partes);
   const pagadas = partes.filter((parte) => parte.tipo === 'saldado');
   const pendientes = sala.gastos.flatMap(gasto => gasto.partes.filter(parte => parte.tipo !== 'saldado' && !parte.cancelada).map(parte => ({
@@ -66,9 +66,9 @@ export default function FormularioCerrarSala({
     <View style={[estilosGlobales.tarjeta, estilos.tarjetaCompacta]}>
       <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Al confirmar el cierre</Text>
       <View style={estilos.filaCampos}><Ionicons color={tema.foco} name="lock-closed-outline" size={20} /><Text style={[estilosGlobales.textoSecundario, estilos.textoFlexible]}>La sala quedará en el historial, en solo lectura. No podrás editar sus ítems ni sus personas.</Text></View>
-      <Text style={estilosGlobales.textoSecundario}>{pendientes.length ? 'Las partes pendientes que te involucren se registrarán como deudas. Los pendientes entre otras personas quedarán solo en la sala.' : 'No quedarán pagos pendientes de esta sala.'}</Text>
-      <Text style={estilosGlobales.textoSecundario}>Se aplicarán los movimientos nuevos a los depósitos asociados. Los movimientos que ya existían se vincularán sin duplicarlos.</Text>
+      <Text style={estilosGlobales.textoSecundario}>{pendientes.length ? (sala.online?'Se fijarán las obligaciones de todas las personas de la sala.':'Las partes pendientes que te involucren se registrarán como deudas. Los pendientes entre otras personas quedarán solo en la sala.') : 'No quedarán pagos pendientes de esta sala.'}</Text>
+      <Text style={estilosGlobales.textoSecundario}>{sala.online?'Cada persona incorporará sus compras y pagos en sus propios depósitos después del cierre. Los movimientos pendientes no impiden cerrar.':'Se aplicarán los movimientos nuevos a los depósitos asociados. Los movimientos que ya existían se vincularán sin duplicarlos.'}</Text>
     </View>
-    <AccionesFormulario texto="Confirmar cierre" alGuardar={() => cerrarSala(sala.id)} {...aspecto} />
+    <AccionesFormulario deshabilitado={!sala.demo&&sala.online&&(['offline','revocado','sesion'].includes(obtenerVistaSincronizacion().estado)||sala.pendientesOnline>0)} texto="Confirmar cierre" alGuardar={() => cerrarSala(sala.id)} {...aspecto} />
   </>;
 }

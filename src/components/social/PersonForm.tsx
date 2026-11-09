@@ -2,7 +2,7 @@ import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
 import AccionesFormulario from './SocialFormActions';
 import RequisitoCreacionSocial from './SocialCreationGate';
-import { guardarPersona, cambiarActividadPersona } from '../../social/socialService';
+import { guardarPersona } from '../../social/socialService';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
 import { View, Text } from 'react-native';
 import CampoFormulario from './SocialTextField';
@@ -10,8 +10,7 @@ import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function FormularioPersona(propiedades: import('../../social/types').AspectoSocial & ({alCerrar:(persona?:Pick<import('../../database/types').Persona,'id'> | null)=>void;personaInicial?:import('../../social/types').PersonaVista | null} & Pick<import('../../social/types').AccionesSociales,'abrirPersona'>)) {
   const {
-    personas: personasSociales,
-    irAgenda
+    personas: personasSociales
   } = useDatosSociales();
   const {
     abrirPersona,
@@ -51,10 +50,6 @@ export default function FormularioPersona(propiedades: import('../../social/type
       <AccionesFormulario texto={personaInicial ? "Guardar cambios" : "Registrar persona"}
         deshabilitado={!nombreNormalizado || !apellidoNormalizado || !apodoNormalizado || Boolean(existente)}
         recargarAntesDeCerrar alGuardar={() => guardarPersona({ nombre, apellido, apodo }, personaInicial?.id)} alExito={alCerrar} {...aspecto} />
-      {personaInicial ? <AccionesFormulario texto={personaInicial.activa ? 'Eliminar persona' : 'Reactivar persona'} peligro={personaInicial.activa}
-        confirmacion={personaInicial.activa ? { titulo: '¿Eliminar esta persona?', descripcion: 'Se desactivará su ficha. Sus salas, pagos y deudas anteriores se conservarán y podrán saldarse.', textoConfirmar: 'Sí, eliminar persona' } : undefined}
-        recargarAntesDeCerrar alGuardar={() => cambiarActividadPersona(personaInicial.id, !personaInicial.activa)}
-        alExito={persona => { alCerrar(); if (persona && !persona.activa) irAgenda(); }} {...aspecto} /> : null}
       {!personaInicial ? <BotonSocial texto="Cancelar" simple alPresionar={() => alCerrar()} {...aspecto} /> : null}
     </View></RequisitoCreacionSocial>;
 }

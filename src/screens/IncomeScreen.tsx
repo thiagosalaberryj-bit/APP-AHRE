@@ -1,4 +1,4 @@
-import { useCallback, useContext, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -24,11 +24,12 @@ import BotonPrincipal from '../components/PrimaryButton';
 import ControlRecurrencia from '../components/RecurrenceControl';
 import EncabezadoSeccion from '../components/SectionHeader';
 import SelectorHora from '../components/TimeSelector';
+import {generarIdentificador} from '../database/identifiers';
 import { RUTAS } from '../constants/routes';
 import { ErrorBaseDatos } from '../database/errors';
 import {
   cargarDatosMovimiento,
-  crearMovimiento,
+  crearMovimiento,corregirMovimiento,consultarDetalleHistorialMovimiento,
   ErrorMovimiento,
 } from '../movements/movementService';
 import { FRECUENCIAS_MOVIMIENTO, validarDatosMovimiento } from '../utils/movementValidation';
@@ -48,7 +49,9 @@ const obtenerHoraActual = () => {
   return `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
 };
 
-export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' }: {navigation:import('../navigation/types').NavegacionRaiz;tipo?:'ingreso'|'egreso'}) {
+export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 'ingreso' }: {navigation:import('../navigation/types').NavegacionRaiz;route?:import('../navigation/types').PropiedadesPantalla['route'];tipo?:'ingreso'|'egreso'}) {
+  const movimientoEditarId=ruta?.params?.movimientoId;
+  const inicializado=useRef(false),claveEdicion=useRef(generarIdentificador());
   const esEgreso = tipo === 'egreso';
   const nombreMovimiento = esEgreso ? 'egreso' : 'ingreso';
   const insets = useSafeAreaInsets();
@@ -93,6 +96,14 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
       const datos = await cargarDatosMovimiento(tipo);
       establecerDepositos(datos.depositos);
       establecerCategorias(datos.categorias);
+      if(movimientoEditarId&&!inicializado.current){
+        const original=await consultarDetalleHistorialMovimiento(movimientoEditarId);
+        if(!original||original.anulado||original.fecha_eliminacion||original.reversion_de_id||original.transferencia_id||original.tipo!==tipo)throw new ErrorMovimiento('datos_invalidos');
+        establecerMonto(String(original.monto).replace('.',','));establecerDescripcion(original.descripcion);
+        establecerDepositoId(original.deposito_id);establecerCategoriaId(original.categoria);
+        const fechaOriginal=new Date(original.fecha_hora);establecerFecha(fechaOriginal);establecerHora(String(fechaOriginal.getHours()).padStart(2,'0')+':'+String(fechaOriginal.getMinutes()).padStart(2,'0'));
+        inicializado.current=true;
+      }
       establecerDepositoId((depositoActual) => (
         datos.depositos.some((deposito) => deposito.id === depositoActual)
           ? depositoActual
@@ -107,7 +118,7 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
     } finally {
       establecerCargandoDatos(false);
     }
-  }, [nombreMovimiento, tipo]);
+  }, [nombreMovimiento, tipo,movimientoEditarId]);
 
   useFocusEffect(useCallback(() => {
     cargarDatos();
@@ -128,9 +139,10 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
     establecerGuardando(true);
 
     try {
-      await crearMovimiento(datosFormulario, tipo);
+      if(movimientoEditarId)await corregirMovimiento(movimientoEditarId,datosFormulario,tipo,claveEdicion.current);
+      else await crearMovimiento(datosFormulario, tipo);
       mostrarAviso(`El ${nombreMovimiento} se guardó correctamente.`, { tipo: 'exito' });
-      navegacion.goBack();
+      accionEnCurso.current=false;navegacion.goBack();
     } catch (error) {
       if (error instanceof ErrorMovimiento && error.errores) {
         establecerIntentoGuardar(true);
@@ -146,6 +158,7 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
     }
   };
 
+  useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(accionEnCurso.current)evento.preventDefault();}),[navegacion]);
   const volver = () => {
     if (!accionEnCurso.current) navegacion.goBack();
   };
@@ -297,7 +310,7 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
               alSeleccionar={establecerHora}
             />
             <View style={estilosMovimiento.separadorInformacion} />
-            <ControlRecurrencia
+            {!movimientoEditarId?<ControlRecurrencia
               tema={tema}
               estilosMovimiento={estilosMovimiento}
               valor={recurrente}
@@ -305,7 +318,7 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
               frecuencias={FRECUENCIAS_RECURRENCIA}
               frecuenciaSeleccionada={frecuencia}
               alCambiarFrecuencia={establecerFrecuencia}
-            />
+            />:<Text style={estilosGlobales.textoAyuda}>Se conserva el original y se registra su corrección junto al movimiento actualizado. Las recurrencias futuras no cambian.</Text>}
           </View>
           <View style={estilosMovimiento.avisoFechaDeposito}>
             <Ionicons color={tema.textoSecundario} name="information-circle-outline" size={18} />
@@ -320,20 +333,13 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
           {intentoGuardar && recurrente && !FRECUENCIAS_MOVIMIENTO.includes(frecuencia) ? (
             <Text style={estilosGlobales.textoError}>{errores.frecuencia}</Text>
           ) : null}
-          <Text style={estilosGlobales.textoAyuda}>
-            {recurrente
-              ? 'Elegí cada cuánto se repetirá este movimiento.'
-              : esEgreso
-                ? 'Alquiler, suscripción o servicio.'
-                : 'Sueldo, venta o pago recibido.'}
-          </Text>
         </View>
 
         <View style={estilosMovimiento.acciones}>
           <BotonPrincipal
             estilosAutenticacion={estilosMovimiento}
             estilosGlobales={estilosGlobales}
-            titulo={`Guardar ${nombreMovimiento}`}
+            titulo={movimientoEditarId?'Guardar corrección':`Guardar ${nombreMovimiento}`}
             cargando={guardando}
             alPresionar={guardarMovimientoFormulario}
           />
@@ -347,7 +353,7 @@ export function FormularioMovimiento({ navigation: navegacion, tipo = 'ingreso' 
       <View style={estilosGlobales.pantalla}>
         <EncabezadoSeccion
           tema={tema}
-          titulo={`Nuevo ${nombreMovimiento}`}
+          titulo={`${movimientoEditarId?'Corregir':'Nuevo'} ${nombreMovimiento}`}
           descripcion={esEgreso ? 'Registra el dinero que gastas.' : 'Registra el dinero que recibes.'}
           alVolver={volver}
         />

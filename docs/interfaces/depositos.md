@@ -202,3 +202,53 @@ inactivos no aparecen en su lista.
 La pantalla y sus modales usan el tema activo claro u oscuro, tokens de
 `globalStyles.ts` y colores de `colors.ts`. No se añade una pantalla separada
 para edición ni se modifica la navegación existente.
+
+
+## Integración online y recurrencias
+
+La [guía de la implementación](../arquitectura/social-online-recurrencias.md) define el contrato actual de categorías por gasto, identidades, conectividad, recurrencias y eliminación lógica.
+
+## Recurrencias del depósito
+
+El detalle tiene pestañas Movimientos y Recurrentes, con un contador de
+programaciones. Comparten buscador, accesos rápidos de tipo, categoría e importe
+y el panel de filtros de la pantalla Movimientos. El depósito queda fijado por contexto.
+En Recurrentes los filtros de fecha se aplican a la próxima ejecución.
+La pestaña Movimientos recurrentes muestra el total y todas las tarjetas sin plegarse.
+Cada programación usa la apariencia de las tarjetas de movimientos e indica importe
+y tiempo restante en el lugar donde una tarjeta habitual muestra la hora.
+La frecuencia y los selectores de fecha y hora aparecen dentro del modal;
+no se muestra el identificador técnico de zona horaria.
+Los botones Editar programación, Pausar y Reactivar usan iconos y los estilos del proyecto.
+El detalle de un movimiento recibe su ID para habilitar edición y eliminación
+de registros vigentes, conservando las restricciones de transferencias y correcciones.
+
+La programación no tiene un botón Cancelar separado: tocar Editar programación nuevamente cierra la edición sin guardar. Guardar programación modifica el importe y la fecha de los próximos registros, conservando los cobros anteriores.
+
+## Opciones e historial recurrente
+
+Al volver a entrar con datos de prueba, Billetera de prueba incluye «Streaming ·
+recurrencia de prueba», con cinco cobros históricos por un total de $47.500 y
+una próxima cuota de $12.000. Reentrar conserva las pausas y cambios de fecha
+realizados sobre ese ejemplo. Sus fondos son ficticios y no cambian el saldo
+neto de los ejemplos existentes.
+
+Las tarjetas recurrentes reutilizan directamente los estilos de MovementCard. Tocar una abre un modal con importe, programación y acciones de edición, pausa o reactivación. El resumen acumulado reemplaza la lista de historial: Total gastado o Total recibido, veces registrado y, si cambió, variación del importe actual frente al primer importe registrado, en pesos y porcentaje. El primer importe se obtiene de la primera ejecución, incluso si después se elimina o corrige ese movimiento. El total excluye eliminados y correcciones; el contador conserva las ejecuciones realizadas. Las acciones y selectores quedan dentro del modal, sin botón Cancelar separado.
+
+
+## Confirmación manual y claridad financiera
+
+Las recurrencias vencidas se aceptan desde Depósito → Recurrentes o se desactivan;
+no generan dinero automáticamente. La aceptación es única por fecha programada.
+En salas cerradas se indica cuántos movimientos propios faltan incorporar y qué
+gastos los originan. La incorporación local actualiza el aviso sin esperar la red.
+Las acciones financieras bloquean otros envíos y cancelaciones mientras guardan;
+solo el botón elegido muestra carga. Las deudas usan Te debe/Le debés mientras
+haya pendiente, Saldada cuando se pagó todo y Perdonada si se perdonó el resto.
+Cerrada corresponde a salas. Las propuestas rechazadas se retiran del destinatario
+y se conserva el registro privado del creador. Deuda registrada integra el
+movimiento de origen, sin repetir una fila Adelanto registrado ni otro cargo.
+
+Prueba física pendiente: nueva APK en Android, funcionamiento sin red, apertura
+tras fechas vencidas, doble toque, navegación Atrás y resumen después de aceptar.
+La APK build 11 anterior no incluye estos cambios; no se generó otra en esta revisión.
