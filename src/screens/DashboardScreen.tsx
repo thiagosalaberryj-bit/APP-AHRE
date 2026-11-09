@@ -173,21 +173,20 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
       <View style={estilosGlobales.pantalla}>
+        <EncabezadoPrincipal
+          tema={tema}
+          titulo="Bienvenido"
+          descripcion={usuario?.nombre}
+          alAbrirNotificaciones={() => abrirPantalla(RUTAS.NOTIFICACIONES)}
+          alAbrirPerfil={() => abrirPantalla(RUTAS.PERFIL)}
+          altura={120}
+        />
         <ScrollView
           contentContainerStyle={estilos.contenidoDesplazable}
           showsVerticalScrollIndicator={false}
         >
-          <EncabezadoPrincipal
-            tema={tema}
-            titulo="Bienvenido"
-            descripcion={usuario?.nombre}
-            alAbrirNotificaciones={() => abrirPantalla(RUTAS.NOTIFICACIONES)}
-            alAbrirPerfil={() => abrirPantalla(RUTAS.PERFIL)}
-            altura={120}
-          />
-
           <View style={estilos.contenidoDashboard}>
-            <View style={estilos.contenedorTarjetaBalance}>
+            <View>
               <View style={[estilosGlobales.tarjeta, estilos.tarjetaBalance]}>
                 <View style={estilos.encabezadoBalance}>
                   <Ionicons color={tema.foco} name="wallet-outline" size={20} />

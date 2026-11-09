@@ -25,8 +25,10 @@ No se muestra una sección de deudas en el Dashboard.
 
 El encabezado reutiliza `MainHeader.tsx` y muestra el nombre devuelto por la
 sesión local junto con los accesos a Notificaciones y Perfil. La tarjeta de
-balance se superpone al borde inferior del encabezado verde. Su contenedor
-sigue las proporciones del resumen de deudas: radio de 12 puntos, relleno y
+balance queda debajo del encabezado verde, separada por 24 puntos como el
+contenido de Deudas. El encabezado permanece fijo fuera del desplazamiento;
+se desplaza el contenido inferior, sin márgenes negativos ni superposición.
+Su contenedor sigue las proporciones del resumen de deudas: radio de 12 puntos, relleno y
 separaciones de 12. «Balance» aparece a la izquierda junto a un ícono y el
 monto usa 24 puntos. Una línea fina separa el saldo de las acciones, que tienen
 74 puntos de altura, íconos de 20 y etiquetas de 12, igual que en Social.
