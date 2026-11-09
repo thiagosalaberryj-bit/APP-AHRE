@@ -13,8 +13,9 @@ documentación se registran en este archivo.
   y continuidad de identidad entre invitado web y cuenta propia.
 - Acuerdos online con aceptación, historial de pagos informados/confirmados/
   rechazados y perdón sin crear dinero. Cada cuenta utiliza depósitos propios.
-- Motor recurrente local, gestión desde depósitos y módulo Android WorkManager
-  sin requisito de red. Ocurrencias únicas y recuperación de fechas vencidas.
+- Recurrencias con aceptación manual desde depósitos, pendientes por fecha y
+  registros únicos. La tarea automática heredada se desregistra y su callback
+  conservado no genera movimientos financieros.
 - Demos sociales interactivas para creador y participante, restringidas a la
   cuenta local de desarrollo; no usan el servidor ni se habilitan en release.
 
