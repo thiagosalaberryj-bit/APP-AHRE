@@ -45,6 +45,9 @@ npm start -- --go --clear
 
 Escaneá el QR en el teléfono, conectado a la misma red. El registro necesita
 internet; «Entrar con datos de prueba» prepara ejemplos locales de desarrollo.
+Para probar listas grandes, «Entrar con 10.000 movimientos» agrega un depósito
+ficticio en esa cuenta local, sin sincronizar ni modificar la cuenta habitual.
+Ver [cómo probar la fluidez](docs/configuracion/pruebas-optimizacion.md#muchos-movimientos).
 La URL del backend se configura con `EXPO_PUBLIC_API_URL`; ver
 [entorno y pruebas](docs/configuracion/entorno.md).
 

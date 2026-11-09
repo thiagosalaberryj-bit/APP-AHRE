@@ -46,15 +46,20 @@ Login con contraseña.
 
 ## Acceso temporal a datos de prueba
 
-En Expo Go, Inicio muestra Entrar con datos de prueba encima del deslizador,
-con la aclaración Solo desarrollo · Cuenta independiente. Está condicionado
+En Expo Go, Inicio muestra Entrar con datos de prueba y Entrar con 10.000 movimientos
+encima del deslizador, con la aclaración Solo desarrollo · Cuenta local independiente. Está condicionado
 por `__DEV__`; no se habilitó ningún perfil ni APK para este acceso.
 
-El botón prepara tres depósitos, seis movimientos, tres contactos, una sala
+El primer botón prepara tres depósitos, movimientos de ejemplo, tres contactos, una sala
 con cuatro gastos y una deuda pendiente en una cuenta local de pruebas; luego
 abre el Dashboard. Muestra Preparando datos… y bloquea el deslizador
 mientras trabaja. Un error conserva Inicio y se comunica con el toast existente.
 El flujo normal del deslizador sigue disponible cuando termina.
+
+El segundo agrega el depósito Volumen · 10.000 movimientos en la misma cuenta
+de prueba, sin sincronizar. Mientras trabaja muestra Preparando 10.000 movimientos…;
+ambos botones y el deslizador quedan deshabilitados para evitar cargas simultáneas.
+No aparece en la versión de producción ni altera las cuentas habituales.
 
 El componente y sus estilos están separados en DevelopmentDataButton.tsx y
 DevelopmentDataButtonStyles.ts. La preparación está en src/development/ y se

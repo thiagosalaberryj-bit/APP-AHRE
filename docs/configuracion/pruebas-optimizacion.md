@@ -87,12 +87,32 @@ debounce, limpieza y reutilización del filtrado/orden tras quince renders y un
 cambio de tema. Cuenta operaciones; no impone un umbral de milisegundos que
 dependa de la PC. No es una medición de SQLite, RAM, FPS ni del teléfono.
 
-Para medir en Android, falta preparar un dataset sintético equivalente dentro
-de una cuenta local de desarrollo. El acceso actual a datos de prueba no carga
-10.000 movimientos. Una vez disponible ese dataset, comparar la versión base y
-esta rama en el mismo teléfono, con el mismo conjunto y configuración:
+Para cargar datos reales de SQLite en el teléfono, actualizar la app de desarrollo
+desde esta rama y seguir estos pasos:
 
-1. Probar con 1.000 y 10.000 movimientos, tanto en un mes como repartidos entre meses.
+1. Recargar Expo Go con **Reload** para volver a Inicio, sin borrar datos de la app.
+2. Tocar **Entrar con 10.000 movimientos** y esperar a que termine la carga inicial.
+3. Abrir el depósito **Volumen · 10.000 movimientos**. Contiene 5.000 ingresos y
+   5.000 egresos, con todas las categorías y distintos importes. Hay 7.000 registros
+   del mes de la carga y 3.000 repartidos en los 23 meses anteriores.
+4. Buscar `Volumen 00001`, probar filtros, limpiar, desplazarse y desplegar meses.
+   Luego revisar Movimientos y Estadísticas con este depósito seleccionado.
+5. Cerrar la sesión de pruebas y volver a ingresar a la cuenta habitual al terminar.
+
+El acceso aparece solo en desarrollo. Usa la cuenta local independiente
+`pruebas@ahre.test`; no requiere MySQL, conexión ni otra contraseña. El depósito
+masivo se agrega a los ejemplos existentes y sus pares de ingresos/egresos tienen
+saldo neto cero. La preparación es atómica, se ejecuta por lotes y no duplica ni
+restablece registros al reentrar. Las ediciones o anulaciones de prueba se conservan.
+Si el depósito fue eliminado, se informa el problema sin reactivarlo. Se rechaza
+la carga en cuentas de pruebas vinculadas al servidor y con sincronización habilitada.
+No se borran bases, datos ni depósitos de la cuenta habitual.
+
+Comparar la versión base y esta rama en el mismo teléfono, con el mismo conjunto
+y configuración. Para comparar con la base, se necesita llevar este generador
+también a esa versión; el adaptador automatizado por sí solo no mide el teléfono:
+
+1. Probar el mes de mayor volumen y el historial completo de 10.000 movimientos.
 2. Medir apertura de Movimientos y Detalle de depósito, búsqueda tras la pausa de
    250 ms, limpieza, desplazamiento y apertura/cierre de meses y filtros.
 3. Repetir cinco veces cada recorrido, anotar mediana y peor tiempo observado,
@@ -113,8 +133,11 @@ con permisos para las bases sintéticas `ahre_test_*`, con contraseña aleatoria
 conservada solo en el entorno del proceso de pruebas.
 
 - Backend: tipos correctos y 60 pruebas aprobadas, cero fallos y cero omisiones.
-- App: 395 pruebas aprobadas, cero fallos y cero omisiones, incluido el escenario
-  de 10.000 movimientos. Se ejecutaron las 39 integraciones antes omitidas.
+- App: 401 pruebas aprobadas, cero fallos y cero omisiones, incluidos el escenario
+  de pantalla con 10.000 movimientos y los seis casos nuevos del generador SQLite.
+  Se ejecutaron las 39 integraciones antes omitidas. Los casos nuevos comprueban
+  aislamiento de la cuenta habitual, carga sin HTTP, distribución, saldo,
+  reentrada y rollback tras un fallo parcial, además de las restricciones de acceso.
 - Limpieza: cero bases sintéticas restantes; proceso detenido, puerto cerrado
   y carpeta de datos temporal eliminada. Los logs locales se conservan bajo
   `.expo/validation/`, fuera de Git. No hubo cambios en los archivos del servidor.

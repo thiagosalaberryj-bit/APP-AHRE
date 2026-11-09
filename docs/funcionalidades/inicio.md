@@ -93,6 +93,18 @@ local ni modifica sus pendientes: se indica ingresar manualmente. Las pruebas
 automatizadas de integración pueden pedir explícitamente sincronizar la cuenta
 ficticia contra su backend MySQL local; el botón de Inicio conserva el modo local.
 
+El segundo botón, **Entrar con 10.000 movimientos**, agrega un depósito exclusivo
+**Volumen · 10.000 movimientos** a esta misma cuenta local. La opción
+`volumenMovimientos` invoca `src/development/seedMovementVolume.ts` dentro de la
+transacción: valida cuenta y autorización local, crea 5.000 pares de ingreso y
+egreso con saldo neto cero, y usa lotes de 80 filas para limitar los parámetros
+SQLite y los cruces hacia el código nativo. El diario conserva sus triggers.
+Hay 7.000 registros en el mes actual y 3.000 en los 23 anteriores. Los identificadores
+son estables: una segunda entrada conserva ediciones y eliminaciones lógicas.
+Un depósito eliminado o un conjunto parcial se rechazan sin restablecerlos.
+Esta opción no admite sincronización. Ver el
+[recorrido en el teléfono](../configuracion/pruebas-optimizacion.md#muchos-movimientos).
+
 | Depósito ficticio | Saldo inicial | Saldo tras los movimientos de ejemplo |
 | --- | ---: | ---: |
 | Efectivo de prueba | $120.000 | $106.800 |
