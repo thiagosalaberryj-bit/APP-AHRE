@@ -182,6 +182,9 @@ export function crearDatosColumnas(categorias: (import('../constants/movimientos
     return {
       id: periodo.id,
       etiqueta: periodo.etiqueta,
+      tituloDetalle: periodo.inicio.toLocaleDateString('es-AR', modo === 'semana'
+        ? { weekday: 'long', day: 'numeric', month: 'long' }
+        : { month: 'long', year: 'numeric' }),
       totalGeneral: totalesGenerales.get(clavePeriodo) || 0,
       segmentos: categorias.map((categoria) => ({
         ...categoria,

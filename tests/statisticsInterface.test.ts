@@ -42,6 +42,7 @@ function preparar(nombreTema: 'claro' | 'oscuro') {
     tema, estilos: crearEstilosEstadisticas(tema),
     circular: cargar<typeof import('../src/components/StatisticsPieChart.tsx')>('src/components/StatisticsPieChart.tsx').default,
     columnas: cargar<typeof import('../src/components/StatisticsBarChart.tsx')>('src/components/StatisticsBarChart.tsx').default,
+    resumenColumna: cargar<typeof import('../src/components/StatisticsBarSummary.tsx')>('src/components/StatisticsBarSummary.tsx').default,
     fechas: cargar<typeof import('../src/components/StatisticsDateControls.tsx')>('src/components/StatisticsDateControls.tsx'),
     datos: cargar<typeof import('../src/statistics/statisticsPresentation.ts')>('src/statistics/statisticsPresentation.ts'),
     renderizar<T>(callback: () => T): T { indice = 0; efectos = []; return callback(); },
@@ -50,6 +51,23 @@ function preparar(nombreTema: 'claro' | 'oscuro') {
 }
 
 for (const tema of ['claro', 'oscuro'] as const) {
+  test(`el resumen de barras muestra período, familias, importes y porcentajes (${tema})`, () => {
+    const e = preparar(tema);
+    const categorias = e.datos.obtenerCategorias('egreso', e.tema).filter(c => ['alimentacion','salud'].includes(c.id));
+    const columnas = e.datos.crearDatosColumnas(categorias, 'anio', [
+      { periodo: '2026-11', categoria: 'alimentacion', total: 750 },
+      { periodo: '2026-11', categoria: 'salud', total: 250 },
+    ], new Date(2026,10,9), 2026);
+    const detalle = e.datos.obtenerDetalleColumna(columnas, 10);
+    const arbol = e.resumenColumna({ barra: detalle.barraSeleccionada, segmentos: detalle.filasDetalleColumna, total: detalle.totalBarraSeleccionada, tipo: 'egreso', tema: e.tema, estilos: e.estilos });
+    const elementos = nodos(arbol);
+    const textos = elementos.filter(n => n.type === 'Text').map(n => n.props.children);
+    assert.ok(textos.includes('noviembre de 2026')); assert.ok(textos.includes('75%')); assert.ok(textos.includes('25%'));
+    assert.equal(elementos.filter(n => n.type === 'Icon').length, 2);
+    assert.equal(elementos.filter(n => n.props.accessibilityRole === 'header').length, 2);
+    assert.equal('borderWidth' in e.estilos.detalleColumna, false);
+    assert.equal(e.estilos.resumenColumna.backgroundColor, e.tema.superficie);
+  });
   test(`calendario conserva año bisiesto, navegación, selección y reapertura (${tema})`, () => {
     const e = preparar(tema);
     let seleccion: Date | null = null, cerrado = false;

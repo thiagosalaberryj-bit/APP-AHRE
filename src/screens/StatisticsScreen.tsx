@@ -1,5 +1,6 @@
 import GraficoCircular from '../components/StatisticsPieChart';
 import GraficoColumnas from '../components/StatisticsBarChart';
+import ResumenColumna from '../components/StatisticsBarSummary';
 import { SelectorDesplegable, CalendarioDesplegable } from '../components/StatisticsDateControls';
 import { PERIODOS_RESUMEN, MODOS_COLUMNAS, MESES, ANIO_ACTUAL, ANIOS_DISPONIBLES } from '../constants/statistics';
 import {
@@ -604,29 +605,8 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                 ) : !hayDatosColumnasVisibles ? (
                   <Text style={estilos.textoDetalleSeleccion}>Seleccioná categorías para ver el detalle.</Text>
                 ) : barraSeleccionada ? (
-                  <>
-                    <View style={estilos.resumenColumna}>
-                      <Text style={estilos.tituloDetalleSeleccion}>{barraSeleccionada.etiqueta}</Text>
-                      <Text style={estilos.totalColumna}>{formatearMonto(totalBarraSeleccionada)}</Text>
-                    </View>
-                    {filasDetalleColumna.length ? (
-                      <View style={estilos.listaDetalleColumna}>
-                        {filasDetalleColumna.map((segmento) => (
-                          <View key={segmento.id} style={estilos.filaDetalleColumna}>
-                            <View style={[estilos.muestraColor, { backgroundColor: segmento.color }]} />
-                            <Text numberOfLines={1} style={estilos.nombreCategoria}>{segmento.nombre}</Text>
-                            <Text style={estilos.montoCategoria}>{formatearMonto(segmento.monto)}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    ) : (
-                      <Text style={estilos.textoDetalleSeleccion}>
-                        {barraSeleccionada.totalGeneral > 0
-                          ? 'El período tiene movimientos en categorías ocultas.'
-                          : 'Este día o mes no tuvo movimientos.'}
-                      </Text>
-                    )}
-                  </>
+                  <ResumenColumna barra={barraSeleccionada} segmentos={filasDetalleColumna} total={totalBarraSeleccionada}
+                    tipo={tipoMovimiento} tema={tema} estilos={estilos}/>
                 ) : (
                   <Text style={estilos.textoDetalleSeleccion}>No hay datos para este período.</Text>
                 )}

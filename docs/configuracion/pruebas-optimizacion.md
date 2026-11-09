@@ -81,11 +81,14 @@ El escenario automatizado se ejecuta sin servidor ni datos reales:
 node --experimental-vm-modules --test --test-name-pattern="10.000 movimientos" tests/depositDetailPerformance.test.ts
 ```
 
-Carga 10.000 movimientos sintéticos en la pantalla mediante el adaptador de
-interfaz. Comprueba orden descendente, conservación del origen, búsqueda con
-debounce, limpieza y reutilización del filtrado/orden tras quince renders y un
-cambio de tema. Cuenta operaciones; no impone un umbral de milisegundos que
-dependa de la PC. No es una medición de SQLite, RAM, FPS ni del teléfono.
+Entrega 10.000 movimientos sintéticos al servicio simulado de la pantalla y
+comprueba que monta solo 50 tarjetas y agrega otras 50 al pedir más, sin duplicar
+un doble toque. Otros casos cubren debounce, filtros, reintentos y respuestas
+vencidas. `tests/depositPagination.test.ts` ejecuta además el generador y las
+consultas reales de SQLite: verifica resumen sin historial completo, recorrido
+de los 7.000 registros del mes mediante cursor y búsquedas fuera de la página.
+No se impone un umbral de milisegundos dependiente de la PC. Estas pruebas no
+miden RAM, FPS ni la latencia del teléfono.
 
 Para cargar datos reales de SQLite en el teléfono, actualizar la app de desarrollo
 desde esta rama y seguir estos pasos:
@@ -97,6 +100,10 @@ desde esta rama y seguir estos pasos:
    del mes de la carga y 3.000 repartidos en los 23 meses anteriores.
 4. Buscar `Volumen 00001`, probar filtros, limpiar, desplazarse y desplegar meses.
    Luego revisar Movimientos y Estadísticas con este depósito seleccionado.
+   En Detalle, comprobar que abre con el mes actual y 50 filas, y que «Cargar más
+   movimientos» agrega otras 50. Para consultar otros meses, quitar el filtro
+   de fecha o elegir otro mes desde Filtros. Cambiar búsqueda o filtros debe
+   reiniciar la lista, incluyendo coincidencias que no estaban en la primera página.
 5. Cerrar la sesión de pruebas y volver a ingresar a la cuenta habitual al terminar.
 
 El acceso aparece solo en desarrollo. Usa la cuenta local independiente
@@ -133,11 +140,15 @@ con permisos para las bases sintéticas `ahre_test_*`, con contraseña aleatoria
 conservada solo en el entorno del proceso de pruebas.
 
 - Backend: tipos correctos y 60 pruebas aprobadas, cero fallos y cero omisiones.
-- App: 401 pruebas aprobadas, cero fallos y cero omisiones, incluidos el escenario
+- App: 407 pruebas aprobadas, cero fallos y cero omisiones, incluidos el escenario
   de pantalla con 10.000 movimientos y los seis casos nuevos del generador SQLite.
   Se ejecutaron las 39 integraciones antes omitidas. Los casos nuevos comprueban
   aislamiento de la cuenta habitual, carga sin HTTP, distribución, saldo,
   reentrada y rollback tras un fallo parcial, además de las restricciones de acceso.
+  Tras el bloqueo detectado en el teléfono se verificaron también la paginación
+  real de SQLite y la pantalla limitada a 50 tarjetas, así como el nuevo desglose
+  de barras en ambos temas. La nueva presentación y la fluidez nativa del detalle
+  deben comprobarse nuevamente en el dispositivo.
 - Limpieza: cero bases sintéticas restantes; proceso detenido, puerto cerrado
   y carpeta de datos temporal eliminada. Los logs locales se conservan bajo
   `.expo/validation/`, fuera de Git. No hubo cambios en los archivos del servidor.

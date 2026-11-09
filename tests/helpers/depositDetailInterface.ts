@@ -3,10 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { crearCargadorComponentes } from './componentInterface.ts';
 import type { Movimiento } from '../../src/database/types.ts';
 
-export function interfazDetalleDeposito(movimientosIniciales: Movimiento[]) {
+export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opciones: {
+  consultarPagina?: typeof import('../../src/deposits/depositService.ts').consultarPaginaMovimientosDeposito;
+} = {}) {
   const casillas: { valor?: unknown; current?: unknown; deps?: readonly unknown[]; limpiar?: () => void }[] = [];
   let indice = 0, efectos: (() => unknown)[] = [], arbol: unknown;
-  const recuentos = { filtros: 0, ordenamientos: 0 };
+  const recuentos = { consultas: 0, filas: 0 };
+  const consultas: { filtros: import('../../src/types/forms.ts').FiltrosHistorial; cursor?: { fecha_hora: string; id: string } | null }[] = [];
   let movimientos = movimientosIniciales;
   const iguales = (a?: readonly unknown[], b?: readonly unknown[]) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
   const apariencia = {}, avisos = {}, mostrarAviso = () => {};
@@ -39,19 +42,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[]) {
     },
     useContext: (contexto: object) => contexto === apariencia ? { tema } : { mostrarAviso },
   };
-  // Observa las operaciones de la colección recibida por la pantalla, sin cambiar sus resultados.
-  function observar<T>(filas: T[]): T[] {
-    return new Proxy(filas, {
-      get(lista, propiedad, receptor) {
-        if (propiedad === 'map' || propiedad === 'filter' || propiedad === 'sort') return (...argumentos: unknown[]) => {
-          if (propiedad === 'filter') recuentos.filtros++;
-          if (propiedad === 'sort') recuentos.ordenamientos++;
-          return observar(Reflect.apply(Array.prototype[propiedad], lista, argumentos) as T[]);
-        };
-        return Reflect.get(lista, propiedad, receptor);
-      },
-    });
-  }
+  let enfocada = true;
   const deposito = { id: 'deposito', usuario_id: 'usuario', nombre: 'Cuenta', tipo: 'banco', saldo_actual: 1000, descripcion: 'Cuenta de prueba' };
   const adaptadores: Record<string, unknown> = {
     react,
@@ -60,7 +51,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[]) {
       Platform: { OS: 'android' }, StyleSheet: { create: (valor: unknown) => valor },
       useWindowDimensions: () => ({ width: 360, height: 780 }),
     },
-    '@react-navigation/native': { useFocusEffect: (callback: () => unknown) => react.useEffect(callback, [callback]) },
+    '@react-navigation/native': { useFocusEffect: (callback: () => unknown) => react.useEffect(() => enfocada ? callback() : undefined, [callback, enfocada]) },
     'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' },
     '../contexts/AppearanceContext': { ContextoApariencia: apariencia },
     '../contexts/ToastContext': { ContextoAvisos: avisos },
@@ -69,7 +60,24 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[]) {
     '../profile/balanceVisibilityService': { consultarSaldoOculto: async () => false },
     '../deposits/depositService': {
       ErrorDeposito: class extends Error {},
-      consultarDetalleDeposito: async () => ({ deposito, movimientos: observar(movimientos), comparacionMensual: null }),
+      consultarDetalleDeposito: async () => ({ deposito, cantidadMovimientos: movimientos.length, categoriasMovimientos: [...new Set(movimientos.map(m => m.categoria))], comparacionMensual: null }),
+    },
+    './depositService': {
+      consultarPaginaMovimientosDeposito: async (id: string, filtros: import('../../src/types/forms.ts').FiltrosHistorial, cursor?: {fecha_hora:string;id:string}|null) => {
+        recuentos.consultas++;
+        consultas.push({ filtros, cursor });
+        const filas = opciones.consultarPagina ? await opciones.consultarPagina(id, filtros, cursor) : movimientos
+          .filter(m => (!filtros.desde || m.fecha_hora >= filtros.desde) && (!filtros.hasta || m.fecha_hora < filtros.hasta)
+            && (!filtros.busqueda || m.descripcion.toLocaleLowerCase('es-AR').includes(filtros.busqueda.toLocaleLowerCase('es-AR')))
+            && (filtros.tipo === 'todos' || !filtros.tipo || (filtros.tipo === 'ingreso' ? ['ingreso','transferencia_entrada'].includes(m.tipo) : ['egreso','transferencia_salida'].includes(m.tipo)))
+            && (!filtros.categoriaIds || filtros.categoriaIds.includes(m.categoria))
+            && (filtros.montoMinimo == null || m.monto >= filtros.montoMinimo) && (filtros.montoMaximo == null || m.monto <= filtros.montoMaximo)
+            && (!cursor || m.fecha_hora < cursor.fecha_hora || (m.fecha_hora === cursor.fecha_hora && m.id < cursor.id)))
+          .sort((a,b) => b.fecha_hora.localeCompare(a.fecha_hora) || b.id.localeCompare(a.id)).slice(0,50)
+          .map(m => ({ ...m, deposito_nombre: deposito.nombre }));
+        recuentos.filas += filas.length;
+        return filas;
+      },
     },
     '../components/MovementFilterSections': Object.fromEntries(['FiltroTipoMovimientos', 'FiltroFechaMovimientos', 'FiltroCategoriasMovimientos', 'FiltroMontoMovimientos'].map(n => [n, n])),
   };
@@ -88,7 +96,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[]) {
     efectos.forEach(efecto => efecto());
     return arbol;
   }
-  async function asentar() { for (let i = 0; i < 4; i++) { await new Promise(resolve => setImmediate(resolve)); renderizar(); } }
+  async function asentar() { for (let i = 0; i < 6; i++) { await new Promise(resolve => setImmediate(resolve)); renderizar(); } }
   function nodos(nodo: unknown): { type: string; props: Record<string, unknown> }[] {
     if (Array.isArray(nodo)) return nodo.flatMap(nodos);
     if (!nodo || typeof nodo !== 'object' || !('props' in nodo)) return [];
@@ -106,7 +114,8 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[]) {
     callback(...argumentos); renderizar();
   }
   return {
-    renderizar, asentar, buscar, nodos: () => nodos(arbol), invocar, recuentos,
+    renderizar, asentar, buscar, nodos: () => nodos(arbol), invocar, recuentos, consultas,
+    cambiarEnfoque(valor: boolean) { enfocada = valor; renderizar(); },
     desmontar() { casillas.forEach(casilla => casilla.limpiar?.()); },
     cambiarTema() { tema = tema === TEMAS.claro ? TEMAS.oscuro : TEMAS.claro; renderizar(); },
     async recargar(nuevos: Movimiento[]) {

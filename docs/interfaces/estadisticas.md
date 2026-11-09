@@ -133,6 +133,15 @@ El detalle de categorías queda debajo del gráfico dentro del desplazamiento
 vertical de la pantalla, para poder recorrer la lista completa sin un área de
 scroll interna pequeña.
 
+El desglose usa `StatisticsBarSummary.tsx`: un resumen compacto con el día o mes
+completo, el total visible y su tipo, seguido por filas independientes de
+categorías agrupadas por familia. Reutiliza los colores, íconos y tipografía del
+circular; cada fila presenta el importe y su porcentaje del total de la columna
+seleccionada. No hay un marco grande alrededor de todo el desglose. Los importes
+largos quedan separados del nombre y el total se adapta a una sola línea. Se
+conservan selección de columna, arrastre, filtros, períodos y estados vacíos en
+ambos temas; las filas describen el período seleccionado sin abrir otra pantalla.
+
 ## Detalles y datos
 
 El detalle de categoría usa una tarjeta de resumen con ícono y nombre, familia

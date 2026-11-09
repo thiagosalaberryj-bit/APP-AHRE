@@ -187,11 +187,17 @@ Semana mantiene su selección actual sin agregar un calendario al detalle.
 La búsqueda, los criterios activos y el filtrado de recurrencias permanecen
 coordinados por esta pantalla.
 
-El detalle memoriza la función de filtrado y la lista ordenada según los
-movimientos y los criterios activos. Cambiar el tema, abrir un modal o plegar
-un mes reutiliza esa lista y la agrupación mensual. Modificar búsqueda, tipo,
-categorías, montos o fechas, o recargar los movimientos, actualiza el resultado.
-El filtro de Recurrentes mantiene su aplicación sobre la próxima ejecución.
+El detalle abre con el mes actual seleccionado y consulta solo 50 movimientos
+en SQLite. «Cargar más movimientos» incorpora la siguiente página del mismo
+período y filtros, como en Movimientos. Quitar el criterio de fecha o usar
+«Limpiar filtros» permite consultar otros meses; también se puede elegir uno
+desde el panel. No se montan todas las tarjetas del mes de una vez.
+La consulta aplica búsqueda, tipo, categorías, montos y fechas antes de paginar;
+las categorías disponibles se obtienen del historial completo del depósito.
+Cambiar un criterio reinicia la página; cambiar tema, abrir un modal o plegar
+un mes no vuelve a consultar. Las respuestas anteriores se descartan al cambiar
+filtros o salir. Una carga adicional fallida conserva las filas y permite
+reintentar. El filtro de Recurrentes mantiene su aplicación sobre la próxima ejecución.
 
 El texto del buscador se muestra inmediatamente y se aplica después de
 250 ms sin escribir, igual que en Movimientos. La pausa se reinicia con cada

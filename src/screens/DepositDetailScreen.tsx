@@ -48,6 +48,7 @@ import EncabezadoSeccionPlegable from '../components/CollapsibleSectionHeader';
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { RUTAS } from '../constants/routes';
 import { actualizarDeposito, consultarDetalleDeposito, eliminarDeposito, ErrorDeposito } from '../deposits/depositService';
+import { useMovimientosDeposito } from '../deposits/useDepositMovements';
 import { consultarSaldoOculto } from '../profile/balanceVisibilityService';
 import { convertirSaldoInicial } from '../utils/depositValidation';
 import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../styles/colors';
@@ -175,7 +176,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const [cantidadRecurrencias,establecerCantidadRecurrencias]=useState(0);
   const estilosFiltros = crearEstilosMovimientos(tema, anchoVentana);
   const estilosAccesos=crearEstilosBusquedaFiltros(tema);
-  const [movimientos, establecerMovimientos] = useState<(import('../database/types').Movimiento & {deposito_nombre:string})[]>([]);
+  const [cantidadMovimientos, establecerCantidadMovimientos] = useState(0);
+  const [categoriasMovimientos, establecerCategoriasMovimientos] = useState<string[]>([]);
+  const [revisionMovimientos, establecerRevisionMovimientos] = useState(0);
+  const [enfocada, establecerEnfocada] = useState(false);
   const [comparacionMensual, establecerComparacionMensual] = useState<Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null>(null);
   const [cargando, establecerCargando] = useState(true);
   const [errorCarga, establecerErrorCarga] = useState<string | null>(null);
@@ -195,10 +199,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   };
   const [filtrosVisibles, establecerFiltrosVisibles] = useState(false);
   const [tipoFiltro, establecerTipoFiltro] = useState('todos');
-  const [fechaFiltro, establecerFechaFiltro] = useState('todos');
+  const [fechaFiltro, establecerFechaFiltro] = useState('mes');
   const [fechaDia, establecerFechaDia] = useState<Date | null>(null);
   const [fechaSemana, establecerFechaSemana] = useState<Date | null>(null);
-  const [mesSeleccionado, establecerMesSeleccionado] = useState<Date | null>(null);
+  const [mesSeleccionado, establecerMesSeleccionado] = useState<Date | null>(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [anioMesVisible, establecerAnioMesVisible] = useState(() => new Date().getFullYear());
   const [fechaInicial, establecerFechaInicial] = useState<Date | null>(null);
   const [fechaFinal, establecerFechaFinal] = useState<Date | null>(null);
@@ -249,10 +253,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       establecerDeposito(detalle.deposito);
       establecerComparacionMensual(detalle.comparacionMensual);
       establecerCantidadRecurrencias(recurrencias.length);
-      establecerMovimientos(detalle.movimientos.map((movimiento) => ({
-        ...movimiento,
-        deposito_nombre: detalle.deposito.nombre,
-      })));
+      establecerCantidadMovimientos(detalle.cantidadMovimientos);
+      establecerCategoriasMovimientos(detalle.categoriasMovimientos);
+      establecerRevisionMovimientos(valor => valor + 1);
     } catch (error) {
       if (secuencia !== secuenciaCarga.current) return;
       const noEncontrado = error instanceof ErrorDeposito && error.codigo === 'deposito_no_encontrado';
@@ -260,7 +263,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         ? error.message
         : 'No se pudo cargar el depósito. Intentá nuevamente.';
       establecerDeposito(null);
-      establecerMovimientos([]);
+      establecerCantidadMovimientos(0);
+      establecerCategoriasMovimientos([]);
       establecerComparacionMensual(null);
       establecerErrorCarga(mensaje);
       if (!noEncontrado) mostrarAviso(mensaje, { tipo: 'error' });
@@ -270,21 +274,23 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   }, [depositoId, mostrarAviso]);
 
   useFocusEffect(useCallback(() => {
+    establecerEnfocada(true);
     cargarDetalle();
     return () => {
+      establecerEnfocada(false);
       secuenciaCarga.current += 1;
     };
   }, [cargarDetalle]));
 
   const categoriasDisponiblesFiltro = useMemo(() => {
-    const idsDisponibles = new Set(movimientos.map((movimiento) => movimiento.categoria));
+    const idsDisponibles = new Set(categoriasMovimientos);
     const categoriasPorTipo = tipoFiltro === 'ingreso'
       ? [...CATEGORIAS_INGRESO, ...CATEGORIAS_EGRESO.filter((categoria) => IDS_TRANSFERENCIA.has(categoria.id))]
       : tipoFiltro === 'egreso'
         ? CATEGORIAS_EGRESO
         : CATEGORIAS_FILTRO;
     return categoriasPorTipo.filter((categoria) => seccionDeposito==='recurrentes'||idsDisponibles.has(categoria.id));
-  }, [movimientos, tipoFiltro,seccionDeposito]);
+  }, [categoriasMovimientos, tipoFiltro,seccionDeposito]);
 
   const cambiarTipoFiltro = (tipo: SetStateAction<string>) => {
     establecerTipoFiltro(tipo);
@@ -347,6 +353,30 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         ? 'La fecha desde debe ser anterior o igual a la fecha hasta.'
         : null
     : null;
+
+  const filtrosConsulta = useMemo(() => {
+    let inicio: Date | null = null, fin: Date | null = null;
+    if (fechaFiltro === 'dia' && fechaDia) {
+      inicio = crearFechaSinHora(fechaDia);
+      fin = new Date(fechaDia.getFullYear(), fechaDia.getMonth(), fechaDia.getDate() + 1);
+    } else if (fechaFiltro === 'semana' && fechaSemana) {
+      inicio = obtenerRangoSemana(fechaSemana).inicio;
+      fin = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + 7);
+    } else if (fechaFiltro === 'mes' && mesSeleccionado) {
+      inicio = new Date(mesSeleccionado.getFullYear(), mesSeleccionado.getMonth(), 1);
+      fin = new Date(mesSeleccionado.getFullYear(), mesSeleccionado.getMonth() + 1, 1);
+    } else if (fechaFiltro === 'personalizado' && fechaInicial && fechaFinal) {
+      inicio = crearFechaSinHora(fechaInicial);
+      fin = new Date(fechaFinal.getFullYear(), fechaFinal.getMonth(), fechaFinal.getDate() + 1);
+    }
+    return { busqueda: busquedaAplicada, tipo: tipoFiltro, categoriaIds: categoriaFiltroIds.length ? categoriaFiltroIds : null,
+      montoMinimo: montoMinimoNumero, montoMaximo: montoMaximoNumero,
+      ...(inicio && fin ? { desde: inicio.toISOString(), hasta: fin.toISOString() } : {}) };
+  }, [busquedaAplicada, tipoFiltro, categoriaFiltroIds, montoMinimoNumero, montoMaximoNumero,
+    fechaFiltro, fechaDia, fechaSemana, mesSeleccionado, fechaInicial, fechaFinal]);
+  const { movimientos, cargando: cargandoMovimientos, cargandoMas, hayMas, error: errorMovimientos, cargarMas, reintentar } =
+    useMovimientosDeposito(depositoId, enfocada && deposito?.id === depositoId && seccionDeposito === 'movimientos', revisionMovimientos,
+      filtrosConsulta, !!errorMontoFiltro || !!errorFechaFiltro);
 
   const filtrosActivos = useMemo(() => {
     const filtros: {id:string;etiqueta:string;alQuitar:()=>void}[] = [];
@@ -557,10 +587,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     montoMinimoNumero, montoMaximoNumero, tipoFiltro, categoriaFiltroIds,
     fechaFiltro, fechaDia, fechaSemana, mesSeleccionado, fechaInicial, fechaFinal,
   ]);
-  const movimientosFiltrados = useMemo(
-    () => movimientos.filter(cumpleFiltros).sort((a, b) => Date.parse(b.fecha_hora) - Date.parse(a.fecha_hora)),
-    [movimientos, cumpleFiltros],
-  );
+  const movimientosFiltrados = movimientos;
   const categoriasContexto=seccionDeposito==='recurrentes'?CATEGORIAS_FILTRO:categoriasDisponiblesFiltro;
   const preajustesCategorias=obtenerPreajustesMovimientos(tipoFiltro,categoriasContexto.map(c=>({...c,tipo:IDS_INGRESO.has(c.id)?'ingreso':'egreso'})));
 
@@ -690,7 +717,14 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             </BuscadorFiltrosMovimientos>
             {seccionDeposito==='recurrentes'&&depositoId?<PanelRecurrencias depositoId={depositoId} tema={tema} alCambiar={()=>{void cargarDetalle();}} alCambiarCantidad={establecerCantidadRecurrencias} filtrar={fila=>cumpleFiltros({...fila,fecha_hora:fila.proxima_ejecucion})}/>:null}
             {seccionDeposito==='movimientos'?<>
-            {movimientos.length === 0 ? (
+            {cargandoMovimientos ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando movimientos del depósito" /> : errorMovimientos && movimientos.length === 0 ? (
+              <View style={estilos.estadoVacio}>
+                <Text style={estilosGlobales.textoError}>{errorMovimientos}</Text>
+                <Pressable accessibilityRole="button" onPress={reintentar} style={estilos.botonLimpiar}>
+                  <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
+                </Pressable>
+              </View>
+            ) : cantidadMovimientos === 0 ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.textoSecundario} name="receipt-outline" size={32} />
                 <Text style={[estilosGlobales.textoSecundario, estilos.textoEstadoVacio]}>
@@ -720,6 +754,11 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                 </Pressable>
               </View>
             )}
+            {movimientos.length > 0 && errorMovimientos ? <Text style={estilosGlobales.textoError}>{errorMovimientos}</Text> : null}
+            {hayMas ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: cargandoMas, busy: cargandoMas }}
+              disabled={cargandoMas} onPress={cargarMas} style={estilos.botonLimpiar}>
+              <Text style={estilos.textoBotonLimpiar}>{cargandoMas ? 'Cargando más movimientos…' : errorMovimientos ? 'Reintentar cargar más' : 'Cargar más movimientos'}</Text>
+            </Pressable> : null}
             </>:null}
           </View>
           </>

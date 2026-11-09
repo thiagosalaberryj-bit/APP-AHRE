@@ -106,6 +106,19 @@ requiere red.
 
 ## Búsqueda y filtros del detalle
 
+`consultarDetalleDeposito` devuelve el depósito, la cantidad y categorías del
+historial y la comparación mensual mediante agregaciones SQLite. No devuelve
+todo el historial. La comparación sigue usando todos los movimientos y ajustes
+del mes, independientemente de la página o los filtros visibles.
+`consultarPaginaMovimientosDeposito` verifica sesión y propiedad del depósito
+activo y devuelve hasta 50 filas ordenadas por fecha e identificador descendentes.
+El cursor usa ambos campos para no perder movimientos con la misma fecha.
+Se incluyen transferencias y se conserva la búsqueda por descripción, nombre e
+identificador de categoría, con caracteres de búsqueda tratados literalmente.
+`src/deposits/useDepositMovements.ts` coordina primera página, cargas adicionales,
+reintentos, bloqueo de doble envío y descarte de respuestas vencidas. Al abrir se
+consulta el mes actual; limpiar o cambiar fecha habilita el resto del historial.
+
 La búsqueda se aplica sobre la descripción y categoría de los movimientos del
 depósito. Al vaciar el texto vuelve a mostrarse el conjunto que cumpla los
 filtros seleccionados. La búsqueda funciona al mismo tiempo que los filtros.
