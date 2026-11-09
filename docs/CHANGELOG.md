@@ -18,6 +18,8 @@ documentación se registran en este archivo.
   conservado no genera movimientos financieros.
 - Demos sociales interactivas para creador y participante, restringidas a la
   cuenta local de desarrollo; no usan el servidor ni se habilitan en release.
+- Iconos de estado en el historial de deudas para pagos pendientes, confirmados,
+  rechazados y anulados, perdón y movimientos por incorporar, en ambos temas.
 
 ### Cambiado
 
@@ -29,7 +31,11 @@ documentación se registran en este archivo.
   de estadísticas y mantiene los acuerdos sociales sin cambios automáticos.
 - Menos descargas y escrituras sin novedades; reconciliación al reanudar y
   comprobaciones transaccionales para evitar propuestas cruzadas duplicadas.
-- Versión 0.8.0 y código Android 12; documentación vigente separada de antecedentes.
+- Inicio de Social sin límite de tarjetas: muestra todas las salas abiertas y las
+  cerradas con movimientos propios por registrar. Las tarjetas muestran el
+  contador, que descuenta incorporaciones locales sin esperar la sincronización.
+  Al completar los registros, las cerradas permanecen en Ver todas las salas.
+- Versión 0.8.0 y código Android 13; documentación vigente separada de antecedentes.
 
 ### Corregido
 
@@ -47,6 +53,9 @@ documentación se registran en este archivo.
 
 - 349 pruebas de app y 60 de backend aprobadas, cero fallos y cero omisiones,
   con SQLite real, MySQL temporal aislado, HTTP y WebSocket. TypeScript correcto.
+- Tras los ajustes de iconos y visibilidad de salas: 127 pruebas sociales
+  aprobadas, incluidas las nuevas comprobaciones en ambos temas, y TypeScript
+  correcto. Esta verificación específica complementa la ejecución conjunta anterior.
 - Pendiente: revisión en dispositivos, enlaces/QR, WSS detrás del proxy real y
   aceptación manual sin red y navegación nativa. Preparar una build no acredita esas pruebas.
 

@@ -106,7 +106,17 @@ export function cargarSocial() {
         porCobrar: formatearMontoSocial(cobrar / 100), porPagar: formatearMontoSocial(pagar / 100) };
     });
     const demo=typeof __DEV__!=='undefined'&&__DEV__&&contexto.usuario.correo_electronico==='pruebas@ahre.test';
-    const salas=[...salasLocales,...proyectarSalasOnline(online)].map(sala=>({...sala,demo}));
+    const cacheOperaciones=await contexto.conexion.getFirstAsync<{datos:string}>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='operaciones'",[contexto.usuario.id]);
+    const operaciones=cacheOperaciones?JSON.parse(cacheOperaciones.datos) as import('./online/types').OperacionPersonal[]:[];
+    const incorporaciones=await contexto.conexion.getAllAsync<{clave:string}>('SELECT clave FROM incorporaciones_sociales_locales WHERE usuario_id=?',[contexto.usuario.id]);
+    const incorporadas=new Set(incorporaciones.map(i=>i.clave));
+    const pendientesPorSala=new Map<string,Set<string>>();
+    for(const operacion of operaciones){
+      if(!operacion.salaId||operacion.incorporada||incorporadas.has(operacion.clave))continue;
+      const claves=pendientesPorSala.get(operacion.salaId)||new Set<string>();
+      claves.add(operacion.clave);pendientesPorSala.set(operacion.salaId,claves);
+    }
+    const salas=[...salasLocales,...proyectarSalasOnline(online)].map(sala=>({...sala,demo,movimientosPorRegistrar:pendientesPorSala.get(sala.id)?.size||0}));
     const personasOnline=online.flatMap(o=>o.sala.participantes.filter(p=>p.id!==o.personaPropiaId).map(p=>({id:p.id,nombre:p.nombre,apellido:'',apodo:'',iniciales:p.nombre.slice(0,2).toLocaleUpperCase('es'),activa:p.activa})));
     const deudas=deudasPrivadas.map(d=>{const a=acuerdos.find(a=>a.origenLocalId===d.id&&a.estado!=='rechazada');return {...d,ultimaActividad:[d.ultimaActividad,...(a?.pagos||[]).map(p=>p.fecha_decision||p.fecha),...(a?.perdon?[a.perdon.fecha]:[])].sort().at(-1)!,acuerdoOnlineId:a?.id||d.acuerdoOnlineId,invitacionOnline:a?.estado==='pendiente',soloOnline:false,estadoOnline:a?.estado,estado:a?.perdon?'Perdonada':d.estado};});
     const privadas=new Set(deudas.map(d=>d.id));

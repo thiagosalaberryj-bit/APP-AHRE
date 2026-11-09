@@ -18,7 +18,7 @@ export default function TarjetaResumenSala(propiedades: Omit<import('../../socia
     }
   };
   return <Pressable accessibilityRole="button" accessibilityLabel={`Abrir ${sala.nombre}`} accessibilityValue={{
-    text: `${sala.participantes.length + 1} personas, creada el ${sala.creadaEl.split('-').reverse().join('/')}, gastado ${sala.totalGastado}`
+    text: `${sala.participantes.length + 1} personas, creada el ${sala.creadaEl.split('-').reverse().join('/')}, gastado ${sala.totalGastado}, ${sala.estado === 'cerrada' ? 'cerrada' : 'abierta'}, ${sala.movimientosPorRegistrar} movimientos por registrar`
   }} accessibilityHint="Abre los gastos, balances y personas de esta sala." onPress={alAbrir} style={({
     pressed: presionado
   }) => [estilosGlobales.tarjeta, estilos.deudaHistorial, estilos.tarjetaPanel, presionado && estilos.deudaHistorialPresionada]}>
@@ -40,5 +40,7 @@ export default function TarjetaResumenSala(propiedades: Omit<import('../../socia
           <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.encabezadoSeccion, estilos.tituloTarjetaPanel]}>{sala.totalGastado}</Text>
         </View>
       </View>
+      {sala.estado==='cerrada'?<Text style={estilosGlobales.textoSecundario}>Cerrada</Text>:null}
+      {sala.movimientosPorRegistrar>0?<View style={estilos.filaCampos}><Ionicons name="wallet-outline" size={18} color={tema.foco}/><Text style={[estilosGlobales.etiqueta,estilos.textoFlexible]}>{sala.movimientosPorRegistrar} {sala.movimientosPorRegistrar===1?'movimiento por registrar':'movimientos por registrar'}</Text></View>:null}
     </Pressable>;
 }

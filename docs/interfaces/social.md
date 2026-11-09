@@ -156,10 +156,16 @@ social. Social y el historial usan el mismo diseño compacto por defecto.
 Perdonar deuda y Registrar pago reutilizan el mismo tamaño en modo de solo
 lectura, sin flecha ni acción. No se mantiene una segunda card de resumen.
 
-Debajo aparecen hasta cinco deudas pendientes recientes y hasta tres salas
-abiertas. Ver todas las deudas y Ver todas las salas conservan sus flechas.
-Sin pendientes se muestran cero y el estado al día; sin salas abiertas se indica
-su ausencia. Ya no se utiliza el parámetro de demostración sinDeudas.
+Debajo aparecen hasta cinco deudas pendientes recientes y todas las salas
+abiertas o con movimientos propios por registrar, sin límite de tarjetas.
+Las salas cerradas muestran su estado y las tarjetas indican cuántos movimientos
+faltan incorporar a los depósitos de esta cuenta. El contador descuenta las
+incorporaciones locales sin esperar la sincronización. Una sala cerrada sale del
+inicio al completar sus registros y sigue disponible en Ver todas las salas.
+El límite de creación de salas administradas no cambia. Ver todas las deudas y
+Ver todas las salas conservan sus flechas. Sin pendientes se muestran cero y el
+estado al día; sin salas abiertas ni registros pendientes se indica su ausencia.
+Ya no se utiliza el parámetro de demostración sinDeudas.
 
 El historial de deudas busca por nombre, apellido, apodo, descripción y origen.
 Combina Todas/Pendientes/Saldadas y agrupa por mes expandible, con X de Y saldadas.

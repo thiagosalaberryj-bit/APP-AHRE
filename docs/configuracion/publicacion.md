@@ -36,7 +36,7 @@ El comando envía el código local a EAS y devuelve el seguimiento. Descargar el
 APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
-entrega. El estado actual declara versión 0.8.0 y `android.versionCode` 12;
+entrega. El estado actual declara versión 0.8.0 y `android.versionCode` 13;
 la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
 `Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
@@ -90,3 +90,12 @@ de incorporación por sala, bloqueo de acciones y navegación durante operacione
 historial de origen unificado y etiquetas Saldada/Perdonada. Actualiza el mismo
 PR sin mergearlo. La compilación en EAS no despliega el servidor ni publica el
 APK en la landing. La build 11 anterior conserva su comportamiento original.
+
+## Build 13: historial y salas pendientes
+
+La build 12 fue cancelada a pedido del líder. La entrega interna 0.8.0/13 añade
+iconos de estado al historial de deudas y muestra sin límite todas las salas
+abiertas o con movimientos propios por registrar en el inicio de Social. Las
+tarjetas indican el estado cerrado y la cantidad pendiente; las incorporaciones
+locales actualizan el contador sin esperar la sincronización. Generar esta APK
+no despliega el servidor ni publica la descarga en la web.

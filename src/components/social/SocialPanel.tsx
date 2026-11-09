@@ -2,7 +2,6 @@ import OpcionesSalas from './RoomActionsMenu';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
 import type { NombreIcono } from '../../constants/movimientos';
 import { useDatosSociales } from '../../social/SocialDataContext';
-import { LIMITE_SALAS_ACTIVAS } from "../../social/socialConstants";
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import TituloSeccionSocial from './SocialSectionTitle';
@@ -41,7 +40,7 @@ export default function PanelSocial(propiedades: import('../../social/types').As
     estilos,
     estilosGlobales
   } = aspecto;
-  const activas = salasSociales.filter((sala) => sala.estado === 'abierta').sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion) || b.id.localeCompare(a.id)).slice(0, LIMITE_SALAS_ACTIVAS);
+  const activas = salasSociales.filter((sala) => sala.estado === 'abierta'||sala.movimientosPorRegistrar>0).sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion) || b.id.localeCompare(a.id));
   const pendientes = deudasSociales.filter(deuda => !deuda.saldada);
   const recientes = [...pendientes].sort((a, b) => (b.ultimaActividad||b.fechaISO).localeCompare(a.ultimaActividad||a.fechaISO) || b.id.localeCompare(a.id)).slice(0, 5);
   return <>
@@ -86,7 +85,7 @@ export default function PanelSocial(propiedades: import('../../social/types').As
       </View>
       <View style={estilos.grupo}>
         <TituloSeccionSocial titulo="Salas" etiqueta="Ver todas las salas" alAbrir={alVerSalas} {...aspecto} />
-        {activas.length ? activas.map(sala => <TarjetaResumenSala key={sala.id} sala={sala} alAbrir={() => abrirSala(sala.id)} {...aspecto} />) : <Text style={estilosGlobales.textoSecundario}>No tenés salas activas.</Text>}
+        {activas.length ? activas.map(sala => <TarjetaResumenSala key={sala.id} sala={sala} alAbrir={() => abrirSala(sala.id)} {...aspecto} />) : <Text style={estilosGlobales.textoSecundario}>No tenés salas abiertas ni movimientos de salas por registrar.</Text>}
       </View>
     </>;
 }

@@ -3,6 +3,7 @@ import test from 'node:test';
 import { preparar } from './helpers/localDatabase.ts';
 import { presente } from './helpers/assertions.ts';
 import { interfazSocial } from './helpers/socialInterface.ts';
+import { TEMAS } from '../src/styles/colors.ts';
 
 for(const tema of ['claro','oscuro'] as const)test(`la selección financiera bloquea cerrar el modal hasta terminar el guardado en ${tema}`,async prueba=>{
   const {e,abierta}=await prepararDemo(prueba),sala=presente((await e.cargarSocial()).salas.find(s=>s.id===abierta.id));
@@ -187,6 +188,29 @@ test('rechazar la invitación demo la retira del historial del destinatario',asy
  assert.ok(!(await e.cargarSocial()).deudas.some(d=>d.id===invitacion.id));
 });
 
+for(const tema of ['claro','oscuro'] as const)test(`Social muestra todas las salas abiertas y las cerradas con registros pendientes sin límite en ${tema}`,async prueba=>{
+ const {e,datos}=await prepararDemo(prueba);await e.sincronizarSocialOnline();
+ const fila=presente(e.base.prepare('SELECT datos FROM salas_online_locales WHERE usuario_id=? LIMIT 1').get(datos.usuarioId));
+ const original=JSON.parse(String(fila.datos)) as import('../src/social/online/types.ts').RespuestaSala;
+ for(let i=0;i<5;i++){
+   const copia={...original,sala:{...original.sala,id:'sala-listado-'+i,nombre:'Sala visible '+i,estado:'abierta'}};
+   e.base.prepare('INSERT INTO salas_online_locales(usuario_id,sala_id,datos,administrador,persona_propia_id,fecha_actualizacion) VALUES(?,?,?,?,?,?)').run(datos.usuarioId,copia.sala.id,JSON.stringify(copia),0,copia.personaPropiaId,new Date().toISOString());
+ }
+ const operaciones=await e.leerDatosOnline<import('../src/social/online/types.ts').OperacionPersonal[]>(datos.usuarioId,'operaciones',[]);
+ const salas=(await e.cargarSocial()).salas;
+ const cerrada=presente(salas.find(s=>s.estado==='cerrada'&&s.movimientosPorRegistrar>0));
+ const vista=interfazSocial(e,tema);await vista.abrir();
+ for(let i=0;i<5;i++)assert.ok(vista.buscarBoton('Abrir Sala visible '+i));
+ assert.ok(vista.buscarBoton('Abrir '+cerrada.nombre));
+ assert.ok(vista.texto(vista.buscarBoton('Abrir '+cerrada.nombre)).includes('movimientos por registrar'));
+ for(const sala of salas.filter(s=>s.estado==='cerrada'&&!s.movimientosPorRegistrar))assert.ok(!vista.todos().some(n=>n.props.accessibilityLabel==='Abrir '+sala.nombre));
+ for(const operacion of operaciones.filter(o=>o.salaId===cerrada.id&&!o.incorporada))await e.incorporarOperacionPersonal(operacion,{depositoId:datos.depositos[0].id});
+ await vista.asentar();
+ assert.equal(presente((await e.cargarSocial()).salas.find(s=>s.id===cerrada.id)).movimientosPorRegistrar,0);
+ assert.ok(!vista.todos().some(n=>n.props.accessibilityLabel==='Abrir '+cerrada.nombre));
+ for(let i=0;i<5;i++)assert.ok(vista.buscarBoton('Abrir Sala visible '+i));
+});
+
 test('la sala cerrada indica incorporaciones pendientes y las actualiza con el registro local',async prueba=>{
  const {e,datos}=await prepararDemo(prueba);await e.sincronizarSocialOnline();
  const operaciones=await e.leerDatosOnline<import('../src/social/online/types.ts').OperacionPersonal[]>(datos.usuarioId,'operaciones',[]);
@@ -339,6 +363,10 @@ for(const tema of ['claro','oscuro'] as const)test(`la misma deuda demo permite 
   const saldo=()=>Number(e.base.prepare('SELECT SUM(saldo_actual) saldo FROM depositos').get()!.saldo);
   const cantidad=()=>Number(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n);
   const inicial=saldo(),movimientos=cantidad(),vista=interfazSocial(e,tema);
+  const comprobarIcono=(etiqueta:string,icono:string,color:string)=>{
+    const indicador=presente(vista.todos().find(n=>n.type==='Icon'&&n.props.accessibilityLabel===etiqueta));
+    assert.equal(indicador.props.name,icono);assert.equal(indicador.props.color,color);
+  };
   const abrirDetalle=()=>vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
   const cache=async()=>presente((await e.leerDatosOnline<import('../src/social/online/types.ts').DeudaOnline[]>(datos.usuarioId,'deudas',[])).find(d=>d.id===deuda.id));
   await abrirDetalle();assert.ok(vista.texto().includes('Simular respuesta de Bruno'));
@@ -347,8 +375,10 @@ for(const tema of ['claro','oscuro'] as const)test(`la misma deuda demo permite 
   await vista.pulsar('Depósito');await vista.pulsar(deposito.nombre,true);await vista.pulsar('Informar pago realizado');
   assert.equal(saldo(),inicial-100);assert.equal((await cache()).pendiente,1000);
   await abrirDetalle();assert.ok(vista.texto().includes('En espera de Bruno'));
+  comprobarIcono('Pendiente de confirmación','time-outline',TEMAS[tema].textoSecundario);
   await vista.pulsar('Simular respuesta de Bruno');await vista.pulsar('Rechazar pago de $ 100');
   assert.ok(vista.texto().includes('Rechazado por Bruno'));assert.equal((await cache()).pendiente,1000);
+  comprobarIcono('Pago rechazado','close-circle-outline',TEMAS[tema].error);
   assert.equal(saldo(),inicial-100);assert.equal(cantidad(),movimientos+1);
   const rechazo=(await cache()).pagos[0];
   const flecha=presente(vista.todos().find(n=>n.type==='Pressable'&&n.props.accessibilityLabel==='Ver movimiento: Pago · $ 100'));
@@ -361,12 +391,15 @@ for(const tema of ['claro','oscuro'] as const)test(`la misma deuda demo permite 
   const aceptado=presente((await cache()).pagos.find(p=>p.monto===200));
   assert.equal(aceptado.estado,'confirmado');assert.equal((await cache()).pendiente,800);
   assert.ok(vista.texto().includes('Confirmado por Bruno'));assert.deepEqual(vista.buscarBoton('Ver importe Pagaste').props.accessibilityValue,{text:'$ 200'});
+  comprobarIcono('Pago confirmado','checkmark-circle-outline',TEMAS[tema].exito);
   assert.equal(saldo(),inicial-300);assert.equal(cantidad(),movimientos+2);
   await e.simularRespuestaDemo(deuda.id,{decision:'confirmado',pagoId:aceptado.id,pendienteEsperado:1000});
   assert.equal((await cache()).pendiente,800);assert.equal(saldo(),inicial-300);
   await e.registrarPagoConSeleccion(deuda.id,50,{depositoId:deposito.id},false);
   await abrirDetalle();await vista.pulsar('Simular respuesta de Bruno');await vista.pulsar('Perdonarme $ 800');
   assert.ok(vista.texto().includes('Te perdonaron · $ 800'));assert.equal((await cache()).pendiente,0);
+  comprobarIcono('Deuda perdonada','heart-outline',TEMAS[tema].foco);
+  comprobarIcono('Origen de la deuda','document-text-outline',TEMAS[tema].textoSecundario);
   assert.equal((await cache()).pagos.find(p=>p.monto===50)?.estado,'rechazado');
   assert.equal(saldo(),inicial-350);assert.equal(cantidad(),movimientos+3);
   assert.deepEqual(vista.buscarBoton('Ver importe Pagaste').props.accessibilityValue,{text:'$ 200'});
