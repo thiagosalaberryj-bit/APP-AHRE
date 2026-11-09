@@ -128,8 +128,7 @@ Cada mes tiene una revisión de solicitud: plegarlo descarta tanto la respuesta
 pendiente como las filas posteriores a las primeras 50. La apertura deja dibujar
 el estado de carga mediante `src/utils/renderFrame.ts` antes de preparar sus
 tarjetas. El hook también fija la referencia del encabezado durante los cambios
-de altura y gestiona la acción «Volver arriba», separada del contenido mediante
-`MovementScrollTopButton.tsx` para no cubrir filas.
+de altura.
 
 La búsqueda se aplica sobre la descripción y categoría de los movimientos del
 depósito. Al vaciar el texto vuelve a mostrarse el conjunto que cumpla los

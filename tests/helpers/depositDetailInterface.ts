@@ -6,13 +6,15 @@ import type { Movimiento } from '../../src/database/types.ts';
 export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opciones: {
   pantalla?: 'deposito' | 'movimientos';
   esperarDibujo?: () => Promise<void>;
-  reducirMovimiento?: boolean;
+  esperarOpciones?: () => Promise<void>;
+  esperarMeses?: () => Promise<void>;
   consultarPagina?: typeof import('../../src/deposits/depositService.ts').consultarPaginaMovimientosDeposito;
 } = {}) {
   const casillas: { valor?: unknown; current?: unknown; deps?: readonly unknown[]; limpiar?: () => void }[] = [];
   let indice = 0, efectos: (() => unknown)[] = [], arbol: unknown;
   const recuentos = { consultas: 0, filas: 0, meses: 0 };
   const posicionesScroll: { y: number; animated: boolean }[] = [];
+  const textosRenderizados: string[] = [];
   const consultas: { filtros: import('../../src/types/forms.ts').FiltrosHistorial; cursor?: { fecha_hora: string; id: string } | null }[] = [];
   let movimientos = movimientosIniciales;
   const iguales = (a?: readonly unknown[], b?: readonly unknown[]) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
@@ -56,6 +58,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     && (!filtros.categoriaIds || filtros.categoriaIds.includes(m.categoria))
     && (filtros.montoMinimo == null || m.monto >= filtros.montoMinimo) && (filtros.montoMaximo == null || m.monto <= filtros.montoMaximo));
   const consultarMeses = async (_id: string, filtros: import('../../src/types/forms.ts').FiltrosHistorial) => {
+    await opciones.esperarMeses?.();
     recuentos.meses++;
     const meses = new Map<string, number>();
     for (const fila of filtrar(filtros)) {
@@ -77,7 +80,6 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     'react-native': {
       ...Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'Modal', 'KeyboardAvoidingView', 'ActivityIndicator'].map(n => [n, n])),
       Platform: { OS: 'android' }, StyleSheet: { create: (valor: unknown) => valor },
-      AccessibilityInfo: { isReduceMotionEnabled: async () => opciones.reducirMovimiento || false, addEventListener: () => ({ remove() {} }) },
       useWindowDimensions: () => ({ width: 360, height: 780 }),
     },
     '@react-navigation/native': { useFocusEffect: (callback: () => unknown) => react.useEffect(() => enfocada ? callback() : undefined, [callback, enfocada]) },
@@ -96,8 +98,8 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     },
     '../movements/movementService': {
       cargarMesesHistorialMovimientos: consultarMeses, cargarPaginaHistorialMovimientos: consultarPagina,
-      cargarOpcionesHistorialMovimientos: async () => ({ usuarioId: 'usuario', cantidad: movimientos.length,
-        categorias: [...new Map(movimientos.map(m => [m.tipo + m.categoria, { tipo: m.tipo, categoria: m.categoria }])).values()], depositos: [deposito] }),
+      cargarOpcionesHistorialMovimientos: async () => { await opciones.esperarOpciones?.(); return { usuarioId: 'usuario', cantidad: movimientos.length,
+        categorias: [...new Map(movimientos.map(m => [m.tipo + m.categoria, { tipo: m.tipo, categoria: m.categoria }])).values()], depositos: [deposito] }; },
     },
     './MovementCard': { __esModule: true, default: 'MovementCard' },
     './CollapsibleSectionHeader': { __esModule: true, default: 'CollapsibleSectionHeader' },
@@ -115,6 +117,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
   function renderizar() {
     indice = 0; efectos = [];
     arbol = pantalla(propiedades as unknown as Parameters<typeof pantalla>[0]);
+    textosRenderizados.push(nodos(arbol).filter(nodo => nodo.type === 'Text').map(nodo => JSON.stringify(nodo.props.children)).join(' '));
     efectos.forEach(efecto => efecto());
     return arbol;
   }
@@ -123,7 +126,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     if (Array.isArray(nodo)) return nodo.flatMap(nodos);
     if (!nodo || typeof nodo !== 'object' || !('props' in nodo)) return [];
     const componente = nodo as { type: unknown; props: Record<string, unknown> };
-    if (typeof componente.type === 'function' && ['ListaMesesMovimientos', 'BotonSubirMovimientos'].includes(componente.type.name)) return nodos(componente.type(componente.props));
+    if (typeof componente.type === 'function' && componente.type.name === 'ListaMesesMovimientos') return nodos(componente.type(componente.props));
     const elemento = nodo as { type: string; props: Record<string, unknown> };
     return [elemento, ...nodos(elemento.props.children)];
   }
@@ -138,7 +141,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     callback(...argumentos); renderizar();
   }
   return {
-    renderizar, asentar, buscar, nodos: (nodo: unknown = arbol) => nodos(nodo), invocar, recuentos, consultas, posicionesScroll,
+    renderizar, asentar, buscar, nodos: (nodo: unknown = arbol) => nodos(nodo), invocar, recuentos, consultas, posicionesScroll, textosRenderizados,
     prepararScroll(posicionBoton = 550, posicionEncabezado = 200) {
       const componente = (arbol: unknown): Record<string, unknown> | null => {
         if (Array.isArray(arbol)) { for (const hijo of arbol) { const encontrado = componente(hijo); if (encontrado) return encontrado; } return null; }

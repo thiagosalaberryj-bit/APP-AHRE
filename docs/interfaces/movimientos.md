@@ -306,10 +306,11 @@ por aparecer, subir, permanecer quieto ni mostrar un error; tampoco descarga
 filas de meses plegados. Las mediciones pendientes se invalidan al detener
 el gesto o cambiar filtros. Los errores conservan los datos y permiten reintento manual.
 
-Al bajar más de una pantalla aparece una flecha «Volver arriba» en una franja
-separada bajo el área desplazable: no tapa registros ni captura sus toques.
-Vuelve al inicio con desplazamiento animado, salvo que el sistema solicite
-reducir movimiento, y cancela cualquier carga automática del gesto previo.
+El estado de carga continúa mientras se consultan las opciones y los meses de
+los criterios actuales, incluso en el render anterior a iniciar esa consulta.
+«Sin resultados» y «Todavía no hay movimientos» se muestran solo después de
+recibir la respuesta correspondiente. Esto evita el parpadeo al entrar, volver
+a la pestaña o limpiar filtros. La flecha y la franja de volver arriba se retiraron.
 
 ### Buscador
 

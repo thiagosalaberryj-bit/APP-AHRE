@@ -29,6 +29,38 @@ const iniciar = (prueba: import('node:test').TestContext, filas = datos, opcione
 };
 const probar = (nombre: string, ejecutar: (prueba: import('node:test').TestContext) => Promise<void>) => test(pantalla + ': ' + nombre, ejecutar);
 
+if (pantalla === 'movimientos') probar('no muestra vacíos transitorios entre opciones, meses y primera página ni al volver a enfocar', async prueba => {
+  let liberarOpciones!: () => void, liberarMeses!: () => void, dibujar!: () => void;
+  const opciones = new Promise<void>(resolver => { liberarOpciones = resolver; });
+  const meses = new Promise<void>(resolver => { liberarMeses = resolver; });
+  const cuadro = new Promise<void>(resolver => { dibujar = resolver; });
+  const e = iniciar(prueba, datos, { esperarOpciones: () => opciones, esperarMeses: () => meses, esperarDibujo: () => cuadro });
+  const sinParpadeo = () => assert.ok(e.textosRenderizados.every(texto => !/Sin resultados|Todavía no hay movimientos/.test(texto)), 'No debe presentar vacíos antes de terminar la consulta');
+  await e.asentar(); sinParpadeo();
+  liberarOpciones(); await e.asentar(); sinParpadeo(); assert.equal(e.consultas.length, 0);
+  liberarMeses(); await e.asentar(); sinParpadeo(); assert.equal(tarjetas(e).length, 0);
+  dibujar(); await e.asentar(); sinParpadeo(); assert.equal(tarjetas(e).length, 3);
+  e.cambiarEnfoque(false); await e.asentar(); e.cambiarEnfoque(true); await e.asentar();
+  sinParpadeo(); assert.equal(tarjetas(e).length, 3);
+});
+
+if (pantalla === 'movimientos') probar('los vacíos reales aparecen solo después de responder y desaparecen al cambiar criterios', async prueba => {
+  let liberar!: () => void, espera = Promise.resolve();
+  const e = iniciar(prueba, datos, { esperarMeses: () => espera }); await e.asentar();
+  espera = new Promise<void>(resolver => { liberar = resolver; }); e.textosRenderizados.length = 0;
+  e.invocar(e.buscar('FiltroCategoriasMovimientos'), 'establecerCategoriaFiltroIds', ['sin-coincidencias']); await e.asentar();
+  assert.ok(e.textosRenderizados.every(texto => !texto.includes('Sin resultados')));
+  liberar(); await e.asentar(); assert.ok(e.textosRenderizados.at(-1)?.includes('Sin resultados'));
+  e.textosRenderizados.length = 0;
+  e.invocar(e.buscar('MovementSearchFilters'), 'alLimpiar'); await e.asentar();
+  assert.ok(e.textosRenderizados.every(texto => !texto.includes('Sin resultados'))); assert.equal(tarjetas(e).length, 3);
+  let liberarVacia!: () => void;
+  const esperaVacia = new Promise<void>(resolver => { liberarVacia = resolver; });
+  const vacia = iniciar(prueba, [], { esperarMeses: () => esperaVacia }); await vacia.asentar();
+  assert.ok(vacia.textosRenderizados.every(texto => !/Sin resultados|Todavía no hay movimientos/.test(texto)));
+  liberarVacia(); await vacia.asentar(); assert.ok(vacia.textosRenderizados.at(-1)?.includes('Todavía no hay movimientos'));
+});
+
 probar('sin filtros iniciales, mes actual abierto y meses anteriores plegados sin consultas de filas', async prueba => {
   const e = iniciar(prueba); await e.asentar();
   assert.deepEqual(tarjetas(e), ['nuevo', 'igual', 'ingreso']); assert.equal(e.consultas.length, 1);
@@ -112,21 +144,6 @@ probar('cerrar un mes descarta la página pendiente y no repone sus filas al rea
   assert.equal(tarjetas(e).length, 50); assert.equal(e.consultas.length, 2);
 });
 
-probar('volver arriba aparece al bajar, queda fuera de los registros y respeta reducir movimiento', async prueba => {
-  for (const reducirMovimiento of [false, true]) {
-    const e = iniciar(prueba, datos, { reducirMovimiento }); await e.asentar(); e.prepararScroll();
-    assert.ok(!e.nodos().some(n => n.props.accessibilityLabel === 'Volver arriba'));
-    const scroll = e.buscar('ScrollView');
-    e.invocar(scroll, 'onScroll', { nativeEvent: { contentOffset: { y: 900 }, layoutMeasurement: { height: 600 } } });
-    const subir = e.nodos().find(n => n.props.accessibilityLabel === 'Volver arriba')!; assert.ok(subir);
-    assert.ok(!e.nodos(scroll.props.children).some(n => n.props.accessibilityLabel === 'Volver arriba'));
-    e.invocar(subir, 'onPress');
-    assert.deepEqual(e.posicionesScroll.at(-1), { y: 0, animated: !reducirMovimiento });
-    assert.ok(!e.nodos().some(n => n.props.accessibilityLabel === 'Volver arriba'));
-    assert.equal(e.consultas.length, 1);
-  }
-});
-
 probar('plegar y desplegar conserva la posición y detiene la carga automática anterior', async prueba => {
   const volumen = Array.from({ length: 600 }, (_, i) => movimiento(String(i).padStart(5,'0'), fecha(1)));
   const e = iniciar(prueba, volumen); await e.asentar(); e.prepararScroll(550,100);
@@ -140,9 +157,9 @@ probar('plegar y desplegar conserva la posición y detiene la carga automática 
   e.invocar(scroll, 'onContentSizeChange', 360, 7000);
   assert.deepEqual(e.posicionesScroll.at(-1), { y: 1200, animated: false });
   e.invocar(scroll, 'onScroll', evento(1300)); await e.asentar(); assert.equal(e.consultas.length, 1);
-  const subir = e.nodos().find(n => n.props.accessibilityLabel === 'Volver arriba')!;
-  e.invocar(subir, 'onPress'); e.invocar(scroll, 'onContentSizeChange', 360, 7000);
-  assert.equal(e.posicionesScroll.at(-1)?.y, 0);
+  const restauraciones = e.posicionesScroll.length;
+  e.invocar(scroll, 'onScrollBeginDrag', evento(1300)); e.invocar(scroll, 'onContentSizeChange', 360, 7000);
+  assert.equal(e.posicionesScroll.length, restauraciones);
 });
 
 probar('debounce consulta coincidencias fuera de la página y limpiar cancela la búsqueda pendiente', async prueba => {

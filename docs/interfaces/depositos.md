@@ -204,10 +204,6 @@ y la persona sigue desplazándose hacia abajo, incluida la inercia de ese gesto.
 No se activa por aparecer, subir, quedarse quieto ni cambiar filtros. Un error
 requiere reintento manual. El botón conserva su acción táctil y accesible.
 
-Después de bajar más de una altura visible aparece «Volver arriba», con una
-flecha de 44 puntos de área táctil. Está en una franja fuera del ScrollView,
-sin superponerse a registros. Vuelve al inicio sin activar nuevas cargas y
-respeta la preferencia del sistema para reducir movimiento.
 La consulta aplica búsqueda, tipo, categorías, montos y fechas antes de paginar;
 las categorías disponibles se obtienen del historial completo del depósito.
 Cambiar un criterio reinicia los meses; cambiar tema, abrir un modal o plegar

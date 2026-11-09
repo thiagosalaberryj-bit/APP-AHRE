@@ -91,8 +91,10 @@ copia completa en memoria.
 Plegar un mes recorta su caché a 50 filas e invalida sus solicitudes pendientes;
 al reabrirlo vuelve a la primera página, con feedback antes de preparar tarjetas.
 El encabezado se usa como referencia para restaurar la posición después del
-cambio de altura. «Volver arriba» aparece al superar una pantalla de distancia,
-fuera del contenido desplazable, y cancela la intención de carga automática.
+cambio de altura. La pantalla distingue opciones pendientes, consulta mensual
+pendiente y resultados respondidos. El hook expone `consultaResuelta` para el
+contexto actual (criterios, revisión y consultas); la pantalla conserva la carga
+hasta recibir esa respuesta y evita vacíos transitorios al entrar o reenfocar.
 
 ## Funcionamiento offline del historial
 

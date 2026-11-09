@@ -86,8 +86,8 @@ comprueba que monta solo 50 tarjetas y agrega otras 50 al pedir más, sin duplic
 un doble toque. Se ejecuta en ambas pantallas: valida meses plegados sin consultas
 de filas, apertura con carga y reapertura limitada a las primeras 50 filas,
 incluso después de mostrar 300. Verifica feedback previo a la consulta, descarte
-de páginas al cerrar, posición del encabezado y flecha fuera de los registros,
-incluida la preferencia de reducir movimiento. Comprueba también el
+de páginas al cerrar, posición del encabezado y ausencia de vacíos transitorios
+durante las etapas de carga de Movimientos. Comprueba también el
 indicador animado y la carga automática solo con botón visible y desplazamiento
 descendente. `tests/visibleLoadMore.test.ts` cubre mediciones pendientes, dirección,
 inercia y ausencia de cargas al detenerse. Otros casos cubren debounce, filtros, reintentos y respuestas
@@ -115,8 +115,8 @@ desde esta rama y seguir estos pasos:
    Acumular 300 filas, plegar y reabrir el mes: debe mostrar feedback debajo del
    título y volver a 50 filas. Repetir mientras hay una página pendiente para
    confirmar que no reaparece al terminar. Comprobar que el encabezado no salta
-   al final al cambiar la altura y que la flecha de volver arriba queda fuera
-   de los registros, también con reducir movimiento activado.
+   al final al cambiar la altura. Al entrar a Movimientos o volver a la pestaña,
+   no debe aparecer «Sin resultados» entre las distintas etapas de carga.
    Cambiar búsqueda o filtros debe reiniciar los meses e incluir coincidencias
    que no estaban en la primera página, sin descargar meses plegados.
 5. Cerrar la sesión de pruebas y volver a ingresar a la cuenta habitual al terminar.
@@ -167,12 +167,21 @@ conservada solo en el entorno del proceso de pruebas.
   La última ejecución cubre además ambas listas sin filtros iniciales, meses
   históricos plegados sin descargar filas, caché al reabrir y carga automática
   condicionada por botón visible y desplazamiento descendente, con indicador animado.
-  Se agregaron ocho casos para feedback antes de preparar filas, reapertura de
-  300 a 50 movimientos, descarte de páginas al cerrar, restauración de posición
-  y flecha fuera de los registros con soporte para reducir movimiento.
+  Se cubrieron feedback antes de preparar filas, reapertura de 300 a 50
+  movimientos, descarte de páginas al cerrar y restauración de posición.
 - Limpieza: cero bases sintéticas restantes; proceso detenido, puerto cerrado
   y carpeta de datos temporal eliminada. Los logs locales se conservan bajo
   `.expo/validation/`, fuera de Git. No hubo cambios en los archivos del servidor.
 
 Esta ejecución valida integración MySQL/HTTP/WebSocket y los escenarios de las
 suites. La medición de fluidez con datos masivos en Android sigue pendiente.
+
+## Ajuste posterior de la interfaz de Movimientos
+
+Se retiraron la flecha y su franja. La corrección de vacíos transitorios se
+verificó con 27 casos de interfaz y la suite local completa: 390 aprobadas,
+cero fallos y 39 integraciones MySQL omitidas; no se levantó MySQL en esta
+repetición. `npm run typecheck` y el chequeo de variables sin uso de la app pasan.
+La prueba nueva observó todos los renders y detectó el parpadeo antes del cambio.
+Después comprueba entrada, reenfoque y limpieza de criterios sin vacíos prematuros,
+además de casos legítimos sin coincidencias y cuenta vacía una vez respondidos.

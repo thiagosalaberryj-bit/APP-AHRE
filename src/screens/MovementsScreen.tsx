@@ -29,7 +29,6 @@ import { ContextoAvisos } from '../contexts/ToastContext';
 import SelectorDeposito from '../components/DepositSelector';
 import EncabezadoPrincipal from '../components/MainHeader';
 import ListaMesesMovimientos from '../components/MovementMonthList';
-import BotonSubirMovimientos from '../components/MovementScrollTopButton';
 import { useMovimientosPorMes } from '../movements/useMonthlyMovements';
 import { RUTAS } from '../constants/routes';
 import {
@@ -451,6 +450,8 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
   const sinMovimientos = !cargando && cantidadTotal === 0;
   const sinResultados = !cargando && (cantidadTotal || 0) > 0 && datosMeses.meses.length === 0;
+  const esperandoHistorial = cargando || (!errorConsulta && !errorMontoFiltro
+    && (!enfocada || !usuarioId || !revisionHistorial || !datosMeses.consultaResuelta || datosMeses.cargando));
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
@@ -472,7 +473,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                 errorMontoFiltro={errorMontoFiltro} establecerMontoMinimo={establecerMontoMinimo} establecerMontoMaximo={establecerMontoMaximo}/>
             </BuscadorFiltrosMovimientos>
 
-            {cargando || datosMeses.cargando ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses"/> : errorConsulta || datosMeses.error ? (
+            {esperandoHistorial ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses"/> : errorConsulta || datosMeses.error ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.error} name="alert-circle-outline" size={32} />
                 <Text style={estilos.textoEstadoVacio}>{errorConsulta || datosMeses.error}</Text>
@@ -507,7 +508,6 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
             )}
           </View>
         </ScrollView>
-        <BotonSubirMovimientos visible={datosMeses.mostrarSubir} alSubir={datosMeses.volverArriba} tema={tema}/>
 
         <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={() => establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
                 <View style={estilos.listaSeccionesFiltro}>

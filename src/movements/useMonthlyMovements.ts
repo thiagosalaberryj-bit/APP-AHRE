@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, type ScrollView, type View, type NativeSyntheticEvent, type NativeScrollEvent } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ScrollView, View, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import type { FiltrosHistorial, MesHistorial, MovimientoVisible } from '../types/forms';
 import { crearCargaVisible } from './visibleLoadMore';
 import { esperarDibujo } from '../utils/renderFrame';
@@ -25,7 +25,7 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
   const [cargando, establecerCargando] = useState(false);
   const [error, establecerError] = useState<string | null>(null);
   const [intento, establecerIntento] = useState(0);
-  const [mostrarSubir, establecerMostrarSubir] = useState(false);
+  const [contextoResuelto, establecerContextoResuelto] = useState<object | null>(null);
   const secuencia = useRef(0), paginasActuales = useRef(paginas), abiertosActuales = useRef(abiertos);
   const mesesActuales = useRef(meses), habilitadoActual = useRef(habilitado && !invalido);
   habilitadoActual.current = habilitado && !invalido;
@@ -33,16 +33,10 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
   const botones = useRef(new Map<string, View>());
   const encabezados = useRef(new Map<string, View>());
   const solicitudesMes = useRef(new Map<string, number>());
-  const posicionScroll = useRef(0), subirVisible = useRef(false), reducirMovimiento = useRef(true);
+  const posicionScroll = useRef(0);
   const revisionAncla = useRef(0);
   const ancla = useRef<{ mes: string; y: number } | null>(null);
   const cargaVisible = useRef<ReturnType<typeof crearCargaVisible> | null>(null);
-  useEffect(() => {
-    let vigente = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then(valor => { if (vigente) reducirMovimiento.current = valor; }).catch(() => {});
-    const escucha = AccessibilityInfo.addEventListener('reduceMotionChanged', valor => { reducirMovimiento.current = valor; });
-    return () => { vigente = false; escucha.remove(); };
-  }, []);
   const actualizarPagina = (mes: string, pagina: PaginaMes) => {
     paginasActuales.current = { ...paginasActuales.current, [mes]: pagina };
     establecerPaginas(paginasActuales.current);
@@ -74,15 +68,18 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
     }
   }, [consultarPagina, filtros]);
 
+  // Identifica la consulta antes de que se ejecute su efecto: una lista vacía
+  // no representa todavía un resultado para los criterios nuevos.
+  const contextoConsulta = useMemo(() => ({}), [habilitado, revision, filtros, invalido, consultarMeses, cargarMes, intento]);
+
   useEffect(() => {
     const actual = ++secuencia.current;
     cargaVisible.current?.terminar();
     revisionAncla.current++; ancla.current = null;
     solicitudesMes.current.clear();
-    subirVisible.current = false; establecerMostrarSubir(false);
     paginasActuales.current = {}; abiertosActuales.current = {}; mesesActuales.current = [];
     establecerPaginas({}); establecerAbiertos({}); establecerMeses([]); establecerError(null);
-    if (!habilitado || invalido) { establecerCargando(false); return; }
+    if (!habilitado || invalido) { establecerCargando(false); establecerContextoResuelto(contextoConsulta); return; }
     establecerCargando(true);
     consultarMeses(filtros).then(filas => {
       if (actual !== secuencia.current) return;
@@ -93,9 +90,11 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
         void cargarMes(mesActual);
       }
     }).catch(() => { if (actual === secuencia.current) establecerError('No se pudieron cargar los meses. Intentá nuevamente.'); })
-      .finally(() => { if (actual === secuencia.current) establecerCargando(false); });
+      .finally(() => {
+        if (actual === secuencia.current) { establecerCargando(false); establecerContextoResuelto(contextoConsulta); }
+      });
     return () => { secuencia.current++; };
-  }, [habilitado, revision, filtros, invalido, consultarMeses, cargarMes, intento]);
+  }, [habilitado, revision, filtros, invalido, consultarMeses, cargarMes, intento, contextoConsulta]);
 
   const aplicarAlternancia = (mes: string) => {
     cargaVisible.current?.terminar();
@@ -135,11 +134,6 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
     }));
   };
   const cancelarAncla = () => { revisionAncla.current++; ancla.current = null; };
-  const volverArriba = () => {
-    cancelarAncla(); cargaVisible.current?.terminar();
-    referenciaScroll.current?.scrollTo({ y: 0, animated: !reducirMovimiento.current });
-    subirVisible.current = false; establecerMostrarSubir(false);
-  };
   const cargarActual = useRef(cargarMes); cargarActual.current = cargarMes;
   if (!cargaVisible.current) cargaVisible.current = crearCargaVisible(
     recibir => {
@@ -153,7 +147,7 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
     }) : [],
   );
   useEffect(() => () => { cargaVisible.current?.terminar(); }, []);
-  return { meses, abiertos, paginas, cargando, error, alternarMes, cargarMes, mostrarSubir: habilitado && mostrarSubir, volverArriba,
+  return { meses, abiertos, paginas, cargando, consultaResuelta: contextoResuelto === contextoConsulta, error, alternarMes, cargarMes,
     reintentar: () => establecerIntento(valor => valor + 1), referenciaScroll,
     referenciaBoton: (mes: string, nodo: View | null) => { if (nodo) botones.current.set(mes, nodo); else botones.current.delete(mes); },
     referenciaEncabezado: (mes: string, nodo: View | null) => { if (nodo) encabezados.current.set(mes, nodo); else encabezados.current.delete(mes); },
@@ -161,8 +155,6 @@ export function useMovimientosPorMes({ habilitado, revision, filtros, invalido, 
       onScroll: (evento: NativeSyntheticEvent<NativeScrollEvent>) => {
         const y = Math.max(0, evento.nativeEvent.contentOffset.y);
         posicionScroll.current = y;
-        const visible = y > (evento.nativeEvent.layoutMeasurement?.height || 600);
-        if (visible !== subirVisible.current) { subirVisible.current = visible; establecerMostrarSubir(visible); }
         cargaVisible.current?.desplazar(y);
       },
       onScrollBeginDrag: (evento: NativeSyntheticEvent<NativeScrollEvent>) => { cancelarAncla(); cargaVisible.current?.iniciar(evento.nativeEvent.contentOffset.y); },
