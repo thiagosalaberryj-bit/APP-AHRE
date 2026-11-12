@@ -60,3 +60,25 @@ La validación inicial del 9/11 no publicó ramas, PRs, APK ni despliegues.
 - Pendiente configuración Firebase/FCM v1 y comprobación nativa de push,
   permisos, app cerrada, reinicio y modo avión en Android físico.
 - No se despliega el servidor ni se publican APK en la landing durante este cierre.
+
+## Ajustes de tarjetas · 12 de noviembre de 2026
+
+Indicadores de movimientos por registrar en salas abiertas y cerradas, suma
+en Gastos y distribución por gasto sin aumentar la altura de las tarjetas.
+Los pagos de deudas sin gasto asociado se muestran en Pagos por registrar
+y abren el formulario existente con la operación correcta. La selección previa
+al cierre reduce pendientes sin registrar dinero anticipadamente.
+
+Etiquetas sobre importes compartidas por movimientos, deudas, recurrencias,
+MP, salas, gastos y balances: dos segundos al inicio, recorrido de un segundo
+y dos segundos al final antes de reiniciar. Se midieron ancho y escala de fuente;
+se conservan accesibilidad y desplazamiento manual con Reducir movimiento.
+Las etiquetas financieras indicadas por el líder usan peso regular y colores
+para distinguir importe, estado y revisión pendiente. Demos existentes actualizadas
+sin borrar decisiones ni añadir cargos por mostrar ejemplos.
+
+TypeScript correcto. Última ejecución: 57 pruebas (Social y etiqueta animada)
+aprobadas, sin fallos ni omisiones; comprobación de varias repeticiones y pausas
+con reloj simulado. Antes del ajuste de pausas, 84 pruebas de tarjetas, listas
+y Social aprobadas. La animación nativa requiere revisión visual en el teléfono.
+Este commit no incluye ajustes al comportamiento de plegado del encabezado.

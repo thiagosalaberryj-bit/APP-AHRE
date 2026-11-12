@@ -303,6 +303,7 @@ export async function prepararOperacionesDemo() {
   const cambio = await ejecutarTransaccion(async c => {
     const ejemploNuevo=await prepararEjemploDeudaDemo(usuario.id,c);
     const escenariosRecibidos=await prepararEscenariosRecibidosDemo(usuario.id,c);
+    for (const sala of await salas(c,usuario.id)) if(sala.sala.estado==='abierta'){const actualizada=finanzasDemo(sala,true);if(JSON.stringify(actualizada.misFinanzas)!==JSON.stringify(sala.misFinanzas))await guardarSala(c,usuario.id,actualizada);}
     const operaciones = await leer<OperacionPersonal[]>(c, usuario.id, 'operaciones', []);
     const interactiva=await prepararDeudaInteractivaDemo(usuario.id,c);
     let cambio = ejemploNuevo||escenariosRecibidos||interactiva;

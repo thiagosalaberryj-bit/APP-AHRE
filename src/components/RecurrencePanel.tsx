@@ -1,3 +1,4 @@
+import EtiquetaImporte from './AmountLabel';
 import {iniciarOperacionFinanciera} from '../social/financialOperation';
 import {useFocusEffect} from '@react-navigation/native';
 import {useCallback,useEffect,useRef,useState} from 'react';
@@ -67,7 +68,7 @@ export default function PanelRecurrencias({depositoId,tema,alCambiar,alCambiarCa
           <View style={tarjeta.filaMetadatos}><Text numberOfLines={1} style={tarjeta.metadatos}>{categoria?.nombre||'Recurrente'}</Text><Text numberOfLines={1} style={[tarjeta.fecha,{color:fila.activa?tema.foco:tema.textoSecundario}]}>{restante}</Text></View>
         </View>
         <View style={tarjeta.franjaImporte}>
-          <View style={tarjeta.filaTipo}><Text style={[tarjeta.tipo,{color}]}>{ingreso?'Ingreso':'Egreso'}</Text><Ionicons name="chevron-forward" size={16} color={tema.textoSecundario}/></View>
+          <View style={tarjeta.filaTipo}><EtiquetaImporte style={[tarjeta.tipo,{color}]}>{ingreso?'Ingreso':'Egreso'}</EtiquetaImporte><Ionicons name="chevron-forward" size={16} color={tema.textoSecundario}/></View>
           <Text numberOfLines={1} adjustsFontSizeToFit style={tarjeta.importe}>{monto(fila.monto)}</Text>
         </View>
       </Pressable>;

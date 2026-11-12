@@ -1,3 +1,4 @@
+import EtiquetaImporte from '../components/AmountLabel';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator, Alert, AppState, Linking, Modal, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
@@ -144,7 +145,7 @@ export default function PantallaMercadoPago({ navigation: navegacion, route: rut
             <View style={[e.iconoMovimiento,{backgroundColor:colorTipo+'18'}]}><Ionicons name={categoria?.icono || 'wallet-outline'} size={18} color={colorTipo}/></View>
             <Pressable accessibilityRole="button" accessibilityLabel={op.descripcion + '. Ver categoría y detalle'} style={e.cuerpoMovimiento} onPress={() => { if(op.decision==='pendiente'&&op.registrable&&borrador.tipo&&!op.revisionPendiente) establecerCategoriaId(op.id); else establecerEditandoId(op.id); }}>
               <View style={e.contenidoMovimiento}><Text numberOfLines={1} style={e.tituloMovimiento}>{borrador.descripcion || op.descripcion}</Text><View style={e.metadatos}><Text numberOfLines={1} style={[e.fecha,e.flexible]}>{op.revisionPendiente ? 'Cambio para revisar' : !op.registrable ? op.monto===0?'Sin importe':'No registrable' : categoria?.nombre || 'Sin categoría'}</Text><Text style={e.fecha}>{new Date(op.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}</Text></View></View>
-              <View style={e.finalMovimiento}><Text style={[e.tipoMovimiento,{color:colorTipo}]}>{borrador.tipo==='ingreso'?'Ingreso':borrador.tipo==='egreso'?'Egreso':'Sin identificar'}</Text><Text numberOfLines={1} adjustsFontSizeToFit style={e.importe}>{importe(op,borrador.tipo)}</Text></View>
+              <View style={e.finalMovimiento}><EtiquetaImporte enFila={false} style={[e.tipoMovimiento,{color:colorTipo}]}>{borrador.tipo==='ingreso'?'Ingreso':borrador.tipo==='egreso'?'Egreso':'Sin identificar'}</EtiquetaImporte><Text numberOfLines={1} adjustsFontSizeToFit style={e.importe}>{importe(op,borrador.tipo)}</Text></View>
             </Pressable>
             {seleccionable?<Pressable accessibilityRole="checkbox" accessibilityState={{checked:seleccionada}} accessibilityLabel={'Seleccionar '+op.descripcion} disabled={ocupada} style={e.controlMovimiento} onPress={()=>elegir(op.id)}><Ionicons name={seleccionada?'checkbox':'square-outline'} size={22} color={tema.foco}/></Pressable>:null}
           </View>;

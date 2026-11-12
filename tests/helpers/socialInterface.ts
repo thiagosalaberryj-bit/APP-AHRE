@@ -99,7 +99,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     }),
   };
   nativo.PanResponder = { create: (manejadores: Record<string, unknown>) => ({ panHandlers: manejadores }) };
-  nativo.StyleSheet = { create: <T>(x: T) => x, absoluteFill: { position: 'absolute' } };
+  nativo.StyleSheet = { create: <T>(x: T) => x, flatten: (x: unknown): unknown => Array.isArray(x) ? Object.assign({}, ...x.flat(Infinity).filter(Boolean)) : x, absoluteFill: { position: 'absolute' } };
   function cargar<T>(archivo: string): T {
     archivo = path.resolve(archivo);
     if (cache.has(archivo)) return cache.get(archivo) as T;

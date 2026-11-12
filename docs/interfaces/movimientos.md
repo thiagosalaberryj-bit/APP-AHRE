@@ -452,3 +452,16 @@ El reemplazo mantiene la categoría precargada salvo que se elija otra. La inver
 usa Otros ingresos u Otros gastos porque su tipo es opuesto; su finalidad es
 neutralizar el original y no representa una nueva fuente de ingreso o consumo.
 El botón para consultar el original queda separado del resumen del detalle.
+
+## Etiquetas sobre importes
+
+Las tarjetas financieras usan AmountLabel para su etiqueta encima del monto:
+movimientos, deudas, recurrencias, Mercado Pago, salas, gastos y balances.
+Solo el desborde horizontal inicia un ciclo común: dos segundos quieto al inicio, un segundo de desplazamiento
+y dos segundos quieto al final antes de reiniciar desde el comienzo.
+Cada pasada usa una animación nueva y no bloquea las interacciones.
+La etiqueta ocupa una línea sin puntos suspensivos ni reducción de letra.
+El importe, descripción y demás textos conservan su comportamiento.
+Al cambiar el texto o el ancho se vuelve a medir; salir de la app detiene
+la animación y desmontar elimina las suscripciones. Con Reducir movimiento
+se ofrece desplazamiento horizontal manual y lectura accesible del texto completo.

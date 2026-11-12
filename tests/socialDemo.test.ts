@@ -202,7 +202,7 @@ for(const tema of ['claro','oscuro'] as const)test(`Social muestra todas las sal
  const vista=interfazSocial(e,tema);await vista.abrir();
  for(let i=0;i<5;i++)assert.ok(vista.buscarBoton('Abrir Sala visible '+i));
  assert.ok(vista.buscarBoton('Abrir '+cerrada.nombre));
- assert.ok(vista.texto(vista.buscarBoton('Abrir '+cerrada.nombre)).includes('movimientos por registrar'));
+ assert.ok(vista.todos(vista.buscarBoton('Abrir '+cerrada.nombre)).some(n=>n.props.accessibilityLabel===`${cerrada.movimientosPorRegistrar} movimientos por registrar`));
  for(const sala of salas.filter(s=>s.estado==='cerrada'&&!s.movimientosPorRegistrar))assert.ok(!vista.todos().some(n=>n.props.accessibilityLabel==='Abrir '+sala.nombre));
  for(const operacion of operaciones.filter(o=>o.salaId===cerrada.id&&!o.incorporada))await e.incorporarOperacionPersonal(operacion,{depositoId:datos.depositos[0].id});
  await vista.asentar();
@@ -219,7 +219,7 @@ test('la sala cerrada indica incorporaciones pendientes y las actualiza con el r
  const vista=interfazSocial(e,'oscuro');await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId});
  assert.ok(vista.texto().includes(cantidad+' movimientos por registrar'));
  await e.incorporarOperacionPersonal(operacion,{depositoId:datos.depositos[0].id});await vista.asentar();
- assert.ok(vista.texto().includes(cantidad===1?'Todos tus movimientos están incorporados':(cantidad-1)+' movimientos por registrar'));
+ assert.ok(vista.texto().includes(cantidad===1?'Sin movimientos por registrar':(cantidad-1)+' movimientos por registrar'));
 });
 
 test('confirmar un pago bloquea rechazar y solo muestra carga en la acción elegida',async prueba=>{
@@ -548,4 +548,54 @@ for(const tema of ['claro','oscuro'] as const)test(`cada integrante abre una pan
   assert.ok(!vista.texto().includes('Ya pagué mi parte'));
   const tarjeta=presente(vista.todos().find(n=>n.type==='View'&&n.props.style&&typeof n.props.style==='object'&&!Array.isArray(n.props.style)&&(n.props.style as {borderWidth?:number}).borderWidth===1&&vista.texto(n).includes('Corregir la descripción')));
   assert.ok(tarjeta);comprobarRed();
+});
+
+for (const tema of ['claro', 'oscuro'] as const) test('indicadores de sala y gasto se reducen al incorporar offline en '+tema, async prueba => {
+  const {e, datos, comprobarRed} = await prepararDemo(prueba);
+  await e.sincronizarSocialOnline();
+  const sala = presente((await e.cargarSocial()).salas.find(s => s.nombre === 'Demo · Cena cerrada'));
+  const operaciones = (await e.leerDatosOnline<import('../src/social/online/types.ts').OperacionPersonal[]>(datos.usuarioId,'operaciones',[])).filter(o => o.salaId === sala.id && o.gastoId && !o.incorporada);
+  assert.ok(operaciones.length > 1);
+  const vista = interfazSocial(e, tema);
+  await vista.abrir(vista.rutas.SALA_SOCIAL, {salaId:sala.id});
+  await vista.pulsar('Sección de sala: Gastos');
+  const gasto = presente(sala.gastos.find(g => g.id === operaciones[0].gastoId));
+  const card = () => vista.buscarBoton('Ver gasto '+gasto.descripcion);
+  const pendientesGasto = () => vista.todos(card()).filter(n => String(n.props.accessibilityLabel || '').endsWith('movimientos por registrar'));
+  assert.equal(pendientesGasto().length, 0);
+  assert.ok(card().props.accessibilityValue);
+  assert.ok(vista.texto(card()).includes(operaciones.filter(o=>o.gastoId===gasto.id).length+' por registrar'));
+  const totalGastos = sala.movimientosPorRegistrar;
+  assert.ok(vista.texto(vista.buscarBoton('Sección de sala: Gastos')).includes('Gastos · '+totalGastos));
+  for (const op of operaciones) { await e.incorporarOperacionPersonal(op,{depositoId:datos.depositos[0].id}); await vista.asentar(); }
+  assert.ok(!vista.texto(card()).includes('por registrar'));
+  assert.ok(vista.texto(card()).includes('Importe'));
+  const restantes = sala.movimientosPorRegistrar - operaciones.length;
+  assert.equal(vista.texto(vista.buscarBoton('Sección de sala: Gastos')), restantes ? 'Gastos · '+restantes : 'Gastos');
+  assert.equal(pendientesGasto().length, 0);
+  assert.equal(presente((await e.cargarSocial()).salas.find(s => s.id === sala.id)).movimientosPorRegistrar, sala.movimientosPorRegistrar - operaciones.length);
+  comprobarRed();
+});
+
+for(const tema of ['claro','oscuro'] as const)test('sala abierta cuenta selecciones pendientes sin registrar dinero en '+tema,async prueba=>{
+ const {e,datos,abierta,comprobarRed}=await prepararDemo(prueba);await e.sincronizarSocialOnline();
+ const antes=presente((await e.cargarSocial()).salas.find(s=>s.id===abierta.id));assert.ok(antes.movimientosPorRegistrar>0);
+ const detalle=await e.obtenerSalaOnline(abierta.id),op=presente(detalle.misFinanzas?.find(o=>!o.seleccion&&o.tipo==='ingreso'));
+ const saldo=e.base.prepare('SELECT SUM(saldo_actual) n FROM depositos').get()!.n;
+ const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:abierta.id});
+ assert.ok(vista.texto().includes('movimientos por registrar'));assert.ok(vista.texto().includes('se aplicará al cerrar'));
+ await e.elegirFinanciacionSala(abierta.id,op,{depositoId:datos.depositos[0].id});await vista.asentar();
+ assert.equal(presente((await e.cargarSocial()).salas.find(s=>s.id===abierta.id)).movimientosPorRegistrar,antes.movimientosPorRegistrar-1);
+ assert.equal(e.base.prepare('SELECT SUM(saldo_actual) n FROM depositos').get()!.n,saldo);comprobarRed();
+});
+
+for(const tema of ['claro','oscuro'] as const)test('los pagos pendientes de quien debe se ven y abren el registro desde la sala en '+tema,async prueba=>{
+ const {e,datos,comprobarRed}=await prepararDemo(prueba);await e.sincronizarSocialOnline();
+ const op=presente((await e.leerDatosOnline<import('../src/social/online/types.ts').OperacionPersonal[]>(datos.usuarioId,'operaciones',[])).find(o=>o.deudaId&&o.salaId?.includes(':recibidos:')&&!o.gastoId&&!o.incorporada));
+ const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:op.salaId!});await vista.pulsar('Sección de sala: Gastos');
+ assert.ok(vista.texto().includes('Pagos por registrar'));assert.ok(vista.buscarBoton('Registrar '+op.descripcion));
+ await vista.pulsar('Registrar '+op.descripcion);
+ const destino=presente(vista.destinos.at(-1));assert.equal(destino[0],vista.rutas.REGISTRO_SOCIAL);
+ const parametros=destino[1] as import('../src/social/types.ts').ParametrosSociales;assert.equal(parametros.operacionClave,op.clave);
+ await vista.abrir(vista.rutas.REGISTRO_SOCIAL,parametros);assert.ok(vista.texto().toLowerCase().includes('depósito'),vista.texto());comprobarRed();
 });

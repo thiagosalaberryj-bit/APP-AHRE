@@ -1,3 +1,4 @@
+import EtiquetaImporte from '../AmountLabel';
 import crearEstilosSala from '../../styles/social/RoomDetailsStyles';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { View, Text, Pressable } from 'react-native';
@@ -62,9 +63,9 @@ export default function BalancesSala(propiedades: import('../../social/types').A
                 <Text ellipsizeMode="tail" numberOfLines={1} style={[estilosGlobales.textoSecundario, estilos.metadatosFila]}>{gasto.descripcion}</Text>
               </View>
               <View style={estilos.franjaImporteHistorial}>
-                <View style={estilos.filaCampos}><Text style={[estilos.estadoHistorialDeuda, estilos.textoFlexible, {
-                color
-              }]}>{estado}</Text><Ionicons color={tema.textoSecundario} name="chevron-forward" size={16} /></View>
+                <View style={estilos.filaCampos}><EtiquetaImporte style={[estilos.estadoHistorialDeuda, estilos.textoFlexible, {
+                color, fontWeight: '400'
+              }]}>{estado}</EtiquetaImporte><Ionicons color={tema.textoSecundario} name="chevron-forward" size={16} /></View>
                 <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.encabezadoSeccion, estilos.tituloFila]}>{parte.pendiente || parte.monto}</Text>
               </View>
             </View>

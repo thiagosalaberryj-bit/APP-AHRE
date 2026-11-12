@@ -1,3 +1,4 @@
+import EtiquetaImporte from './AmountLabel';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 
@@ -53,7 +54,7 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar }: imp
     </View>
     <View style={estilos.franjaImporte}>
       <View style={estilos.filaTipo}>
-        <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.tipo,{color:colorTipo}]}>{eliminado?'Eliminado':correccion?'Corrección':esTransferencia?esIngreso?'Recibida':'Enviada':tipo}</Text>
+        <EtiquetaImporte style={[estilos.tipo,{color:colorTipo}]}>{eliminado?'Eliminado':correccion?'Corrección':esTransferencia?esIngreso?'Recibida':'Enviada':tipo}</EtiquetaImporte>
         {alPresionar?<Ionicons color={tema.textoSecundario} name="chevron-forward" size={16}/>:null}
       </View>
       <Text ellipsizeMode="tail" numberOfLines={1} style={[estilos.importe,eliminado&&{textDecorationLine:'line-through',color:tema.textoSecundario}]}>{importe}</Text>
