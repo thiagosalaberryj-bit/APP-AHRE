@@ -2,6 +2,10 @@ import { TIPOS_DEPOSITO } from '../constants/deposits';
 import { depositosRepositorio } from '../database/repositories/depositsRepository';
 import { movimientosRepositorio } from '../database/repositories/movementsRepository';
 import { obtenerSesionActual } from '../authentication/sessionService';
+import { ejecutarTransaccion } from '../database/transactions';
+import { desvincularEnConexion, ESTADO_MP_INICIAL } from '../mercadoPago/mercadoPagoService';
+import { avisarIntegraciones, leerDato } from '../integrations/integrationStore';
+import type { OperacionMp } from '../mercadoPago/types';
 import {
   convertirSaldoInicial,
   resolverColorDeposito,
@@ -121,9 +125,12 @@ export async function consultarDetalleDeposito(depositoId: string) {
   const deposito = await consultarDepositoPropioActivo(depositoId);
   const ahora = new Date();
   const resumen = await movimientosRepositorio.consultarResumenDeposito(deposito.id, new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString());
+  const estadoMp = await leerDato(deposito.usuario_id, 'mp:estado', ESTADO_MP_INICIAL);
+  const operacionesMp = estadoMp.vinculacion?.deposito_id === deposito.id ? await leerDato<OperacionMp[]>(deposito.usuario_id, 'mp:operaciones', []) : null;
 
   return {
     deposito,
+    mercadoPago: operacionesMp ? { obtenidos: operacionesMp.length, pendientes: operacionesMp.filter(f => f.decision === 'pendiente' || f.revisionPendiente).length } : null,
     cantidadMovimientos: resumen.cantidad,
     categoriasMovimientos: resumen.categorias,
     comparacionMensual: calcularComparacionMensual(deposito, resumen.impactoMovimientos, resumen.impactoAjustes),
@@ -169,9 +176,13 @@ export async function actualizarDeposito(depositoId: string, datos: import('../t
 
 export async function eliminarDeposito(depositoId: string) {
   const deposito = await consultarDepositoPropioActivo(depositoId);
-  const eliminado = await depositosRepositorio.eliminar(deposito.id);
+  const eliminado = await ejecutarTransaccion(async c => {
+    await desvincularEnConexion(c, deposito.usuario_id, deposito.id);
+    return depositosRepositorio.eliminar(deposito.id, c);
+  });
   if (!eliminado) {
     throw new ErrorDeposito('deposito_no_encontrado');
   }
+  avisarIntegraciones();
   return true;
 }

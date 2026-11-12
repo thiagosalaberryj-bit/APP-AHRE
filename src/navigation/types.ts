@@ -11,6 +11,8 @@ export interface ParametrosPantalla extends ParametrosSociales {
   rangoMontoEstadistica?: import('../utils/statisticsFilters').FiltrosDatosEstadistica;
   tipoMovimiento?: string; anio?: number; mes?: number; movimiento?: Partial<MovimientoVisible>;
   deposito_nombre?: string; destino?: string;
+  seccionDeposito?: 'movimientos' | 'recurrentes';
+  seccionSala?: 'gastos' | 'participantes' | 'balances';
 }
 export type ParametrosNavegacion = { [Ruta in NombreRuta]: ParametrosPantalla | undefined };
 export type PropiedadesPantalla = NativeStackScreenProps<ParametrosNavegacion, NombreRuta>;

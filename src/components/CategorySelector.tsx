@@ -45,8 +45,13 @@ export default function SelectorCategoria({
   carrusel = false,
   estiloTarjeta = null,
   error = undefined,
+  modalAbierto,
+  alCerrarModal,
+  contenidoAntesDeCategorias,
 }: import('../types/ui').SelectorCategoriaProps) {
-  const [modalVisible, establecerModalVisible] = useState(false);
+  const [modalLocal, establecerModalLocal] = useState(false);
+  const modalVisible = modalAbierto ?? modalLocal;
+  const establecerModalVisible = (valor: boolean) => { establecerModalLocal(valor); if (!valor) alCerrarModal?.(); };
   const bordeCampo = {
     borderColor: estilosMovimiento.filaDescripcion?.borderColor ?? tema.borde,
     borderWidth: estilosMovimiento.filaDescripcion?.borderWidth ?? BORDES.anchos.fino,
@@ -120,6 +125,7 @@ export default function SelectorCategoria({
 
   return (
     <View style={estilosMovimiento.grupo}>
+      {modalAbierto === undefined ? <>
       {etiqueta ? <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text> : null}
       {carrusel ? (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -158,6 +164,7 @@ export default function SelectorCategoria({
         <Text style={[estilosGlobales.textoError, estilosMovimiento.errorCampo]}>{error}</Text>
       ) : null}
 
+      </> : null}
       {enGrilla ? null : (
       <Modal statusBarTranslucent navigationBarTranslucent
         animationType="fade"
@@ -188,6 +195,7 @@ export default function SelectorCategoria({
               showsVerticalScrollIndicator={false}
               style={estilosMovimiento.scrollCategorias}
             >
+              {contenidoAntesDeCategorias}
               {categoriasModal.map((categoria) => {
                 const activa = categoria.id === seleccionadaId;
                 const color = obtenerColorCategoria(categoria.id, tema, tipoMovimiento);

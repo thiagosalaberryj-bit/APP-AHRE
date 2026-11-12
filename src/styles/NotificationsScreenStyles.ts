@@ -139,6 +139,7 @@ export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
       padding: ESPACIADO.pantalla,
     },
     tarjetaSuperpuesta: {
+      maxHeight: '90%',
       width: '100%',
       maxWidth: 480,
       gap: ESPACIADO.formulario,

@@ -5,6 +5,10 @@ import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './global
 
 export function crearEstilosDashboard(tema: Tema) {
   return StyleSheet.create({
+    nombreConAviso: { flexDirection:'row', alignItems:'center', gap:ESPACIADO.minimo },
+    nombreDepositoFlexible: { flex:1, minWidth:0 },
+    avisoMp: { backgroundColor:tema.botonPrincipal, borderRadius:BORDES.radios.campo/2, paddingHorizontal:ESPACIADO.minimo, paddingVertical:ESPACIADO.minimo/2 },
+    textoAvisoMp: { color:tema.botonPrincipalTexto, fontSize:TIPOGRAFIA.tamanos.auxiliar, fontWeight:TIPOGRAFIA.pesos.seminegrita },
     contenidoDesplazable: {
       paddingBottom: ESPACIADO.extraGrande,
     },

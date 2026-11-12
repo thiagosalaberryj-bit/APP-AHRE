@@ -20,6 +20,7 @@ type ServiciosPrueba =
   & typeof import('../../src/database/initialization.ts')
   & typeof import('../../src/social/socialService.ts')
   & typeof import('../../src/statistics/statisticsService.ts');
+type ServiciosIntegraciones = typeof import('../../src/mercadoPago/mercadoPagoService.ts') & typeof import('../../src/integrations/integrationStore.ts') & typeof import('../../src/integrations/integrationSync.ts') & typeof import('../../src/notifications/notificationService.ts');
 type ServiciosRecurrencias = typeof import('../../src/recurrences/recurrenceService.ts');
 type ServiciosSync = typeof import('../../src/sync/syncService.ts') & typeof import('../../src/sync/remote.ts') & typeof import('../../src/sync/deviceAuthorization.ts') & typeof import('../../src/sync/pendingService.ts') & Pick<typeof import('../../src/sync/journal.ts'),'observarCambiosLocales'> & typeof import('../../src/database/connectionQueue.ts') & typeof import('../../src/database/transactions.ts');
 
@@ -84,6 +85,10 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     export * from './src/database/connectionQueue.ts';
     export * from './src/database/transactions.ts';
     export {observarCambiosLocales} from './src/sync/journal.ts';
+    export * from './src/mercadoPago/mercadoPagoService.ts';
+    export * from './src/integrations/integrationStore.ts';
+    export * from './src/integrations/integrationSync.ts';
+    export * from './src/notifications/notificationService.ts';
   `, { context: contexto, identifier: path.join(raiz, 'prueba-desarrollo-virtual.ts') });
   await entrada.link(async (nombre, origen) => {
     if (modulos.has(nombre)) return modulos.get(nombre)!;
@@ -91,5 +96,5 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     return cargar(resolverFuente(ruta));
   });
   await entrada.evaluate();
-  return { base, almacenamiento, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias) };
+  return { base, almacenamiento, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias & ServiciosIntegraciones) };
 }

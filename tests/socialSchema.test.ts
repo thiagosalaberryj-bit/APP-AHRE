@@ -65,7 +65,10 @@ async function preparar(prueba: import('node:test').TestContext) {
 
 test('el esquema inicial completo crea las tablas de dominio y copias sociales sin ejemplos y es repetible', async prueba => {
   const { base, adaptador } = await preparar(prueba);
-  assert.equal(presente(base.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").get()).n, 20);
+  assert.equal(presente(base.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").get()).n, 24);
+  for (const tabla of ['avisos_locales', 'integraciones_locales', 'integraciones_outbox', 'programaciones_avisos']) {
+    assert.equal(presente(base.prepare(`SELECT COUNT(*) AS n FROM ${tabla}`).get()).n, 0);
+  }
   await (inicial.namespace as unknown as typeof import('../src/database/migrations/001_initialSchema.ts')).aplicarEsquemaInicial(adaptador);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM gastos_compartidos').get()).n, 0);
   assert.deepEqual(base.prepare('PRAGMA foreign_key_check').all(), []);

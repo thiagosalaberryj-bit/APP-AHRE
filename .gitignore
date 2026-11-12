@@ -42,3 +42,7 @@ yarn-error.*
 
 # Capturas adjuntas del chat, fuera del código y de las entregas
 .codex-attachments/
+credentials/
+
+# Configuración Firebase por entorno (EAS la recibe mediante .easignore)
+/google-services.json

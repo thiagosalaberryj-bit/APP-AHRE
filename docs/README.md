@@ -52,6 +52,7 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 | Lógica de inicio de AHRE | [inicio](funcionalidades/inicio.md) |
 | Registro local de ingresos y egresos | [movimientos](funcionalidades/movimientos.md) |
 | Notificaciones toast | [notificaciones-toast](funcionalidades/notificaciones-toast.md) |
+| Recordatorios, historial y revisión de pagos Search | [notificaciones-mercado-pago](funcionalidades/notificaciones-mercado-pago.md) |
 | OCR offline de comprobantes — Issue 31 | [ocr](funcionalidades/ocr.md) |
 | Perfil y preferencias locales | [perfil](funcionalidades/perfil.md) |
 | Funcionamiento local de Social | [social](funcionalidades/social.md) |

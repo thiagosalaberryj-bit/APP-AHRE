@@ -91,6 +91,11 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     '../social/financialOperation': { operacionFinancieraEnCurso: () => false },
     '../recurrences/recurrenceService': { consultarRecurrenciasDeposito: async () => [] },
     '../profile/balanceVisibilityService': { consultarSaldoOculto: async () => false },
+    '../integrations/integrationStore': { observarIntegraciones: () => () => {} },
+    '../mercadoPago/mercadoPagoService': {
+      consultarResumenMp: async () => null,
+      cargarMercadoPago: async () => ({ estado: { vinculacion: null }, operaciones: [] }),
+    },
     '../utils/renderFrame': { esperarDibujo: opciones.esperarDibujo || (() => new Promise<void>(resolver => setImmediate(() => setImmediate(resolver)))) },
     '../deposits/depositService': {
       ErrorDeposito: class extends Error {},

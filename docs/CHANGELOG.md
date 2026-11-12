@@ -5,6 +5,39 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+## [v0.9.0] - 2026-11-11 - no estable
+
+### Añadido
+
+- Historial persistente de notificaciones, preferencias por tipo, recordatorios
+  locales sin conexión y destinos a deudas, salas, depósitos y movimientos.
+- Vinculación OAuth de un depósito con Mercado Pago y revisión de pagos Search:
+  categorías propuestas, selección múltiple, ignorados recuperables, asociación
+  a registros existentes y registro offline sin duplicar el saldo.
+- Descripción editable desde la card, conservada como borrador local y utilizada
+  al registrar. El dato original del proveedor se conserva para comparación.
+- Indicadores de pendientes, historial de consultas en modal y seguimiento
+  WebSocket solo mientras una consulta esté en curso.
+- Avisos persistentes al finalizar búsquedas/identificación y ante fallos definitivos.
+
+### Corregido
+
+- Identificación de ingresos/egresos con detalle y filtros de Mercado Pago,
+  actualización de pagos antiguos sin consumir búsquedas y tratamiento de importe cero.
+- Registro bloqueado visualmente con explicación al tocar; errores en diálogo
+  central y aviso fijo junto a las acciones, sin depender del desplazamiento.
+- Etiqueta «Próxima búsqueda automática» y usos disponibles centrados en el botón.
+
+### Entrega
+
+- App 0.9.0, Android versionCode 14; requiere backend coordinado 0.3.0.
+- TypeScript correcto y 463 pruebas aprobadas, sin fallos ni omisiones,
+  con SQLite y las integraciones MySQL habilitadas.
+- Expo Go conserva revisión y registro offline; push remoto requiere APK y FCM v1.
+- Rendimientos de la billetera y tratamiento específico de transferencias propias
+  siguen fuera de esta entrega. Search no representa un extracto completo.
+
+
 ### Cambiado
 
 - Encabezados fuera del desplazamiento en todas las pantallas que los usan,

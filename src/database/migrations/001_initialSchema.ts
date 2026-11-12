@@ -3,6 +3,7 @@ import type { Conexion } from '../types';
 export const VERSION_ESQUEMA_INICIAL = 1;
 
 export async function aplicarEsquemaInicial(baseDatos: Pick<Conexion, 'execAsync'>) {
+  await prepararEsquemaIntegraciones(baseDatos);
   await baseDatos.execAsync(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id TEXT PRIMARY KEY NOT NULL,
@@ -692,6 +693,32 @@ export async function prepararEsquemaSincronizacion(conexion: Pick<Conexion, 'ex
     CREATE TABLE IF NOT EXISTS sync_profile_backup (
       usuario_id TEXT NOT NULL, secuencia INTEGER NOT NULL, lote TEXT NOT NULL,
       cambio TEXT NOT NULL, PRIMARY KEY(usuario_id,secuencia)
+    );
+  `);
+}
+
+// Tablas auxiliares aditivas; el contrato financiero y su versión se conservan.
+export async function prepararEsquemaIntegraciones(baseDatos: Pick<Conexion, 'execAsync'>) {
+  await baseDatos.execAsync(`
+    CREATE TABLE IF NOT EXISTS integraciones_locales (
+      usuario_id TEXT NOT NULL, clave TEXT NOT NULL, datos TEXT NOT NULL,
+      PRIMARY KEY(usuario_id, clave)
+    );
+    CREATE TABLE IF NOT EXISTS integraciones_outbox (
+      secuencia INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE,
+      usuario_id TEXT NOT NULL, ruta TEXT NOT NULL, datos TEXT NOT NULL,
+      prioridad INTEGER NOT NULL DEFAULT 1
+    );
+    CREATE TABLE IF NOT EXISTS avisos_locales (
+      usuario_id TEXT NOT NULL, id TEXT NOT NULL, datos TEXT NOT NULL,
+      fecha TEXT NOT NULL, vista INTEGER NOT NULL DEFAULT 0,
+      resuelta INTEGER NOT NULL DEFAULT 0, remota INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY(usuario_id, id)
+    );
+    CREATE INDEX IF NOT EXISTS avisos_usuario_fecha ON avisos_locales(usuario_id, fecha, id);
+    CREATE TABLE IF NOT EXISTS programaciones_avisos (
+      usuario_id TEXT NOT NULL, clave TEXT NOT NULL, fecha TEXT NOT NULL,
+      datos TEXT NOT NULL, nativo TEXT, PRIMARY KEY(usuario_id, clave)
     );
   `);
 }

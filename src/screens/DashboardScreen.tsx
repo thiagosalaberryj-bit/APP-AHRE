@@ -19,6 +19,8 @@ import { consultarSaldoOculto, guardarSaldoOculto } from '../profile/balanceVisi
 import EncabezadoPrincipal from '../components/MainHeader';
 import TarjetaMovimiento from '../components/MovementCard';
 import { RUTAS } from '../constants/routes';
+import { consultarResumenMp } from '../mercadoPago/mercadoPagoService';
+import { observarIntegraciones } from '../integrations/integrationStore';
 import { depositosRepositorio, movimientosRepositorio } from '../database/repositories';
 import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../styles/colors';
 import { crearEstilosGlobales } from '../styles/globalStyles';
@@ -58,6 +60,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
   const [guardandoVisibilidadSaldo, establecerGuardandoVisibilidadSaldo] = useState(false);
   const [usuario, establecerUsuario] = useState<import("../database/types").Usuario | null>(null);
   const [depositos, establecerDepositos] = useState<import('../database/types').Deposito[]>([]);
+  const [resumenMp,establecerResumenMp]=useState<Awaited<ReturnType<typeof consultarResumenMp>>>(null);
   const [movimientos, establecerMovimientos] = useState<ReturnType<typeof prepararMovimiento>[]>([]);
   const [balance, establecerBalance] = useState(0);
   const [saldoAnterior, establecerSaldoAnterior] = useState<number | null>(null);
@@ -143,6 +146,9 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
       if (identificadorCarga !== secuenciaCarga.current) return;
       datosCargados.current = true;
       establecerUsuario(sesion.usuario);
+      const pendientesMp=await consultarResumenMp();
+      if(identificadorCarga!==secuenciaCarga.current)return;
+      establecerResumenMp(pendientesMp);
       establecerDepositos(depositosUsuario);
       establecerMovimientos(movimientosPreparados);
       establecerBalance(balanceUsuario);
@@ -162,8 +168,11 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
   }, [mostrarAviso]);
 
   useFocusEffect(useCallback(() => {
+    let activa=true;
     cargarDatos();
+    const dejar=observarIntegraciones(()=>{void consultarResumenMp().then(resumen=>{if(activa)establecerResumenMp(resumen);}).catch(()=>{});});
     return () => {
+      activa=false;dejar();
       secuenciaCarga.current += 1;
     };
   }, [cargarDatos]));
@@ -333,7 +342,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                           <Ionicons color={COLOR_ICONO_DEPOSITO} name={iconoDeposito as import('../constants/movimientos').NombreIcono} size={20} />
                         </View>
                         <View style={estilos.detalleElemento}>
-                          <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.nombreElemento]}>{deposito.nombre}</Text>
+                          <View style={estilos.nombreConAviso}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.nombreElemento, estilos.nombreDepositoFlexible]}>{deposito.nombre}</Text>{resumenMp?.depositoId===deposito.id&&resumenMp.pendientes>0?<View accessibilityLabel={`Mercado Pago, ${resumenMp.pendientes} por revisar`} style={estilos.avisoMp}><Text style={estilos.textoAvisoMp}>MP {resumenMp.pendientes>99?'99+':resumenMp.pendientes}</Text></View>:null}</View>
                           <Text
                             numberOfLines={1}
                             ellipsizeMode="tail"

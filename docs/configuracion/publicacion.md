@@ -1,5 +1,15 @@
 # Compilación y publicación Android
 
+## Notificaciones y Mercado Pago
+
+La nueva APK requiere el archivo `google-services.json` de la app Firebase con
+package `com.thiagosalaberry.APPAHRE`, la credencial FCM v1 en el proyecto Expo
+existente y el backend con OAuth/n8n configurado. Ver la guía
+`docs/notificaciones-mercado-pago.md` de SERVER-AHRE. La exportación Metro/Hermes
+comprueba el paquete JS; no acredita entrega push ni sustituye una APK.
+El perfil existente `ocr-comparison` sigue disponible. Preparar una numeración
+de entrega antes de publicar; esta implementación no publica un APK.
+
 ## Elegir qué probar
 
 | Cambio o función | Cómo verificar |
@@ -49,7 +59,7 @@ El comando envía el código local a EAS y devuelve el seguimiento. Descargar el
 APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
-entrega. El estado actual declara versión 0.8.0 y `android.versionCode` 13;
+entrega. El estado actual declara versión 0.9.0 y `android.versionCode` 14;
 la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
 `Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
@@ -112,3 +122,35 @@ abiertas o con movimientos propios por registrar en el inicio de Social. Las
 tarjetas indican el estado cerrado y la cantidad pendiente; las incorporaciones
 locales actualizan el contador sin esperar la sincronización. Generar esta APK
 no despliega el servidor ni publica la descarga en la web.
+
+## Entrega 0.9.0 · build 14
+
+Incluye notificaciones y Mercado Pago Search con backend 0.3.0. Conserva el
+perfil interno ocr-comparison y la firma del proyecto Expo existente. Antes
+de compilar, guardar google-services.json en la raíz de APP-AHRE y configurar
+la cuenta de servicio FCM v1 en EAS Credentials. El archivo de configuración
+se excluye de Git; .easignore permite enviarlo al compilador. Nunca colocar
+la clave privada de la cuenta de servicio dentro del paquete de la app.
+
+La compilación envía fuentes a EAS; no publica el APK en la landing ni cambia
+el servidor desplegado. La instalación sobre una versión de desarrollo previa
+puede requerir recrear su base SQLite si cambió el esquema inicial. No borrar
+datos reales para actualizar la app.
+
+### Obtener google-services.json
+
+1. Abrir https://console.firebase.google.com/ y crear AHRE o reutilizar su proyecto.
+2. Agregar una app Android con paquete exacto com.thiagosalaberry.APPAHRE.
+   El apodo puede ser AHRE Android; conservar las mayúsculas del paquete.
+3. Descargar google-services.json y guardarlo en la raíz de APP-AHRE, junto
+   a app.json. No modificar Gradle manualmente: Expo genera los archivos nativos.
+4. Para push remoto, abrir Configuración del proyecto → Cuentas de servicio,
+   generar una clave privada y guardarla fuera del repositorio. Es otro archivo.
+5. Ejecutar npx --yes eas-cli credentials --platform android, elegir el perfil
+   ocr-comparison y cargar esa clave en la opción de Push Notifications FCM v1.
+   Conservar la firma Android existente. No copiar su contenido al chat ni a Git.
+6. Con ambos pasos completos, ejecutar npx --yes eas-cli build --platform android
+   --profile ocr-comparison --no-wait para enviar la APK interna a EAS.
+
+Referencias: [Firebase Android](https://firebase.google.com/docs/android/setup) y
+[credenciales FCM v1 de Expo](https://docs.expo.dev/push-notifications/fcm-credentials/).

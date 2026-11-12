@@ -22,13 +22,17 @@ import {obtenerPreajustesMovimientos} from '../utils/statisticsFilters';
 import { formatearEntradaMonto } from '../utils/moneyInput';
 import PanelRecurrencias from '../components/RecurrencePanel';
 import type { NombreIcono } from '../constants/movimientos';
+import { observarIntegraciones } from '../integrations/integrationStore';
+import { consultarResumenMp, desvincularMercadoPago, cargarMercadoPago, iniciarVinculacion } from '../mercadoPago/mercadoPagoService';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   AccessibilityInfo,
   Animated,
   Easing,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -173,8 +177,11 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const [saldoVisible, establecerSaldoVisible] = useState(false);
   const [saldoAmpliado, establecerSaldoAmpliado] = useState(false);
   useEffect(()=>{establecerSaldoAmpliado(false);},[saldoVisible,depositoId]);
-  const [seccionDeposito,establecerSeccionDeposito]=useState('movimientos');
+  const [seccionDeposito,establecerSeccionDeposito]=useState(ruta.params?.seccionDeposito || 'movimientos');
   const [cantidadRecurrencias,establecerCantidadRecurrencias]=useState(0);
+  const [resumenMercadoPago,establecerResumenMercadoPago]=useState<{obtenidos:number;pendientes:number}|null>(null);
+  const [guardandoConexionMp,establecerGuardandoConexionMp]=useState(false);
+  const [requiereAutorizacionMp,establecerRequiereAutorizacionMp]=useState(false);
   const estilosFiltros = crearEstilosMovimientos(tema, anchoVentana);
   const estilosAccesos=crearEstilosBusquedaFiltros(tema);
   const [cantidadMovimientos, establecerCantidadMovimientos] = useState(0);
@@ -251,6 +258,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       if (secuencia !== secuenciaCarga.current) return;
       establecerSaldoVisible(!saldoOculto);
       establecerDeposito(detalle.deposito);
+        establecerResumenMercadoPago(detalle.mercadoPago || null);
       establecerComparacionMensual(detalle.comparacionMensual);
       establecerCantidadRecurrencias(recurrencias.length);
       establecerCantidadMovimientos(detalle.cantidadMovimientos);
@@ -274,9 +282,18 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   }, [depositoId, mostrarAviso]);
 
   useFocusEffect(useCallback(() => {
+    let activa=true;
     establecerEnfocada(true);
     cargarDetalle();
+    const comprobarConexion=()=>{void cargarMercadoPago().then(({estado})=>{
+      if(activa)establecerRequiereAutorizacionMp(!!estado.vinculacion&&estado.vinculacion.deposito_id===depositoId&&!!estado.vinculacion.error);
+    }).catch(()=>{});};
+    comprobarConexion();
+    const dejar=observarIntegraciones(()=>{comprobarConexion();void consultarResumenMp().then(resumen=>{
+      if(activa)establecerResumenMercadoPago(resumen&&resumen.depositoId===depositoId?{obtenidos:resumen.obtenidos,pendientes:resumen.pendientes}:null);
+    }).catch(()=>{});});
     return () => {
+      activa=false;dejar();
       establecerEnfocada(false);
       secuenciaCarga.current += 1;
     };
@@ -690,14 +707,15 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                 </>}
               </View>
               </View>
-              <Pressable accessibilityLabel="Opciones del depósito" accessibilityRole="button" onPress={() => establecerModalOpcionesVisible(true)} style={estilos.botonOpciones}>
+              <Pressable accessibilityLabel={`Opciones del depósito${resumenMercadoPago?.pendientes ? `, ${resumenMercadoPago.pendientes} movimientos de Mercado Pago por revisar` : ''}`} accessibilityRole="button" onPress={() => establecerModalOpcionesVisible(true)} style={estilos.botonOpciones}>
                 <Ionicons color={tema.textoSecundario} name="ellipsis-horizontal" size={22}/>
+                {resumenMercadoPago&&resumenMercadoPago.pendientes>0?<View style={estilos.indicadorMp}><Text style={estilos.textoIndicadorMp}>{resumenMercadoPago.pendientes>99?'99+':resumenMercadoPago.pendientes}</Text></View>:null}
               </Pressable>
             </View>
           </View>
 
           <View style={estilos.seccionMovimientos}>
-            <SelectorSegmentado tema={tema} opciones={[{id:'movimientos',nombre:'Movimientos'},{id:'recurrentes',nombre:'Recurrentes'+(cantidadRecurrencias?' · '+cantidadRecurrencias:'')}]} valor={seccionDeposito} alSeleccionar={establecerSeccionDeposito} etiqueta="Sección del depósito"/>
+            <SelectorSegmentado tema={tema} opciones={[{id:'movimientos',nombre:'Movimientos'},{id:'recurrentes',nombre:'Recurrentes'+(cantidadRecurrencias?' · '+cantidadRecurrencias:'')}]} valor={seccionDeposito} alSeleccionar={v => establecerSeccionDeposito(v as 'movimientos' | 'recurrentes')} etiqueta="Sección del depósito"/>
             <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={cambiarBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosActivos} cantidad={cantidadFiltros}>
               <FiltrosRapidosMovimientos estilosAccesos={estilosAccesos}
                 tipoFiltro={tipoFiltro} cambiarTipoFiltro={cambiarTipoFiltro} establecerTipoFiltro={establecerTipoFiltro}
@@ -794,6 +812,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                 <Ionicons color={tema.textoSecundario} name="close" size={22} />
               </Pressable>
             </View>
+            <ScrollView contentContainerStyle={estilos.listaOpcionesDeposito}>
             <Pressable
               accessibilityRole="button"
               onPress={abrirEdicion}
@@ -813,6 +832,45 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               accessibilityRole="button"
               onPress={() => {
                 establecerModalOpcionesVisible(false);
+                navegacion.navigate(RUTAS.MERCADO_PAGO, { depositoId });
+              }}
+              style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.opcionPresionada : null]}
+            >
+              <View style={estilos.iconoOpcionModal}>
+                <Ionicons color={tema.foco} name="wallet-outline" size={21} />
+              </View>
+              <View style={estilos.detalleOpcionModal}>
+                <Text style={estilos.tituloOpcionModal}>Mercado Pago</Text>
+                <Text style={estilos.subtituloOpcionModal}>Conexión con Mercado Pago</Text>
+              </View>
+              {resumenMercadoPago&&resumenMercadoPago.pendientes>0?<View style={estilos.contadorOpcionMp}><Text style={estilos.textoIndicadorMp}>{resumenMercadoPago.pendientes}</Text></View>:null}
+              <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
+            </Pressable>
+            {resumenMercadoPago ? <>
+              {requiereAutorizacionMp ? <>
+              <View style={estilos.separadorOpcionModal} />
+              <Pressable accessibilityRole="button" disabled={guardandoConexionMp} style={({pressed})=>[estilos.opcionModal,pressed&&estilos.opcionPresionada]} onPress={()=>{
+                if(operacionDepositoEnCurso.current)return;
+                operacionDepositoEnCurso.current=true;establecerGuardandoConexionMp(true);
+                void cargarMercadoPago().then(async({estado})=>{
+                  if(!estado.vinculacion||estado.vinculacion.deposito_id!==depositoId)return;
+                  const respuesta=await iniciarVinculacion(depositoId!,estado.vinculacion.meses,true);
+                  await Linking.openURL(respuesta.url);
+                }).catch(error=>mostrarAviso(error instanceof Error?error.message:'No se pudo renovar la conexión.',{tipo:'error'})).finally(()=>{operacionDepositoEnCurso.current=false;establecerGuardandoConexionMp(false);});
+              }}><View style={estilos.iconoOpcionModal}><Ionicons name="refresh-outline" size={21} color={tema.foco}/></View><View style={estilos.detalleOpcionModal}><Text style={estilos.tituloOpcionModal}>Renovar autorización</Text><Text style={estilos.subtituloOpcionModal}>Volver a permitir el acceso a Mercado Pago</Text></View>{guardandoConexionMp?<ActivityIndicator color={tema.foco}/>:null}</Pressable>
+              </> : null}
+              <View style={estilos.separadorOpcionModal} />
+              <Pressable accessibilityRole="button" disabled={guardandoConexionMp} style={({pressed})=>[estilos.opcionModal,pressed&&estilos.opcionPresionada]} onPress={()=>Alert.alert('Desvincular Mercado Pago',`Se descartarán ${resumenMercadoPago.pendientes} pendientes. Los movimientos registrados se conservan. Podés hacerlo sin conexión.`,[{text:'Cancelar',style:'cancel'},{text:'Desvincular',style:'destructive',onPress:()=>{
+                if(operacionDepositoEnCurso.current)return;
+                operacionDepositoEnCurso.current=true;establecerGuardandoConexionMp(true);
+                void desvincularMercadoPago().then(()=>{establecerModalOpcionesVisible(false);mostrarAviso('Cuenta desvinculada. Se confirmará al reconectar.',{tipo:'exito'});}).catch(error=>mostrarAviso(error instanceof Error?error.message:'No se pudo desvincular.',{tipo:'error'})).finally(()=>{operacionDepositoEnCurso.current=false;establecerGuardandoConexionMp(false);});
+              }}])}><View style={[estilos.iconoOpcionModal,estilos.iconoOpcionEliminar]}><Ionicons name="unlink-outline" size={21} color={tema.error}/></View><View style={estilos.detalleOpcionModal}><Text style={[estilos.tituloOpcionModal,estilos.textoOpcionEliminar]}>Desvincular Mercado Pago</Text><Text style={estilos.subtituloOpcionModal}>Conservar los movimientos registrados</Text></View></Pressable>
+            </> : null}
+            <View style={estilos.separadorOpcionModal} />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                establecerModalOpcionesVisible(false);
                 establecerModalEliminacionVisible(true);
               }}
               style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.opcionPresionada : null]}
@@ -826,6 +884,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </View>
               <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
             </Pressable>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -924,6 +983,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               <Ionicons color={tema.error} name="information-circle-outline" size={20} />
               <Text style={estilos.textoAvisoEliminar}>
                 El depósito se desactivará y sus movimientos permanecerán en el historial.
+                  {resumenMercadoPago ? ` También se desvinculará Mercado Pago y se descartarán ${resumenMercadoPago.pendientes} pagos pendientes de revisión.` : ''}
               </Text>
             </View>
             <View style={estilos.accionesModal}>

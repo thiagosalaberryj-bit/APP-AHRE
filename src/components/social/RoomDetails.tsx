@@ -16,7 +16,7 @@ import TarjetaGastoSala from './RoomExpenseCard';
 import ResumenImporteSocial from './SocialAmountSummary';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/RoomDetailsStyles';
-export default function DetalleSala(propiedades: import('../../social/types').AspectoSocial & ({sala:import('../../social/types').SalaVista;alAbrirGasto:(id:string)=>void} & Pick<import('../../social/types').AccionesSociales,'abrirRegistro'>)) {
+export default function DetalleSala(propiedades: import('../../social/types').AspectoSocial & ({sala:import('../../social/types').SalaVista;alAbrirGasto:(id:string)=>void;seccionInicial?:'gastos'|'participantes'|'balances'} & Pick<import('../../social/types').AccionesSociales,'abrirRegistro'>)) {
   const {
     usuarioId,personaActual,
     obtenerPersona,
@@ -43,7 +43,8 @@ export default function DetalleSala(propiedades: import('../../social/types').As
   const [pendientes,cambiarPendientes]=useState<import('../../social/online/types').OperacionPersonal[]>([]);
   useEffect(()=>{let activo=true;const cargar=async()=>{try{const [ops,locales]=await Promise.all([leerDatosOnline<import('../../social/online/types').OperacionPersonal[]>(usuarioId,'operaciones',[]),consultarMovimientosSociales()]);if(activo)cambiarPendientes(ops.filter(o=>o.salaId===sala.id&&!o.incorporada&&!locales.some(l=>l.clave===o.clave)));}catch{}};void cargar();const dejar=observarSocialOnline(()=>{void cargar();});return()=>{activo=false;dejar();};},[usuarioId,sala.id]);
   const contador=(detalleOnline?.solicitudes.filter(s=>s.estado==='pendiente').length||0)+(detalleOnline?.admisiones?.filter(s=>s.estado==='pendiente').length||0);
-  const [seccion, establecerSeccion] = useState('balances');
+  const [seccion, establecerSeccion] = useState(propiedades.seccionInicial || 'balances');
+  useEffect(()=>{if(propiedades.seccionInicial)establecerSeccion(propiedades.seccionInicial);},[propiedades.seccionInicial]);
   const personasSala = sala.participantes;
   const cerrada = sala.estado === 'cerrada'||!sala.administrador||sala.cierrePendiente||sala.publicacionPendiente;
   const cierreSinConexion=!sala.demo&&sala.online&&['offline','revocado','sesion'].includes(obtenerVistaSincronizacion().estado);
@@ -69,7 +70,7 @@ export default function DetalleSala(propiedades: import('../../social/types').As
       </View>
 
 
-      <SelectorSegmentado tema={tema} opciones={SECCIONES_SALA.map(s=>s.id==='participantes'?{...s,contador}:s)} valor={seccion} alSeleccionar={establecerSeccion} etiqueta="Sección de sala" />
+      <SelectorSegmentado tema={tema} opciones={SECCIONES_SALA.map(s=>s.id==='participantes'?{...s,contador}:s)} valor={seccion} alSeleccionar={valor=>establecerSeccion(valor as 'gastos'|'participantes'|'balances')} etiqueta="Sección de sala" />
       {seccion === 'balances' ? <BalancesSala sala={sala} alAbrirGasto={alAbrirGasto} {...aspecto} /> : seccion === 'participantes' ? <>{sala.online?<PanelSalaOnline sala={sala} alAbrirPersona={personaId=>abrirRegistro('personaSala',{salaId:sala.id,personaId})} alCrearPersona={()=>abrirRegistro('persona')} {...aspecto}/>:<PersonasSala personasSala={personasSala} gastos={sala.gastos} alCambiar={async ids => { await cambiarPersonasSala(sala.id, ids); await recargar(); }} cerrada={cerrada} alCrearPersona={() => abrirRegistro('persona')} {...aspecto} />}</> : <View style={estilos.grupo}>
           {sala.gastos.length ? sala.gastos.map(gasto => <View key={gasto.id}><TarjetaGastoSala gasto={gasto} alAbrir={() => alAbrirGasto(gasto.id)} {...aspecto}/>{pendientes.some(o=>o.gastoId===gasto.id)?<Text style={estilosGlobales.textoAyuda}>Pendiente de registrar en tu depósito</Text>:null}</View>) : <EstadoVacio icono="receipt-outline" titulo="Todavía no hay gastos" descripcion="Registrá quién pagó y cómo se reparten las partes." {...aspecto} />}
         </View>}

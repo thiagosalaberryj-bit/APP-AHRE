@@ -1,80 +1,20 @@
 # Notificaciones de AHRE
 
-## Alcance
+La pantalla usa historial persistente de SQLite, agrupación por día, filtros
+Todas/Pendientes/No vistas y carga de páginas. Las tarjetas distinguen Nueva y
+Vista mediante texto y peso tipográfico, además del borde; Pendiente/Resuelta
+es un estado independiente. Tocar abre el recurso relacionado.
 
-Este documento registra el maquetado de la pantalla de Notificaciones. En
-esta etapa no hay notificaciones push ni locales, programación de
-recordatorios, lectura desde base de datos, contador real, permisos del
-dispositivo ni navegación contextual. Todo es simulado y solo en pantalla.
+La rueda de ajustes abre un formulario con tipos, horarios, anticipación,
+zona horaria y privacidad. Muestra el permiso real del sistema y permite
+solicitarlo de forma explícita o abrir Ajustes. Perfil conserva el interruptor
+general de avisos. Se mantienen temas claro/oscuro y estilos locales.
 
-## Estructura de la pantalla
+Mercado Pago agrega una pantalla de revisión accesible desde el depósito y
+la notificación. Muestra cantidades, período recuperado, cupos manuales,
+selección múltiple, categorías, ignorados y asociación de registros existentes.
+Un aviso visto no se resuelve mientras queden pagos pendientes.
 
-`src/screens/NotificationsScreen.tsx` es secundaria con `EncabezadoSeccion`
-(«Notificaciones») y lista desplazable. Se abre desde el botón de
-notificaciones del Dashboard; la flecha del encabezado regresa. El contenido
-usa 12 puntos de margen lateral, igual que Inicio, y acompaña los temas claro y oscuro, incluidos
-el modal y los controles. El scroll reserva espacio para el área segura inferior
-del dispositivo, de modo que la última tarjeta pueda verse completa.
-
-Encima de la lista hay una fila con el conteo visual (`2 nuevas sin leer`,
-`Estás al día`) y la rueda de ajustes que abre el modal de tipos de alerta.
-
-## Información mostrada por notificación
-
-`TarjetaNotificacion` (`src/components/NotificationCard.tsx`), coherente en
-toda la lista:
-
-- ícono AHRE a la izquierda en contenedor verde;
-- encabezado del día («Hoy», «Ayer» o fecha) fuera de las tarjetas, agrupando
-  las notificaciones más recientes primero;
-- título en negrita (nuevas) con la hora a la derecha;
-- mensaje en gris abajo (2 líneas, completo al expandir);
-- etiqueta `Nueva` en las no leídas.
-
-La hora queda dentro de cada tarjeta, mientras que el día se presenta como un
-encabezado independiente para separar los grupos, igual que en Movimientos.
-
-Datos simulados propios de AHRE (no promociones externas):
-
-```text
-Hoy
-  Recordatorio · 20:00
-Ayer
-  Deuda pendiente · 09:00
-24 de septiembre
-  Movimientos recurrentes · 09:40
-```
-
-La maqueta presenta tres avisos: recordatorio de gastos, deuda pendiente y
-movimientos recurrentes (ingreso y egreso).
-
-## Diferenciación visual de estados
-
-Nueva: borde de foco, punto verde, título en negrita y etiqueta `Nueva`.
-Revisada: tarjeta normal. La diferencia no depende solo del color (punto,
-negrita y texto). Tocar una tarjeta la expande con el mensaje completo y la
-marca como leída solo en pantalla, sin persistencia.
-
-## Ajustes de tipos de alerta
-
-El modal `Ajustes de notificaciones` lista `Recordatorios de registro,
-Vencimientos y deudas, Movimientos registrados, Resúmenes y novedades` con
-`Conmutador` reutilizado y nota al pie. Todo visual, sin permisos ni
-programación. El badge con cantidad en el Dashboard queda como observación
-para un Issue futuro (el Issue actual lo excluye y tocaría el header
-compartido).
-
-## Estado vacío y estado de carga
-
-- **Carga:** los avisos de muestra disponibles se presentan directamente, sin
-  esqueletos, temporizadores ni mensajes de búsqueda simulada.
-- **Vacío:** tarjeta con ícono y `No tenés notificaciones.`
-- La lista soporta ninguna, pocas o muchas notificaciones con scroll
-  vertical.
-
-## Componentes utilizados
-
-`SectionHeader`, `NotificationCard` (nuevo común), `Toggle` (reutilizado) y
-tokens de `colors.ts`/`globalStyles.ts`. Estilos locales en
-`src/styles/NotificationsScreenStyles.ts`. Sin Internet ni servicios
-externos.
+Ver el [contrato funcional y límites](../funcionalidades/notificaciones-mercado-pago.md)
+y la guía de credenciales de SERVER-AHRE. Push Android requiere APK con FCM;
+Expo Go conserva las funcionalidades locales compatibles.
