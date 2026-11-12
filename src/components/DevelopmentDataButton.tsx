@@ -1,5 +1,5 @@
 import { useContext, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
@@ -14,12 +14,14 @@ export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntr
   const accionEnCurso = useRef(false);
   const [cargando, establecerCargando] = useState(false);
   const [volumenEnCurso, establecerVolumenEnCurso] = useState(false);
+  const [errorVisible, establecerErrorVisible] = useState('');
   const estilos = crearEstilosDatosPrueba();
   const estilosGlobales = crearEstilosGlobales(tema);
 
   const entrar = async (volumenMovimientos = false) => {
     if (!__DEV__ || accionEnCurso.current || deshabilitado) return;
     accionEnCurso.current = true;
+    establecerErrorVisible('');
     establecerCargando(true);
     establecerVolumenEnCurso(volumenMovimientos);
     alCambiarCarga?.(true);
@@ -33,7 +35,14 @@ export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntr
       }
       alEntrar();
     } catch (error) {
-      mostrarAviso((error instanceof Error ? error.message : "") || 'No se pudieron preparar los datos de prueba.', { tipo: 'error' });
+      const detalle = error as { message?: unknown; name?: unknown; codigo?: unknown; code?: unknown; etapaDatosPrueba?: unknown; pasoSQLite?: unknown } | null;
+      const mensaje = String(detalle?.message || 'No se pudieron preparar los datos de prueba.');
+      const etapa = String(detalle?.etapaDatosPrueba || 'entrada-datos-prueba');
+      const codigo = String(detalle?.codigo || detalle?.code || detalle?.name || 'sin-codigo');
+      const diagnostico = `${mensaje}\n\nEtapa: ${etapa}\nCódigo: ${codigo}${detalle?.pasoSQLite ? '\nSQLite: '+String(detalle.pasoSQLite) : ''}`;
+      console.error('[AHRE] No se pudieron preparar los datos de prueba', { modo: volumenMovimientos ? '10000-movimientos' : 'datos-prueba', etapa, codigo, mensaje, pasoSQLite: detalle?.pasoSQLite });
+      establecerErrorVisible(diagnostico);
+      Alert.alert('Error al preparar datos de prueba', diagnostico);
     } finally {
       accionEnCurso.current = false;
       establecerCargando(false);
@@ -60,5 +69,6 @@ export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntr
       <Text style={[deshabilitado || cargando ? estilosGlobales.textoDeshabilitado : estilosGlobales.textoBotonSecundario, estilos.texto]}>{cargando && volumenEnCurso ? 'Preparando 10.000 movimientos…' : 'Entrar con 10.000 movimientos'}</Text>
     </Pressable>
     <Text style={[estilosGlobales.textoAyuda, estilos.texto]}>Solo desarrollo · Cuenta local independiente</Text>
+    {errorVisible ? <Text selectable accessibilityRole="alert" style={estilosGlobales.textoError}>{errorVisible}</Text> : null}
   </View>;
 }

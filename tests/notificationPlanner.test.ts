@@ -33,15 +33,15 @@ test('respeta una zona distinta del teléfono y el cambio de horario de verano',
   assert.ok(avisos.some(a => a.tipo === 'registro' && a.fecha === '2026-03-07T14:00:00.000Z'));
   assert.ok(avisos.some(a => a.tipo === 'registro' && a.fecha === '2026-03-08T13:00:00.000Z'));
 });
-test('una deuda genera aviso previo y vencimiento; el cierre mensual no inventa cifras', () => {
-  const d = datos(); d.deudas = [{ id: 'deuda', tipo: 'debo', vencimiento: '2026-11-12T12:00:00Z' }];
-  const avisos = planificarRecordatorios(d, ajustesPredeterminados(), new Date('2026-11-09T16:00:00Z'));
-  assert.equal(avisos.filter(a => a.tipo === 'debo').length, 2);
-  assert.ok(avisos.some(a => a.tipo === 'mensual' && a.fecha === '2026-12-01T13:00:00.000Z' && !a.mensaje.includes('$')));
+test('las deudas generan recordatorios de saldo sin vencimientos; el cierre mensual no inventa cifras',()=>{
+ const d=datos();d.deudas=[{id:'deuda',tipo:'debo'},{id:'cobro',tipo:'me_deben'}];
+ const avisos=planificarRecordatorios(d,ajustesPredeterminados(),new Date('2026-11-09T16:00:00Z'));
+ const deudas=avisos.filter(a=>a.tipo==='debo'||a.tipo==='me_deben');assert.equal(deudas.length,118);
+ assert.equal(deudas[0].fecha,'2026-11-10T12:00:00.000Z');
+ assert.ok(deudas.every(a=>!/vence|vencimiento|vencida/i.test(a.titulo+' '+a.mensaje)));
+ assert.ok(avisos.some(a=>a.tipo==='mensual'&&a.fecha==='2026-12-01T13:00:00.000Z'&&!a.mensaje.includes('$')));
 });
-test('un vencimiento expresado como día no se desplaza al día anterior por UTC', () => {
-  const d = datos(); d.deudas = [{ id: 'deuda', tipo: 'debo', vencimiento: '2026-11-12' }];
-  const avisos = planificarRecordatorios(d, ajustesPredeterminados(), new Date('2026-11-09T16:00:00Z'));
-  assert.ok(avisos.some(a => a.tipo === 'debo' && a.fecha === '2026-11-12T12:00:00.000Z'));
-  assert.ok(avisos.some(a => a.tipo === 'debo' && a.fecha === '2026-11-11T12:00:00.000Z'));
+
+test('sin deudas pendientes no programa avisos de deudas',()=>{
+ const avisos=planificarRecordatorios(datos(),ajustesPredeterminados(),new Date('2026-11-09T16:00:00Z'));assert.ok(!avisos.some(a=>a.tipo==='debo'||a.tipo==='me_deben'));
 });

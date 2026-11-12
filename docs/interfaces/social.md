@@ -779,3 +779,9 @@ existente y su operación concreta. La pestaña suma todos los movimientos
 visibles pendientes, incluyendo esos pagos; no se inventa un gasto de origen.
 Las etiquetas Te debe/Le debés y las cabeceras de importe no llevan negrita.
 Importe usa gris; N por registrar usa verde. Los montos conservan su jerarquía.
+
+El listado y el detalle de las salas demo comparten la reconstrucción de
+operaciones financieras, incluso en la primera entrada offline y con cachés
+creadas por versiones anteriores. Calcular el indicador no escribe en SQLite
+ni necesita una sincronización para que aparezca el número. Las selecciones
+y decisiones de incorporación existentes se conservan.

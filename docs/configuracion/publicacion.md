@@ -154,3 +154,17 @@ datos reales para actualizar la app.
 
 Referencias: [Firebase Android](https://firebase.google.com/docs/android/setup) y
 [credenciales FCM v1 de Expo](https://docs.expo.dev/push-notifications/fcm-credentials/).
+
+### Revisión de notificaciones y encabezado en la entrega 0.9.0
+
+Se conserva la misma versión 0.9.0 (versionCode 14) y el perfil ocr-comparison.
+Para esta revisión se envía la compilación con --no-wait: enviar no significa
+que la APK ya esté disponible. Instalarla cuando EAS termine y conceder permisos.
+Expo Go permite revisar diseño, paginación, decisiones y datos offline; push
+remoto con app cerrada se comprueba en la APK sobre un Android físico.
+
+Probar un pago parcial y después saldar la deuda: el primer pago mantiene el
+aviso pendiente; el segundo lo resuelve y cancela recordatorios futuros. Verificar
+locales y remotas juntas, aceptar/rechazar solicitudes y confirmar recurrencias.
+Un día sin registros conserva su recordatorio informativo sin generar atrasos.
+Backend y mp-worker deben tener los cambios coordinados antes de la prueba online.

@@ -599,3 +599,14 @@ for(const tema of ['claro','oscuro'] as const)test('los pagos pendientes de quie
  const parametros=destino[1] as import('../src/social/types.ts').ParametrosSociales;assert.equal(parametros.operacionClave,op.clave);
  await vista.abrir(vista.rutas.REGISTRO_SOCIAL,parametros);assert.ok(vista.texto().toLowerCase().includes('depósito'),vista.texto());comprobarRed();
 });
+
+for(const tema of ['claro','oscuro'] as const)test('el listado y el detalle coinciden en pendientes demo desde la primera entrada offline en '+tema,async prueba=>{
+ const {e,abierta,comprobarRed}=await prepararDemo(prueba);
+ const detalle=await e.obtenerSalaOnline(abierta.id);
+ const pendientes=(detalle.misFinanzas||[]).filter(o=>!o.seleccion&&!o.incorporada&&(o.clave.startsWith('compra:')||o.tipo==='ingreso'||detalle.sala.gastos.find(g=>g.id===o.gastoId)?.pagaron.includes(detalle.personaPropiaId)));
+ assert.equal(pendientes.length,2);
+ const sala=presente((await e.cargarSocial()).salas.find(s=>s.id===abierta.id));assert.equal(sala.movimientosPorRegistrar,pendientes.length);
+ const vista=interfazSocial(e,tema);await vista.abrir();
+ assert.ok(vista.todos(vista.buscarBoton('Abrir '+sala.nombre)).some(n=>n.props.accessibilityLabel===pendientes.length+' movimientos por registrar'));
+ comprobarRed();
+});

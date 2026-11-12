@@ -12,7 +12,7 @@ ambos estados y abren deudas, salas, recurrencias, estadísticas, movimientos o
 la revisión de Mercado Pago. Los destinos de push se validan y esperan el acceso
 normal de la cuenta, incluida la biometría, sin abrir pantallas privadas desde Inicio.
 
-Los ajustes por usuario permiten elegir tipos, hora, anticipación y zona horaria.
+Los ajustes por usuario permiten elegir tipos, hora y anticipación. La zona horaria se toma del teléfono al guardar.
 El interruptor general de Perfil controla los avisos del teléfono; no elimina el
 historial. Los avisos ocultan detalles por defecto. Rechazar permisos no bloquea
 la app: se muestra su estado y se ofrece abrir Ajustes sin volver a insistir.
@@ -28,6 +28,24 @@ Se cancelan o recalculan al registrar movimientos, resolver deudas, modificar
 recurrencias, revisar pendientes y cambiar preferencias. El cierre mensual
 invita a consultar estadísticas, sin mostrar cifras futuras o desactualizadas.
 Los avisos de servidor se conservan aunque no se entregue su push.
+
+Los recordatorios diarios de deudas y salas cubren ese mismo horizonte de
+60 días. Una deuda parcialmente pagada continúa pendiente; saldo cero,
+perdón o cancelación resuelven sus avisos sin marcarlos vistos. Las salas usan
+los mismos pendientes de sus tarjetas, tanto abiertas como cerradas. Una
+recurrencia conserva su ocurrencia específica y solo se resuelve al avanzar
+o desactivarla, nunca por haber llegado la fecha del aviso anticipado.
+
+Registrar movimientos y revisar el mes son avisos informativos, sin obligación
+de declarar actividad. Si un día no hubo registros, su aviso conserva fecha
+y estado de lectura; el siguiente día tiene un recordatorio independiente.
+No se crean movimientos ni se da por saldada una deuda por pasar el tiempo.
+
+El historial conectado mezcla una página remota con los avisos locales usando
+el mismo cursor de fecha/ID y devuelve como máximo diez elementos. Los filtros
+se aplican a ambas fuentes y offline se consultan las copias disponibles.
+El servidor cierra acciones de Social por su referencia y los errores de MP
+al recuperarse; publicar el backend actualizado es necesario para estas reglas.
 
 ## Mercado Pago
 
@@ -192,3 +210,6 @@ Sin internet se revisan los datos descargados, guardan borradores y registran
 o ignoran selecciones atómicamente. Se requiere conexión para vincular, buscar
 y sincronizar. Rendimientos y transferencias entre cuentas propias quedan
 pendientes de definición; no se agregaron en esta entrega.
+
+Aclaración: recordar deudas pendientes no representa vencimientos. El modelo
+de recordatorios ya no toma fecha de vencimiento ni anticipación para deudas.

@@ -9,7 +9,8 @@ export default function SelectorHora({
   estilosMovimiento,
   valor,
   alSeleccionar,
-}: {tema: import('../styles/colors').Tema; estilosMovimiento: import('../types/ui').EstilosMovimiento; valor:string; alSeleccionar:(valor:string)=>void}) {
+  etiquetaAccesibilidad = 'Seleccionar hora',
+}: {tema: import('../styles/colors').Tema; estilosMovimiento: import('../types/ui').EstilosMovimiento; valor:string; alSeleccionar:(valor:string)=>void;etiquetaAccesibilidad?:string}) {
   const [modalVisible, establecerModalVisible] = useState(false);
   const [horaElegida, establecerHoraElegida] = useState(0);
   const [minutoElegido, establecerMinutoElegido] = useState(0);
@@ -37,7 +38,7 @@ export default function SelectorHora({
   return (
     <>
       <Pressable
-        accessibilityLabel={`Seleccionar hora, ${valor}`}
+        accessibilityLabel={`${etiquetaAccesibilidad}, ${valor}`}
         accessibilityRole="button"
         onPress={abrirSelector}
         style={estilosMovimiento.filaInformacion}

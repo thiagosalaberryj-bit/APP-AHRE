@@ -18,6 +18,7 @@ function preparar(nombre: 'claro' | 'oscuro', reducir = false, propiedadesEncabe
   let contexto: unknown = null, tecladosCerrados = 0;
   const animaciones: { toValue: number; duration: number; useNativeDriver: boolean }[] = [];
   const destinos: string[] = [];
+  let diferir = false; const finales: (()=>void)[] = [];
   const iguales = (a?: readonly unknown[], b?: readonly unknown[]) => a && b && a.length === b.length && a.every((valor,i) => Object.is(valor,b[i]));
   const react = {
     isValidElement: (valor: unknown) => !!valor && typeof valor === 'object' && 'props' in valor,
@@ -43,11 +44,12 @@ function preparar(nombre: 'claro' | 'oscuro', reducir = false, propiedadesEncabe
   const { cargar } = crearCargadorComponentes(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), {
     react,
     '@react-navigation/native': { useNavigation: () => ({ navigate: (ruta: string) => destinos.push(ruta) }) },
+    './NotificationUnreadBadge': { __esModule:true, default:'NotificationBadge' },
     './SyncStatus': { __esModule: true, default: 'SyncStatus' },
     'react-native': { View: 'View', Pressable: 'Pressable', ScrollView: 'ScrollView', SectionList: 'SectionList',
-      StyleSheet: { create: (estilos: unknown) => estilos }, Keyboard: { dismiss: () => { tecladosCerrados++; } },
+      Easing: { cubic: (v:number)=>v*v*v, inOut: (fn:unknown)=>fn }, StyleSheet: { create: (estilos: unknown) => estilos }, Keyboard: { dismiss: () => { tecladosCerrados++; } },
       AccessibilityInfo: { isReduceMotionEnabled: async () => reducir, addEventListener: () => ({ remove() {} }) },
-      Animated: { Value: Valor, View: 'AnimatedView', timing: (valor: Valor, opciones: typeof animaciones[number]) => ({ start: () => { animaciones.push(opciones); valor.setValue(opciones.toValue); } }) },
+      Animated: { Value: Valor, View: 'AnimatedView', timing: (valor: Valor, opciones: typeof animaciones[number]) => ({ start: (alTerminar?: (r:{finished:boolean})=>void) => { animaciones.push(opciones); valor.setValue(opciones.toValue); if (diferir) finales.push(()=>alTerminar?.({finished:true})); else alTerminar?.({finished:true}); } }) },
     },
   });
   const marco = cargar<typeof import('../src/components/ScreenHeaderFrame.tsx')>('src/components/ScreenHeaderFrame.tsx').default;
@@ -65,6 +67,8 @@ function preparar(nombre: 'claro' | 'oscuro', reducir = false, propiedadesEncabe
   const evento = (y: number) => ({ nativeEvent: { contentOffset: { y }, contentSize: { height: 2000 }, layoutMeasurement: { height: 600 } } });
   function invocar(nodo: Nodo, propiedad: string, valor?: unknown) { assert.equal(typeof nodo.props[propiedad], 'function'); (nodo.props[propiedad] as (valor?:unknown)=>void)(valor); renderizarMarco(); }
   return { renderizar, renderizarMarco, evento, invocar, desplazamientos, animaciones, destinos, tema: TEMAS[nombre], get tecladosCerrados() { return tecladosCerrados; },
+    diferirAnimaciones() { diferir = true; },
+    terminarUnaAnimacion() { finales.shift()?.(); renderizarMarco(); },
     elementos: () => nodos(arbol),
     boton(etiqueta: string) { const boton = nodos(arbol).find(n => n.props.accessibilityLabel === etiqueta); assert.ok(boton, etiqueta); return boton; },
     async asentar() { await new Promise(resolver => setImmediate(resolver)); renderizarMarco(); renderizarMarco(); },
@@ -96,7 +100,7 @@ for (const tema of ['claro', 'oscuro'] as const) test(`marco plegable conserva r
   assert.deepEqual(subidas,[{ y: 0, animated: true }]); assert.equal(e.tecladosCerrados,1);
   assert.deepEqual(eventos.slice(-2),['cancelar-paginacion','subir']);
   for (const nombre of ['scroll','inicio','fin','inercia','fin-inercia']) assert.ok(eventos.includes(nombre));
-  assert.ok(e.animaciones.every(animacion => animacion.duration === 180 && animacion.useNativeDriver === false));
+  assert.ok(e.animaciones.every(animacion => animacion.duration === 280 && animacion.useNativeDriver === false));
   assert.ok(e.animaciones.length >= 2);
   assert.ok(!e.elementos().some(n => n.type === 'Pressable'));
   (scroll.props.ref as (valor: unknown)=>void)(null); assert.equal(ref.current,null);
@@ -120,7 +124,7 @@ for (const tema of ['claro', 'oscuro'] as const) test(`barra compacta conserva c
   const e = preparar(tema, false, { alAbrirPerfil: () => { perfiles++; }, alAbrirNotificaciones: () => { notificaciones++; } });
   prueba.after(e.desmontar); e.renderizarMarco(); await e.asentar();
   const scroll = e.renderizar('scroll', () => e.desplazamientos.DesplazamientoEncabezado({})) as unknown as Nodo;
-  e.invocar(scroll,'onScrollBeginDrag',e.evento(0)); e.invocar(scroll,'onScroll',e.evento(250));
+  e.invocar(scroll,'onScrollBeginDrag',e.evento(0)); e.invocar(scroll,'onScroll',e.evento(250)); await e.asentar();
   const fila = e.elementos().find(n => n.type === 'View' && (n.props.style as import('react-native').ViewStyle)?.height === 44);
   assert.ok(fila); assert.equal((fila.props.style as import('react-native').ViewStyle).backgroundColor,e.tema.encabezado);
   for (const etiqueta of ['Perfil','Notificaciones']) {
@@ -137,7 +141,20 @@ for (const tema of ['claro', 'oscuro'] as const) test(`barra compacta conserva c
   const secundaria = preparar(tema,false,{ mostrarSincronizacion: false }); prueba.after(secundaria.desmontar);
   secundaria.renderizarMarco(); await secundaria.asentar();
   const otro = secundaria.renderizar('scroll', () => secundaria.desplazamientos.DesplazamientoEncabezado({})) as unknown as Nodo;
-  secundaria.invocar(otro,'onScrollBeginDrag',secundaria.evento(0)); secundaria.invocar(otro,'onScroll',secundaria.evento(250));
+  secundaria.invocar(otro,'onScrollBeginDrag',secundaria.evento(0)); secundaria.invocar(otro,'onScroll',secundaria.evento(250)); await secundaria.asentar();
   secundaria.invocar(secundaria.boton('Perfil'),'onPress'); secundaria.invocar(secundaria.boton('Notificaciones'),'onPress');
   assert.deepEqual(secundaria.destinos,['Perfil','Notificaciones']); assert.ok(!secundaria.elementos().some(n => n.type === 'SyncStatus'));
+});
+
+for(const tema of ['claro','oscuro'] as const)test('los iconos compactos esperan al plegado y descartan transiciones interrumpidas en '+tema,async prueba=>{
+ const e=preparar(tema);prueba.after(e.desmontar);e.renderizarMarco();await e.asentar();e.diferirAnimaciones();
+ const scroll=e.renderizar('scroll',()=>e.desplazamientos.DesplazamientoEncabezado({})) as unknown as Nodo;
+ const visibles=()=>e.elementos().some(n=>n.type==='SyncStatus'||n.props.accessibilityLabel==='Perfil'||n.props.accessibilityLabel==='Notificaciones');
+ e.invocar(scroll,'onScrollBeginDrag',e.evento(0));e.invocar(scroll,'onScroll',e.evento(250));
+ assert.equal(visibles(),false);e.terminarUnaAnimacion();assert.equal(visibles(),false);
+ e.terminarUnaAnimacion();assert.equal(visibles(),true);
+ e.invocar(e.boton('Desplegar encabezado'),'onPress');assert.equal(visibles(),false);
+ e.invocar(e.boton('Plegar encabezado'),'onPress');assert.equal(visibles(),false);
+ e.terminarUnaAnimacion();e.terminarUnaAnimacion();assert.equal(visibles(),false);
+ e.terminarUnaAnimacion();e.terminarUnaAnimacion();assert.equal(visibles(),true);
 });

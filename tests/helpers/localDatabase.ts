@@ -20,7 +20,7 @@ type ServiciosPrueba =
   & typeof import('../../src/database/initialization.ts')
   & typeof import('../../src/social/socialService.ts')
   & typeof import('../../src/statistics/statisticsService.ts');
-type ServiciosIntegraciones = typeof import('../../src/mercadoPago/mercadoPagoService.ts') & typeof import('../../src/integrations/integrationStore.ts') & typeof import('../../src/integrations/integrationSync.ts') & typeof import('../../src/notifications/notificationService.ts');
+type ServiciosIntegraciones = typeof import('../../src/mercadoPago/mercadoPagoService.ts') & typeof import('../../src/integrations/integrationStore.ts') & typeof import('../../src/integrations/integrationSync.ts') & typeof import('../../src/notifications/notificationService.ts') & typeof import('../../src/notifications/reminderService.ts');
 type ServiciosRecurrencias = typeof import('../../src/recurrences/recurrenceService.ts');
 type ServiciosSync = typeof import('../../src/sync/syncService.ts') & typeof import('../../src/sync/remote.ts') & typeof import('../../src/sync/deviceAuthorization.ts') & typeof import('../../src/sync/pendingService.ts') & Pick<typeof import('../../src/sync/journal.ts'),'observarCambiosLocales'> & typeof import('../../src/database/connectionQueue.ts') & typeof import('../../src/database/transactions.ts');
 
@@ -48,6 +48,12 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     for (const [clave, valor] of Object.entries(valores)) this.setExport(clave, valor);
   }, { context: contexto, identifier: nombre });
   modulos.set('expo-sqlite', sintetico('expo-sqlite', { openDatabaseAsync: async () => adaptador }));
+  const avisosNativos=new Map<string,unknown>();
+  modulos.set(path.join(raiz,'src/notifications/nativeAdapter.ts'),sintetico('avisos-nativos-prueba',{
+    notificacionesNativas:async()=>({getPermissionsAsync:async()=>({granted:true}),getAllScheduledNotificationsAsync:async()=>[],cancelAllScheduledNotificationsAsync:async()=>avisosNativos.clear()}),
+    cancelarAviso:async(id:string)=>{avisosNativos.delete(id);},
+    programarAviso:async(aviso:{id:string})=>{avisosNativos.set(aviso.id,aviso);return aviso.id;},
+  }));
   modulos.set('expo-secure-store', sintetico('expo-secure-store', {
     getItemAsync: async (clave: string) => almacenamiento.get(clave) || null,
     setItemAsync: async (clave: string, valor: string) => { almacenamiento.set(clave, valor); },
@@ -89,6 +95,7 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     export * from './src/integrations/integrationStore.ts';
     export * from './src/integrations/integrationSync.ts';
     export * from './src/notifications/notificationService.ts';
+    export * from './src/notifications/reminderService.ts';
   `, { context: contexto, identifier: path.join(raiz, 'prueba-desarrollo-virtual.ts') });
   await entrada.link(async (nombre, origen) => {
     if (modulos.has(nombre)) return modulos.get(nombre)!;
@@ -96,5 +103,5 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     return cargar(resolverFuente(ruta));
   });
   await entrada.evaluate();
-  return { base, almacenamiento, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias & ServiciosIntegraciones) };
+  return { base, almacenamiento, avisosNativos, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias & ServiciosIntegraciones) };
 }

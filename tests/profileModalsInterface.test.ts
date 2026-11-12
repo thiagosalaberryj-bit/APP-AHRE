@@ -92,3 +92,14 @@ for (const nombreTema of ['claro', 'oscuro'] as const) {
     assert.ok(nodos(siguiente).some(nodo => nodo.props.name === 'checkmark-circle' && nodo.props.color === tema.foco));
   });
 }
+
+for(const nombre of ['claro','oscuro'] as const)test('modal de notificaciones separa el fondo del scroll y mantiene fija la X en '+nombre,()=>{
+ const {cargar}=crearCargadorComponentes(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'));
+ const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');const {crearEstilosPerfil}=cargar<typeof import('../src/styles/ProfileScreenStyles.ts')>('src/styles/ProfileScreenStyles.ts');
+ const ModalPerfil=cargar<typeof import('../src/components/ProfileModal.tsx')>('src/components/ProfileModal.tsx').default;let cierres=0;
+ const arbol=expandir(ModalPerfil({tema:TEMAS[nombre],estilos:crearEstilosPerfil(TEMAS[nombre]),visible:true,separarFondo:true,desplazable:true,estiloTarjeta:{height:'85%'},estiloDesplazamiento:{flex:1},titulo:'Notificaciones',descripcion:'Ajustes',icono:'notifications-outline',etiquetaCerrar:'Cerrar ajustes',etiquetaCerrarFondo:'Cerrar fondo',alCerrar:()=>cierres++,children:{type:'Text',props:{children:'Contenido largo'}} as never}));
+ const elementos=nodos(arbol),scroll=elementos.find(n=>n.type==='ScrollView')!;assert.ok(scroll);assert.equal(scroll.props.nestedScrollEnabled,true);
+ const fondo=elementos.find(n=>n.props.accessibilityLabel==='Cerrar fondo')!;assert.ok(!nodos(fondo.props.children).some(n=>n.type==='ScrollView'));
+ assert.ok(!nodos(scroll).some(n=>n.props.accessibilityLabel==='Cerrar ajustes'));
+ invocar(fondo,'onPress');invocar(elementos.find(n=>n.props.accessibilityLabel==='Cerrar ajustes')!,'onPress');assert.equal(cierres,2);
+});

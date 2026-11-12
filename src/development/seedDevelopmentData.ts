@@ -1,3 +1,4 @@
+import { prepararAvisosDemo } from './seedNotificationPreview';
 import {prepararVistaSocialOnline} from './seedSocialOnlinePreview';
 import type { Deposito } from '../database/types';
 import { iniciarSesion, registrarUsuario } from '../authentication/authenticationService';
@@ -18,6 +19,8 @@ let preparacionEnCurso: Promise<void> | null = null;
 let volumenEnCurso = false;
 
 async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean,vistaSocialOnline:boolean,volumenMovimientos:boolean) {
+  let etapa = 'consultar-cuenta-prueba';
+  try {
   const cuenta = await autenticacionRepositorio.consultarCredencialesPorCorreo(CUENTA_PRUEBA.correo);
   let usuario: Pick<import('../database/types').Usuario,'id'|'nombre'>;
   if (cuenta) {
@@ -38,6 +41,7 @@ async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean,v
     });
   }
 
+  etapa = 'preparar-datos-prueba';
   const ahora = Date.now();
   const diasAntes = (dias: number) => new Date(ahora - dias * 86400000).toISOString();
   const idDeposito = (clave: string) => `prueba:${usuario.id}:deposito:${clave}`;
@@ -76,10 +80,16 @@ async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean,v
     }
     if (incluirSocial) await prepararSocialPrueba(usuario, conexion, depositos, diasAntes(1));
     if(incluirSocial&&vistaSocialOnline&&!sincronizar)await prepararVistaSocialOnline(usuario.id,conexion,depositos);
+    if(incluirSocial&&vistaSocialOnline&&!sincronizar)await prepararAvisosDemo(usuario.id,conexion);
     if (volumenMovimientos) await prepararVolumenMovimientos(usuario.id, conexion);
   });
 
+  etapa = 'iniciar-sesion-prueba';
   await iniciarSesion({ ...CUENTA_PRUEBA, recordar: false,localPruebas:!sincronizar });
+  } catch(error) {
+    if(error && typeof error === 'object') { try { Object.defineProperty(error,'etapaDatosPrueba',{value:etapa,configurable:true}); } catch {} }
+    throw error;
+  }
 }
 
 export function prepararDatosPrueba({ incluirSocial = true,sincronizar=false,vistaSocialOnline=false,volumenMovimientos=false }: { incluirSocial?: boolean;sincronizar?:boolean;vistaSocialOnline?:boolean;volumenMovimientos?:boolean } = {}) {

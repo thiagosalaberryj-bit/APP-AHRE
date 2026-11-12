@@ -58,12 +58,13 @@ async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatic
       const protegidas = new Set(decisiones.map(f => (JSON.parse(f.datos) as { pagoId: string }).pagoId));
       await guardarDato(c, usuario.id, 'mp:operaciones', operaciones.map(op => protegidas.has(op.id) ? previas.find(f => f.id === op.id) || op : op));
     });
-    // Recuperar todas las páginas permite reflejar resoluciones sobre avisos antiguos.
+    // Solo la página reciente. Las anteriores se solicitan desde el historial.
     let antes: string | null = '';
-    do {
-      const pagina: { avisos: Aviso[]; siguiente: string | null } = await solicitarRemoto('/notificaciones?antes=' + encodeURIComponent(antes || ''), undefined, remota.token);
+    {
+      const pagina: { avisos: Aviso[]; siguiente: string | null; noVistas?:number } = await solicitarRemoto('/notificaciones?limite=10&antes=' + encodeURIComponent(antes || ''), undefined, remota.token);
       if (!await vigente()) return;
       await ejecutarTransaccion(async c => {
+        if(Number.isFinite(pagina.noVistas))await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',pagina.noVistas);
         for (const aviso of pagina.avisos) {
           const vistaLocal = await leerDato<string | null>(usuario.id, 'avisos:visto:' + aviso.id, null, c);
           if (vistaLocal && vistaLocal >= aviso.fecha) aviso.vista = true;
@@ -77,7 +78,7 @@ async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatic
         }
       });
       if (pagina.siguiente === antes) throw new Error('Historial de avisos inválido.'); antes = pagina.siguiente;
-    } while (antes);
+    }
     if (!await vigente()) return;
     const ajustes = await solicitarRemoto<AjustesAvisos>('/notificaciones/preferencias', undefined, remota.token);
     await ejecutarTransaccion(async c => {

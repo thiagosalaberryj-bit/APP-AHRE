@@ -1,3 +1,4 @@
+import IndicadorAvisosNoVistos from './NotificationUnreadBadge';
 import type { Tema } from '../styles/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -52,7 +53,7 @@ export default function EncabezadoPrincipal({
               name="notifications-outline"
               size={22}
               color={tema.botonPrincipal}
-            />
+            /><IndicadorAvisosNoVistos tema={tema}/>
           </Pressable>
           <Pressable
             accessibilityLabel="Perfil"

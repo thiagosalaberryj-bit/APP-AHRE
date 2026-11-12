@@ -1,3 +1,4 @@
+import { finanzasDemo } from '../development/demoRoomFinances';
 import { pendientesSala } from './roomPending';
 import {leerSalasOnline} from './online/onlineStore';
 import {proyectarSalasOnline} from './online/onlineProjection';
@@ -113,7 +114,7 @@ export function cargarSocial() {
     const incorporadas=new Set(incorporaciones.map(i=>i.clave));
     const pendientesPorSala=new Map<string,Set<string>>();
     for(const detalle of online){
-      pendientesPorSala.set(detalle.sala.id,new Set(pendientesSala(detalle,operaciones,incorporadas).map(o=>o.clave)));
+      pendientesPorSala.set(detalle.sala.id,new Set(pendientesSala(finanzasDemo(detalle,demo),operaciones,incorporadas).map(o=>o.clave)));
     }
     const salas=[...salasLocales,...proyectarSalasOnline(online)].map(sala=>({...sala,demo,movimientosPorRegistrar:pendientesPorSala.get(sala.id)?.size||0}));
     const personasOnline=online.flatMap(o=>o.sala.participantes.filter(p=>p.id!==o.personaPropiaId).map(p=>({id:p.id,nombre:p.nombre,apellido:'',apodo:'',iniciales:p.nombre.slice(0,2).toLocaleUpperCase('es'),activa:p.activa})));

@@ -5,6 +5,20 @@ import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './global
 
 export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
   return StyleSheet.create({
+    avisoCompacto:{backgroundColor:tema.superficie,borderColor:tema.borde,borderWidth:BORDES.anchos.fino,borderRadius:BORDES.radios.campo,overflow:'hidden'},
+    avisoNoVisto:{borderColor:tema.foco},
+    cabeceraAviso:{minHeight:56,flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno,paddingHorizontal:ESPACIADO.medio,paddingVertical:ESPACIADO.pequeno},
+    iconoAvisoCompacto:{width:32,height:32,alignItems:'center',justifyContent:'center',borderRadius:BORDES.radios.campo/2},
+    tituloAvisoCompacto:{flex:1,minWidth:0,color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.secundario,lineHeight:20},
+    detalleAviso:{paddingHorizontal:ESPACIADO.medio,paddingBottom:ESPACIADO.pequeno,gap:ESPACIADO.minimo},
+    enlaceAviso:{color:tema.foco,fontSize:TIPOGRAFIA.tamanos.secundario},
+    filaTipoAjuste:{paddingVertical:ESPACIADO.pequeno,borderBottomWidth:BORDES.anchos.fino,borderBottomColor:tema.borde,gap:ESPACIADO.minimo},
+    controlesAjuste:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:ESPACIADO.pequeno,flexWrap:'wrap'},
+    horaAjuste:{width:140},
+    campoHora:{minHeight:36,flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo,paddingHorizontal:ESPACIADO.pequeno,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo,borderWidth:0},
+    anticipacion:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo},
+    pasoAnticipacion:{width:36,minHeight:36,alignItems:'center',justifyContent:'center'},
+    accesoPermisos:{minHeight:44,justifyContent:'center'},
     contenido: {
       gap: ESPACIADO.formulario,
       padding: ESPACIADO.pantalla,
@@ -38,8 +52,10 @@ export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
       gap: ESPACIADO.medio,
     },
     grupoDia: {
-      gap: ESPACIADO.minimo,
+      gap: ESPACIADO.pequeno,
     },
+    encabezadoDia: {flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno},
+    lineaDia: {flex:1,height:BORDES.anchos.fino,backgroundColor:tema.borde},
     tituloDia: {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
@@ -162,7 +178,7 @@ export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
       textAlign: 'center',
     },
     filaAjuste: {
-      minHeight: 56,
+      minHeight: 36,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.medio,

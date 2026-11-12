@@ -82,3 +82,31 @@ aprobadas, sin fallos ni omisiones; comprobación de varias repeticiones y pausa
 con reloj simulado. Antes del ajuste de pausas, 84 pruebas de tarjetas, listas
 y Social aprobadas. La animación nativa requiere revisión visual en el teléfono.
 Este commit no incluye ajustes al comportamiento de plegado del encabezado.
+
+## Ajustes locales posteriores: resolución e historial combinado
+
+Cambios sin commit ni despliegue, verificados el 12 de noviembre de 2026.
+
+- TypeScript correcto. Suite de app: 450 aprobadas, cero fallos y 39 pruebas
+  MySQL omitidas en la ejecución local habitual.
+- Reloj y adaptador nativo simulados con SQLite real: pago parcial conserva
+  pendientes; pago final resuelve avisos de días anteriores sin marcarlos vistos
+  y elimina alarmas futuras. Pasar una deuda a acuerdo online no la salda.
+- Una recurrencia anticipada permanece pendiente hasta aceptar la ocurrencia;
+  las repeticiones de esa ocurrencia se cancelan al avanzar. Salas pendientes
+  se repiten por fechas fijas y se cancelan al incorporar sus operaciones.
+- Un día sin registros conserva su aviso informativo y programa el siguiente;
+  no crea obligaciones atrasadas ni movimientos financieros automáticamente.
+- Historial conectado de 23 remotas y 7 locales: orden común, máximo diez por
+  página, treinta IDs únicos, filtros y copia offline sin duplicados.
+- Backend: seis casos API de notificaciones/Search en MySQL aislado y cuatro
+  pruebas de roles de pagos aprobados. La prueba de cola de 1.000 usuarios
+  completó 2.000 páginas simuladas sin duplicados ni superar cinco consultas
+  concurrentes. No es una medición contra cuentas reales de Mercado Pago.
+- Encabezado: pruebas de interacción aprobadas en ambos temas; la capa exterior
+  de la barra compacta recorta las dos esquinas inferiores.
+
+Queda la comprobación física de entrega con modo avión/app cerrada y la revisión
+visual del scroll y redondeado en Expo Go/APK. Las simulaciones prueban fechas,
+cancelaciones y estados; no sustituyen la entrega de Android. La programación
+concreta cubre 60 días renovables al usar la app, sujeta al sistema operativo.

@@ -9,6 +9,10 @@ documentación se registran en este archivo.
 
 ### Añadido
 
+- Campana con contador de avisos no vistos, tarjetas plegables con iconos por
+  tipo, agrupación por fecha y ejemplos de los nueve tipos en datos de prueba.
+- Historial combinado local/servidor paginado de diez en diez, con copia offline.
+
 - Historial persistente de notificaciones, preferencias por tipo, recordatorios
   locales sin conexión y destinos a deudas, salas, depósitos y movimientos.
 - Vinculación OAuth de un depósito con Mercado Pago y revisión de pagos Search:
@@ -22,6 +26,17 @@ documentación se registran en este archivo.
 
 ### Corregido
 
+- Resolución al completar acciones y repetición diaria de deudas con saldo,
+  salas y recurrencias pendientes dentro del horizonte de 60 días.
+- Recurrencias anticipadas conservan la ocurrencia a confirmar; pagar parcialmente
+  una deuda no la resuelve y los avisos informativos no crean tareas atrasadas.
+- Ajustes de notificaciones con scroll independiente, X fija y selector de hora;
+  el acceso para solicitar permisos se oculta si ya están concedidos.
+- Plegado del header sin rebotes, accesos compactos al terminar la transición y
+  recorte inferior redondeado durante toda la animación.
+- Pendientes de salas coincidentes entre listado y detalle demo desde la primera
+  entrada offline; diagnóstico persistente para errores SQLite de datos de prueba.
+
 - Identificación de ingresos/egresos con detalle y filtros de Mercado Pago,
   actualización de pagos antiguos sin consumir búsquedas y tratamiento de importe cero.
 - Registro bloqueado visualmente con explicación al tocar; errores en diálogo
@@ -31,8 +46,9 @@ documentación se registran en este archivo.
 ### Entrega
 
 - App 0.9.0, Android versionCode 14; requiere backend coordinado 0.3.0.
-- TypeScript correcto y 463 pruebas aprobadas, sin fallos ni omisiones,
-  con SQLite y las integraciones MySQL habilitadas.
+- TypeScript correcto. Última suite: 450 pruebas aprobadas y 39 de integración
+  MySQL omitidas; 13 pruebas del header aprobadas tras el ajuste final.
+- La entrega física con app cerrada y sin conexión requiere validación en Android.
 - Expo Go conserva revisión y registro offline; push remoto requiere APK y FCM v1.
 - Rendimientos de la billetera y tratamiento específico de transferencias propias
   siguen fuera de esta entrega. Search no representa un extracto completo.

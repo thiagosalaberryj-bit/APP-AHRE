@@ -6,7 +6,7 @@ export const NOMBRES_AVISO: Record<TipoAviso, string> = {
   mercado_pago: 'Movimientos de Mercado Pago', social: 'Novedades de Social', cuenta: 'Vinculaciones y cuenta',
 };
 export interface DestinoAviso { tipo: 'movimientos' | 'deuda' | 'recurrencia' | 'sala' | 'estadisticas' | 'mercado_pago' | 'personas'; id?: string; depositoId?: string; seccion?: 'gastos' | 'participantes' | 'balances'; }
-export interface Aviso { id: string; tipo: TipoAviso; titulo: string; mensaje: string; destino: DestinoAviso; fecha: string; vista: boolean; resuelta: boolean; obtenidos?: number; pendientes?: number; }
+export interface Aviso { id: string; tipo: TipoAviso; titulo: string; mensaje: string; destino: DestinoAviso; fecha: string; vista: boolean; resuelta: boolean; obtenidos?: number; pendientes?: number; ocurrencia?: string; }
 export interface AjusteAviso { activo: boolean; hora: string; anticipacion: number; }
 export interface AjustesAvisos { zona: string; mostrarDetalles: boolean; tipos: Record<TipoAviso, AjusteAviso>; }
 export function ajustesPredeterminados(): AjustesAvisos {
