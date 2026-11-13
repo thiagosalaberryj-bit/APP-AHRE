@@ -55,6 +55,9 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     botonOpciones: {
       width:44,height:44,alignItems:'center',justifyContent:'center',
     },
+    indicadorMp: { position:'absolute', top:0, right:0, minWidth:19, minHeight:19, paddingHorizontal:ESPACIADO.minimo, borderRadius:BORDES.radios.circular, backgroundColor:tema.botonPrincipal, alignItems:'center', justifyContent:'center', borderWidth:BORDES.anchos.fino, borderColor:tema.superficie },
+    textoIndicadorMp: { fontSize:TIPOGRAFIA.tamanos.auxiliar, fontWeight:TIPOGRAFIA.pesos.negrita, color:tema.botonPrincipalTexto },
+    contadorOpcionMp: { minWidth:26, padding:ESPACIADO.minimo, borderRadius:BORDES.radios.campo, alignItems:'center', backgroundColor:tema.botonPrincipal },
     resumenSaldo: {
       flex:1,minWidth:0,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo/2,paddingHorizontal:ESPACIADO.medio,paddingVertical:ESPACIADO.pequeno,gap:ESPACIADO.minimo,alignItems:'flex-end',
     },
@@ -582,6 +585,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
     },
     tarjetaOpciones: {
       width: '100%',
+      maxHeight: '85%',
       maxWidth: 480,
       gap: ESPACIADO.medio,
       padding: ESPACIADO.grande,
@@ -595,6 +599,7 @@ export function crearEstilosDetalleDeposito(tema: Tema, anchoVentana = 390) {
       shadowOpacity: 0.22,
       shadowRadius: 12,
     },
+    listaOpcionesDeposito: { gap:ESPACIADO.medio },
     encabezadoOpciones: {
       flexDirection: 'row',
       alignItems: 'center',

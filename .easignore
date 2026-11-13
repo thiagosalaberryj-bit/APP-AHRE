@@ -42,6 +42,7 @@ yarn-error.*
 
 # Solo código y recursos necesarios para EAS
 .codex-attachments/
+credentials/
 .env
 .env.*
 !.env.example

@@ -6,6 +6,7 @@ import { estaPreparadoDiario, prepararDiario } from '../sync/journal';
 import { ErrorBaseDatos, manejarErrorBaseDatos } from './errors';
 import {
   aplicarEsquemaInicial,
+  prepararEsquemaIntegraciones,
   VERSION_ESQUEMA_INICIAL,
 } from './migrations/001_initialSchema';
 
@@ -92,6 +93,10 @@ async function abrirYPrepararBaseDatos() {
       versionActual = migracion.version;
     }
 
+    if (!await baseDatos.getFirstAsync("SELECT name FROM sqlite_master WHERE type='table' AND name='programaciones_avisos'")) {
+      operacion = 'preparar-integraciones';
+      await prepararEsquemaIntegraciones(baseDatos);
+    }
     operacion = 'preparar-diario-sincronizacion';
     await prepararDiarioSiHaceFalta(baseDatos, paso=>{operacion=paso;});
     return baseDatos;

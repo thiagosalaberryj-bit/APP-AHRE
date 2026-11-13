@@ -1,3 +1,4 @@
+import EtiquetaImporte from '../AmountLabel';
 import {CATEGORIAS_EGRESO} from '../../constants/movimientos';
 import {obtenerColorCategoria,obtenerColorIconoCategoria} from '../../styles/categoryColors';
 import crearEstilosSala from '../../styles/social/RoomDetailsStyles';
@@ -7,10 +8,11 @@ import { useDatosSociales } from '../../social/SocialDataContext';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 
-export default function TarjetaGastoSala({ gasto, alAbrir, tema, estilosGlobales }: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & ({gasto:import('../../social/types').GastoVista;alAbrir:()=>void})) {
+export default function TarjetaGastoSala({ gasto, alAbrir, tema, estilosGlobales, pendientesPorRegistrar = 0 }: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & ({gasto:import('../../social/types').GastoVista;alAbrir:()=>void;pendientesPorRegistrar?:number})) {
   const { obtenerPersona } = useDatosSociales();
   const estilos = { ...crearEstilosCompartidos(tema), ...crearEstilosSala(tema) };
   return <Pressable accessibilityRole="button" accessibilityLabel={`Ver gasto ${gasto.descripcion}`}
+    accessibilityValue={pendientesPorRegistrar > 0 ? { text: `${pendientesPorRegistrar} movimientos por registrar` } : undefined}
     accessibilityHint="Abre el reparto y los pagos de este gasto." onPress={alAbrir}
     style={({ pressed: presionado }) => [estilosGlobales.tarjeta, estilos.tarjetaSala, estilos.deudaHistorial, presionado && estilos.deudaHistorialPresionada]}>
     <View style={estilos.filaCampos}>
@@ -23,7 +25,7 @@ export default function TarjetaGastoSala({ gasto, alAbrir, tema, estilosGlobales
       </View>
       <View style={estilos.franjaImporteHistorial}>
         <View style={estilos.filaCampos}>
-          <Text numberOfLines={1} style={[estilos.estadoHistorialDeuda, estilos.textoFlexible, { color: tema.foco }]}>Importe</Text>
+          <EtiquetaImporte style={[estilos.estadoHistorialDeuda, estilos.textoFlexible, { color: pendientesPorRegistrar > 0 ? tema.foco : tema.textoSecundario, fontWeight: '400' }]}>{pendientesPorRegistrar > 0 ? `${pendientesPorRegistrar} por registrar` : 'Importe'}</EtiquetaImporte>
           <Ionicons color={tema.textoSecundario} name="chevron-forward" size={16} />
         </View>
         <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.encabezadoSeccion, estilos.tituloFila]}>{gasto.monto}</Text>

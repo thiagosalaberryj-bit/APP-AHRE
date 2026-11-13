@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NombreIcono } from '../constants/movimientos';
 import type { Tema } from '../styles/colors';
 import type { crearEstilosPerfil } from '../styles/ProfileScreenStyles';
+import type { StyleProp, ViewStyle } from 'react-native';
 
 type PropiedadesEncabezado = {
   alCerrar: () => void;
@@ -43,11 +44,14 @@ function EncabezadoModalPerfil({ alCerrar, colorIcono, descripcion, etiquetaCerr
 
 export default function ModalPerfil({
   visible, alCerrar, estilos, etiquetaCerrar, etiquetaCerrarFondo = etiquetaCerrar,
-  desplazable = false, children, ...encabezado
+  desplazable = false, separarFondo = false, estiloTarjeta, estiloDesplazamiento, children, ...encabezado
 }: PropiedadesEncabezado & {
   visible: boolean;
   etiquetaCerrarFondo?: string;
   desplazable?: boolean;
+  separarFondo?: boolean;
+  estiloTarjeta?: StyleProp<ViewStyle>;
+  estiloDesplazamiento?: StyleProp<ViewStyle>;
   children: ReactNode;
 }) {
   const contenido = <>
@@ -56,6 +60,18 @@ export default function ModalPerfil({
     {children}
   </>;
 
+  if (separarFondo) return <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}>
+    <View style={estilos.fondoSuperpuesto}>
+      <Pressable accessibilityLabel={etiquetaCerrarFondo} onPress={alCerrar} style={StyleSheet.absoluteFill}/>
+      <View style={[estilos.tarjetaSuperpuesta,estiloTarjeta]} accessibilityViewIsModal>
+        <EncabezadoModalPerfil {...encabezado} alCerrar={alCerrar} estilos={estilos} etiquetaCerrar={etiquetaCerrar}/>
+        <View style={estilos.separadorModal}/>
+        <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={[estilos.desplazamientoModal,estiloDesplazamiento]} contentContainerStyle={estilos.contenidoScrollModal}>
+          <View style={estilos.formularioModal}>{children}</View>
+        </ScrollView>
+      </View>
+    </View>
+  </Modal>;
   return (
     <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}>
       <Pressable accessibilityLabel={etiquetaCerrarFondo} onPress={alCerrar} style={estilos.fondoSuperpuesto}>

@@ -1,3 +1,4 @@
+import EtiquetaImporte from './AmountLabel';
 import { Pressable, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Tema } from '../styles/colors';
@@ -32,7 +33,7 @@ export default function TarjetaDeuda({ tema, deuda, nombrePersona, alAbrir, solo
     </View>
     <View style={estilos.franjaImporte}>
       <View style={estilos.filaTipo}>
-        <Text numberOfLines={1} style={[estilos.tipo, { color: colorEstado }]}>{estado}</Text>
+        <EtiquetaImporte style={[estilos.tipo, { color: colorEstado, fontWeight: '400' }]}>{estado}</EtiquetaImporte>
         {!soloLectura ? <Ionicons color={tema.textoSecundario} name="chevron-forward" size={16} /> : null}
       </View>
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.importe}>{importe}</Text>

@@ -5,6 +5,69 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+## [v0.9.0] - 2026-11-13 - no estable
+
+### Añadido
+
+- Campana con contador de avisos no vistos, tarjetas plegables con iconos por
+  tipo, agrupación por fecha y ejemplos de los nueve tipos en datos de prueba.
+- Historial combinado local/servidor paginado de diez en diez, con copia offline.
+- Acceso a Alarmas y recordatorios de Android para habilitar horarios precisos,
+  con consulta del permiso real y alternativa compatible en Expo Go.
+
+- Historial persistente de notificaciones, preferencias por tipo, recordatorios
+  locales sin conexión y destinos a deudas, salas, depósitos y movimientos.
+- Vinculación OAuth de un depósito con Mercado Pago y revisión de pagos Search:
+  categorías propuestas, selección múltiple, ignorados recuperables, asociación
+  a registros existentes y registro offline sin duplicar el saldo.
+- Descripción editable desde la card, conservada como borrador local y utilizada
+  al registrar. El dato original del proveedor se conserva para comparación.
+- Indicadores de pendientes, historial de consultas en modal y seguimiento
+  WebSocket solo mientras una consulta esté en curso.
+- Avisos persistentes al finalizar búsquedas/identificación y ante fallos definitivos.
+
+### Corregido
+
+- Resolución al completar acciones y repetición diaria de deudas con saldo,
+  salas y recurrencias pendientes dentro del horizonte de 60 días.
+- Recurrencias anticipadas conservan la ocurrencia a confirmar; pagar parcialmente
+  una deuda no la resuelve y los avisos informativos no crean tareas atrasadas.
+- Ajustes de notificaciones con scroll independiente, X fija y selector de hora;
+  el acceso para solicitar permisos se oculta si ya están concedidos.
+- Perfil mantiene el interruptor de AHRE cuando Android permite avisos y usa
+  una flecha solo si los bloquea. Apagar conserva los tipos y horarios elegidos.
+- Guardar espera la programación nativa sin depender del backend; serializa los
+  cambios, conserva alarmas retrasadas pendientes y recupera programaciones perdidas.
+- El formulario conserva su distribución mientras guarda y bloquea sus controles;
+  se retiró el botón temporal de prueba de diez segundos.
+- Las entregas al cambiar horario tienen identidades distintas, aunque el aviso
+  anterior siga pendiente. El historial incorpora los avisos previstos vencidos;
+  no los presenta como recibos de entrega física del teléfono.
+- Plegado del header sin rebotes, accesos compactos al terminar la transición y
+  recorte inferior redondeado durante toda la animación.
+- Pendientes de salas coincidentes entre listado y detalle demo desde la primera
+  entrada offline; diagnóstico persistente para errores SQLite de datos de prueba.
+
+- Identificación de ingresos/egresos con detalle y filtros de Mercado Pago,
+  actualización de pagos antiguos sin consumir búsquedas y tratamiento de importe cero.
+- Registro bloqueado visualmente con explicación al tocar; errores en diálogo
+  central y aviso fijo junto a las acciones, sin depender del desplazamiento.
+- Etiqueta «Próxima búsqueda automática» y usos disponibles centrados en el botón.
+- Revisión de Mercado Pago con barra compacta de selección y acciones en modal,
+  sin el bloque inferior que tapaba los movimientos.
+
+### Entrega
+
+- App 0.9.0, Android versionCode 14; requiere backend coordinado 0.3.0.
+- TypeScript correcto. Revisión previa al merge: 512 pruebas de app y 101 del
+  backend aprobadas, cero fallos y cero omisiones, con MySQL 8.4.3 temporal aislado.
+- El usuario confirmó la entrega de recordatorios en Android. Queda ampliar
+  la comprobación física a todos los tipos, reinicios y modelos de teléfono.
+- Expo Go conserva revisión y registro offline; push remoto requiere APK y FCM v1.
+- Rendimientos de la billetera y tratamiento específico de transferencias propias
+  siguen fuera de esta entrega. Search no representa un extracto completo.
+
+
 ### Cambiado
 
 - Encabezados fuera del desplazamiento en todas las pantallas que los usan,
@@ -28,6 +91,10 @@ documentación se registran en este archivo.
 
 ### Verificación
 
+- El 13 de noviembre se revisaron conflictos y archivos versionados antes del
+  merge autorizado. Las suites completas usaron SQLite y MySQL aislados;
+  no se accedió a datos de producción. Credenciales, APK y compilados quedan
+  fuera del árbol versionado; se conservan fuentes, módulos, tests y lockfiles.
 - Encabezados y ajustes de Social: tipos correctos y suite local con 399 pruebas
   aprobadas, cero fallos y 39 integraciones MySQL omitidas. Se comprueban los
   controles compactos en ambos temas y el regreso del historial por el encabezado.

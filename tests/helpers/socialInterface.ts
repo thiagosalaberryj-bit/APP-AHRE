@@ -99,7 +99,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     }),
   };
   nativo.PanResponder = { create: (manejadores: Record<string, unknown>) => ({ panHandlers: manejadores }) };
-  nativo.StyleSheet = { create: <T>(x: T) => x, absoluteFill: { position: 'absolute' } };
+  nativo.StyleSheet = { create: <T>(x: T) => x, flatten: (x: unknown): unknown => Array.isArray(x) ? Object.assign({}, ...x.flat(Infinity).filter(Boolean)) : x, absoluteFill: { position: 'absolute' } };
   function cargar<T>(archivo: string): T {
     archivo = path.resolve(archivo);
     if (cache.has(archivo)) return cache.get(archivo) as T;
@@ -114,6 +114,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       if (nombre === 'expo-clipboard') return {setStringAsync:async(texto:string)=>{copias.push(texto);return opciones.copiarTexto?opciones.copiarTexto(texto):true;}};
       if (nombre === 'expo-secure-store') return {getItemAsync:async()=>null,deleteItemAsync:async()=>{}};
       if (nombre === '@react-navigation/native') return { useFocusEffect: (callback:()=>void|(()=>void)) => react.useEffect(callback, [callback]), useNavigation: () => propiedades.navigation };
+      if (nombre.endsWith('/NotificationUnreadBadge')) return {__esModule:true,default:'NotificationBadge'};
       if (nombre.endsWith('/SyncStatus')) return { __esModule: true, default: 'SyncStatus' };
       if (nombre === 'react-native-safe-area-context') return { SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ bottom: 24 }) };
       if (nombre.endsWith('/MainHeader') || nombre.endsWith('/SectionHeader')) return { __esModule: true, default: 'Header' };

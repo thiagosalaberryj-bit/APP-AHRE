@@ -6,6 +6,16 @@ El proyecto utiliza Expo SDK 57, React Native y TypeScript. Las dependencias adm
 
 ## Dependencias de ejecución
 
+### Notificaciones · 9 de noviembre de 2026
+
+El líder autorizó explícitamente instalar dependencias para esta tarea.
+Se agregó `expo-notifications` `~57.0.25`, mediante `expo install` para SDK 57.
+Permite canales, permisos, programación local y tokens en APK Android.
+Expo Go omite la funcionalidad de push remoto y conserva los recordatorios
+locales compatibles. No se incorpora Firebase JS ni un SDK Mercado Pago al cliente.
+Las credenciales FCM v1 se administran en Expo y `google-services.json` registra
+la app Android; la clave privada de servicio no forma parte del paquete.
+
 ### Dependencias existentes
 
 | Dependencia | Versión | Finalidad | Uso en AHRE |

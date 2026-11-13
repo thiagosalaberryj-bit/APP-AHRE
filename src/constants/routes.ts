@@ -15,6 +15,7 @@ export const RUTAS = Object.freeze({
   GASTO_SOCIAL: 'GastoSocial',
   PERFIL: 'Perfil',
   NOTIFICACIONES: 'Notificaciones',
+  MERCADO_PAGO: 'MercadoPago',
   INGRESO: 'Ingreso',
   EGRESO: 'Egreso',
   DEPOSITO: 'Deposito',

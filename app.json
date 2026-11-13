@@ -2,7 +2,7 @@
   "expo": {
     "name": "AHRE",
     "slug": "APP-AHRE",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "orientation": "portrait",
     "icon": "./assets/ahre-mark.png",
     "userInterfaceStyle": "automatic",
@@ -10,20 +10,23 @@
       "supportsTablet": true
     },
     "android": {
-      "versionCode": 13,
+      "googleServicesFile": "./google-services.json",
+      "versionCode": 14,
       "adaptiveIcon": {
         "backgroundColor": "#024C42",
         "foregroundImage": "./assets/ahre-mark.png"
       },
       "package": "com.thiagosalaberry.APPAHRE",
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.SCHEDULE_EXACT_ALARM"
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-notifications",
       "expo-font",
       [
         "expo-camera",

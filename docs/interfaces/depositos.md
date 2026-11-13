@@ -297,3 +297,14 @@ movimiento de origen, sin repetir una fila Adelanto registrado ni otro cargo.
 Prueba física pendiente: nueva APK en Android, funcionamiento sin red, apertura
 tras fechas vencidas, doble toque, navegación Atrás y resumen después de aceptar.
 La APK build 11 anterior no incluye estos cambios; no se generó otra en esta revisión.
+
+## Revisión compacta de selección Mercado Pago
+
+La revisión ya no reserva un bloque inferior para registrar/ignorar. Una barra
+compacta debajo del encabezado mantiene Todos/Ninguno y Revisar con la cantidad
+seleccionada accesibles mientras se desplaza la lista. Revisar abre un modal
+con acciones verticales para registrar o ignorar; en Ignorados ofrece volver
+a pendientes. Se conserva la confirmación explícita, la explicación de los
+pagos bloqueados y el registro offline. No cambia importes, categorías ni cupos.
+Sin selección se explica cómo seleccionar; con una operación en curso se impiden
+envíos adicionales. El modal cierra con X, Atrás o al tocar el fondo.

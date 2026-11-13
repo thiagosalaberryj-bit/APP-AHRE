@@ -199,7 +199,12 @@ sincronización también mantiene sus estados e insignias. Al desplegar el
 encabezado manualmente se ocultan los accesos compactos para evitar duplicarlos.
 La pantalla de Sincronización conserva su opción de no mostrar ese acceso.
 
-El cambio de altura dura 180 ms y se desactiva con reducir movimiento. Volver
+El cambio de altura dura 280 ms, con aceleración y frenado suaves, y se desactiva
+con reducir movimiento. Encabezado y barra compacta animan sus alturas al mismo
+tiempo para evitar que la barra empuje primero el contenido. Durante la transición
+se ignoran los cambios de offset producidos por el propio layout. Los gestos lentos
+acumulan recorrido, sin exigir más de dos puntos en cada evento. Al volver arriba,
+se exige intención de subida o la acción explícita para evitar oscilaciones. Volver
 al inicio también respeta esa preferencia y cierra el teclado sin borrar los
 campos. `HeaderScrollView.tsx` conecta el desplazamiento vertical principal y
 la lista de Sincronización; conserva referencias, eventos y opciones existentes.
@@ -380,3 +385,13 @@ El anclaje del depósito usa `measure` con `pageX/pageY` y la altura completa
 del campo. Las dimensiones disponibles provienen de `onLayout` de la capa
 flotante; no se resta el origen de otra ventana medido con `measureInWindow`.
 La lista no se reposiciona arriba al abrir, evitando que tape parte del campo.
+
+Los iconos de sincronización, notificaciones y perfil de la barra compacta
+se muestran al finalizar el plegado completo del encabezado y de la barra.
+Se ocultan en cuanto comienza una expansión; una transición interrumpida no
+puede volver a mostrarlos por un callback anterior. Con Reducir movimiento
+el cambio es inmediato, sin temporizadores ni duplicación de accesos.
+
+Una única máscara exterior contiene el encabezado y la barra compacta con
+radio inferior constante. El recorte sigue la altura combinada durante toda
+la animación: ninguna capa rectangular tapa las esquinas al plegar o desplegar.

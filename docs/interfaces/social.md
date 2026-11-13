@@ -737,3 +737,51 @@ el toque fuera del modal y el regreso del sistema, sin un botón Cancelar inferi
 El historial de solicitudes de un integrante vuelve mediante el encabezado, sin
 repetir «Volver a integrantes» dentro del contenido. «Cancelar solicitud de vínculo»
 se conserva porque retira una solicitud enviada.
+
+## Indicadores de incorporaciones pendientes
+
+Las tarjetas de sala de Social y del listado muestran un número junto al nombre,
+con el mismo fondo, tipografía y espaciado del aviso MP de los depósitos. El número
+cuenta movimientos personales por incorporar, no deudas ni cambios por sincronizar.
+También aparece en el resumen de la sala. La pestaña Gastos suma las operaciones pendientes de sus gastos, no la cantidad
+de gastos. Cada card muestra «N por registrar» encima del monto, en lugar de
+«Importe», sin agregar otra línea ni aumentar su altura. Al tocarla se abre el detalle habitual con Mis movimientos.
+Los contadores no suman operaciones ya incorporadas, incluso si aún no se confirmó
+la sincronización, y desaparecen al resolver el último pendiente correspondiente.
+Un gasto puede generar más de un movimiento; otros pagos de la sala pueden seguir
+pendientes aunque ese gasto ya esté registrado. Se conserva la selección financiera
+previa al cierre de salas abiertas y el funcionamiento offline existente.
+
+Para verlo en Expo Go: entrar con datos de prueba → Social → Demo · Cena cerrada.
+En la pestaña Gastos, Cena con pago parcial muestra su marca; al abrirla,
+Mis movimientos permite elegir el depósito. Registrar una operación disminuye
+el contador; las demás quedan visibles. Volver a entrar a la cuenta de prueba
+conserva las decisiones, sin reiniciar ni añadir cargos por mostrar el ejemplo.
+La demostración usa los datos existentes y funciona sin credenciales ni HTTP.
+
+El estado Abierta/Cerrada reemplaza «Gastado» sobre el importe en la tarjeta
+de sala, sin negrita y con color diferenciado. El indicador numérico está centrado
+y su significado se explica en el contenedor principal de la sala. En las abiertas
+cuenta operaciones propias sin selección financiera o que requieren revisión;
+elegir el depósito reduce ese número sin registrar dinero antes del cierre.
+Solo se cuentan partes que ya figuran pagadas, compras propias e ingresos
+correspondientes. En las cerradas cuenta movimientos aún no incorporados.
+Para comparar ambos casos, las demos Viaje con amigos y Cena cerrada conservan
+sus decisiones y se actualizan sin reiniciar la cuenta de prueba.
+
+Los pendientes se distribuyen por gasto: 3 y 2 muestran Gastos · 5.
+La marca desaparece al resolver las operaciones de ese gasto y vuelve a decir
+Importe; el total principal conserva además otros movimientos propios de la sala.
+
+Si un pago de deuda pertenece a la sala pero no informa gasto asociado, se
+muestra en Pagos por registrar dentro de Gastos, con acceso al formulario
+existente y su operación concreta. La pestaña suma todos los movimientos
+visibles pendientes, incluyendo esos pagos; no se inventa un gasto de origen.
+Las etiquetas Te debe/Le debés y las cabeceras de importe no llevan negrita.
+Importe usa gris; N por registrar usa verde. Los montos conservan su jerarquía.
+
+El listado y el detalle de las salas demo comparten la reconstrucción de
+operaciones financieras, incluso en la primera entrada offline y con cachés
+creadas por versiones anteriores. Calcular el indicador no escribe en SQLite
+ni necesita una sincronización para que aparezca el número. Las selecciones
+y decisiones de incorporación existentes se conservan.

@@ -159,5 +159,25 @@ Ante `perfil_correo_duplicado`, Sincronización ofrece Corregir en Perfil y lueg
 Solo se modifica el correo en eventos de perfil no confirmados. Se conservan nombres, IDs, secuencias y eventos financieros, y se respaldan los originales. Los rechazos financieros, las revocaciones y los timeouts sin rechazo definitivo no habilitan esta acción. Una respuesta perdida se reintenta con el mismo contenido.
 
 «Acerca de AHRE» consulta `Constants.expoConfig.version`; la configuración actual
-es 0.7.0. Esa versión no demuestra qué revisión de JavaScript incluye una APK
+es 0.9.0. Esa versión no demuestra qué revisión de JavaScript incluye una APK
 anterior ni acredita que se haya publicado otra build.
+
+Notificaciones conserva la preferencia general de AHRE y consulta además el
+permiso real del teléfono al entrar y regresar de Ajustes. Si está activada en
+AHRE pero Android la bloquea, muestra Bloqueadas en Android y Activar en Android,
+sin fingir que pueden entregarse avisos. Desactivar en AHRE no borra las
+preferencias por tipo: el modal las muestra deshabilitadas hasta reactivar.
+
+El interruptor representa la entrega efectiva: solo se ve encendido cuando la
+preferencia general de AHRE está activa y el permiso del sistema está concedido.
+Mientras se consulta, se ve apagado y bloqueado. Intentar encenderlo
+guarda la intención del usuario y solicita el permiso o abre Ajustes; no se
+enciende por abrir Ajustes, sino al confirmar el permiso real al regresar.
+No se borran ni reescriben horarios, categorías de avisos ni privacidad al
+revocar permisos o cambiar este interruptor.
+
+Si Android deniega el permiso, la fila usa una flecha y se puede tocar para
+activarlo, sin un botón adicional que aumente su altura. Cuando Android permite
+notificaciones, siempre aparece el interruptor para encenderlas o apagarlas en
+AHRE, incluso si la preferencia general está apagada. Mientras se gestiona la
+activación, la fila bloquea nuevos toques.

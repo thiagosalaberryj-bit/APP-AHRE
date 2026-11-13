@@ -1,49 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import type { NombreIcono } from '../constants/movimientos';
+import type { Aviso, TipoAviso } from '../notifications/types';
+import type { Tema } from '../styles/colors';
+import { crearEstilosNotificaciones } from '../styles/NotificationsScreenStyles';
 
-function formatearHora(fechaHora: string|number|Date) {
-  const fecha = new Date(fechaHora);
-  if (Number.isNaN(fecha.getTime())) return '—';
-  return `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
-}
-
-export default function TarjetaNotificacion({
-  tema,
-  estilos,
-  notificacion,
-  nueva,
-  expandida,
-  alPresionar,
-  etiquetaAccesibilidad,
-}: {tema:import('../styles/colors').Tema;estilos:ReturnType<typeof import('../styles/NotificationsScreenStyles').crearEstilosNotificaciones>;notificacion:{id:string;titulo:string;mensaje:string;fechaHora:string;icono:import('../constants/movimientos').NombreIcono};nueva:boolean;expandida:boolean;alPresionar:()=>void;etiquetaAccesibilidad?:string}) {
-  return (
-    <Pressable
-      accessibilityLabel={etiquetaAccesibilidad||`${nueva ? 'Nueva notificación' : 'Notificación'}: ${notificacion.titulo}`}
-      accessibilityRole="button"
-      accessibilityState={{ expanded: expandida }}
-      onPress={alPresionar}
-      style={({ pressed: presionado }) => [
-        estilos.tarjetaNotificacion,
-        nueva ? estilos.tarjetaNueva : null,
-        presionado ? { opacity: 0.85 } : null,
-      ]}
-    >
-      <View style={estilos.iconoNotificacion}>
-        <Ionicons color={tema.botonPrincipal} name={notificacion.icono} size={26} />
-      </View>
-      <View style={estilos.contenidoNotificacion}>
-        <View style={estilos.filaTitulo}>
-          {nueva ? <View style={estilos.puntoNuevo} /> : null}
-          <Text style={[estilos.tituloNotificacion, nueva ? estilos.tituloNuevo : null]}>
-            {notificacion.titulo}
-          </Text>
-          <Text style={estilos.horaNotificacion}>{formatearHora(notificacion.fechaHora)}</Text>
-        </View>
-        <Text numberOfLines={expandida ? undefined : 2} style={estilos.mensajeNotificacion}>
-          {notificacion.mensaje}
-        </Text>
-        {nueva ? <Text style={estilos.etiquetaNueva}>Nueva</Text> : null}
-      </View>
-    </Pressable>
-  );
+const iconos:Record<TipoAviso,NombreIcono>={registro:'list-outline',debo:'arrow-up-circle-outline',me_deben:'arrow-down-circle-outline',recurrencias:'repeat-outline',salas:'people-outline',mensual:'stats-chart-outline',mercado_pago:'wallet-outline',social:'chatbubbles-outline',cuenta:'shield-checkmark-outline'};
+export default function TarjetaNotificacion({aviso,tema,alAbrir}:{aviso:Aviso;tema:Tema;alAbrir:()=>void}){
+ const [desplegada,establecerDesplegada]=useState(false),e=crearEstilosNotificaciones(tema);
+ const color=aviso.tipo==='debo'?tema.error:aviso.tipo==='me_deben'?tema.exito:tema.foco;
+ return <View style={[e.avisoCompacto,!aviso.vista&&e.avisoNoVisto]}>
+  <Pressable accessibilityRole="button" accessibilityLabel={`${aviso.vista?'Vista':'Nueva'}: ${aviso.titulo}`} accessibilityState={{expanded:desplegada}} onPress={()=>establecerDesplegada(v=>!v)} style={e.cabeceraAviso}>
+   <View style={[e.iconoAvisoCompacto,{backgroundColor:color+'15'}]}><Ionicons name={iconos[aviso.tipo]||'notifications-outline'} size={20} color={color}/></View>
+   <Text numberOfLines={desplegada?undefined:1} style={[e.tituloAvisoCompacto,!aviso.vista&&e.tituloNuevo]}>{aviso.titulo}</Text>
+   <Text style={e.horaNotificacion}>{new Date(aviso.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false})}</Text>
+   <Ionicons name={desplegada?'chevron-up':'chevron-down'} size={18} color={tema.textoSecundario}/>
+  </Pressable>
+  {desplegada?<View style={e.detalleAviso}><Text style={e.mensajeNotificacion}>{aviso.mensaje}</Text><Text style={e.horaNotificacion}>{aviso.vista?'Vista':'Nueva'} · {aviso.resuelta?'Resuelta':'Pendiente'}</Text><Pressable accessibilityRole="button" accessibilityLabel={'Abrir detalle de '+aviso.titulo} onPress={alAbrir} style={e.accesoPermisos}><Text style={e.enlaceAviso}>Abrir detalle ›</Text></Pressable></View>:null}
+ </View>;
 }

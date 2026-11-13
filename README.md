@@ -9,7 +9,7 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.8.0-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.9.0-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
@@ -26,6 +26,8 @@ Finanzas personales, gastos compartidos y comprobantes en una app Android con da
 | Finanzas | Depósitos, ingresos, egresos, ajustes y estadísticas locales. |
 | Social | Agenda privada, salas locales/online, invitados web, acuerdos y pagos con movimientos propios. |
 | Recurrencias | Programaciones locales con aceptación manual desde depósitos; no modifican el saldo hasta confirmar. |
+| Notificaciones | Historial, preferencias y recordatorios locales; push Android requiere configurar FCM y generar APK. |
+| Mercado Pago | Vinculación y revisión offline de pagos disponibles mediante Search, con consultas gestionadas por SERVER-AHRE y n8n. |
 | Comprobantes | OCR local con ML Kit y revisión antes de guardar; requiere APK Android. |
 | Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado y preferencias. |
 | Sincronización | Lotes ordenados, reintentos sin duplicados y corrección guiada de correo rechazado. |
@@ -79,7 +81,9 @@ Los resultados actuales y los resultados históricos se distinguen en
 La sincronización privada funciona con la app activa; Social compartido utiliza
 HTTP, eventos persistentes y WebSocket, con acceso web limitado a invitados.
 Expo Go permite probar la interfaz y las demos, pero no WorkManager ni OCR nativo.
-Notificaciones muestra ejemplos y el idioma elegido no traduce
+Mercado Pago requiere configurar OAuth y n8n en el servidor; Search no cubre
+todo el extracto. Los recordatorios locales preparan 60 días y renuevan ese
+horizonte al usar la app. El idioma elegido no traduce
 toda la interfaz. Los pendientes de una autorización revocada se conservan sin
 recuperación automática. La app es una versión de evaluación; ver los
 [límites y verificaciones](docs/estado-y-validacion.md).

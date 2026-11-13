@@ -47,7 +47,7 @@ async function prepararInicializacion(fallo: 'apertura' | 'version' | 'esquema' 
       estado.intentosDiario++;
       if (estado.fallo && fallo === 'diario') throw errorNativo;
     } }),
-    './migrations/001_initialSchema': sintetico('esquema', { VERSION_ESQUEMA_INICIAL: 1, aplicarEsquemaInicial: async () => { if (estado.fallo && fallo === 'esquema') throw errorNativo; } }),
+    './migrations/001_initialSchema': sintetico('esquema', { VERSION_ESQUEMA_INICIAL: 1, prepararEsquemaIntegraciones: async () => {}, aplicarEsquemaInicial: async () => { if (estado.fallo && fallo === 'esquema') throw errorNativo; } }),
     './errors': errores,
     './sqliteTransaction': control,
   };

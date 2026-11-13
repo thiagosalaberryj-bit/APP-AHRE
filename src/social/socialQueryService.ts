@@ -1,3 +1,5 @@
+import { finanzasDemo } from '../development/demoRoomFinances';
+import { pendientesSala } from './roomPending';
 import {leerSalasOnline} from './online/onlineStore';
 import {proyectarSalasOnline} from './online/onlineProjection';
 import type { Tablas } from '../database/types';
@@ -111,10 +113,8 @@ export function cargarSocial() {
     const incorporaciones=await contexto.conexion.getAllAsync<{clave:string}>('SELECT clave FROM incorporaciones_sociales_locales WHERE usuario_id=?',[contexto.usuario.id]);
     const incorporadas=new Set(incorporaciones.map(i=>i.clave));
     const pendientesPorSala=new Map<string,Set<string>>();
-    for(const operacion of operaciones){
-      if(!operacion.salaId||operacion.incorporada||incorporadas.has(operacion.clave))continue;
-      const claves=pendientesPorSala.get(operacion.salaId)||new Set<string>();
-      claves.add(operacion.clave);pendientesPorSala.set(operacion.salaId,claves);
+    for(const detalle of online){
+      pendientesPorSala.set(detalle.sala.id,new Set(pendientesSala(finanzasDemo(detalle,demo),operaciones,incorporadas).map(o=>o.clave)));
     }
     const salas=[...salasLocales,...proyectarSalasOnline(online)].map(sala=>({...sala,demo,movimientosPorRegistrar:pendientesPorSala.get(sala.id)?.size||0}));
     const personasOnline=online.flatMap(o=>o.sala.participantes.filter(p=>p.id!==o.personaPropiaId).map(p=>({id:p.id,nombre:p.nombre,apellido:'',apodo:'',iniciales:p.nombre.slice(0,2).toLocaleUpperCase('es'),activa:p.activa})));

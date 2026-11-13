@@ -1,3 +1,5 @@
+import { consultarPermisoAvisos, activarAvisosTelefono } from '../notifications/nativeAdapter';
+import OpcionNotificacionesPerfil from '../components/ProfileNotificationOption';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import ModalPerfil from '../components/ProfileModal';
@@ -9,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as AutenticacionLocal from 'expo-local-authentication';
 import {
   Alert,
+  AppState,
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
@@ -116,6 +119,10 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const [idioma, establecerIdioma] = useState('es');
   const [modalIdioma, establecerModalIdioma] = useState(false);
   const [notificaciones, establecerNotificaciones] = useState(true);
+  const [gestionandoAvisos,establecerGestionandoAvisos]=useState(false);
+  const gestionAvisos=useRef(false);
+  const [permisoAvisos,establecerPermisoAvisos]=useState('Comprobando permisos');
+  useEffect(()=>{let vigente=true;const cargar=()=>{void consultarPermisoAvisos().then(p=>{if(vigente)establecerPermisoAvisos(p);}).catch(()=>{if(vigente)establecerPermisoAvisos('No disponible');});};cargar();const escucha=AppState.addEventListener('change',estado=>{if(estado==='active')cargar();});return()=>{vigente=false;escucha.remove();};},[]);
   const [modalApariencia, establecerModalApariencia] = useState(false);
   const [modalCierre, establecerModalCierre] = useState(false);
   const [modalAcercaDe, establecerModalAcercaDe] = useState(false);
@@ -355,11 +362,12 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   };
 
   const guardarPreferencia = async (cambios: Partial<Omit<Preferencias,"notificaciones_activas">>&{ notificaciones_activas?: boolean; }, actualizarEstado: { (): void; (): void; (): void; (): void; }, restaurarEstado: { (): void; (): void; (): void; (): void; }) => {
-    if (accionPreferenciaEnCurso.current) return;
+    if (accionPreferenciaEnCurso.current) return false;
     accionPreferenciaEnCurso.current = true;
     actualizarEstado();
     try {
       await actualizarPreferencias(cambios);
+      return true;
     } catch (error) {
       restaurarEstado();
       mostrarAviso(
@@ -368,6 +376,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           : 'No se pudo guardar la preferencia. Intentá nuevamente.',
         { tipo: 'error' },
       );
+      return false;
     } finally {
       accionPreferenciaEnCurso.current = false;
     }
@@ -383,13 +392,20 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
     );
   };
 
-  const cambiarNotificaciones = (nuevoEstado: boolean) => {
+  const cambiarNotificaciones = async (nuevoEstado: boolean) => {
+    if(gestionAvisos.current||accionPreferenciaEnCurso.current)return;
+    gestionAvisos.current=true;establecerGestionandoAvisos(true);
     const estadoAnterior = notificaciones;
-    guardarPreferencia(
+    try{
+    if(nuevoEstado)establecerPermisoAvisos('Comprobando permisos');
+    const guardada=await guardarPreferencia(
       { notificaciones_activas: nuevoEstado },
       () => establecerNotificaciones(nuevoEstado),
       () => establecerNotificaciones(estadoAnterior),
     );
+    if(nuevoEstado)establecerPermisoAvisos(await (guardada?activarAvisosTelefono():consultarPermisoAvisos()));
+    }catch{establecerPermisoAvisos(await consultarPermisoAvisos().catch(()=>'No disponible'));mostrarAviso('No se pudieron abrir los permisos. Probá desde Ajustes del teléfono.',{tipo:'error'});}
+    finally{gestionAvisos.current=false;establecerGestionandoAvisos(false);}
   };
 
   const seleccionarApariencia = (nuevaApariencia: import('../styles/colors').Apariencia) => {
@@ -548,21 +564,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                         <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
                       </Pressable>
                       <View style={estilos.separadorOpcion} />
-                      <View style={estilos.filaSelector}>
-                        <View style={estilos.iconoSelector}>
-                          <Ionicons color={tema.foco} name="notifications-outline" size={21} />
-                        </View>
-                        <View style={estilos.contenidoSelector}>
-                          <Text style={estilos.textoFilaSelector}>Notificaciones</Text>
-                          <Text style={estilos.valorSelector}>{notificaciones ? 'Activadas' : 'Desactivadas'}</Text>
-                        </View>
-                        <Conmutador
-                          tema={tema}
-                          valor={notificaciones}
-                          alCambiar={cambiarNotificaciones}
-                          etiquetaAccesibilidad="Notificaciones"
-                        />
-                      </View>
+                      <OpcionNotificacionesPerfil tema={tema} estilos={estilos} preferencia={notificaciones} permiso={permisoAvisos} ocupada={gestionandoAvisos} alCambiar={cambiarNotificaciones}/>
                       <View style={estilos.separadorOpcion} />
                       <Pressable
                         accessibilityRole="button"

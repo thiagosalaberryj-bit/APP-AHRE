@@ -11,6 +11,8 @@ export type EstilosGlobales = ReturnType<typeof crearEstilosGlobales>;
 export type EstilosMovimiento = Partial<{ [Clave in keyof ReturnType<typeof crearEstilosEgreso>]: Clave extends 'colorIndicador' ? string : ViewStyle & TextStyle & ImageStyle }> & Partial<Record<'opcionDepositoFiltro'|'iconoDepositoFiltro'|'seleccionDepositoFiltro'|'listaDepositosFiltro'|'listaDepositos'|'accionesDepositosFiltro'|'textoAccionDepositoFiltro', ViewStyle & TextStyle>>;
 export interface Aspecto { tema: Tema; estilosGlobales: EstilosGlobales; estilosMovimiento?: EstilosMovimiento; }
 export interface SelectorCategoriaProps extends Aspecto {
+  modalAbierto?: boolean; alCerrarModal?: () => void;
+  contenidoAntesDeCategorias?: ReactNode;
   tipoMovimiento?: string;
   categoriasPrincipalesIds?: readonly string[];
   categorias?: readonly (Pick<Categoria, 'id'|'nombre'|'icono'> & Partial<Categoria>)[]; seleccionadaId?: string | null; alSeleccionar?: (id: string) => void;
@@ -47,7 +49,7 @@ export interface EncabezadoProps {
   alAbrirNotificaciones?: () => void; alAbrirPerfil?: () => void;
 }
 export interface ContenedorAuthProps { tema: Tema; titulo: string; descripcion: string; children?: ReactNode; }
-export interface ToggleProps { tema: Tema; valor: boolean; alCambiar: (valor: boolean) => void; etiquetaAccesibilidad?: string; }
+export interface ToggleProps { tema: Tema; valor: boolean; alCambiar: (valor: boolean) => void; etiquetaAccesibilidad?: string; deshabilitado?:boolean; }
 export interface AvisoProps { duracion: number; mensaje: string; onDismiss: () => void; tipo: 'error' | 'exito' | 'informacion'; margenSuperior: number; }
 export type Frecuencia = { id: string; nombre: string };
 export interface RecurrenciaProps { tema: Tema; estilosMovimiento: EstilosMovimiento; valor: boolean; alCambiar: (valor: boolean) => void; frecuencias: readonly Frecuencia[]; frecuenciaSeleccionada: string; alCambiarFrecuencia: (id: string) => void; }

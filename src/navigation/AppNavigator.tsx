@@ -22,6 +22,7 @@ import PantallaInicio from '../screens/HomeScreen';
 import PantallaInicioSesion from '../screens/LoginScreen';
 import PantallaMovimientos from '../screens/MovementsScreen';
 import PantallaNotificaciones from '../screens/NotificationsScreen';
+import PantallaMercadoPago from '../screens/MercadoPagoScreen';
 import PantallaSincronizacion from '../screens/SyncScreen';
 import PantallaOCR from '../screens/OcrScreen';
 import PantallaPerfil from '../screens/ProfileScreen';
@@ -140,6 +141,7 @@ export default function NavegadorAplicacion({ rutaInicial }: {rutaInicial: impor
           <PilaNavegacion.Screen name={RUTAS.PRINCIPAL} component={PestanasPrincipales} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.PERFIL} component={PantallaPerfil} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.NOTIFICACIONES} component={PantallaNotificaciones} options={{ headerShown: false }} />
+          <PilaNavegacion.Screen name={RUTAS.MERCADO_PAGO} component={PantallaMercadoPago} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.SINCRONIZACION} component={PantallaSincronizacion} options={{headerShown:false}}/>
           <PilaNavegacion.Screen name={RUTAS.INGRESO} component={PantallaIngreso} options={{ headerShown: false }} />
           <PilaNavegacion.Screen name={RUTAS.EGRESO} component={PantallaEgreso} options={{ headerShown: false }} />

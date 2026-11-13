@@ -1,3 +1,4 @@
+import IndicadorAvisosNoVistos from './NotificationUnreadBadge';
 import { Pressable, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -15,7 +16,7 @@ export default function AccionesEncabezadoCompacto({ tema, alAbrirNotificaciones
     {mostrarSincronizacion ? <EstadoSincronizacion soloIcono/> : null}
     <Pressable accessibilityRole="button" accessibilityLabel="Notificaciones"
       onPress={alAbrirNotificaciones || (() => navegacion.navigate(RUTAS.NOTIFICACIONES))} style={estilos.flecha}>
-      <Ionicons name="notifications-outline" size={22} color={tema.botonPrincipal}/>
+      <Ionicons name="notifications-outline" size={22} color={tema.botonPrincipal}/><IndicadorAvisosNoVistos tema={tema}/>
     </Pressable>
     <Pressable accessibilityRole="button" accessibilityLabel="Perfil"
       onPress={alAbrirPerfil || (() => navegacion.navigate(RUTAS.PERFIL))} style={estilos.flecha}>

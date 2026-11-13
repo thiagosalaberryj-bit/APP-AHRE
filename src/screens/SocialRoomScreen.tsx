@@ -7,7 +7,8 @@ export default function PantallaSalaSocial(propiedades: import('../navigation/ty
     ...contexto.aspecto,
     abrirRegistro: contexto.datos.abrirRegistro,
     sala: contexto.datos.sala,
-    alAbrirGasto: contexto.datos.alAbrirGasto
+    alAbrirGasto: contexto.datos.alAbrirGasto,
+    seccionInicial: propiedades.route.params?.seccionSala
   };
   return <MarcoSocial contexto={contexto}>{!contexto.cargando && !contexto.noDisponible ? <DetalleSala {...contenido} sala={contenido.sala!} /> : null}</MarcoSocial>;
 }

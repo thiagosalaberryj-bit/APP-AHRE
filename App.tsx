@@ -21,6 +21,7 @@ import { inicializarBaseDatos } from './src/database';
 import { ErrorBaseDatos } from './src/database/errors';
 import NavegadorAplicacion from './src/navigation/AppNavigator';
 import {ControladorSincronizacion} from './src/components/SyncStatus';
+import ControladorIntegraciones from './src/integrations/IntegrationController';
 import { cargarAparienciaSesionGuardada } from './src/profile/profileService';
 import { TEMAS } from './src/styles/colors';
 
@@ -146,7 +147,7 @@ function ContenidoAplicacion() {
         ) : (
           <View onLayout={ocultarPantallaCarga} style={{ flex: 1 }}>
             {estadoInicio === 'lista' ? (
-              <View style={{flex:1}}><NavegadorAplicacion key={revisionAcceso} rutaInicial={revisionAcceso?RUTAS.INICIO_SESION:RUTAS.INICIO} /><ControladorSincronizacion alRevocar={alRevocar} /></View>
+              <View style={{flex:1}}><NavegadorAplicacion key={revisionAcceso} rutaInicial={revisionAcceso?RUTAS.INICIO_SESION:RUTAS.INICIO} /><ControladorSincronizacion alRevocar={alRevocar} /><ControladorIntegraciones /></View>
             ) : (
               <View style={[estilosInicializacion.contenedor, { backgroundColor: tema.fondo }]}>
                 <Text
