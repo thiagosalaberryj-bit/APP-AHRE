@@ -15,7 +15,9 @@ export function planificarRecordatorios(datos: DatosRecordatorios, ajustes: Ajus
   const aHora = (fecha: Date, hora: string) => { const p = partesCalendario(fecha.toISOString(), zona), [h, m] = hora.split(':').map(Number); return instanteCalendario({ ...p, hora: h, minuto: m, segundo: 0 }, zona); };
   const agregar = (tipo: TipoAviso, clave: string, fecha: string, titulo: string, mensaje: string, destino: DestinoAviso, resuelta = false, ocurrencia?: string) => {
     if (!ajustes.tipos[tipo].activo || Date.parse(fecha) <= ahora.getTime()) return;
-    salida.push({ id: 'local:' + clave, clave, tipo, fecha, titulo, mensaje, destino, vista: false, resuelta, ...(ocurrencia?{ocurrencia}:{}) });
+    // La clave identifica la programación a reemplazar; el ID, la entrega concreta.
+    // Cambiar la hora después de recibir un aviso debe crear otra entrega visible.
+    salida.push({ id: 'local:' + clave + ':' + fecha, clave, tipo, fecha, titulo, mensaje, destino, vista: false, resuelta, ...(ocurrencia?{ocurrencia}:{}) });
   };
   const registrados = new Set(datos.registros.map(dia));
   // Fechas explícitas respetan el huso configurado incluso si cambia el horario de verano.

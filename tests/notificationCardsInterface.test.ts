@@ -32,3 +32,38 @@ test('configuración pide permiso solo si falta y no insiste al volver a renderi
  Ajustes({...props,permiso:'Sin permiso'});await Promise.resolve();assert.equal(solicitudes,1);assert.deepEqual(cambios,['Permitidas']);
  Ajustes({...props,permiso:'Sin permiso'});await Promise.resolve();assert.equal(solicitudes,1);
 });
+
+for(const nombre of ['claro','oscuro'] as const)test('guardar conserva el diseño del formulario y bloquea sus controles en '+nombre,()=>{
+ let cambios=0,guardados=0;
+ const {cargar}=crearCargadorComponentes(raiz,{react:{useRef:()=>({current:false}),useEffect:()=>{}},'../notifications/nativeAdapter':{solicitarPermisoAvisos:async()=>'Permitidas'}});
+ const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
+ const Ajustes=cargar<typeof import('../src/components/NotificationSettings.tsx')>('src/components/NotificationSettings.tsx').default;
+ const ajustes=ajustesPredeterminados();ajustes.tipos.registro.hora='21:07';const original=JSON.stringify(ajustes);
+ const props={tema:TEMAS[nombre],ajustes,alCambiar:()=>cambios++,alCerrar:()=>{},alGuardar:()=>guardados++,guardando:false,permiso:'Permitidas',alCambiarPermiso:()=>{},canales:{}};
+ const editables=nodos(Ajustes(props)),guardando=nodos(Ajustes({...props,guardando:true}));
+ const formulario=(filas:Nodo[])=>filas.find(n=>n.props.pointerEvents!==undefined)!;
+ assert.deepEqual(formulario(guardando).props.style,formulario(editables).props.style);
+ assert.deepEqual(formulario(guardando).props.style,{width:'100%',alignItems:'stretch'});
+ assert.equal(formulario(editables).props.pointerEvents,'auto');assert.equal(formulario(guardando).props.pointerEvents,'none');
+ assert.deepEqual(guardando.filter(n=>n.type==='Text').map(n=>n.props.children).filter(t=>t!=='Guardando…'),editables.filter(n=>n.type==='Text').map(n=>n.props.children).filter(t=>t!=='Guardar ajustes'));
+ for(const nodo of guardando.filter(n=>typeof n.props.alCambiar==='function')){assert.equal(nodo.props.deshabilitado,true);nodo.props.alCambiar(false);}
+ for(const nodo of guardando.filter(n=>typeof n.props.alSeleccionar==='function')){assert.equal(nodo.props.deshabilitado,true);nodo.props.alSeleccionar('22:00');}
+ const guardar=guardando.find(n=>n.type==='Pressable'&&nodos(n.props.children).some(c=>c.props.children==='Guardando…'))!;assert.equal(guardar.props.disabled,true);guardar.props.onPress();
+ assert.equal(cambios,0);assert.equal(guardados,0);assert.equal(JSON.stringify(ajustes),original);
+ assert.ok(!editables.some(n=>n.type==='Text'&&String(n.props.children).includes('10 segundos')));
+});
+
+for(const nombre of ['claro','oscuro'] as const)test('general apagado bloquea edición y guardado sin borrar preferencias en '+nombre,()=>{
+ let cambios=0,guardados=0,solicitudes=0;
+ const {cargar}=crearCargadorComponentes(raiz,{react:{useRef:()=>({current:false}),useEffect:(f:()=>void)=>f()},'../notifications/nativeAdapter':{solicitarPermisoAvisos:async()=>{solicitudes++;return 'Permitidas';}}});
+ const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
+ const Ajustes=cargar<typeof import('../src/components/NotificationSettings.tsx')>('src/components/NotificationSettings.tsx').default;
+ const ajustes=ajustesPredeterminados();ajustes.tipos.registro.hora='21:07';ajustes.tipos.debo.activo=false;const original=JSON.stringify(ajustes);
+ const props={tema:TEMAS[nombre],ajustes,alCambiar:()=>cambios++,alCerrar:()=>{},alGuardar:()=>guardados++,guardando:false,permiso:'Sin permiso',alCambiarPermiso:()=>{},canales:{},generales:false};
+ const filas=nodos(Ajustes(props));assert.equal(solicitudes,0);
+ for(const nodo of filas.filter(n=>typeof n.props.alCambiar==='function')){assert.equal(nodo.props.deshabilitado,true);nodo.props.alCambiar(true);}
+ for(const nodo of filas.filter(n=>typeof n.props.alSeleccionar==='function')){assert.equal(nodo.props.deshabilitado,true);nodo.props.alSeleccionar('22:00');}
+ const guardar=filas.find(n=>n.type==='Pressable'&&nodos(n.props.children).some(c=>c.props.children==='Guardar ajustes'))!;assert.equal(guardar.props.disabled,true);guardar.props.onPress();
+ assert.equal(cambios,0);assert.equal(guardados,0);assert.equal(JSON.stringify(ajustes),original);
+ const activadas=nodos(Ajustes({...props,generales:true,permiso:'Permitidas'}));assert.ok(activadas.some(n=>n.props.valor==='21:07'&&!n.props.deshabilitado));assert.ok(activadas.some(n=>n.props.etiquetaAccesibilidad==='Deudas que debo'&&n.props.valor===false));
+});

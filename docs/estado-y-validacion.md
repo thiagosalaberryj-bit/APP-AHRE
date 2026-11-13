@@ -1,11 +1,33 @@
 # Estado y validación de AHRE
 
-Referencia vigente: **8 de noviembre de 2026**, rama
-`codex/social-online-recurrencias`, versión configurada 0.8.0 y código Android 12.
-Este estado corresponde al código local; no identifica una APK instalada ni
-la revisión que corre en producción. El changelog queda a cargo de la revisión.
+Referencia vigente: **13 de noviembre de 2026**, rama
+`codex/notificaciones-mercado-pago`, versión configurada 0.9.0 y código Android 14.
+Este estado corresponde al código local; no identifica la revisión instalada
+ni la que corre en producción. El changelog queda a cargo de la revisión.
 
 ## Estado actual
+
+Se agregaron historial combinado local/servidor, filtros y páginas de diez,
+resolución por acción, recordatorios diarios y acceso a alarmas exactas de Android.
+La revisión MP usa una barra compacta y un modal para registrar/ignorar, sin el
+bloque inferior anterior. Expo Go conserva las funciones compatibles; la precisión
+de alarmas requiere instalar una APK nueva y conceder el acceso del sistema.
+
+TypeScript correcto. Última suite: **473 pruebas aprobadas, 39 integraciones
+MySQL omitidas y cero fallos** (512 casos). Expo config y autolinking detectan
+el permiso y el puente nativo. El usuario confirmó la entrega de recordatorios
+en Android con la APK c33f1e33; esta confirmación no sustituye verificar cada
+tipo de aviso ni todos los dispositivos.
+
+Perfil conserva el interruptor de AHRE cuando Android permite notificaciones;
+solo muestra una flecha si el sistema las bloquea. Guardar horarios conserva
+la distribución del modal y bloquea sus controles sin perder preferencias.
+Se retiró la prueba temporal de diez segundos. La compilación interna se envía
+a EAS sin esperar su resultado; su seguimiento se registra en
+`configuracion/publicacion.md`. Estos ajustes no despliegan el servidor ni
+publican la descarga en la web.
+
+## Validación histórica: revisión del 8 de noviembre de 2026
 
 La revisión posterior agrega confirmación manual de recurrencias, bloqueo financiero
 compartido, pendientes visibles de incorporación y etiquetas de deuda unificadas.

@@ -17,6 +17,7 @@ export async function guardarAjustesAvisos(datos: AjustesAvisos) {
 }
 export async function consultarAvisos(filtro: 'todas' | 'pendientes' | 'no_vistas', limite = 10) {
   const { usuario } = await obtenerSesionActual(); if (!usuario) return { avisos: [] as Aviso[], total: 0, noVistas: 0 };
+  await actualizarHistorialProgramado(usuario.id);
   return ejecutarLecturaConConexion(async c => {
     const condicion = filtro === 'pendientes' ? ' AND resuelta=0' : filtro === 'no_vistas' ? ' AND vista=0' : '';
     const filas = await c.getAllAsync<{ datos: string; vista: number; resuelta: number }>('SELECT datos,vista,resuelta FROM avisos_locales WHERE usuario_id=?' + condicion + ' ORDER BY fecha DESC,id DESC LIMIT ?', [usuario.id, limite]);
@@ -44,6 +45,7 @@ export async function guardarAvisoLocal(aviso: Aviso) {
 export async function contarAvisosNoVistos(){const {usuario}=await obtenerSesionActual();if(!usuario)return 0;return ejecutarLecturaConConexion(async c=>{const fila=await c.getFirstAsync<{total:number;locales:number}>('SELECT COUNT(*) total,SUM(CASE WHEN remota=0 THEN 1 ELSE 0 END) locales FROM avisos_locales WHERE usuario_id=? AND vista=0',[usuario.id]);const remoto=await leerDato<number|null>(usuario.id,'avisos:remotas-no-vistas',null,c);return remoto===null?Number(fila?.total||0):Number(fila?.locales||0)+remoto;});}
 export async function cargarPaginaAvisos(filtro:'todas'|'pendientes'|'no_vistas',antes=''){
  const {usuario}=await obtenerSesionActual();if(!usuario)return {avisos:[] as Aviso[],siguiente:null as string|null};
+ await actualizarHistorialProgramado(usuario.id);
  const remota=await obtenerSesionRemota(usuario.id);
  if(remota)try{
   const pagina=await solicitarRemoto<{avisos:Aviso[];siguiente:string|null;noVistas?:number}>('/notificaciones?limite=10&filtro='+filtro+'&antes='+encodeURIComponent(antes),undefined,remota.token);
@@ -58,6 +60,13 @@ export async function cargarPaginaAvisos(filtro:'todas'|'pendientes'|'no_vistas'
   return {avisos,siguiente:ultimo?(combinados.length>10||pagina.siguiente||locales.siguiente?ultimo.fecha+ultimo.id:null):pagina.siguiente};
  }catch(error){if(!(error instanceof ErrorRemoto)||error.estado!==0)throw error;}
  return paginaLocal(usuario.id,filtro,antes);
+}
+
+async function actualizarHistorialProgramado(usuarioId:string){
+ await ejecutarTransaccion(async c=>{
+  // Es historial de recordatorios previstos, no un recibo de entrega de Android.
+  await c.runAsync('INSERT OR IGNORE INTO avisos_locales(usuario_id,id,datos,fecha,vista,resuelta) SELECT usuario_id,json_extract(datos,\'$.id\'),datos,fecha,0,COALESCE(json_extract(datos,\'$.resuelta\'),0) FROM programaciones_avisos WHERE usuario_id=? AND fecha<=?',[usuarioId,new Date().toISOString()]);
+ });
 }
 
 async function paginaLocal(usuarioId:string,filtro:'todas'|'pendientes'|'no_vistas',antes:string,soloLocales=false){

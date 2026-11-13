@@ -56,3 +56,28 @@ test('el historial remoto pide una sola página por acción y conserva la copia 
  const segunda=await e.cargarPaginaAvisos('todas',primera.siguiente!);assert.equal(llamadas,2);assert.equal(segunda.avisos.length,10);
  offline=true;const local=await e.cargarPaginaAvisos('todas');assert.equal(local.avisos.length,10);assert.equal(llamadas,3);
 });
+
+test('una respuesta antigua de preferencias del backend no pisa un horario que se acaba de guardar',async t=>{
+ let servidor:unknown=null;
+ let liberar!:(respuesta:Response)=>void,iniciada!:()=>void,esperar=true;
+ const inicio=new Promise<void>(r=>iniciada=r);
+ let e:Awaited<ReturnType<typeof preparar>>;
+ e=await preparar(t,true,{url:'http://example.test/api/v1',fetch:async(entrada,opciones)=>{
+  const ruta=new URL(String(entrada)).pathname;
+  if(ruta.endsWith('/mercado-pago'))return Response.json(e.ESTADO_MP_INICIAL);
+  if(ruta.endsWith('/notificaciones'))return Response.json({avisos:[],siguiente:null});
+  if(ruta.endsWith('/notificaciones/preferencias')){
+   if(opciones?.method==='POST'){servidor=JSON.parse(String(opciones.body));return new Response(null,{status:204});}
+   if(esperar){iniciada();return new Promise<Response>(r=>liberar=r);}
+   return Response.json(servidor);
+  }
+  throw Error('Ruta inesperada: '+ruta);
+ }});
+ await e.prepararDatosPrueba();const {usuario}=await e.obtenerSesionActual();assert.ok(usuario);e.base.exec('DELETE FROM sync_outbox');
+ await e.guardarSesionRemota(usuario.id,{token:'ab'.repeat(32),vence:Date.now()+3600000,usuario,dispositivoId:await e.obtenerInstalacion(),generacion:1,revision:0},false);
+ const anterior=await e.cargarAjustesAvisos();servidor=anterior;
+ const sincronizacion=e.sincronizarIntegraciones(false,false);await inicio;
+ const nuevo=JSON.parse(JSON.stringify(anterior));nuevo.tipos.me_deben.hora='16:35';await e.guardarYProgramarAvisos(nuevo);
+ liberar(Response.json(anterior));await sincronizacion;assert.equal((await e.cargarAjustesAvisos()).tipos.me_deben.hora,'16:35');
+ esperar=false;await e.sincronizarIntegraciones(false,false);assert.equal((await e.cargarAjustesAvisos()).tipos.me_deben.hora,'16:35');
+});

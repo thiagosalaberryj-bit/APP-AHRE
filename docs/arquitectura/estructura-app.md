@@ -394,3 +394,14 @@ formularios de pago y eliminación.
 Estadísticas, Movimientos e Historial de deudas reutilizan los estilos de filtros
 de `MovementSearchFiltersStyles.ts`, incluidos tamaño, peso y selección por
 relleno. Las particularidades de cada pantalla permanecen en sus propios estilos.
+
+### Acceso a alarmas exactas
+
+El módulo local recurrence-worker registra también ModuloAlarmasExactas, un
+puente Android independiente de la ejecución de recurrencias. Consulta
+AlarmManager.canScheduleExactAlarms y abre el acceso especial del paquete AHRE.
+El adaptador exactAlarmAdapter.ts evita llamadas nativas en Expo Go, plataformas
+sin ese acceso y APK anteriores. ExactAlarmSettings.tsx refleja el permiso real;
+IntegrationController fuerza reprogramación al regresar y reminderService guarda
+la precisión en el JSON auxiliar de las programaciones, sin cambiar el esquema.
+El permiso SCHEDULE_EXACT_ALARM se declara en app.json y requiere recompilar APK.

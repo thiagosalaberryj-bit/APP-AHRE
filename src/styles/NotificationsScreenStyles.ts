@@ -13,6 +13,7 @@ export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
     detalleAviso:{paddingHorizontal:ESPACIADO.medio,paddingBottom:ESPACIADO.pequeno,gap:ESPACIADO.minimo},
     enlaceAviso:{color:tema.foco,fontSize:TIPOGRAFIA.tamanos.secundario},
     filaTipoAjuste:{paddingVertical:ESPACIADO.pequeno,borderBottomWidth:BORDES.anchos.fino,borderBottomColor:tema.borde,gap:ESPACIADO.minimo},
+    opcionesAjuste:{width:'100%',alignItems:'stretch'},
     controlesAjuste:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:ESPACIADO.pequeno,flexWrap:'wrap'},
     horaAjuste:{width:140},
     campoHora:{minHeight:36,flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo,paddingHorizontal:ESPACIADO.pequeno,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo,borderWidth:0},

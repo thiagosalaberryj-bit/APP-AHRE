@@ -1,6 +1,7 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { NOMBRES_AVISO, TIPOS_AVISO, type Aviso } from './types';
+export { consultarAlarmasExactas, abrirAjustesAlarmasExactas } from './exactAlarmAdapter';
 let modulo: Promise<typeof import('expo-notifications') | null> | null = null;
 export async function notificacionesNativas() {
   if (Platform.OS === 'web') return null;
@@ -12,6 +13,15 @@ export async function prepararCanales() { const n = await notificacionesNativas(
 export async function consultarPermisoAvisos() { const n = await notificacionesNativas(); if (!n) return 'No disponible'; const p = await n.getPermissionsAsync(); return p.granted ? 'Permitidas' : p.canAskAgain ? 'Sin permiso' : 'Desactivadas en Ajustes'; }
 export async function consultarCanalesAvisos(): Promise<Record<string, boolean>> { const n = await notificacionesNativas(); if (!n || Platform.OS !== 'android') return {}; return Object.fromEntries((await n.getNotificationChannelsAsync()).map(c => [c.id, c.importance !== n.AndroidImportance.NONE])); }
 export async function solicitarPermisoAvisos() { await prepararCanales(); const n = await notificacionesNativas(); if (n) await n.requestPermissionsAsync(); return consultarPermisoAvisos(); }
+export async function activarAvisosTelefono(){
+ const permiso=await consultarPermisoAvisos();
+ if(permiso==='Sin permiso'){
+  if(Platform.OS==='android'&&Number(Platform.Version)<33){await Linking.openSettings();return permiso;}
+  return solicitarPermisoAvisos();
+ }
+ if(permiso==='Desactivadas en Ajustes')await Linking.openSettings();
+ return permiso;
+}
 export async function obtenerTokenPush() {
   if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return null;
   const n = await notificacionesNativas(); if (!n || !(await n.getPermissionsAsync()).granted) return null;

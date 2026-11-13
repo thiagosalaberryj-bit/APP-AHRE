@@ -48,11 +48,18 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     for (const [clave, valor] of Object.entries(valores)) this.setExport(clave, valor);
   }, { context: contexto, identifier: nombre });
   modulos.set('expo-sqlite', sintetico('expo-sqlite', { openDatabaseAsync: async () => adaptador }));
-  const avisosNativos=new Map<string,unknown>();
+  const avisosNativos=new Map<string,import('../../src/notifications/types.ts').Aviso>(),duenosAvisos=new Map<string,string>();
+  let retenerVencidas=false,antesDeProgramar:(()=>Promise<void>)|null=null;
+  let permisoAlarmas='no_requerido';
   modulos.set(path.join(raiz,'src/notifications/nativeAdapter.ts'),sintetico('avisos-nativos-prueba',{
-    notificacionesNativas:async()=>({getPermissionsAsync:async()=>({granted:true}),getAllScheduledNotificationsAsync:async()=>[],cancelAllScheduledNotificationsAsync:async()=>avisosNativos.clear()}),
+    consultarAlarmasExactas:async()=>permisoAlarmas,
+    notificacionesNativas:async()=>({getPermissionsAsync:async()=>({granted:true}),getAllScheduledNotificationsAsync:async()=>{
+      const ahora=remoto?.reloj?.now()??Date.now();
+      if(!retenerVencidas)for(const [id,aviso] of avisosNativos)if(Date.parse(aviso.fecha)<=ahora)avisosNativos.delete(id);
+      return [...avisosNativos.keys()].map(identifier=>({identifier,content:{data:{aplicacion:'ahre',usuarioId:duenosAvisos.get(identifier)}}}));
+    },cancelAllScheduledNotificationsAsync:async()=>avisosNativos.clear()}),
     cancelarAviso:async(id:string)=>{avisosNativos.delete(id);},
-    programarAviso:async(aviso:{id:string})=>{avisosNativos.set(aviso.id,aviso);return aviso.id;},
+    programarAviso:async(aviso:import('../../src/notifications/types.ts').Aviso,usuarioId:string)=>{await antesDeProgramar?.();avisosNativos.set(aviso.id,aviso);duenosAvisos.set(aviso.id,usuarioId);return aviso.id;},
   }));
   modulos.set('expo-secure-store', sintetico('expo-secure-store', {
     getItemAsync: async (clave: string) => almacenamiento.get(clave) || null,
@@ -103,5 +110,5 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     return cargar(resolverFuente(ruta));
   });
   await entrada.evaluate();
-  return { base, almacenamiento, avisosNativos, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias & ServiciosIntegraciones) };
+  return { base, almacenamiento, avisosNativos, establecerPermisoAlarmas:(valor:string)=>{permisoAlarmas=valor;}, retenerAlarmasVencidas:(valor:boolean)=>{retenerVencidas=valor;}, interceptarProgramacion:(accion:(()=>Promise<void>)|null)=>{antesDeProgramar=accion;}, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias & ServiciosIntegraciones) };
 }

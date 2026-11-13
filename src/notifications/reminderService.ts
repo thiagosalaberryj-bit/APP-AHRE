@@ -5,15 +5,26 @@ import type { Recurrencia } from '../database/types';
 import { avisarIntegraciones, leerDato } from '../integrations/integrationStore';
 import { ESTADO_MP_INICIAL } from '../mercadoPago/mercadoPagoService';
 import type { OperacionMp } from '../mercadoPago/types';
-import { cargarAjustesAvisos } from './notificationService';
+import { cargarAjustesAvisos,guardarAjustesAvisos } from './notificationService';
+import type { AjustesAvisos } from './types';
 import { avisoLocalResuelto, planificarRecordatorios, type DatosRecordatorios } from './reminderPlanner';
-import { cancelarAviso, notificacionesNativas, programarAviso } from './nativeAdapter';
+import { cancelarAviso, consultarAlarmasExactas, notificacionesNativas, programarAviso } from './nativeAdapter';
 import type { Aviso } from './types';
 import type { DeudaOnline, OperacionPersonal } from '../social/online/types';
 import { leerSalasOnline } from '../social/online/onlineStore';
 import { pendientesSala } from '../social/roomPending';
 
-export async function reconciliarRecordatorios() {
+let colaRecordatorios:Promise<void>=Promise.resolve();
+export function reconciliarRecordatorios(forzarProgramacion=false):Promise<void>{
+  const trabajo=colaRecordatorios.catch(()=>{}).then(()=>ejecutarReconciliacion(forzarProgramacion));
+  colaRecordatorios=trabajo;return trabajo;
+}
+export async function guardarYProgramarAvisos(ajustes:AjustesAvisos){
+  await guardarAjustesAvisos(ajustes);
+  // No depende de que termine una sincronización de red ni de seguir en primer plano.
+  await reconciliarRecordatorios();
+}
+async function ejecutarReconciliacion(forzarProgramacion:boolean) {
   const { usuario } = await obtenerSesionActual(); if (!usuario) { const n = await notificacionesNativas(); if (n) await n.cancelAllScheduledNotificationsAsync(); return; }
   const ajustes = await cargarAjustesAvisos();
   const contexto = await ejecutarLecturaConConexion(async c => {
@@ -52,23 +63,34 @@ export async function reconciliarRecordatorios() {
       if (resuelta) { await c.runAsync('UPDATE avisos_locales SET resuelta=1 WHERE usuario_id=? AND id=?', [usuario.id, fila.id]); historialCambiado = true; }
     }
   });
-  const siguientes = contexto.activa ? planificarRecordatorios(contexto.datos, ajustes).map(aviso => ({ ...aviso, detalles: ajustes.mostrarDetalles })) : [];
+  const precision=await consultarAlarmasExactas();
+  const n = await notificacionesNativas(), permitida = n ? (await n.getPermissionsAsync()).granted : false;
+  const programadasNativas=n?await n.getAllScheduledNotificationsAsync():[];
+  const pendientesNativas=new Set(programadasNativas.map(p=>p.identifier));
+  const siguientes = contexto.activa ? planificarRecordatorios(contexto.datos, ajustes).map(aviso => ({ ...aviso, detalles: ajustes.mostrarDetalles,precision })) : [];
   const mapa = new Map(siguientes.map(f => [f.clave, f]));
+  const formatoDia=new Intl.DateTimeFormat('en-CA',{timeZone:ajustes.zona,year:'numeric',month:'2-digit',day:'2-digit'});
+  const diasRegistrados=new Set(contexto.datos.registros.map(fecha=>formatoDia.format(new Date(fecha))));
   for (const fila of anteriores) {
     const nueva = mapa.get(fila.clave);
+    const aviso=JSON.parse(fila.datos) as Aviso;
+    // Una alarma aproximada puede estar vencida y aún en espera de Android.
+    // No retirarla por el mero paso de la hora, ni antes de que llegue a dispararse.
+    const relevante=aviso.tipo==='registro'?!diasRegistrados.has(formatoDia.format(new Date(fila.fecha))):aviso.tipo==='mensual'||!avisoLocalResuelto(aviso,contexto.datos);
+    const conservarRetrasada=!nueva&&Date.parse(fila.fecha)<=Date.now()&&fila.nativo&&pendientesNativas.has(fila.nativo)&&contexto.activa&&permitida&&ajustes.tipos[aviso.tipo].activo&&relevante;
+    if(conservarRetrasada)continue;
     if (!nueva || JSON.stringify(nueva) !== fila.datos) {
       if (fila.nativo) await cancelarAviso(fila.nativo);
       await ejecutarTransaccion(c => c.runAsync('DELETE FROM programaciones_avisos WHERE usuario_id=? AND clave=?', [usuario.id, fila.clave]));
     }
   }
-  const n = await notificacionesNativas(), permitida = n ? (await n.getPermissionsAsync()).granted : false;
-  if (n) for (const programada of await n.getAllScheduledNotificationsAsync()) {
+  if (n) for (const programada of programadasNativas) {
     if (programada.content.data?.aplicacion === 'ahre' && programada.content.data.usuarioId !== usuario.id) await cancelarAviso(programada.identifier);
   }
   for (const aviso of siguientes) {
     if ((await obtenerSesionActual()).usuario?.id !== usuario.id) return;
     const anterior = anteriores.find(f => f.clave === aviso.clave && f.datos === JSON.stringify(aviso));
-    if (anterior?.nativo && permitida) continue;
+    if (anterior?.nativo && permitida && pendientesNativas.has(anterior.nativo) && !forzarProgramacion) continue;
     if (anterior?.nativo) await cancelarAviso(anterior.nativo);
     const nativo = permitida ? await programarAviso(aviso, usuario.id, ajustes.mostrarDetalles) : null;
     await ejecutarTransaccion(c => c.runAsync('INSERT INTO programaciones_avisos(usuario_id,clave,fecha,datos,nativo) VALUES(?,?,?,?,?) ON CONFLICT(usuario_id,clave) DO UPDATE SET fecha=excluded.fecha,datos=excluded.datos,nativo=excluded.nativo', [usuario.id, aviso.clave, aviso.fecha, JSON.stringify(aviso), nativo]));

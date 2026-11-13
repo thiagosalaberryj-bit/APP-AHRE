@@ -1,8 +1,10 @@
 # Notificaciones y Mercado Pago
 
-Implementación local del 9 de noviembre de 2026. Requiere publicar el backend
-coordinado y preparar Firebase/Mercado Pago antes de validar servicios reales.
-No se generó ni publicó una APK mediante estos cambios.
+Implementación iniciada el 9 de noviembre de 2026, con ajustes posteriores de
+historial, revisión compacta y alarmas exactas. Requiere el backend coordinado
+y Firebase/Mercado Pago configurados para validar servicios reales. El estado
+de las compilaciones internas se registra en la guía de publicación; enviar
+fuentes a EAS no equivale a tener una APK compilada ni publicada en la web.
 
 ## Centro de notificaciones
 

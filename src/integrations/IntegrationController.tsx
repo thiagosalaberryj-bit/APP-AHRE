@@ -19,7 +19,7 @@ import type { DestinoAviso } from '../notifications/types';
 const CLAVE_DESTINO = 'ahre.notificacion.destino';
 export default function ControladorIntegraciones() {
   useEffect(() => {
-    let cerrado = false, ocupado = false, recargaPendiente = false, ultimoRemoto = 0, ultimoLocal = 0, tokenRegistrado = '', usuarioAnterior = '';
+    let cerrado = false, ocupado = false, recargaPendiente = false, reprogramarAlVolver = true, ultimoRemoto = 0, ultimoLocal = 0, tokenRegistrado = '', usuarioAnterior = '';
     let quitarRespuesta: (() => void) | undefined;
     const recordar = async (datos: Record<string, unknown> = {}) => {
       if (typeof datos.usuarioId !== 'string' || typeof datos.avisoId !== 'string' || !esDestinoAviso(datos.destino)) return;
@@ -40,7 +40,7 @@ export default function ControladorIntegraciones() {
           const dato = JSON.parse(pendiente) as { usuarioId: string; avisoId: string; destino: DestinoAviso };
           if (dato.usuarioId === usuario.id) { await marcarAvisoVisto(dato.avisoId); await SecureStore.deleteItemAsync(CLAVE_DESTINO); navegarAviso(referenciaNavegacion, dato.destino); }
         }
-        if (forzar || Date.now() - ultimoLocal > 60000) { ultimoLocal = Date.now(); await reconciliarRecordatorios(); }
+        if (forzar || Date.now() - ultimoLocal > 60000) { ultimoLocal = Date.now(); const reprogramar=reprogramarAlVolver;reprogramarAlVolver=false;try{await reconciliarRecordatorios(reprogramar);}catch(error){reprogramarAlVolver=reprogramarAlVolver||reprogramar;throw error;} }
         if (Date.now() - ultimoRemoto > 15000) {
           ultimoRemoto = Date.now();
           try { await sincronizarIntegraciones(true); await sincronizarIntegraciones(); } catch { /* La cola conserva las decisiones y el historial disponible. */ }
@@ -62,7 +62,7 @@ export default function ControladorIntegraciones() {
     const temporizador = setInterval(() => ejecutarSeguro(), 3000);
     const dejarLocal = observarCambiosLocales(() => ejecutarSeguro(true)), dejarSocial = observarSocialOnline(() => ejecutarSeguro(true)), dejarIntegraciones = observarIntegraciones(() => ejecutarSeguro(true));
     const dejarSync = observarSincronizacion(v => { if (v.estado === 'online') ejecutarSeguro(true); });
-    const escucha = AppState.addEventListener('change', estado => { if (estado === 'active') { ultimoRemoto = 0; tokenRegistrado = ''; ejecutarSeguro(true); } });
+    const escucha = AppState.addEventListener('change', estado => { if (estado === 'active') { reprogramarAlVolver=true; ultimoRemoto = 0; tokenRegistrado = ''; ejecutarSeguro(true); } });
     ejecutarSeguro(true);
     return () => { cerrado = true; clearInterval(temporizador); dejarLocal(); dejarSocial(); dejarIntegraciones(); dejarSync(); escucha.remove(); quitarRespuesta?.(); };
   }, []);

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable } from 'react-native';
 
-export default function Conmutador({ tema, valor, alCambiar, etiquetaAccesibilidad = 'Conmutador' }: import('../types/ui').ToggleProps) {
+export default function Conmutador({ tema, valor, alCambiar, etiquetaAccesibilidad = 'Conmutador',deshabilitado=false }: import('../types/ui').ToggleProps) {
   const progreso = useRef(new Animated.Value(valor ? 1 : 0)).current;
 
   useEffect(() => {
@@ -33,8 +33,9 @@ export default function Conmutador({ tema, valor, alCambiar, etiquetaAccesibilid
     <Pressable
       accessibilityLabel={etiquetaAccesibilidad}
       accessibilityRole="switch"
-      accessibilityState={{ checked: valor }}
-      onPress={() => alCambiar(!valor)}
+      accessibilityState={{ checked: valor,disabled:deshabilitado }}
+      disabled={deshabilitado}
+      onPress={() => {if(!deshabilitado)alCambiar(!valor);}}
       style={{ minWidth: 56, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
     >
       <Animated.View

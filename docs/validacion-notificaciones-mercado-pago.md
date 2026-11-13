@@ -110,3 +110,91 @@ Queda la comprobación física de entrega con modo avión/app cerrada y la revis
 visual del scroll y redondeado en Expo Go/APK. Las simulaciones prueban fechas,
 cancelaciones y estados; no sustituyen la entrega de Android. La programación
 concreta cubre 60 días renovables al usar la app, sujeta al sistema operativo.
+
+## Alarmas exactas (cambios locales posteriores)
+
+- TypeScript correcto; suite de 495 casos: 456 aprobados, 39 integraciones MySQL
+  omitidas y cero fallos. Incluye los ajustes locales de selección MP.
+- Adaptador probado con permiso concedido/denegado, errores del puente, APK sin
+  módulo y Android anterior a 12. Expo Go no consulta ni abre funciones nativas
+  ausentes. Interfaz verificada en ambos temas al regresar de Ajustes.
+- SQLite y reloj simulados verifican que cambiar permiso o forzar regreso
+  reemplaza las alarmas existentes sin duplicarlas; una reconciliación normal
+  conserva las programaciones sin recrearlas continuamente.
+- Expo config prebuild confirma SCHEDULE_EXACT_ALARM. Autolinking Android detecta
+  ModuloAlarmasExactas junto al módulo de recurrencias existente.
+
+No se compiló el puente Kotlin localmente: no hay SDK Android configurado.
+Requiere una APK nueva y comprobar entrega en dispositivo, concesión/revocación
+del acceso especial y retorno a la app. No se cambia el backend ni el horario
+de eventos push remotos. No se hizo commit en este ajuste. El 13 de noviembre
+se enviaron estas fuentes a EAS con --no-wait; el enlace está en la guía de
+publicación. Envío confirmado no equivale a compilación nativa aprobada ni a
+entrega física validada; ambas comprobaciones siguen pendientes.
+
+## Claridad de permisos y repetición al cambiar horarios
+
+TypeScript correcto y suite de 500 casos: 461 aprobados, 39 integraciones MySQL
+omitidas, cero fallos. Se cubre el bloqueo del modal en ambos temas sin borrar
+tipos ni horarios, sin pedir permisos si el general está apagado y sin permitir
+guardar cambios por callbacks de accesibilidad. Perfil distingue la preferencia
+activa de un bloqueo real de Android; la activación abre Ajustes o solicita
+permiso según el estado y versión del sistema.
+
+Regresión de SQLite con reloj simulado: una deuda a cobrar genera un aviso a las
+09:00; se deja pendiente y se cambia a las 10:30 del mismo día. Se verifica otra
+programación nativa y otra entrada pendiente con ID distinto. No se exige
+resolver el primer aviso. Elegir una hora igual al instante actual mueve la
+próxima entrega al día siguiente. Sin cambiar hora se conserva la idempotencia.
+Las simulaciones no sustituyen comprobar presentación/sonido en Android físico.
+No se hizo commit ni se generó otra APK con este ajuste.
+
+Revisión posterior de Perfil: 20 pruebas específicas aprobadas y TypeScript
+correcto. El interruptor se ve apagado si Android no concede permiso, conserva
+la preferencia de AHRE y los tipos/horarios, y verifica el permiso al intentar
+activar. La nueva solicitud de APK 55f805ed se registra en la guía de publicación;
+se confirmó el envío sin esperar el resultado de compilación.
+
+## Guardado de horarios y entrega local independiente de la red
+
+Última suite: 511 casos, 472 aprobados, 39 integraciones MySQL omitidas y cero
+fallos. TypeScript correcto. Se reproducen con SQLite y adaptador nativo simulado:
+
+- Un guardado que ocurre durante otra reconciliación espera su turno y deja
+  instaladas las alarmas del horario más reciente antes de confirmar éxito.
+- Una respuesta antigua del backend no sobrescribe el horario recién guardado.
+- Al abrir el historial se incorporan los avisos previstos vencidos sin esperar
+  el controlador ni Internet, sin duplicar registros.
+- Una alarma retrasada aún pendiente en Android se conserva al pasar la hora;
+  resolver la deuda la cancela. Una alarma futura perdida se vuelve a instalar.
+- Los errores nativos se propagan a Guardar y permiten reintentar, en vez de
+  quedar ocultos por el controlador de sincronización.
+- Perfil mantiene la altura de la fila con una flecha para activar y un
+  interruptor solo cuando puede entregar; pruebas en ambos temas.
+- La prueba local de diez segundos exige permiso y que el SDK confirme el ID
+  programado. No solicita un token push ni modifica movimientos financieros.
+
+La APK 55f805ed que se venía probando no incluye estas correcciones posteriores.
+En esa revisión, la ausencia de entrega reportada todavía requería comprobar la
+nueva APK en Android físico. Historial previsto y aceptación de la programación
+por el SDK no son recibos de entrega. No se cambió el backend ni se hizo commit.
+
+## Ajustes visuales posteriores a la comprobación en Android
+
+El usuario confirmó que los recordatorios y la prueba de diez segundos funcionan
+en su teléfono con la APK posterior c33f1e33. Es una comprobación reportada por
+el usuario; las pruebas automatizadas no certifican la entrega física.
+
+- Perfil conserva el interruptor cuando Android permite avisos, tanto encendido
+  como apagado en AHRE. Solo muestra la flecha cuando Android deniega el permiso.
+- Guardar mantiene el mismo ancho y distribución del formulario; sus controles
+  quedan bloqueados y conserva horarios y tipos. Se eliminó el estilo de botón
+  deshabilitado que deformaba el contenedor completo.
+- Se retiraron el botón temporal de diez segundos y su función de diagnóstico.
+
+TypeScript correcto y 34 pruebas específicas aprobadas: Perfil y modal en ambos
+temas, permisos, alarmas exactas y ciclo de recordatorios. La validación completa
+previa a la entrega posterior completó 512 casos: 473 aprobados, 39 integraciones
+MySQL omitidas y cero fallos. Los cambios se prepararon para commit y una nueva
+APK por pedido del usuario; no requieren despliegue del backend. El seguimiento
+de la compilación se registra en la guía de publicación.

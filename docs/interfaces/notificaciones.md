@@ -109,3 +109,77 @@ El backend también reconcilia avisos antiguos al consultar el historial.
 Una autorización MP renovada cierra su error de autorización; una búsqueda
 completa cierra errores de consulta anteriores. Desvincular cancela ambos.
 Esto no registra ni ignora movimientos financieros pendientes.
+
+### Precisión del horario en Android
+
+La APK declara SCHEDULE_EXACT_ALARM, un acceso especial distinto al permiso
+para mostrar notificaciones. Notificaciones → Ajustes → Horario preciso de
+recordatorios muestra el estado real y permite abrir Alarmas y recordatorios
+del paquete AHRE en Android 12+. No se solicita automáticamente ni se da por
+concedido al abrir esa pantalla. Android puede revocarlo.
+
+Al volver a AHRE se consulta canScheduleExactAlarms y se reemplazan las alarmas
+previas, incluso si el sistema las eliminó al revocar el permiso. Un cambio
+detectado de precisión también reprograma los recordatorios existentes. Expo
+Notifications usa setExactAndAllowWhileIdle cuando está permitido y conserva
+la alternativa aproximada si no lo está. No se añaden temporizadores JS para
+disparar el aviso. Permitir precisión no habilita por sí solo la entrega si
+está denegado el permiso de notificaciones o su canal.
+
+Expo Go no llama al puente nativo de AHRE ni abre este acceso: informa que se
+requiere una APK. Una APK anterior que no incluya el módulo pide actualizar,
+sin romper el historial ni los recordatorios compatibles. En Android anterior
+a 12 y otras plataformas se omite el ajuste especial.
+
+Se requiere recompilar/instalar la APK: recargar JavaScript no agrega permisos
+ni módulos nativos. Para comprobarlo: denegar y conceder desde Ajustes, volver
+a AHRE y revisar el estado; programar unos minutos después y probar con la app
+cerrada, con y sin conexión. Repetir después de revocar el permiso. Esta opción
+solo afecta recordatorios locales: no adelanta los eventos push del servidor.
+El sistema operativo y el fabricante siguen controlando la entrega.
+Referencia: [Alarmas de Android](https://developer.android.com/develop/background-work/services/alarms).
+
+### Claridad de permisos y pruebas de horario
+
+Horario preciso usa un botón con fondo visible; el texto solo indica si está
+activado o ayuda a reducir retrasos, sin referencias técnicas a eventos remotos.
+La pantalla omite el aviso genérico de permisos cuando todo está habilitado.
+Si Android bloquea las notificaciones, se indica ese motivo y se ofrece Activar
+en Android; el estado se vuelve a consultar al regresar del sistema. Perfil
+distingue la preferencia del usuario de la entrega: no muestra Activadas si
+Android niega permiso. Conservar la preferencia no concede ese permiso.
+
+Al apagar Notificaciones en Perfil, el modal conserva tipos y horarios pero
+bloquea controles, privacidad, precisión y Guardar. Ir a Perfil permite volver
+a activarlas; no se solicita permiso automáticamente mientras el general esté
+apagado. Las opciones vuelven a habilitarse con sus valores anteriores.
+
+Una notificación de deuda pendiente no bloquea la siguiente entrega. Al cambiar
+el horario a otro posterior del mismo día se reemplaza la programación futura,
+pero se usa un ID de entrega distinto para no actualizar el aviso ya mostrado
+ni omitir la segunda entrada del historial. Reprogramar sin cambiar hora sigue
+siendo idempotente. Completar la acción cancela los recordatorios posteriores.
+Para probar, elegir una hora unos minutos por delante, Guardar y esperar.
+La hora exacta que ya comenzó se considera pasada y va al próximo día aplicable.
+El recordatorio de registro se cancela hoy si ya se registró un movimiento;
+para probar deudas debe existir saldo pendiente y estar activo su tipo de aviso.
+
+### Confirmación local de programación y diagnóstico
+
+Guardar ajustes espera a que termine la programación nativa antes de cerrar el
+modal. No espera sincronización ni llamadas al backend; los trabajos locales
+se serializan para que una reconciliación anterior no termine después con datos
+viejos. Los errores del programador nativo se muestran en el modal de error,
+sin fingir que guardar la preferencia confirma también la alarma.
+
+Al consultar el historial se incorporan los recordatorios cuya fecha prevista
+ya pasó, sin esperar el ciclo del controlador ni conexión. Es historial de
+avisos previstos: no acredita entrega física. Las alarmas retrasadas que Android
+todavía conserva no se cancelan solo por pasar la hora; se cancelan si el aviso
+se resuelve, se desactiva o se cambia explícitamente su horario. Si desaparece
+una alarma futura del sistema, se vuelve a programar aunque SQLite tenga su ID.
+
+Durante el guardado, el formulario conserva el ancho, la distribución y los
+valores de sus opciones; solo se bloquea la interacción. No se aplica el estilo
+de botón deshabilitado al contenedor completo. El botón temporal de diagnóstico
+de diez segundos fue retirado después de comprobar la entrega en el dispositivo.

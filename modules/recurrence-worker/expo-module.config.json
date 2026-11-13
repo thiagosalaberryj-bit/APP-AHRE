@@ -1,1 +1,1 @@
-{"platforms":["android"],"android":{"modules":["expo.modules.recurrenceworker.ModuloRecurrencias"]}}
+{"platforms":["android"],"android":{"modules":["expo.modules.recurrenceworker.ModuloRecurrencias","expo.modules.recurrenceworker.ModuloAlarmasExactas"]}}
