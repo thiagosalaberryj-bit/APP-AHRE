@@ -195,6 +195,7 @@ el usuario; las pruebas automatizadas no certifican la entrega física.
 TypeScript correcto y 34 pruebas específicas aprobadas: Perfil y modal en ambos
 temas, permisos, alarmas exactas y ciclo de recordatorios. La validación completa
 previa a la entrega posterior completó 512 casos: 473 aprobados, 39 integraciones
-MySQL omitidas y cero fallos. Los cambios se prepararon para commit y una nueva
-APK por pedido del usuario; no requieren despliegue del backend. El seguimiento
-de la compilación se registra en la guía de publicación.
+MySQL omitidas y cero fallos. Los cambios se publicaron en el commit dca0f39 y
+se enviaron a EAS f0d2bf46 por pedido del usuario, sin esperar la compilación.
+No requieren despliegue del backend. El seguimiento se registra en la guía de
+publicación.

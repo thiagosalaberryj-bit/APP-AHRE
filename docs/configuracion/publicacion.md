@@ -237,3 +237,8 @@ Verificación previa al envío: TypeScript correcto y 512 casos de la suite,
 ni despliega el servidor. Tras instalar, comprobar el toggle de Perfil tanto
 encendido como apagado, denegar/restaurar el permiso de Android y guardar un
 horario verificando que el modal no cambie de distribución.
+
+Envío confirmado el 13 de noviembre de 2026: [EAS f0d2bf46](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/f0d2bf46-007a-4348-85d0-9eb180919c54),
+con las fuentes del commit dca0f39. EAS confirmó carga y fingerprint; no se
+esperó el resultado de compilación. El commit está publicado en la rama del
+PR existente. No se desplegaron backend, mp-worker ni n8n.
