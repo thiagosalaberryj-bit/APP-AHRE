@@ -199,3 +199,14 @@ MySQL omitidas y cero fallos. Los cambios se publicaron en el commit dca0f39 y
 se enviaron a EAS f0d2bf46 por pedido del usuario, sin esperar la compilación.
 No requieren despliegue del backend. El seguimiento se registra en la guía de
 publicación.
+
+## Revisión final de integración · 13 de noviembre de 2026
+
+Suites completas con MySQL 8.4.3 temporal en 127.0.0.1:13331 y SQLite real:
+512 pruebas de app y 101 de backend aprobadas, cero fallos y cero omisiones.
+Cada escenario creó bases sintéticas independientes de producción. Esta
+ejecución completa reemplaza las omisiones de la verificación local anterior.
+Se comprobaron conflictos y patrones de credenciales antes de integrar los PR;
+la única coincidencia del detector fue un secreto sintético de un test.
+No hay checks automáticos configurados en GitHub para estos commits; la
+evidencia de esta revisión corresponde a las suites locales documentadas.

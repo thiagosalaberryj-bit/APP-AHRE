@@ -13,8 +13,9 @@ La revisión MP usa una barra compacta y un modal para registrar/ignorar, sin el
 bloque inferior anterior. Expo Go conserva las funciones compatibles; la precisión
 de alarmas requiere instalar una APK nueva y conceder el acceso del sistema.
 
-TypeScript correcto. Última suite: **473 pruebas aprobadas, 39 integraciones
-MySQL omitidas y cero fallos** (512 casos). Expo config y autolinking detectan
+TypeScript correcto. Revisión previa al merge: **512 pruebas de app y 101 de
+backend aprobadas, cero fallos y cero omisiones**, con MySQL 8.4.3 temporal
+aislado en loopback y SQLite real. Expo config y autolinking detectan
 el permiso y el puente nativo. El usuario confirmó la entrega de recordatorios
 en Android con la APK c33f1e33; esta confirmación no sustituye verificar cada
 tipo de aviso ni todos los dispositivos.
@@ -26,6 +27,11 @@ Se retiró la prueba temporal de diez segundos. La compilación interna se enví
 a EAS sin esperar su resultado; su seguimiento se registra en
 `configuracion/publicacion.md`. Estos ajustes no despliegan el servidor ni
 publican la descarga en la web.
+
+Se revisaron conflictos de los PR #70 de app y #3 de servidor, así como los
+archivos versionados. Las credenciales reales, APK, compilados y datos temporales
+no forman parte de los commits. La revisión prepara las releases no estables
+0.9.0 y 0.3.0; crear tags y mergear no ejecuta un despliegue.
 
 ## Validación histórica: revisión del 8 de noviembre de 2026
 
