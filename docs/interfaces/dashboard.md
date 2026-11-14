@@ -59,11 +59,11 @@ La tarjeta presenta tres accesos con ícono y etiqueta:
 
 - **Ingreso:** abre la pantalla existente de ingreso.
 - **Egreso:** abre la pantalla existente de egreso.
-- **OCR:** abre la pantalla existente de OCR.
+- **Escanear:** abre la pantalla existente para escanear comprobantes.
 
 Estos accesos mantienen la navegación definida por la aplicación; sus
 formularios y operaciones no forman parte de la carga del Dashboard. OCR también
-está disponible en el menú inferior «Nuevo» bajo la etiqueta «Escanear OCR».
+está disponible en el menú inferior «Nuevo» bajo la etiqueta «Escanear».
 
 ## Depósitos
 
@@ -129,7 +129,7 @@ sin Wi-Fi ni datos móviles.
 
 La barra mantiene las cinco pestañas existentes: Inicio, Movimientos, Nuevo,
 Estadísticas y Social. Al tocar «Nuevo», se oscurece el fondo y aparecen en
-abanico Escanear OCR, Ingreso y Egreso. Cada acción cierra el menú y abre su
+abanico Escanear, Ingreso y Egreso. Cada acción cierra el menú y abre su
 ruta; tocar el fondo también lo cierra. Mantener presionado «Nuevo» no abre el
 menú.
 

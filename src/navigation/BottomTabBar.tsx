@@ -11,7 +11,7 @@ import { COLORES_ESTADO } from '../styles/colors';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../styles/globalStyles';
 
 const ACCIONES_NUEVO = Object.freeze([
-  { etiqueta: 'Escanear OCR', icono: 'scan-outline', ruta: RUTAS.OCR },
+  { etiqueta: 'Escanear', icono: 'scan-outline', ruta: RUTAS.OCR },
   { etiqueta: 'Ingreso', icono: 'arrow-down-circle-outline', ruta: RUTAS.INGRESO },
   { etiqueta: 'Egreso', icono: 'arrow-up-circle-outline', ruta: RUTAS.EGRESO },
 ]);

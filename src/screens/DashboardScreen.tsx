@@ -48,7 +48,7 @@ function prepararMovimiento(movimiento: import('../database/types').Movimiento, 
 const ACCIONES_RAPIDAS = Object.freeze([
   { etiqueta: 'Ingreso', icono: 'add-circle', ruta: RUTAS.INGRESO },
   { etiqueta: 'Egreso', icono: 'remove-circle', ruta: RUTAS.EGRESO },
-  { etiqueta: 'OCR', icono: 'scan-sharp', ruta: RUTAS.OCR },
+  { etiqueta: 'Escanear', icono: 'scan-sharp', ruta: RUTAS.OCR },
 ]);
 
 export default function PantallaPanel({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
