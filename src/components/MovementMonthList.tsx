@@ -28,7 +28,7 @@ export default function ListaMesesMovimientos({ datos, tema, alPresionar }: {
             <Text style={estilos.textoBoton}>Cargando movimientos…</Text>
           </View> : <>
           {pagina?.movimientos.map(movimiento => <TarjetaMovimientoMemorizada key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={alPresionar}/>)}
-          {pagina?.error ? <Text style={estilos.error}>{pagina.error}</Text> : null}
+
           {pagina.cargando || pagina.hayMas || pagina.error ? <View collapsable={false} nativeID={`cargar-mes-${mes}`} ref={nodo => { datos.referenciaBoton(mes, nodo); }}>
             <Pressable accessibilityRole="button" accessibilityLabel={`Cargar más movimientos de ${titulo}`}
               accessibilityState={{ disabled: !!pagina?.cargando, busy: !!pagina?.cargando }} disabled={!!pagina?.cargando}

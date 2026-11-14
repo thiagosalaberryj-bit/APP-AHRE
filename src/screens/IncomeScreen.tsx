@@ -1,3 +1,4 @@
+import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
@@ -75,7 +76,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
   const [depositos, establecerDepositos] = useState<(import('../database/types').Deposito & {saldoTexto:string})[]>([]);
   const [categorias, establecerCategorias] = useState<import('../constants/movimientos').Categoria[]>([]);
   const [cargandoDatos, establecerCargandoDatos] = useState(true);
-  const [errorCarga, establecerErrorCarga] = useState<string | null>(null);
+  const [errorCarga, establecerErrorCarga] = useErrorNotificado(null);
   const [guardando, establecerGuardando] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [descripcionEnfocada, establecerDescripcionEnfocada] = useState(false);
@@ -184,7 +185,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
     if (errorCarga) {
       return (
         <View style={[estilosGlobales.tarjeta, { gap: ESPACIADO.medio }]}>
-          <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{errorCarga}</Text>
+
           <Pressable
             accessibilityRole="button"
             onPress={cargarDatos}

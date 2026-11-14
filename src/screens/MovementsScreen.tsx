@@ -1,3 +1,4 @@
+import { useAvisoError } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
@@ -298,6 +299,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
   const consultarPagina = useCallback((criterios: import('../types/forms').FiltrosHistorial, cursor: {fecha_hora:string;id:string}|null) => cargarPaginaHistorialMovimientos(usuarioId || '', criterios, cursor), [usuarioId]);
   const datosMeses = useMovimientosPorMes({ habilitado: enfocada && !!usuarioId && !!revisionHistorial && !cargando,
     revision: revisionHistorial, filtros: filtrosConsulta, invalido: !!errorMontoFiltro, consultarMeses, consultarPagina });
+  useAvisoError(datosMeses.error || Object.values(datosMeses.paginas).find(pagina => pagina.error)?.error);
 
   const filtrosAplicados = useMemo(() => {
     const filtros: {id:string;etiqueta:string;alQuitar:()=>void;bloqueado?:boolean}[] = [];
@@ -479,18 +481,13 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
             {esperandoHistorial ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses"/> : errorConsulta || datosMeses.error ? (
               <View style={estilos.estadoVacio}>
-                <Ionicons color={tema.error} name="alert-circle-outline" size={32} />
-                <Text style={estilos.textoEstadoVacio}>{errorConsulta || datosMeses.error}</Text>
+
+
                 <Pressable accessibilityRole="button" onPress={errorConsulta ? reintentarHistorial : datosMeses.reintentar} style={estilos.botonLimpiar}>
                   <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
                 </Pressable>
               </View>
-            ) : errorMontoFiltro ? (
-              <View style={estilos.estadoVacio}>
-                <Ionicons color={tema.error} name="cash-outline" size={32} />
-                <Text style={estilos.textoEstadoVacio}>{errorMontoFiltro}</Text>
-              </View>
-            ) : sinMovimientos ? (
+            ) : errorMontoFiltro ? null : sinMovimientos ? (
               <View style={estilos.estadoVacio}>
                 <Ionicons color={tema.textoSecundario} name="receipt-outline" size={32} />
                 <Text style={estilos.textoEstadoVacio}>Todavía no hay movimientos para mostrar.</Text>

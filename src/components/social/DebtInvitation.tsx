@@ -1,3 +1,6 @@
+import { useContext } from 'react';
+import { ContextoAvisos } from '../../contexts/ToastContext';
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import {useEffect,useRef,useState} from 'react';
 import {ActivityIndicator,Text,View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
@@ -10,8 +13,9 @@ import OpcionesSeleccion from './SocialChoiceGroup';
 import crearEstilosInvitacion from '../../styles/social/DebtInvitationStyles';
 
 export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:DeudaVista}){
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const social=useDatosSociales(),estilos=crearEstilosInvitacion(aspecto.tema);
-  const [invitacion,cambiarInvitacion]=useState<DeudaOnline|null>(null),[asociacion,cambiarAsociacion]=useState(''),[cargando,cambiarCargando]=useState(true),[error,cambiarError]=useState(''),[decision,cambiarDecision]=useState('');
+  const [invitacion,cambiarInvitacion]=useState<DeudaOnline|null>(null),[asociacion,cambiarAsociacion]=useState(''),[cargando,cambiarCargando]=useState(true),[, cambiarError]=useErrorNotificado(''),[decision,cambiarDecision]=useState('');
   const [conexion,cambiarConexion]=useState(obtenerVistaSincronizacion);
   const montado=useRef(true),bloqueo=useRef(false);
   useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
@@ -31,7 +35,7 @@ export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:
     bloqueo.current=true;cambiarDecision(valor);cambiarError('');
     try{
       await enviarAccionSocial('propuesta:'+invitacion.id,'/deudas/'+invitacion.id+'/decidir',{decision:valor,...(valor==='aceptada'&&asociacion?{deudaLocalId:asociacion,confirmarVinculo:true}:{})});
-      await sincronizarSocialOnline();await social.recargar();if(valor==='rechazada'&&montado.current)social.volver();
+      await sincronizarSocialOnline();await social.recargar();mostrarAviso(valor==='aceptada'?'Invitación aceptada.':'Invitación rechazada.',{tipo:'exito'});if(valor==='rechazada'&&montado.current)social.volver();
     }catch(fallo){if(montado.current)cambiarError(fallo instanceof Error?fallo.message:'No se pudo responder la invitación.');}
     finally{bloqueo.current=false;if(montado.current)cambiarDecision('');}
   };
@@ -42,7 +46,7 @@ export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:
       <View style={estilos.titulos}><Text accessibilityRole="header" style={aspecto.estilosGlobales.encabezadoSeccion}>{rechazada?'Invitación rechazada':'Invitación de deuda'}</Text><Text style={aspecto.estilosGlobales.textoSecundario}>{rechazada?'Tus registros personales se conservan.':invitacion?.puedeDecidir?'Revisá la propuesta antes de aceptarla.':'Esperando la aceptación de la otra persona.'}</Text></View>
     </View>
     {cargando||decision?<View style={estilos.progreso}><ActivityIndicator color={aspecto.tema.foco}/><Text accessibilityLiveRegion="polite" style={aspecto.estilosGlobales.textoSecundario}>{decision==='aceptada'?'Aceptando invitación…':decision==='rechazada'?'Rechazando invitación…':'Cargando invitación…'}</Text></View>:null}
-    {error?<Text accessibilityRole="alert" style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
     {invitacion?.puedeDecidir&&!rechazada?<>
       <Text style={aspecto.estilosGlobales.textoSecundario}>Al aceptar, esta deuda quedará vinculada online. No se registra ningún pago.</Text>
       {compatibles.length?<View style={estilos.grupo}><Text style={aspecto.estilosGlobales.etiqueta}>¿Ya tenías anotada esta deuda?</Text><Text style={aspecto.estilosGlobales.textoSecundario}>Podés vincular tu registro para evitar duplicarla. Es opcional.</Text><OpcionesSeleccion opciones={compatibles.map(d=>({id:d.id,nombre:(social.obtenerPersona(d.personaId)?.nombre||'Persona')+' · '+d.descripcion+' · '+d.pendiente}))} elegida={asociacion} alElegir={id=>cambiarAsociacion(actual=>actual===id?'':id)} {...aspecto}/></View>:null}

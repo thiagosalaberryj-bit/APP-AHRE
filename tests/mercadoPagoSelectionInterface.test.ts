@@ -9,7 +9,8 @@ function nodos(a:any):Nodo[]{if(Array.isArray(a))return a.flatMap(nodos);if(!a||
 for(const nombre of ['claro','oscuro'] as const)test('selección MP: revisión compacta y acciones explícitas, con bloqueo y recuperación en '+nombre,()=>{
  let abierto=false,registrados=0,ignorados=0,alternados=0,alertas=0;
  const {cargar}=crearCargadorComponentes(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),{
-  react:{useState:()=>[abierto,(v:boolean)=>{abierto=v;}]},
+  '../contexts/ToastContext': {ContextoAvisos:{},AvisosEnModal:({children}:{children:unknown})=>children},
+  react:{useContext:()=>({mostrarAviso:()=>alertas++}),useState:()=>[abierto,(v:boolean)=>{abierto=v;}]},
   'react-native':{View:'View',Text:'Text',Pressable:'Pressable',Modal:'Modal',ActivityIndicator:'ActivityIndicator',Alert:{alert:()=>alertas++},StyleSheet:{create:(e:unknown)=>e,absoluteFill:{}}},
  });
  const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');

@@ -87,7 +87,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     '@react-navigation/native': { useFocusEffect: (callback: () => unknown) => react.useEffect(() => enfocada ? callback() : undefined, [callback, enfocada]) },
     'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' },
     '../contexts/AppearanceContext': { ContextoApariencia: apariencia },
-    '../contexts/ToastContext': { ContextoAvisos: avisos },
+    '../contexts/ToastContext': { ContextoAvisos: avisos, AvisosEnModal: ({children}: {children:unknown}) => children },
     '../social/financialOperation': { operacionFinancieraEnCurso: () => false },
     '../recurrences/recurrenceService': { consultarRecurrenciasDeposito: async () => [] },
     '../profile/balanceVisibilityService': { consultarSaldoOculto: async () => false },

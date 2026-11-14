@@ -1,3 +1,4 @@
+import { useAvisoError } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
@@ -80,6 +81,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [depositos, establecerDepositos] = useState<Awaited<ReturnType<typeof cargarOpcionesHistorialMovimientos>>['depositos']>([]);
   const [depositosIds, establecerDepositosIds] = useState<string[] | null>(null);
   const [errorDepositos, establecerErrorDepositos] = useState(false);
+  useAvisoError(errorDepositos ? 'No se pudieron cargar los depósitos. Volvé a abrir la pantalla para reintentar.' : null);
   const [seccionesAbiertas, establecerSeccionesAbiertas] = useState(['categorias', 'monto']);
   const estilosFiltros = crearEstilosMovimientos(tema, anchoPantalla);
   const minimo = montoMinimo.trim() ? convertirSaldoInicial(montoMinimo) : undefined;
@@ -118,6 +120,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [indiceColumnaSeleccionada, establecerIndiceColumnaSeleccionada] = useState(0);
   const [estadisticas, establecerEstadisticas] = useState<{ resumen: { categorias: { categoria: string; total: number; cantidad: number; }[]; total: number; cantidad: number; }; columnas: { periodo: string; categoria: string; total: number; }[]; } | null>(null);
   const [estadoCarga, establecerEstadoCarga] = useState('cargando');
+  useAvisoError(estadoCarga === 'error' ? '— Reintentá la consulta.' : null);
   const ultimaConsultaCompletada = useRef<string|null>(null);
   const [intentoCarga, establecerIntentoCarga] = useState(0);
 
@@ -478,7 +481,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                       onPress={() => establecerIntentoCarga((intento) => intento + 1)}
                       style={estilos.botonReintentar}
                     >
-                      <Text style={estilos.textoSinCategorias}>No se pudieron cargar las estadísticas. Tocá para reintentar.</Text>
+                      <Text style={estilos.textoSinCategorias}>Reintentar</Text>
                     </Pressable>
                   ) : !hayMovimientosResumen ? (
                     <Text style={estilos.textoSinCategorias}>No hay movimientos con estos filtros. Probá restablecerlos o cambiar el período.</Text>
@@ -509,7 +512,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                     onPress={() => establecerIntentoCarga((intento) => intento + 1)}
                     style={estilos.estadoGrafico}
                   >
-                    <Text style={estilos.textoSinCategorias}>No se pudieron cargar las estadísticas. Tocá para reintentar.</Text>
+                    <Text style={estilos.textoSinCategorias}>Reintentar</Text>
                   </Pressable>
                 ) : !hayDatosColumnas ? (
                   <Text style={estilos.textoSinCategorias}>No hay movimientos en este período.</Text>
@@ -548,7 +551,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
               <>
                 <View style={estilos.detalleSeleccion}>
                   {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
-                    <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
+                    <Text style={estilos.textoDetalleSeleccion}>—</Text>
                   ) : !hayMovimientosResumen ? (
                     <Text style={estilos.textoDetalleSeleccion}>No hay movimientos con estos filtros.</Text>
                   ) : !hayDatosResumen ? (
@@ -603,7 +606,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
             ) : (
               <View style={estilos.detalleColumna}>
                 {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
-                  <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
+                  <Text style={estilos.textoDetalleSeleccion}>—</Text>
                 ) : !hayDatosColumnas ? (
                   <Text style={estilos.textoDetalleSeleccion}>No hay movimientos en el período seleccionado.</Text>
                 ) : !hayDatosColumnasVisibles ? (
@@ -657,7 +660,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
             <SelectorCategoria tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} categorias={categorias} tipoMovimiento={tipoMovimiento} etiqueta="" variante="grilla" seleccionMultiple seleccionadasIds={categoriasSeleccionadas} alCambiarMulti={establecerCategoriasSeleccionadas} estiloTarjeta={estilosFiltros.tarjetaCategoriaFiltro}/>
           </SeccionFiltro>
           <SeccionFiltro titulo="Depósitos" resumen={depositosIds === null ? 'Todos los depósitos' : depositosIds.length + ' seleccionados'} abierta={seccionesAbiertas.includes('depositos')} alAlternar={() => alternarSeccion('depositos')} colorAcento={tema.foco} estilos={estilosFiltros}>
-            {errorDepositos ? <Text style={estilosGlobales.textoError}>No se pudieron cargar los depósitos. Volvé a abrir la pantalla para reintentar.</Text> : <SelectorDeposito tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} etiqueta="" depositos={depositos} seleccionMultiple seleccionadasIds={depositosIds ?? depositos.map(deposito => deposito.id)} alCambiarMulti={establecerDepositosIds} impedirSeleccionVacia/>}
+            {errorDepositos ? <Text style={estilosGlobales.textoAyuda}>Volvé a abrir el selector para reintentar.</Text> : <SelectorDeposito tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} etiqueta="" depositos={depositos} seleccionMultiple seleccionadasIds={depositosIds ?? depositos.map(deposito => deposito.id)} alCambiarMulti={establecerDepositosIds} impedirSeleccionVacia/>}
           </SeccionFiltro>
           <SeccionFiltro titulo="Monto" resumen={textoMontoActivo} abierta={seccionesAbiertas.includes('monto')} alAlternar={() => alternarSeccion('monto')} colorAcento={tema.foco} estilos={estilosFiltros}>
             <View style={estilosFiltros.filaRango}>

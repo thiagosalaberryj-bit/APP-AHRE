@@ -27,9 +27,9 @@ for(const tema of ['claro','oscuro'] as const)test(`la invitación copia el enla
   await vista.abrirInvitacion({enlace,nombre:'Sofi',alCerrar:()=>{}});
   const campo=presente(vista.todos().find(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Enlace personal para compartir'));
   assert.equal(campo.props.multiline,false);assert.equal(campo.props.value,enlace);
-  assert.ok(!vista.texto().includes('Enlace copiado'));
+  assert.ok(!vista.avisos.some(m=>m.includes('Enlace copiado')));
   await vista.pulsar('Copiar enlace de invitación');
-  assert.deepEqual(vista.copias,[enlace]);assert.ok(vista.texto().includes('Enlace copiado'));
+  assert.deepEqual(vista.copias,[enlace]);assert.ok(vista.avisos.some(m=>m.includes('Enlace copiado')));
   assert.equal(vista.compartidos.length,0);
   await vista.pulsar('Compartir por una app');
   assert.equal(vista.compartidos.length,1);assert.ok(vista.compartidos[0].message.includes(enlace));
@@ -63,7 +63,7 @@ for(const fallo of ['rechazo','error'] as const)test(`la copia con ${fallo} mues
   const e=await preparar(prueba),vista=interfazSocial(e,'claro',{copiarTexto:async()=>{if(fallo==='error')throw new Error('sin portapapeles');return false;}});
   await vista.abrirInvitacion({enlace:'https://ahre.example.test/invitacion/#'+'a'.repeat(64),nombre:'Sofi',alCerrar:()=>{}});
   await vista.pulsar('Copiar enlace de invitación');
-  assert.ok(vista.texto().includes('No se pudo copiar'));assert.ok(!vista.texto().includes('Enlace copiado'));
+  assert.ok(vista.avisos.some(m=>m.includes('No se pudo copiar')));assert.ok(!vista.texto().includes('No se pudo copiar'));assert.ok(!vista.avisos.some(m=>m.includes('Enlace copiado')));
   assert.equal(vista.buscarBoton('Compartir por una app').props.disabled,false);
 });
 
@@ -94,7 +94,7 @@ for(const tema of ['claro','oscuro'] as const)test(`Social ubica los acuerdos en
   await vista.pulsar('Unirme a sala');
   await vista.llenar('Enlace de invitación','https://otro.test/no-valido');
   await vista.pulsar('Aceptar invitación');
-  assert.ok(vista.texto().includes('no es una invitación válida'));
+  assert.ok(vista.avisos.some(m=>m.includes('no es una invitación válida')));assert.ok(!vista.texto().includes('no es una invitación válida'));
   await vista.pulsar('Cerrar invitación');
   assert.ok(!vista.texto().includes('Aceptar invitación'));
 });

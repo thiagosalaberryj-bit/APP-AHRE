@@ -1,3 +1,4 @@
+import { AvisosEnModal } from '../../contexts/ToastContext';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
@@ -5,7 +6,7 @@ import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, TextInput
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosModal from '../../styles/social/AddRoomPeopleModalStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[]; guardando?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean;error?:string})) {
+export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[]; guardando?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean})) {
   const {
     personasActivas: personasSociales
   } = useDatosSociales();
@@ -18,7 +19,7 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
     seleccionInicial = [],
     titulo = 'Agregar personas',
     textoConfirmar = 'Agregar',
-    permitirVacia = false,error,
+    permitirVacia = false,
     ...aspecto
   } = {
     ...propiedades,
@@ -39,7 +40,7 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
   const disponibles = personasSociales.filter(persona => !personasSala.includes(persona.id));
   const consulta = normalizarNombrePersona(busqueda);
   const personas = disponibles.filter((persona) => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo}`).includes(consulta));
-  return <Modal statusBarTranslucent navigationBarTranslucent transparent animationType="fade" visible onRequestClose={()=>!guardando&&alCerrar()}>
+  return <Modal statusBarTranslucent navigationBarTranslucent transparent animationType="fade" visible onRequestClose={()=>!guardando&&alCerrar()}><AvisosEnModal>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
         <Pressable accessibilityRole="button" accessibilityLabel="Cancelar selección de personas" disabled={guardando} onPress={alCerrar} style={estilos.cierreFondo} />
         <View accessibilityViewIsModal style={estilos.tarjetaModal}>
@@ -62,7 +63,7 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
                 <Ionicons color={seleccionadas.includes(persona.id)?tema.foco:tema.textoSecundario} name={seleccionadas.includes(persona.id) ? 'checkmark-circle' : 'ellipse-outline'} size={23} />
               </Pressable>) : <Text style={estilosGlobales.textoSecundario}>{disponibles.length ? 'No encontramos personas con esos datos.' : titulo === 'Agregar personas' ? 'Todas las personas registradas ya están en la sala.' : 'Todavía no hay personas registradas. Podés crear una desde aquí.'}</Text>}
           </ScrollView>
-{error?<Text accessibilityRole="alert" style={estilosGlobales.textoError}>{error}</Text>:null}
+
           <View style={estilos.acciones}>
             <Pressable accessibilityRole="button" accessibilityLabel="Crear una persona" disabled={guardando} onPress={alCrear} style={[estilos.crear, guardando && estilos.deshabilitado]}>
               <Ionicons name="person-add-outline" color={tema.foco} size={18} /><Text style={estilos.textoCrear}>Crear persona</Text>
@@ -73,5 +74,5 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
           </View>
         </View>
       </KeyboardAvoidingView>
-    </Modal>;
+    </AvisosEnModal></Modal>;
 }

@@ -251,3 +251,21 @@ una nueva carga. Tocar la nube abre la pantalla; Sincronizar ahora inicia el env
 Verificación: TypeScript correcto y ocho pruebas de interfaz aprobadas, incluida
 la regresión de lectura inicial única y agrupación de avisos. Falta comprobar
 visualmente la animación en Android y ambos temas.
+
+## Errores generales y resultados por toast · 14/11/2026
+
+El inventario de interfaces está en
+[Notificaciones toast](../funcionalidades/notificaciones-toast.md#interfaces-revisadas).
+Se conservan errores de campo, bloqueos de guardado y recuperación; los errores
+generales y confirmaciones se muestran arriba, también sobre los modales nativos.
+
+Verificación: TypeScript correcto; suite completa con 517 casos, 478 aprobados,
+cero fallos y 39 integraciones MySQL omitidas (entorno no habilitado). Los casos
+de routing comprueban prioridad de modal anidado, continuidad del aviso al cerrar,
+duración y deduplicación/reintento. Las regresiones de Social comprueban que
+fallos de QR/copia llegan al toast y dejan de repetirse como texto en la vista.
+
+Pendiente en Android: QR inválido/válido, solicitud de ingreso enviada, copiar
+enlace, admitir con reemplazo de acceso, guardado fallido en modal y confirmación
+tras cerrarlo, con teclado abierto y en ambos temas. Las pruebas de componentes
+no ejecutan las ventanas nativas ni certifican el aspecto físico del toast.

@@ -1,3 +1,6 @@
+import { useContext } from 'react';
+import { ContextoAvisos } from '../../contexts/ToastContext';
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import crearEstilosGasto from '../../styles/social/ExpenseDetailsStyles';
 import {mensajeErrorSocial} from '../../social/socialHelpers';
 import {useEffect,useRef,useState} from 'react';
@@ -14,18 +17,19 @@ import Seleccion from './RoomFinanceSelection';
 import crearEstilosDetalle from '../../styles/social/DebtDetailsStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function AccionesGastoOnline({sala,gasto,seccion,...aspecto}:AspectoSocial&{sala:SalaVista;gasto:GastoVista;seccion:'partes'|'movimientos'}){
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosPago=crearEstilosGasto(aspecto.tema);
   const detalle=useSalaOnline(sala.id,sala.online),social=useDatosSociales(),estilos=crearEstilosDetalle(aspecto.tema),compartidos=crearEstilosCompartidos(aspecto.tema),bloqueo=useRef(false);
-  const [seleccion,abrirSeleccion]=useState<OperacionPersonal|null>(null),[intencion,cambiarIntencion]=useState<'asociar'|'informar'|'marcar'>('asociar'),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[ocupado,cambiarOcupado]=useState(false),[error,cambiarError]=useState('');
+  const [seleccion,abrirSeleccion]=useState<OperacionPersonal|null>(null),[intencion,cambiarIntencion]=useState<'asociar'|'informar'|'marcar'>('asociar'),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[ocupado,cambiarOcupado]=useState(false),[, cambiarError]=useErrorNotificado('');
   useEffect(()=>{let activo=true;const cargar=()=>{void leerDatosOnline<OperacionPersonal[]>(social.usuarioId,'operaciones',[]).then(async o=>{const locales=await consultarMovimientosSociales();if(activo)cambiarOperaciones(o.map(p=>({...p,incorporada:p.incorporada||locales.some(l=>l.clave===p.clave)})));}).catch(()=>{if(activo)cambiarError('No se pudieron cargar tus movimientos.');});};cargar();const dejar=observarSocialOnline(cargar);return()=>{activo=false;dejar();};},[social.usuarioId]);
   if(!sala.online||!detalle)return null;
   const remoto=detalle.sala.gastos.find(g=>g.id===gasto.id);if(!remoto)return null;
   const propia=detalle.personaPropiaId,pedido=detalle.solicitudes.find(s=>s.gasto_id===gasto.id&&s.personaId===propia&&s.tipo==='parte_pagada'&&s.estado==='pendiente'),abierta=sala.estado==='abierta';
   const misFinanzas=abierta?(detalle.misFinanzas||[]).filter(o=>o.gastoId===gasto.id&&(o.clave.startsWith('compra:')||o.tipo==='ingreso'||remoto.pagaron.includes(propia))):operaciones.filter(o=>o.gastoId===gasto.id&&!o.incorporada);
-  const ejecutar=async(accion:()=>Promise<unknown>)=>{if(bloqueo.current)return;bloqueo.current=true;cambiarOcupado(true);cambiarError('');try{await accion();await sincronizarSocialOnline();await social.recargar();}catch(e){cambiarError(mensajeErrorSocial(e,'No se pudo guardar.'));}finally{bloqueo.current=false;cambiarOcupado(false);}};
+  const ejecutar=async(accion:()=>Promise<unknown>)=>{if(bloqueo.current)return;bloqueo.current=true;cambiarOcupado(true);cambiarError('');try{await accion();await sincronizarSocialOnline();await social.recargar();mostrarAviso('Cambios guardados.',{tipo:'exito'});}catch(e){cambiarError(mensajeErrorSocial(e,'No se pudo guardar.'));}finally{bloqueo.current=false;cambiarOcupado(false);}};
   const elegirPago=(modo:'informar'|'marcar')=>{const opcion=detalle.misFinanzas?.find(o=>o.gastoId===gasto.id&&o.tipo==='egreso');if(opcion){cambiarIntencion(modo);abrirSeleccion(opcion);}};
   return <View style={estilos.historial}>
-    {error?<Text style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
     {seccion==='partes'?<>
       {remoto.partes.map(p=>{const pagada=p.personaId===remoto.pagadorId||remoto.pagaron.includes(p.personaId),editable=abierta&&sala.administrador&&p.personaId!==remoto.pagadorId;
         const parte=gasto.partes.find(v=>v.personaId===(p.personaId===propia?'vos':p.personaId));

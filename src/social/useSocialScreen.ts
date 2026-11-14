@@ -1,3 +1,4 @@
+import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { operacionFinancieraEnCurso } from './financialOperation';
 import { useContext, useState, useEffect, useCallback, useRef } from 'react';
@@ -44,7 +45,7 @@ export default function usePantallaSocial({
   const esSala = Boolean(parametros.salaId) && !esRegistro && !esGasto;
   const esSecundaria = esRegistro || esPersona || esListado || esGasto || esSala || esListaSalas;
   const [registros, establecerRegistros] = useState<import('./socialQueryService').DatosSocialesVisibles | null>(null);
-  const [error, establecerError] = useState<string | null>(null);
+  const [error, establecerError] = useErrorNotificado(null);
   const [cargando, establecerCargando] = useState(true);
   const montado = useRef(true);
   const solicitud = useRef(0);

@@ -1,3 +1,4 @@
+import { AvisosEnModal } from '../contexts/ToastContext';
 import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -60,7 +61,7 @@ export default function ModalPerfil({
     {children}
   </>;
 
-  if (separarFondo) return <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}>
+  if (separarFondo) return <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}><AvisosEnModal visible={visible}>
     <View style={estilos.fondoSuperpuesto}>
       <Pressable accessibilityLabel={etiquetaCerrarFondo} onPress={alCerrar} style={StyleSheet.absoluteFill}/>
       <View style={[estilos.tarjetaSuperpuesta,estiloTarjeta]} accessibilityViewIsModal>
@@ -71,9 +72,9 @@ export default function ModalPerfil({
         </ScrollView>
       </View>
     </View>
-  </Modal>;
+  </AvisosEnModal></Modal>;
   return (
-    <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}>
+    <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}><AvisosEnModal visible={visible}>
       <Pressable accessibilityLabel={etiquetaCerrarFondo} onPress={alCerrar} style={estilos.fondoSuperpuesto}>
         <Pressable style={estilos.tarjetaSuperpuesta}>
           {desplazable ? (
@@ -88,6 +89,6 @@ export default function ModalPerfil({
           ) : contenido}
         </Pressable>
       </Pressable>
-    </Modal>
+    </AvisosEnModal></Modal>
   );
 }

@@ -1,3 +1,4 @@
+import { AvisosEnModal } from '../../contexts/ToastContext';
 import { Modal, Pressable, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BotonSocial from './SocialButton';
@@ -6,7 +7,7 @@ import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function ModalConfirmacionSocial({ titulo, descripcion, textoConfirmar, peligro = false, alCerrar, alConfirmar, ...aspecto }: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & (import('../../social/types').ConfirmacionSocial & {peligro?:boolean;alCerrar:()=>void;alConfirmar:()=>void})) {
   const { tema, estilosGlobales } = aspecto;
   const estilos = crearEstilosCompartidos(tema);
-  return <Modal transparent animationType="fade" visible onRequestClose={alCerrar}>
+  return <Modal transparent animationType="fade" visible onRequestClose={alCerrar}><AvisosEnModal>
     <View style={estilos.fondoModal}>
       <Pressable accessibilityRole="button" accessibilityLabel="Volver sin confirmar" onPress={alCerrar} style={estilos.cierreFondo} />
       <View accessibilityViewIsModal style={estilos.tarjetaModal}>
@@ -18,5 +19,5 @@ export default function ModalConfirmacionSocial({ titulo, descripcion, textoConf
         <BotonSocial texto={textoConfirmar} peligro={peligro} alPresionar={alConfirmar} {...aspecto} />
       </View>
     </View>
-  </Modal>;
+  </AvisosEnModal></Modal>;
 }

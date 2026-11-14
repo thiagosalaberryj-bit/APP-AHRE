@@ -28,7 +28,7 @@ for(const tema of ['claro','oscuro'] as const)test(`los ejemplos sociales permit
  assert.ok(asignaciones.some(t=>t.trim()==='Ana'));
  assert.ok(!asignaciones.some(t=>t.trim()==='Bruno'||t.trim()==='Carla'));
  await vista.pulsar('Ana');await vista.pulsar('Admitir');
- assert.ok(vista.texto().includes('ya tiene acceso'),vista.texto());await vista.pulsar('Reemplazar acceso anterior');
+ assert.ok(vista.avisos.some(m=>m.includes('ya tiene acceso')),vista.avisos.join(' · '));await vista.pulsar('Reemplazar acceso anterior');
  assert.equal((await e.obtenerSalaOnline(sala.id)).admisiones?.[0].estado,'aceptada');
  assert.ok(!vista.texto().includes('Ejemplo visual local'));
  assert.equal(presente(e.base.prepare('SELECT COUNT(*) n FROM comandos_sociales_locales').get()).n,0);

@@ -1,3 +1,4 @@
+import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { useCallback, useContext, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
@@ -23,7 +24,7 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
   const [depositos, establecerDepositos] = useState<(import('../database/types').Deposito & {saldoTexto:string})[]>([]);
   const [categorias, establecerCategorias] = useState<import('../constants/movimientos').Categoria[]>([]);
   const [cargando, establecerCargando] = useState(true);
-  const [errorCarga, establecerErrorCarga] = useState('');
+  const [errorCarga, establecerErrorCarga] = useErrorNotificado('');
   const [guardando, establecerGuardando] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [mostrarTexto, establecerMostrarTexto] = useState(false);
@@ -114,7 +115,7 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
         {cargando ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando depósitos y categorías" /> : null}
         {errorCarga ? (
           <View style={estilos.tarjetaInformacion}>
-            <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{errorCarga}</Text>
+
             <Pressable accessibilityRole="button" onPress={() => cargarDatos()} style={estilos.botonGaleria}>
               <Text style={estilos.textoBotonGaleria}>Reintentar carga</Text>
             </Pressable>

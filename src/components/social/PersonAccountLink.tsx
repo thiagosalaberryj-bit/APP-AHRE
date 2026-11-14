@@ -1,3 +1,6 @@
+import { useContext } from 'react';
+import { ContextoAvisos } from '../../contexts/ToastContext';
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import {mensajeErrorSocial} from '../../social/socialHelpers';
 import {useRef,useState} from 'react';
 import {Text,TextInput,View} from 'react-native';
@@ -10,11 +13,12 @@ import BotonSocial from './SocialButton';
 import {crearEstilosSocialOnline} from '../../styles/social/OnlineSocialStyles';
 
 export default function ModalVinculoCuenta({persona,vinculo,sinConexion,alCerrar,...aspecto}:AspectoSocial&{persona:PersonaVista;vinculo?:VinculoOnline;sinConexion:boolean;alCerrar:()=>void}){
-  const [correo,cambiarCorreo]=useState(''),[error,cambiarError]=useState(''),[ocupado,cambiarOcupado]=useState(false);
+  const { mostrarAviso } = useContext(ContextoAvisos);
+  const [correo,cambiarCorreo]=useState(''),[, cambiarError]=useErrorNotificado(''),[ocupado,cambiarOcupado]=useState(false);
   const bloqueo=useRef(false),estilos=crearEstilosSocialOnline(aspecto.tema);
-  const ejecutar=async(accion:()=>Promise<unknown>)=>{
+  const ejecutar=async(accion:()=>Promise<unknown>,mensaje='Vínculo actualizado.')=>{
     if(bloqueo.current)return;bloqueo.current=true;cambiarOcupado(true);cambiarError('');
-    try{await accion();alCerrar();}
+    try{await accion();mostrarAviso(mensaje,{tipo:'exito'});alCerrar();}
     catch(fallo){cambiarError(mensajeErrorSocial(fallo,'No se pudo actualizar el vínculo.'));}
     finally{bloqueo.current=false;cambiarOcupado(false);}
   };
@@ -29,9 +33,9 @@ export default function ModalVinculoCuenta({persona,vinculo,sinConexion,alCerrar
     </>:<>
         <TextInput accessibilityLabel="Correo de la cuenta a vincular" value={correo} onChangeText={cambiarCorreo} placeholder="Correo de su cuenta AHRE" placeholderTextColor={aspecto.tema.textoSecundario} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} editable={!ocupado} style={estilos.entrada}/>
         <Text style={aspecto.estilosGlobales.textoAyuda}>La otra persona debe aceptar. Sus deudas anteriores siguen siendo privadas.</Text>
-        <BotonSocial texto="Enviar solicitud de vínculo" deshabilitado={!persona.activa||ocupado||sinConexion||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())} alPresionar={()=>ejecutar(()=>solicitarVinculoOnline(persona.id,correo))} {...aspecto}/>
+        <BotonSocial texto="Enviar solicitud de vínculo" deshabilitado={!persona.activa||ocupado||sinConexion||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())} alPresionar={()=>ejecutar(()=>solicitarVinculoOnline(persona.id,correo),'Solicitud de vínculo enviada. La otra persona debe aceptarla.')} {...aspecto}/>
     </>}
     {sinConexion?<Text style={aspecto.estilosGlobales.textoAyuda}>Iniciá sesión con conexión para vincular una cuenta.</Text>:null}
-    {error?<Text accessibilityRole="alert" style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
   </DialogoInvitacion>;
 }

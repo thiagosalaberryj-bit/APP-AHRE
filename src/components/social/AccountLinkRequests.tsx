@@ -1,3 +1,6 @@
+import { useContext } from 'react';
+import { ContextoAvisos } from '../../contexts/ToastContext';
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import {mensajeErrorSocial} from '../../social/socialHelpers';
 import {useRef,useState} from 'react';
 import {Text,View} from 'react-native';
@@ -9,13 +12,14 @@ import BotonSocial from './SocialButton';
 import {crearEstilosSocialOnline} from '../../styles/social/OnlineSocialStyles';
 
 export default function SolicitudesVinculo(aspecto:AspectoSocial){
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const social=useDatosSociales(),{vinculos,sinConexion}=useVinculosOnline(social.usuarioId);
   const solicitudes=vinculos.filter(v=>v.direccion==='recibida'&&v.estado==='solicitado');
-  const [ocupado,cambiarOcupado]=useState(false),[error,cambiarError]=useState(''),bloqueo=useRef(false),estilos=crearEstilosSocialOnline(aspecto.tema);
+  const [ocupado,cambiarOcupado]=useState(false),[, cambiarError]=useErrorNotificado(''),bloqueo=useRef(false),estilos=crearEstilosSocialOnline(aspecto.tema);
   if(!solicitudes.length)return null;
   const responder=async(id:string,decision:'aceptado'|'rechazado')=>{
     if(bloqueo.current)return;bloqueo.current=true;cambiarOcupado(true);cambiarError('');
-    try{await responderVinculoOnline(id,decision);}catch(fallo){cambiarError(mensajeErrorSocial(fallo,'No se pudo responder.'));}
+    try{await responderVinculoOnline(id,decision);mostrarAviso(decision==='aceptado'?'Vínculo aceptado.':'Vínculo rechazado.',{tipo:'exito'});}catch(fallo){cambiarError(mensajeErrorSocial(fallo,'No se pudo responder.'));}
     finally{bloqueo.current=false;cambiarOcupado(false);}
   };
   return <View style={estilos.grupo}>
@@ -26,6 +30,6 @@ export default function SolicitudesVinculo(aspecto:AspectoSocial){
       <View style={estilos.fila}>{(['aceptado','rechazado'] as const).map(decision=><BotonSocial texto={decision==='aceptado'?'Aceptar vínculo':'Rechazar vínculo'} key={decision} deshabilitado={ocupado||sinConexion} alPresionar={()=>responder(solicitud.id,decision)} {...aspecto}/>)}</View>
     </View>)}
     {sinConexion?<Text style={aspecto.estilosGlobales.textoAyuda}>Necesitás conexión para responder las solicitudes.</Text>:null}
-    {error?<Text accessibilityRole="alert" style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
   </View>;
 }

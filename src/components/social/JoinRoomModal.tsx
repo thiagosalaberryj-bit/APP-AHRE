@@ -1,3 +1,6 @@
+import { useContext } from 'react';
+import { ContextoAvisos } from '../../contexts/ToastContext';
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import {mensajeErrorSocial} from '../../social/socialHelpers';
 import Campo from './SocialTextField';
 import BotonSocial from './SocialButton';
@@ -15,8 +18,9 @@ import DialogoInvitacion from './InvitationDialog';
 import SelectorSegmentado from '../SegmentedSelector';
 
 export default function UnirseSala({alUnirse,alCerrar,enlaceInicial='',...aspecto}:AspectoSocial&{alUnirse:(salaId:string)=>void;alCerrar:()=>void;enlaceInicial?:string}){
-  const [metodo,cambiarMetodo]=useState('enlace'),[enlace,cambiarEnlace]=useState(enlaceInicial),[error,cambiarError]=useState('');
-  const [nombre,cambiarNombre]=useState(''),[contrasena,cambiarContrasena]=useState(''),[esperando,cambiarEsperando]=useState(false);
+  const { mostrarAviso } = useContext(ContextoAvisos);
+  const [metodo,cambiarMetodo]=useState('enlace'),[enlace,cambiarEnlace]=useState(enlaceInicial),[, cambiarError]=useErrorNotificado('');
+  const [nombre,cambiarNombre]=useState(''),[contrasena,cambiarContrasena]=useState('');
   const social=useDatosSociales(),demo=social.salas.some(s=>s.demo);
   const leer=(texto:string)=>leerEnlaceInvitacion(texto,URL_SERVIDOR)||(demo?leerEnlaceInvitacion(texto,'https://demo.ahre.test'):null);
   const esGlobal=!!leer(enlace)?.global;
@@ -27,9 +31,9 @@ export default function UnirseSala({alUnirse,alCerrar,enlaceInicial='',...aspect
     cambiarMetodo('enlace');cambiarEnlace(texto);cambiarError('');Keyboard.dismiss();
     const datos=leer(texto);
     if(!datos){cambiarError('Este enlace o QR no es una invitación válida de AHRE.');return;}
-    if(datos.global&&(!nombre.trim()||!contrasena)){cambiarError('Completá tu nombre y la contraseña de la sala.');return;}
+    if(datos.global&&(!nombre.trim()||!contrasena)){if(metodo==='qr')mostrarAviso('QR reconocido. Completá tu nombre y la contraseña para solicitar ingreso.',{tipo:'informacion'});else cambiarError('Completá tu nombre y la contraseña de la sala.');return;}
     ocupado.current=true;cambiarCargando(true);
-    try{const resultado=datos.global?await solicitarIngresoSala(datos.token,nombre,contrasena):await aceptarInvitacionOnline(datos.token,datos.canje);if('estado' in resultado&&resultado.estado!=='aceptada'){cambiarEsperando(true);return;}await social.recargar();alCerrar();cambiarEnlace('');alUnirse(resultado.salaId);}
+    try{const resultado=datos.global?await solicitarIngresoSala(datos.token,nombre,contrasena):await aceptarInvitacionOnline(datos.token,datos.canje);if('estado' in resultado&&resultado.estado!=='aceptada'){mostrarAviso('Solicitud enviada. El administrador debe aprobarla; la sala aparecerá en Social cuando te admita.',{tipo:'exito'});return;}await social.recargar();alCerrar();cambiarEnlace('');alUnirse(resultado.salaId);mostrarAviso('Ya ingresaste a la sala.',{tipo:'exito'});}
     catch(fallo){cambiarError(mensajeErrorSocial(fallo,'No se pudo aceptar la invitación.'));}
     finally{ocupado.current=false;cambiarCargando(false);}
   };
@@ -43,9 +47,9 @@ export default function UnirseSala({alUnirse,alCerrar,enlaceInicial='',...aspect
       </View>:Escaner?<Escaner {...aspecto} alLeer={(texto:string)=>{void aceptar(texto);}}/>:null}
       {esGlobal?<><Campo etiqueta="Tu nombre" valor={nombre} alCambiar={cambiarNombre} {...aspecto}/><Campo secreto etiqueta="Contraseña de la sala" valor={contrasena} alCambiar={cambiarContrasena} {...aspecto}/></>:null}
       {demo?<BotonSocial secundario texto="Usar sala demo como participante" deshabilitado={cargando} alPresionar={()=>{void (async()=>{try{await sincronizarSocialOnline();const sala=social.salas.find(s=>s.demo&&s.online&&!s.administrador&&s.estado==='abierta');if(!sala)throw Error('No hay una sala demo abierta como participante.');const detalle=await obtenerSalaOnline(sala.id);if(!detalle.acceso)throw Error('No se pudo preparar el enlace demo.');cambiarEnlace('https://demo.ahre.test/invitacion/#sala='+detalle.acceso.codigo);cambiarNombre('Cuenta de pruebas');cambiarContrasena('ahre1234');cambiarMetodo('enlace');cambiarError('');}catch(e){cambiarError(mensajeErrorSocial(e,'No se pudo preparar la demo.'));}})();}} {...aspecto}/>:null}
-      {esperando?<Text accessibilityLiveRegion="polite" style={aspecto.estilosGlobales.etiqueta}>Solicitud enviada. El administrador debe aprobarla; la sala aparecerá en Social cuando te admita.</Text>:null}
+
       <View style={estilos.ayudaFila}><Ionicons name="information-circle-outline" size={18} color={aspecto.tema.textoSecundario}/><Text style={estilos.ayudaTexto}>{metodo==='enlace'?'Pedile tu enlace al administrador de la sala y pegalo acá.':'Apuntá al QR que te muestre el administrador. Entrarás con tu cuenta de AHRE.'}</Text></View>
-      {error?<Text accessibilityRole="alert" style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
     </DialogoInvitacion>
   </>;
 }

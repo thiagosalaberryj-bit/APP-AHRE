@@ -1,3 +1,4 @@
+import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
@@ -59,7 +60,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   const movimientoId = ruta.params?.movimientoId || ruta.params?.movimiento?.id;
   const [movimientoHistorial, establecerMovimientoHistorial] = useState<import('../database/types').MovimientoHistorial | null>(null);
   const [cargandoHistorial, establecerCargandoHistorial] = useState(Boolean(movimientoId));
-  const [errorHistorial, establecerErrorHistorial] = useState<string | null>(null);
+  const [errorHistorial, establecerErrorHistorial] = useErrorNotificado(null);
   const [intentoConsulta, establecerIntentoConsulta] = useState(0);
   const [importeVisible, establecerImporteVisible] = useState(false);
 
@@ -169,7 +170,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
             <Text style={estilos.textoEstadoHistorial}>
               {noEncontrado
                 ? 'No se encontró este movimiento. Puede que ya no esté disponible.'
-                : errorHistorial}
+                : 'Reintentá la consulta del movimiento.'}
             </Text>
             {!noEncontrado ? (
               <Pressable

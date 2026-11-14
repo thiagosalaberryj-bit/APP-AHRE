@@ -11,8 +11,10 @@ test('abrir Sincronización lee una vez y agrupa avisos recibidos durante la lec
   let consultas = 0;
   const resolver: (() => void)[] = [];
   const adaptadores: Record<string, unknown> = {
+    '../contexts/ToastContext':{ContextoAvisos:{}},
     react: {
-      useContext: () => ({tema:{}}), useState: (v: unknown) => [typeof v === 'function' ? v() : v, () => {}],
+      useEffect:()=>{},
+      useContext: () => ({tema:{},mostrarAviso:()=>{}}), useState: (v: unknown) => [typeof v === 'function' ? v() : v, () => {}],
       useRef: (current: unknown) => ({current}), useCallback: (v: unknown) => v, useMemo: (f: () => unknown) => f(),
     },
     '@react-navigation/native': {useFocusEffect: (f: typeof enfoque) => {enfoque = f;}},

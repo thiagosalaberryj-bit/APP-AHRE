@@ -1,3 +1,4 @@
+import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { consultarPermisoAvisos, activarAvisosTelefono } from '../notifications/nativeAdapter';
 import OpcionNotificacionesPerfil from '../components/ProfileNotificationOption';
@@ -92,7 +93,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const estilos = crearEstilosPerfil(tema);
   const accionPreferenciaEnCurso = useRef(false);
   const [cargandoInfo, establecerCargandoInfo] = useState(true);
-  const [errorCarga, establecerErrorCarga] = useState<string | null>(null);
+  const [errorCarga, establecerErrorCarga] = useErrorNotificado(null);
   const [nombre, establecerNombre] = useState('');
   const [correo, establecerCorreo] = useState('');
   const [fechaRegistro, establecerFechaRegistro] = useState<string | null>(null);
@@ -467,7 +468,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
             <View style={estilos.contenido}>
               {cargandoInfo ? null : errorCarga ? (
                 <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
-                  <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{errorCarga}</Text>
+
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => navegacion.replace(RUTAS.INICIO_SESION)}

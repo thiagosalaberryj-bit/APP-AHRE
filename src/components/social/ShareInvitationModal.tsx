@@ -1,3 +1,6 @@
+import { useContext } from 'react';
+import { ContextoAvisos } from '../../contexts/ToastContext';
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import BotonSocial from './SocialButton';
 import {useMemo,useRef,useState} from 'react';
 import {Pressable,Share,Text,TextInput,useWindowDimensions,View} from 'react-native';
@@ -11,12 +14,13 @@ import DialogoInvitacion from './InvitationDialog';
 const {create}=require('qrcode/lib/core/qrcode') as Pick<typeof import('qrcode'),'create'>;
 
 export default function CompartirInvitacion({enlace,nombre,alCerrar,global:esGlobal=false,alConfigurar,...aspecto}:AspectoSocial&{enlace:string;nombre:string;alCerrar:()=>void;global?:boolean;alConfigurar?:()=>void}){
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const estilos=crearEstilosSocialOnline(aspecto.tema),{width}=useWindowDimensions();
-  const [error,cambiarError]=useState(''),[compartiendo,cambiarCompartiendo]=useState(false),enCurso=useRef(false);
+  const [, cambiarError]=useErrorNotificado(''),[compartiendo,cambiarCompartiendo]=useState(false),enCurso=useRef(false);
   const [copiado,cambiarCopiado]=useState(false),[copiando,cambiarCopiando]=useState(false);
   const copiar=async()=>{
     if(enCurso.current)return;enCurso.current=true;cambiarCopiando(true);cambiarError('');cambiarCopiado(false);
-    try{const resultado=await setStringAsync(enlace);if(!resultado)throw new Error('copia_no_disponible');cambiarCopiado(true);}
+    try{const resultado=await setStringAsync(enlace);if(!resultado)throw new Error('copia_no_disponible');cambiarCopiado(true);mostrarAviso('Enlace copiado.',{tipo:'exito'});}
     catch{cambiarError('No se pudo copiar el enlace. Reintentá o compartilo por una app.');}
     finally{enCurso.current=false;cambiarCopiando(false);}
   };
@@ -32,7 +36,7 @@ export default function CompartirInvitacion({enlace,nombre,alCerrar,global:esGlo
     <View style={estilos.grupo}>
       <Text style={aspecto.estilosGlobales.etiqueta}>Enlace de invitación</Text>
       <View style={estilos.enlaceCampo}><Ionicons name="link-outline" size={21} color={aspecto.tema.foco}/><TextInput accessibilityLabel="Enlace personal para compartir" value={enlace} editable={false} multiline={false} numberOfLines={1} style={estilos.enlaceTexto}/><Pressable accessibilityRole="button" accessibilityLabel="Copiar enlace de invitación" accessibilityHint="Copia el enlace completo al portapapeles." disabled={copiando||compartiendo} onPress={()=>{void copiar();}} style={[estilos.accionCopiar,(copiando||compartiendo)&&estilos.deshabilitado]}><Ionicons name={copiado?'checkmark-outline':'copy-outline'} size={21} color={aspecto.tema.foco}/></Pressable></View>
-      {copiado?<Text accessibilityLiveRegion="polite" style={aspecto.estilosGlobales.textoAyuda}>Enlace copiado</Text>:null}
+
     </View>
     <View style={estilos.qrCentrado}>
       <View style={estilos.qr} accessible accessibilityLabel={'QR de invitación para '+nombre}><Svg width={lado} height={lado} viewBox={'0 0 '+qr.tamano+' '+qr.tamano}><Rect width={qr.tamano} height={qr.tamano} fill="#FFFFFF"/><Path d={qr.trazado} fill="#000000"/></Svg></View>
@@ -41,6 +45,6 @@ export default function CompartirInvitacion({enlace,nombre,alCerrar,global:esGlo
     <View style={estilos.ayudaFila}><Ionicons name="globe-outline" size={18} color={aspecto.tema.textoSecundario}/><Text style={estilos.ayudaTexto}>El enlace abre la web sin instalar AHRE. Desde ahí puede entrar como invitado o abrir la app.</Text></View>
     <View style={estilos.ayudaFila}><Ionicons name="time-outline" size={18} color={aspecto.tema.textoSecundario}/><Text style={estilos.ayudaTexto}>{esGlobal?'El enlace se conserva hasta que lo renueves. Cada ingreso requiere contraseña y aprobación.':'Válido por 7 días y para una persona. Generar otro enlace reemplaza el anterior.'}</Text></View>
     {alConfigurar?<BotonSocial secundario texto="Opciones de acceso" alPresionar={alConfigurar} {...aspecto}/>:null}
-    {error?<Text accessibilityRole="alert" style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
   </DialogoInvitacion>;
 }

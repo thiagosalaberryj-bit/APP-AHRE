@@ -1,3 +1,5 @@
+import { ContextoAvisos } from '../contexts/ToastContext';
+import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { cargarPreferenciasActuales } from '../profile/profileService';
 import { activarAvisosTelefono } from '../notifications/nativeAdapter';
@@ -6,7 +8,7 @@ import TarjetaNotificacion from '../components/NotificationCard';
 import { guardarYProgramarAvisos } from '../notifications/reminderService';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { ActivityIndicator, Alert, AppState, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, Pressable, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -25,6 +27,7 @@ import { observarIntegraciones } from '../integrations/integrationStore';
 
 export default function PantallaNotificaciones({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
   const volverProtegido = useRegresoProtegido(navegacion);
+  const { mostrarAviso } = useContext(ContextoAvisos);
   const { tema } = useContext(ContextoApariencia), { bottom } = useSafeAreaInsets();
   const g = crearEstilosGlobales(tema), e = crearEstilosNotificaciones(tema, bottom);
   const [filtro, establecerFiltro] = useState<'todas' | 'pendientes' | 'no_vistas'>('todas');
@@ -34,7 +37,7 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
   const [cargandoMas,establecerCargandoMas]=useState(false);
   const [ajustes, establecerAjustes] = useState<AjustesAvisos | null>(null), [permiso, establecerPermiso] = useState('Comprobando permisos');
   const [canales, establecerCanales] = useState<Record<string, boolean>>({});
-  const [cargando, establecerCargando] = useState(true), [error, establecerError] = useState(''), [guardando, establecerGuardando] = useState(false);
+  const [cargando, establecerCargando] = useState(true), [, establecerError] = useErrorNotificado(''), [guardando, establecerGuardando] = useState(false);
   useEffect(() => {
     let activa = true;
     const cargar = () => { void Promise.all([consultarPermisoAvisos(), consultarCanalesAvisos(),cargarPreferenciasActuales()]).then(([p, c,preferencias]) => { if (activa) { establecerPermiso(p); establecerCanales(c);establecerGenerales(!!preferencias.notificaciones_activas); } }).catch(() => {}); };
@@ -55,14 +58,14 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
     grupo.push(aviso);
     gruposPorFecha.set(fecha, grupo);
   }
-  const guardar = async () => { if (!ajustes || guardando || generales!==true) return; establecerGuardando(true); try { await guardarYProgramarAvisos({...ajustes,zona:Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Argentina/Buenos_Aires'}); establecerAjustes(null); } catch (err) { Alert.alert('No se pudieron programar los recordatorios', err instanceof Error ? err.message : 'Intentá guardar de nuevo.'); } finally { establecerGuardando(false); } };
+  const guardar = async () => { if (!ajustes || guardando || generales!==true) return; establecerGuardando(true); try { await guardarYProgramarAvisos({...ajustes,zona:Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Argentina/Buenos_Aires'}); establecerAjustes(null);mostrarAviso('Preferencias de notificaciones guardadas.',{tipo:'exito'}); } catch (err) { establecerError(err instanceof Error ? err.message : 'No se pudieron programar los recordatorios. Intentá guardar de nuevo.'); } finally { establecerGuardando(false); } };
   return <SafeAreaView edges={['top']} style={g.areaSegura}>
     <MarcoEncabezado style={g.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Notificaciones" descripcion="Tus avisos, recordatorios y pendientes." alVolver={volverProtegido} />}>
       <DesplazamientoEncabezado contentContainerStyle={e.contenido}>
-        <View style={e.filaEncabezado}><Text style={e.textoNuevas}>{vista.noVistas ? `${vista.noVistas} sin ver` : 'Estás al día'}</Text><Pressable style={e.botonAjustes} accessibilityRole="button" accessibilityLabel="Ajustes de notificaciones" onPress={() => { void Promise.all([cargarAjustesAvisos(),consultarPermisoAvisos(),cargarPreferenciasActuales()]).then(([a,p,v])=>{establecerPermiso(p);establecerGenerales(!!v.notificaciones_activas);establecerAjustes(a);}).catch(()=>Alert.alert('No se pudieron cargar los ajustes')); }}><Ionicons name="settings-outline" color={tema.textoPrincipal} size={22} /></Pressable></View>
+        <View style={e.filaEncabezado}><Text style={e.textoNuevas}>{vista.noVistas ? `${vista.noVistas} sin ver` : 'Estás al día'}</Text><Pressable style={e.botonAjustes} accessibilityRole="button" accessibilityLabel="Ajustes de notificaciones" onPress={() => { void Promise.all([cargarAjustesAvisos(),consultarPermisoAvisos(),cargarPreferenciasActuales()]).then(([a,p,v])=>{establecerPermiso(p);establecerGenerales(!!v.notificaciones_activas);establecerAjustes(a);}).catch(()=>establecerError('No se pudieron cargar los ajustes')); }}><Ionicons name="settings-outline" color={tema.textoPrincipal} size={22} /></Pressable></View>
         <SelectorSegmentado tema={tema} opciones={[{ id: 'todas', nombre: 'Todas' }, { id: 'pendientes', nombre: 'Pendientes' }, { id: 'no_vistas', nombre: 'No vistas' }]} valor={filtro} alSeleccionar={v => { establecerFiltro(v as typeof filtro); establecerCargando(true); }} etiqueta="Filtrar notificaciones" />
-        {generales===false?<View><Text style={g.textoAyuda}>Notificaciones desactivadas en AHRE.</Text><Pressable accessibilityRole="button" style={g.botonSecundario} onPress={()=>navegacion.navigate(RUTAS.PERFIL)}><Text style={g.textoBotonSecundario}>Activar en Perfil</Text></Pressable></View>:generales&&['Sin permiso','Desactivadas en Ajustes'].includes(permiso)?<View><Text style={g.textoError}>Android bloquea las notificaciones de AHRE.</Text><Pressable accessibilityRole="button" style={g.botonSecundario} onPress={()=>{void activarAvisosTelefono().then(establecerPermiso).catch(()=>Alert.alert('No se pudieron abrir los permisos'));}}><Text style={g.textoBotonSecundario}>Activar en Android</Text></Pressable></View>:null}
-        {error ? <Text accessibilityRole="alert" style={g.textoError}>{error}</Text> : null}
+        {generales===false?<View><Text style={g.textoAyuda}>Notificaciones desactivadas en AHRE.</Text><Pressable accessibilityRole="button" style={g.botonSecundario} onPress={()=>navegacion.navigate(RUTAS.PERFIL)}><Text style={g.textoBotonSecundario}>Activar en Perfil</Text></Pressable></View>:generales&&['Sin permiso','Desactivadas en Ajustes'].includes(permiso)?<View><Text style={g.textoError}>Android bloquea las notificaciones de AHRE.</Text><Pressable accessibilityRole="button" style={g.botonSecundario} onPress={()=>{void activarAvisosTelefono().then(establecerPermiso).catch(()=>establecerError('No se pudieron abrir los permisos'));}}><Text style={g.textoBotonSecundario}>Activar en Android</Text></Pressable></View>:null}
+
         {cargando ? <ActivityIndicator color={tema.foco} /> : !vista.avisos.length ? <Text style={g.textoAyuda}>No tenés notificaciones en este filtro.</Text> : [...gruposPorFecha].map(([fecha, avisos]) =>
           <View key={fecha} style={e.grupoDia}>
             <View style={e.encabezadoDia}><Text style={e.tituloDia}>{fecha}</Text><View style={e.lineaDia}/></View>

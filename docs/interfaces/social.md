@@ -668,7 +668,7 @@ una sola tarjeta; Mis movimientos muestra una tarjeta por operación. Los avisos
 también se consultan desde la persona, en su historial de solicitudes.
 Los permisos siguen comprobándose en el servicio y en el servidor. Una solicitud
 sobre una sala cerrada ya no presenta acciones de aceptación. Los fallos al
-agregar integrantes se muestran dentro del modal, conservando la selección.
+agregar integrantes se muestran con el toast por encima del modal, conservando la selección.
 
 `useRoomOnline.ts` comparte únicamente lecturas simultáneas por cuenta/sala y
 vuelve a leer si recibe novedades durante una consulta. No mantiene una copia
@@ -785,3 +785,13 @@ operaciones financieras, incluso en la primera entrada offline y con cachés
 creadas por versiones anteriores. Calcular el indicador no escribe en SQLite
 ni necesita una sincronización para que aparezca el número. Las selecciones
 y decisiones de incorporación existentes se conservan.
+
+## Avisos de resultados
+
+Los errores generales y los resultados de acciones se anuncian con el toast
+superior, también en modales de Social. Escanear un QR válido que requiere
+completar nombre/contraseña muestra un aviso informativo; solicitud enviada,
+enlace copiado, respuesta a un vínculo e ingreso aceptado usan confirmaciones.
+Las validaciones de campos y los estados de negocio permanecen en su lugar.
+El inventario de componentes y las reglas están en
+[Notificaciones toast](../funcionalidades/notificaciones-toast.md#interfaces-revisadas).

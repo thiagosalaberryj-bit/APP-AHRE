@@ -258,8 +258,8 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
             </View>
 
             {errorCarga ? (
-              <View accessibilityRole="alert" style={estilos.estadoError}>
-                <Text style={estilos.textoError}>{errorCarga}</Text>
+              <View>
+
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => cargarDatos(!datosCargados.current)}

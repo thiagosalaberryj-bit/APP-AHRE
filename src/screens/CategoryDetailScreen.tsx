@@ -1,3 +1,4 @@
+import { useAvisoError } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
@@ -106,6 +107,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   );
   const [datosDetalle, establecerDatosDetalle] = useState<{ anio: number; anioMinimoDisponible: number; evolucion: { mes: number; total: number; }[]; resumenMes: { total: number; cantidad: number; }; movimientos: import("../database/types").MovimientoHistorial[]; } | null>(null);
   const [estadoCarga, establecerEstadoCarga] = useState('cargando');
+  useAvisoError(estadoCarga === 'error' ? 'No se pudieron cargar los datos de la categoría. Reintentá la consulta.' : null);
   const [intentoCarga, establecerIntentoCarga] = useState(0);
 
   useFocusEffect(useCallback(() => {
@@ -183,8 +185,8 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                 </View>
               </> : (
                 <Pressable accessibilityRole="button" onPress={() => establecerIntentoCarga(intento => intento + 1)} style={estilos.estadoDetalle}>
-                  <Ionicons color={tema.error} name="alert-circle-outline" size={22} />
-                  <Text style={estilos.textoEstado}>No se pudieron cargar los datos. Tocá para reintentar.</Text>
+
+                  <Text style={estilos.textoEstado}>Reintentar</Text>
                 </Pressable>
               )}
             </View>

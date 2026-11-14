@@ -1,3 +1,4 @@
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import {useEffect,useRef,useState} from 'react';
 import {Text,View,Pressable} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
@@ -14,7 +15,7 @@ import Dialogo from './InvitationDialog';
 
 export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial&{deuda:DeudaVista}) {
   const social=useDatosSociales(),estilos=crearEstilosDetalle(aspecto.tema),compartidos=crearEstilosCompartidos(aspecto.tema);
-  const [pagos,cambiarPagos]=useState<PagoSocial[]>([]),[acuerdo,cambiarAcuerdo]=useState<DeudaOnline|null>(null),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[vinculos,cambiarVinculos]=useState<{clave:string;movimiento_id:string}[]>([]),[error,cambiarError]=useState('');
+  const [pagos,cambiarPagos]=useState<PagoSocial[]>([]),[acuerdo,cambiarAcuerdo]=useState<DeudaOnline|null>(null),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[vinculos,cambiarVinculos]=useState<{clave:string;movimiento_id:string}[]>([]),[, cambiarError]=useErrorNotificado('');
   const [esDemo,cambiarDemo]=useState(false),[simulando,cambiarSimulando]=useState(false),[ocupado,cambiarOcupado]=useState(false);
   const bloqueo=useRef(false),montado=useRef(true);
   useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
@@ -59,7 +60,7 @@ export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial
   };
   return <View style={estilos.historial}>
     <Text accessibilityRole="header" style={aspecto.estilosGlobales.encabezadoSeccion}>Historial de la deuda</Text>
-    {error?<Text style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
     {deuda.perdonadoNumero>0?registro('perdon',(deuda.tipo==='debo'?'Te perdonaron · ':'Perdonaste · ')+formatearMontoSocial(deuda.perdonadoNumero),deuda.fechaPerdon||deuda.fechaISO,deuda.tipo==='debo'?nombre+' te perdonó este importe. No generó ingresos ni egresos.':'Cerraste este importe sin cobrarlo. No generó ingresos ni egresos.',undefined,undefined,false,'perdonado'):null}
     {pagos.filter(p=>p.clase!=='origen_deuda').map(p=>registro(p.id,(deuda.tipo==='debo'?'Pagaste':'Te pagó')+' · '+formatearMontoSocial(p.monto)+(p.estado==='anulado'?' · Anulado':''),p.fecha,p.descripcion||'',p.movimiento_id||undefined,undefined,false,p.estado==='anulado'?'anulado':'confirmado'))}
     {acuerdo?.estado==='aceptada'?[...acuerdo.pagos].sort((a,b)=>(b.fecha_decision||b.fecha).localeCompare(a.fecha_decision||a.fecha)).map(p=>{
@@ -81,7 +82,7 @@ export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial
       </View>)}
       {!acuerdo.pagos.some(p=>p.estado==='informado')?<Text style={aspecto.estilosGlobales.textoSecundario}>Registrá un pago desde tu lado para simular cómo te lo acepta o rechaza.</Text>:null}
       <BotonSocial secundario texto={'Perdonarme '+formatearMontoSocial(acuerdo.pendiente)} deshabilitado={ocupado||acuerdo.pendiente<=0} alPresionar={()=>{void responder('perdonado');}} {...aspecto}/>
-      {error?<Text style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
     </Dialogo>:null}
   </View>;
 }

@@ -10,7 +10,7 @@ const raiz=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 
 for(const nombre of ['claro','oscuro'] as const)test('el aviso plegado solo muestra icono, título y hora; el detalle se abre explícitamente en '+nombre,()=>{
  let abierta=false,entradas=0;
- const {cargar}=crearCargadorComponentes(raiz,{react:{useState:()=>[abierta,(v:any)=>{abierta=typeof v==='function'?v(abierta):v;}]}});
+ const {cargar}=crearCargadorComponentes(raiz,{'../contexts/ToastContext':{AvisosEnModal:({children}:{children:unknown})=>children},react:{useState:()=>[abierta,(v:any)=>{abierta=typeof v==='function'?v(abierta):v;}]}});
  const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
  const Card=cargar<typeof import('../src/components/NotificationCard.tsx')>('src/components/NotificationCard.tsx').default;
  const aviso:Aviso={id:'demo',tipo:'salas',titulo:'Gastos por registrar',mensaje:'Descripción que solo se ve desplegada',fecha:new Date().toISOString(),vista:false,resuelta:false,destino:{tipo:'sala',id:'sala'}};
@@ -24,7 +24,7 @@ for(const nombre of ['claro','oscuro'] as const)test('el aviso plegado solo mues
 
 test('configuración pide permiso solo si falta y no insiste al volver a renderizar',async()=>{
  let solicitudes=0;const ref={current:false},cambios:string[]=[];
- const {cargar}=crearCargadorComponentes(raiz,{react:{useRef:()=>ref,useEffect:(f:()=>void)=>f()},'../notifications/nativeAdapter':{solicitarPermisoAvisos:async()=>{solicitudes++;return 'Permitidas';}}});
+ const {cargar}=crearCargadorComponentes(raiz,{'../contexts/ToastContext':{AvisosEnModal:({children}:{children:unknown})=>children},react:{useRef:()=>ref,useEffect:(f:()=>void)=>f()},'../notifications/nativeAdapter':{solicitarPermisoAvisos:async()=>{solicitudes++;return 'Permitidas';}}});
  const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
  const Ajustes=cargar<typeof import('../src/components/NotificationSettings.tsx')>('src/components/NotificationSettings.tsx').default;
  const props={tema:TEMAS.claro,ajustes:ajustesPredeterminados(),alCambiar:()=>{},alCerrar:()=>{},alGuardar:()=>{},guardando:false,alCambiarPermiso:(p:string)=>cambios.push(p),canales:{}};
@@ -35,7 +35,7 @@ test('configuración pide permiso solo si falta y no insiste al volver a renderi
 
 for(const nombre of ['claro','oscuro'] as const)test('guardar conserva el diseño del formulario y bloquea sus controles en '+nombre,()=>{
  let cambios=0,guardados=0;
- const {cargar}=crearCargadorComponentes(raiz,{react:{useRef:()=>({current:false}),useEffect:()=>{}},'../notifications/nativeAdapter':{solicitarPermisoAvisos:async()=>'Permitidas'}});
+ const {cargar}=crearCargadorComponentes(raiz,{'../contexts/ToastContext':{AvisosEnModal:({children}:{children:unknown})=>children},react:{useRef:()=>({current:false}),useEffect:()=>{}},'../notifications/nativeAdapter':{solicitarPermisoAvisos:async()=>'Permitidas'}});
  const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
  const Ajustes=cargar<typeof import('../src/components/NotificationSettings.tsx')>('src/components/NotificationSettings.tsx').default;
  const ajustes=ajustesPredeterminados();ajustes.tipos.registro.hora='21:07';const original=JSON.stringify(ajustes);
@@ -55,7 +55,7 @@ for(const nombre of ['claro','oscuro'] as const)test('guardar conserva el diseñ
 
 for(const nombre of ['claro','oscuro'] as const)test('general apagado bloquea edición y guardado sin borrar preferencias en '+nombre,()=>{
  let cambios=0,guardados=0,solicitudes=0;
- const {cargar}=crearCargadorComponentes(raiz,{react:{useRef:()=>({current:false}),useEffect:(f:()=>void)=>f()},'../notifications/nativeAdapter':{solicitarPermisoAvisos:async()=>{solicitudes++;return 'Permitidas';}}});
+ const {cargar}=crearCargadorComponentes(raiz,{'../contexts/ToastContext':{AvisosEnModal:({children}:{children:unknown})=>children},react:{useRef:()=>({current:false}),useEffect:(f:()=>void)=>f()},'../notifications/nativeAdapter':{solicitarPermisoAvisos:async()=>{solicitudes++;return 'Permitidas';}}});
  const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
  const Ajustes=cargar<typeof import('../src/components/NotificationSettings.tsx')>('src/components/NotificationSettings.tsx').default;
  const ajustes=ajustesPredeterminados();ajustes.tipos.registro.hora='21:07';ajustes.tipos.debo.activo=false;const original=JSON.stringify(ajustes);

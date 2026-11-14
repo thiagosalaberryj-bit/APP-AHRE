@@ -41,7 +41,7 @@ export default function MarcoSocial({
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.expandir}>
           <DesplazamientoEncabezado keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} showsVerticalScrollIndicator={false}>
             <View pointerEvents={bloqueado?'none':'auto'} style={[estilos.contenido, !esSecundaria && estilos.contenidoPanel, esRegistro && estilos.contenidoFormulario, esRegistro && parametros.tipo === 'gasto' && estilos.contenidoGasto]}>
-              {cargando ? null : contexto.error ? <View style={estilos.grupo}><EstadoVacio icono="alert-circle-outline" titulo="No pudimos cargar Social" descripcion={contexto.error} {...aspecto} /><BotonSocial texto="Reintentar" alPresionar={contexto.recargar} {...aspecto} /></View> : noDisponible ? <EstadoVacio icono="alert-circle-outline" titulo="No pudimos mostrar la información" descripcion="Volvé a Social para elegir otro registro." {...aspecto} /> : <RequisitoCreacionSocial aplicar={requiereDeposito} {...aspecto}>{children}</RequisitoCreacionSocial>}
+              {cargando ? null : contexto.error ? <View style={estilos.grupo}><BotonSocial texto="Reintentar" alPresionar={contexto.recargar} {...aspecto} /></View> : noDisponible ? <EstadoVacio icono="alert-circle-outline" titulo="No pudimos mostrar la información" descripcion="Volvé a Social para elegir otro registro." {...aspecto} /> : <RequisitoCreacionSocial aplicar={requiereDeposito} {...aspecto}>{children}</RequisitoCreacionSocial>}
             </View>
           </DesplazamientoEncabezado>
         </KeyboardAvoidingView>
