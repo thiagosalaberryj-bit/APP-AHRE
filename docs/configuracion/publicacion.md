@@ -59,7 +59,7 @@ El comando envía el código local a EAS y devuelve el seguimiento. Descargar el
 APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
-entrega. El estado actual declara versión 0.9.0 y `android.versionCode` 14;
+entrega. El estado actual declara versión 0.9.1 y `android.versionCode` 15;
 la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
 `Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
@@ -83,6 +83,20 @@ No usar la exportación local como si fuera un APK.
 
 Subir un backend, hacer commit/push, compilar un APK y publicar su descarga son
 acciones diferentes. La etapa 8 documenta el proceso; no ejecuta esas acciones.
+
+## Mantenimiento 0.9.1 · build 15
+
+Actualiza parches de SDK 57, React Navigation 7 y WorkManager 2.10.5,
+manteniendo React 19.2.3, React Native 0.86.3 y el perfil `ocr-comparison`.
+El backend coordinado de mantenimiento es 0.3.1; no cambia el protocolo HTTP,
+el esquema ni las reglas financieras. El detalle está en
+[Dependencias](dependencias.md#actualización-de-mantenimiento-091).
+
+Esta tarea prepara fuentes y versiones; no envía una build a EAS ni publica
+la descarga. La exportación Metro/Hermes no sustituye compilar e instalar
+una APK 0.9.1/15 y comprobar OCR, SQLite, navegación, notificaciones, alarmas
+exactas y WorkManager con la app cerrada. Conservar la firma y las credenciales
+FCM existentes. Las builds 0.9.0/14 descritas debajo son antecedentes.
 
 ## Build 10: Social reorganizado
 

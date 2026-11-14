@@ -5,6 +5,41 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+## [v0.9.1] - 2026-11-13 - no estable
+
+### Cambiado
+
+- Actualización compatible de Expo 57.0.31 a 57.0.33 y parches de Constants,
+  Image Manipulator, Image Picker, Splash Screen, SQLite y Task Manager.
+- React Navigation: bottom-tabs/native-stack 7.21.0 y native 7.5.1.
+  Se conservan React 19.2.3, React Native 0.86.3 y TypeScript 6.0.3.
+- WorkManager 2.10.1 → 2.10.5 en el módulo de recurrencias; se mantiene ML Kit
+  16.0.1 y se difieren los saltos de SDK y requisitos Android.
+- Manifiesto y lockfile coordinados, app 0.9.1 y Android versionCode 15.
+  Documentación de dependencias, publicación y validación actualizada.
+
+### Seguridad
+
+- Auditoría npm: 15 paquetes afectados → 3 moderados, sin altos, bajos ni
+  críticos. Se actualizan las transitivas admitidas por los consumidores,
+  incluidos glob y node-forge; desaparecen las rutas vulnerables de Zod 3
+  y deepmerge. No se usan overrides ni actualizaciones forzadas.
+- Queda un aviso de minimatch en fingerprint, propagado a fingerprint y Expo.
+  Se documenta; no se acepta el retroceso a SDK 52 sugerido por npm.
+
+### Verificación y entrega
+
+- Tipos correctos, Expo Doctor 21/21, comprobación de versiones Expo y árbol
+  npm sin problemas. Autolinking detecta OCR, recurrencias y alarmas exactas.
+- Suites completas: 512 pruebas de app y 101 de backend aprobadas, cero fallos
+  y cero omisiones, con SQLite y MySQL 8.4.13 temporal aislado en loopback.
+- Exportación Android/Hermes correcta. Advierte que falta `google-services.json`
+  en este checkout; se necesita la configuración FCM antes de una APK nueva.
+- No se genera ni publica APK, ni se despliega el servidor. La comprobación
+  física de navegación, OCR, SQLite, avisos y WorkManager queda pendiente.
+- Dependencias y changelog modificados con autorización explícita del líder,
+  sin Issue; rama `codex/actualizar-dependencias-0.9.1`.
+
 ## [v0.9.0] - 2026-11-13 - no estable
 
 ### Añadido
