@@ -1,5 +1,23 @@
 # Revisión final e integración · etapa 9
 
+## Cierre vigente · 0.9.1 · 14 de noviembre de 2026
+
+El 14 de noviembre de 2026 el líder confirmó que completó la validación
+integral de la app y del servidor para esta actualización, incluidos los
+recorridos manuales y las comprobaciones externas que figuraban pendientes,
+y autorizó actualizar documentación/changelogs, integrar ambos PR a `main`
+y publicar releases no estables. Esta confirmación del líder complementa
+las pruebas automatizadas registradas; no representa una repetición de esas
+pruebas por el agente ni una certificación de todos los dispositivos.
+
+PR de cierre: [#71](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/71).
+Versión 0.9.1, Android 15, coordinada con servidor 0.3.1 ya desplegado.
+La revisión de mantenimiento comprobó los cambios de manifiestos, lockfiles,
+WorkManager y documentación frente a `main`, sin cambios funcionales adicionales.
+Resultados detallados: [Estado y validación](estado-y-validacion.md).
+
+## Antecedente histórico · etapa 9 del 3 de noviembre
+
 Revisión local del 3 de noviembre de 2026. La etapa 8 está completa con el
 alcance actualizado por el líder: README breves y coherentes, guías separadas y
 sin material gráfico de procesos. Este informe prepara la revisión e integración;

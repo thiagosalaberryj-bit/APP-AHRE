@@ -9,7 +9,7 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.9.0-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.9.1-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
@@ -57,6 +57,11 @@ El OCR nativo necesita un APK. La guía de [compilación y publicación](docs/co
 explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
+
+Cierre 0.9.1 (14/11/2026): validación integral confirmada por el líder.
+SERVER-AHRE 0.3.1 está desplegado y su supervisor n8n fue comprobado cada minuto.
+El detalle y la procedencia de las verificaciones están en
+[Estado y validación](docs/estado-y-validacion.md#dependencias-091).
 
 ```powershell
 npm run typecheck
