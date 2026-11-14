@@ -1,12 +1,26 @@
 # Estado y validación de AHRE
 
-Referencia vigente: **13 de noviembre de 2026**, rama
+Referencia vigente: **14 de noviembre de 2026**, rama
 `codex/actualizar-dependencias-0.9.1`, versión configurada 0.9.1 y código Android 15.
-Este estado corresponde al código local; no identifica la revisión instalada
-ni la que corre en producción. El líder autorizó actualizar también el changelog
+Entrega coordinada con SERVER-AHRE 0.3.1, ya desplegado y verificado.
+El líder autorizó el cierre documental, changelog, merge y release no estable
 para este mantenimiento, sin Issue.
 
 ## Dependencias 0.9.1
+
+El 14 de noviembre de 2026 el líder confirmó que completó la validación
+integral de la app y del servidor para esta actualización, incluidos los
+recorridos manuales y las comprobaciones externas que figuraban pendientes,
+y autorizó actualizar documentación/changelogs, integrar ambos PR a `main`
+y publicar releases no estables. Esta confirmación del líder complementa
+las pruebas automatizadas registradas; no representa una repetición de esas
+pruebas por el agente ni una certificación de todos los dispositivos.
+
+El servidor y su supervisor n8n fueron comprobados también por el agente;
+ver [cierre operativo](https://github.com/thiagosalaberryj-bit/SERVER-AHRE/blob/main/docs/infraestructura-y-despliegue.md#cierre-operativo-031--14-de-noviembre-de-2026).
+La release de código no compila ni publica una APK automáticamente.
+
+### Verificación automatizada del 13 de noviembre
 
 Se actualizan parches compatibles con SDK 57, React Navigation 7 y WorkManager
 2.10.5; se conservan React 19.2.3, React Native 0.86.3 y TypeScript 6.0.3.
@@ -32,7 +46,7 @@ MySQL 8.4.13 portátil escuchó solo en `127.0.0.1:13317`; se verificó `@@datad
 y se usó un usuario temporal limitado a bases `ahre_test_*`, con contraseña
 aleatoria solo en memoria. Al finalizar quedaron cero bases sintéticas y el
 servidor se apagó normalmente; se retiraron los datos y binarios temporales.
-No se dispuso de un entorno de compilación Android ni dispositivo para probar
+En la ejecución automatizada del 13/11 no se dispuso de un entorno de compilación Android ni dispositivo para probar
 una APK, ni Docker para las imágenes de SERVER-AHRE. La exportación y el
 autolinking no compilan Kotlin ni prueban entrega física de avisos. No se envía build a EAS ni se
 despliega o publica una descarga. Los resultados 0.9.0 siguientes son históricos.

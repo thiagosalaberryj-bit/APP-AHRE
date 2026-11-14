@@ -92,11 +92,14 @@ El backend coordinado de mantenimiento es 0.3.1; no cambia el protocolo HTTP,
 el esquema ni las reglas financieras. El detalle está en
 [Dependencias](dependencias.md#actualización-de-mantenimiento-091).
 
-Esta tarea prepara fuentes y versiones; no envía una build a EAS ni publica
-la descarga. La exportación Metro/Hermes no sustituye compilar e instalar
-una APK 0.9.1/15 y comprobar OCR, SQLite, navegación, notificaciones, alarmas
-exactas y WorkManager con la app cerrada. Conservar la firma y las credenciales
-FCM existentes. Las builds 0.9.0/14 descritas debajo son antecedentes.
+El 14/11/2026 el líder confirmó la validación integral de la entrega,
+incluidas las comprobaciones manuales pendientes. SERVER-AHRE 0.3.1 quedó
+desplegado; API, worker y supervisor n8n fueron verificados. Ver el registro
+y la procedencia de los resultados en [Estado y validación](../estado-y-validacion.md).
+La release GitHub 0.9.1 es no estable y contiene fuentes; no inicia una build
+EAS ni reemplaza la descarga de la landing. Este cierre no adjunta un APK nuevo
+ni un identificador de build adicional. Conservar firma y credenciales FCM.
+Las builds 0.9.0/14 descritas debajo son antecedentes.
 
 ## Build 10: Social reorganizado
 

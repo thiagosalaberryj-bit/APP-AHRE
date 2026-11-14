@@ -58,6 +58,11 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
+Cierre 0.9.1 (14/11/2026): validación integral confirmada por el líder.
+SERVER-AHRE 0.3.1 está desplegado y su supervisor n8n fue comprobado cada minuto.
+El detalle y la procedencia de las verificaciones están en
+[Estado y validación](docs/estado-y-validacion.md#dependencias-091).
+
 ```powershell
 npm run typecheck
 npm test

@@ -5,7 +5,7 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
-## [v0.9.1] - 2026-11-13 - no estable
+## [v0.9.1] - 2026-11-14 - no estable
 
 ### Cambiado
 
@@ -35,10 +35,23 @@ documentación se registran en este archivo.
   y cero omisiones, con SQLite y MySQL 8.4.13 temporal aislado en loopback.
 - Exportación Android/Hermes correcta. Advierte que falta `google-services.json`
   en este checkout; se necesita la configuración FCM antes de una APK nueva.
-- No se genera ni publica APK, ni se despliega el servidor. La comprobación
-  física de navegación, OCR, SQLite, avisos y WorkManager queda pendiente.
+- El 14/11 el líder confirmó la validación integral de app y servidor,
+  incluidas las comprobaciones manuales y externas pendientes, y autorizó
+  el merge y las releases no estables. Es una confirmación del líder,
+  complementaria a las pruebas automatizadas registradas.
+- SERVER-AHRE 0.3.1 desplegado, API local/pública y worker disponibles;
+  supervisor n8n publicado con ejecuciones automáticas exitosas cada minuto.
+- La release publica fuentes; este cierre no genera ni adjunta un APK nuevo.
 - Dependencias y changelog modificados con autorización explícita del líder,
   sin Issue; rama `codex/actualizar-dependencias-0.9.1`.
+
+### Integración y revisión
+
+- Cierre mediante el [PR #71](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/71),
+  con documentación y changelog actualizados por autorización explícita del líder.
+- Entrega coordinada: APP-AHRE 0.9.1 / Android 15 y SERVER-AHRE 0.3.1.
+- Se conserva el aviso moderado de minimatch/fingerprint; la confirmación
+  funcional no equivale a una auditoría nueva de seguridad.
 
 ## [v0.9.0] - 2026-11-13 - no estable
 

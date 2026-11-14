@@ -1,5 +1,23 @@
 # Validación de notificaciones y Mercado Pago · 9 de noviembre de 2026
 
+## Cierre vigente · 14 de noviembre de 2026
+
+El 14 de noviembre de 2026 el líder confirmó que completó la validación
+integral de la app y del servidor para esta actualización, incluidos los
+recorridos manuales y las comprobaciones externas que figuraban pendientes,
+y autorizó actualizar documentación/changelogs, integrar ambos PR a `main`
+y publicar releases no estables. Esta confirmación del líder complementa
+las pruebas automatizadas registradas; no representa una repetición de esas
+pruebas por el agente ni una certificación de todos los dispositivos.
+
+App 0.9.1 / Android 15 y servidor 0.3.1. El servidor quedó desplegado,
+con API y worker disponibles; el agente verificó el supervisor publicado y
+dos ejecuciones automáticas exitosas separadas por 60 segundos.
+Ver [Estado y validación](estado-y-validacion.md#dependencias-091).
+Los registros siguientes conservan el alcance y los pendientes históricos.
+
+## Antecedente · validación inicial del 9 de noviembre
+
 App y servidor se prepararon desde `main` actualizado, en la rama
 `codex/notificaciones-mercado-pago` de cada repositorio. El repositorio
 AHRE-MP-MOVIMIENTOS se consultó como referencia sin modificarlo.

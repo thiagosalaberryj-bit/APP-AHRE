@@ -8,7 +8,10 @@ El proyecto utiliza Expo SDK 57, React Native y TypeScript. Las dependencias adm
 
 El líder autorizó esta actualización y su changelog el 13 de noviembre de 2026,
 sin Issue. La rama `codex/actualizar-dependencias-0.9.1` parte de `main`
-`2a5389e`. La app declara 0.9.1 y código Android 15; SERVER-AHRE prepara 0.3.1.
+`2a5389e`. La app declara 0.9.1 y código Android 15; SERVER-AHRE 0.3.1
+está desplegado y verificado desde el 14/11. El líder confirmó la validación
+integral y autorizó el cierre coordinado como releases no estables; ver
+[Estado y validación](../estado-y-validacion.md#dependencias-091).
 
 Se conserva SDK 57 con React 19.2.3, React Native 0.86.3, TypeScript 6.0.3 y
 las versiones nativas administradas por Expo. Los siguientes paquetes suben
