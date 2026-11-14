@@ -4,6 +4,70 @@ Este documento registra las dependencias directas utilizadas por AHRE, su finali
 
 El proyecto utiliza Expo SDK 57, React Native y TypeScript. Las dependencias administradas por Expo se instalan con `npx expo install` para conservar la compatibilidad con la versión de SDK utilizada.
 
+## Actualización de mantenimiento 0.9.1
+
+El líder autorizó esta actualización y su changelog el 13 de noviembre de 2026,
+sin Issue. La rama `codex/actualizar-dependencias-0.9.1` parte de `main`
+`2a5389e`. La app declara 0.9.1 y código Android 15; SERVER-AHRE prepara 0.3.1.
+
+Se conserva SDK 57 con React 19.2.3, React Native 0.86.3, TypeScript 6.0.3 y
+las versiones nativas administradas por Expo. Los siguientes paquetes suben
+dentro de sus rangos previos; se elevan también sus mínimos en el manifiesto:
+
+| Paquete | Lockfile anterior | Lockfile 0.9.1 |
+| --- | --- | --- |
+| `expo` | 57.0.31 | 57.0.33 |
+| `expo-constants` | 57.0.23 | 57.0.24 |
+| `expo-image-manipulator` | 57.0.21 | 57.0.22 |
+| `expo-image-picker` | 57.0.20 | 57.0.21 |
+| `expo-splash-screen` | 57.0.10 | 57.0.11 |
+| `expo-sqlite` | 57.0.4 | 57.0.5 |
+| `expo-task-manager` | 57.0.22 | 57.0.23 |
+| `@react-navigation/bottom-tabs` | 7.19.2 | 7.21.0 |
+| `@react-navigation/native` | 7.4.1 | 7.5.1 |
+| `@react-navigation/native-stack` | 7.19.2 | 7.21.0 |
+
+El módulo `recurrence-worker` actualiza `work-runtime-ktx` de 2.10.1 a 2.10.5,
+el último parche de su línea. Se difiere 2.12.0, que cambia el mínimo Android
+y el comportamiento de planificación, hasta una validación nativa específica.
+[Notas oficiales de WorkManager](https://developer.android.com/jetpack/androidx/releases/work).
+ML Kit 16.0.1 ya está actualizado y conserva el modelo latino incluido.
+
+npm regeneró las transitivas requeridas por los paquetes seleccionados, sin
+`overrides`, `--force` ni saltos impuestos sobre los rangos de sus consumidores.
+Entre ellas: `@expo/cli` 57.0.34, `@expo/config` 57.0.11,
+`@expo/config-plugins` 57.0.13, `glob` 14.0.6 y `node-forge` 1.4.3.
+
+### Auditoría de seguridad
+
+`npm audit --package-lock-only --json` pasa de 15 paquetes afectados
+(2 altos, 10 moderados y 3 bajos) a **3 moderados**, sin altos, críticos ni bajos.
+Queda `minimatch` 10.2.6 requerido por `@expo/fingerprint` 0.20.16 y la
+propagación a ese paquete y a Expo: es un aviso y sus dependientes, no tres
+fallos independientes. El aviso afecta versiones anteriores a 11.0.1.
+[Aviso de minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249).
+
+La copia 11.0.8 que usa `glob` ya está corregida; no reemplaza la 10.2.6 de
+fingerprint. npm propone retroceder a Expo 52.0.49; se rechaza esa sugerencia
+por incompatibilidad con SDK 57. No se fuerza minimatch 11 sobre `^10.2.6`.
+La ruta restante pertenece al cálculo de huellas de compilación; no se ha
+demostrado explotación desde el APK. No se declara la app libre de riesgos.
+
+Expo 58, React 19.3, React Native 0.88, Gesture Handler 3, TypeScript 7 y
+otros módulos fuera de la matriz de SDK 57 se difieren para una migración
+coordinada. Los tipos de Node permanecen en la línea 24 del runtime.
+
+### Reproducción y comprobación
+
+Las instalaciones se realizaron con `--ignore-scripts --no-audit --no-fund`.
+El lockfile forma parte de la entrega. Para reproducirlo, usar `npm ci`
+en un checkout de esta rama, sin ejecutar `npm update` ni `audit fix --force`.
+Expo Doctor aprueba sus 21 comprobaciones, `expo install --check` no pide
+cambios y `npm ls --all` no informa problemas. Resultados completos y límites:
+[Estado y validación](../estado-y-validacion.md#dependencias-091).
+La consulta final de `npm outdated` no encuentra actualizaciones directas dentro
+de los rangos elegidos; las versiones fuera de ellos se difieren por compatibilidad.
+
 ## Dependencias de ejecución
 
 ### Notificaciones · 9 de noviembre de 2026
@@ -20,7 +84,7 @@ la app Android; la clave privada de servicio no forma parte del paquete.
 
 | Dependencia | Versión | Finalidad | Uso en AHRE |
 | --- | --- | --- | --- |
-| `expo` | `~57.0.31` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
+| `expo` | `~57.0.33` | Base del entorno Expo (SDK 57). | Ejecución y configuración general de la aplicación. |
 | `expo-status-bar` | `~57.0.1` | Control de la barra de estado. | Ajustes visuales básicos de la aplicación. |
 | `react` | `19.2.3` | Biblioteca para construir la interfaz. | Pantallas y componentes de AHRE. |
 | `react-native` | `0.86.3` | Framework móvil utilizado por Expo. | Desarrollo de la aplicación para Android y otras plataformas compatibles. |
@@ -31,20 +95,20 @@ la app Android; la clave privada de servicio no forma parte del paquete.
 | --- | --- | --- | --- |
 | `@expo/vector-icons` | `^15.0.2` | Proporciona un conjunto de íconos compatibles con Expo y React Native. | Navegación, acciones y estados visuales de la interfaz. |
 | `expo-camera` | `~57.0.6` | Muestra una vista previa de cámara dentro de la aplicación y captura fotografías. | Vista en vivo y captura de comprobantes en OCR; el obturador está debajo del visor. |
-| `expo-image-picker` | `~57.0.20` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes elegidos desde la galería en OCR y documentos. |
-| `expo-image-manipulator` | `~57.0.21` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
+| `expo-image-picker` | `~57.0.21` | Permite seleccionar imágenes desde la galería o tomar una fotografía mediante la interfaz del sistema. | Perfil, comprobantes elegidos desde la galería en OCR y documentos. |
+| `expo-image-manipulator` | `~57.0.22` | Recorta y transforma imágenes locales en el dispositivo. | Genera en la caché el recorte confirmado para adjuntarlo al borrador OCR. |
 | `expo-crypto` | `~57.0.4` | Genera bytes aleatorios y calcula resúmenes criptográficos con Expo. | `passwordSecurity.ts` crea una sal de 16 bytes con `getRandomBytesAsync()` y deriva el verificador con una pasada SHA-256 mediante `digestStringAsync()`. |
-| `expo-constants` | `~57.0.22` | Expone información constante de la aplicación y del entorno de ejecución. | Perfil lee `expoConfig.version` para Acerca de AHRE; Expo y expo-asset también la utilizan. |
+| `expo-constants` | `~57.0.24` | Expone información constante de la aplicación y del entorno de ejecución. | Perfil lee `expoConfig.version` para Acerca de AHRE; Expo y expo-asset también la utilizan. |
 | `expo-font` | `~57.0.4` | Permite cargar fuentes personalizadas o incluidas por paquetes. | Plugin en app.json y dependencia de @expo/vector-icons y Expo. Conservar. |
 | `expo-local-authentication` | `~57.0.3` | Permite consultar y utilizar la autenticación biométrica disponible en el dispositivo. | Inicio la usa después de comprobar que existe una sesión local válida; la huella autoriza el acceso al Dashboard. |
 | `expo-secure-store` | `~57.0.4` | Guarda valores pequeños de forma segura utilizando mecanismos nativos del dispositivo. | `sessionService.ts` guarda el identificador del usuario si «Recordarme» está activo. `balanceVisibilityService.ts` conserva por usuario la preferencia para ocultar saldos. No guarda contraseñas ni sus verificadores. |
-| `expo-splash-screen` | `~57.0.10` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Logo de AHRE y fondo claro/oscuro configurados explícitamente en el plugin; coordinación del inicio. |
-| `expo-sqlite` | `~57.0.4` | Permite utilizar una base de datos SQLite local. | Persistencia offline-first; también guarda las cuentas, sus verificadores y preferencias locales. |
+| `expo-splash-screen` | `~57.0.11` | Controla la pantalla de inicio nativa mientras se prepara la aplicación. | Logo de AHRE y fondo claro/oscuro configurados explícitamente en el plugin; coordinación del inicio. |
+| `expo-sqlite` | `~57.0.5` | Permite utilizar una base de datos SQLite local. | Persistencia offline-first; también guarda las cuentas, sus verificadores y preferencias locales. |
 | `expo-system-ui` | `~57.0.4` | Permite configurar aspectos de la interfaz nativa del sistema. | Fondo de la ventana según el tema activo y transiciones sin un fondo blanco inesperado. |
 | `expo-navigation-bar` | `~57.0.3` | Permite definir el estilo de los controles de navegación del sistema Android. | Cambiar el contraste de los controles según el tema; una capa de React Native pinta el fondo que corresponde a cada pantalla. |
-| `@react-navigation/native` | `^7.4.1` | Base común para administrar la navegación en React Native. | Organización de los flujos y pantallas de AHRE. |
-| `@react-navigation/native-stack` | `^7.19.2` | Implementa navegación tipo pila entre pantallas. | Flujos como inicio de sesión, registro y detalle de movimientos. |
-| `@react-navigation/bottom-tabs` | `^7.19.2` | Implementa navegación mediante pestañas inferiores. | Acceso a Inicio, Movimientos, Nuevo, Estadísticas y Social. |
+| `@react-navigation/native` | `^7.5.1` | Base común para administrar la navegación en React Native. | Organización de los flujos y pantallas de AHRE. |
+| `@react-navigation/native-stack` | `^7.21.0` | Implementa navegación tipo pila entre pantallas. | Flujos como inicio de sesión, registro y detalle de movimientos. |
+| `@react-navigation/bottom-tabs` | `^7.21.0` | Implementa navegación mediante pestañas inferiores. | Acceso a Inicio, Movimientos, Nuevo, Estadísticas y Social. |
 | `react-native-screens` | `~4.26.0` | Optimiza la administración nativa de pantallas utilizadas por la navegación. | Soporte de los navegadores de React Navigation. |
 | `react-native-safe-area-context` | `~5.7.0` | Detecta áreas seguras del dispositivo, como barras del sistema y cámaras frontales. | Mantener formularios y navegación accesibles y calcular el inset que colorea la zona inferior de Android. |
 | `react-native-gesture-handler` | `~2.32.0` | Proporciona gestos nativos para interacciones táctiles. | Está declarada, pero el código actual no la importa directamente; el gesto del toast usa `PanResponder` de React Native. |
@@ -52,13 +116,18 @@ la app Android; la clave privada de servicio no forma parte del paquete.
 | `react-native-worklets` | `0.10.1` | Proporciona la ejecución de funciones de Reanimated en contextos de trabajo. | Soporte requerido por la versión instalada de Reanimated. |
 | `react-native-svg` | `15.15.4` | Permite renderizar y manipular gráficos SVG. | Íconos, gráficos y recursos vectoriales de la interfaz. |
 | `date-fns` | `^4.4.0` | Proporciona funciones para analizar, comparar, ordenar y formatear fechas. | Movimientos, depósitos, estadísticas, filtros y reportes. |
+| `expo-clipboard` | `~57.0.2` | Acceso al portapapeles del sistema. | Copia de enlaces e invitaciones de Social. |
+| `expo-notifications` | `~57.0.25` | Permisos, canales, tokens y programación de avisos. | Recordatorios locales y notificaciones push Android. |
+| `expo-task-manager` | `~57.0.23` | Registro de tareas nativas. | Integración de tareas del módulo de recurrencias. |
+| `qrcode` | `^1.5.4` | Generación de códigos QR. | Invitaciones de Social. |
 
 ## Formularios y validación
 
 Los formularios de AHRE utilizan estado de React y validaciones locales.
 `react-hook-form`, `@hookform/resolvers` y el `zod` directo se retiraron en
 la etapa 7 con autorización del líder, después de verificar que no tenían uso.
-La copia transitiva de Zod requerida por Expo CLI permanece instalada.
+La CLI actualizada en 0.9.1 ya no incluye la copia vulnerable de Zod 3.
+Las auditorías históricas de este documento conservan el estado de sus entregas.
 
 ## Comandos utilizados
 
@@ -134,28 +203,29 @@ Estas dependencias no requieren cambios adicionales en `app.json`. La validació
 | `typescript` | `6.0.3` | Compilador y comprobación de tipos, según la plantilla de Expo SDK 57. |
 | `@types/react` | `19.2.4` | Tipos para React 19.2 y JSX, parche recomendado por Expo CLI. |
 | `@types/node` | `24.19.2` | Tipos para las pruebas y el plugin ejecutados con Node 24. |
+| `@types/qrcode` | `1.5.6` (rango `^1.5.6`) | Tipos del generador de QR. |
 
 El líder autorizó estos cambios e instalación en la conversación de migración
-sin Issue. No se actualizaron las dependencias de ejecución.
+TypeScript sin Issue. En aquella migración no se actualizaron las dependencias de ejecución.
 Ver [compatibilidad y configuración de TypeScript](typescript.md).
 
 ## Dependencias previstas para módulos futuros
 
 Estas capacidades todavía no están implementadas. Algunas dependencias de la tabla ya están declaradas, pero no se usan hasta que se desarrolle el flujo correspondiente:
 
-- notificaciones locales o push y tareas en segundo plano;
 - ubicación y mapas;
 - procesamiento avanzado de imágenes adicional al OCR local implementado;
-- gráficos;
-- Bluetooth;
-- sincronización de datos y detección de conectividad.
+- Bluetooth.
+
+Las notificaciones, tareas, gráficos SVG y sincronización ya tienen usos
+implementados; no se consideran futuras incorporaciones de dependencias.
 
 ## Cantidad actual
 
-El proyecto tiene actualmente **30 dependencias directas**:
+El proyecto tiene actualmente **35 dependencias directas**:
 
-- 4 dependencias que ya formaban parte del proyecto base;
-- 26 dependencias incorporadas para la estructura base y los módulos iniciales.
+- 31 dependencias de ejecución;
+- 4 dependencias de desarrollo, incluidos los tipos de QR.
 
 No se agregan dependencias adicionales para módulos futuros hasta que exista
 una necesidad concreta y una decisión técnica documentada. Algunas
@@ -197,9 +267,9 @@ la imagen original para evitar recortes por la máscara del launcher. Ambos
 cambios requieren un APK nuevo. `eas.json` declara `cli.appVersionSource: local`
 para explicitar el versionado actual sin activar incrementos remotos.
 
-## Versión de la aplicación y APK interno
+## Antecedente: versión 0.5.0 y APK interno
 
-La versión `0.5.0` se preparó el 1 de noviembre de 2026. La configuración actual
+La versión `0.5.0` se preparó el 1 de noviembre de 2026. La configuración de esa entrega
 usa `expo.version: 0.5.0` y `android.versionCode: 3` en
 `app.json`. `package.json` y las dos versiones de la raíz de `package-lock.json`
 también indican `0.5.0`; las versiones de dependencias no cambian.

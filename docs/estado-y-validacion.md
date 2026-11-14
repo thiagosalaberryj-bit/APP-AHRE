@@ -1,11 +1,43 @@
 # Estado y validación de AHRE
 
 Referencia vigente: **13 de noviembre de 2026**, rama
-`codex/notificaciones-mercado-pago`, versión configurada 0.9.0 y código Android 14.
+`codex/actualizar-dependencias-0.9.1`, versión configurada 0.9.1 y código Android 15.
 Este estado corresponde al código local; no identifica la revisión instalada
-ni la que corre en producción. El changelog queda a cargo de la revisión.
+ni la que corre en producción. El líder autorizó actualizar también el changelog
+para este mantenimiento, sin Issue.
 
-## Estado actual
+## Dependencias 0.9.1
+
+Se actualizan parches compatibles con SDK 57, React Navigation 7 y WorkManager
+2.10.5; se conservan React 19.2.3, React Native 0.86.3 y TypeScript 6.0.3.
+El alcance y las decisiones están en [Dependencias](configuracion/dependencias.md).
+
+- `npm run typecheck`: correcto, app y herramientas.
+- `npm test`: **512 aprobadas, cero fallos y cero omisiones**; backend
+  coordinado: **101 aprobadas, cero fallos y cero omisiones**. Se habilitaron
+  las 39 integraciones MySQL de la app con `AHRE_MYSQL_TEST=1` y
+  `AHRE_SERVER_SOURCE` apuntando al backend actualizado y compilado.
+- `expo install --check`: dependencias actualizadas para SDK 57, consulta online.
+- Expo Doctor: 21 de 21 comprobaciones aprobadas.
+- `npm ls --all`: sin problemas; no hay paquetes marcados `deprecated`.
+- Autolinking Android: detecta OCR, recurrencias y el puente de alarmas exactas.
+- Exportación Android/Hermes: correcta, 2.341 módulos. Advierte que falta el
+  `google-services.json` local; no se elimina ni se sustituye la referencia FCM.
+- Auditoría del lockfile: 3 paquetes moderados por un aviso de minimatch y su
+  propagación; sin altos, críticos ni bajos. Antes eran 15 paquetes afectados.
+
+La ejecución utiliza Node 24.12.0 y npm 11.6.2. Los artefactos locales de
+validación se guardan en `.expo/validation/dependencies-091/`, fuera de Git.
+MySQL 8.4.13 portátil escuchó solo en `127.0.0.1:13317`; se verificó `@@datadir`
+y se usó un usuario temporal limitado a bases `ahre_test_*`, con contraseña
+aleatoria solo en memoria. Al finalizar quedaron cero bases sintéticas y el
+servidor se apagó normalmente; se retiraron los datos y binarios temporales.
+No se dispuso de un entorno de compilación Android ni dispositivo para probar
+una APK, ni Docker para las imágenes de SERVER-AHRE. La exportación y el
+autolinking no compilan Kotlin ni prueban entrega física de avisos. No se envía build a EAS ni se
+despliega o publica una descarga. Los resultados 0.9.0 siguientes son históricos.
+
+## Antecedente: entrega 0.9.0
 
 Se agregaron historial combinado local/servidor, filtros y páginas de diez,
 resolución por acción, recordatorios diarios y acceso a alarmas exactas de Android.
