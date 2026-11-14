@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as AutenticacionLocal from 'expo-local-authentication';
@@ -37,6 +38,7 @@ const ETAPAS_CARGA = [
 ];
 
 export default function PantallaInicio({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  useRegresoProtegido(navegacion);
   const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const contextoAvisos = useContext(ContextoAvisos);
   const mostrarAviso = contextoAvisos?.mostrarAviso;

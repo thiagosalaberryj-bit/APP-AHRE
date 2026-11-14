@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
@@ -52,6 +53,7 @@ const obtenerHoraActual = () => {
 };
 
 export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 'ingreso' }: {navigation:import('../navigation/types').NavegacionRaiz;route?:import('../navigation/types').PropiedadesPantalla['route'];tipo?:'ingreso'|'egreso'}) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => accionEnCurso.current);
   const movimientoEditarId=ruta?.params?.movimientoId;
   const inicializado=useRef(false),claveEdicion=useRef(generarIdentificador());
   const esEgreso = tipo === 'egreso';
@@ -144,7 +146,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
       if(movimientoEditarId)await corregirMovimiento(movimientoEditarId,datosFormulario,tipo,claveEdicion.current);
       else await crearMovimiento(datosFormulario, tipo);
       mostrarAviso(`El ${nombreMovimiento} se guardó correctamente.`, { tipo: 'exito' });
-      accionEnCurso.current=false;navegacion.goBack();
+      accionEnCurso.current=false;volverProtegido();
     } catch (error) {
       if (error instanceof ErrorMovimiento && error.errores) {
         establecerIntentoGuardar(true);
@@ -162,7 +164,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
 
   useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(accionEnCurso.current)evento.preventDefault();}),[navegacion]);
   const volver = () => {
-    if (!accionEnCurso.current) navegacion.goBack();
+    if (!accionEnCurso.current) volverProtegido();
   };
 
   const abrirNuevoDeposito = () => {

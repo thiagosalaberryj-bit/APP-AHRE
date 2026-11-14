@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import AccionesSeleccionMp from '../components/MercadoPagoSelectionActions';
 import EtiquetaImporte from '../components/AmountLabel';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
@@ -26,6 +27,7 @@ const nombreEstado = (estado: string) => ({ completo: 'Completa', fallido: 'Fall
 const importe = (op: OperacionMp, tipo = op.tipo) => `${op.monto > 0 ? tipo === 'egreso' ? '−' : tipo === 'ingreso' ? '+' : '' : ''}${op.moneda === 'ARS' ? '$ ' : op.moneda + ' '}${op.monto.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
 
 export default function PantallaMercadoPago({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion);
   const { tema } = useContext(ContextoApariencia), g = crearEstilosGlobales(tema), e = crearEstilosMercadoPago(tema);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const [estado, establecerEstado] = useState<EstadoMp>(ESTADO_MP_INICIAL), [operaciones, establecerOperaciones] = useState<OperacionMp[]>([]);
@@ -118,7 +120,7 @@ export default function PantallaMercadoPago({ navigation: navegacion, route: rut
   const motivoRegistroBloqueado = !seleccionActual.length ? 'Seleccioná al menos un movimiento con su casilla derecha.' : invalidos.length ? `${invalidos.length} seleccionado(s) no se pueden registrar: ${invalidos.slice(0, 3).map(op => `${op.descripcion}: ${op.monto === 0 ? 'importe cero' : op.moneda !== 'ARS' ? 'moneda distinta de pesos' : !op.tipo ? 'sentido sin identificar' : 'pago todavía no aprobado'}`).join('; ')}. Desmarcalos para registrar los demás. Podés ignorarlos por separado.` : '';
   const proxima = estado.automatica ? new Date(estado.automatica.proximaDisponible).toLocaleString('es-AR', { timeZone: estado.automatica.zona, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null;
   const automaticaDisponible = estado.automatica && Date.parse(estado.automatica.proximaDisponible) <= Date.now();
-  return <SafeAreaView edges={['top', 'bottom']} style={g.areaSegura}><MarcoEncabezado style={g.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Mercado Pago" descripcion="Revisá e incorporá tus movimientos." alVolver={() => navegacion.goBack()} />}>
+  return <SafeAreaView edges={['top', 'bottom']} style={g.areaSegura}><MarcoEncabezado style={g.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Mercado Pago" descripcion="Revisá e incorporá tus movimientos." alVolver={() => volverProtegido()} />}>
     {vinculada && !otraVinculacion && filtro !== 'registrado' && !cargando ? <AccionesSeleccionMp tema={tema} cantidad={seleccionActual.length} todas={todasSeleccionadas} disponibles={!!elegibles.length} ocupada={ocupada} recuperando={filtro==='ignorado'} motivoBloqueo={motivoRegistroBloqueado} alAlternar={()=>establecerSeleccionadas(alternarSeleccionMp(visibles,seleccionActual))} alRegistrar={()=>decidir(filtro==='ignorado'?'recuperado':'registrado')} alIgnorar={()=>decidir('ignorado')}/> : null}
     <DesplazamientoEncabezado contentContainerStyle={e.contenido} refreshControl={<RefreshControl refreshing={refrescando} onRefresh={() => { void refrescar(); }} tintColor={tema.foco} />}>
       {mensaje ? <Text style={e.textoSecundario} accessibilityLiveRegion="polite">{mensaje}</Text> : null}

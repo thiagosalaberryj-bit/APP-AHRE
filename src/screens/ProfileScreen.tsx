@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { consultarPermisoAvisos, activarAvisosTelefono } from '../notifications/nativeAdapter';
 import OpcionNotificacionesPerfil from '../components/ProfileNotificationOption';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -84,6 +85,7 @@ function formatearFechaRegistro(fecha: string|number|Date|null) {
 }
 
 export default function PantallaPerfil({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion);
   const { tema, apariencia, establecerApariencia } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
@@ -454,7 +456,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           tema={tema}
           titulo="Perfil"
           descripcion="Consultá los datos de tu cuenta y personalizá AHRE a tu gusto."
-          alVolver={() => navegacion.goBack()}
+          alVolver={() => volverProtegido()}
         />}>
 
         <KeyboardAvoidingView

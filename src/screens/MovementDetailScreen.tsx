@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import {useFocusEffect} from '@react-navigation/native';
@@ -45,6 +46,7 @@ function obtenerNombreTipo(tipo: string|undefined) {
 }
 
 export default function PantallaDetalleMovimiento({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => bloqueoEliminacion.current);
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const [confirmandoEliminacion, establecerConfirmandoEliminacion] = useState(false);
@@ -132,7 +134,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
     return (
       <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
         <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
-            alVolver={() => {if(!bloqueoEliminacion.current)navegacion.goBack();}}
+            alVolver={() => {if(!bloqueoEliminacion.current)volverProtegido();}}
             descripcion="Consultá la descripción, el depósito, la fecha y el importe."
             tema={tema}
             titulo="Detalle de movimiento"
@@ -152,7 +154,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
     return (
       <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
         <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
-            alVolver={() => navegacion.goBack()}
+            alVolver={() => volverProtegido()}
             descripcion="Consultá la descripción, el depósito, la fecha y el importe."
             tema={tema}
             titulo="Detalle de movimiento"
@@ -180,7 +182,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
             ) : null}
             <Pressable
               accessibilityRole="button"
-              onPress={() => navegacion.goBack()}
+              onPress={() => volverProtegido()}
               style={estilos.botonEstadoHistorial}
             >
               <Text style={estilos.textoBotonEstadoHistorial}>Volver</Text>
@@ -194,7 +196,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
       <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
-          alVolver={() => navegacion.goBack()}
+          alVolver={() => volverProtegido()}
           descripcion="Consultá la descripción, el depósito, la fecha y el importe."
           tema={tema}
           titulo="Detalle de movimiento"

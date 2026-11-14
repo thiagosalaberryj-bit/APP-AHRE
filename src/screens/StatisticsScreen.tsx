@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import GraficoCircular from '../components/StatisticsPieChart';
@@ -59,6 +60,7 @@ import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
 import { cargarEstadisticas } from '../statistics/statisticsService';
 
 export default function PantallaEstadisticas({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
+  useRegresoProtegido(navegacion);
   const raizSelectores = useRef<View>(null);
   const controlesSelectores = useRef<Record<string, View | null>>({});
   const [anclaSelector, establecerAnclaSelector] = useState<{left:number;top:number;width:number;altoMaximo:number} | null>(null);
@@ -105,11 +107,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [anioColumnas, establecerAnioColumnas] = useState(ANIO_ACTUAL);
   const [selectorActual, establecerSelectorActual] = useState<string | null>(null);
   const [selectorFechaActual, establecerSelectorFechaActual] = useState<string | null>(null);
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!selectorActual && !selectorFechaActual) return;
     const suscripcion = BackHandler.addEventListener('hardwareBackPress', () => { establecerSelectorActual(null); establecerSelectorFechaActual(null); return true; });
     return () => suscripcion.remove();
-  }, [selectorActual, selectorFechaActual]);
+  }, [selectorActual, selectorFechaActual]));
   useEffect(() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); }, [indiceGrafico, anchoPantalla]);
   const [filtroCategoriasAbierto, establecerFiltroCategoriasAbierto] = useState(false);
   const [categoriaSeleccionada, establecerCategoriaSeleccionada] = useState<string | null>(null);

@@ -91,10 +91,10 @@ for (const tema of ['claro', 'oscuro'] as const) test(`marco plegable conserva r
   assert.ok(!e.elementos().some(n => n.props.accessibilityLabel === 'Volver al inicio de la pantalla'));
   e.invocar(scroll,'onScrollBeginDrag',e.evento(0)); e.invocar(scroll,'onScroll',e.evento(250)); await e.asentar();
   assert.ok(e.elementos().some(n => n.type === 'AnimatedView' && n.props.importantForAccessibility === 'no-hide-descendants'));
-  assert.equal(e.elementos().filter(n => n.type === 'Pressable').length, 4);
+  assert.equal(e.elementos().filter(n => n.type === 'Pressable').length, 3);
   assert.equal(e.elementos().filter(n => n.type === 'SyncStatus').length, 1);
-  e.invocar(e.boton('Desplegar encabezado'),'onPress'); await e.asentar(); e.boton('Plegar encabezado');
-  e.invocar(scroll,'onScroll',e.evento(280)); e.boton('Plegar encabezado');
+  assert.ok(!e.elementos().some(n => ['Desplegar encabezado', 'Plegar encabezado'].includes(String(n.props.accessibilityLabel))));
+  e.invocar(scroll,'onScroll',e.evento(280));
   e.invocar(scroll,'onScrollEndDrag',e.evento(280)); e.invocar(scroll,'onMomentumScrollBegin',e.evento(280)); e.invocar(scroll,'onMomentumScrollEnd',e.evento(280));
   e.invocar(e.boton('Volver al inicio de la pantalla'),'onPress');
   assert.deepEqual(subidas,[{ y: 0, animated: true }]); assert.equal(e.tecladosCerrados,1);
@@ -135,7 +135,7 @@ for (const tema of ['claro', 'oscuro'] as const) test(`barra compacta conserva c
   assert.equal(perfiles,1); assert.equal(notificaciones,1); assert.deepEqual(e.destinos,[]);
   const estado = e.elementos().find(n => n.type === 'SyncStatus'); assert.equal(estado?.props.soloIcono,true);
   assert.ok(e.elementos().filter(n => n.type === 'Icon').every(n => n.props.color === e.tema.botonPrincipal));
-  e.invocar(e.boton('Desplegar encabezado'),'onPress');
+  e.invocar(e.boton('Volver al inicio de la pantalla'),'onPress');
   assert.ok(!e.elementos().some(n => n.props.accessibilityLabel === 'Perfil' || n.type === 'SyncStatus'));
 
   const secundaria = preparar(tema,false,{ mostrarSincronizacion: false }); prueba.after(secundaria.desmontar);
@@ -153,8 +153,8 @@ for(const tema of ['claro','oscuro'] as const)test('los iconos compactos esperan
  e.invocar(scroll,'onScrollBeginDrag',e.evento(0));e.invocar(scroll,'onScroll',e.evento(250));
  assert.equal(visibles(),false);e.terminarUnaAnimacion();assert.equal(visibles(),false);
  e.terminarUnaAnimacion();assert.equal(visibles(),true);
- e.invocar(e.boton('Desplegar encabezado'),'onPress');assert.equal(visibles(),false);
- e.invocar(e.boton('Plegar encabezado'),'onPress');assert.equal(visibles(),false);
+ e.invocar(e.boton('Volver al inicio de la pantalla'),'onPress');assert.equal(visibles(),false);
  e.terminarUnaAnimacion();e.terminarUnaAnimacion();assert.equal(visibles(),false);
+ e.invocar(scroll,'onScrollBeginDrag',e.evento(0));e.invocar(scroll,'onScroll',e.evento(250));assert.equal(visibles(),false);
  e.terminarUnaAnimacion();e.terminarUnaAnimacion();assert.equal(visibles(),true);
 });

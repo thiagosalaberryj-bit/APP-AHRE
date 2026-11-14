@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import FormularioDeposito from '../components/DepositForm';
@@ -159,6 +160,7 @@ function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: impo
 }
 
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => operacionFinancieraEnCurso() || operacionDepositoEnCurso.current);
   const operacionDepositoEnCurso=useRef(false);
   useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(operacionFinancieraEnCurso()||operacionDepositoEnCurso.current)evento.preventDefault();}),[navegacion]);
   const { width: anchoVentana } = useWindowDimensions();
@@ -553,7 +555,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       await eliminarDeposito(deposito.id);
       establecerModalEliminacionVisible(false);
       mostrarAviso('El depósito se desactivó y su historial quedó conservado.', { tipo: 'exito' });
-      operacionDepositoEnCurso.current=false;navegacion.goBack();
+      operacionDepositoEnCurso.current=false;volverProtegido();
     } catch (error) {
       mostrarAviso(error instanceof ErrorDeposito
         ? error.message
@@ -625,7 +627,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           tema={tema}
           titulo="Detalle de depósito"
           descripcion="Consultá el saldo y los movimientos de este depósito."
-          alVolver={() => navegacion.goBack()}
+          alVolver={() => volverProtegido()}
         />}>
 
         <DesplazamientoEncabezado ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} alVolverAlInicio={datosMeses.detenerDesplazamiento} contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>

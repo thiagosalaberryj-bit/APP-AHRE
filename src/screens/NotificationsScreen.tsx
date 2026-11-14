@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { cargarPreferenciasActuales } from '../profile/profileService';
 import { activarAvisosTelefono } from '../notifications/nativeAdapter';
 import { RUTAS } from '../constants/routes';
@@ -23,6 +24,7 @@ import { navegarAviso } from '../notifications/notificationNavigation';
 import { observarIntegraciones } from '../integrations/integrationStore';
 
 export default function PantallaNotificaciones({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion);
   const { tema } = useContext(ContextoApariencia), { bottom } = useSafeAreaInsets();
   const g = crearEstilosGlobales(tema), e = crearEstilosNotificaciones(tema, bottom);
   const [filtro, establecerFiltro] = useState<'todas' | 'pendientes' | 'no_vistas'>('todas');
@@ -55,7 +57,7 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
   }
   const guardar = async () => { if (!ajustes || guardando || generales!==true) return; establecerGuardando(true); try { await guardarYProgramarAvisos({...ajustes,zona:Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Argentina/Buenos_Aires'}); establecerAjustes(null); } catch (err) { Alert.alert('No se pudieron programar los recordatorios', err instanceof Error ? err.message : 'Intentá guardar de nuevo.'); } finally { establecerGuardando(false); } };
   return <SafeAreaView edges={['top']} style={g.areaSegura}>
-    <MarcoEncabezado style={g.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Notificaciones" descripcion="Tus avisos, recordatorios y pendientes." alVolver={() => navegacion.goBack()} />}>
+    <MarcoEncabezado style={g.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Notificaciones" descripcion="Tus avisos, recordatorios y pendientes." alVolver={volverProtegido} />}>
       <DesplazamientoEncabezado contentContainerStyle={e.contenido}>
         <View style={e.filaEncabezado}><Text style={e.textoNuevas}>{vista.noVistas ? `${vista.noVistas} sin ver` : 'Estás al día'}</Text><Pressable style={e.botonAjustes} accessibilityRole="button" accessibilityLabel="Ajustes de notificaciones" onPress={() => { void Promise.all([cargarAjustesAvisos(),consultarPermisoAvisos(),cargarPreferenciasActuales()]).then(([a,p,v])=>{establecerPermiso(p);establecerGenerales(!!v.notificaciones_activas);establecerAjustes(a);}).catch(()=>Alert.alert('No se pudieron cargar los ajustes')); }}><Ionicons name="settings-outline" color={tema.textoPrincipal} size={22} /></Pressable></View>
         <SelectorSegmentado tema={tema} opciones={[{ id: 'todas', nombre: 'Todas' }, { id: 'pendientes', nombre: 'Pendientes' }, { id: 'no_vistas', nombre: 'No vistas' }]} valor={filtro} alSeleccionar={v => { establecerFiltro(v as typeof filtro); establecerCargando(true); }} etiqueta="Filtrar notificaciones" />

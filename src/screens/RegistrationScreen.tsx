@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { ErrorAutenticacion } from '../authentication/errors';
 import { useContext, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -15,6 +16,7 @@ import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
 export default function PantallaRegistro({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  useRegresoProtegido(navegacion, () => cargando);
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);

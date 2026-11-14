@@ -212,16 +212,23 @@ de AHRE, título, descripción y accesos a notificaciones y perfil.
 secundarias, con el título junto a la flecha de regreso y una descripción
 alineada a la izquierda y centrada verticalmente debajo.
 `ScreenHeaderFrame.tsx` aloja cualquiera de esos encabezados fuera del scroll,
-coordina su plegado automático y presenta las flechas para alternarlo y volver
-al inicio cuando se está abajo. El contexto es local a cada pantalla.
+coordina su plegado automático y presenta una flecha para volver al inicio
+cuando se está abajo, sin control de expansión manual. El contexto es local a cada pantalla.
 `HeaderCompactActions.tsx` presenta los accesos de sincronización, notificaciones
 y perfil cuando el encabezado está plegado, reutilizando sus callbacks y la
 variante `soloIcono` de `SyncStatus.tsx`, sin fondos de botón.
 `HeaderScrollView.tsx` conserva la API de los ScrollView y SectionList nativos,
 incluidos sus refs y callbacks, y añade la comunicación con el marco. El
 controlador puro `src/navigation/headerScrollController.ts` gestiona dirección,
-inercia, elección manual, rebotes y regreso al inicio. Movimientos detiene su
+inercia, rebotes y regreso al inicio. Movimientos detiene su
 carga automática y las restauraciones pendientes antes del regreso programático.
+`src/navigation/useSafeGoBack.ts` comparte el regreso protegido entre las acciones
+de la interfaz y Atrás de Android, tanto botón como gesto. Conserva los bloqueos
+de operaciones, comprueba foco e historial y retira la escucha al perder el foco.
+`androidBackController.ts` absorbe repeticiones durante 400 ms entre pantallas;
+sin historial permite la salida nativa. Las pantallas principales y de
+autenticación también registran la escucha. Ver [navegación](navegacion.md#regreso-entre-pantallas).
+
 `ToastNotification.tsx` dibuja avisos superiores con una barra de tiempo, cierre
 manual y gesto horizontal. El estado compartido entre pantallas vive en
 `src/contexts/ToastContext.tsx`. Las pantallas usan `mostrarAviso` para errores

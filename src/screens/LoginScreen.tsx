@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { ErrorAutenticacion } from '../authentication/errors';
 import { SetStateAction, useContext, useRef, useState } from 'react';
 import { Alert,Animated, Pressable, Text, View } from 'react-native';
@@ -16,6 +17,7 @@ import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
 export default function PantallaInicioSesion({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  useRegresoProtegido(navegacion, () => cargando);
   const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);

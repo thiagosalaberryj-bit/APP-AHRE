@@ -2,7 +2,7 @@ export interface EstadoEncabezado { desplegado: boolean; desplazado: boolean; }
 
 export function crearControlEncabezado(alCambiar: (estado: EstadoEncabezado) => void, alSubir: () => void) {
   let estado: EstadoEncabezado = { desplegado: true, desplazado: false };
-  let ultimoY = 0, gesto = false, eleccionManual = false, regresando = false, finArrastre = -Infinity;
+  let ultimoY = 0, gesto = false, regresando = false, finArrastre = -Infinity;
   let enTransicion = false, bajada = 0, subida = 0, ultimaVista: number | undefined;
   const actualizar = (siguiente: EstadoEncabezado) => {
     if (estado.desplegado === siguiente.desplegado && estado.desplazado === siguiente.desplazado) return;
@@ -10,7 +10,7 @@ export function crearControlEncabezado(alCambiar: (estado: EstadoEncabezado) => 
   };
   return {
     iniciarArrastre(y: number) {
-      ultimoY = Math.max(0, y); bajada = 0; subida = 0; gesto = true; eleccionManual = false; regresando = false;
+      ultimoY = Math.max(0, y); bajada = 0; subida = 0; gesto = true; regresando = false;
       if (ultimoY <= 8 && !enTransicion) actualizar({ desplegado: true, desplazado: false });
     },
     terminarTransicion() { enTransicion = false; bajada = 0; subida = 0; },
@@ -29,20 +29,15 @@ export function crearControlEncabezado(alCambiar: (estado: EstadoEncabezado) => 
         if (diferencia < 0) { subida -= diferencia; if (diferencia < -1) bajada = 0; }
       }
       if (y <= 8 && (!estado.desplazado || regresando || gesto && subida >= 8)) {
-        regresando = false; eleccionManual = false;
+        regresando = false;
         actualizar({ desplegado: true, desplazado: false }); return;
       }
       if (regresando) return;
       const desplazado = estado.desplazado || y > 144;
-      actualizar({ desplazado, desplegado: desplazado && gesto && bajada >= 8 && !eleccionManual ? false : estado.desplegado });
-    },
-    alternar() {
-      if (!estado.desplazado) return;
-      eleccionManual = true;
-      actualizar({ ...estado, desplegado: !estado.desplegado });
+      actualizar({ desplazado, desplegado: desplazado && gesto && bajada >= 8 ? false : estado.desplegado });
     },
     volverArriba() {
-      gesto = false; finArrastre = -Infinity; regresando = true; eleccionManual = false;
+      gesto = false; finArrastre = -Infinity; regresando = true;
       actualizar({ desplegado: true, desplazado: false }); alSubir();
     },
   };

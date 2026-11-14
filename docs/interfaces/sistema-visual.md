@@ -186,17 +186,16 @@ debajo de la fila del título.
 
 Los encabezados existentes se alojan en `ScreenHeaderFrame.tsx`, fuera del
 contenido desplazable. Al bajar con un gesto más de 144 puntos se pliegan
-automáticamente; queda una barra del mismo color `tema.encabezado`, con dos
-flechas a la izquierda y los íconos de sincronización, notificaciones y perfil
-a la derecha. Todos conservan áreas táctiles de 44 puntos, sin fondos individuales
-y sin superponerse a los registros. La primera flecha
-despliega o pliega el encabezado y la segunda vuelve al inicio de la pantalla.
-Una elección manual se mantiene durante la inercia del mismo gesto. Al llegar
-arriba se muestra de nuevo el encabezado y desaparecen ambas flechas.
+automáticamente; queda una barra del mismo color `tema.encabezado`, con una
+flecha para volver al inicio a la izquierda y los íconos de sincronización,
+notificaciones y perfil a la derecha. Todos conservan áreas táctiles de 44 puntos,
+sin fondos individuales y sin superponerse a los registros. No hay un control
+para desplegar o plegar manualmente el encabezado. Al llegar arriba se muestra
+de nuevo el encabezado y desaparece la barra compacta.
 
 Los accesos compactos conservan los íconos, colores y acciones del encabezado;
-sincronización también mantiene sus estados e insignias. Al desplegar el
-encabezado manualmente se ocultan los accesos compactos para evitar duplicarlos.
+sincronización también mantiene sus estados e insignias. Al volver al inicio
+se ocultan los accesos compactos para evitar duplicarlos.
 La pantalla de Sincronización conserva su opción de no mostrar ese acceso.
 
 El cambio de altura dura 280 ms, con aceleración y frenado suaves, y se desactiva

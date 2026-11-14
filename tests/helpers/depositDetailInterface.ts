@@ -81,7 +81,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
     '../components/HeaderScrollView': { DesplazamientoEncabezado: 'ScrollView' },
     'react-native': {
       ...Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'Modal', 'KeyboardAvoidingView', 'ActivityIndicator'].map(n => [n, n])),
-      Platform: { OS: 'android' }, StyleSheet: { create: (valor: unknown) => valor },
+      BackHandler: { addEventListener: () => ({ remove() {} }) }, Platform: { OS: 'android' }, StyleSheet: { create: (valor: unknown) => valor },
       useWindowDimensions: () => ({ width: 360, height: 780 }),
     },
     '@react-navigation/native': { useFocusEffect: (callback: () => unknown) => react.useEffect(() => enfocada ? callback() : undefined, [callback, enfocada]) },
@@ -120,7 +120,7 @@ export function interfazDetalleDeposito(movimientosIniciales: Movimiento[], opci
   const { TEMAS } = cargar<typeof import('../../src/styles/colors.ts')>('src/styles/colors.ts');
   tema = TEMAS.claro;
   const pantalla = cargar<typeof import('../../src/screens/DepositDetailScreen.tsx')>(opciones.pantalla === 'movimientos' ? 'src/screens/MovementsScreen.tsx' : 'src/screens/DepositDetailScreen.tsx').default;
-  const propiedades = { route: { params: { depositoId: 'deposito' } }, navigation: { getParent: () => ({ navigate() {} }), addListener: () => () => {}, goBack() {}, push() {} } };
+  const propiedades = { route: { params: { depositoId: 'deposito' } }, navigation: { isFocused: () => true, canGoBack: () => true, getParent: () => ({ navigate() {} }), addListener: () => () => {}, goBack() {}, push() {} } };
   function renderizar() {
     indice = 0; efectos = [];
     arbol = pantalla(propiedades as unknown as Parameters<typeof pantalla>[0]);

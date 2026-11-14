@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useCallback, useContext, useMemo, useRef, useState } from 'react';
@@ -41,6 +42,7 @@ function formatearMonto(monto: number, tipo: string) {
 }
 
 export default function PantallaDetalleCategoria({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion);
   const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleCategoria(tema);
@@ -146,7 +148,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
-      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion alVolver={() => navegacion.goBack()} descripcion="Consultá la evolución y los movimientos de esta categoría." tema={tema} titulo="Detalle de categoría" />}>
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion alVolver={() => volverProtegido()} descripcion="Consultá la evolución y los movimientos de esta categoría." tema={tema} titulo="Detalle de categoría" />}>
 
         <View ref={raizContenido} collapsable={false} style={estilos.cuerpo}>
           <DesplazamientoEncabezado contentContainerStyle={estilos.contenidoCategoria} showsVerticalScrollIndicator={false} onScrollBeginDrag={() => establecerSelectorPeriodo(null)}>

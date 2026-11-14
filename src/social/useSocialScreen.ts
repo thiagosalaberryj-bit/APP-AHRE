@@ -1,3 +1,5 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
+import { operacionFinancieraEnCurso } from './financialOperation';
 import { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -13,6 +15,7 @@ export default function usePantallaSocial({
   navigation: navegacion,
   route: ruta
 }: import('../navigation/types').PropiedadesPantalla | import('../navigation/types').PropiedadesPestana) {
+  const volverProtegido = useRegresoProtegido(navegacion, operacionFinancieraEnCurso);
   const {
     tema
   } = useContext(ContextoApariencia);
@@ -64,7 +67,7 @@ export default function usePantallaSocial({
     abrirPago: (deudaId:string,pagoId?:string,operacionClave?:string)=>raiz.push(RUTAS.REGISTRO_SOCIAL,{tipo:'pago',deudaId,pagoId,operacionClave}),
     personasActivas: registros.personas.filter(p => p.activa),
     obtenerPersona: (id: string | undefined) => id === 'vos' ? registros.personaActual : registros.personas.find(p => p.id === id) || registros.personasOnline.find(p=>p.id===id),
-    volver: () => navegacion.goBack(),
+    volver: volverProtegido,
     irInicioSocial: () => raiz.popTo(RUTAS.PRINCIPAL, { screen: RUTAS.SOCIAL }),
     irAgenda: () => raiz.popTo(RUTAS.PERSONAS_SOCIAL, { todas: true }),
     abrirDeposito: () => raiz.push(RUTAS.DEPOSITO),
@@ -108,6 +111,7 @@ export default function usePantallaSocial({
   return {
     aspecto,
     navegacion,
+    volverProtegido,
     esSecundaria,
     esRegistro,
     parametros,

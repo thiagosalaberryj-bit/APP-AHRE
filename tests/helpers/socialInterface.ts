@@ -98,6 +98,8 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       start(alTerminar?: (resultado: { finished: boolean }) => void) { animaciones.forEach(animacion => animacion.start()); alTerminar?.({ finished: true }); },
     }),
   };
+  nativo.Platform = { OS: 'android' };
+  nativo.BackHandler = { addEventListener: () => ({ remove() {} }) };
   nativo.PanResponder = { create: (manejadores: Record<string, unknown>) => ({ panHandlers: manejadores }) };
   nativo.StyleSheet = { create: <T>(x: T) => x, flatten: (x: unknown): unknown => Array.isArray(x) ? Object.assign({}, ...x.flat(Infinity).filter(Boolean)) : x, absoluteFill: { position: 'absolute' } };
   function cargar<T>(archivo: string): T {
@@ -179,7 +181,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     for (const valores of instancias.values()) valores.forEach(v => v?.limpiar?.());
     instancias = new Map();
     const navegar = (...args: unknown[]) => destinos.push(args);
-    propiedades = { route: { name: nombre, params }, navigation: { push: navegar, replace: navegar, navigate: navegar, popTo: navegar, getParent: () => ({ navigate: navegar }), goBack: () => destinos.push(['Atrás']) } };
+    propiedades = { route: { name: nombre, params }, navigation: { isFocused: () => true, canGoBack: () => true, push: navegar, replace: navegar, navigate: navegar, popTo: navegar, getParent: () => ({ navigate: navegar }), goBack: () => destinos.push(['Atrás']) } };
     renderizar(); await asentar();
   }
   function todos(nodo: Nodo = arbol): Elemento[] {

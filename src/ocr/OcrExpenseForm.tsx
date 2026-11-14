@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { useCallback, useContext, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator, Image, Keyboard, Pressable, Text, TextInput, View } from 'react-native';
@@ -16,6 +17,7 @@ import { validarDatosMovimiento } from '../utils/movementValidation';
 import { prepararEgresoReconocido } from './ocrExpenseDraft';
 
 export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tema, estilos, estilosGlobales, estilosMovimiento, alVolverAEscanear, alCambiarGuardado }: import('../social/types').AspectoSocial & {resultado:Awaited<ReturnType<typeof import('./ocrService').reconocerComprobante>>;imagen:{uri:string;width:number;height:number;fileName?:string|null}|null;navegacion:import('../navigation/types').NavegacionRaiz;estilos:ReturnType<typeof import('../styles/OcrScreenStyles').crearEstilosOcr>;alVolverAEscanear:()=>void;alCambiarGuardado:(valor:boolean)=>void}) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => accionEnCurso.current && !egresoGuardado.current);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const [datos, establecerDatos] = useState<import('../types/forms').DatosMovimiento>(() => prepararEgresoReconocido(resultado));
   const [depositos, establecerDepositos] = useState<(import('../database/types').Deposito & {saldoTexto:string})[]>([]);
@@ -71,7 +73,7 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
       await crearMovimiento(datos, 'egreso');
       egresoGuardado.current = true;
       mostrarAviso('El egreso se guardó correctamente.', { tipo: 'exito' });
-      navegacion.goBack();
+      volverProtegido();
     } catch (error) {
       mostrarAviso(error instanceof ErrorMovimiento || error instanceof ErrorBaseDatos
         ? error.message : 'No se pudo guardar el egreso. Intentá nuevamente.', { tipo: 'error' });

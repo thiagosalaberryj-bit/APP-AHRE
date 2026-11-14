@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { SetStateAction, useContext, useEffect, useRef, useState } from 'react';
@@ -51,6 +52,7 @@ function limitarDesplazamiento(valor: number, limite: number) {
 }
 
 export default function PantallaOCR({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => guardandoEgresoRef.current);
   const insets = useSafeAreaInsets();
   const enfocada = useIsFocused();
   const referenciaCamara = useRef<CameraView|null>(null);
@@ -368,7 +370,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
           tema={tema}
           titulo="Escanear comprobante"
           descripcion="Tomá o elegí una foto del ticket."
-          alVolver={() => { if (!guardandoEgresoRef.current) navegacion.goBack(); }}
+          alVolver={() => { if (!guardandoEgresoRef.current) volverProtegido(); }}
         />}>
 
         <KeyboardAvoidingView
@@ -571,7 +573,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                 </Text>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => navegacion.goBack()}
+                  onPress={() => volverProtegido()}
                   style={estilosGlobales.botonSecundario}
                 >
                   <Text style={estilosGlobales.textoBotonSecundario}>Cancelar</Text>
@@ -622,7 +624,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                 ) : null}
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => navegacion.goBack()}
+                  onPress={() => volverProtegido()}
                   style={estilosGlobales.botonSecundario}
                 >
                   <Text style={estilosGlobales.textoBotonSecundario}>Cancelar</Text>

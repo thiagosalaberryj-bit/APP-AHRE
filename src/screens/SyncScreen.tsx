@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { SeccionesEncabezado } from '../components/HeaderScrollView';
 import {useCallback,useContext,useMemo,useRef,useState} from 'react';
@@ -24,6 +25,7 @@ const fechaValida=(valor:string)=>{const fecha=new Date(valor);return Number.isN
 const formatearFecha=(valor:string)=>fechaValida(valor)?.toLocaleString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})??'Fecha no disponible';
 
 export default function PantallaSincronizacion({navigation:navegacion}:import('../navigation/types').PropiedadesPantalla){
+  const volverProtegido = useRegresoProtegido(navegacion);
   const {tema}=useContext(ContextoApariencia),{bottom}=useSafeAreaInsets();
   const globales=crearEstilosGlobales(tema),estilos=crearEstilosSincronizacion(tema,bottom);
   const [vista,establecerVista]=useState(obtenerVistaSincronizacion);
@@ -82,7 +84,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       }},
     ]);
   };
-  return <SafeAreaView edges={['top']} style={globales.areaSegura}><MarcoEncabezado style={globales.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>navegacion.goBack()} mostrarSincronizacion={false}/>}>
+  return <SafeAreaView edges={['top']} style={globales.areaSegura}><MarcoEncabezado style={globales.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>volverProtegido()} mostrarSincronizacion={false}/>}>
 
     <SeccionesEncabezado sections={secciones} keyExtractor={r=>r.id} contentContainerStyle={estilos.contenido} stickySectionHeadersEnabled={false}
       ListHeaderComponent={<View style={estilos.resumen}>

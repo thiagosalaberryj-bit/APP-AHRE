@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import type { NombreIcono } from '../constants/movimientos';
@@ -51,6 +52,7 @@ const ACCIONES_RAPIDAS = Object.freeze([
 ]);
 
 export default function PantallaPanel({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
+  useRegresoProtegido(navegacion);
   const { tema } = useContext(ContextoApariencia);
   const contextoAvisos = useContext(ContextoAvisos);
   const mostrarAviso = contextoAvisos?.mostrarAviso;

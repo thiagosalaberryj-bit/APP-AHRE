@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import {
@@ -96,6 +97,7 @@ function obtenerTextoTipoDeposito(tipo: string) {
 }
 
 export default function PantallaMovimientos({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
+  useRegresoProtegido(navegacion);
   const { width: anchoVentana } = useWindowDimensions();
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
