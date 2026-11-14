@@ -36,10 +36,10 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
   const [reparacion,establecerReparacion]=useState<ReparacionPerfil|null>(null);
   const [reparando,establecerReparando]=useState(false);
   const [enviando,establecerEnviando]=useState(false);
-  const secuencia=useRef(0),datosActuales=useRef(datos),cargaActiva=useRef(false);
-  const cargar=useCallback(async(reemplazar=true)=>{
-    if(!reemplazar&&cargaActiva.current)return;
-    const peticion=++secuencia.current;cargaActiva.current=true;establecerCargando(true);
+  const secuencia=useRef(0),datosActuales=useRef(datos),cargaActiva=useRef(false),recargaPendiente=useRef(false);
+  const cargar=useCallback(async(reemplazar=true,mostrarCarga=true)=>{
+    if(cargaActiva.current){if(reemplazar)recargaPendiente.current=true;return;}
+    const peticion=++secuencia.current;cargaActiva.current=true;if(mostrarCarga)establecerCargando(true);
     try{
       const actuales=datosActuales.current;
       const resultado=await consultarPendientes(30,reemplazar?0:actuales.registros.length);
@@ -49,7 +49,10 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       const nuevos={...resultado,registros:reemplazar?resultado.registros:[...actuales.registros,...resultado.registros]};
       datosActuales.current=nuevos;establecerDatos(nuevos);establecerError('');
     }catch{if(peticion===secuencia.current)establecerError('No se pudieron consultar los pendientes. Volvé a intentar.');}
-    finally{if(peticion===secuencia.current){cargaActiva.current=false;establecerCargando(false);}}
+    finally{if(peticion===secuencia.current){
+      cargaActiva.current=false;establecerCargando(false);
+      if(recargaPendiente.current){recargaPendiente.current=false;void cargar(true,false);}
+    }}
   },[]);
   useFocusEffect(useCallback(()=>{
     let activa=true;
@@ -57,9 +60,9 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       const privado=usuario?await consultarSaldoOculto(usuario.id):true;
       if(activa)establecerOculto(privado);
     }).catch(()=>{if(activa)establecerOculto(true);});
-    const dejar=observarSincronizacion(v=>{establecerVista(v);void cargar();});
-    void cargar();const dejarSocial=observarSocialOnline(()=>{void cargar();});
-    return()=>{activa=false;secuencia.current++;cargaActiva.current=false;dejar();dejarSocial();};
+    const dejar=observarSincronizacion(v=>{establecerVista(v);void cargar(true,false);});
+    const dejarSocial=observarSocialOnline(()=>{void cargar(true,false);});
+    return()=>{activa=false;secuencia.current++;cargaActiva.current=false;recargaPendiente.current=false;dejar();dejarSocial();};
   },[cargar]));
   const secciones=useMemo(()=>{
     const grupos=new Map<string,{titulo:string;data:RegistroPendiente[]}>();

@@ -236,3 +236,18 @@ confirmar que un guardado o eliminación no permite salir, que luego se puede
 volver y que los selectores/modales cierran primero. En las pantallas principales,
 comprobar cambio de pestaña por historial y salida normal cuando se agota.
 Repetir al recuperar el foco y en los temas claro/oscuro.
+
+## Indicador de nube y actualización de Sincronización
+
+El indicador usa nubes de Ionicons; se retiraron arcos del wifi, estados de
+reconexión de esa animación y el indicador circular superpuesto. Al enviar,
+la nube con flecha de subida pulsa y se desplaza suavemente; reducir movimiento
+la mantiene estática. Los servicios y sus intervalos automáticos se conservan.
+
+La pantalla agrupa avisos que llegan durante una consulta en una lectura posterior,
+elimina la lectura duplicada al entrar y actualiza en segundo plano sin mostrar
+una nueva carga. Tocar la nube abre la pantalla; Sincronizar ahora inicia el envío.
+
+Verificación: TypeScript correcto y ocho pruebas de interfaz aprobadas, incluida
+la regresión de lectura inicial única y agrupación de avisos. Falta comprobar
+visualmente la animación en Android y ambos temas.

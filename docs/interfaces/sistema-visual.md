@@ -211,6 +211,29 @@ Los desplazamientos horizontales, listas flotantes y contenidos de modales
 conservan su comportamiento. Los estilos viven en `ScreenHeaderFrameStyles.ts`
 y el controlador de estado en `src/navigation/headerScrollController.ts`.
 
+### Indicador de sincronización
+
+`SyncStatus.tsx` usa la familia de nubes de Ionicons en los encabezados
+completos y compactos, en lugar de la señal de wifi:
+
+- Nube con check: sincronización completa, sin pendientes.
+- Nube tachada: sin conexión con el servidor o modo solo local.
+- Nube con pulsación suave: comprobando conexión, con un ciclo de 1,3 segundos.
+- Nube con flecha de subida y desplazamiento vertical suave: sincronización en curso, sin indicador circular superpuesto.
+- Nube con marca de error: conflicto, sesión requerida o instalación desvinculada.
+
+Se conserva el contador de pendientes, los colores de ambos temas, la etiqueta
+accesible con estado y cantidad, y el acceso a Sincronización al tocar el botón.
+Con reducir movimiento se desactivan la pulsación y el desplazamiento; la nube
+con flecha permanece estática. No se interpreta una conexión
+wifi como confirmación de que los datos llegaron al servidor.
+
+
+La pantalla de Sincronización consulta sus pendientes al entrar y al recibir
+avisos. Las actualizaciones de fondo conservan el contenido sin mostrar otra
+carga; si llegan varios avisos durante una consulta se agrupan en una lectura
+posterior. Tocar la nube abre la pantalla; «Sincronizar ahora» sí inicia el envío.
+
 ## Tema claro y oscuro
 
 Los dos temas están definidos en `src/styles/colors.ts` dentro de `TEMAS.claro`
