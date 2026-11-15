@@ -2,7 +2,43 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {preparar} from './helpers/localDatabase.ts';
 import {interfazSocial} from './helpers/socialInterface.ts';
-import {gastoDePendiente} from '../src/social/roomClosing.ts';
+import {gastoDePendiente,pendientesCierreLocales} from '../src/social/roomClosing.ts';
+
+for(const tema of ['claro','oscuro'] as const)test('el café ya pagado y asociado no aparece pendiente ni bloquea el cierre local en '+tema,async t=>{
+ const e=await preparar(t);await e.prepararDatosPrueba();
+ const sala=(await e.cargarSocial()).salas.find(s=>s.nombre==='Encuentro de prueba')!;
+ const cafe=sala.gastos.find(g=>g.descripcion==='Café ya pagado de prueba')!;
+ const propia=cafe.partes.find(p=>p.personaId==='vos')!;
+ assert.equal(propia.tipo,'saldado');assert.equal(propia.pendienteNumero,0);assert.equal(propia.pagadoNumero,750);
+ assert.equal(pendientesCierreLocales(sala).length,0);
+ const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:sala.id});
+ assert.equal(vista.buscarBoton('Cerrar sala').props.disabled,false);
+ assert.ok(!vista.texto().includes(cafe.descripcion));
+ const fila=e.base.prepare('SELECT plan_pagos FROM gastos_compartidos WHERE id=?').get(cafe.id)!;
+ const plan=JSON.parse(String(fila.plan_pagos));plan.financiaciones={};
+ e.base.prepare('UPDATE gastos_compartidos SET plan_pagos=? WHERE id=?').run(JSON.stringify(plan),cafe.id);
+ const actual=(await e.cargarSocial()).salas.find(s=>s.id===sala.id)!;
+ assert.equal(pendientesCierreLocales(actual).length,1);
+ assert.equal(pendientesCierreLocales(actual)[0].descripcion,'Pago: '+cafe.descripcion);
+ await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:sala.id});assert.equal(vista.buscarBoton('Cerrar sala').props.disabled,true);
+});
+
+for(const tema of ['claro','oscuro'] as const)test('el reparto inicia abierto, permite abrir gastos y conserva el plegado al actualizar en '+tema,async t=>{
+ const e=await preparar(t);await e.prepararDatosPrueba({vistaSocialOnline:true});
+ const datos=await e.cargarSocial(),sala=datos.salas.find(s=>s.nombre==='Demo · Viaje con amigos')!;
+ const pendientes=sala.gastos.flatMap(g=>g.partes.filter(p=>p.tipo!=='saldado'&&!p.cancelada).map(p=>({g,p})));
+ assert.ok(pendientes.length);
+ const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:sala.id});
+ const filas=()=>vista.todos().filter(n=>n.type==='Pressable'&&n.props.accessibilityHint==='Abre el ítem y sus pagos.');
+ assert.deepEqual(vista.buscarBoton('Quién le debe a quién').props.accessibilityState,{expanded:true});assert.equal(filas().length,pendientes.length);
+ assert.ok(vista.texto().includes('Tu balance en esta sala'));
+ await (filas()[0].props.onPress as ()=>void)();
+ assert.deepEqual(vista.destinos.at(-1),[vista.rutas.GASTO_SOCIAL,{salaId:sala.id,gastoId:pendientes[0].g.id}]);
+ await vista.pulsar('Quién le debe a quién');assert.equal(filas().length,0);
+ await vista.asentar();
+ assert.equal(filas().length,0);assert.deepEqual(vista.buscarBoton('Quién le debe a quién').props.accessibilityState,{expanded:false});
+ await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:sala.id});assert.equal(filas().length,pendientes.length);
+});
 
 for(const tema of ['claro','oscuro'] as const)test('cierre muestra quién falta, bloquea guardar y la tarjeta de gasto no contiene texto fuera de Text en '+tema,async t=>{
  const e=await preparar(t);await e.prepararDatosPrueba({vistaSocialOnline:true});

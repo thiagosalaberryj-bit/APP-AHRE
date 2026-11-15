@@ -98,7 +98,8 @@ export function cargarSocial() {
         });
         return { id: gasto.id, categoriaId: gasto.categoria, descripcion: gasto.descripcion, monto: formatearMontoSocial(gasto.monto_total), montoNumero: gasto.monto_total,
           fecha: fechaCorta(gasto.fecha), fechaISO: gasto.fecha, pagadorId: visibles(gasto.pagador_id), reparto: gasto.reparto, version: gasto.version,
-          distribucion: gasto.reparto === 'manual' ? 'Montos manuales' : 'Partes iguales', partes, asociaciones: plan.financiaciones,
+          distribucion: gasto.reparto === 'manual' ? 'Montos manuales' : 'Partes iguales', partes,
+          asociaciones: Object.fromEntries(Object.entries(plan.financiaciones).map(([clave,financiacion])=>[clave.startsWith('parte:')?'parte:'+visibles(clave.slice('parte:'.length)):clave,financiacion])),
           depositosAsociados: [...new Set(Object.values(plan.financiaciones).map(f => f.depositoNombre).filter(Boolean))].join(' · ') };
       });
       return { online:false,administrador:true,puedeEditarGastos:true,publicacionPendiente:Boolean(sala.publicada||publicando.has(sala.id)),cierrePendiente:false,pendientesOnline:0,ultimaActualizacion:sala.fecha_actualizacion,id: sala.id, nombre: sala.nombre, descripcion: sala.descripcion, icono: sala.icono, color: sala.color,

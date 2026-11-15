@@ -1,5 +1,22 @@
 # Interfaces de Social
 
+## Balance y reparto de sala
+
+«Quién le debe a quién» es una sección plegable, abierta al entrar a una sala.
+El encabezado tiene una flecha e informa su estado expandido a accesibilidad.
+El reparto conserva una separación pequeña con el recuadro de balance; al abrirlo
+se conservan los importes, las direcciones de deuda y los accesos a cada gasto.
+Plegar la sección no modifica el cálculo del balance ni los pagos.
+Si se pliega, los refrescos y el regreso desde un gasto no la vuelven a abrir
+mientras se conserva la pantalla de sala.
+
+Las asociaciones financieras locales usan los mismos identificadores visibles
+que las partes (incluido «vos»). Esto evita marcar como pendiente un pago propio
+ya asociado a un depósito o movimiento. Se corrigió el caso «Café ya pagado de
+prueba»: su parte de $750 está saldada y financiada, y no bloquea el cierre.
+Si se quita la asociación, sigue siendo necesario registrar dónde se pagó antes
+de cerrar; no se presenta como una nueva deuda ni se repite el pago.
+
 ## Personas, solicitudes y permisos de la sala
 
 Personas separa Integrantes e Ingresos. Integrantes reutiliza la búsqueda, los

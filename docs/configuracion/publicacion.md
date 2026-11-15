@@ -65,7 +65,7 @@ El comando envía el código local a EAS y devuelve el seguimiento. Descargar el
 APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
-entrega. El estado actual declara versión 0.9.1 y `android.versionCode` 15;
+entrega. El estado actual declara versión 0.9.2 y `android.versionCode` 16;
 la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
 `Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
@@ -276,3 +276,17 @@ conservando su `.env` actual. Se confirmó la carga/fingerprint con `--no-wait`;
 no se comprobó la finalización ni se publicó la APK en la landing.
 Tipos correctos y 12 pruebas específicas aprobadas (6 locales, 3 integraciones
 Social/MySQL, 3 casos de API), sin omisiones. No se hicieron commits ni despliegue.
+
+### Preparación de APK 0.9.2 · build 16
+
+Se actualizan app.json, package.json y la raíz del lockfile a 0.9.2, con
+android.versionCode 16. Se conserva el perfil interno ocr-comparison (APK) y
+la firma existente. Incluye los cambios acumulados de perfil y Acerca de,
+notificaciones, filtros, OCR y Social. En la última revisión el reparto de sala
+empieza abierto y conserva el plegado manual; el café pagado y asociado deja
+de bloquear el cierre por una diferencia de identificadores, sin alterar pagos.
+
+Validación: TypeScript de app y herramientas correcto. La regresión específica
+de sala tiene ocho pruebas aprobadas en ambos temas. El envío a EAS no equivale
+a una APK terminada ni a una verificación física en Android. Los cambios de
+servidor acordados requieren su despliegue coordinado por separado.
