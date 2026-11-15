@@ -79,8 +79,11 @@ Una respuesta perdida se recupera con el mismo identificador.
 
 El egreso completo corresponde a quien pagó la compra. Las partes ajenas crean
 obligaciones, sin registrar otra vez la parte propia como egreso.
-Cada cuenta incorpora después su compra o pago en un depósito propio, o asocia un
-movimiento existente compatible. Esa incorporación es independiente del cierre.
+Cada cuenta elige antes del cierre su depósito o un movimiento compatible para
+las compras y partes efectivamente pagadas. El cierre espera las asociaciones
+válidas de todas las cuentas y confirma movimientos y saldos en la misma
+transacción. Los invitados sin cuenta no necesitan depósito: sus pendientes
+con una cuenta quedan como deudas personales. Ver [ajustes acordados](../ajustes-acordados.md).
 
 ## Personas e invitados
 
@@ -103,7 +106,7 @@ anterior sin duplicar al integrante. La sesión de invitado solo accede a esa sa
 y a sus obligaciones. Registrarse o ingresar conserva su identidad y participación.
 
 La web vive en SERVER-AHRE, ruta `/invitacion/`, y no expone un buscador público.
-Ofrece abrir `ahre://invitation` en la app; la app conserva el enlace durante el
+Declara Android App Links HTTPS y ofrece también `ahre://invitation`; la app conserva el enlace durante el
 ingreso. Un fallo muestra una invitación pendiente, que puede conservarse o descartarse.
 
 Las deudas anteriores son privadas. Compartir crea una propuesta; rechazarla no
@@ -238,14 +241,15 @@ Las asociaciones privadas se guardan por cuenta, sala y clave financiera, con
 huella del importe, pagador y reparto. La cola local usa datos_sociales_online
 y se envía antes de los comandos de cierre, después de sincronizar depósitos y
 movimientos propios. Un rechazo queda para revisión; un fallo de red conserva el
-identificador. Al recibir el cierre, la app incorpora una vez las operaciones con
-selección válida; las demás permanecen en el detalle del gasto.
+identificador. El servidor rechaza el cierre si falta alguna asociación requerida
+y devuelve pendientesCierre con persona y concepto. Una asociación incompatible
+debe corregirse antes del cierre; no quedan compras pendientes después.
 
-El contrato privado conserva su versión: no se agregan columnas SQLite ni se
-reinterpretan lotes. El contrato social añade respuestas opcionales y tablas
-aditivas en MySQL. Los pagos generados al cerrar llevan origen_cierre para que
-una selección preparada no se aplique a un pago posterior. La incorporación y
-su reconocimiento en servidor conservan las claves existentes.
+La revisión de los 22 ajustes agrega apellido y procedencia de deudas de invitados
+al esquema inicial SQLite y a la actualización controlada MySQL. Requiere una
+entrega coordinada de clientes y servidor. Los lotes privados actualizacionSocial
+se recuperan antes del outbox y conservan los saldos de operaciones offline
+independientes. Los pagos posteriores de deudas siguen su propio flujo.
 
 ## Matriz vigente de roles y estados
 

@@ -9,6 +9,80 @@ import type {DeudaOnline,OperacionPersonal,VinculoOnline} from '../src/social/on
 
 const origen=process.env.AHRE_SERVER_SOURCE,disponible=!!origen&&process.env.AHRE_MYSQL_TEST==='1';
 
+test('cierre espera las finanzas de todas las cuentas, confirma una vez y conserva gastos locales pendientes del otro participante',{skip:!disponible},async t=>{
+ const e=await escenario(t);
+ await assert.rejects(e.juan.cerrarSala(e.sala.id),/Falta registrar.*Sofi/);
+ assert.equal((await e.db.get('SELECT COUNT(*) n FROM movimientos'))!.n,0);
+ assert.equal((await e.juan.obtenerSalaOnline(e.sala.id)).sala.estado,'abierta');
+ assert.equal(e.juan.base.prepare('SELECT COUNT(*) n FROM comandos_sociales_locales').get()!.n,0);
+ await e.sofi.sincronizarSocialOnline();
+ const compra=(await e.sofi.obtenerSalaOnline(e.sala.id)).misFinanzas!.find(o=>o.clave==='compra:comida')!;
+ await e.sofi.elegirFinanciacionSala(e.sala.id,compra,{depositoId:e.sofi.deposito.id});await e.sofi.sincronizarSocialOnline();
+ await e.sofi.movimientosRepositorio.crear({deposito_id:e.sofi.deposito.id,tipo:'egreso',categoria:'alimentacion',monto:7,descripcion:'Pendiente independiente',fecha_hora:new Date().toISOString()});
+ e.juan.perderRespuesta('/comandos');await assert.rejects(e.juan.cerrarSala(e.sala.id));
+ await e.juan.cerrarSala(e.sala.id);await e.sofi.sincronizarSocialOnline();
+ assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,873);
+ assert.equal((await e.db.get('SELECT saldo_actual FROM depositos WHERE id=?',[e.sofi.deposito.id]))!.saldo_actual,873);
+ assert.equal((await e.db.get('SELECT COUNT(*) n FROM incorporaciones_online'))!.n,1);
+ const operaciones=await e.sofi.leerDatosOnline<OperacionPersonal[]>(e.sofi.usuario.id,'operaciones',[]);
+ assert.ok(operaciones.every(o=>o.incorporada&&o.movimientoId));
+ const detalle=await e.sofi.consultarDetalleHistorialMovimiento(operaciones[0].movimientoId!);
+ assert.equal(detalle!.origenSala!.sala_nombre,'Sala online');
+});
+
+test('invitados sin cuenta no necesitan depósito y sus deudas al cerrar son personales en ambas direcciones',{skip:!disponible},async t=>{
+ const e=await escenario(t,false),id=randomUUID();
+ await e.juan.guardarGasto({id,claveOperacion:id,salaId:e.sala.id,descripcion:'Compra propia con invitada',monto:100,categoriaId:'alimentacion',pagadorId:'vos',reparto:'iguales',involucradas:['vos',e.persona.id],pagaron:[]},{compra:{depositoId:e.juan.deposito.id}});
+ await e.juan.publicarSalaOnline(e.sala.id);await e.juan.cerrarSala(e.sala.id);
+ const datos=await e.juan.cargarSocial();
+ assert.equal((await e.db.get('SELECT COUNT(*) n FROM deudas_online'))!.n,0);
+ assert.equal(datos.deudas.length,2);assert.ok(datos.deudas.every(d=>!d.acuerdoOnlineId&&d.salaId===e.sala.id));
+ assert.equal(datos.deudas.find(d=>d.tipo==='me_deben')!.pendienteNumero,50);
+ assert.equal(datos.deudas.find(d=>d.tipo==='debo')!.pendienteNumero,60);
+ assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,900);
+ const deuda=datos.deudas.find(d=>d.tipo==='debo')!;
+ await e.juan.registrarPagoDeuda({deudaId:deuda.id,monto:10,claveOperacion:'pago-invitada'},{depositoId:e.juan.deposito.id});await e.juan.sincronizarCuenta(e.juan.usuario.id);
+ assert.equal((await e.db.get('SELECT estado FROM deudas WHERE id=?',[deuda.id]))!.estado,'parcial');
+ assert.equal((await e.db.get('SELECT saldo_actual FROM depositos WHERE id=?',[e.juan.deposito.id]))!.saldo_actual,890);
+ assert.equal(e.juan.obtenerVistaSincronizacion().estado,'online',e.juan.obtenerVistaSincronizacion().detalle);
+ const pago=e.juan.base.prepare('SELECT movimiento_id FROM pagos_sociales WHERE deuda_id=?').get(deuda.id)!;
+ assert.equal((await e.juan.consultarDetalleHistorialMovimiento(String(pago.movimiento_id)))!.origenSala!.sala_nombre,'Sala online');
+});
+
+test('reiniciar al administrador retira las deudas personales de invitados relacionadas sin tocar el dinero de la otra cuenta',{skip:!disponible},async t=>{
+ const e=await escenario(t),invitada=(await e.juan.guardarPersona({nombre:'Ana',apellido:'Invitada',apodo:'Ana'}))!;
+ await e.juan.cambiarPersonasSala(e.sala.id,[e.persona.id,invitada.id]);await e.juan.sincronizarSocialOnline();
+ const id=randomUUID();await e.juan.guardarGasto({id,claveOperacion:id,salaId:e.sala.id,descripcion:'Compra con invitada',monto:200,categoriaId:'alimentacion',pagadorId:e.persona.id,reparto:'iguales',involucradas:[e.persona.id,invitada.id],pagaron:[]});await e.juan.sincronizarSocialOnline();
+ await e.cerrarPreparada();await e.sofi.sincronizarSocialOnline();
+ const personales=(await e.sofi.cargarSocial()).deudas.filter(d=>!d.acuerdoOnlineId);assert.equal(personales.length,1);assert.equal(personales[0].pendienteNumero,100);
+ const saldo=(await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual;
+ const movimientos=e.sofi.base.prepare('SELECT * FROM movimientos ORDER BY id').all();
+ await e.juan.sincronizarSocialOnline();await e.juan.sincronizarCuenta(e.juan.usuario.id);
+ await e.juan.reiniciarDatos(await e.juan.consultarReinicio(),e.juan.correo,'ClaveOnline123!','BORRAR MIS DATOS');
+ await e.sofi.sincronizarCuenta(e.sofi.usuario.id);
+ assert.equal((await e.sofi.cargarSocial()).deudas.length,0);
+ assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,saldo);
+ assert.deepEqual(e.sofi.base.prepare('SELECT * FROM movimientos ORDER BY id').all(),movimientos);
+});
+
+test('marcar pagada una parte resuelve el aviso pendiente y permite volver a aceptar sin error',{skip:!disponible},async t=>{
+ const e=await escenario(t),id=randomUUID();
+ await e.juan.guardarGasto({id,claveOperacion:id,salaId:e.sala.id,descripcion:'Cena',monto:100,categoriaId:'alimentacion',pagadorId:'vos',reparto:'iguales',involucradas:['vos',e.persona.id],pagaron:[]});await e.juan.sincronizarSocialOnline();
+ const aviso=randomUUID();await e.sofi.solicitarSocial('/salas/'+e.sala.id+'/solicitudes',{idOperacion:randomUUID(),solicitudId:aviso,tipo:'parte_pagada',gastoId:id});
+ await e.juan.marcarPartePagada(e.sala.id,id,e.persona.id,true);await e.juan.sincronizarSocialOnline();
+ assert.equal((await e.db.get('SELECT estado FROM solicitudes_online WHERE id=?',[aviso]))!.estado,'resuelta');
+ await e.juan.solicitarSocial('/solicitudes/'+aviso+'/decidir',{idOperacion:randomUUID(),decision:'resuelta'});
+});
+
+for(const direccion of ['debo','me_deben'])test('una propuesta rechazada se puede enviar de nuevo: '+direccion,{skip:!disponible},async t=>{
+ const e=await escenario(t),deuda=await e.juan.crearDeudaPersonal({personaId:e.persona.id,direccion,monto:80,descripcion:'Reenviar'},direccion==='me_deben'?{depositoId:e.juan.deposito.id}:undefined);
+ await e.juan.proponerDeudaOnline(deuda.id);const id='deuda:'+deuda.id;
+ await e.sofi.solicitarSocial('/deudas/'+id+'/decidir',{idOperacion:randomUUID(),decision:'rechazada'});
+ e.juan.perderRespuesta('/deudas/propuestas');await assert.rejects(e.juan.proponerDeudaOnline(deuda.id));await e.juan.proponerDeudaOnline(deuda.id);
+ const recibidas=(await e.sofi.solicitarSocial<{deudas:DeudaOnline[]}>('/deudas')).deudas;
+ assert.equal(recibidas.find(d=>d.id===id)!.estado,'pendiente');assert.equal((await e.db.get('SELECT COUNT(*) n FROM deudas_online WHERE origen_deuda_id=?',[deuda.id]))!.n,1);
+});
+
 test('publicar conserva depósitos y movimientos preparados de la sala local, incluso con respuesta perdida',{skip:!disponible},async t=>{
   const e=await escenario(t,false),gastoId=randomUUID(),adjuntoId=randomUUID();
   const movimiento=await e.juan.movimientosRepositorio.crear({deposito_id:e.juan.deposito.id,tipo:'egreso',categoria:'transporte',monto:80,descripcion:'Taxi ya registrado',fecha_hora:new Date().toISOString()});
@@ -21,7 +95,7 @@ test('publicar conserva depósitos y movimientos preparados de la sala local, in
   assert.equal(detalle.misFinanzas?.find(o=>o.clave==='compra:'+gastoId)?.seleccion?.depositoId,e.juan.deposito.id);
   assert.equal(detalle.misFinanzas?.find(o=>o.clave==='compra:'+adjuntoId)?.seleccion?.movimientoId,movimiento.id);
   assert.equal((await e.db.get('SELECT COUNT(*) n FROM selecciones_financieras_sala'))!.n,2);
-  await e.juan.cerrarSala(e.sala.id);await e.juan.sincronizarSocialOnline();await new Promise<void>(r=>setImmediate(r));await e.juan.sincronizarSocialOnline();
+  await e.cerrarPreparada();await e.juan.sincronizarSocialOnline();await new Promise<void>(r=>setImmediate(r));await e.juan.sincronizarSocialOnline();
   assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,800);
   assert.equal((await e.db.get('SELECT COUNT(*) n FROM incorporaciones_online'))!.n,2);
 });
@@ -54,7 +128,7 @@ test('las propuestas cruzadas no aceptan dos acuerdos para la misma deuda privad
   const e=await escenario(t),personaJuan=(await e.sofi.guardarPersona({nombre:'Juan',apellido:'Prueba',apodo:'Juan'}))!;
   await e.sofi.solicitarVinculoOnline(personaJuan.id,e.juan.correo);await e.juan.sincronizarSocialOnline();
   const vinculos=await e.juan.leerDatosOnline<VinculoOnline[]>(e.juan.usuario.id,'vinculos',[]);
-  await e.juan.responderVinculoOnline(vinculos.find(v=>v.direccion==='recibida')!.id,'aceptado');
+  await e.juan.responderVinculoOnline(vinculos.find(v=>v.direccion==='recibida')!.id,'aceptado',e.persona.id);
   const a=await e.juan.crearDeudaPersonal({personaId:e.persona.id,direccion:'me_deben',monto:'100',descripcion:'Préstamo'},{depositoId:e.juan.deposito.id});
   const b=await e.sofi.crearDeudaPersonal({personaId:personaJuan.id,direccion:'debo',monto:'100',descripcion:'Préstamo'});
   await e.juan.proponerDeudaOnline(a.id);await e.sofi.proponerDeudaOnline(b.id);
@@ -100,13 +174,14 @@ async function escenario(t:import('node:test').TestContext,compartirSala=true){
   const {app,db}=await prepararAplicacion({...configuracion,database:nombre}),servidor=crearServidorSocial(app,db);servidor.listen(0,'127.0.0.1');
   await new Promise<void>(resolver=>servidor.once('listening',resolver));const direccion=servidor.address();assert.ok(direccion&&typeof direccion!=='string');const url='http://127.0.0.1:'+direccion.port+'/api/v1';
   t.after(async()=>{(servidor as Server&{cerrarSocial:()=>void}).cerrarSocial();servidor.closeAllConnections();await new Promise<void>(resolver=>servidor.close(()=>resolver()));await db.close();});
+  const clientes:(Pick<Awaited<ReturnType<typeof preparar>>,'sincronizarSocialOnline'|'solicitarSocial'|'obtenerSalaOnline'|'elegirFinanciacionSala'>&{deposito:{id:string}})[]=[];
   async function cliente(nombre:string){
     let offline=false,perder='';const transporte:typeof fetch=async(...args)=>{if(offline)throw new Error('sin conexión');const respuesta=await fetch(...args);if(perder&&String(args[0]).includes(perder)&&respuesta.ok){perder='';throw new Error('respuesta perdida');}return respuesta;};
     const e=await preparar(t,true,{url,fetch:transporte}),correo=randomUUID()+'@example.test';
     const usuario=await e.registrarUsuario({nombre,correo,contrasena:'ClaveOnline123!',confirmacion:'ClaveOnline123!'});await e.crearSesion(usuario.id,false);
     const deposito=await e.depositosRepositorio.crear({usuario_id:usuario.id,nombre:'Depósito '+nombre,tipo:'efectivo',saldo_inicial:1000,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'});
     await e.cargarSocial();await e.sincronizarCuenta(usuario.id);
-    return {...e,usuario,correo,deposito,conectar:()=>{offline=false;},desconectar:()=>{offline=true;},perderRespuesta:(ruta:string)=>{perder=ruta;}};
+    const clienteCreado={...e,usuario,correo,deposito,conectar:()=>{offline=false;},desconectar:()=>{offline=true;},perderRespuesta:(ruta:string)=>{perder=ruta;}};clientes.push(clienteCreado);return clienteCreado;
   }
   const juan=await cliente('Juan'),sofi=await cliente('Sofi');
   const persona=(await juan.guardarPersona({nombre:'Sofi',apellido:'Prueba',apodo:'Sofi'}))!;
@@ -118,7 +193,11 @@ async function escenario(t:import('node:test').TestContext,compartirSala=true){
     await juan.sincronizarSocialOnline();const vinculos=(await juan.solicitarSocial<{vinculos:{id:string}[]}>('/vinculos')).vinculos;
     await juan.solicitarSocial('/vinculos/'+vinculos[0].id+'/decidir',{idOperacion:randomUUID(),decision:'confirmado'});
   }
-  return {juan,sofi,persona,sala,db,url,cargar,cliente,servidor,app};
+  async function cerrarPreparada(){
+    for(const cliente of clientes){await cliente.sincronizarSocialOnline();const salas=await cliente.solicitarSocial<{salas:{id:string}[]}>('/salas');if(!salas.salas.some(s=>s.id===sala.id))continue;const detalle=await cliente.obtenerSalaOnline(sala.id);if(detalle.sala.estado==='cerrada')continue;for(const op of detalle.misFinanzas||[])if(!op.seleccion)await cliente.elegirFinanciacionSala(sala.id,op,{depositoId:cliente.deposito.id});await cliente.sincronizarSocialOnline();}
+    return juan.cerrarSala(sala.id);
+  }
+  return {juan,sofi,persona,sala,db,url,cargar,cliente,servidor,app,cerrarPreparada};
 }
 
 test('online: vínculo por correo sin sala, deuda reconocida y pagos con depósitos conservan idempotencia ante respuestas perdidas',{skip:!disponible},async t=>{
@@ -129,13 +208,14 @@ test('online: vínculo por correo sin sala, deuda reconocida y pagos con depósi
   await e.sofi.sincronizarSocialOnline();
   const recibidas=await e.sofi.leerDatosOnline<VinculoOnline[]>(e.sofi.usuario.id,'vinculos',[]);
   assert.equal(recibidas.length,1);assert.equal(recibidas[0].direccion,'recibida');
-  e.sofi.perderRespuesta('/responder');await assert.rejects(e.sofi.responderVinculoOnline(recibidas[0].id,'aceptado'));
-  await e.sofi.responderVinculoOnline(recibidas[0].id,'aceptado');await e.juan.sincronizarSocialOnline();
+  const contactoJuan=(await e.sofi.guardarPersona({nombre:'Juan',apellido:'Prueba',apodo:'Juan'}))!;
+  e.sofi.perderRespuesta('/responder');await assert.rejects(e.sofi.responderVinculoOnline(recibidas[0].id,'aceptado',contactoJuan.id));
+  await e.sofi.responderVinculoOnline(recibidas[0].id,'aceptado',contactoJuan.id);await e.juan.sincronizarSocialOnline();
   assert.equal((await e.juan.leerDatosOnline<VinculoOnline[]>(e.juan.usuario.id,'vinculos',[]))[0].estado,'confirmado');
   assert.equal(Number((await e.db.get('SELECT COUNT(*) AS n FROM salas_online'))!.n),0);
 
   const deudaJuan=await e.juan.crearDeudaPersonal({personaId:e.persona.id,direccion:'me_deben',monto:120,descripcion:'Préstamo sin sala'},{depositoId:e.juan.deposito.id});
-  const personaJuan=(await e.sofi.guardarPersona({nombre:'Juan',apellido:'Prueba',apodo:'Juan'}))!;
+  const personaJuan=contactoJuan;
   const deudaSofi=await e.sofi.crearDeudaPersonal({personaId:personaJuan.id,direccion:'debo',monto:120,descripcion:'Préstamo anotado por Sofi'});
   await e.sofi.sincronizarCuenta(e.sofi.usuario.id);await e.juan.proponerDeudaOnline(deudaJuan.id);
   const acuerdoId='deuda:'+deudaJuan.id;
@@ -162,15 +242,15 @@ test('online: vínculo por correo sin sala, deuda reconocida y pagos con depósi
   assert.equal(confirmado.pendiente,105);assert.equal(confirmado.pagos.length,1);assert.equal(confirmado.pagos[0].estado,'confirmado');
   assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,895);
   assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,985);
-  assert.equal((await e.juan.cargarSocial()).totales.porCobrar,'$ 105');
-  assert.equal((await e.sofi.cargarSocial()).totales.porPagar,'$ 105');
+  assert.equal((await e.juan.cargarSocial()).totales.porCobrar,'$ 105,00');
+  assert.equal((await e.sofi.cargarSocial()).totales.porPagar,'$ 105,00');
   assert.equal(Number((await e.db.get('SELECT COUNT(*) AS n FROM pagos_online WHERE deuda_id=?',[acuerdoId]))!.n),1);
   assert.equal(Number((await e.db.get('SELECT COUNT(*) AS n FROM salas_online'))!.n),0);
   await e.sofi.informarPagoConDeposito(acuerdoId,5,e.sofi.deposito.id);
   const otroPago=(await e.juan.solicitarSocial<{deudas:DeudaOnline[]}>('/deudas')).deudas.find(d=>d.id===acuerdoId)!.pagos.find(p=>p.id!==pagoId)!;
   await e.juan.enviarAccionSocial('pago-decision:'+otroPago.id,'/pagos/'+otroPago.id+'/decidir',{decision:'rechazado'});
   await e.sofi.recuperarEventosSociales();await e.juan.sincronizarSocialOnline();
-  assert.equal((await e.sofi.cargarSocial()).totales.porPagar,'$ 105');
+  assert.equal((await e.sofi.cargarSocial()).totales.porPagar,'$ 105,00');
   assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,980);
   assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,895);
   assert.ok(!(await e.juan.leerDatosOnline<OperacionPersonal[]>(e.juan.usuario.id,'operaciones',[])).some(o=>o.pagoId===otroPago.id));
@@ -191,11 +271,11 @@ test('online: solo el administrador edita; los cambios offline llegan sin duplic
   await assert.rejects(e.juan.cerrarSala(e.sala.id));assert.equal(remota.estado,'abierta');
   e.juan.conectar();await e.juan.sincronizarSocialOnline();await e.juan.sincronizarSocialOnline();await e.sofi.sincronizarSocialOnline();
   assert.equal((await e.sofi.cargarSocial()).salas[0].gastos.length,2);
-  await e.juan.cerrarSala(e.sala.id);await e.juan.cerrarSala(e.sala.id);
+  await e.cerrarPreparada();await e.cerrarPreparada();
   const operaciones=(await e.sofi.solicitarSocial<{operaciones:OperacionPersonal[]}>('/operaciones-personales')).operaciones;
   assert.equal(operaciones.filter(o=>o.tipo==='egreso'&&o.clave==='compra:comida')[0].monto,120);
-  assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,1000);
-  assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,1000);
+  assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,880);
+  assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,960);
 });
 
 test('online: retirar a un integrante permite recuperar novedades y revoca su copia activa',{skip:!disponible},async t=>{
@@ -245,13 +325,13 @@ test('online: el aviso de un invitado se revisa por persona y no registra pagos 
   assert.equal(Number((await e.db.get('SELECT COUNT(*) AS n FROM pagos_online'))!.n),0);
   await e.juan.solicitarSocial('/solicitudes/'+solicitudId+'/decidir',{idOperacion:randomUUID(),decision:'resuelta'});
   const aprobada=await e.juan.recuperarSalaOnline(e.sala.id);assert.ok(aprobada.sala.gastos.find(g=>g.id==='compra-invitada')!.pagaron.includes(invitada!.id));
-  await assert.rejects(e.juan.solicitarSocial('/solicitudes/'+solicitudId+'/decidir',{idOperacion:randomUUID(),decision:'resuelta'}),/decisión/);
+  await e.juan.solicitarSocial('/solicitudes/'+solicitudId+'/decidir',{idOperacion:randomUUID(),decision:'resuelta'});
   assert.equal(Number((await e.db.get('SELECT COUNT(*) AS n FROM pagos_online'))!.n),0);
   assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,1000);
-  await e.juan.cerrarSala(e.sala.id);
+  await e.cerrarPreparada();
   assert.equal((await web('/salas/'+e.sala.id+'/solicitudes',{idOperacion:randomUUID(),solicitudId:randomUUID(),tipo:'parte_pagada',gastoId:'compra-invitada'})).estado,409);
   const deuda=await e.db.get('SELECT d.id FROM deudas_online d JOIN integrantes_online i ON i.identidad_id=d.deudor_id WHERE i.persona_local_id=?',[invitada!.id]);
-  assert.equal((await web('/deudas/'+deuda!.id+'/pagos',{idOperacion:randomUUID(),pagoId:randomUUID(),monto:1})).estado,403);
+  assert.equal(deuda,undefined); // Una invitada sin cuenta no tiene acuerdo online.
 });
 
 test('online: perder la respuesta al publicar conserva un único envío e impide editar o cerrar la copia local',{skip:!disponible},async t=>{
@@ -268,11 +348,11 @@ test('online: perder la respuesta al publicar conserva un único envío e impide
 });
 
 test('online: informar no salda, solo el acreedor confirma y dos pagos no pueden superar el pendiente',{skip:!disponible},async t=>{
-  const e=await escenario(t);await e.juan.cerrarSala(e.sala.id);
+  const e=await escenario(t);await e.cerrarPreparada();
   const deuda=(await e.juan.solicitarSocial<{deudas:DeudaOnline[]}>('/deudas')).deudas[0];assert.equal(deuda.pendiente,60);
   await e.sofi.sincronizarSocialOnline();
-  assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 60');
-  assert.equal((await e.sofi.cargarSocial()).totales.porCobrar,'$ 60');
+  assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 60,00');
+  assert.equal((await e.sofi.cargarSocial()).totales.porCobrar,'$ 60,00');
   const primero=randomUUID(),segundo=randomUUID();
   const envio={idOperacion:randomUUID(),pagoId:primero,monto:40};await e.juan.solicitarSocial('/deudas/'+deuda.id+'/pagos',envio);await e.juan.solicitarSocial('/deudas/'+deuda.id+'/pagos',envio);
   await e.juan.solicitarSocial('/deudas/'+deuda.id+'/pagos',{idOperacion:randomUUID(),pagoId:segundo,monto:40});
@@ -285,7 +365,7 @@ test('online: informar no salda, solo el acreedor confirma y dos pagos no pueden
 });
 
 test('online: incorporar un gasto solo modifica el depósito propio y eliminarlo conserva la deuda compartida',{skip:!disponible},async t=>{
-  const e=await escenario(t);await e.juan.cerrarSala(e.sala.id);
+  const e=await escenario(t);await e.cerrarPreparada();
   const operacion=(await e.sofi.solicitarSocial<{operaciones:OperacionPersonal[]}>('/operaciones-personales')).operaciones[0];
   await assert.rejects(e.juan.incorporarOperacionPersonal(operacion,{depositoId:e.sofi.deposito.id}));
   await e.sofi.incorporarOperacionPersonal(operacion,{depositoId:e.sofi.deposito.id});await e.sofi.sincronizarSocialOnline();
@@ -339,7 +419,7 @@ test('online: un conflicto conserva las ediciones y permite revisión explícita
 });
 
 test('online: respuesta perdida de un pago conserva su identificador y el balance de la sala se actualiza al confirmar',{skip:!disponible},async t=>{
-  const e=await escenario(t);await e.juan.cerrarSala(e.sala.id);
+  const e=await escenario(t);await e.cerrarPreparada();
   const deuda=(await e.juan.solicitarSocial<{deudas:DeudaOnline[]}>('/deudas')).deudas[0];
   e.juan.perderRespuesta('/pagos');
   await assert.rejects(e.juan.enviarAccionSocial('pago:'+deuda.id,'/deudas/'+deuda.id+'/pagos',{monto:25}));
@@ -359,8 +439,8 @@ test('online: dos registros privados se reconocen como un solo acuerdo sin modif
   assert.equal((await e.juan.cargarSocial()).deudas.find(d=>d.id===a.id)!.acuerdoOnlineId,propuestaId);
   assert.equal((await e.sofi.cargarSocial()).deudas.find(d=>d.id===b.id)!.acuerdoOnlineId,propuestaId);
   assert.equal((await e.sofi.deudasRepositorio.consultarPorId(b.id))!.estado,'pendiente');
-  assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 35');
-  assert.equal((await e.sofi.cargarSocial()).totales.porCobrar,'$ 35');
+  assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 35,00');
+  assert.equal((await e.sofi.cargarSocial()).totales.porCobrar,'$ 35,00');
 });
 
 test('online: WebSocket exige ticket único, restringe canales y permite recuperar eventos persistidos por HTTP',{skip:!disponible},async t=>{
@@ -508,10 +588,10 @@ test('finanzas de sala: elegir depósito no afecta saldo y el cierre incorpora l
  await assert.rejects(e.sofi.solicitarSocial('/salas/'+e.sala.id+'/mis-finanzas',{idOperacion:randomUUID(),clave:compra.clave,huella:compra.huella,depositoId:e.juan.deposito.id}),/propio/);
  await e.sofi.elegirFinanciacionSala(e.sala.id,compra,{depositoId:e.sofi.deposito.id});await e.sofi.sincronizarSocialOnline();
  assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,1000);
- await e.juan.cerrarSala(e.sala.id);await e.sofi.sincronizarSocialOnline();await e.sofi.sincronizarSocialOnline();
+ await e.cerrarPreparada();await e.sofi.sincronizarSocialOnline();await e.sofi.sincronizarSocialOnline();
  assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,880);
  assert.equal((await e.juan.cargarSocial()).deudas.filter(d=>d.acuerdoOnlineId&&d.tipo==='debo')[0].pendienteNumero,60);
- assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 60');
+ assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 60,00');
  await new Promise<void>(r=>setImmediate(r));await e.sofi.sincronizarSocialOnline();await new Promise<void>(r=>setImmediate(r));
 });
 
@@ -520,11 +600,11 @@ test('finanzas de sala: una parte pagada sin depósito no vuelve a ser deuda; ca
  const compra=(await e.sofi.obtenerSalaOnline(e.sala.id)).misFinanzas![0];
  await e.sofi.elegirFinanciacionSala(e.sala.id,compra,{depositoId:e.sofi.deposito.id});await e.sofi.sincronizarSocialOnline();
  await e.juan.marcarPartePagada(e.sala.id,'comida','vos',true);await e.juan.sincronizarSocialOnline();
- await e.juan.cerrarSala(e.sala.id);await e.sofi.sincronizarSocialOnline();
- assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 0');
- assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,1000);
+ await e.cerrarPreparada();await e.sofi.sincronizarSocialOnline();
+ assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 0,00');
+ assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,940);
  const operaciones=await e.juan.leerDatosOnline<OperacionPersonal[]>(e.juan.usuario.id,'operaciones',[]);
- assert.ok(operaciones.some(o=>o.tipo==='egreso'&&!o.incorporada));
+ assert.ok(operaciones.some(o=>o.tipo==='egreso'&&o.incorporada));
  await new Promise<void>(r=>setImmediate(r));await e.sofi.sincronizarSocialOnline();await new Promise<void>(r=>setImmediate(r));
 });
 
@@ -536,9 +616,11 @@ test('finanzas de sala: cambiar pagador o importe exige revisar la selección y 
  await e.juan.guardarGasto({gastoId:gasto.id,version:gasto.version,claveOperacion:randomUUID(),salaId:e.sala.id,descripcion:'Compra revisada',monto:140,categoriaId:'compras',pagadorId:e.persona.id,reparto:'iguales',involucradas:['vos',e.persona.id],pagaron:[]});
  await e.juan.sincronizarSocialOnline();await e.sofi.sincronizarSocialOnline();
  const revisada=(await e.sofi.obtenerSalaOnline(e.sala.id)).misFinanzas!.find(o=>o.clave===compra.clave)!;assert.equal(revisada.necesitaRevision,true);assert.equal(revisada.seleccion,undefined);
- await e.juan.cerrarSala(e.sala.id);await e.sofi.sincronizarSocialOnline();
+ await assert.rejects(e.juan.cerrarSala(e.sala.id),/Falta registrar/);
  assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,1000);
- assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 70');
+ await e.sofi.elegirFinanciacionSala(e.sala.id,revisada,{depositoId:e.sofi.deposito.id});await e.sofi.sincronizarSocialOnline();await e.juan.cerrarSala(e.sala.id);await e.sofi.sincronizarSocialOnline();
+ assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,860);
+ assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 70,00');
 });
 
 for(const administrador of [false,true])test('reinicio online elimina datos propios y acuerdos, conserva saldo ajeno y procesa pendientes seguros: administrador='+administrador,{skip:!disponible},async t=>{

@@ -11,7 +11,7 @@ export const FRECUENCIAS_MOVIMIENTO = Object.freeze([
 
 export function convertirMontoMovimiento(valor: unknown) {
   if (typeof valor === 'number') {
-    if (!Number.isFinite(valor) || valor <= 0) return null;
+    if (!Number.isFinite(valor) || valor <= 0 || Math.abs(valor*100-Math.round(valor*100))>0.00001) return null;
     return Math.round((valor + Number.EPSILON) * 100) / 100;
   }
 

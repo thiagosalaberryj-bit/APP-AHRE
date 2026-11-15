@@ -28,7 +28,7 @@ async function consultarContexto(conexion: Conexion, usuario: Usuario, crearIden
   const activo = await conexion.getFirstAsync<Pick<Tablas['usuarios'], 'id'>>('SELECT id FROM usuarios WHERE id = ? AND activo = 1;', [usuario.id]);
   exigir(activo, 'La sesión ya no está disponible.');
   let propia = (await personasRepositorio.consultar({ usuario_id: usuario.id, es_usuario_actual: 1 }, {}, conexion))[0];
-  if (!propia && crearIdentidad) propia = await personasRepositorio.crear({ usuario_id: usuario.id, nombre: usuario.nombre, nombre_normalizado: normalizarNombrePersona(usuario.nombre), es_usuario_actual: 1, activa: 1 }, conexion);
+  if (!propia && crearIdentidad) propia = await personasRepositorio.crear({ usuario_id: usuario.id, nombre: usuario.nombre, apellido: usuario.apellido||null, apellido_normalizado: usuario.apellido?normalizarNombrePersona(usuario.apellido):null, nombre_normalizado: normalizarNombrePersona(usuario.nombre), es_usuario_actual: 1, activa: 1 }, conexion);
   return propia ? { usuario, propia, conexion } : null;
 }
 

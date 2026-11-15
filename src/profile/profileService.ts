@@ -175,6 +175,7 @@ export async function actualizarPerfil(datos: import('../types/forms').DatosPerf
   try {
     const usuarioActualizado = await usuariosRepositorio.actualizar(usuario.id, {
       nombre,
+      apellido: datos.apellido === undefined ? (usuario.apellido || '') : datos.apellido.trim(),
       correo_electronico: correo,
     });
 

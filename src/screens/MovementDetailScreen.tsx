@@ -22,7 +22,7 @@ import { crearEstilosDetalleMovimiento } from '../styles/MovementDetailScreenSty
 function formatearMonto(monto: number|null|undefined, tipo: string|undefined) {
   const importe = Number(monto);
   if (monto === null || monto === undefined || !Number.isFinite(importe)) return '—';
-  const valor = `$ ${Math.abs(importe).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
+  const valor = `$ ${Math.abs(importe).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   if (tipo === 'ingreso' || tipo === 'transferencia_entrada') return `+ ${valor}`;
   return `− ${valor}`;
@@ -58,7 +58,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleMovimiento(tema);
   const movimientoId = ruta.params?.movimientoId || ruta.params?.movimiento?.id;
-  const [movimientoHistorial, establecerMovimientoHistorial] = useState<import('../database/types').MovimientoHistorial | null>(null);
+  const [movimientoHistorial, establecerMovimientoHistorial] = useState<Awaited<ReturnType<typeof consultarDetalleHistorialMovimiento>>>(null);
   const [cargandoHistorial, establecerCargandoHistorial] = useState(Boolean(movimientoId));
   const [errorHistorial, establecerErrorHistorial] = useErrorNotificado(null);
   const [intentoConsulta, establecerIntentoConsulta] = useState(0);
@@ -236,6 +236,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
                 </View>:null}
               </View>
               <Text selectable style={estilos.nombreMovimiento}>{movimiento.descripcion || 'Movimiento'}</Text>
+              {movimientoHistorial?.origenSala?<View style={estilos.detalleDato}><Ionicons name="people-outline" size={20} color={tema.foco}/><Text style={estilosGlobales.textoSecundario}>Sala: {movimientoHistorial.origenSala.sala_nombre}{'\n'}{movimientoHistorial.origenSala.concepto}</Text></View>:null}
             </View>
             <View style={estilos.tarjetaDatos}>
               {datosMovimiento.map((dato,indice)=><View key={dato.etiqueta} style={[estilos.dato,indice>0&&estilos.datoSeparado]}>

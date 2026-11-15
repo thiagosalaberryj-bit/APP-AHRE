@@ -42,7 +42,7 @@ export default function CompartirInvitacion({enlace,nombre,alCerrar,global:esGlo
       <View style={estilos.qr} accessible accessibilityLabel={'QR de invitación para '+nombre}><Svg width={lado} height={lado} viewBox={'0 0 '+qr.tamano+' '+qr.tamano}><Rect width={qr.tamano} height={qr.tamano} fill="#FFFFFF"/><Path d={qr.trazado} fill="#000000"/></Svg></View>
       <Text style={aspecto.estilosGlobales.textoAyuda}>También puede escanear este QR</Text>
     </View>
-    <View style={estilos.ayudaFila}><Ionicons name="globe-outline" size={18} color={aspecto.tema.textoSecundario}/><Text style={estilos.ayudaTexto}>El enlace abre la web sin instalar AHRE. Desde ahí puede entrar como invitado o abrir la app.</Text></View>
+    <View style={estilos.ayudaFila}><Ionicons name="globe-outline" size={18} color={aspecto.tema.textoSecundario}/><Text style={estilos.ayudaTexto}>El enlace y el QR abren AHRE si está instalada. Si no, permiten entrar como invitado desde la web.</Text></View>
     <View style={estilos.ayudaFila}><Ionicons name="time-outline" size={18} color={aspecto.tema.textoSecundario}/><Text style={estilos.ayudaTexto}>{esGlobal?'El enlace se conserva hasta que lo renueves. Cada ingreso requiere contraseña y aprobación.':'Válido por 7 días y para una persona. Generar otro enlace reemplaza el anterior.'}</Text></View>
     {alConfigurar?<BotonSocial secundario texto="Opciones de acceso" alPresionar={alConfigurar} {...aspecto}/>:null}
 

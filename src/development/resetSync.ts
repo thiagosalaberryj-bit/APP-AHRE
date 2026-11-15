@@ -5,7 +5,7 @@ import { solicitarRemoto, type SesionRemota } from '../sync/remote';
 import type { CambioSync, VersionSync } from '../sync/protocol';
 import { cancelarAviso } from '../notifications/nativeAdapter';
 
-type LoteReinicio = VersionSync['lote'] & { reinicioPruebas?: boolean; recursosEliminados?: string[] };
+type LoteReinicio = VersionSync['lote'] & { reinicioPruebas?: boolean; recursosEliminados?: string[]; actualizacionSocial?: boolean; ajustesSaldo?: Record<string,number> };
 export function contieneRecurso(valor: unknown, recursos: Set<string>, campo = ''): boolean {
   if (typeof valor === 'string') {
     try { const datos: unknown = JSON.parse(valor); if (datos && typeof datos === 'object') return contieneRecurso(datos, recursos); } catch { /* Texto simple. */ }
@@ -16,8 +16,8 @@ export function contieneRecurso(valor: unknown, recursos: Set<string>, campo = '
   if (Array.isArray(valor)) return valor.some(v => contieneRecurso(v, recursos, campo));
   return !!valor && typeof valor === 'object' && Object.entries(valor).some(([clave, dato]) => contieneRecurso(dato, recursos, clave));
 }
-// Consumir bajas antes de subir el outbox evita restaurar acuerdos eliminados
-// desde otra cuenta. Está activo también en APK finales que reciban una baja.
+// Consumir bajas y cierres antes de subir el outbox conserva los acuerdos
+// eliminados y suma el impacto del cierre a los saldos locales aún pendientes.
 export async function recuperarReinicios(usuarioId: string, remota: SesionRemota, validar: (v: unknown) => { lotes: VersionSync[]; mas: boolean }) {
   let revision = await ejecutarLecturaConConexion(async c => Number((await c.getFirstAsync<{ revision: number }>('SELECT revision FROM sync_state WHERE usuario_id=?', [usuarioId]))?.revision || 0));
   const inicial = revision, versiones: VersionSync[] = [];
@@ -32,7 +32,10 @@ export async function recuperarReinicios(usuarioId: string, remota: SesionRemota
     if (mas && !pagina.lotes.length) throw new Error('Paginación remota inválida.');
   }
   const reinicios = versiones.filter(v => (v.lote as LoteReinicio).reinicioPruebas === true);
-  if (!reinicios.length) return false;
+  const sociales = versiones.filter(v => (v.lote as LoteReinicio).actualizacionSocial === true);
+  if (!reinicios.length && !sociales.length) return false;
+  const ajustes = new Map<string,number>();
+  for (const version of sociales) for (const [id,importe] of Object.entries((version.lote as LoteReinicio).ajustesSaldo || {})) ajustes.set(id, Math.round(((ajustes.get(id)||0)+importe)*100)/100);
   const recursos = new Set(reinicios.flatMap(v => (v.lote as LoteReinicio).recursosEliminados || []));
   const eliminados = new Set(reinicios.flatMap(v => v.lote.cambios.filter(c => c.accion === 'eliminar').map(c => c.tabla + ':' + c.datos.id)));
   const confirmados = new Set(versiones.map(v => v.lote.id));
@@ -46,11 +49,20 @@ export async function recuperarReinicios(usuarioId: string, remota: SesionRemota
     for (const fila of pendientes) lotes.set(fila.lote, [...(lotes.get(fila.lote) || []), fila]);
     for (const [lote, filas] of lotes) {
       const restantes = confirmados.has(lote) ? [] : filas.filter(f => { const cambio = JSON.parse(f.cambio) as CambioSync; return !eliminados.has(cambio.tabla + ':' + cambio.datos.id) && !contieneRecurso(cambio.datos, recursos); });
+      let reajustado = false;
+      for (const fila of restantes) {
+        const cambio = JSON.parse(fila.cambio) as CambioSync;
+        const ajuste = ajustes.get(String(cambio.tabla === 'depositos' ? cambio.datos.id : cambio.datos.deposito_id));
+        if (!ajuste || cambio.accion !== 'guardar') continue;
+        const campos = cambio.tabla === 'depositos' ? ['saldo_actual'] : cambio.tabla === 'historial_saldos_deposito' ? ['saldo_anterior','saldo_informado'] : [];
+        for (const campo of campos) cambio.datos[campo] = Math.round((Number(cambio.datos[campo])+ajuste)*100)/100;
+        if (campos.length) { fila.cambio = JSON.stringify(cambio); reajustado = true; }
+      }
       conservados.push(...restantes.map(f => JSON.parse(f.cambio) as CambioSync));
-      if (restantes.length === filas.length) continue;
+      if (restantes.length === filas.length && !reajustado) continue;
       const nuevo = generarIdentificador();
       for (const fila of filas) {
-        if (restantes.includes(fila)) await c.runAsync('UPDATE sync_outbox SET lote=? WHERE secuencia=?', [nuevo, fila.secuencia]);
+        if (restantes.includes(fila)) await c.runAsync('UPDATE sync_outbox SET lote=?,cambio=? WHERE secuencia=?', [nuevo, fila.cambio, fila.secuencia]);
         else await c.runAsync('DELETE FROM sync_outbox WHERE secuencia=?', [fila.secuencia]);
       }
       await c.runAsync('DELETE FROM sync_batch_authorization WHERE usuario_id=? AND lote=?', [usuarioId, lote]);

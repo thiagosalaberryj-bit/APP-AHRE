@@ -144,8 +144,9 @@ Referencia: [Alarmas de Android](https://developer.android.com/develop/backgroun
 Horario preciso usa un botón con fondo visible; el texto solo indica si está
 activado o ayuda a reducir retrasos, sin referencias técnicas a eventos remotos.
 La pantalla omite el aviso genérico de permisos cuando todo está habilitado.
-Si Android bloquea las notificaciones, se indica ese motivo y se ofrece Activar
-en Android; el estado se vuelve a consultar al regresar del sistema. Perfil
+Si Android bloquea las notificaciones, aparece un contenedor informativo con
+flecha hacia ajustes: «Activá las notificaciones de la app para recibir avisos
+aunque esté cerrada», sin texto rojo ni botón separado; el estado se vuelve a consultar al regresar del sistema. Perfil
 distingue la preferencia del usuario de la entrega: no muestra Activadas si
 Android niega permiso. Conservar la preferencia no concede ese permiso.
 
@@ -183,3 +184,11 @@ Durante el guardado, el formulario conserva el ancho, la distribución y los
 valores de sus opciones; solo se bloquea la interacción. No se aplica el estilo
 de botón deshabilitado al contenedor completo. El botón temporal de diagnóstico
 de diez segundos fue retirado después de comprobar la entrega en el dispositivo.
+
+## Lectura y contador
+
+El tick doble está inmediatamente a la izquierda de la tuerca, junto al total
+sin ver. Marca avisos locales y remotos hasta la hora de pulsarlo, aunque no estén
+en la página cargada. Abrir una tarjeta marca ese aviso visto; los contadores
+compartidos cambian al momento y descartan resultados de consultas anteriores
+a esa lectura. Visto y resuelto siguen siendo estados distintos.

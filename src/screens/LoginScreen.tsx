@@ -80,6 +80,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           {text:'Usar esta instalación',style:'destructive',onPress:()=>{void manejarInicioSesion(true);}},
         ]);return;
       }
+      if(error instanceof ErrorAutenticacion&&error.codigo==='credenciales_invalidas'){establecerErrores({correo:'Revisá el correo o la contraseña.',contrasena:'Revisá el correo o la contraseña.'});return;}
       if ((error instanceof ErrorAutenticacion ? error.detalles : null)) establecerErrores((error instanceof ErrorAutenticacion ? error.detalles : null) || {});
       else mostrarAviso((error instanceof Error ? error.message : "") || 'No se pudo iniciar sesión. Intentá nuevamente.', { tipo: 'error' });
     } finally {

@@ -10,7 +10,7 @@ import {consultarAutorizacion,registrarAutorizacion,obtenerInstalacion,contarPen
 import {sincronizarCuenta} from '../sync/syncService';
 import {ejecutarConConexion,ejecutarLecturaConConexion} from '../database/connectionQueue';
 
-const publico=(u:Pick<import('../database/types').Usuario,'id'|'nombre'|'correo_electronico'|'activo'>)=>({id:u.id,nombre:u.nombre,correo_electronico:u.correo_electronico,activo:u.activo});
+const publico=(u:Pick<import('../database/types').Usuario,'id'|'nombre'|'apellido'|'correo_electronico'|'activo'>)=>({id:u.id,nombre:u.nombre,...(u.apellido?{apellido:u.apellido}:{}),correo_electronico:u.correo_electronico,activo:u.activo});
 const pruebaLocal=(correo:string,solicitada=false)=>typeof __DEV__!=='undefined'&&__DEV__&&(!URL_SERVIDOR||(solicitada&&normalizarCorreo(correo)==='pruebas@ahre.test'));
 function traducirError(error:unknown):never{
   if(error instanceof ErrorAutenticacion)throw error;
@@ -33,10 +33,10 @@ export async function registrarUsuario(datos:import('../types/forms').DatosRegis
     else{
       if(!URL_SERVIDOR)throw new ErrorAutenticacion('conexion_requerida');
       await comprobarProtocolo();
-      const remota=await solicitarRemoto<SesionRemota>('/auth/register',{id,nombre:datos.nombre.trim(),correo:normalizarCorreo(datos.correo),contrasena:datos.contrasena,dispositivoId:await obtenerInstalacion()});
+      const remota=await solicitarRemoto<SesionRemota>('/auth/register',{id,nombre:datos.nombre.trim(),apellido:datos.apellido?.trim(),correo:normalizarCorreo(datos.correo),contrasena:datos.contrasena,dispositivoId:await obtenerInstalacion()});
       await guardarSesionRemota(id,remota,false);
     }
-    const usuario=await autenticacionRepositorio.crearCuenta({id,nombre:datos.nombre.trim(),correo:normalizarCorreo(datos.correo),contrasenaVerificador:await crearVerificadorContrasena(datos.contrasena)});
+    const usuario=await autenticacionRepositorio.crearCuenta({id,nombre:datos.nombre.trim(),apellido:datos.apellido?.trim(),correo:normalizarCorreo(datos.correo),contrasenaVerificador:await crearVerificadorContrasena(datos.contrasena)});
     return publico(usuario);
   }catch(error){return traducirError(error);}
 }
@@ -71,7 +71,7 @@ export async function iniciarSesion({correo,contrasena,recordar=true,reemplazarD
       if(cuenta&&!cuenta.activo)throw new ErrorAutenticacion('credenciales_invalidas');
       await guardarSesionRemota(remota.usuario.id,remota,recordar);
       if(!cuenta){
-        await autenticacionRepositorio.crearCuenta({id:remota.usuario.id,nombre:remota.usuario.nombre,correo:normalizarCorreo(correo),contrasenaVerificador:await crearVerificadorContrasena(contrasena),omitirPreferencias:remota.revision>0});
+        await autenticacionRepositorio.crearCuenta({id:remota.usuario.id,nombre:remota.usuario.nombre,apellido:remota.usuario.apellido||'',correo:normalizarCorreo(correo),contrasenaVerificador:await crearVerificadorContrasena(contrasena),omitirPreferencias:remota.revision>0});
         cuenta=await autenticacionRepositorio.consultarCredencialesPorId(remota.usuario.id);
       }else if(!claveLocal)await autenticacionRepositorio.actualizarVerificadorContrasena(cuenta.id,await crearVerificadorContrasena(contrasena));
     }

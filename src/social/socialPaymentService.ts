@@ -182,3 +182,22 @@ export function consultarHistorialDeuda(deudaId:string){
     return contexto.conexion.getAllAsync<Tablas['pagos_sociales']>('SELECT * FROM pagos_sociales WHERE usuario_id=? AND deuda_id=? ORDER BY fecha DESC,id DESC',[contexto.usuario.id,deudaId]);
   });
 }
+
+/** Eliminar corrige el dinero; perdonar conserva los pagos y solo cierra el pendiente. */
+export function eliminarDeudaPersonal(id:string){
+ return conSocial(async contexto=>{
+  const deuda=await registroPropio(deudasRepositorio,id,contexto);
+  if(deuda.estado==='cancelada'&&deuda.motivo_cancelacion==='eliminada')return deuda;
+  const cache=await contexto.conexion.getFirstAsync<{datos:string}>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='deudas'",[contexto.usuario.id]);
+  const acuerdos=cache?JSON.parse(cache.datos) as import('./online/types').DeudaOnline[]:[];
+  exigir(!acuerdos.some(a=>a.origenLocalId===id&&a.estado!=='rechazada'),'Esta deuda tiene una propuesta o acuerdo online. No puede eliminarse como deuda personal.');
+  const pagos=await pagosSocialesRepositorio.consultar({usuario_id:contexto.usuario.id,deuda_id:id},{},contexto.conexion);
+  const ahora=new Date().toISOString();
+  // Las correcciones y sus saldos forman una única transacción y un solo lote.
+  for(const pago of pagos.filter(p=>p.estado==='vigente')){
+   if(pago.movimiento_id){const movimiento=await movimientosRepositorio.consultarPorId(pago.movimiento_id,contexto.conexion);exigir(!movimiento?.transferencia_id,'El movimiento asociado es una transferencia y requiere revisión.');if(movimiento&&!movimiento.fecha_eliminacion){const eliminado=await movimientosRepositorio.eliminar(movimiento.id,contexto.conexion);exigir(eliminado,'El movimiento fue corregido previamente. Revisá su historial antes de eliminar la deuda.');}}
+   await pagosSocialesRepositorio.actualizar(pago.id,{estado:'anulado',fecha_anulacion:ahora},contexto.conexion);
+  }
+  return deudasRepositorio.actualizar(id,{estado:'cancelada',fecha_cancelacion:ahora,motivo_cancelacion:'eliminada'},contexto.conexion);
+ });
+}

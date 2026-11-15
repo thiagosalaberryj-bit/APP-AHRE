@@ -12,6 +12,7 @@ import MontoSocial from './SocialAmountInput';
 import CampoFormulario from './SocialTextField';
 import SelectorPersonas from './PeopleSelector';
 import OpcionesSeleccion from './SocialChoiceGroup';
+import { convertirMontoMovimiento } from '../../utils/movementValidation';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function FormularioRegistrarDeuda({
@@ -43,6 +44,7 @@ export default function FormularioRegistrarDeuda({
   const [personaId, establecerPersonaId] = useState(parametros.personaId || null);
   const [direccion, establecerDireccion] = useState('me_deben');
   const [monto, establecerMonto] = useState('');
+  const [errores,cambiarErrores]=useState<Record<string,string>>({});
   const [descripcion, establecerDescripcion] = useState('');
   const id = useRef(generarIdentificador());
   const solicitud = useRef<import('../../social/types').DatosDeuda | null>(null);
@@ -63,8 +65,9 @@ export default function FormularioRegistrarDeuda({
       <SelectorPersonas etiqueta="Persona" personas={personasSociales} seleccionadas={personaId ? [personaId] : []} alCambiar={ids => {establecerPersonaId(ids[0]);cambiarCompartir(false);}} alRegistrar={() => abrirRegistro('persona')} {...aspecto} />
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{persona ? direccion === 'debo' ? `Vos le debés a ${nombreCompletoPersona(persona)}.` : `${nombreCompletoPersona(persona)} te debe a vos.` : 'Elegí una persona de tu agenda o registrá una nueva.'}</Text>
     </View>
-    <MontoSocial etiqueta="Monto de la deuda" valor={monto} alCambiar={establecerMonto} {...aspecto} />
-    <CampoFormulario etiqueta="Descripción" ejemplo="Ej.: Almuerzo, compra, préstamo" valor={descripcion} alCambiar={establecerDescripcion} limite={500} {...aspecto} />
+    {errores.persona?<Text style={estilosGlobales.textoError}>{errores.persona}</Text>:null}
+    <MontoSocial error={errores.monto} etiqueta="Monto de la deuda" valor={monto} alCambiar={establecerMonto} {...aspecto} />
+    <CampoFormulario etiqueta="Descripción" error={errores.descripcion} ejemplo="Ej.: Almuerzo, compra, préstamo" valor={descripcion} alCambiar={establecerDescripcion} limite={500} {...aspecto} />
     {direccion === 'me_deben' ? <>
       <Text style={estilosGlobales.textoAyuda}>Registraremos el dinero que adelantaste como un egreso. Podés elegir el depósito o vincular un egreso existente para no duplicarlo.</Text>
     </> : <Text style={estilosGlobales.textoAyuda}>Registrar lo que debés no genera un ingreso ni modifica tus depósitos. Al pagar, elegirás el depósito y se registrará el egreso.</Text>}
@@ -75,6 +78,7 @@ export default function FormularioRegistrarDeuda({
       <Text style={estilosGlobales.textoAyuda}>{!personaId?'Elegí una persona para compartir la deuda.':!vinculada?'La persona necesita una cuenta vinculada y confirmada.':sinConexion?'Necesitás conexión para enviar la propuesta.':compartir?'Se enviará al guardar y esperará la aceptación de la otra persona.':'Opcional. Si no lo activás, queda solo en tus registros.'}</Text>
     </View>
     <AccionesFormulario texto="Registrar deuda" preparar={async () => {
+      const campos:Record<string,string>={};if(!personaId)campos.persona='Elegí una persona.';if(convertirMontoMovimiento(monto)===null)campos.monto='Ingresá un importe mayor que cero, con hasta dos decimales.';if(!descripcion.trim()||descripcion.trim().length>500)campos.descripcion='Completá una descripción de hasta 500 caracteres.';cambiarErrores(campos);if(Object.keys(campos).length)throw new Error('Revisá los campos marcados.');
       compartirSolicitud.current=compartir;
       if(compartir&&!disponible)throw new Error('Para compartir necesitás conexión y una cuenta vinculada y confirmada.');
       if(compartirSolicitud.current)await sesionOnline();

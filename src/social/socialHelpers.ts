@@ -5,7 +5,7 @@ export function nombreCompletoPersona(persona: {nombre?:string;apellido?:string|
   return [persona?.nombre, persona?.apellido].filter(Boolean).join(' ');
 }
 
-const formatoMonto = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+const formatoMonto = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const formatearMontoSocial = (monto: number) => `$ ${formatoMonto.format(monto || 0)}`;
 export const montoParaEntrada = (monto: number) => Number(monto || 0).toFixed(2).replace(/\.00$/, '').replace('.', ',');
 export function mensajeErrorSocial(error:unknown,respaldo:string) {

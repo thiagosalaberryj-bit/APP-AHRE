@@ -6,6 +6,10 @@ import { ejecutarTransaccion } from '../database/transactions';
 import { avisarIntegraciones, encolarIntegracion, guardarDato, leerDato } from '../integrations/integrationStore';
 import { ajustesPredeterminados, validarAjustes, type AjustesAvisos, type Aviso } from './types';
 
+const revisionesLectura=new Map<string,number>();
+export const obtenerRevisionLectura=(usuarioId:string)=>revisionesLectura.get(usuarioId)||0;
+const cambiarRevisionLectura=(usuarioId:string)=>revisionesLectura.set(usuarioId,obtenerRevisionLectura(usuarioId)+1);
+
 export async function cargarAjustesAvisos() { const { usuario } = await obtenerSesionActual(); return usuario ? leerDato(usuario.id, 'avisos:ajustes', ajustesPredeterminados()) : ajustesPredeterminados(); }
 export async function guardarAjustesAvisos(datos: AjustesAvisos) {
   validarAjustes(datos); const { usuario } = await obtenerSesionActual(); if (!usuario) throw new Error('Iniciá sesión.');
@@ -26,8 +30,22 @@ export async function consultarAvisos(filtro: 'todas' | 'pendientes' | 'no_vista
     return { avisos: filas.map(f => ({ ...JSON.parse(f.datos) as Aviso, vista: !!f.vista, resuelta: !!f.resuelta })), total: Number(total?.n || 0), noVistas: Number(noVistas?.n || 0) };
   });
 }
+export async function marcarTodosAvisosVistos(){
+ const {usuario}=await obtenerSesionActual();if(!usuario)return;
+ cambiarRevisionLectura(usuario.id);
+ const hasta=new Date().toISOString();
+ await ejecutarTransaccion(async c=>{
+  const filas=await c.getAllAsync<{id:string;fecha:string}>('SELECT id,fecha FROM avisos_locales WHERE usuario_id=? AND fecha<=?',[usuario.id,hasta]);
+  for(const fila of filas)await guardarDato(c,usuario.id,'avisos:visto:'+fila.id,fila.fecha);
+  await c.runAsync('UPDATE avisos_locales SET vista=1 WHERE usuario_id=? AND fecha<=?',[usuario.id,hasta]);
+  await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',0);
+  await encolarIntegracion(c,usuario.id,'/notificaciones/vistas',{hasta});
+ });avisarIntegraciones();
+}
+
 export async function marcarAvisoVisto(id: string) {
   const { usuario } = await obtenerSesionActual(); if (!usuario) return;
+  cambiarRevisionLectura(usuario.id);
   await ejecutarTransaccion(async c => {
     const fila = await c.getFirstAsync<{ remota: number; fecha: string }>('SELECT remota,fecha FROM avisos_locales WHERE usuario_id=? AND id=?', [usuario.id, id]);
     const anterior=await c.getFirstAsync<{vista:number;remota:number}>('SELECT vista,remota FROM avisos_locales WHERE usuario_id=? AND id=?',[usuario.id,id]);
@@ -47,11 +65,13 @@ export async function cargarPaginaAvisos(filtro:'todas'|'pendientes'|'no_vistas'
  const {usuario}=await obtenerSesionActual();if(!usuario)return {avisos:[] as Aviso[],siguiente:null as string|null};
  await actualizarHistorialProgramado(usuario.id);
  const remota=await obtenerSesionRemota(usuario.id);
- if(remota)try{
+ const hayVistasPendientes=await ejecutarLecturaConConexion(c=>c.getFirstAsync("SELECT id FROM integraciones_outbox WHERE usuario_id=? AND ruta='/notificaciones/vistas' LIMIT 1",[usuario.id]));
+ if(remota&&!hayVistasPendientes)try{
+  const revisionLectura=obtenerRevisionLectura(usuario.id);
   const pagina=await solicitarRemoto<{avisos:Aviso[];siguiente:string|null;noVistas?:number}>('/notificaciones?limite=10&filtro='+filtro+'&antes='+encodeURIComponent(antes),undefined,remota.token);
   if((await obtenerSesionActual()).usuario?.id!==usuario.id)return {avisos:[],siguiente:null};
   if(!Array.isArray(pagina.avisos)||pagina.avisos.length>10)throw new Error('Actualizá el backend para cargar notificaciones de a diez.');
-  await ejecutarTransaccion(async c=>{if(Number.isFinite(pagina.noVistas))await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',pagina.noVistas);for(const aviso of pagina.avisos){const visto=await leerDato<string|null>(usuario.id,'avisos:visto:'+aviso.id,null,c);if(visto&&visto>=aviso.fecha)aviso.vista=true;if(aviso.tipo==='mercado_pago'&&await c.getFirstAsync("SELECT id FROM integraciones_outbox WHERE usuario_id=? AND ruta='/mercado-pago/decisiones' LIMIT 1",[usuario.id])){const ops=await leerDato<OperacionMp[]>(usuario.id,'mp:operaciones',[],c);aviso.pendientes=ops.filter(o=>o.decision==='pendiente'||o.revisionPendiente).length;aviso.resuelta=aviso.pendientes===0;aviso.mensaje=ops.length+' obtenidos · '+aviso.pendientes+' pendientes';}await c.runAsync('INSERT INTO avisos_locales(usuario_id,id,datos,fecha,vista,resuelta,remota) VALUES(?,?,?,?,?,?,1) ON CONFLICT(usuario_id,id) DO UPDATE SET datos=excluded.datos,fecha=excluded.fecha,vista=CASE WHEN avisos_locales.fecha>=excluded.fecha THEN MAX(avisos_locales.vista,excluded.vista) ELSE excluded.vista END,resuelta=excluded.resuelta',[usuario.id,aviso.id,JSON.stringify(aviso),aviso.fecha,aviso.vista?1:0,aviso.resuelta?1:0]);}});
+  await ejecutarTransaccion(async c=>{if(revisionLectura===obtenerRevisionLectura(usuario.id)&&Number.isFinite(pagina.noVistas))await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',pagina.noVistas);for(const aviso of pagina.avisos){const visto=await leerDato<string|null>(usuario.id,'avisos:visto:'+aviso.id,null,c);if(visto&&visto>=aviso.fecha)aviso.vista=true;if(aviso.tipo==='mercado_pago'&&await c.getFirstAsync("SELECT id FROM integraciones_outbox WHERE usuario_id=? AND ruta='/mercado-pago/decisiones' LIMIT 1",[usuario.id])){const ops=await leerDato<OperacionMp[]>(usuario.id,'mp:operaciones',[],c);aviso.pendientes=ops.filter(o=>o.decision==='pendiente'||o.revisionPendiente).length;aviso.resuelta=aviso.pendientes===0;aviso.mensaje=ops.length+' obtenidos · '+aviso.pendientes+' pendientes';}await c.runAsync('INSERT INTO avisos_locales(usuario_id,id,datos,fecha,vista,resuelta,remota) VALUES(?,?,?,?,?,?,1) ON CONFLICT(usuario_id,id) DO UPDATE SET datos=excluded.datos,fecha=excluded.fecha,vista=CASE WHEN avisos_locales.fecha>=excluded.fecha THEN MAX(avisos_locales.vista,excluded.vista) ELSE excluded.vista END,resuelta=excluded.resuelta',[usuario.id,aviso.id,JSON.stringify(aviso),aviso.fecha,aviso.vista?1:0,aviso.resuelta?1:0]);}});
   const locales=await paginaLocal(usuario.id,filtro,antes,true);
   const combinados=[...pagina.avisos,...locales.avisos]
    .filter(a=>filtro==='pendientes'?!a.resuelta:filtro==='no_vistas'?!a.vista:true)

@@ -23,7 +23,7 @@ export default function ModalVinculoCuenta({persona,vinculo,sinConexion,alCerrar
     finally{bloqueo.current=false;cambiarOcupado(false);}
   };
   return <DialogoInvitacion {...aspecto} titulo={vinculo?.estado==='confirmado'?'Cuenta vinculada':'Vínculo de cuenta'} descripcion={persona.nombre} icono="link-outline" etiquetaCerrar="Cerrar vínculo de cuenta" ocupado={ocupado} alCerrar={alCerrar}>
-    {vinculo?.estado==='confirmado'?<View style={estilos.fila}><Ionicons name="link-outline" size={20} color={aspecto.tema.foco}/><Text style={aspecto.estilosGlobales.texto}>Cuenta vinculada: {vinculo.nombre}</Text></View>
+    {vinculo?.estado==='confirmado'?<View style={estilos.fila}><Ionicons name="link-outline" size={20} color={aspecto.tema.foco}/><Text style={aspecto.estilosGlobales.texto}>Cuenta vinculada: {[vinculo.nombre,vinculo.apellido].filter(Boolean).join(' ')}{'\n'}{vinculo.correo_electronico||'Correo no disponible. Actualizá la sincronización.'}</Text></View>
     :vinculo?.estado==='solicitado'?<>
       <Text style={aspecto.estilosGlobales.textoSecundario}>Solicitud enviada a {vinculo.nombre}. Espera su aceptación en Personas.</Text>
       <BotonSocial texto="Cancelar solicitud de vínculo" deshabilitado={ocupado||sinConexion} alPresionar={()=>ejecutar(()=>cancelarVinculoOnline(vinculo.id))} {...aspecto}/>

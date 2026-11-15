@@ -102,7 +102,7 @@ export default function usePantallaSocial({
     persona: ['Registrar persona', 'Agregá una persona a tu listado personal.'],
     deuda: ['Registrar deuda', 'Indicá quién debe y cuánto queda pendiente.'],
     gasto: [parametros.gastoId ? 'Editar gasto' : 'Agregar gasto', 'Elegí quién pagó y cómo se reparte.'],
-    eliminarDeuda: ['Perdonar deuda', 'Cerrá el pendiente sin registrar un pago.'],
+    eliminarDeuda: ruta.params?.modo==='eliminar-personal'?['Eliminar deuda personal','Corregí sus movimientos y saldos asociados.']:['Perdonar deuda', 'Cerrá el pendiente sin registrar un pago.'],
     detalleDeuda: ['Detalle de deuda', 'Información y acciones de esta deuda.'],
     pago: ['Registrar pago', 'Registrá dinero entregado o recibido.'],
     cerrar: ['Cerrar sala', 'Revisá el reparto antes de finalizar la ocasión.']

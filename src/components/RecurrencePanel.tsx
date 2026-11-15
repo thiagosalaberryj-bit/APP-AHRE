@@ -23,7 +23,7 @@ import SelectorFecha from './DateSelector';
 import SelectorHora from './TimeSelector';
 import EntradaMonto from './MoneyInput';
 
-const monto=(valor:number)=>'$ '+valor.toLocaleString('es-AR',{maximumFractionDigits:2});
+const monto=(valor:number)=>'$ '+valor.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 export default function PanelRecurrencias({depositoId,tema,alCambiar,alCambiarCantidad,filtrar}:{
   depositoId:string;tema:Tema;alCambiar:()=>void;alCambiarCantidad?:(cantidad:number)=>void;filtrar?:(fila:Recurrencia)=>boolean;
 }){

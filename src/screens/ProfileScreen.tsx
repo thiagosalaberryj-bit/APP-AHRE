@@ -96,10 +96,14 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const [cargandoInfo, establecerCargandoInfo] = useState(true);
   const [errorCarga, establecerErrorCarga] = useErrorNotificado(null);
   const [nombre, establecerNombre] = useState('');
+  const [apellido, establecerApellido] = useState('');
+  const nombreCompleto = [nombre, apellido].filter(Boolean).join(' ');
   const [correo, establecerCorreo] = useState('');
   const [fechaRegistro, establecerFechaRegistro] = useState<string | null>(null);
   const [fotoPerfil, establecerFotoPerfil] = useState<string | null>(null);
   const [nombreEdicion, establecerNombreEdicion] = useState('');
+  const [apellidoEdicion, establecerApellidoEdicion] = useState('');
+  const referenciaApellidoEdicion = useRef<TextInput | null>(null);
   const [correoEdicion, establecerCorreoEdicion] = useState('');
   const [modalEdicion, establecerModalEdicion] = useState(false);
   const [modalContrasena, establecerModalContrasena] = useState(false);
@@ -145,9 +149,11 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
         const datos = await cargarPerfil();
         if (!componenteActivo) return;
         establecerNombre(datos.usuario.nombre);
+        establecerApellido(datos.usuario.apellido || '');
         establecerCorreo(datos.usuario.correo_electronico);
         establecerFechaRegistro(datos.usuario.fecha_creacion);
         establecerNombreEdicion(datos.usuario.nombre);
+        establecerApellidoEdicion(datos.usuario.apellido || '');
         establecerCorreoEdicion(datos.usuario.correo_electronico);
         establecerIdioma(datos.preferencias.idioma);
         establecerNotificaciones(datos.preferencias.notificaciones_activas);
@@ -173,6 +179,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const idiomaActual = IDIOMAS.find((item) => item.id === idioma);
   const aparienciaActual = APARIENCIAS.find((item) => item.id === apariencia);
   const errorEdicion = intentoGuardar ? erroresEdicion.nombre : null;
+  const errorApellidoEdicion = intentoGuardar ? erroresEdicion.apellido : null;
   const errorCorreoEdicion = intentoGuardar ? erroresEdicion.correo : null;
 
   const abrirConfirmacionEdicion = () => {
@@ -184,6 +191,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
 
   const abrirEdicion = () => {
     establecerNombreEdicion(nombre);
+    establecerApellidoEdicion(apellido);
     establecerCorreoEdicion(correo);
     establecerContrasenaConfirmacion('');
     establecerErrorContrasena(null);
@@ -332,7 +340,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
 
   const guardarCambios = async () => {
     if (guardando) return;
-    const datos = { nombre: nombreEdicion, correo: correoEdicion };
+    const datos = { nombre: nombreEdicion, apellido: apellidoEdicion, correo: correoEdicion };
     const nuevosErrores = validarDatosPerfil(datos);
     establecerIntentoGuardar(true);
     establecerErroresEdicion(nuevosErrores);
@@ -344,6 +352,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
     try {
       const resultadoPerfil = await actualizarPerfil(datos);
       establecerNombre(nuevoNombre);
+      establecerApellido(apellidoEdicion.trim());
       establecerCorreo(nuevoCorreo);
       establecerModalEdicion(false);
       mostrarAviso(resultadoPerfil.correoModificado
@@ -487,9 +496,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                         <View style={estilos.columnaAvatar}>
                           <View style={estilos.avatar}>
                             {fotoPerfil ? (
-                              <Image accessibilityLabel={`Foto de perfil de ${nombre}`} source={{ uri: fotoPerfil }} style={estilos.imagenAvatar} />
+                              <Image accessibilityLabel={`Foto de perfil de ${nombreCompleto}`} source={{ uri: fotoPerfil }} style={estilos.imagenAvatar} />
                             ) : (
-                              <Text style={estilos.inicialesAvatar}>{obtenerIniciales(nombre) || 'A'}</Text>
+                              <Text style={estilos.inicialesAvatar}>{obtenerIniciales(nombreCompleto) || 'A'}</Text>
                             )}
                           </View>
                           {fotoPerfil ? (
@@ -524,7 +533,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                         </View>
                         <View style={estilos.detalleUsuario}>
                           <View style={estilos.datosUsuario}>
-                            <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.nombreUsuario}>{nombre}</Text>
+                            <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.nombreUsuario}>{nombreCompleto}</Text>
                             <Text style={estilos.correoUsuario}>{correo}</Text>
                           </View>
                           <View style={estilos.fechaRegistro}>
@@ -855,7 +864,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           visible={modalEdicion}
           desplazable
           alCerrar={() => establecerModalEdicion(false)}
-          descripcion="Los cambios se guardan en este teléfono. Si cambiás el correo, usá el anterior para ingresar con conexión hasta que se sincronice."
+          descripcion="Los cambios se guardan en este teléfono y se sincronizan con el servidor. Si cambiás el correo, usá el anterior para ingresar con conexión hasta que se sincronice."
           etiquetaCerrar="Cerrar edición de perfil"
           estilos={estilos}
           icono="person-outline"
@@ -875,7 +884,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   establecerNombreEdicion(valor);
                   establecerIntentoGuardar(false);
                 }}
-                onSubmitEditing={() => referenciaCorreoEdicion.current?.focus()}
+                onSubmitEditing={() => referenciaApellidoEdicion.current?.focus()}
                 placeholder="Tu nombre"
                 placeholderTextColor={tema.textoSecundario}
                 returnKeyType="next"
@@ -885,6 +894,19 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
               />
             </View>
             {errorEdicion ? <Text style={estilosGlobales.textoError}>{errorEdicion}</Text> : null}
+          </View>
+          <View style={estilos.grupoCampoModal}>
+            <View style={estilosGlobales.encabezadoCampo}>
+              <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Apellido</Text>
+              <Text style={estilosGlobales.contadorCampo}>{apellidoEdicion.length}/80</Text>
+            </View>
+            <View style={[estilos.campoEdicion, errorApellidoEdicion ? estilosGlobales.campoError : null]}>
+              <TextInput ref={referenciaApellidoEdicion} accessibilityLabel="Apellido" autoCapitalize="words" autoComplete="family-name" maxLength={80} editable={!guardando}
+                onChangeText={valor=>{establecerApellidoEdicion(valor);establecerIntentoGuardar(false);}}
+                onSubmitEditing={()=>referenciaCorreoEdicion.current?.focus()} placeholder="Tu apellido" placeholderTextColor={tema.textoSecundario}
+                returnKeyType="next" selectionColor={tema.foco} style={estilos.entradaEdicion} value={apellidoEdicion}/>
+            </View>
+            {errorApellidoEdicion ? <Text style={estilosGlobales.textoError}>{errorApellidoEdicion}</Text> : null}
           </View>
           <View style={estilos.grupoCampoModal}>
             <View style={estilosGlobales.encabezadoCampo}>

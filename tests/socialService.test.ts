@@ -40,14 +40,14 @@ test('lista de gastos guarda todo o nada, respeta reintentos y no mueve dinero h
 
 test('personas normalizadas, duplicados, baja lógica y reactivación conservan su identidad', async prueba => {
   const e = await escenario(prueba);
-  await assert.rejects(e.guardarPersona({ nombre: ' lucia ', apellido: 'GÓMEZ', apodo: 'Otro' }), /Ya existe/);
+  const homonima=await e.guardarPersona({ nombre: ' lucia ', apellido: 'GÓMEZ', apodo: 'Otro' });assert.notEqual(homonima!.id,e.lucia!.id);
   await e.cambiarActividadPersona(presente(e.lucia).id, false);
   await assert.rejects(e.guardarPersona({ nombre: 'Otra', apellido: 'Persona', apodo: ' lU ' }), /Ya existe/);
   await e.guardarPersona({ nombre: 'Lucía', apellido: 'Gómez', apodo: 'Lucita' }, presente(e.lucia).id);
   await e.cambiarActividadPersona(presente(e.lucia).id, true);
   const datos = await e.cargarSocial();
   assert.equal(presente(datos.personas.find(p => p.id === presente(e.lucia).id)).apodo, 'Lucita');
-  assert.equal(datos.personas.length, 2);
+  assert.equal(datos.personas.length, 3);
 });
 
 test('crear sala es idempotente y el cuarto cupo solo se libera al cerrar una sala', async prueba => {
@@ -70,7 +70,7 @@ test('compra propia, cierre, cobros parciales y cancelación no duplican movimie
   assert.equal((await e.cargarSocial()).deudas.length, 0);
   await e.cerrarSala('s'); await e.cerrarSala('s');
   let datos = await e.cargarSocial();
-  assert.equal(datos.deudas.length, 2); assert.equal(datos.totales.porCobrar, '$ 8.000');
+  assert.equal(datos.deudas.length, 2); assert.equal(datos.totales.porCobrar, '$ 8.000,00');
   const deuda = datos.deudas.find(d => d.personaId === presente(e.lucia).id);
   const pago = { deudaId: presente(deuda).id, monto: '1000', claveOperacion: 'pago-parcial' };
   await e.registrarPagoDeuda(pago, { depositoId: e.deposito.id });
@@ -84,7 +84,7 @@ test('compra propia, cierre, cobros parciales y cancelación no duplican movimie
   assert.ok(presente(datos.deudas.find(d => d.id === presente(deuda).id)).saldada);
   const otra = datos.deudas.find(d => d.id !== presente(deuda).id);
   await e.cancelarDeuda(presente(otra).id); await e.cancelarDeuda(presente(otra).id);
-  assert.equal((await e.cargarSocial()).totales.porCobrar, '$ 0');
+  assert.equal((await e.cargarSocial()).totales.porCobrar, '$ 0,00');
   assert.equal(e.saldo(), 92000);
 });
 
@@ -215,7 +215,7 @@ test('pagador fuera del reparto y montos manuales generan únicamente las partes
   const datos = await e.cargarSocial();
   assert.equal(datos.deudas.length, 2);
   assert.equal(datos.salas[0].gastos[0].partes.length, 2);
-  assert.equal(datos.totales.porCobrar, '$ 12.000');
+  assert.equal(datos.totales.porCobrar, '$ 12.000,00');
 });
 
 test('eliminar una compra cerrada no cambia el reparto ni las deudas', async prueba => {

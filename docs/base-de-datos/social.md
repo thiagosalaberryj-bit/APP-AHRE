@@ -45,9 +45,10 @@ pero no interpreta husos horarios ni actualiza automáticamente las fechas.
 | `es_usuario_actual`, `activa` | Indicadores 0/1. Una sola fila por cuenta representa a Vos y no puede desactivarse ni convertirse en contacto. |
 | `fecha_creacion`, `fecha_actualizacion` | Marcas de auditoría obligatorias. |
 
-Los índices únicos de apodo y nombre/apellido normalizados incluyen contactos
-inactivos y excluyen la representación interna de Vos. La fila interna puede
-tener apellido, apodo y sus claves correspondientes en `NULL`. Eliminar significa
+El índice único de apodo normalizado incluye contactos inactivos y excluye
+la representación interna de Vos. Se permiten iguales nombre y apellido con
+apodos distintos. La fila interna puede
+tener apellido, apodo y sus claves correspondientes en `NULL`. Archivar significa
 `activa = 0`: el borrado físico está bloqueado, incluso sin referencias previas.
 
 ### Salas y pertenencias
@@ -109,6 +110,7 @@ Se conserva la comprobación de versión. No se modifica un ítem de sala cerrad
 | `id`, `usuario_id` | Identidad y propietario. |
 | `deudor_id`, `acreedor_id` | Personas distintas de la misma cuenta. Exactamente una representa a Vos. |
 | `participante_gasto_id` | Opcional para deuda manual; único y obligatorio para identificar el origen de una deuda de sala. |
+| `origen_sala_online_id`, `origen_participacion_online_id` | Procedencia inmutable de deudas personales con invitados, confirmada por el servidor al cerrar una sala online. No duplica la compra. |
 | `monto`, `descripcion`, `fecha`, `fecha_vencimiento` | Importe original, descripción y fecha obligatorios; vencimiento opcional. |
 | `estado` | `pendiente`, `parcial`, `pagada` o `cancelada`. |
 | `fecha_cancelacion`, `motivo_cancelacion` | Fecha requerida al cancelar; motivo opcional. Cancelar no permite reactivar la deuda. |

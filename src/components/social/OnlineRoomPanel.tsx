@@ -1,3 +1,4 @@
+import {crearEstilosSocialOnline} from '../../styles/social/OnlineSocialStyles';
 import { useContext } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
 import { useErrorNotificado } from '../../hooks/useErrorNotice';
@@ -12,7 +13,7 @@ import {enviarAccionSocial,sincronizarSocialOnline,guardarSolicitudOnline,cambia
 import type {AspectoSocial,SalaVista} from '../../social/types';
 import {normalizarNombrePersona} from '../../social/socialHelpers';
 import AgregarPersonas from './AddRoomPeopleModal';
-import SelectorPersonas from './PeopleSelector';
+import ListaPersonas from './PersonSelectionList';
 import SelectorSegmentado from '../SegmentedSelector';
 import Dialogo from './InvitationDialog';
 import Confirmacion from './SocialConfirmationModal';
@@ -27,6 +28,7 @@ import crearEstilosDetalle from '../../styles/social/DebtDetailsStyles';
 export default function PersonasOnline({sala,alCrearPersona,personaId,alAbrirPersona,...aspecto}:AspectoSocial&{sala:SalaVista;alCrearPersona:()=>void;personaId?:string;alAbrirPersona?:(id:string)=>void}){
   const { mostrarAviso } = useContext(ContextoAvisos);
   const social=useDatosSociales(),{vinculos}=useVinculos(social.usuarioId),detalle=useSalaOnline(sala.id);
+  const controles=crearEstilosSocialOnline(aspecto.tema);
   const estilos={...crearEstilosCompartidos(aspecto.tema),...crearEstilosPersonas(aspecto.tema)},tarjetas=crearEstilosDetalle(aspecto.tema);
   const [seccion,cambiarSeccion]=useState('integrantes'),[busqueda,cambiarBusqueda]=useState(''),[agregando,abrirAgregar]=useState(false);
   const persona=personaId||null;
@@ -60,9 +62,11 @@ export default function PersonasOnline({sala,alCrearPersona,personaId,alAbrirPer
 
     {seccion==='ingresos'&&admin&&abierta?<View style={estilos.grupo}>
       <Text style={aspecto.estilosGlobales.textoSecundario}>Revisá quién quiere entrar. La sala se comparte después de tu aprobación.</Text>
-      {pendientes.map(a=><Pressable key={a.id} accessibilityRole="button" accessibilityLabel={'Revisar ingreso de '+a.nombre} onPress={()=>{elegirAdmision(a.id);elegirFicha('');cambiarModo('agenda');cambiarNombre(a.nombre);cambiarApellido('');cambiarApodo('');cambiarError('');}} style={[tarjetas.registro,estilos.filaCampos]}>
-        <Ionicons name="person-add-outline" size={24} color={aspecto.tema.foco}/><View style={estilos.textoFlexible}><Text style={aspecto.estilosGlobales.etiqueta}>{a.nombre}</Text><Text style={aspecto.estilosGlobales.textoAyuda}>Espera tu aprobación · {new Date(a.fecha).toLocaleDateString('es-AR')}</Text></View><Ionicons name="chevron-forward" size={20} color={aspecto.tema.textoSecundario}/>
-      </Pressable>)}
+      {pendientes.map(a=><View key={a.id} style={[tarjetas.registro,controles.filaSolicitud]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={'Revisar ingreso de '+a.nombre} disabled={ocupado} onPress={()=>{elegirAdmision(a.id);elegirFicha('');cambiarModo('agenda');cambiarNombre(a.nombre);cambiarApellido('');cambiarApodo('');cambiarError('');}} style={[estilos.filaCampos,controles.flexible]}><Ionicons name="person-add-outline" size={24} color={aspecto.tema.foco}/><View style={estilos.textoFlexible}><Text style={aspecto.estilosGlobales.etiqueta}>{a.nombre}</Text><Text style={aspecto.estilosGlobales.textoAyuda}>Espera tu aprobación · {new Date(a.fecha).toLocaleDateString('es-AR')}</Text></View></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={'Aceptar ingreso de '+a.nombre} style={controles.accionSolicitud} disabled={ocupado} onPress={()=>{elegirAdmision(a.id);elegirFicha('');cambiarModo('agenda');cambiarNombre(a.nombre);cambiarApellido('');cambiarApodo('');cambiarError('');}}><Ionicons name="checkmark" size={23} color={aspecto.tema.exito}/></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={'Rechazar ingreso de '+a.nombre} style={controles.accionSolicitud} disabled={ocupado} onPress={()=>{void ejecutar(()=>decidirIngresoSala(a.id,'rechazada'));}}><Ionicons name="close" size={23} color={aspecto.tema.error}/></Pressable>
+      </View>)}
       {!pendientes.length?<Text style={aspecto.estilosGlobales.textoSecundario}>No hay ingresos pendientes.</Text>:null}
     </View>:<>
       <View style={estilos.filaCampos}>
@@ -82,8 +86,8 @@ export default function PersonasOnline({sala,alCrearPersona,personaId,alAbrirPer
     </>:null}
     {agregando?<AgregarPersonas {...aspecto} personasSala={sala.participantes} guardando={ocupado} alCerrar={()=>abrirAgregar(false)} alCrear={()=>{abrirAgregar(false);alCrearPersona();}} alAgregar={ids=>{void ejecutar(()=>cambiarPersonasSala(sala.id,[...sala.participantes,...ids])).then(ok=>{if(ok)abrirAgregar(false);});}}/>:null}
     {persona&&participante?<View style={estilos.grupo}><Text style={aspecto.estilosGlobales.encabezadoSeccion}>Historial de solicitudes</Text><Text style={aspecto.estilosGlobales.etiqueta}>{participante.nombre}</Text>
-      {solicitudes.map(s=><View key={s.id} style={tarjetas.registro}><View style={estilos.filaCampos}><Ionicons name={s.estado==='resuelta'?'checkmark-circle-outline':s.estado==='rechazada'?'close-circle-outline':'time-outline'} color={s.estado==='resuelta'?aspecto.tema.exito:s.estado==='rechazada'?aspecto.tema.error:aspecto.tema.textoSecundario} size={22}/><Text style={[aspecto.estilosGlobales.etiqueta,estilos.textoFlexible]}>{s.texto}</Text></View><Text style={aspecto.estilosGlobales.textoAyuda}>{detalle.sala.gastos.find(g=>g.id===s.gasto_id)?.descripcion} · {new Date(s.fecha).toLocaleString('es-AR')} · {s.estado==='resuelta'?'Aceptada':s.estado==='rechazada'?'Rechazada':'Espera respuesta'}</Text>
-        {admin&&abierta&&s.estado==='pendiente'?<View style={estilos.filaCampos}><View style={estilos.columnaCampo}><BotonSocial texto="Aceptar" deshabilitado={ocupado} alPresionar={()=>{void resolver(s.id,'resuelta');}} {...aspecto}/></View><View style={estilos.columnaCampo}><BotonSocial secundario texto="Rechazar" deshabilitado={ocupado} alPresionar={()=>{void resolver(s.id,'rechazada');}} {...aspecto}/></View></View>:null}
+      {solicitudes.map(s=><View key={s.id} style={[tarjetas.registro,controles.filaSolicitud]}><View style={controles.flexible}><View style={estilos.filaCampos}><Ionicons name={s.estado==='resuelta'?'checkmark-circle-outline':s.estado==='rechazada'?'close-circle-outline':'time-outline'} color={s.estado==='resuelta'?aspecto.tema.exito:s.estado==='rechazada'?aspecto.tema.error:aspecto.tema.textoSecundario} size={22}/><Text style={[aspecto.estilosGlobales.etiqueta,estilos.textoFlexible]}>{s.texto}</Text></View><Text style={aspecto.estilosGlobales.textoAyuda}>{detalle.sala.gastos.find(g=>g.id===s.gasto_id)?.descripcion} · {new Date(s.fecha).toLocaleString('es-AR')} · {s.estado==='resuelta'?'Aceptada':s.estado==='rechazada'?'Rechazada':'Espera respuesta'}</Text>
+        </View>{admin&&abierta&&s.estado==='pendiente'?<><Pressable accessibilityRole="button" accessibilityLabel="Aceptar solicitud" style={controles.accionSolicitud} disabled={ocupado} onPress={()=>{void resolver(s.id,'resuelta');}}><Ionicons name="checkmark" size={23} color={aspecto.tema.exito}/></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Rechazar solicitud" style={controles.accionSolicitud} disabled={ocupado} onPress={()=>{void resolver(s.id,'rechazada');}}><Ionicons name="close" size={23} color={aspecto.tema.error}/></Pressable></>:null}
         {sala.demo&&!admin&&s.estado==='pendiente'?<View style={estilos.grupoCampo}><Text style={aspecto.estilosGlobales.textoAyuda}>Simular respuesta del administrador</Text><View style={estilos.filaCampos}><View style={estilos.columnaCampo}><BotonSocial texto="Simular aceptación" deshabilitado={ocupado} alPresionar={()=>{void ejecutar(()=>simularRespuestaSalaDemo(sala.id,s.id,'resuelta'));}} {...aspecto}/></View><View style={estilos.columnaCampo}><BotonSocial secundario texto="Simular rechazo" deshabilitado={ocupado} alPresionar={()=>{void ejecutar(()=>simularRespuestaSalaDemo(sala.id,s.id,'rechazada'));}} {...aspecto}/></View></View></View>:null}
       </View>)}
       {!solicitudes.length?<Text style={aspecto.estilosGlobales.textoSecundario}>Sin solicitudes.</Text>:null}
@@ -92,8 +96,8 @@ export default function PersonasOnline({sala,alCrearPersona,personaId,alAbrirPer
 
     </View>:null}
     {ingreso?<Dialogo {...aspecto} titulo={ingreso.nombre} descripcion="Revisar solicitud de ingreso" icono="person-add-outline" ocupado={ocupado} alCerrar={()=>elegirAdmision(null)}>
-      <SelectorSegmentado tema={aspecto.tema} opciones={[{id:'agenda',nombre:'Ya está en mi agenda'},{id:'nueva',nombre:'Crear persona'}]} valor={modo} alSeleccionar={cambiarModo} etiqueta="Identidad del invitado"/>
-      {modo==='agenda'?<SelectorPersonas etiqueta="Persona de mi agenda" personas={disponibles} seleccionadas={ficha?[ficha]:[]} alCambiar={ids=>elegirFicha(ids[0]||'')} {...aspecto}/>:<><Campo etiqueta="Nombre" valor={nombre} alCambiar={cambiarNombre} limite={80} {...aspecto}/><Campo etiqueta="Apellido" valor={apellido} alCambiar={cambiarApellido} limite={80} {...aspecto}/><Campo etiqueta="Apodo" valor={apodo} alCambiar={cambiarApodo} limite={20} {...aspecto}/></>}
+      <SelectorSegmentado tema={aspecto.tema} opciones={[{id:'nueva',nombre:'Nueva persona'},{id:'agenda',nombre:'Seleccionar persona'}]} valor={modo} alSeleccionar={cambiarModo} etiqueta="Identidad del invitado"/>
+      {modo==='agenda'?<ListaPersonas personas={disponibles} elegida={ficha} alElegir={elegirFicha} ocupado={ocupado} {...aspecto}/>:<><Campo bordeDiscreto etiqueta="Nombre" valor={nombre} alCambiar={cambiarNombre} limite={80} {...aspecto}/><Campo bordeDiscreto etiqueta="Apellido" valor={apellido} alCambiar={cambiarApellido} limite={80} {...aspecto}/><Campo bordeDiscreto etiqueta="Apodo" valor={apodo} alCambiar={cambiarApodo} limite={20} {...aspecto}/></>}
       <Text style={aspecto.estilosGlobales.textoAyuda}>Confirmá quién es antes de admitirlo. Las fichas con una cuenta vinculada no se pueden asignar a otro invitado.</Text>
 
       <View style={estilos.filaCampos}><View style={estilos.columnaCampo}><BotonSocial texto="Admitir" deshabilitado={ocupado||(modo==='agenda'?!ficha:!nombre.trim()||!apellido.trim()||!apodo.trim())} alPresionar={()=>{void admitir();}} {...aspecto}/></View><View style={estilos.columnaCampo}><BotonSocial secundario texto="Rechazar ingreso" deshabilitado={ocupado} alPresionar={()=>{void ejecutar(()=>decidirIngresoSala(ingreso.id,'rechazada')).then(ok=>{if(ok)elegirAdmision(null);});}} {...aspecto}/></View></View>

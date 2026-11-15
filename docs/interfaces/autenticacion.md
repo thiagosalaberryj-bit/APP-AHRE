@@ -6,7 +6,7 @@ Registro y primer ingreso consultan SERVER-AHRE y necesitan conexión para autor
 
 ## Login
 
-`src/screens/LoginScreen.tsx` solicita correo electrónico y contraseña. Antes de consultar SQLite comprueba que ambos estén completos y que el correo tenga un formato válido. El correo se recorta y normaliza a minúsculas. Las credenciales inválidas muestran el mismo mensaje para un usuario inexistente o una contraseña incorrecta.
+`src/screens/LoginScreen.tsx` solicita correo electrónico y contraseña. Antes de consultar SQLite comprueba que ambos estén completos y que el correo tenga un formato válido. El correo se recorta y normaliza a minúsculas. Las credenciales inválidas muestran el mismo mensaje para un usuario inexistente o una contraseña incorrecta. El rechazo marca correo y contraseña junto a sus campos.
 
 El botón «Recordarme» está activo inicialmente. Al activarlo, el identificador de usuario de la sesión se guarda con `expo-secure-store`. Si se desactiva, la sesión se conserva solo mientras la aplicación está abierta. Después de inicializar SQLite, AHRE permanece en Inicio; la sesión se consulta al completar el deslizador. «¿Olvidaste tu contraseña?» permanece sin un flujo asociado; la recuperación remota no forma parte de esta funcionalidad.
 
@@ -14,17 +14,17 @@ El botón de Login muestra carga durante la verificación, impide pulsaciones re
 
 ## Registro
 
-`src/screens/RegistrationScreen.tsx` solicita nombre, correo, contraseña y confirmación. La pantalla valida los campos antes de llamar al servicio; el servicio vuelve a validar antes de cualquier operación de persistencia.
+`src/screens/RegistrationScreen.tsx` solicita nombre y apellido en una misma fila, correo, contraseña y confirmación. La pantalla valida los campos antes de llamar al servicio; el servicio vuelve a validar antes de cualquier operación de persistencia.
 
 Reglas actuales:
 
-- nombre obligatorio, recortando espacios externos;
+- nombre y apellido obligatorios en el formulario, recortando espacios externos y con hasta 80 caracteres cada uno;
 - correo obligatorio, formato de correo y comparación única sin distinguir mayúsculas de minúsculas;
 - contraseña de al menos 8 caracteres Unicode y no compuesta solo por espacios;
 - confirmación obligatoria e idéntica a la contraseña;
 - la contraseña conserva exactamente los espacios que escribió la persona.
 
-Los errores de validación aparecen junto al campo correspondiente. Los avisos generales, como un correo duplicado o un fallo de almacenamiento, aparecen en una notificación emergente en la parte superior. Mientras se guarda la cuenta, los campos y el botón quedan deshabilitados.
+Los errores de validación aparecen junto al campo correspondiente. En Nombre y Apellido del registro ocupan una sola línea y se recortan si falta espacio; el mensaje de apellido dice «Ingresá tu apellido.». Los avisos generales, como un correo duplicado o un fallo de almacenamiento, aparecen en una notificación emergente en la parte superior. Mientras se guarda la cuenta, los campos y el botón quedan deshabilitados.
 
 ## Protección de contraseña
 

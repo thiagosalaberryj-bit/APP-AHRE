@@ -2,7 +2,7 @@ import {useRef} from 'react';
 import {View,Text} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useDatosSociales} from '../../social/SocialDataContext';
-import {perdonarDeudaPersonal,perdonarDeudaOnline,obtenerVistaSincronizacion} from '../../social/socialService';
+import {eliminarDeudaPersonal,perdonarDeudaPersonal,perdonarDeudaOnline,obtenerVistaSincronizacion} from '../../social/socialService';
 import {nombreCompletoPersona,formatearMontoSocial} from '../../social/socialHelpers';
 import AccionesFormulario from './SocialFormActions';
 import RegistroNoDisponible from './SocialRecordUnavailable';
@@ -13,6 +13,8 @@ export default function FormularioPerdonarDeuda({parametros,...aspecto}:import('
   const social=useDatosSociales(),deuda=social.deudas.find(d=>d.id===parametros.deudaId);
   const pendiente=useRef(deuda?.pendienteNumero||0);
   const estilos=crearEstilosCompartidos(aspecto.tema);
+  const eliminar=parametros.modo==='eliminar-personal';
+  if(eliminar&&deuda&&!deuda.acuerdoOnlineId)return <><TarjetaDeuda deuda={deuda} nombrePersona={nombreCompletoPersona(social.obtenerPersona(deuda.personaId))} soloLectura {...aspecto}/><Text style={aspecto.estilosGlobales.texto}>Se eliminará esta deuda personal y se corregirán todos sus movimientos asociados, incluidos los pagos parciales. Los saldos se ajustarán. Esta acción es distinta de perdonar.</Text><AccionesFormulario texto="Eliminar deuda personal" peligro alGuardar={()=>eliminarDeudaPersonal(deuda.id)} recargarAntesDeCerrar alExito={()=>social.volver()} mensajeExito="Deuda y movimientos asociados eliminados." confirmacion={{titulo:'¿Eliminar deuda y movimientos?',descripcion:'Se corregirán el adelanto y los pagos vinculados, ajustando los saldos. No se puede deshacer.',textoConfirmar:'Eliminar deuda'}} {...aspecto}/></>;
   if(!deuda||deuda.saldada||deuda.tipo!=='me_deben'||deuda.invitacionOnline||deuda.estadoOnline==='rechazada')return <RegistroNoDisponible {...aspecto}/>;
   const online=!!deuda.acuerdoOnlineId;
   const sinConexion=online&&!deuda.id.startsWith('demo-social:')&&['offline','revocado','sesion','local'].includes(obtenerVistaSincronizacion().estado);

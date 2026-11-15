@@ -60,7 +60,7 @@ export function cargarSocial() {
       const pendiente = acuerdo?unidades(acuerdo.pendiente):Math.max(0, unidades(deuda.monto) - pagado - perdonado), esPago = deuda.deudor_id === contexto.propia.id;
       const parte = partesPorId.get(deuda.participante_gasto_id || '');
       const gasto = gastosPorId.get(parte?.gasto_compartido_id || '');
-      const sala = salasPorId.get(gasto?.sala_id || '');
+      const sala = salasPorId.get(gasto?.sala_id || '') || online.find(o=>o.sala.id===deuda.origen_sala_online_id)?.sala;
       const movimientoOrigen = origenesPorDeuda.get(deuda.id)?.[0];
       return { fechaPerdon:acuerdo?.perdon?.fecha || (perdonado ? deuda.fecha_cancelacion : null), perdonadoNumero:perdonado/100,acuerdoOnlineId:acuerdo?.id,id: deuda.id, personaId: visibles(esPago ? deuda.acreedor_id : deuda.deudor_id), tipo: esPago ? 'debo' : 'me_deben',
         descripcion: deuda.descripcion, fecha: diaLocal(deuda.fecha), fechaISO: deuda.fecha, ultimaActividad:[deuda.fecha,deuda.fecha_actualizacion,...(pagosPorDeuda.get(deuda.id)||[]).flatMap(p=>[p.fecha,p.fecha_anulacion||p.fecha])].sort().at(-1)!, monto: formatearMontoSocial(deuda.monto), montoNumero: deuda.monto,

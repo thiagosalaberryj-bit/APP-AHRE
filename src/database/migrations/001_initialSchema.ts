@@ -8,6 +8,7 @@ export async function aplicarEsquemaInicial(baseDatos: Pick<Conexion, 'execAsync
     CREATE TABLE IF NOT EXISTS usuarios (
       id TEXT PRIMARY KEY NOT NULL,
       nombre TEXT NOT NULL,
+      apellido TEXT NOT NULL DEFAULT '',
       correo_electronico TEXT NOT NULL,
       activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
       fecha_creacion TEXT NOT NULL,
@@ -387,6 +388,8 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
       deudor_id TEXT NOT NULL,
       acreedor_id TEXT NOT NULL,
       participante_gasto_id TEXT UNIQUE,
+      origen_sala_online_id TEXT,
+      origen_participacion_online_id TEXT,
       monto REAL NOT NULL CHECK (${montoValido('monto')}),
       descripcion TEXT NOT NULL CHECK (LENGTH(TRIM(descripcion)) > 0),
       fecha TEXT NOT NULL,
@@ -438,7 +441,6 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_personas_usuario_actual_unico ON personas (usuario_id) WHERE es_usuario_actual = 1;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_personas_apodo_unico ON personas (usuario_id, apodo_normalizado) WHERE es_usuario_actual = 0;
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_personas_nombre_unico ON personas (usuario_id, nombre_normalizado, apellido_normalizado) WHERE es_usuario_actual = 0;
     CREATE INDEX IF NOT EXISTS idx_personas_usuario_nombre ON personas (usuario_id, activa, nombre_normalizado, apellido_normalizado);
     CREATE INDEX IF NOT EXISTS idx_salas_usuario_estado ON salas (usuario_id, estado, fecha_creacion DESC);
     CREATE INDEX IF NOT EXISTS idx_personas_sala_persona ON personas_sala (usuario_id, persona_id, activa);
@@ -595,7 +597,7 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
 
     CREATE TRIGGER IF NOT EXISTS trg_deuda_origen_inmutable BEFORE UPDATE ON deudas
     WHEN NEW.deudor_id <> OLD.deudor_id OR NEW.acreedor_id <> OLD.acreedor_id OR NEW.monto <> OLD.monto
-      OR NEW.participante_gasto_id IS NOT OLD.participante_gasto_id OR (OLD.estado = 'cancelada' AND NEW.estado <> 'cancelada')
+      OR NEW.participante_gasto_id IS NOT OLD.participante_gasto_id OR NEW.origen_sala_online_id IS NOT OLD.origen_sala_online_id OR NEW.origen_participacion_online_id IS NOT OLD.origen_participacion_online_id OR (OLD.estado = 'cancelada' AND NEW.estado <> 'cancelada')
     BEGIN SELECT RAISE(ABORT, 'conservar el origen y la cancelacion de la deuda'); END;
 
     CREATE TRIGGER IF NOT EXISTS trg_deuda_saldada_conservar BEFORE UPDATE OF estado ON deudas

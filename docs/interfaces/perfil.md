@@ -11,7 +11,7 @@ queda fuera de este Issue.
 `src/screens/ProfileScreen.tsx` es secundaria con `EncabezadoSeccion`
 («Perfil») y contenido desplazable con `KeyboardAvoidingView`:
 
-Perfil reúne Usuario, Preferencias, Cuenta, Ajustes avanzados y Sesión. Usuario presenta la foto junto al nombre, correo y registro; permite cambiar o quitar la foto y verificar la identidad antes de editar el perfil. Preferencias ofrece idioma, notificaciones, apariencia y restablecimiento al tema del dispositivo. Cuenta permite cambiar la contraseña. Ajustes avanzados muestra las opciones futuras y Acerca de AHRE. Cerrar sesión abre una confirmación al final de la pantalla.
+Perfil reúne Usuario, Preferencias, Cuenta, Ajustes avanzados y Sesión. Usuario presenta la foto junto al nombre y apellido, correo y registro; permite cambiar o quitar la foto y verificar la identidad antes de editar el perfil. Preferencias ofrece idioma, notificaciones, apariencia y restablecimiento al tema del dispositivo. Cuenta permite cambiar la contraseña. Ajustes avanzados muestra las opciones futuras y Acerca de AHRE. Cerrar sesión abre una confirmación al final de la pantalla.
 
 Se abre desde el botón de Perfil del Dashboard. La flecha del encabezado
 vuelve atrás. Los estilos locales están en
@@ -32,7 +32,7 @@ confirmación de cierre de sesión.
 
 Tarjeta superior compacta en dos columnas: avatar circular a la izquierda
 (iniciales sobre `contenedorVerde` hasta seleccionar una foto) y los datos
-alineados a su lado. Nombre y correo se agrupan arriba; la fecha queda abajo a
+alineados a su lado. Nombre completo y correo se agrupan arriba; la fecha queda abajo a
 la altura de las acciones bajo el avatar. `Editar perfil` aparece dentro de la
 misma tarjeta, debajo de un separador. El nombre completo usa una sola línea,
 el mismo estilo destacado y puntos suspensivos si no entra. Correo y fecha de
@@ -55,14 +55,14 @@ el contenido se muestra al completar la lectura, sin esqueletos ni esperas simul
 
 ## Modal de edición
 
-La descripción y el aviso posterior a cambiar el correo indican que se use el correo anterior para ingresar con conexión hasta sincronizarlo. Guardar nombre y correo conserva el ID de cuenta. El ingreso por ese ID recupera los datos locales sin duplicar usuarios ni preferencias; las credenciales incorrectas o una identidad remota diferente no habilitan acceso.
+La descripción y el aviso posterior a cambiar el correo indican que se use el correo anterior para ingresar con conexión hasta sincronizarlo. Guardar nombre, apellido y correo conserva el ID de cuenta. El ingreso por ese ID recupera los datos locales sin duplicar usuarios ni preferencias; las credenciales incorrectas o una identidad remota diferente no habilitan acceso.
 
 
 `Editar perfil` abre primero un modal para confirmar la identidad. El campo de
 contraseña envía la verificación con `Listo` del teclado; debajo aparece la
 acción `Usar huella` cuando se quiere confirmar con biometría. El modal no
 muestra un botón `Continuar` ni texto comparando los métodos. Después abre un
-segundo modal (no una pantalla independiente) con los campos `Nombre` y
+segundo modal (no una pantalla independiente) con los campos `Nombre`, `Apellido` y
 `Correo electrónico`, la acción `Guardar cambios` y una `X` para cerrar y
 descartar el borrador. Ambos modales usan un encabezado alineado a la izquierda
 con icono, título y descripción, y la `X` en la esquina superior derecha. Se
@@ -183,3 +183,10 @@ activarlo, sin un botón adicional que aumente su altura. Cuando Android permite
 notificaciones, siempre aparece el interruptor para encenderlas o apagarlas en
 AHRE, incluso si la preferencia general está apagada. Mientras se gestiona la
 activación, la fila bloquea nuevos toques.
+
+Nombre y Apellido tienen límite de 80 caracteres cada uno, igual que Registro.
+Apellido es editable, muestra contador y error propio y se incluye en el lote
+de usuario enviado al backend. Si no hay conexión queda pendiente de sincronizar;
+al confirmarse, se conserva en MySQL y se recupera al ingresar. El backend valida
+también el máximo de 80 caracteres. Prueba de integración: edición, recuperación
+tras iniciar sesión, aceptación de 80 y rechazo remoto de 81 sin sobrescribir datos.

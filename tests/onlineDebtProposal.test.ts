@@ -41,7 +41,7 @@ test('la propuesta espera la sincronización privada y reutiliza su identificado
   offline=false;
   await assert.rejects(e.proponerDeudaOnline(deuda.id),/conexión|respuesta/i);
   await e.proponerDeudaOnline(deuda.id);
-  assert.deepEqual(intentos,['propuesta:'+deuda.id,'propuesta:'+deuda.id]);
+  assert.equal(intentos.length,2);assert.equal(intentos[0],intentos[1]);
   assert.equal(propuestas.size,1);
   assert.equal((await e.cargarSocial()).deudas.length,1);
 });

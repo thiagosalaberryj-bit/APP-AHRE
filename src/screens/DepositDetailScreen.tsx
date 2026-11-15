@@ -85,7 +85,7 @@ function formatearFechaCorta(fecha: Date) {
 function formatearSaldo(monto: number) {
   const saldo = Number(monto);
   if (!Number.isFinite(saldo)) return '—';
-  return `$ ${saldo.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `$ ${saldo.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatearComparacionMensual(comparacion: Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null) {

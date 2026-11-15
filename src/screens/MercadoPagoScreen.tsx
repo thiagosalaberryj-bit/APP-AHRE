@@ -26,7 +26,7 @@ import { observarIntegraciones } from '../integrations/integrationStore';
 import { sincronizarIntegraciones } from '../integrations/integrationSync';
 
 const nombreEstado = (estado: string) => ({ completo: 'Completa', fallido: 'Fallida', cancelado: 'Cancelada', pendiente: 'En espera', procesando: 'Buscando' }[estado] || 'En curso');
-const importe = (op: OperacionMp, tipo = op.tipo) => `${op.monto > 0 ? tipo === 'egreso' ? '−' : tipo === 'ingreso' ? '+' : '' : ''}${op.moneda === 'ARS' ? '$ ' : op.moneda + ' '}${op.monto.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
+const importe = (op: OperacionMp, tipo = op.tipo) => `${op.monto > 0 ? tipo === 'egreso' ? '−' : tipo === 'ingreso' ? '+' : '' : ''}${op.moneda === 'ARS' ? '$ ' : op.moneda + ' '}${op.monto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function PantallaMercadoPago({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
   const volverProtegido = useRegresoProtegido(navegacion);

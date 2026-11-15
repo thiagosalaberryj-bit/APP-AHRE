@@ -81,3 +81,13 @@ test('una respuesta antigua de preferencias del backend no pisa un horario que s
  liberar(Response.json(anterior));await sincronizacion;assert.equal((await e.cargarAjustesAvisos()).tipos.me_deben.hora,'16:35');
  esperar=false;await e.sincronizarIntegraciones(false,false);assert.equal((await e.cargarAjustesAvisos()).tipos.me_deben.hora,'16:35');
 });
+
+test('marcar todo incluye páginas no cargadas, conserva resueltas y actualiza el contador al instante',async t=>{
+ const e=await preparar(t);await e.prepararDatosPrueba({vistaSocialOnline:true});
+ const resueltas=e.base.prepare('SELECT COUNT(*) n FROM avisos_locales WHERE resuelta=1').get()!.n;
+ await e.marcarTodosAvisosVistos();
+ assert.equal(await e.contarAvisosNoVistos(),0);
+ assert.equal((await e.cargarPaginaAvisos('no_vistas')).avisos.length,0);
+ assert.equal(e.base.prepare('SELECT COUNT(*) n FROM avisos_locales WHERE resuelta=1').get()!.n,resueltas);
+ assert.ok(e.base.prepare("SELECT id FROM integraciones_outbox WHERE ruta='/notificaciones/vistas'").get());
+});

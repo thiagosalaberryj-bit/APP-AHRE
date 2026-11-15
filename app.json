@@ -20,6 +20,23 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.SCHEDULE_EXACT_ALARM"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "ahre-server.tailc5dfc5.ts.net",
+              "pathPrefix": "/invitacion/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {

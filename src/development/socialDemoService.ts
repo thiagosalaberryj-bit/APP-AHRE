@@ -1,4 +1,4 @@
-import { finanzasDemo } from './demoRoomFinances';
+import { registrosRequeridosDemo, finanzasDemo } from './demoRoomFinances';
 export { finanzasDemo } from './demoRoomFinances';
 import type { Conexion, Usuario } from '../database/types';
 import {prepararEjemploDeudaDemo,prepararEscenariosRecibidosDemo,prepararDeudaInteractivaDemo} from './seedSocialOnlinePreview';
@@ -72,6 +72,7 @@ async function incorporar(c: Conexion, usuarioId: string, operacion: OperacionPe
 }
 
 async function cerrar(c: Conexion, usuarioId: string, detalle: RespuestaSala) {
+  const faltantes=finanzasDemo(detalle,true).pendientesCierre||[];exigir(!faltantes.length,'Falta registrar antes de cerrar: '+faltantes.map(p=>p.nombre+' · '+p.descripcion).join('; '));
   const deudas = await leer<DeudaOnline[]>(c, usuarioId, 'deudas', []);
   detalle.sala.estado = 'cerrada';
   detalle.sala.obligaciones = [];
@@ -111,7 +112,7 @@ export async function comandoDemo(salaId: string, comando: Omit<ComandoOnline, '
       const g = detalle.sala.gastos.find(g => g.id === comando.gastoId);
       exigir(g && g.partes.some(p => p.personaId === comando.personaId), 'La parte no existe.');
       g.pagaron = g.pagaron.filter(id => id !== comando.personaId);
-      if (comando.pagada) g.pagaron.push(comando.personaId!);
+      if (comando.pagada){g.pagaron.push(comando.personaId!);for(const q of detalle.solicitudes)if(q.gasto_id===g.id&&q.personaId===comando.personaId&&q.tipo==='parte_pagada'&&q.estado==='pendiente'&&q.monto_parte===g.partes.find(p=>p.personaId===comando.personaId)?.monto)q.estado='resuelta';}
       g.version++;
     } else if (comando.tipo === 'integrantes') {
       const ids = new Set(comando.personas?.map(p => p.id));
@@ -138,7 +139,23 @@ export async function accionDemo(ruta: string, datos: Record<string, unknown>): 
     const partes = ruta.split('/').filter(Boolean).map(decodeURIComponent), id = partes[1], ahora = new Date().toISOString();
     const listaSalas = await salas(c, usuarioId), deudas = await leer<DeudaOnline[]>(c, usuarioId, 'deudas', []);
     const detalle = listaSalas.find(s => s.sala.id === id || s.solicitudes.some(q => q.id === id) || s.admisiones?.some(a => a.id === id));
-    if (partes[0] === 'salas' && partes[2] === 'acceso') {
+    if(partes[0]==='salas'&&partes[2]==='registrar-integrantes-demo'){exigir(detalle?.administrador&&detalle.sala.estado==='abierta','Solo el administrador puede simular registros en la sala abierta.');detalle.registrosIntegrantesDemo=registrosRequeridosDemo(detalle).filter(p=>p.personaId!==detalle.personaPropiaId).map(p=>p.clave);await guardarSala(c,usuarioId,detalle);return {};
+    }else if(partes[0]==='vinculos'&&id==='solicitar'){
+      exigir(typeof datos.correo==='string'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo),'Ingresá un correo válido.');
+      const persona=await c.getFirstAsync<{id:string;nombre:string;apellido:string}>('SELECT id,nombre,apellido FROM personas WHERE id=? AND usuario_id=? AND activa=1 AND es_usuario_actual=0',[String(datos.personaId||''),usuarioId]);exigir(persona,'Elegí una persona activa.');
+      const vinculos=await leer<import('../social/online/types').VinculoOnline[]>(c,usuarioId,'vinculos',[]),anterior=vinculos.find(v=>v.persona_id===persona.id);
+      exigir(anterior?.estado!=='confirmado','La persona ya tiene una cuenta vinculada.');
+      const vinculo={id:anterior?.id||'demo-social:'+generarIdentificador(),persona_id:persona.id,nombre:persona.nombre,apellido:persona.apellido,correo_electronico:datos.correo,cuenta_id:'demo-social:cuenta:'+datos.correo,estado:'solicitado'};
+      await guardar(c,usuarioId,'vinculos',[...vinculos.filter(v=>v.persona_id!==persona.id),vinculo]);return {id:vinculo.id,estado:vinculo.estado};
+    }else if(partes[0]==='vinculos'&&partes[2]==='cancelar'){
+      const vinculos=await leer<import('../social/online/types').VinculoOnline[]>(c,usuarioId,'vinculos',[]),vinculo=vinculos.find(v=>v.id===id);exigir(vinculo&&['solicitado','pendiente'].includes(vinculo.estado),'No hay una solicitud pendiente para cancelar.');vinculo.estado='cancelado';await guardar(c,usuarioId,'vinculos',vinculos);return {id,estado:'cancelado'};
+    }else if(partes[0]==='vinculos'&&partes[2]==='responder'){
+      const vinculos=await leer<import('../social/online/types').VinculoOnline[]>(c,usuarioId,'vinculos',[]),vinculo=vinculos.find(v=>v.id===id);
+      exigir(vinculo?.direccion==='recibida'&&vinculo.estado==='solicitado','La solicitud demo ya fue resuelta.');
+      exigir(datos.decision==='aceptado'||datos.decision==='rechazado','Elegí aceptar o rechazar.');
+      if(datos.decision==='aceptado'){const persona=await c.getFirstAsync<{id:string;apodo:string}>('SELECT id,apodo FROM personas WHERE id=? AND usuario_id=? AND activa=1 AND es_usuario_actual=0',[String(datos.personaId||''),usuarioId]);exigir(persona?.apodo,'Registrá o elegí una persona con apodo para aceptar.');exigir(!vinculos.some(v=>v.id!==id&&v.persona_id===persona.id&&v.estado==='confirmado'),'La ficha ya está vinculada.');vinculo.persona_id=persona.id;vinculo.estado='confirmado';delete vinculo.direccion;}else vinculo.estado='rechazado';
+      await guardar(c,usuarioId,'vinculos',vinculos);return {id,estado:vinculo.estado};
+    }else if (partes[0] === 'salas' && partes[2] === 'acceso') {
       exigir(detalle?.administrador && detalle.sala.estado === 'abierta', 'Solo el administrador puede cambiar el acceso de una sala abierta.');
       exigir(detalle.acceso || String(datos.contrasena || '').length >= 8, 'La contraseña debe tener al menos ocho caracteres.');
       if(datos.contrasena)exigir(String(datos.contrasena).length>=8&&String(datos.contrasena).length<=128,'La contraseña debe tener entre 8 y 128 caracteres.');

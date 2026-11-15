@@ -6,7 +6,7 @@ const ejemplos:Record<TipoAviso,[string,string]>={
  debo:['Recordá revisar tus deudas','Tenés una deuda pendiente para revisar'],
  me_deben:['Recordá las deudas que te deben','Tenés un cobro pendiente'],
  recurrencias:['Mañana se repite un movimiento','Hay una recurrencia pendiente de aceptar'],
- salas:['Hay gastos de sala por registrar','Un pago de la sala está listo para incorporar'],
+ salas:['Hay gastos de sala por registrar','La sala tiene pagos por revisar'],
  mensual:['Revisá cómo cerraste el mes','Compará tu balance con el mes anterior'],
  mercado_pago:['Mercado Pago tiene movimientos nuevos','Todavía tenés movimientos de Mercado Pago por revisar'],
  social:['Recibiste una solicitud en Social','Hay una decisión sobre un pago compartido'],

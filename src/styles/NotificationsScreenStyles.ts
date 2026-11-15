@@ -5,6 +5,9 @@ import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './global
 
 export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
   return StyleSheet.create({
+    accionesEncabezado:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno},
+    avisoPermisos:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno,padding:ESPACIADO.medio,backgroundColor:tema.superficie,borderColor:tema.borde,borderWidth:BORDES.anchos.fino,borderRadius:BORDES.radios.tarjeta},
+    textoPermisos:{flex:1,color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.secundario},
     avisoCompacto:{backgroundColor:tema.superficie,borderColor:tema.borde,borderWidth:BORDES.anchos.fino,borderRadius:BORDES.radios.campo,overflow:'hidden'},
     avisoNoVisto:{borderColor:tema.foco},
     cabeceraAviso:{minHeight:56,flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno,paddingHorizontal:ESPACIADO.medio,paddingVertical:ESPACIADO.pequeno},

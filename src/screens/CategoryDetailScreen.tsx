@@ -37,7 +37,7 @@ const MESES = Object.freeze([
 ]);
 function formatearMonto(monto: number, tipo: string) {
   const valor = new Intl.NumberFormat('es-AR', {
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(Number(monto) || 0);
   return tipo === 'ingreso' ? `+$ ${valor}` : `−$ ${valor}`;
 }

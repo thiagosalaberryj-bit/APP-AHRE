@@ -1,3 +1,4 @@
+import {obtenerRevisionLectura} from '../notifications/notificationService';
 import {iniciarActividadReinicio} from '../development/testResetState';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { obtenerSesionRemota, solicitarRemoto } from '../sync/remote';
@@ -63,10 +64,11 @@ async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatic
     // Solo la página reciente. Las anteriores se solicitan desde el historial.
     let antes: string | null = '';
     {
+      const revisionLectura=obtenerRevisionLectura(usuario.id);
       const pagina: { avisos: Aviso[]; siguiente: string | null; noVistas?:number } = await solicitarRemoto('/notificaciones?limite=10&antes=' + encodeURIComponent(antes || ''), undefined, remota.token);
       if (!await vigente()) return;
       await ejecutarTransaccion(async c => {
-        if(Number.isFinite(pagina.noVistas))await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',pagina.noVistas);
+        if(revisionLectura===obtenerRevisionLectura(usuario.id)&&Number.isFinite(pagina.noVistas))await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',pagina.noVistas);
         for (const aviso of pagina.avisos) {
           const vistaLocal = await leerDato<string | null>(usuario.id, 'avisos:visto:' + aviso.id, null, c);
           if (vistaLocal && vistaLocal >= aviso.fecha) aviso.vista = true;

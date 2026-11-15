@@ -153,21 +153,6 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
                 cargando={guardando}
                 alPresionar={guardarDeposito}
               />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ disabled: guardando }}
-                disabled={guardando}
-                onPress={volver}
-                style={({ pressed }) => [
-                  estilosGlobales.botonSecundario,
-                  pressed && !guardando && estilos.elementoPresionado,
-                  guardando && estilosGlobales.botonDeshabilitado,
-                ]}
-              >
-                <Text style={guardando ? estilosGlobales.textoDeshabilitado : estilosGlobales.textoBotonSecundario}>
-                  Cancelar
-                </Text>
-              </Pressable>
             </View>
 
           </DesplazamientoEncabezado>
