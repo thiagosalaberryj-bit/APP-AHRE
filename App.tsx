@@ -1,3 +1,4 @@
+import {completarReinicioPendiente} from './src/development/dataResetService';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -82,6 +83,7 @@ function ContenidoAplicacion() {
 
       try {
         await inicializarBaseDatos();
+        await completarReinicioPendiente();
 
         let aparienciaInicial: import('./src/styles/colors').Apariencia = APARIENCIA_PREDETERMINADA;
         try {

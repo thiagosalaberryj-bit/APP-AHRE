@@ -540,3 +540,62 @@ test('finanzas de sala: cambiar pagador o importe exige revisar la selección y 
  assert.equal((await e.sofi.depositosRepositorio.consultarPorId(e.sofi.deposito.id))!.saldo_actual,1000);
  assert.equal((await e.juan.cargarSocial()).totales.porPagar,'$ 70');
 });
+
+for(const administrador of [false,true])test('reinicio online elimina datos propios y acuerdos, conserva saldo ajeno y procesa pendientes seguros: administrador='+administrador,{skip:!disponible},async t=>{
+ const e=await escenario(t),actor=administrador?e.juan:e.sofi,otra=administrador?e.sofi:e.juan;
+ await otra.sincronizarCuenta(otra.usuario.id);
+ const independiente=await otra.movimientosRepositorio.crear({deposito_id:otra.deposito.id,tipo:'egreso',monto:7,categoria:'alimentacion',descripcion:'comida',fecha_hora:new Date().toISOString()});
+ const saldo=(await otra.depositosRepositorio.consultarPorId(otra.deposito.id))!.saldo_actual;
+ // Un mismo lote contiene una edición ligada al acuerdo y un cambio independiente.
+ await otra.ejecutarTransaccion(async c=>{
+   await c.runAsync('UPDATE depositos SET nombre=? WHERE id=?',['Nombre pendiente',otra.deposito.id]);
+   const deuda=await c.getFirstAsync<{id:string}>('SELECT id FROM deudas WHERE usuario_id=? LIMIT 1',[otra.usuario.id]);
+   if(deuda)await c.runAsync('UPDATE deudas SET descripcion=? WHERE id=?',['Edición pendiente del acuerdo',deuda.id]);
+ });
+ const vista=await actor.consultarReinicio();
+ if(!administrador)assert.equal(vista.salasActualizadas,1);
+ actor.perderRespuesta('/testing/reset');
+ await actor.reiniciarDatos(vista,actor.correo,'ClaveOnline123!','BORRAR MIS DATOS');
+ assert.equal((await actor.obtenerSesionActual()).usuario,null);
+ assert.equal(Number(actor.base.prepare('SELECT COUNT(*) n FROM depositos WHERE usuario_id=?').get(actor.usuario.id)!.n),0);
+ assert.equal(Number((await e.db.get('SELECT COUNT(*) n FROM depositos WHERE usuario_id=?',[actor.usuario.id]))!.n),0);
+ assert.equal(Number((await e.db.get('SELECT COUNT(*) n FROM deudas_online'))!.n),0);
+ await otra.sincronizarCuenta(otra.usuario.id);
+ assert.equal(otra.obtenerVistaSincronizacion().estado,'online',otra.obtenerVistaSincronizacion().detalle);
+ assert.ok(await e.db.get('SELECT id FROM movimientos WHERE id=?',[independiente.id]));
+ assert.equal((await otra.depositosRepositorio.consultarPorId(otra.deposito.id))!.saldo_actual,saldo);
+ assert.equal((await otra.depositosRepositorio.consultarPorId(otra.deposito.id))!.nombre,'Nombre pendiente');
+ assert.equal(Number(otra.base.prepare('SELECT COUNT(*) n FROM deudas WHERE usuario_id=?').get(otra.usuario.id)!.n),0);
+ assert.deepEqual(otra.base.prepare('PRAGMA foreign_key_check').all(),[]);
+ assert.equal(Number((await e.db.get('SELECT COUNT(*) n FROM salas_online'))!.n),administrador?0:1);
+ if(!administrador){const sala=JSON.parse(String((await e.db.get('SELECT datos FROM salas_online'))!.datos));assert.equal(sala.gastos.length,0);assert.equal(sala.participantes.length,1);}
+ const usuario=await actor.iniciarSesion({correo:actor.correo,contrasena:'ClaveOnline123!',recordar:true});
+ await actor.crearSesion(usuario.id);await actor.sincronizarCuenta(usuario.id);
+ assert.equal((await actor.cargarPerfil()).usuario.id,actor.usuario.id);
+ assert.equal(Number(actor.base.prepare('SELECT COUNT(*) n FROM depositos WHERE usuario_id=?').get(usuario.id)!.n),0);
+});
+
+test('reinicio online retira deudas y pagos contabilizados conservando movimientos y saldo de la otra cuenta',{skip:!disponible},async t=>{
+ const e=await escenario(t);
+ const deudaJuan=await e.juan.crearDeudaPersonal({personaId:e.persona.id,direccion:'me_deben',monto:120,descripcion:'Préstamo a reiniciar'},{depositoId:e.juan.deposito.id});
+ const personaJuan=(await e.sofi.guardarPersona({nombre:'Juan',apellido:'Prueba',apodo:'Juan'}))!;
+ const deudaSofi=await e.sofi.crearDeudaPersonal({personaId:personaJuan.id,direccion:'debo',monto:120,descripcion:'Préstamo recibido'});
+ await e.sofi.sincronizarCuenta(e.sofi.usuario.id);await e.juan.proponerDeudaOnline(deudaJuan.id);
+ const acuerdo='deuda:'+deudaJuan.id;
+ await e.sofi.enviarAccionSocial('propuesta:'+acuerdo,'/deudas/'+acuerdo+'/decidir',{decision:'aceptada',deudaLocalId:deudaSofi.id,confirmarVinculo:true});
+ await e.sofi.informarPagoConDeposito(acuerdo,15,e.sofi.deposito.id);
+ const deuda=(await e.juan.solicitarSocial<{deudas:DeudaOnline[]}>('/deudas')).deudas.find(d=>d.id===acuerdo)!;
+ await e.juan.confirmarPagoConDeposito(deuda.pagos[0].id,e.juan.deposito.id);
+ await e.juan.sincronizarCuenta(e.juan.usuario.id);await e.sofi.sincronizarCuenta(e.sofi.usuario.id);
+ const saldo=(await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual;
+ const movimientos=e.juan.base.prepare('SELECT id,monto FROM movimientos ORDER BY id').all();assert.ok(movimientos.length>=2);
+ await e.sofi.reiniciarDatos(await e.sofi.consultarReinicio(),e.sofi.correo,'ClaveOnline123!','BORRAR MIS DATOS');
+ await e.juan.sincronizarCuenta(e.juan.usuario.id);
+ assert.equal(e.juan.obtenerVistaSincronizacion().estado,'online',e.juan.obtenerVistaSincronizacion().detalle);
+ assert.equal((await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual,saldo);
+ assert.deepEqual(e.juan.base.prepare('SELECT id,monto FROM movimientos ORDER BY id').all(),movimientos);
+ assert.equal(Number(e.juan.base.prepare('SELECT COUNT(*) n FROM deudas').get()!.n),0);
+ assert.equal(Number(e.juan.base.prepare('SELECT COUNT(*) n FROM pagos_sociales').get()!.n),0);
+ assert.equal(Number((await e.db.get('SELECT COUNT(*) n FROM pagos_online'))!.n),0);
+ assert.deepEqual(e.juan.base.prepare('PRAGMA foreign_key_check').all(),[]);
+});

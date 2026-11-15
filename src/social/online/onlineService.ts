@@ -1,3 +1,4 @@
+import {iniciarActividadReinicio,reinicioEnCurso} from '../../development/testResetState';
 import * as Crypto from 'expo-crypto';
 import {esRecursoDemo,esRutaDemo,usuarioDemoActual,comandoDemo,accionDemo,seleccionarFinanzasDemo,incorporarDemo,leerSalaDemo,finanzasDemo,prepararOperacionesDemo,publicarSalaDemo,solicitarIngresoDemo} from '../../development/socialDemoService';
 import {obtenerSesionActual} from '../../authentication/sessionService';
@@ -82,12 +83,14 @@ export async function cerrarSalaOnline(id:string){if(esRecursoDemo(id)||await us
 let sincronizando:{usuarioId:string;promesa:Promise<void>;repetir:boolean}|null=null;
 let ultimaReconciliacion:{usuarioId:string;fecha:number}|null=null;
 export async function sincronizarSocialOnline():Promise<void>{
+  if(reinicioEnCurso())return;
   if(await usuarioDemoActual()){await prepararOperacionesDemo();return;}
   const {usuario}=await obtenerSesionActual();exigir(usuario,'Iniciá sesión.');
   if(sincronizando){
     if(sincronizando.usuarioId===usuario.id){sincronizando.repetir=true;return sincronizando.promesa;}
     await sincronizando.promesa.catch(()=>{});return sincronizarSocialOnline();
   }
+  const terminar=iniciarActividadReinicio();if(!terminar)return;
   const estado={usuarioId:usuario.id,promesa:Promise.resolve(),repetir:false};
   sincronizando=estado;
   estado.promesa=(async()=>{
@@ -98,11 +101,14 @@ export async function sincronizarSocialOnline():Promise<void>{
       // Un aviso o comando recibido durante la descarga necesita otra consulta:
       // esperar el envío anterior no garantiza recuperar ese cambio posterior.
     }while(estado.repetir);
-  })().finally(()=>{if(sincronizando===estado)sincronizando=null;});
+  })().finally(()=>{if(sincronizando===estado)sincronizando=null;terminar();});
   return estado.promesa;
 }
 async function ejecutarSincronizacion(){
   const {usuario,token}=await sesionOnline();
+  // Antes de enviar comandos, consumir las bajas de acuerdos reiniciados por
+  // otra cuenta y retirar comandos pendientes que ya no corresponden.
+  await sincronizarCuenta(usuario.id,true);
   const pedir=async<T>(ruta:string,datos?:unknown):Promise<T>=>{
     exigir((await obtenerSesionActual()).usuario?.id===usuario.id,'La sesión cambió durante la sincronización social.');
     const respuesta=await solicitarRemoto<T>('/social'+ruta,datos,token);

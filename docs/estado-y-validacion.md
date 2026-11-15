@@ -6,6 +6,28 @@ Entrega coordinada con SERVER-AHRE 0.3.1, ya desplegado y verificado.
 El líder autorizó el cierre documental, changelog, merge y release no estable
 para este mantenimiento, sin Issue.
 
+## Reinicio temporal desde Perfil — 14 de noviembre de 2026
+
+Cambio local posterior al commit de toasts `2e317d9`, en
+`codex/mejoras-visuales-accesibilidad`. Backend coordinado en
+`codex/reiniciar-datos-pruebas` de SERVER-AHRE. La herramienta sigue sin commit,
+sin despliegue. El botón está disponible para cualquier cuenta en Expo Go y
+APK, sin variables de entorno ni lista de correos. La compilación se envía
+a EAS por separado; enviar las fuentes no acredita una APK terminada.
+
+- Tipos de app, herramientas y backend: correctos.
+- Suite completa de app: **527 aprobadas, cero fallos y cero omisiones**.
+  Incluye las integraciones MySQL, salas propias/ajenas, pendientes mixtos y
+  conservación de movimientos/saldo con pagos confirmados.
+- Suite completa de backend: **104 aprobadas, cero fallos y cero omisiones**.
+- Exportación Android/Hermes: correcta con la herramienta habilitada.
+- SQLite en memoria y MySQL aislado en el puerto 13307, con carpeta nueva y
+  ruta verificada; no se usaron ni borraron datos reales.
+- Pendiente de dispositivo: interacción/visualización en Android y una APK
+  instalada. Pendiente operativo: desplegar este backend; no confundirlo con la entrega anterior ya publicada.
+
+Ver [alcance, recuperación y retirada](configuracion/reinicio-datos-pruebas.md).
+
 ## Dependencias 0.9.1
 
 El 14 de noviembre de 2026 el líder confirmó que completó la validación
@@ -379,3 +401,9 @@ con ID 38745167-d8f9-463e-9c6a-2598b694980f; el envío confirmó estado NEW.
 No equivale a compilación finalizada ni a APK probada en un dispositivo.
 
 </details>
+
+Simplificación posterior: cualquier cuenta autenticada puede reiniciar sus datos
+sin variables de entorno ni listas de correos. Verificadas 6 pruebas locales,
+3 integraciones Social/MySQL y los 3 casos de reinicio del servidor, sin fallos
+ni omisiones; tipos correctos. Los recuentos integrales anteriores corresponden
+al estado previo a este ajuste de disponibilidad.

@@ -31,6 +31,12 @@ Comprueba el empaquetado JavaScript/Hermes y los recursos. No produce un APK ni
 instala la app. En la etapa 7 se exportó fuera del repositorio y el primer intento
 necesitó reintentarse con permisos para el temporal de Hermes en Windows.
 
+## Reinicio temporal de datos en APK
+
+El botón de Perfil está disponible para cualquier cuenta en la APK, sin
+variables de entorno ni listas de correos. Solo necesita backend actualizado.
+Ver [reinicio de datos y retirada](reinicio-datos-pruebas.md).
+
 ## APK interno con EAS
 
 `.easignore` excluye `/docs/`, `/tests/`, `/README.md` y `/AGENTS.md` del
@@ -259,3 +265,14 @@ Envío confirmado el 13 de noviembre de 2026: [EAS f0d2bf46](https://expo.dev/ac
 con las fuentes del commit dca0f39. EAS confirmó carga y fingerprint; no se
 esperó el resultado de compilación. El commit está publicado en la rama del
 PR existente. No se desplegaron backend, mp-worker ni n8n.
+
+### APK del reinicio sin configuración adicional — 14/11/2026
+
+Fuentes enviadas a [EAS 88fc2e23](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/88fc2e23-2c3f-417f-8c57-a4a4377fbf4d),
+perfil interno `ocr-comparison`, versión 0.9.1 / versionCode 15, misma firma.
+Sustituye el envío 78753083: cualquier cuenta autenticada dispone del reinicio,
+sin variables de entorno ni listas de correos. Requiere actualizar el backend,
+conservando su `.env` actual. Se confirmó la carga/fingerprint con `--no-wait`;
+no se comprobó la finalización ni se publicó la APK en la landing.
+Tipos correctos y 12 pruebas específicas aprobadas (6 locales, 3 integraciones
+Social/MySQL, 3 casos de API), sin omisiones. No se hicieron commits ni despliegue.

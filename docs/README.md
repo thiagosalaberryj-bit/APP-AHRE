@@ -11,6 +11,7 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 
 - [Entorno, Expo Go y pruebas](configuracion/entorno.md).
 - [Integraciones MySQL y pruebas con muchos movimientos](configuracion/pruebas-optimizacion.md).
+- [Reiniciar datos desde Perfil: APK, alcance y retirada](configuracion/reinicio-datos-pruebas.md).
 - [Compilar y publicar Android](configuracion/publicacion.md).
 - [Dependencias y auditoría](configuracion/dependencias.md).
 

@@ -1,3 +1,4 @@
+import {reinicioEnCurso} from '../development/testResetState';
 import {observarSocialOnline} from '../social/online/onlineStore';
 import {useContext,useEffect,useRef,useState} from 'react';
 import {AccessibilityInfo,Animated,AppState,Pressable,StyleSheet,Text,View} from 'react-native';
@@ -25,7 +26,7 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
     const procesar=async()=>{if(procesandoRecurrencias)return;procesandoRecurrencias=true;try{await procesarRecurrencias();}catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudieron registrar las recurrencias.',{tipo:'error'});}finally{procesandoRecurrencias=false;}};
     void registrarTareaRecurrencias().catch(()=>{});
     void procesar();
-    const programador=crearProgramadorSincronizacion({sincronizar:sincronizarSesion,obtenerVista:obtenerVistaSincronizacion,estaActiva:()=>AppState.currentState==='active'});
+    const programador=crearProgramadorSincronizacion({sincronizar:sincronizarSesion,obtenerVista:obtenerVistaSincronizacion,estaActiva:()=>AppState.currentState==='active'&&!reinicioEnCurso()});
     const dejar=observarSincronizacion(v=>{
       if(v.estado==='revocado'&&anterior!=='revocado'){
         mostrarAviso('Esta instalación fue desvinculada. Los pendientes se conservaron.',{tipo:'informacion'});alRevocar();

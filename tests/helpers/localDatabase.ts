@@ -22,6 +22,8 @@ type ServiciosPrueba =
   & typeof import('../../src/statistics/statisticsService.ts');
 type ServiciosIntegraciones = typeof import('../../src/mercadoPago/mercadoPagoService.ts') & typeof import('../../src/integrations/integrationStore.ts') & typeof import('../../src/integrations/integrationSync.ts') & typeof import('../../src/notifications/notificationService.ts') & typeof import('../../src/notifications/reminderService.ts');
 type ServiciosRecurrencias = typeof import('../../src/recurrences/recurrenceService.ts');
+type ServiciosReinicio = typeof import('../../src/development/dataResetService.ts') & typeof import('../../src/development/testResetState.ts');
+
 type ServiciosSync = typeof import('../../src/sync/syncService.ts') & typeof import('../../src/sync/remote.ts') & typeof import('../../src/sync/deviceAuthorization.ts') & typeof import('../../src/sync/pendingService.ts') & Pick<typeof import('../../src/sync/journal.ts'),'observarCambiosLocales'> & typeof import('../../src/database/connectionQueue.ts') & typeof import('../../src/database/transactions.ts');
 
 export async function preparar(prueba: import('node:test').TestContext, desarrollo = true, remoto?:{url:string;fetch:typeof fetch;almacenamiento?:Map<string,string>;base?:DatabaseSync;registrarSql?:(sql:string)=>void;reloj?:(new () => Date) & Pick<typeof Date,'now'|'parse'|'UTC'>}) {
@@ -79,6 +81,8 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     return pendiente;
   };
   const entrada = new SourceTextModule(`
+    export * from './src/development/dataResetService.ts';
+    export * from './src/development/testResetState.ts';
     export * from './src/development/seedDevelopmentData.ts';
     export * from './src/development/developmentData.ts';
     export * from './src/authentication/authenticationService.ts';
@@ -110,5 +114,5 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     return cargar(resolverFuente(ruta));
   });
   await entrada.evaluate();
-  return { base, almacenamiento, avisosNativos, establecerPermisoAlarmas:(valor:string)=>{permisoAlarmas=valor;}, retenerAlarmasVencidas:(valor:boolean)=>{retenerVencidas=valor;}, interceptarProgramacion:(accion:(()=>Promise<void>)|null)=>{antesDeProgramar=accion;}, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias & ServiciosIntegraciones) };
+  return { base, almacenamiento, avisosNativos, establecerPermisoAlarmas:(valor:string)=>{permisoAlarmas=valor;}, retenerAlarmasVencidas:(valor:boolean)=>{retenerVencidas=valor;}, interceptarProgramacion:(accion:(()=>Promise<void>)|null)=>{antesDeProgramar=accion;}, ...(entrada.namespace as unknown as ServiciosPrueba & ServiciosSync & ServiciosRecurrencias & ServiciosIntegraciones & ServiciosReinicio) };
 }

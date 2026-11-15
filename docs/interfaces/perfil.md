@@ -117,8 +117,10 @@ Grupo `Ajustes avanzados` con los apartados `Cuenta fantasma`, `Seguridad` y
 `Registro` desactivados con la etiqueta `Próximamente`, y `Acerca de AHRE`,
 que abre un modal estático con el encabezado común, una descripción de las
 funciones de AHRE, la versión de `Constants.expoConfig.version` (actualmente `0.6.0`) alineada a la derecha y una `X` para
-cerrar. No incluye exportar ni borrar datos: cualquier acción avanzada real
-será otro Issue.
+cerrar. Incluye temporalmente `Reiniciar mis datos` para cuentas de pruebas,
+también en APK interna: conserva la cuenta, elimina datos locales/remotos y
+retira acuerdos sociales relacionados en ambos lados. Disponible para cualquier
+cuenta con backend actualizado; requiere contraseña y confirmación. Ver [alcance, configuración y retirada](../configuracion/reinicio-datos-pruebas.md).
 
 ## Estados visuales
 

@@ -1,3 +1,4 @@
+import {iniciarActividadReinicio} from '../development/testResetState';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { obtenerSesionRemota, solicitarRemoto } from '../sync/remote';
 import { ejecutarLecturaConConexion } from '../database/connectionQueue';
@@ -10,7 +11,8 @@ import type { AjustesAvisos, Aviso } from '../notifications/types';
 let enCurso: Promise<void> | null = null;
 export function sincronizarIntegraciones(soloCancelaciones = false, pedirAutomatica = true): Promise<void> {
   if (enCurso) return enCurso;
-  enCurso = ejecutarSincronizacion(soloCancelaciones, pedirAutomatica).finally(() => { enCurso = null; });
+  const terminar=iniciarActividadReinicio();if(!terminar)return Promise.resolve();
+  enCurso = ejecutarSincronizacion(soloCancelaciones, pedirAutomatica).finally(() => { enCurso = null; terminar(); });
   return enCurso;
 }
 async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatica: boolean) {

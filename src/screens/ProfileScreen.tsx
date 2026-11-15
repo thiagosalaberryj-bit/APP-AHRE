@@ -1,3 +1,4 @@
+import ReinicioDatosPerfil from '../components/ProfileDataReset';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { consultarPermisoAvisos, activarAvisosTelefono } from '../notifications/nativeAdapter';
@@ -621,6 +622,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   <View style={estilos.grupo}>
                     <Text style={estilos.tituloGrupo}>Ajustes avanzados</Text>
                     <View style={estilos.tarjetaOpciones}>
+                      <ReinicioDatosPerfil navegacion={navegacion} />
                       {OPCIONES_AVANZADAS_FUTURAS.map((opcion) => (
                         <View key={opcion.id}>
                           <View style={[estilos.filaOpcion, estilos.filaOpcionDeshabilitada]}>
