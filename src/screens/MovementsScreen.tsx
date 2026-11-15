@@ -193,7 +193,8 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
         establecerUsuarioId(datos.usuarioId);
         establecerCantidadTotal(datos.cantidad);
-        establecerCategoriasHistorial(categoriasPorTipo);
+        const catalogoCompleto=[...CATEGORIAS_INGRESO.map(categoria=>({...categoria,tipo:'ingreso' as const})),...CATEGORIAS_EGRESO.map(categoria=>({...categoria,tipo:'egreso' as const}))];
+        establecerCategoriasHistorial([...catalogoCompleto,...categoriasPorTipo.filter(categoria=>!catalogoCompleto.some(c=>c.id===categoria.id&&c.tipo===categoria.tipo))]);
         establecerDepositosHistorial(depositos);
         establecerDepositoFiltroIds(eranTodosLosDepositos
           ? idsDepositos

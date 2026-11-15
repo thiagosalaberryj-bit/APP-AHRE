@@ -1,4 +1,6 @@
 import usarPanelInferior from '../utils/useBottomSheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ESPACIADO } from '../styles/globalStyles';
 import { type ReactNode } from 'react';
 import { Animated, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,11 +42,14 @@ export default function PanelFiltrosMovimientos({ tema, filtrosVisibles, alCerra
   tema:Tema; filtrosVisibles:boolean; alCerrar:()=>void; limpiarFiltros:()=>void; cantidadFiltros:number; children:ReactNode;
 }) {
   const { width:anchoVentana } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const estilos = crearEstilosMovimientos(tema, anchoVentana);
   const { opacidadOverlay, desplazamientoPanel, responderManija, cerrarPanel: cerrarFiltros } = usarPanelInferior(filtrosVisibles, alCerrar);
 
   return (
         <Modal
+          statusBarTranslucent
+          navigationBarTranslucent
           animationType="none"
           onRequestClose={cerrarFiltros}
           transparent
@@ -60,6 +65,7 @@ export default function PanelFiltrosMovimientos({ tema, filtrosVisibles, alCerra
             <Animated.View
               style={[
                 estilos.panelFiltros,
+                { paddingBottom: insets.bottom + ESPACIADO.medio },
                 { transform: [{ translateY: desplazamientoPanel }] },
               ]}
             >

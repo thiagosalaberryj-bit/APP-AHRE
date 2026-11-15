@@ -248,3 +248,23 @@ conservan la selección de una ficha existente y el apodo obligatorio al crearla
 Se corrigió un espacio literal dentro de la tarjeta de aceptación del gasto:
 React Native exige que incluso ese texto esté dentro de Text. La prueba de
 regresión abre el gasto con una solicitud pendiente y comprueba sus hijos nativos.
+
+## Revisión de escaneo y filtros
+
+Escanear verifica depósitos antes de mostrar cámara/galería y ofrece Nuevo
+depósito desde una tarjeta de estado si no hay ninguno. El resultado ya no
+incluye creación de depósito. Escanear/Tomar foto conserva su ubicación junto
+a Galería; Texto reconocido es desplegable y Escanear otro comprobante es una
+acción secundaria. El comercio continúa siendo una propuesta heurística editable.
+
+Estadísticas, Movimientos y Detalle de depósito usan categorías en listado
+vertical con icono, nombre y casilla. El catálogo completo permanece disponible
+sin movimientos. Incluir todas no marca cada opción; elegir una inicia el filtro.
+Se retiraron Todas/Ninguna del panel de Estadísticas. Los paneles reservan la
+zona segura inferior; el selector de depósitos también limita su altura y puede
+abrirse arriba para mantener opciones y Listo fuera de la navegación Android.
+Los contadores del encabezado plegado se bajaron sin cambiar el desplegado.
+
+Validaciones de esta revisión: TypeScript de app/herramientas correcto; 25 pruebas
+OCR, 54 de filtros/estadísticas/detalle/posición del selector y dos regresiones del
+selector de depósitos aprobadas. No acreditan una prueba visual en el teléfono.

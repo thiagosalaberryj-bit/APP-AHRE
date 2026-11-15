@@ -3,9 +3,7 @@ import { StyleSheet } from 'react-native';
 
 import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './globalStyles';
 
-export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
-  const columnasCategoriasFiltro = anchoVentana >= 420 ? 4 : 3;
-  const anchoCategoriaFiltro = columnasCategoriasFiltro === 4 ? '22.5%' : '30%';
+export function crearEstilosMovimientos(tema: Tema, _anchoVentana = 390) {
 
   return StyleSheet.create({
     contenido: {
@@ -154,18 +152,6 @@ export function crearEstilosMovimientos(tema: Tema, anchoVentana = 390) {
       paddingTop: ESPACIADO.pequeno,
       paddingBottom: ESPACIADO.medio,
       paddingHorizontal: ESPACIADO.minimo,
-    },
-    tarjetaCategoriaFiltro: {
-      width: anchoCategoriaFiltro,
-      minHeight: 76,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: ESPACIADO.minimo,
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
-      borderRadius: BORDES.radios.campo / 2,
-      borderWidth: BORDES.anchos.fino,
-      padding: ESPACIADO.pequeno,
     },
     grillaMeses: {
       flexDirection: 'row',

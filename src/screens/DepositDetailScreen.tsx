@@ -189,7 +189,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const estilosFiltros = crearEstilosMovimientos(tema, anchoVentana);
   const estilosAccesos=crearEstilosBusquedaFiltros(tema);
   const [cantidadMovimientos, establecerCantidadMovimientos] = useState(0);
-  const [categoriasMovimientos, establecerCategoriasMovimientos] = useState<string[]>([]);
   const [revisionMovimientos, establecerRevisionMovimientos] = useState(0);
   const [enfocada, establecerEnfocada] = useState(false);
   const [comparacionMensual, establecerComparacionMensual] = useState<Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null>(null);
@@ -266,7 +265,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       establecerComparacionMensual(detalle.comparacionMensual);
       establecerCantidadRecurrencias(recurrencias.length);
       establecerCantidadMovimientos(detalle.cantidadMovimientos);
-      establecerCategoriasMovimientos(detalle.categoriasMovimientos);
       establecerRevisionMovimientos(valor => valor + 1);
     } catch (error) {
       if (secuencia !== secuenciaCarga.current) return;
@@ -276,7 +274,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         : 'No se pudo cargar el depósito. Intentá nuevamente.';
       establecerDeposito(null);
       establecerCantidadMovimientos(0);
-      establecerCategoriasMovimientos([]);
       establecerComparacionMensual(null);
       establecerErrorCarga(mensaje);
       if (!noEncontrado) mostrarAviso(mensaje, { tipo: 'error' });
@@ -304,14 +301,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   }, [cargarDetalle]));
 
   const categoriasDisponiblesFiltro = useMemo(() => {
-    const idsDisponibles = new Set(categoriasMovimientos);
     const categoriasPorTipo = tipoFiltro === 'ingreso'
       ? [...CATEGORIAS_INGRESO, ...CATEGORIAS_EGRESO.filter((categoria) => IDS_TRANSFERENCIA.has(categoria.id))]
       : tipoFiltro === 'egreso'
         ? CATEGORIAS_EGRESO
         : CATEGORIAS_FILTRO;
-    return categoriasPorTipo.filter((categoria) => seccionDeposito==='recurrentes'||idsDisponibles.has(categoria.id));
-  }, [categoriasMovimientos, tipoFiltro,seccionDeposito]);
+    return categoriasPorTipo;
+  }, [tipoFiltro]);
 
   const cambiarTipoFiltro = (tipo: SetStateAction<string>) => {
     establecerTipoFiltro(tipo);
@@ -750,12 +746,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
       <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={()=>establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
               <View style={estilosFiltros.listaSeccionesFiltro}>
-                <FiltroTipoMovimientos tema={tema} estilos={estilosFiltros} estilosChips={estilosAccesos} resumen={resumenTipo}
+                <FiltroTipoMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenTipo}
                     abierta={seccionesFiltrosAbiertas.includes('tipo')} alAlternar={() => alternarSeccionFiltro('tipo')}
                     tipoFiltro={tipoFiltro} cambiarTipoFiltro={cambiarTipoFiltro}
                   />
 
-                <FiltroFechaMovimientos tema={tema} estilos={estilosFiltros} estilosChips={estilosAccesos} resumen={resumenFecha}
+                <FiltroFechaMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenFecha}
                     abierta={seccionesFiltrosAbiertas.includes('fecha')} alAlternar={() => alternarSeccionFiltro('fecha')}
                     estilosSelectores={estilos} estilosGlobales={estilosGlobales}
                     fechaFiltro={fechaFiltro} cambiarFechaFiltro={cambiarFechaFiltro}
@@ -763,7 +759,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     anioMesVisible={anioMesVisible} establecerAnioMesVisible={establecerAnioMesVisible}
                     mesSeleccionado={mesSeleccionado} establecerMesSeleccionado={establecerMesSeleccionado}
                     fechaInicial={fechaInicial} fechaFinal={fechaFinal}
-                    seleccionarFechaPersonalizada={seleccionarFechaPersonalizada} errorFechaFiltro={errorFechaFiltro}
+                    seleccionarFechaPersonalizada={seleccionarFechaPersonalizada} errorFechaFiltro={errorFechaFiltro} mostrarSelectorSemana
                   />
 
                 <FiltroCategoriasMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenCategorias}

@@ -5,6 +5,8 @@ import { COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../styles/c
 import type { NombreIcono } from '../constants/movimientos';
 import { crearEstilosSelectorDeposito } from '../styles/DepositSelectorStyles';
 import type { SelectorDepositoProps } from '../types/ui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { posicionarSelectorDeposito } from '../utils/depositSelectorPosition';
 
 type DepositoSeleccionable = NonNullable<SelectorDepositoProps['depositos']>[number];
 const iconoDeposito = (deposito?: DepositoSeleccionable): NombreIcono => (deposito?.icono as NombreIcono) || (deposito?.tipo === 'efectivo' ? 'cash-outline' : deposito?.tipo === 'banco' ? 'business-outline' : deposito?.tipo === 'billetera_virtual' ? 'phone-portrait-outline' : 'wallet-outline');
@@ -13,6 +15,7 @@ export default function SelectorDeposito({ tema, etiqueta = 'Depósito', deposit
   const estilos = crearEstilosSelectorDeposito(tema);
   const control = useRef<View>(null);
   const ventana = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const dimensionesCapa = useRef({ width: ventana.width, height: ventana.height });
   const aperturaPendiente = useRef(false);
   const modalListo = useRef(false);
@@ -30,11 +33,7 @@ export default function SelectorDeposito({ tema, etiqueta = 'Depósito', deposit
     control.current?.measure((_x, _y, ancho, alto, pageX, pageY) => {
       if (ancho <= 0 || alto <= 0) return;
       const { width: anchoCapa, height: altoCapa } = dimensionesCapa.current;
-      const width = Math.min(Math.max(ancho, 240), 360, anchoCapa - 24);
-      const top = pageY + alto + 4;
-      const minimo = seleccionMultiple ? 124 : 48;
-      const maxHeight = Math.min(320, Math.max(minimo, depositos.length * 52 + (seleccionMultiple ? 76 : 0) + 2), Math.max(minimo, altoCapa - top - 12));
-      establecerAncla({ left: Math.max(12, Math.min(pageX, anchoCapa - width - 12)), top, width, maxHeight });
+      establecerAncla(posicionarSelectorDeposito({x:pageX,y:pageY,ancho,alto,anchoCapa,altoCapa,superior:insets.top,inferior:insets.bottom,cantidad:depositos.length,multiple:seleccionMultiple}));
       establecerPosicionado(true);
     });
   };
@@ -73,7 +72,7 @@ export default function SelectorDeposito({ tema, etiqueta = 'Depósito', deposit
         <Pressable accessibilityRole="button" accessibilityLabel="Cerrar selector de depósito" onPress={() => establecerVisible(false)} style={estilos.cierre} />
         <View accessibilityViewIsModal style={[estilos.menu, ancla, !posicionado && estilos.sinPosicion]}>
           {seleccionMultiple ? <View style={estilos.cabeceraLista}><Text style={estilos.detalle}>Elegí los depósitos</Text><Pressable accessibilityRole="button" accessibilityLabel="Seleccionar todos los depósitos" onPress={() => alCambiarMulti?.(depositos.map(deposito => deposito.id))} style={estilos.accion}><Text style={estilos.textoAccion}>Todos</Text></Pressable></View> : null}
-          <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: ancla.maxHeight - (seleccionMultiple ? 76 : 0) }}>
+          <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: Math.max(0,ancla.maxHeight - (seleccionMultiple ? 76 : 0)) }}>
             {depositos.map(deposito => {
               const activa = elegidos.some(elegido => elegido.id === deposito.id);
               const bloqueada = seleccionMultiple && impedirSeleccionVacia && activa && elegidos.length === 1;

@@ -1,8 +1,11 @@
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
-import { SetStateAction, useContext, useEffect, useRef, useState } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import { SetStateAction, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { cargarDatosMovimiento } from '../movements/movementService';
+import { RUTAS } from '../constants/routes';
+import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -61,6 +64,16 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilosMovimiento = crearEstilosEgreso(tema);
   const estilos = crearEstilosOcr(tema);
+  const [cargandoDepositos,cambiarCargandoDepositos]=useState(true);
+  const [tieneDepositos,cambiarTieneDepositos]=useState(false);
+  const [errorDepositos,cambiarErrorDepositos]=useErrorNotificado('');
+  const cargarDepositos=useCallback(async(vigente:()=>boolean=()=>true)=>{
+    cambiarCargandoDepositos(true);cambiarErrorDepositos('');
+    try{const datos=await cargarDatosMovimiento('egreso');if(vigente())cambiarTieneDepositos(datos.depositos.length>0);}
+    catch{if(vigente()){cambiarTieneDepositos(false);cambiarErrorDepositos('No se pudieron cargar los depósitos. Intentá nuevamente.');}}
+    finally{if(vigente())cambiarCargandoDepositos(false);}
+  },[]);
+  useFocusEffect(useCallback(()=>{let vigente=true;void cargarDepositos(()=>vigente);return()=>{vigente=false;};},[cargarDepositos]));
   const [estado, establecerEstado] = useState('camara');
   const [origen, establecerOrigen] = useState('escaner');
   const [camaraActiva, establecerCamaraActiva] = useState(false);
@@ -206,6 +219,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
       establecerMensajeError('');
       establecerCamaraLista(false);
       establecerCamaraActiva(true);
+      establecerEstado('camara');
     } catch {
       establecerTituloError('No pudimos abrir la cámara.');
       establecerMensajeError('Intentá nuevamente o elegí una imagen de la galería.');
@@ -362,7 +376,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
     }
   };
 
-  const mostrarVistaCamara = camaraActiva && enfocada;
+  const mostrarVistaCamara = camaraActiva && enfocada && tieneDepositos && !cargandoDepositos;
 
   return (
     <SafeAreaView edges={['top']} style={estilosGlobales.areaSegura}>
@@ -386,6 +400,12 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
             showsVerticalScrollIndicator={false}
           >
           <View style={estilos.contenido}>
+            {cargandoDepositos?<ActivityIndicator color={tema.foco} accessibilityLabel="Cargando depósitos"/>:errorDepositos?<View style={estilos.tarjetaEstado}><Pressable accessibilityRole="button" onPress={()=>{void cargarDepositos();}} style={estilosGlobales.botonPrincipal}><Text style={estilosGlobales.textoBotonPrincipal}>Reintentar</Text></Pressable></View>:!tieneDepositos?<View style={estilos.tarjetaEstado}>
+              <Ionicons name="wallet-outline" color={tema.foco} size={42}/>
+              <Text style={estilos.tituloEstado}>Todavía no tenés depósitos.</Text>
+              <Text style={estilos.textoEstado}>Creá un depósito antes de escanear un comprobante.</Text>
+              <Pressable accessibilityRole="button" onPress={()=>navegacion.navigate(RUTAS.DEPOSITO)} style={estilosGlobales.botonPrincipal}><Text style={estilosGlobales.textoBotonPrincipal}>Nuevo depósito</Text></Pressable>
+            </View>:<>
             {estado === 'camara' && !OCR_DISPONIBLE ? (
               <Text accessibilityRole="alert" style={estilosGlobales.textoError}>Para reconocer comprobantes necesitás el APK Android con ML Kit. Expo Go no incluye el motor.</Text>
             ) : null}
@@ -418,56 +438,20 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                     </>
                   )}
                 </View>
-                {camaraActiva ? (
-                  <Pressable
-                    accessibilityLabel="Tomar foto del comprobante"
-                    accessibilityRole="button"
-                    accessibilityState={{ disabled: !camaraLista }}
-                    disabled={!camaraLista}
-                    onPress={capturarComprobante}
-                    style={[estilos.botonCaptura, !camaraLista && estilos.botonDeshabilitado]}
-                  >
-                    <Ionicons color={tema.botonPrincipalTexto} name="camera" size={26} />
-                    <Text style={estilos.textoBotonCaptura}>
-                      {camaraLista ? 'Tomar foto' : 'Preparando cámara...'}
-                    </Text>
-                  </Pressable>
-                ) : null}
-                <Text style={estilos.instrucciones}>
-                  Usá buena luz y evitá sombras o arrugas.
-                </Text>
-                <View style={estilos.accionesEscaner}>
-                  {camaraActiva ? (
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={seleccionarComprobante}
-                      style={estilos.botonGaleria}
-                    >
-                      <Ionicons color={tema.textoPrincipal} name="image-outline" size={22} />
+                <Text style={estilos.instrucciones}>Usá buena luz y evitá sombras o arrugas.</Text>
+                <View style={estilos.filaBotones}>
+                  <View style={estilos.botonMitad}>
+                    <Pressable accessibilityRole="button" accessibilityLabel={camaraActiva?'Tomar foto del comprobante':'Escanear'} disabled={camaraActiva&&!camaraLista} onPress={camaraActiva?capturarComprobante:activarCamara} style={[estilos.botonCaptura,camaraActiva&&!camaraLista&&estilos.botonDeshabilitado]}>
+                      <Ionicons name="camera-outline" size={24} color={tema.botonPrincipalTexto}/>
+                      <Text style={estilos.textoBotonCaptura}>{camaraActiva?'Tomar foto':'Escanear'}</Text>
+                    </Pressable>
+                  </View>
+                  <View style={estilos.botonMitad}>
+                    <Pressable accessibilityRole="button" onPress={seleccionarComprobante} style={estilos.botonGaleria}>
+                      <Ionicons color={tema.textoPrincipal} name="image-outline" size={22}/>
                       <Text style={estilos.textoBotonGaleria}>Galería</Text>
                     </Pressable>
-                  ) : (
-                    <View style={estilos.filaBotones}>
-                      <View style={estilos.botonMitad}>
-                        <BotonPrincipal
-                          estilosAutenticacion={estilosMovimiento}
-                          estilosGlobales={estilosGlobales}
-                          titulo="Escanear"
-                          alPresionar={activarCamara}
-                        />
-                      </View>
-                      <View style={estilos.botonMitad}>
-                        <Pressable
-                          accessibilityRole="button"
-                          onPress={seleccionarComprobante}
-                          style={estilos.botonGaleria}
-                        >
-                          <Ionicons color={tema.textoPrincipal} name="image-outline" size={22} />
-                          <Text style={estilos.textoBotonGaleria}>Galería</Text>
-                        </Pressable>
-                      </View>
-                    </View>
-                  )}
+                  </View>
                 </View>
               </>
             ) : null}
@@ -631,6 +615,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                 </Pressable>
               </View>
             ) : null}
+            </>}
           </View>
           </DesplazamientoEncabezado>
         </KeyboardAvoidingView>

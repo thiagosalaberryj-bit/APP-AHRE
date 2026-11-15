@@ -97,7 +97,7 @@ export default function EstadoSincronizacion({soloIcono=false}:{soloIcono?:boole
       </Animated.View>
       {error?<Ionicons name="close-circle" size={14} color={tema.error} style={[estilos.marca,{backgroundColor:fondoMarca}]}/>:null}
     </View>
-    {vista.pendientes>0?<View style={[estilos.insignia,{backgroundColor:tema.botonPrincipal,borderColor:tema.encabezado}]}><Text numberOfLines={1} style={[estilos.cantidad,{color:tema.botonPrincipalTexto}]}>{formatearCantidadPendientes(vista.pendientes)}</Text></View>:null}
+    {vista.pendientes>0?<View style={[estilos.insignia,soloIcono&&{top:6},{backgroundColor:tema.botonPrincipal,borderColor:tema.encabezado}]}><Text numberOfLines={1} style={[estilos.cantidad,{color:tema.botonPrincipalTexto}]}>{formatearCantidadPendientes(vista.pendientes)}</Text></View>:null}
   </Pressable>;
 }
 const estilos=StyleSheet.create({

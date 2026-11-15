@@ -10,7 +10,14 @@ Desde Dashboard o Nuevo, el botón «Escanear» abre la pantalla existente de OC
 
 ## Captura y recorte
 
-El visor mantiene la cámara en vivo y el obturador debajo. La cámara se monta
+Antes de mostrar el escáner se consultan los depósitos activos al entrar y al
+recuperar foco. Sin depósitos, se muestra únicamente la tarjeta «Todavía no tenés
+depósitos» con «Nuevo depósito», como en Ingreso/Egreso; cámara y galería no se
+ofrecen. La carga permite reintentar si falla.
+
+El visor mantiene la cámara en vivo y el obturador debajo. Escanear se transforma
+en Tomar foto dentro de la misma fila, con Galería siempre en la misma posición.
+La cámara se monta
 solo cuando la pantalla tiene foco y la captura está activa. Galería utiliza
 el selector del sistema. El permiso rechazado o un error de cámara permiten
 reintentar o regresar, sin bloquear el resto de AHRE.
@@ -36,18 +43,17 @@ texto pero faltan campos, se abre la revisión para completarlos manualmente.
 - categorías y depósitos reales mediante los selectores existentes;
 - fecha y hora editables con los selectores compartidos;
 - foto temporal del comprobante;
-- «Ver texto reconocido», desplegable y seleccionable;
-- «Confirmar egreso» y «Volver a escanear».
+- «Texto reconocido», sección desplegable con chevron y texto seleccionable;
+- «Confirmar egreso» y la acción secundaria «Escanear otro comprobante».
 
 Si falta monto se deja vacío. Si falta fecha/hora se propone la actual y se
 explica visiblemente. La descripción mantiene el límite financiero de 500
 caracteres: una propuesta extensa se conserva para revisar y resumir, con
 contador y validación, sin truncarla automáticamente.
 
-Si no existen depósitos se ofrece «Crear depósito» mediante la ruta existente;
-confirmar queda deshabilitado. Al regresar se conservan el resultado y las
-correcciones y se recargan los depósitos. Categoría y depósito no se eligen
-automáticamente. Un error de carga ofrece reintento.
+La creación de depósitos se resuelve antes de capturar, sin otra invitación en
+el formulario del resultado. Confirmar sigue protegido si no hay depósitos.
+Categoría y depósito no se eligen automáticamente. Un error de carga ofrece reintento.
 
 ## Guardado y presentación
 

@@ -245,9 +245,10 @@ Movimientos y Detalle de depósito reutilizan `MovementQuickFilters.tsx` para
 los accesos rápidos y `MovementFilterSections.tsx` para las secciones Tipo,
 Fecha, Categorías y Monto. Las opciones comunes están en
 `src/constants/movementFilters.ts`. Cada pantalla conserva sus estilos,
-catálogos, resúmenes, validaciones y aplicación de los filtros; solo Movimientos
-incluye la sección Depósitos. El selector de semana del historial y el manejo
-de rangos personalizados conservan las diferencias existentes entre pantallas.
+resúmenes, validaciones y aplicación de los filtros; solo Movimientos
+incluye la sección Depósitos. Ambas pantallas permiten elegir la semana desde
+el calendario. El catálogo de categorías se ofrece completo según el tipo,
+incluidas las categorías sin movimientos.
 
 `src/screens/MovementsScreen.tsx` es pestaña con `MainHeader` («Movimientos») y
 consulta SQLite para el usuario de la sesión y agrupa los movimientos vigentes
@@ -367,8 +368,8 @@ depósitos y límites monetarios; Movimientos conserva sus fechas y tipos existe
   filtran por los que continúan marcados. No se puede quitar el último depósito
   hasta marcar otro. «Todos» vuelve a seleccionar cada depósito. Las opciones
   son depósitos reales con movimientos del usuario actual.
-- **Categorías:** selección múltiple en una grilla adaptable de tres o cuatro
-  columnas, sin desplazamiento horizontal. Los fondos usan el color de acento
+- **Categorías:** selección múltiple en un listado vertical de filas con nombre,
+  icono y casilla, sin desplazamiento horizontal. Los fondos usan el color de acento
   de cada categoría (pastel en claro y más saturado en oscuro); solo aparecen
   categorías presentes en el historial del usuario y la selección no cierra el
   panel.

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { compilarFuente, resolverFuente } from './helpers/typescript.ts';
+import { crearCargadorComponentes } from './helpers/componentInterface.ts';
 
 interface Nodo { type: string; props: Record<string, unknown>; }
 type Estado = unknown | ((anterior: unknown) => unknown);
@@ -113,6 +114,7 @@ for (const tema of ['claro', 'oscuro'] as const) {
     assert.equal(selector.props.estilosMovimiento, e.base.estilos);
     assert.equal(selector.props.tipoMovimiento, 'egreso');
     assert.equal(selector.props.seleccionMultiple, true);
+    assert.deepEqual(selector.props.seleccionadasIds,[],'Todas se representa sin marcar cada tarjeta');
     invocar(selector, 'alCambiarMulti', ['hogar', 'compras']);
     assert.deepEqual(categorias, ['hogar', 'compras']);
     const arbolMonto = e.secciones.FiltroMontoMovimientos({ ...e.base,
@@ -189,3 +191,37 @@ for (const tema of ['claro', 'oscuro'] as const) {
     invocar(buscar(renderizar(), 'Pressable', '$5.000 o más'), 'onPress'); assert.deepEqual([minimo, maximo], ['5000', '']);
   });
 }
+
+for(const tema of ['claro','oscuro'] as const)test('categorías usan listado y conservan opciones sin movimientos en '+tema,()=>{
+ const e=preparar(tema),catalogo=[{id:'hogar',nombre:'Hogar',icono:'home-outline' as const},{id:'compras',nombre:'Compras',icono:'bag-outline' as const}];
+ let ids:string[]=[];
+ const renderizar=()=>e.renderizar(()=>e.secciones.FiltroCategoriasMovimientos({...e.base,categoriasDisponiblesFiltro:catalogo,categoriaFiltroIds:ids,establecerCategoriaFiltroIds:nuevos=>{ids=nuevos;}}));
+ const arbol=renderizar();assert.deepEqual(buscar(arbol,'CategorySelector').props.categorias,catalogo);
+ assert.equal(buscar(arbol,'CategorySelector').props.variante,'lista');
+ invocar(buscar(arbol,'CategorySelector'),'alCambiarMulti',['compras']);assert.deepEqual(buscar(renderizar(),'CategorySelector').props.seleccionadasIds,['compras']);
+ invocar(buscar(renderizar(),'CategorySelector'),'alCambiarMulti',[]);assert.deepEqual(buscar(renderizar(),'CategorySelector').props.seleccionadasIds,[]);
+ const raiz=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+ const cargador=crearCargadorComponentes(raiz,{'react':{useState:()=>[false,()=>{}]}});
+ const Selector=cargador.cargar<typeof import('../src/components/CategorySelector.tsx')>('src/components/CategorySelector.tsx').default;
+ const listado=Selector({...e.base,categorias:catalogo,variante:'lista',seleccionMultiple:true,seleccionadasIds:['compras'],alCambiarMulti:nuevos=>{ids=nuevos;},estilosMovimiento:e.base.estilos});
+ const filas=nodos(listado).filter(n=>n.props.accessibilityRole==='checkbox');
+ assert.equal(filas.length,2);assert.equal(nodos(listado).filter(n=>n.type==='Modal').length,0);
+ const compras=filas.find(n=>n.props.accessibilityLabel==='Compras')!;
+ assert.deepEqual(compras.props.accessibilityState,{checked:true});invocar(compras,'onPress');assert.deepEqual(ids,[]);
+});
+
+for(const inferior of [0,24,48])test('el panel reserva superficie sólida para navegación inferior de '+inferior+' puntos',()=>{
+ const raiz=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+ const cargar=crearCargadorComponentes(raiz,{
+  'react':{},
+  'react-native':{View:'View',Text:'Text',Pressable:'Pressable',ScrollView:'ScrollView',Modal:'Modal',Animated:{View:'AnimatedView'},useWindowDimensions:()=>({width:360,height:780}),StyleSheet:{create:(s:unknown)=>s}},
+  'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:inferior})},
+  '../utils/useBottomSheet':{__esModule:true,default:()=>({opacidadOverlay:1,desplazamientoPanel:0,responderManija:{panHandlers:{}},cerrarPanel:()=>{}})},
+ });
+ const tema=cargar.cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts').TEMAS.claro;
+ const Panel=cargar.cargar<typeof import('../src/components/MovementFiltersPanel.tsx')>('src/components/MovementFiltersPanel.tsx').default;
+ const arbol=Panel({tema,filtrosVisibles:true,alCerrar:()=>{},limpiarFiltros:()=>{},cantidadFiltros:1,children:null});
+ assert.equal(buscar(arbol,'Modal').props.navigationBarTranslucent,true);
+ const panel=nodos(arbol).find(n=>n.type==='AnimatedView'&&Array.isArray(n.props.style)&&n.props.style.some((s:unknown)=>s&&typeof s==='object'&&'paddingBottom' in s&&s.paddingBottom===inferior+12));
+ assert.ok(panel);assert.equal((panel.props.style as {backgroundColor?:string}[])[0].backgroundColor,tema.superficie);
+});

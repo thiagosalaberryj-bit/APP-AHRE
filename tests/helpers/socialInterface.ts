@@ -118,7 +118,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       if (nombre === '@react-navigation/native') return { useFocusEffect: (callback:()=>void|(()=>void)) => react.useEffect(callback, [callback]), useNavigation: () => propiedades.navigation };
       if (nombre.endsWith('/NotificationUnreadBadge')) return {__esModule:true,default:'NotificationBadge'};
       if (nombre.endsWith('/SyncStatus')) return { __esModule: true, default: 'SyncStatus' };
-      if (nombre === 'react-native-safe-area-context') return { SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ bottom: 24 }) };
+      if (nombre === 'react-native-safe-area-context') return { SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ top:24,bottom: 24 }) };
       if (nombre.endsWith('/MainHeader') || nombre.endsWith('/SectionHeader')) return { __esModule: true, default: 'Header' };
       if (nombre.endsWith('/AppearanceContext')) return { ContextoApariencia: apariencia };
       if (nombre.endsWith('/ToastContext')) return { ContextoAvisos: notificaciones, AvisosEnModal: ({children}: {children: unknown}) => children };

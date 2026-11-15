@@ -26,7 +26,7 @@ import SelectorSegmentado from '../components/SegmentedSelector';
 import FilaFiltrosHorizontal from '../components/HorizontalFilterRow';
 import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
 import PanelFiltrosMovimientos, { SeccionFiltro } from '../components/MovementFiltersPanel';
-import SelectorCategoria from '../components/CategorySelector';
+import { FiltroCategoriasMovimientos, FiltroMontoMovimientos } from '../components/MovementFilterSections';
 import SelectorDeposito from '../components/DepositSelector';
 import EntradaMonto from '../components/MoneyInput';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
@@ -368,7 +368,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
   const filtrosActivosEstadistica = [
     ...gruposCategoriasActivos.map(grupo => ({ id:'categorias-' + grupo.id, etiqueta:grupo.nombre, alQuitar:() => {
-      establecerCategoriasSeleccionadas(actuales => actuales.filter(id => !grupo.categorias.includes(id)));
+      establecerCategoriasSeleccionadas(actuales => {const restantes=actuales.filter(id => !grupo.categorias.includes(id));return restantes.length?restantes:todasLasCategorias;});
       establecerCategoriaSeleccionada(null);
     } })),
     ...(!todasSeleccionadas && !categoriasSeleccionadas.length ? [{ id:'sin-categorias', etiqueta:'Sin categorías', alQuitar:() => establecerCategoriasSeleccionadas(todasLasCategorias) }] : []),
@@ -439,7 +439,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
             <BuscadorFiltrosMovimientos tema={tema} mostrarBuscador={false} alAbrirFiltros={() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); establecerFiltroCategoriasAbierto(true); }} alLimpiar={limpiarFiltrosEstadistica} filtrosActivos={filtrosActivosEstadistica} cantidad={cantidadFiltrosActivos}>
               {preajustesCategorias.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: esPreajusteActivo(opcion) }}
-                onPress={() => { establecerCategoriasSeleccionadas(actuales => opcion.id === 'todos' ? todasLasCategorias : alternarGrupoCategorias(actuales, opcion.categorias, todasLasCategorias)); establecerCategoriaSeleccionada(null); }}
+                onPress={() => { establecerCategoriasSeleccionadas(actuales => {const nuevas=opcion.id === 'todos' ? todasLasCategorias : alternarGrupoCategorias(actuales, opcion.categorias, todasLasCategorias);return nuevas.length?nuevas:todasLasCategorias;}); establecerCategoriaSeleccionada(null); }}
                 style={[estilosAccesos.filtro, esPreajusteActivo(opcion) && estilosAccesos.filtroActivo]}>
                 <Text style={[estilosAccesos.textoFiltro, esPreajusteActivo(opcion) && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
               </Pressable>)}
@@ -652,23 +652,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
         </View> : null}
 
         <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtroCategoriasAbierto} alCerrar={() => establecerFiltroCategoriasAbierto(false)} limpiarFiltros={limpiarFiltrosEstadistica} cantidadFiltros={cantidadFiltrosActivos}>
-          <SeccionFiltro titulo="Categorías" resumen={textoCategoriasActivas} abierta={seccionesAbiertas.includes('categorias')} alAlternar={() => alternarSeccion('categorias')} colorAcento={tema.foco} estilos={estilosFiltros}>
-            <View style={estilos.encabezadoFiltrosRapidos}>
-              <Pressable accessibilityRole="button" onPress={() => establecerCategoriasSeleccionadas(catalogo.map(categoria => categoria.id))} style={estilos.accionFiltroRapido}><Text style={estilos.textoAccionFiltroRapido}>Todas</Text></Pressable>
-              <Pressable accessibilityRole="button" onPress={() => establecerCategoriasSeleccionadas([])} style={estilos.accionFiltroRapido}><Text style={estilos.textoAccionFiltroRapido}>Ninguna</Text></Pressable>
-            </View>
-            <SelectorCategoria tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} categorias={categorias} tipoMovimiento={tipoMovimiento} etiqueta="" variante="grilla" seleccionMultiple seleccionadasIds={categoriasSeleccionadas} alCambiarMulti={establecerCategoriasSeleccionadas} estiloTarjeta={estilosFiltros.tarjetaCategoriaFiltro}/>
-          </SeccionFiltro>
+          <FiltroCategoriasMovimientos tema={tema} estilos={estilosFiltros} estilosSelectores={estilosFiltros} estilosGlobales={estilosGlobales} resumen={textoCategoriasActivas} abierta={seccionesAbiertas.includes('categorias')} alAlternar={()=>alternarSeccion('categorias')} categoriasDisponiblesFiltro={categorias} tipoMovimiento={tipoMovimiento} categoriaFiltroIds={todasSeleccionadas?[]:categoriasSeleccionadas} establecerCategoriaFiltroIds={ids=>{establecerCategoriasSeleccionadas(ids.length?ids:todasLasCategorias);establecerCategoriaSeleccionada(null);}}/>
           <SeccionFiltro titulo="Depósitos" resumen={depositosIds === null ? 'Todos los depósitos' : depositosIds.length + ' seleccionados'} abierta={seccionesAbiertas.includes('depositos')} alAlternar={() => alternarSeccion('depositos')} colorAcento={tema.foco} estilos={estilosFiltros}>
             {errorDepositos ? <Text style={estilosGlobales.textoAyuda}>Volvé a abrir el selector para reintentar.</Text> : <SelectorDeposito tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} etiqueta="" depositos={depositos} seleccionMultiple seleccionadasIds={depositosIds ?? depositos.map(deposito => deposito.id)} alCambiarMulti={establecerDepositosIds} impedirSeleccionVacia/>}
           </SeccionFiltro>
-          <SeccionFiltro titulo="Monto" resumen={textoMontoActivo} abierta={seccionesAbiertas.includes('monto')} alAlternar={() => alternarSeccion('monto')} colorAcento={tema.foco} estilos={estilosFiltros}>
-            <View style={estilosFiltros.filaRango}>
-              <View style={estilosFiltros.grupoCampoRango}><Text style={estilosFiltros.textoEtiquetaCampoRango}>Mínimo</Text><EntradaMonto tema={tema} estilosGlobales={estilosGlobales} etiqueta="Monto mínimo" mostrarEtiqueta={false} mostrarLimpiar={false} compacto valor={montoMinimo} alCambiarTexto={valor => { establecerMontoMinimo(valor); establecerPreajusteMontoId('personalizado'); }} estiloContenedor={estilosFiltros.campoRango}/></View>
-              <View style={estilosFiltros.grupoCampoRango}><Text style={estilosFiltros.textoEtiquetaCampoRango}>Máximo</Text><EntradaMonto tema={tema} estilosGlobales={estilosGlobales} etiqueta="Monto máximo" mostrarEtiqueta={false} mostrarLimpiar={false} compacto valor={montoMaximo} alCambiarTexto={valor => { establecerMontoMaximo(valor); establecerPreajusteMontoId('personalizado'); }} estiloContenedor={estilosFiltros.campoRango}/></View>
-            </View>
-            {errorMonto ? <Text style={estilosGlobales.textoError}>{errorMonto}</Text> : null}
-          </SeccionFiltro>
+          <FiltroMontoMovimientos tema={tema} estilos={estilosFiltros} estilosGlobales={estilosGlobales} resumen={textoMontoActivo} abierta={seccionesAbiertas.includes('monto')} alAlternar={()=>alternarSeccion('monto')} montoMinimo={montoMinimo} montoMaximo={montoMaximo} establecerMontoMinimo={valor=>{establecerMontoMinimo(valor);establecerPreajusteMontoId('personalizado');}} establecerMontoMaximo={valor=>{establecerMontoMaximo(valor);establecerPreajusteMontoId('personalizado');}} errorMontoFiltro={errorMonto}/>
         </PanelFiltrosMovimientos>
 
       </MarcoEncabezado>

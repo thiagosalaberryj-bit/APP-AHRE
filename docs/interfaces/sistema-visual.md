@@ -417,3 +417,7 @@ el cambio es inmediato, sin temporizadores ni duplicación de accesos.
 Una única máscara exterior contiene el encabezado y la barra compacta con
 radio inferior constante. El recorte sigue la altura combinada durante toda
 la animación: ninguna capa rectangular tapa las esquinas al plegar o desplegar.
+
+En el encabezado plegado, las insignias de notificaciones y sincronización se
+ubican seis puntos debajo del borde superior de sus controles para evitar
+el recorte por la máscara. El encabezado desplegado conserva su posición.
