@@ -290,3 +290,8 @@ Validación: TypeScript de app y herramientas correcto. La regresión específic
 de sala tiene ocho pruebas aprobadas en ambos temas. El envío a EAS no equivale
 a una APK terminada ni a una verificación física en Android. Los cambios de
 servidor acordados requieren su despliegue coordinado por separado.
+
+Envío confirmado a Expo/EAS con autorización explícita del usuario:
+[APK 0.9.2 · build 16](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/c175c59d-1ff5-4a19-b8a4-e21809d71daa).
+Fuentes del commit d5d2e01; EAS confirmó la carga y el fingerprint con
+--non-interactive --no-wait. No se verificó la finalización de la compilación.
