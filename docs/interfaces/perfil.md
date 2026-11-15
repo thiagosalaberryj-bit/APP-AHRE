@@ -160,8 +160,17 @@ Ante `perfil_correo_duplicado`, Sincronización ofrece Corregir en Perfil y lueg
 
 Solo se modifica el correo en eventos de perfil no confirmados. Se conservan nombres, IDs, secuencias y eventos financieros, y se respaldan los originales. Los rechazos financieros, las revocaciones y los timeouts sin rechazo definitivo no habilitan esta acción. Una respuesta perdida se reintenta con el mismo contenido.
 
-«Acerca de AHRE» consulta `Constants.expoConfig.version`; la configuración actual
-es 0.9.0. Esa versión no demuestra qué revisión de JavaScript incluye una APK
+«Acerca de AHRE» presenta la marca, una descripción breve y un resumen de
+finanzas, Social y acceso sin conexión. Usa estilos locales que acompañan ambos
+temas y contenido desplazable para pantallas pequeñas o texto ampliado.
+El logo queda a la izquierda del lema en dos líneas («Tus finanzas,» / «más
+claras.»). Los textos se alinean a la izquierda. La presentación inicial incluye
+«Versión actual» junto a una etiqueta con el número de versión.
+Consulta `Constants.expoConfig.version` para mostrar la versión instalada.
+Incluye «Visitar la web de AHRE», que abre
+`https://ahre-server.tailc5dfc5.ts.net/` en el navegador mediante `Linking`.
+Si la apertura falla, informa el error con un toast dentro del modal.
+Esa versión no demuestra qué revisión de JavaScript incluye una APK
 anterior ni acredita que se haya publicado otra build.
 
 Notificaciones conserva la preferencia general de AHRE y consulta además el

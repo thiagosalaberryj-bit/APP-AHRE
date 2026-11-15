@@ -5,6 +5,19 @@ import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './global
 
 export function crearEstilosPerfil(tema: Tema) {
   const estilos = StyleSheet.create({
+    presentacionAcerca:{gap:ESPACIADO.medio,paddingVertical:ESPACIADO.medio},
+    cabeceraAcerca:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.grande},
+    marcaAcerca:{width:76,height:76},
+    tituloAcerca:{flex:1,color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.subtitulo,fontWeight:TIPOGRAFIA.pesos.seminegrita,textAlign:'left'},
+    descripcionAcerca:{color:tema.textoSecundario,fontSize:TIPOGRAFIA.tamanos.secundario,lineHeight:21,textAlign:'left'},
+    filaVersionAcerca:{flexDirection:'row',alignItems:'center',flexWrap:'wrap',gap:ESPACIADO.pequeno},
+    versionAcerca:{backgroundColor:tema.contenedorVerde,borderRadius:BORDES.radios.circular,paddingHorizontal:ESPACIADO.medio,paddingVertical:ESPACIADO.minimo},
+    detalleAcerca:{color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.auxiliar},
+    resumenAcerca:{gap:ESPACIADO.medio,paddingVertical:ESPACIADO.grande,borderTopWidth:BORDES.anchos.fino,borderTopColor:tema.borde},
+    filaAcerca:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio},
+    textoAcerca:{flex:1,color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.secundario,textAlign:'left'},
+    enlaceAcerca:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio,padding:ESPACIADO.grande,minHeight:48,borderRadius:BORDES.radios.boton,backgroundColor:tema.botonPrincipal},
+    textoEnlaceAcerca:{flex:1,color:tema.botonPrincipalTexto,fontSize:TIPOGRAFIA.tamanos.boton,fontWeight:TIPOGRAFIA.pesos.seminegrita},
     contenido: {
       gap: ESPACIADO.medio,
       padding: ESPACIADO.grande,

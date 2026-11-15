@@ -17,6 +17,7 @@ import {
   AppState,
   ActivityIndicator,
   Image,
+  Linking,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -979,14 +980,37 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
         <ModalPerfil
           visible={modalAcercaDe}
           alCerrar={() => establecerModalAcercaDe(false)}
-          descripcion="Organizá tus finanzas, registrá movimientos y seguí tus depósitos, incluso sin conexión."
+          descripcion="Administrador de Historial y Recursos Económicos"
           etiquetaCerrar="Cerrar acerca de AHRE"
           estilos={estilos}
           icono="information-circle-outline"
           tema={tema}
           titulo="Acerca de AHRE"
+          desplazable
         >
-          <Text style={estilos.valorOpcion}>Versión {Constantes.expoConfig?.version ?? 'no disponible'}</Text>
+          <View style={estilos.presentacionAcerca}>
+            <View style={estilos.cabeceraAcerca}>
+              <Image source={require('../../assets/ahre-mark.png')} style={estilos.marcaAcerca} resizeMode="contain" accessible={false}/>
+              <Text style={estilos.tituloAcerca}>{'Tus finanzas,\nmás claras.'}</Text>
+            </View>
+            <Text style={estilos.descripcionAcerca}>Organizá tu dinero y compartí gastos con otras personas, desde un solo lugar.</Text>
+            <View style={estilos.filaVersionAcerca}>
+              <Text style={estilos.detalleAcerca}>Versión actual</Text>
+              <View style={estilos.versionAcerca}><Text style={estilos.detalleAcerca}>{Constantes.expoConfig?.version ?? 'no disponible'}</Text></View>
+            </View>
+          </View>
+          <View style={estilos.resumenAcerca}>
+            {[
+              {icono:'wallet-outline' as const,texto:'Ingresos, gastos y depósitos'},
+              {icono:'people-outline' as const,texto:'Salas y deudas compartidas'},
+              {icono:'phone-portrait-outline' as const,texto:'Tus registros disponibles sin conexión'},
+            ].map(({icono,texto})=><View key={icono} style={estilos.filaAcerca}><Ionicons name={icono} size={21} color={tema.foco}/><Text style={estilos.textoAcerca}>{texto}</Text></View>)}
+          </View>
+          <Pressable accessibilityRole="link" accessibilityLabel="Visitar la web de AHRE" accessibilityHint="Abre el sitio de AHRE en el navegador." onPress={()=>{void Linking.openURL('https://ahre-server.tailc5dfc5.ts.net/').catch(()=>mostrarAviso('No se pudo abrir la web de AHRE. Intentá nuevamente.',{tipo:'error'}));}} style={({pressed:presionado})=>[estilos.enlaceAcerca,presionado&&estilosGlobales.botonDeshabilitado]}>
+            <Ionicons name="globe-outline" size={23} color={tema.botonPrincipalTexto}/>
+            <Text style={estilos.textoEnlaceAcerca}>Visitar la web de AHRE</Text>
+            <Ionicons name="open-outline" size={20} color={tema.botonPrincipalTexto}/>
+          </Pressable>
         </ModalPerfil>
 
         <ModalPerfil
