@@ -27,6 +27,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
   let instancias = new Map<string, Casilla[]>(), actual: Casilla[] = [], indice = 0;
   let efectos: (() => void)[] = [], usados = new Set<string>();
   const avisos: string[] = [], destinos: unknown[][] = [], cache = new Map<string, unknown>();
+  let siguienteVentana=0;const ventanasNativas=new Map<string,number>();let ventanasUsadas=new Set<string>();
   const copias:string[]=[],compartidos:{title?:string;message:string}[]=[];
   const apariencia: Contexto = {}, notificaciones: Contexto = {};
   let temas: typeof TEMAS, propiedades: {route:{name:string;params:ParametrosSociales};navigation:unknown}, arbol: Nodo;
@@ -78,7 +79,9 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     isReduceMotionEnabled: async () => true,
     addEventListener: () => ({ remove() {} }),
   };
+  nativo.Easing={linear:(valor:number)=>valor};
   nativo.Animated = {
+    loop:()=>({start(){},stop(){}}),
     Value: class {
       valor: number;
       constructor(valor: number) { this.valor = valor; }
@@ -108,7 +111,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     const modulo: {exports: unknown} = { exports: {} };
     const codigo = compilarFuente(fs.readFileSync(archivo, 'utf8'), archivo, true);
     const importar = (nombre: string): unknown => {
-      if (nombre === 'react') return react;
+      if (nombre === 'react') return {...react,useLayoutEffect:react.useEffect};
       if (nombre === 'react/jsx-runtime') return { jsx: elemento, jsxs: elemento, Fragment: 'Fragment' };
       if (nombre === 'react-native') return nativo;
       if (nombre === '@expo/vector-icons') return { Ionicons: 'Icon' };
@@ -153,7 +156,10 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       usados.add(clave); actual = instancias.get(clave) || []; instancias.set(clave, actual); indice = 0;
       return expandir(nodo.type(nodo.props), clave);
     }
-    if (nodo.type === 'Modal' && !nodo.props.visible) return null;
+    if (nodo.type === 'Modal') {
+      if(!nodo.props.visible)return null;
+      ventanasUsadas.add(sitio);if(!ventanasNativas.has(sitio))ventanasNativas.set(sitio,++siguienteVentana);
+    }
     if ((nodo.type === 'Pressable' || nodo.type === 'View') && nodo.props.ref) {
       const referencia = nodo.props.ref as { current: unknown } | ((valor: unknown) => void);
       const control = {
@@ -166,12 +172,13 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     return { type: nodo.type, props: nodo.props, children: expandir(nodo.props.children, sitio + '/' + nodo.type) };
   }
   function renderizar() {
-    efectos = []; usados = new Set();
+    efectos = []; usados = new Set();ventanasUsadas=new Set();
     const nombre = propiedades.route.name;
     const pantalla = nombre === rutas.SALA_SOCIAL ? adaptadores.RutaSalas : nombre === rutas.PERSONAS_SOCIAL ? adaptadores.RutaPersonas
       : nombre === rutas.REGISTRO_SOCIAL ? adaptadores.RutaRegistro : nombre === rutas.PERSONA_SOCIAL ? persona : nombre === rutas.GASTO_SOCIAL ? gasto : principal;
     arbol = expandir(elemento(componentePrueba || pantalla, propiedades));
     for (const [clave, valores] of instancias) if (!usados.has(clave)) { valores.forEach(v => v?.limpiar?.()); instancias.delete(clave); }
+    for(const ruta of ventanasNativas.keys())if(!ventanasUsadas.has(ruta))ventanasNativas.delete(ruta);
     efectos.forEach(f => f());
   }
   async function asentar() {
@@ -232,5 +239,6 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     await abrir();
   }
   const ocultarTeclado = async () => { tecladoVisible = false; eventosTeclado.get('keyboardDidHide')?.forEach(callback => callback()); await asentar(); };
-  return { abrir, abrirSelectorDepositos,abrirInvitacion,copias,compartidos, mostrarTeclado, ocultarTeclado, pulsar, llenar, texto, todos, buscarBoton, avisos, destinos, rutas, asentar };
+  const ventanas=()=>[...ventanasNativas.values()];
+  return { ventanas, abrir, abrirSelectorDepositos,abrirInvitacion,copias,compartidos, mostrarTeclado, ocultarTeclado, pulsar, llenar, texto, todos, buscarBoton, avisos, destinos, rutas, asentar };
 }

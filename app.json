@@ -11,7 +11,7 @@
     },
     "android": {
       "googleServicesFile": "./google-services.json",
-      "versionCode": 16,
+      "versionCode": 17,
       "adaptiveIcon": {
         "backgroundColor": "#024C42",
         "foregroundImage": "./assets/ahre-mark.png"

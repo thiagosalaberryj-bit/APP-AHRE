@@ -18,17 +18,18 @@ export default function BotonAccion({tema,texto,variante='principal',cargando=fa
   textoActual.current=texto;
   useEffect(()=>{finalizacion.iniciar();},[texto]);
   useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
-  const exitoVisible=(completadoExterno&&cargando)||completado;
   const ocupado=cargando||enCurso;
+  // La promesa del botón sigue pendiente mientras el formulario inicia el cierre.
+  const exitoVisible=(completadoExterno&&ocupado)||completado;
   // Bloqueo de interacción y aspecto deshabilitado son estados distintos.
   const bloqueado=deshabilitado&&!ocupado&&!exitoVisible;
   const fondo=variante==='contorno'?estilos.botonContornoPeligro:variante==='texto'?estilos.botonTexto:variante==='cancelar'?estilos.botonCancelar:variante==='peligro'?estilos.botonPeligro:variante==='secundario'?estilos.botonSecundario:estilos.botonPrincipal;
   const colorFondo=variante==='texto'||variante==='contorno'?'transparent':variante==='cancelar'?tema.fondoDeshabilitado:variante==='peligro'?tema.botonPeligro:variante==='secundario'?tema.botonSecundario:tema.botonPrincipal;
   const color=bloqueado?tema.deshabilitado:variante==='contorno'?tema.error:variante==='peligro'?tema.botonPeligroTexto:variante==='secundario'?tema.botonSecundarioTexto:variante==='texto'?tema.foco:variante==='cancelar'?tema.textoPrincipal:tema.botonPrincipalTexto;
-  return <Pressable accessibilityRole="button" accessibilityLabel={etiquetaAccesibilidad||texto} accessibilityState={{busy:ocupado,disabled:deshabilitado||ocupado||completado}} disabled={deshabilitado||ocupado||completado}
+  return <Pressable accessibilityRole="button" accessibilityLabel={etiquetaAccesibilidad||texto} accessibilityState={{busy:ocupado,disabled:deshabilitado||ocupado||exitoVisible}} disabled={deshabilitado||ocupado||exitoVisible}
     android_ripple={RETROALIMENTACION_PULSACION} style={({pressed})=>[fondo,estilo,{backgroundColor:colorFondo,overflow:'hidden'},bloqueado&&estilos.botonDeshabilitado,pressed&&estilos.botonPresionado]}
     onPress={async ()=>{
-      if(bloqueo.current||deshabilitado||cargando||completado)return;
+      if(bloqueo.current||deshabilitado||cargando||exitoVisible)return;
       bloqueo.current=true;finalizacion.iniciar();
       const textoInicial=texto;
       try{

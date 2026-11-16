@@ -509,3 +509,29 @@ La pulsación no agrega una capa ni un marco gris sobre los controles. Los
 botones de encabezado, opciones, interruptores y navegación usan un cambio
 sutil de opacidad; las operaciones muestran la carga de tres puntos. Las animaciones de carga y
 transición no crean interacciones que bloqueen otras tareas de la interfaz.
+
+
+Las decisiones de Social (aceptar o rechazar solicitudes, registrar personas,
+enviar o cancelar vínculos, invitaciones, archivar o desarchivar y guardar accesos)
+usan el mismo botón que los formularios financieros. `useConfirmedAction.ts`
+coordina estas operaciones con los tiempos de `useActionCompletion.ts`. Las
+recargas de la pantalla y de vínculos o salas conservan su contenido hasta que
+termine la confirmación: una respuesta local o de demo no puede quitar el botón
+antes de mostrar «Listo». Los errores liberan el bloqueo sin confirmar éxito.
+Las confirmaciones de movimientos y desvinculación de Mercado Pago y de corrección de correo
+se muestran en los modales existentes, con el mismo componente y los mismos tiempos.
+
+Al pasar de «Procesando» a «Listo», se conserva la identidad de la fila saliente:
+la palabra y los puntos salen juntos y estos siguen animados hasta completar la
+transición. Un único ciclo nativo mueve los tres puntos; no depende de combinar
+bucles nativos con secuencias de JavaScript. Reducir movimiento evita los
+desplazamientos, manteniendo los tiempos de confirmación.
+
+
+Los pasos de un mismo diálogo de Social conservan una única ventana nativa:
+opciones de persona y vínculos/archivo, opciones de salas e ingreso,
+compartir sala y configuración, y confirmación y selección financiera.
+Los contenidos admiten `sinVentana` cuando la ventana pertenece al recorrido
+contenedor. Guardar no cambia `visible` ni vuelve a presentar el modal para
+mostrar la animación. La ventana permanece montada durante «Procesando»,
+«Listo» y los errores recuperables; solo se cierra al finalizar o cancelar.

@@ -1,3 +1,7 @@
+import {useAccionConfirmada} from '../hooks/useConfirmedAction';
+import {actualizarTrasOperacion} from '../social/financialOperation';
+import ModalPerfil from '../components/ProfileModal';
+import {crearEstilosPerfil} from '../styles/ProfileScreenStyles';
 import {conRespuestaVisual} from '../utils/pressFeedback';
 import BotonAccion from '../components/ActionButton';
 import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
@@ -8,7 +12,7 @@ import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { SeccionesEncabezado } from '../components/HeaderScrollView';
 import {useCallback,useContext,useMemo,useRef,useState} from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect} from '@react-navigation/native';
 import {SafeAreaView,useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -31,6 +35,8 @@ const fechaValida=(valor:string)=>{const fecha=new Date(valor);return Number.isN
 const formatearFecha=(valor:string)=>fechaValida(valor)?.toLocaleString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})??'Fecha no disponible';
 
 export default function PantallaSincronizacion({navigation:navegacion}:import('../navigation/types').PropiedadesPantalla){
+ const respuesta=useAccionConfirmada();
+ const [confirmandoReparacion,cambiarConfirmandoReparacion]=useState(false);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const volverProtegido = useRegresoProtegido(navegacion);
   const {tema}=useContext(ContextoApariencia),{bottom}=useSafeAreaInsets();
@@ -52,7 +58,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       const resultado=await consultarPendientes(30,reemplazar?0:actuales.registros.length);
       const propuesta=await consultarReparacionPerfil();
       if(peticion!==secuencia.current)return;
-      establecerReparacion(propuesta);
+      actualizarTrasOperacion(()=>{if(peticion===secuencia.current)establecerReparacion(propuesta);});
       const nuevos={...resultado,registros:reemplazar?resultado.registros:[...actuales.registros,...resultado.registros]};
       datosActuales.current=nuevos;establecerDatos(nuevos);establecerError('');
     }catch{if(peticion===secuencia.current)establecerError('No se pudieron consultar los pendientes. Volvé a intentar.');}
@@ -85,16 +91,13 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
   },[datos.registros,mesesAbiertos]);
   const ocupado=enviando||reparando||['comprobando','sincronizando'].includes(vista.estado);
   const deshabilitado=ocupado||datos.soloLocal;
-  const confirmarReparacion=()=>{
-    if(!reparacion)return;
-    const propuesta=reparacion;
-    Alert.alert('Corregir correo pendiente',`Se reemplazará ${propuesta.correoAnterior} por ${propuesta.correoNuevo} en los cambios de perfil sin confirmar. Los movimientos y sus importes se conservan.`,[
-      {text:'Cancelar',style:'cancel'},
-      {text:'Aplicar corrección',onPress:()=>{
-        establecerErrorReparacion('');establecerReparando(true);
-        void repararPerfilPendiente(propuesta).catch(fallo=>establecerErrorReparacion(fallo instanceof Error?fallo.message:'No se pudo reparar.')).finally(()=>{establecerReparando(false);void cargar();});
-      }},
-    ]);
+  const confirmarReparacion=()=>{if(reparacion)cambiarConfirmandoReparacion(true);};
+  const aplicarReparacion=async()=>{
+    if(!reparacion||reparando)return;
+    establecerErrorReparacion('');establecerReparando(true);
+    try{await respuesta.ejecutar(()=>repararPerfilPendiente(reparacion),async()=>{cambiarConfirmandoReparacion(false);await cargar(true,false);mostrarAviso('Correo pendiente corregido.',{tipo:'exito'});});}
+    catch(fallo){establecerErrorReparacion(fallo instanceof Error?fallo.message:'No se pudo reparar.');}
+    finally{establecerReparando(false);}
   };
   return <SafeAreaView edges={['top']} style={globales.areaSegura}><MarcoEncabezado style={globales.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>volverProtegido()} mostrarSincronizacion={false}/>}>
 
@@ -146,5 +149,8 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       ListEmptyComponent={!cargando&&!error?<View style={estilos.vacio}><View style={estilos.iconoEstado}><Ionicons name={datos.soloLocal?'phone-portrait-outline':'checkmark-done-outline'} size={28} color={tema.foco}/></View><Text style={estilos.titulo}>{datos.soloLocal?'Datos de prueba':'Sin pendientes'}</Text><Text style={estilos.texto}>{datos.soloLocal?'Los ejemplos se guardan solo en este teléfono.':'Todos los cambios locales están confirmados.'}</Text></View>:null}
       ListFooterComponent={cargando?<PuntosCarga style={estilos.carga} color={tema.foco}/>:!error&&datos.registros.length<datos.total?<Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(()=>{void cargar(false);})} style={estilos.reintentar}><Text style={estilos.valor}>Cargar más pendientes</Text></Pressable>:null}
     />
-  </MarcoEncabezado></SafeAreaView>;
+  </MarcoEncabezado>
+  {confirmandoReparacion&&reparacion?<ModalPerfil visible alCerrar={()=>{if(!reparando)cambiarConfirmandoReparacion(false);}} estilos={crearEstilosPerfil(tema)} tema={tema} titulo="Corregir correo pendiente" descripcion={`Se reemplazará ${reparacion.correoAnterior} por ${reparacion.correoNuevo}. Los movimientos y sus importes se conservan.`} icono="mail-outline" etiquetaCerrar="Cerrar corrección de correo">
+    <BotonAccion tema={tema} texto="Aplicar corrección" cargando={reparando} completado={respuesta.completado} deshabilitado={reparando} alPresionar={aplicarReparacion}/>
+  </ModalPerfil>:null}</SafeAreaView>;
 }

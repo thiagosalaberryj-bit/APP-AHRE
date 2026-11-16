@@ -1,3 +1,5 @@
+import {useAccionConfirmada} from '../../hooks/useConfirmedAction';
+import {actualizarTrasOperacion} from '../../social/financialOperation';
 import PuntosCarga from '../LoadingDots';
 import { useContext } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
@@ -14,6 +16,7 @@ import OpcionesSeleccion from './SocialChoiceGroup';
 import crearEstilosInvitacion from '../../styles/social/DebtInvitationStyles';
 
 export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:DeudaVista}){
+ const respuesta=useAccionConfirmada();
   const { mostrarAviso } = useContext(ContextoAvisos);
   const social=useDatosSociales(),estilos=crearEstilosInvitacion(aspecto.tema);
   const [invitacion,cambiarInvitacion]=useState<DeudaOnline|null>(null),[asociacion,cambiarAsociacion]=useState(''),[cargando,cambiarCargando]=useState(true),[, cambiarError]=useErrorNotificado(''),[decision,cambiarDecision]=useState('');
@@ -25,7 +28,7 @@ export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:
     let activo=true,version=0;
     const cargar=async()=>{const actual=++version;try{
       const deudas=await leerDatosOnline<DeudaOnline[]>(social.usuarioId,'deudas',[]);
-      if(activo&&actual===version){cambiarInvitacion(deudas.find(d=>d.id===deuda.acuerdoOnlineId)||null);cambiarCargando(false);}
+      actualizarTrasOperacion(()=>{if(activo&&actual===version){cambiarInvitacion(deudas.find(d=>d.id===deuda.acuerdoOnlineId)||null);cambiarCargando(false);}});
     }catch{if(activo&&actual===version){cambiarError('No se pudo cargar la invitación.');cambiarCargando(false);}}};
     void cargar();const dejar=observarSocialOnline(()=>{void cargar();});return()=>{activo=false;dejar();};
   },[social.usuarioId,deuda.acuerdoOnlineId]);
@@ -35,8 +38,8 @@ export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:
     if(bloqueo.current||!invitacion?.puedeDecidir)return;
     bloqueo.current=true;cambiarDecision(valor);cambiarError('');
     try{
-      await enviarAccionSocial('propuesta:'+invitacion.id,'/deudas/'+invitacion.id+'/decidir',{decision:valor,...(valor==='aceptada'&&asociacion?{deudaLocalId:asociacion,confirmarVinculo:true}:{})});
-      await sincronizarSocialOnline();await social.recargar();mostrarAviso(valor==='aceptada'?'Invitación aceptada.':'Invitación rechazada.',{tipo:'exito'});if(valor==='rechazada'&&montado.current)social.volver();
+      await respuesta.ejecutar(async()=>{await enviarAccionSocial('propuesta:'+invitacion.id,'/deudas/'+invitacion.id+'/decidir',{decision:valor,...(valor==='aceptada'&&asociacion?{deudaLocalId:asociacion,confirmarVinculo:true}:{})});
+      await sincronizarSocialOnline();await social.recargar();},()=>{mostrarAviso(valor==='aceptada'?'Invitación aceptada.':'Invitación rechazada.',{tipo:'exito'});if(valor==='rechazada'&&montado.current)social.volver();});
     }catch(fallo){if(montado.current)cambiarError(fallo instanceof Error?fallo.message:'No se pudo responder la invitación.');}
     finally{bloqueo.current=false;if(montado.current)cambiarDecision('');}
   };
@@ -48,12 +51,12 @@ export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:
     </View>
     {cargando||decision?<View style={estilos.progreso}><PuntosCarga color={aspecto.tema.foco}/><Text accessibilityLiveRegion="polite" style={aspecto.estilosGlobales.textoSecundario}>{decision==='aceptada'?'Aceptando invitación…':decision==='rechazada'?'Rechazando invitación…':'Cargando invitación…'}</Text></View>:null}
 
-    {invitacion?.estado==='pendiente'&&!invitacion.puedeDecidir?<BotonSocial texto="Retirar propuesta" secundario cargando={decision==='retirar'} deshabilitado={!!decision||sinConexion} alPresionar={async()=>{if(bloqueo.current)return;bloqueo.current=true;cambiarDecision('retirar');try{await retirarPropuestaOnline(invitacion.id);await social.recargar();mostrarAviso('Propuesta retirada. Tu deuda personal se conserva.',{tipo:'exito'});}catch(error){cambiarError(error instanceof Error?error.message:'No se pudo retirar la propuesta.');}finally{bloqueo.current=false;cambiarDecision('');}}} {...aspecto}/>:null}
+    {invitacion?.estado==='pendiente'&&!invitacion.puedeDecidir?<BotonSocial completado={respuesta.completado} texto="Retirar propuesta" secundario cargando={decision==='retirar'} deshabilitado={!!decision||sinConexion} alPresionar={async()=>{if(bloqueo.current)return;bloqueo.current=true;cambiarDecision('retirar');try{await respuesta.ejecutar(async()=>{await retirarPropuestaOnline(invitacion.id);await social.recargar();},()=>mostrarAviso('Propuesta retirada. Tu deuda personal se conserva.',{tipo:'exito'}));}catch(error){cambiarError(error instanceof Error?error.message:'No se pudo retirar la propuesta.');}finally{bloqueo.current=false;cambiarDecision('');}}} {...aspecto}/>:null}
     {invitacion?.puedeDecidir&&!rechazada?<>
       <Text style={aspecto.estilosGlobales.textoSecundario}>Al aceptar, esta deuda quedará vinculada online. No se registra ningún pago.</Text>
       {compatibles.length?<View style={estilos.grupo}><Text style={aspecto.estilosGlobales.etiqueta}>¿Ya tenías anotada esta deuda?</Text><Text style={aspecto.estilosGlobales.textoSecundario}>Podés vincular tu registro para evitar duplicarla. Es opcional.</Text><OpcionesSeleccion opciones={compatibles.map(d=>({id:d.id,nombre:(social.obtenerPersona(d.personaId)?.nombre||'Persona')+' · '+d.descripcion+' · '+d.pendiente}))} elegida={asociacion} alElegir={id=>cambiarAsociacion(actual=>actual===id?'':id)} {...aspecto}/></View>:null}
       {sinConexion?<Text style={aspecto.estilosGlobales.textoAyuda}>Necesitás conexión para responder esta invitación.</Text>:null}
-      <View style={estilos.acciones}><View style={estilos.accion}><BotonSocial texto="Aceptar" cargando={decision==='aceptada'} deshabilitado={!!decision||sinConexion} alPresionar={()=>responder('aceptada')} {...aspecto}/></View><View style={estilos.accion}><BotonSocial texto="Rechazar" cargando={decision==='rechazada'} secundario deshabilitado={!!decision||sinConexion} alPresionar={()=>responder('rechazada')} {...aspecto}/></View></View>
+      <View style={estilos.acciones}><View style={estilos.accion}><BotonSocial completado={respuesta.completado&&decision==='aceptada'} texto="Aceptar" cargando={decision==='aceptada'} deshabilitado={!!decision||sinConexion} alPresionar={()=>responder('aceptada')} {...aspecto}/></View><View style={estilos.accion}><BotonSocial completado={respuesta.completado&&decision==='rechazada'} texto="Rechazar" cargando={decision==='rechazada'} secundario deshabilitado={!!decision||sinConexion} alPresionar={()=>responder('rechazada')} {...aspecto}/></View></View>
     </>:null}
   </View>;
 }

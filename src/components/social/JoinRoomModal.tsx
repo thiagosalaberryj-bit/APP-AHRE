@@ -1,3 +1,5 @@
+import {actualizarTrasOperacion} from '../../social/financialOperation';
+import {useAccionConfirmada} from '../../hooks/useConfirmedAction';
 import {conRespuestaVisual} from '../../utils/pressFeedback';
 import BotonAccion from '../ActionButton';
 import {crearEstilosGlobales} from '../../styles/globalStyles';
@@ -24,7 +26,8 @@ import {crearEstilosSocialOnline} from '../../styles/social/OnlineSocialStyles';
 import DialogoInvitacion from './InvitationDialog';
 import SelectorSegmentado from '../SegmentedSelector';
 
-export default function UnirseSala({alUnirse,alCerrar,enlaceInicial='',...aspecto}:AspectoSocial&{alUnirse:(salaId:string)=>void;alCerrar:()=>void;enlaceInicial?:string}){
+export default function UnirseSala({alUnirse,alCerrar,enlaceInicial='',sinVentana=false,...aspecto}:AspectoSocial&{alUnirse:(salaId:string)=>void;alCerrar:()=>void;sinVentana?:boolean;enlaceInicial?:string}){
+ const respuesta=useAccionConfirmada();
  const [focoEntrada,cambiarFocoEntrada]=useState<string|null>(null);
  const estilosEntrada=crearEstilosGlobales(aspecto.tema);
 
@@ -33,7 +36,7 @@ export default function UnirseSala({alUnirse,alCerrar,enlaceInicial='',...aspect
   const [identidad,cambiarIdentidad]=useState('Tu cuenta de AHRE'),[contrasena,cambiarContrasena]=useState(''),[solicitudId,cambiarSolicitudId]=useState(''),[estadoIngreso,cambiarEstadoIngreso]=useState(''),[errorContrasena,cambiarErrorContrasena]=useState('');
   const social=useDatosSociales(),demo=social.salas.some(s=>s.demo);
   useEffect(()=>{let vigente=true;void obtenerSesionActual().then(({usuario})=>{if(vigente&&usuario)cambiarIdentidad([usuario.nombre,usuario.apellido].filter(Boolean).join(' '));}).catch(()=>{});return()=>{vigente=false;};},[]);
-  useEffect(()=>{if(!solicitudId)return;let vigente=true;const cargar=()=>{void leerDatosOnline<{id:string;estado:string;salaId:string}[]>(social.usuarioId,'ingresos',[]).then(ingresos=>{const ingreso=ingresos.find(i=>i.id===solicitudId);if(!vigente||!ingreso)return;cambiarEstadoIngreso(ingreso.estado);if(ingreso.estado==='aceptada'){alCerrar();alUnirse(ingreso.salaId);mostrarAviso('Aceptaron tu ingreso a la sala.',{tipo:'exito'});}}).catch(()=>{});};cargar();const dejar=observarSocialOnline(cargar);return()=>{vigente=false;dejar();};},[social.usuarioId,solicitudId]);
+  useEffect(()=>{if(!solicitudId)return;let vigente=true;const cargar=()=>{void leerDatosOnline<{id:string;estado:string;salaId:string}[]>(social.usuarioId,'ingresos',[]).then(ingresos=>{const ingreso=ingresos.find(i=>i.id===solicitudId);if(!vigente||!ingreso)return;cambiarEstadoIngreso(ingreso.estado);if(ingreso.estado==='aceptada')actualizarTrasOperacion(()=>{if(vigente){alCerrar();alUnirse(ingreso.salaId);mostrarAviso('Aceptaron tu ingreso a la sala.',{tipo:'exito'});}});}).catch(()=>{});};cargar();const dejar=observarSocialOnline(cargar);return()=>{vigente=false;dejar();};},[social.usuarioId,solicitudId]);
   const leer=(texto:string)=>leerEnlaceInvitacion(texto,URL_SERVIDOR)||(demo?leerEnlaceInvitacion(texto,'https://demo.ahre.test'):null);
   const esGlobal=!!leer(enlace)?.global;
   const ocupado=useRef(false),[cargando,cambiarCargando]=useState(false),estilos=crearEstilosSocialOnline(aspecto.tema);
@@ -45,13 +48,13 @@ export default function UnirseSala({alUnirse,alCerrar,enlaceInicial='',...aspect
     if(!datos){cambiarError('Este enlace o QR no es una invitación válida de AHRE.');return;}
     if(datos.global&&!contrasena){cambiarErrorContrasena('Ingresá la contraseña de la sala.');if(metodo==='qr')mostrarAviso('QR reconocido. Ingresá la contraseña de la sala.',{tipo:'informacion'});return;}
     ocupado.current=true;cambiarCargando(true);
-    try{const resultado=datos.global?await solicitarIngresoSala(datos.token,'',contrasena):await aceptarInvitacionOnline(datos.token,datos.canje);if('estado' in resultado&&resultado.estado!=='aceptada'){cambiarEstadoIngreso(String(resultado.estado));cambiarSolicitudId('id' in resultado&&typeof resultado.id==='string'?resultado.id:'');mostrarAviso('Solicitud enviada. El administrador debe aprobarla.',{tipo:'exito'});return;}await social.recargar();alCerrar();cambiarEnlace('');alUnirse(resultado.salaId);mostrarAviso('Ya ingresaste a la sala.',{tipo:'exito'});}
+    try{await respuesta.ejecutar(async()=>{const resultado=datos.global?await solicitarIngresoSala(datos.token,'',contrasena):await aceptarInvitacionOnline(datos.token,datos.canje);await social.recargar();return resultado;},resultado=>{if('estado' in resultado&&resultado.estado!=='aceptada'){cambiarEstadoIngreso(String(resultado.estado));cambiarSolicitudId('id' in resultado&&typeof resultado.id==='string'?resultado.id:'');mostrarAviso('Solicitud enviada. El administrador debe aprobarla.',{tipo:'exito'});return;}alCerrar();cambiarEnlace('');alUnirse(resultado.salaId);mostrarAviso('Ya ingresaste a la sala.',{tipo:'exito'});});}
     catch(fallo){const mensaje=mensajeErrorSocial(fallo,'No se pudo aceptar la invitación.');if(/contraseña/i.test(mensaje))cambiarErrorContrasena(mensaje);else cambiarError(mensaje);}
     finally{ocupado.current=false;cambiarCargando(false);}
   };
   const Escaner=metodo==='qr'?require('./InvitationScanner').default:null;
   return <>
-    <DialogoInvitacion {...aspecto} titulo="Unirme a una sala" descripcion="Ingresá con el enlace o QR de la sala" icono="people-outline" alCerrar={cerrar} ocupado={cargando} pie={metodo==='enlace'?(estadoIngreso==='pendiente'?<View accessibilityLiveRegion="polite" style={estilos.fila}><Ionicons name="checkmark-circle-outline" size={22} color={aspecto.tema.exito}/><Text style={aspecto.estilosGlobales.texto}>Solicitud enviada</Text></View>:<BotonAccion tema={aspecto.tema} texto={esGlobal?'Entrar a la sala':'Aceptar invitación'} cargando={cargando} deshabilitado={cargando||!enlace.trim()} alPresionar={()=>aceptar(enlace)}/>):null}>
+    <DialogoInvitacion sinVentana={sinVentana} {...aspecto} titulo="Unirme a una sala" descripcion="Ingresá con el enlace o QR de la sala" icono="people-outline" alCerrar={cerrar} ocupado={cargando} pie={metodo==='enlace'?(estadoIngreso==='pendiente'?<View accessibilityLiveRegion="polite" style={estilos.fila}><Ionicons name="checkmark-circle-outline" size={22} color={aspecto.tema.exito}/><Text style={aspecto.estilosGlobales.texto}>Solicitud enviada</Text></View>:<BotonAccion completado={respuesta.completado} tema={aspecto.tema} texto={esGlobal?'Entrar a la sala':'Aceptar invitación'} cargando={cargando} deshabilitado={cargando||!enlace.trim()} alPresionar={()=>aceptar(enlace)}/>):null}>
       <View pointerEvents={cargando?'none':'auto'}><SelectorSegmentado tema={aspecto.tema} opciones={[{id:'enlace',nombre:'Pegar enlace'},{id:'qr',nombre:'Escanear QR'}]} valor={metodo} alSeleccionar={valor=>{Keyboard.dismiss();cambiarError('');cambiarMetodo(valor);}} etiqueta="Forma de unirme"/></View>
       {metodo==='enlace'?<View style={estilos.grupo}>
         <Text style={aspecto.estilosGlobales.etiqueta}>Enlace de invitación</Text>

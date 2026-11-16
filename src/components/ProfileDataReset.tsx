@@ -1,3 +1,4 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
 import {conRespuestaVisual} from '../utils/pressFeedback';
 import BotonAccion from './ActionButton';
 import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
@@ -17,6 +18,7 @@ import ModalPerfil from './ProfileModal';
 
 // Temporal y aislado para poder retirar la herramienta antes de la versión final.
 export default function ReinicioDatosPerfil({ navegacion }: { navegacion: NavegacionRaiz }) {
+ const finalizacion=useFinalizacionAccion();
  const [focoEntrada,cambiarFocoEntrada]=useState<string|null>(null);
 
 
@@ -38,9 +40,10 @@ export default function ReinicioDatosPerfil({ navegacion }: { navegacion: Navega
   };
   const confirmar = async () => {
     if (!vista || bloqueo.current || !correo || !contrasena || frase !== 'BORRAR MIS DATOS') return;
-    bloqueo.current = true; cambiarOcupado(true);
+    bloqueo.current = true; finalizacion.iniciar();cambiarOcupado(true);
     try {
       await reiniciarDatos(vista, correo.trim(), contrasena, frase);
+      if(!await finalizacion.confirmar())return;
       bloqueo.current = false; cambiarOcupado(false); cambiarVisible(false); cambiarContrasena('');
       navegacion.reset({ index: 0, routes: [{ name: RUTAS.INICIO_SESION }] });
       mostrarAviso('Datos locales y del servidor eliminados. Tu cuenta se conserva.', { tipo: 'exito' });
@@ -74,7 +77,7 @@ export default function ReinicioDatosPerfil({ navegacion }: { navegacion: Navega
         <TextInput onFocus={()=>cambiarFocoEntrada("1")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Contraseña para reiniciar" editable={!ocupado} secureTextEntry autoCapitalize="none" value={contrasena} onChangeText={cambiarContrasena} style={[globales.campo,estilosEntrada.campo,focoEntrada==="1"&&estilosEntrada.campoEnfocado]} />
         <Text style={globales.etiqueta}>Escribí BORRAR MIS DATOS</Text>
         <TextInput onFocus={()=>cambiarFocoEntrada("2")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Frase de confirmación de borrado" editable={!ocupado} autoCapitalize="characters" value={frase} onChangeText={cambiarFrase} style={[globales.campo,estilosEntrada.campo,focoEntrada==="2"&&estilosEntrada.campoEnfocado]} />
-        <BotonAccion tema={tema} texto={"Eliminar todos mis datos"} variante="peligro" cargando={false} deshabilitado={ocupado || !correo.trim() || !contrasena || frase !== 'BORRAR MIS DATOS'} alPresionar={confirmar} estilo={[globales.botonPrincipal,{ backgroundColor: tema.botonPeligro }]} />
+        <BotonAccion tema={tema} texto={"Eliminar todos mis datos"} variante="peligro" cargando={ocupado} completado={finalizacion.completado} deshabilitado={ocupado || !correo.trim() || !contrasena || frase !== 'BORRAR MIS DATOS'} alPresionar={confirmar} estilo={[globales.botonPrincipal,{ backgroundColor: tema.botonPeligro }]} />
       </> : null}
       {ocupado ? <View accessibilityLiveRegion="polite"><PuntosCarga color={tema.foco} /><Text style={estilos.descripcionFormularioModal}>{vista ? 'Reiniciando. Si hay una interrupción, reabrí AHRE con conexión para recuperar el resultado.' : 'Consultando el alcance…'}</Text></View> : null}
     </ModalPerfil>

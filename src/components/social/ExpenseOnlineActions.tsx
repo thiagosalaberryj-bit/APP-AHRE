@@ -1,3 +1,4 @@
+import {useAccionConfirmada} from '../../hooks/useConfirmedAction';
 import {conRespuestaVisual} from '../../utils/pressFeedback';
 import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import AccionesSolicitud from './RequestDecisionActions';
@@ -21,6 +22,7 @@ import Seleccion from './RoomFinanceSelection';
 import crearEstilosDetalle from '../../styles/social/DebtDetailsStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function AccionesGastoOnline({sala,gasto,seccion,...aspecto}:AspectoSocial&{sala:SalaVista;gasto:GastoVista;seccion:'partes'|'movimientos'}){
+ const respuesta=useAccionConfirmada();
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosPago=crearEstilosGasto(aspecto.tema),controles=crearEstilosSocialOnline(aspecto.tema);
   const detalle=useSalaOnline(sala.id,sala.online),social=useDatosSociales(),estilos=crearEstilosDetalle(aspecto.tema),compartidos=crearEstilosCompartidos(aspecto.tema),bloqueo=useRef(false);
@@ -31,7 +33,7 @@ export default function AccionesGastoOnline({sala,gasto,seccion,...aspecto}:Aspe
   const remoto=detalle.sala.gastos.find(g=>g.id===gasto.id);if(!remoto)return null;
   const propia=detalle.personaPropiaId,pedido=detalle.solicitudes.find(s=>s.gasto_id===gasto.id&&s.personaId===propia&&s.tipo==='parte_pagada'&&s.estado==='pendiente'),abierta=sala.estado==='abierta';
   const misFinanzas=abierta?(detalle.misFinanzas||[]).filter(o=>o.gastoId===gasto.id&&(o.clave.startsWith('compra:')||o.tipo==='ingreso'||remoto.pagaron.includes(propia))):[];
-  const ejecutar=async(accion:()=>Promise<unknown>)=>{if(bloqueo.current)return;bloqueo.current=true;cambiarOcupado(true);cambiarError('');try{await accion();await sincronizarSocialOnline();await social.recargar();mostrarAviso('Cambios guardados.',{tipo:'exito'});}catch(e){cambiarError(mensajeErrorSocial(e,'No se pudo guardar.'));}finally{bloqueo.current=false;cambiarOcupado(false);}};
+  const ejecutar=async(accion:()=>Promise<unknown>)=>{if(bloqueo.current)return;bloqueo.current=true;cambiarOcupado(true);cambiarError('');try{await respuesta.ejecutar(async()=>{await accion();await sincronizarSocialOnline();await social.recargar();},()=>mostrarAviso('Cambios guardados.',{tipo:'exito'}));}catch(e){cambiarError(mensajeErrorSocial(e,'No se pudo guardar.'));}finally{bloqueo.current=false;cambiarOcupado(false);}};
   const elegirPago=(modo:'informar'|'marcar')=>{const opcion=detalle.misFinanzas?.find(o=>o.gastoId===gasto.id&&o.tipo==='egreso');if(opcion){cambiarIntencion(modo);abrirSeleccion(opcion);}};
   return <View style={estilos.historial}>
 
@@ -47,7 +49,7 @@ export default function AccionesGastoOnline({sala,gasto,seccion,...aspecto}:Aspe
         </View><Text style={aspecto.estilosGlobales.textoAyuda}>{parte?.resumen}</Text></View>;
       })}
 
-    {abierta&&sala.administrador?detalle.solicitudes.filter(s=>s.gasto_id===gasto.id&&s.estado==='pendiente').map(s=><View key={s.id} style={[estilos.registro,controles.filaSolicitud]}><View style={controles.flexible}><Text style={aspecto.estilosGlobales.etiqueta}>{social.obtenerPersona(s.personaId||'')?.nombre} · {s.texto}</Text></View><AccionesSolicitud tema={aspecto.tema} etiquetaAceptar="Aceptar solicitud" etiquetaRechazar="Rechazar solicitud" deshabilitado={ocupado} procesando={enviando?.id===s.id?enviando.accion:null} alAceptar={()=>{if(bloqueo.current)return;cambiarEnviando({id:s.id,accion:'aceptar'});void ejecutar(()=>enviarAccionSocial('solicitud:'+s.id,'/solicitudes/'+s.id+'/decidir',{decision:'resuelta'})).finally(()=>cambiarEnviando(null));}} alRechazar={()=>{if(bloqueo.current)return;cambiarEnviando({id:s.id,accion:'rechazar'});void ejecutar(()=>enviarAccionSocial('solicitud:'+s.id,'/solicitudes/'+s.id+'/decidir',{decision:'rechazada'})).finally(()=>cambiarEnviando(null));}}/></View>):null}
+    {abierta&&sala.administrador?detalle.solicitudes.filter(s=>s.gasto_id===gasto.id&&s.estado==='pendiente').map(s=><View key={s.id} style={estilos.registro}><View style={controles.flexible}><Text style={aspecto.estilosGlobales.etiqueta}>{social.obtenerPersona(s.personaId||'')?.nombre} · {s.texto}</Text></View><AccionesSolicitud completado={respuesta.completado} tema={aspecto.tema} etiquetaAceptar="Aceptar solicitud" etiquetaRechazar="Rechazar solicitud" deshabilitado={ocupado} procesando={enviando?.id===s.id?enviando.accion:null} alAceptar={()=>{if(bloqueo.current)return;cambiarEnviando({id:s.id,accion:'aceptar'});return ejecutar(()=>enviarAccionSocial('solicitud:'+s.id,'/solicitudes/'+s.id+'/decidir',{decision:'resuelta'})).finally(()=>cambiarEnviando(null));}} alRechazar={()=>{if(bloqueo.current)return;cambiarEnviando({id:s.id,accion:'rechazar'});return ejecutar(()=>enviarAccionSocial('solicitud:'+s.id,'/solicitudes/'+s.id+'/decidir',{decision:'rechazada'})).finally(()=>cambiarEnviando(null));}}/></View>):null}
     </>:null}
     {seccion==='movimientos'?<>
     {abierta&&!sala.administrador&&remoto.pagadorId!==propia&&remoto.partes.some(p=>p.personaId===propia)?<BotonSocial texto={remoto.pagaron.includes(propia)?'Tu parte está pagada':pedido?'Espera aprobación':'Ya pagué mi parte'} deshabilitado={ocupado||!!pedido||remoto.pagaron.includes(propia)} alPresionar={()=>elegirPago('informar')} {...aspecto}/>:null}

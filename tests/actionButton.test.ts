@@ -47,3 +47,20 @@ test('un éxito explícito muestra Listo y vuelve a habilitar la acción tras co
 test('un resultado fallido o sin confirmación no muestra un éxito ficticio',async()=>{
   for(const resultado of [false,undefined]){const e=prepararBoton(),props={tema:TEMAS.claro,texto:'Guardar',alPresionar:async()=>resultado};await e.renderizar(props).props.onPress();assert.equal(e.renderizar(props).props.children.props.completado,false);e.cerrar();}
 });
+
+test('el éxito externo se mantiene al iniciar el cierre y permite reutilizar la acción después',async()=>{
+ const e=prepararBoton();let terminar!:()=>void;
+ const props={tema:TEMAS.oscuro,texto:'Guardar ingreso',completado:false,cargando:false,alPresionar:()=>new Promise<void>(r=>{terminar=r;})};
+ const pendiente=e.renderizar(props).props.onPress();
+ const exito={...props,completado:true};
+ const durante=e.renderizar({...exito,cargando:true});
+ assert.equal(durante.props.children.props.completado,true);
+ const cerrando=e.renderizar(exito);
+ assert.equal(cerrando.props.children.props.cargando,false);
+ assert.equal(cerrando.props.children.props.completado,true);
+ terminar();await pendiente;
+ const final=e.renderizar(exito);
+ assert.equal(final.props.children.props.completado,false);
+ assert.equal(final.props.children.props.cargando,false);
+ assert.equal(final.props.disabled,false);e.cerrar();
+});

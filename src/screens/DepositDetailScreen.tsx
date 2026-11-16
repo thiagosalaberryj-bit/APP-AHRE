@@ -1,3 +1,6 @@
+import {useAccionConfirmada} from '../hooks/useConfirmedAction';
+import ModalPerfil from '../components/ProfileModal';
+import {crearEstilosPerfil} from '../styles/ProfileScreenStyles';
 import {useFinalizacionAccion} from '../hooks/useActionCompletion';
 import {conRespuestaVisual} from '../utils/pressFeedback';
 import BotonAccion from '../components/ActionButton';
@@ -33,7 +36,7 @@ import type { NombreIcono } from '../constants/movimientos';
 import { observarIntegraciones } from '../integrations/integrationStore';
 import { consultarResumenMp, desvincularMercadoPago, cargarMercadoPago, iniciarVinculacion } from '../mercadoPago/mercadoPagoService';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
-import { Alert, AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -153,6 +156,8 @@ function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: impo
 
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
  const finalizacion=useFinalizacionAccion();
+ const respuestaMp=useAccionConfirmada();
+ const [confirmandoDesvinculacionMp,cambiarConfirmandoDesvinculacionMp]=useState(false);
 
   const volverProtegido = useRegresoProtegido(navegacion, () => operacionFinancieraEnCurso() || operacionDepositoEnCurso.current);
   const operacionDepositoEnCurso=useRef(false);
@@ -855,11 +860,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               })}><View style={estilos.iconoOpcionModal}><Ionicons name="refresh-outline" size={21} color={tema.foco}/></View><View style={estilos.detalleOpcionModal}><Text style={estilos.tituloOpcionModal}>Renovar autorización</Text><Text style={estilos.subtituloOpcionModal}>Volver a permitir el acceso a Mercado Pago</Text></View>{guardandoConexionMp?<PuntosCarga color={tema.foco}/>:null}</Pressable>
               </> : null}
               <View style={estilos.separadorOpcionModal} />
-              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={guardandoConexionMp} style={({pressed})=>[estilos.opcionModal,pressed&&estilos.opcionPresionada]} onPress={conRespuestaVisual(()=>Alert.alert('Desvincular Mercado Pago',`Se descartarán ${resumenMercadoPago.pendientes} pendientes. Los movimientos registrados se conservan. Podés hacerlo sin conexión.`,[{text:'Cancelar',style:'cancel'},{text:'Desvincular',style:'destructive',onPress:()=>{
-                if(operacionDepositoEnCurso.current)return;
-                operacionDepositoEnCurso.current=true;establecerGuardandoConexionMp(true);
-                void desvincularMercadoPago().then(()=>{establecerModalOpcionesVisible(false);mostrarAviso('Cuenta desvinculada. Se confirmará al reconectar.',{tipo:'exito'});}).catch(error=>mostrarAviso(error instanceof Error?error.message:'No se pudo desvincular.',{tipo:'error'})).finally(()=>{operacionDepositoEnCurso.current=false;establecerGuardandoConexionMp(false);});
-              }}]))}><View style={[estilos.iconoOpcionModal,estilos.iconoOpcionEliminar]}><Ionicons name="unlink-outline" size={21} color={tema.error}/></View><View style={estilos.detalleOpcionModal}><Text style={[estilos.tituloOpcionModal,estilos.textoOpcionEliminar]}>Desvincular Mercado Pago</Text><Text style={estilos.subtituloOpcionModal}>Conservar los movimientos registrados</Text></View></Pressable>
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={guardandoConexionMp} style={({pressed})=>[estilos.opcionModal,pressed&&estilos.opcionPresionada]} onPress={conRespuestaVisual(()=>{establecerModalOpcionesVisible(false);cambiarConfirmandoDesvinculacionMp(true);})}><View style={[estilos.iconoOpcionModal,estilos.iconoOpcionEliminar]}><Ionicons name="unlink-outline" size={21} color={tema.error}/></View><View style={estilos.detalleOpcionModal}><Text style={[estilos.tituloOpcionModal,estilos.textoOpcionEliminar]}>Desvincular Mercado Pago</Text><Text style={estilos.subtituloOpcionModal}>Conservar los movimientos registrados</Text></View></Pressable>
             </> : null}
             <View style={estilos.separadorOpcionModal} />
             <Pressable android_ripple={RETROALIMENTACION_PULSACION}
@@ -986,6 +987,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           </View>
         </View>
       </AvisosEnModal></Modal>
+      <ModalPerfil visible={confirmandoDesvinculacionMp} tema={tema} estilos={crearEstilosPerfil(tema)} titulo="Desvincular Mercado Pago" descripcion={`Se descartarán ${resumenMercadoPago?.pendientes||0} pendientes. Los movimientos registrados se conservan. Podés hacerlo sin conexión.`} icono="unlink-outline" etiquetaCerrar="Cerrar desvinculación" alCerrar={()=>{if(!respuestaMp.ocupado)cambiarConfirmandoDesvinculacionMp(false);}}>
+        <BotonAccion tema={tema} texto="Desvincular" variante="peligro" cargando={respuestaMp.ocupado} completado={respuestaMp.completado} deshabilitado={respuestaMp.ocupado} alPresionar={()=>respuestaMp.ejecutar(()=>desvincularMercadoPago(),()=>{cambiarConfirmandoDesvinculacionMp(false);mostrarAviso('Cuenta desvinculada. Se confirmará al reconectar.',{tipo:'exito'});})}/>
+      </ModalPerfil>
     </SafeAreaView>
   );
 }

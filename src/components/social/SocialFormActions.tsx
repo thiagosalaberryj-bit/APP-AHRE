@@ -1,3 +1,4 @@
+import {Modal} from 'react-native';
 import {useFinalizacionAccion} from '../../hooks/useActionCompletion';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
@@ -63,7 +64,9 @@ export default function AccionesFormulario<Resultado>({ texto, peligro = false, 
   };
   return <>
     <BotonSocial completado={finalizacion.completado} cargando={guardando} peligro={peligro} deshabilitado={deshabilitado || guardando || Boolean(plan)} texto={texto}
-      alPresionar={() => confirmacion ? establecerConfirmando(true) : iniciar()} {...aspecto} />    {confirmando && confirmacion ? <ModalConfirmacionSocial cargando={guardando} completado={finalizacion.completado} {...confirmacion} peligro={peligro} alCerrar={() => {if(!ocupada.current)establecerConfirmando(false);}} alConfirmar={iniciar} {...aspecto} /> : null}
-    {plan ? <ModalMovimientoSocial completado={finalizacion.completado} plan={plan} guardando={guardando} alCerrar={() => { if (!guardando) establecerPlan(null); }} alConfirmar={guardar} {...aspecto} /> : null}
+      alPresionar={() => confirmacion ? establecerConfirmando(true) : iniciar()} {...aspecto} />
+    {confirmando||plan?<Modal statusBarTranslucent navigationBarTranslucent transparent animationType="fade" visible onRequestClose={()=>{if(!ocupada.current){establecerConfirmando(false);establecerPlan(null);}}}>
+      {plan?<ModalMovimientoSocial sinVentana completado={finalizacion.completado} plan={plan} guardando={guardando} alCerrar={()=>{if(!ocupada.current)establecerPlan(null);}} alConfirmar={guardar} {...aspecto}/>:confirmacion?<ModalConfirmacionSocial sinVentana cargando={guardando} completado={finalizacion.completado} {...confirmacion} peligro={peligro} alCerrar={()=>{if(!ocupada.current)establecerConfirmando(false);}} alConfirmar={iniciar} {...aspecto}/>:null}
+    </Modal>:null}
   </>;
 }

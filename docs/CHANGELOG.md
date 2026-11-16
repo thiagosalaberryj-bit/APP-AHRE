@@ -5,7 +5,46 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
-Sin cambios pendientes.
+### Cambiado
+
+- Tema oscuro en tonos azulados neutros y controles compartidos en ambos temas;
+  se conservan los estilos y tokens de la app.
+- Guardar y confirmar comparten «Procesando» con tres puntos durante al menos
+  2 segundos y «Listo» durante otro segundo antes de cerrar o navegar. Las
+  operaciones online esperan el resultado real y los datos de prueba respetan
+  los mismos tiempos; navegar, cancelar y seleccionar no tienen esas esperas.
+- Confirmaciones de Mercado Pago y corrección de correo con el componente de
+  acción compartido; Android versionCode 17 para la APK interna 0.9.2.
+
+### Corregido
+
+- Ciclo nativo de los tres puntos sin congelamientos; la palabra «Procesando»
+  y los puntos salen juntos al entrar «Listo», sin repetir la carga al cerrar.
+- Acciones de Social que cerraban instantáneamente: vínculos, registro de
+  personas, invitaciones, decisiones de solicitudes, archivo y desarchivo,
+  accesos de salas y simulaciones de pagos.
+- Recargas que quitaban el botón antes de terminar su confirmación y modales
+  de Social que cambiaban de ventana para mostrar la animación. Los recorridos
+  conservan una ventana nativa durante carga, éxito, errores y reintentos.
+- Cierre accidental del formulario de persona durante el guardado e indicador
+  duplicado que cambiaba la altura del modal de acceso a salas.
+
+### Verificación y entrega
+
+- Tipos de app/herramientas y exportación Android/Hermes correctos.
+- Suite completa de 611 casos: 560 aprobados, 49 integraciones MySQL omitidas
+  y dos expectativas antiguas de botones compactos actualizadas. Su repetición
+  pasó 2/2, sin cambios de código de app posteriores al envío a EAS.
+- Cobertura de tiempos mínimos, puntos nativos, transición conjunta, bloqueo
+  de doble envío, errores y reintentos; 14 pruebas de continuidad de modales
+  y 10 regresiones de interfaz aprobadas en los temas claro y oscuro.
+- Documentación, changelog y preparación de APK solicitados expresamente por
+  el usuario, sin Issue; rama `codex/modo-oscuro-neutro`, sin merge a `main`.
+- [APK interna 0.9.2 / Android 17 enviada a EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/df14e9e9-9e8f-4295-b242-bb5ec5bef9db),
+  perfil `ocr-comparison`, firma existente. Carga y fingerprint confirmados con
+  `--non-interactive --no-wait`; no se espera ni verifica la compilación.
+- La prueba visual de la nueva APK instalada sigue pendiente; compilar no
+  publica la descarga en la web ni despliega SERVER-AHRE.
 
 ## [v0.9.2] - 2026-11-16 - no estable
 

@@ -42,7 +42,8 @@ Ver [reinicio de datos y retirada](reinicio-datos-pruebas.md).
 `.easignore` excluye `/docs/`, `/tests/`, `/README.md` y `/AGENTS.md` del
 archivo enviado a EAS. Los archivos permanecen en Git y disponibles localmente.
 Se conservan código, recursos, plugins, módulos nativos, sus avisos legales,
-configuración y lockfile. Esta exclusión reduce el envío de fuentes; no implica
+configuración y lockfile. También excluye los informes temporales locales
+`/.codex-*.txt`. Esta exclusión reduce el envío de fuentes; no implica
 una reducción del APK instalado. No se excluyen todos los Markdown mediante un
 patrón global porque los módulos nativos pueden requerir avisos y licencias.
 
@@ -65,7 +66,7 @@ El comando envía el código local a EAS y devuelve el seguimiento. Descargar el
 APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
-entrega. El estado actual declara versión 0.9.2 y `android.versionCode` 16;
+entrega. El estado actual declara versión 0.9.2 y `android.versionCode` 17;
 la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
 `Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
@@ -356,3 +357,27 @@ sin fallos ni omisiones. Los 12 casos de publicación/carrusel se comprobaron po
 separado; no se suman a las suites por solapamiento. Tipos y Android/Hermes correctos.
 La prueba manual de la APK quedó confirmada; la comprobación pública de la nueva
 descarga corresponde al despliegue posterior.
+
+
+## Interfaz y confirmaciones · APK 0.9.2 / Android 17 · 16/11/2026
+
+[Envío de APK interna a Expo/EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/df14e9e9-9e8f-4295-b242-bb5ec5bef9db),
+identificador `df14e9e9-9e8f-4295-b242-bb5ec5bef9db`. Perfil `ocr-comparison`,
+distribución interna y firma existente. Mantiene la versión 0.9.2 e incrementa
+`android.versionCode` de 16 a 17 para distinguirla de la APK anterior.
+
+El envío incluye las fuentes locales de `codex/modo-oscuro-neutro` posteriores
+a `58e3fb0`: tema oscuro neutro, secuencia uniforme de «Procesando» y «Listo»,
+puntos nativos y modales de Social que conservan su ventana. EAS recibió los
+cambios locales antes del commit de documentación, no solo el contenido de HEAD.
+Se incluye `google-services.json`, excluido de Git, y la variable pública de API
+se resuelve desde el entorno `preview` de EAS. `.env`, `credentials/`, documentos,
+pruebas e informes temporales quedan fuera del archivo enviado.
+
+Se ejecutó `eas build --platform android --profile ocr-comparison
+--non-interactive --no-wait`. EAS confirmó la carga y el fingerprint.
+Por pedido del usuario no se esperó la compilación ni se comprobó su resultado;
+el enlace de seguimiento no acredita una APK terminada o probada en dispositivo.
+La exportación local Android/Hermes y los tipos pasaron. No se publica la
+descarga en la web ni en Google Play, no se despliega el servidor y no se mergea
+la rama a `main`. La instalación y la comprobación visual siguen pendientes.

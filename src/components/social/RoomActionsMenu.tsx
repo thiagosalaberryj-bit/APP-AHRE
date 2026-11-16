@@ -1,10 +1,11 @@
+import {operacionFinancieraEnCurso} from '../../social/financialOperation';
 import {conRespuestaVisual} from '../../utils/pressFeedback';
 import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import * as SecureStore from 'expo-secure-store';
 import {observarSocialOnline} from '../../social/socialService';
 import {URL_SERVIDOR} from '../../sync/remote';
 import {useState,useEffect} from 'react';
-import {Pressable,Text} from 'react-native';
+import {Modal,Pressable,Text} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import type {AspectoSocial,AccionesSociales} from '../../social/types';
 import {useDatosSociales} from '../../social/SocialDataContext';
@@ -25,10 +26,11 @@ export default function OpcionesSalas({abrirRegistro,abrirSala,...aspecto}:Aspec
       <Ionicons name="people-outline" size={20} color={aspecto.tema.botonPrincipalTexto}/><Text style={estilos.textoAccionPanel}>Salas</Text>
       <Text style={estilos.textoDetalleAccion}>{disponibles?'Podés crear '+disponibles+(disponibles===1?' sala':' salas'):'Sin cupos disponibles'}</Text>
     </Pressable>
-    {abierto==='opciones'?<MenuOpcionesSocial tema={aspecto.tema} titulo="Salas" descripcion="Elegí cómo querés participar." alCerrar={()=>abrir(null)} opciones={[
+    {abierto?<Modal statusBarTranslucent navigationBarTranslucent transparent animationType="fade" visible onRequestClose={()=>{if(!operacionFinancieraEnCurso())abrir(null);}}>
+    {abierto==='unirse'?<UnirseSala sinVentana {...aspecto} enlaceInicial={enlaceInicial} alCerrar={()=>abrir(null)} alUnirse={abrirSala}/>:<MenuOpcionesSocial sinVentana tema={aspecto.tema} titulo="Salas" descripcion="Elegí cómo querés participar." alCerrar={()=>abrir(null)} opciones={[
       {id:'crear',texto:'Crear sala',descripcion:limite?'Ya tenés tres salas propias activas.': 'Organizá gastos e invitá a otras personas.',icono:'add-circle-outline',deshabilitada:limite||!social.habilitadoParaCrear,alElegir:()=>{abrir(null);abrirRegistro('crear');}},
       {id:'unirse',texto:'Unirme a sala',descripcion:'Entrá con un enlace de invitación o escaneá un QR.',icono:'qr-code-outline',alElegir:()=>abrir('unirse')},
-    ]}/>:null}
-    {abierto==='unirse'?<UnirseSala {...aspecto} enlaceInicial={enlaceInicial} alCerrar={()=>abrir(null)} alUnirse={abrirSala}/>:null}
+    ]}/> }
+    </Modal>:null}
   </>;
 }

@@ -9,13 +9,14 @@ import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, TextInput
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosModal from '../../styles/social/AddRoomPeopleModalStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[]; guardando?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean})) {
+export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[]; guardando?:boolean;completado?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean})) {
   const {
     personas: personasSociales
   } = useDatosSociales();
   const {
     personasSala,
     guardando:guardandoExterno,
+    completado,
     alAgregar,
     alCerrar,
     alCrear,
@@ -73,7 +74,7 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
             <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Crear una persona" disabled={guardando} onPress={conRespuestaVisual(alCrear)} style={[estilos.crear, guardando && estilos.deshabilitado]}>
               <Ionicons name="person-add-outline" color={tema.foco} size={18} /><Text style={estilos.textoCrear}>Crear persona</Text>
             </Pressable>
-            <BotonAccion tema={tema} texto={textoConfirmar + (seleccionadas.length ? ' · ' + seleccionadas.length : '')} variante="principal" cargando={guardando} deshabilitado={(!permitirVacia && !seleccionadas.length) || guardando} alPresionar={() => alAgregar(seleccionadas)} estilo={[estilos.agregar]} etiquetaAccesibilidad={textoConfirmar === 'Agregar' ? 'Agregar seleccionadas' : textoConfirmar}/>
+            <BotonAccion completado={completado} tema={tema} texto={textoConfirmar + (seleccionadas.length ? ' · ' + seleccionadas.length : '')} variante="principal" cargando={guardando} deshabilitado={(!permitirVacia && !seleccionadas.length) || guardando} alPresionar={() => alAgregar(seleccionadas)} estilo={[estilos.agregar]} etiquetaAccesibilidad={textoConfirmar === 'Agregar' ? 'Agregar seleccionadas' : textoConfirmar}/>
           </View>
         </View>
       </KeyboardAvoidingView>

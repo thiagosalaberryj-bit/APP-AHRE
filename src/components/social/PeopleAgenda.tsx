@@ -1,3 +1,5 @@
+import {useAccionConfirmada} from '../../hooks/useConfirmedAction';
+import BotonAccion from '../ActionButton';
 import {conRespuestaVisual} from '../../utils/pressFeedback';
 import {crearEstilosGlobales} from '../../styles/globalStyles';
 import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
@@ -15,6 +17,7 @@ import ModalPersona from './PersonModal';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/PeopleAgendaStyles';
 export default function AgendaPersonas(propiedades: import('../../social/types').AspectoSocial & ({abrirAltaInicial?:boolean} & Pick<import('../../social/types').AccionesSociales,'abrirPersona'>)) {
+ const respuesta=useAccionConfirmada();
  const [focoEntrada,cambiarFocoEntrada]=useState<string|null>(null);
  const estilosEntrada=crearEstilosGlobales(propiedades.tema);
 
@@ -43,7 +46,7 @@ export default function AgendaPersonas(propiedades: import('../../social/types')
   const [busquedaArchivadas,cambiarBusquedaArchivadas]=useState('');
   const [ocupado,cambiarOcupado]=useState(false),bloqueo=useRef(false);
   const {mostrarAviso}=useContext(ContextoAvisos);
-  const desarchivar=async(id:string)=>{if(bloqueo.current)return;bloqueo.current=true;cambiarOcupado(true);try{await cambiarActividadPersona(id,true);await recargar();mostrarAviso('Persona desarchivada.',{tipo:'exito'});}catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudo desarchivar.',{tipo:'error'});}finally{bloqueo.current=false;cambiarOcupado(false);}};
+  const desarchivar=async(id:string)=>{if(bloqueo.current)return;bloqueo.current=true;cambiarOcupado(true);try{await respuesta.ejecutar(async()=>{await cambiarActividadPersona(id,true);await recargar();},()=>mostrarAviso('Persona desarchivada.',{tipo:'exito'}),id);}catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudo desarchivar.',{tipo:'error'});}finally{bloqueo.current=false;cambiarOcupado(false);}};
   const [mostrarFormulario, establecerMostrarFormulario] = useState(abrirAltaInicial);
   const personas = [...personasSociales].filter(persona=>persona.activa).filter(persona => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo || ''}`).includes(normalizarNombrePersona(busqueda))).sort((a, b) => nombreCompletoPersona(a).localeCompare(nombreCompletoPersona(b), 'es'));
   const cerrarFormulario = (persona?: Pick<import('../../database/types').Persona,'id'> | null) => { if (persona?.id) establecerBusqueda(''); establecerMostrarFormulario(false); };
@@ -82,7 +85,7 @@ export default function AgendaPersonas(propiedades: import('../../social/types')
         <TextInput onFocus={()=>cambiarFocoEntrada("1")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Buscar personas archivadas" value={busquedaArchivadas} onChangeText={cambiarBusquedaArchivadas} placeholder="Nombre, apellido o apodo" placeholderTextColor={tema.textoSecundario} style={[[estilosMovimiento.entradaDescripcion,estilosGlobales.campo],estilosEntrada.campo,focoEntrada==="1"&&estilosEntrada.campoEnfocado]}/>
         {personasSociales.filter(p=>!p.activa&&normalizarNombrePersona(nombreCompletoPersona(p)+' '+p.apodo).includes(normalizarNombrePersona(busquedaArchivadas))).sort((a,b)=>nombreCompletoPersona(a).localeCompare(nombreCompletoPersona(b),'es')).map(persona=><View key={persona.id} style={[estilosGlobales.tarjeta,estilos.contactoAgenda]}>
           <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={'Abrir persona archivada '+nombreCompletoPersona(persona)} disabled={ocupado} style={estilos.textoFlexible} onPress={conRespuestaVisual(()=>{cambiarArchivadas(false);abrirPersona(persona.id);})}><Text style={estilosGlobales.etiqueta}>{nombreCompletoPersona(persona)}</Text><Text style={estilosGlobales.textoSecundario}>{persona.apodo}</Text></Pressable>
-          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={'Desarchivar a '+nombreCompletoPersona(persona)} disabled={ocupado} style={estilos.accionDesarchivar} onPress={conRespuestaVisual(()=>{void desarchivar(persona.id);})}><Ionicons name="refresh-outline" size={22} color={tema.foco}/></Pressable>
+          <BotonAccion tema={tema} texto="Desarchivar" etiquetaAccesibilidad={'Desarchivar a '+nombreCompletoPersona(persona)} variante="secundario" cargando={respuesta.accionActiva===persona.id} completado={respuesta.completado&&respuesta.accionActiva===persona.id} deshabilitado={ocupado} alPresionar={()=>desarchivar(persona.id)}/>
         </View>)}
         {!personasSociales.some(p=>!p.activa&&normalizarNombrePersona(nombreCompletoPersona(p)+' '+p.apodo).includes(normalizarNombrePersona(busquedaArchivadas)))?<Text style={estilosGlobales.textoAyuda}>{busquedaArchivadas?'No encontramos personas archivadas con esos datos.':'No tenés personas archivadas.'}</Text>:null}
       </Dialogo>:null}

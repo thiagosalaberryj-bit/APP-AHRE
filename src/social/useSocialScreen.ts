@@ -1,7 +1,7 @@
 import {programarCargaVisible} from '../utils/visibleScreenWork';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
-import { operacionFinancieraEnCurso } from './financialOperation';
+import { actualizarTrasOperacion, operacionFinancieraEnCurso } from './financialOperation';
 import { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -55,9 +55,9 @@ export default function usePantallaSocial({
     const numero = ++solicitud.current;
     try {
       const datos = await cargarSocial();
-      if (montado.current && numero === solicitud.current) { establecerRegistros(datos); establecerError(null); }
+      actualizarTrasOperacion(()=>{if (montado.current && numero === solicitud.current) { establecerRegistros(datos); establecerError(null); }});
     } catch (fallo) {
-      if (montado.current && numero === solicitud.current) { establecerRegistros(null); establecerError((fallo instanceof Error ? fallo.message : "") || 'No se pudo cargar Social.'); }
+      actualizarTrasOperacion(()=>{if (montado.current && numero === solicitud.current) { establecerRegistros(null); establecerError((fallo instanceof Error ? fallo.message : "") || 'No se pudo cargar Social.'); }});
     } finally {
       if (montado.current && numero === solicitud.current) establecerCargando(false);
     }

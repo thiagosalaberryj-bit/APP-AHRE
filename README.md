@@ -58,17 +58,25 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
-Revisión de interfaz del 16/11/2026: tipos correctos, 544 pruebas de app
-aprobadas y 49 integraciones MySQL omitidas por no tener ese entorno habilitado.
-Exportación Android/Hermes correcta. Esta rama incorpora los temas y controles
-compartidos, con 2 segundos mínimos de carga y 1 segundo de «Listo» antes del
-cierre; falta validar esos tiempos en el teléfono. La preparación anterior de
-0.9.2 registró 579 pruebas sin omisiones y 116 del backend coordinado 0.3.3. La preparación actual incluye recordatorios descriptivos, correo
-recordado y horarios precisos. La APK 0.9.2 está probada en el teléfono. Las fuentes se entregan como release
-no estable, coordinada con servidor 0.3.3; el despliegue remoto es manual.
-El cierre 0.9.1 y su servidor desplegado del 14/11 son antecedentes.
-El detalle y la procedencia de las verificaciones están en
-[Estado y validación](docs/estado-y-validacion.md).
+Revisión de interfaz del 16/11/2026 en `codex/modo-oscuro-neutro`: temas y
+controles compartidos, puntos animados y confirmaciones uniformes. Guardar
+muestra «Procesando» durante al menos 2 segundos y «Listo» durante otro segundo;
+los modales de Social conservan su ventana hasta terminar. Los recorridos de
+demo respetan la misma secuencia y los errores permiten reintentar.
+
+Tipos y exportación Android/Hermes correctos. Se comprobaron los 611 casos de
+la suite: 49 integraciones MySQL se omitieron; las dos expectativas antiguas de
+botones se actualizaron y pasaron al repetirlas. El detalle de la ejecución
+completa y la repetición está en el registro de validación.
+
+La preparación de APK interna
+mantiene la versión 0.9.2 y usa Android versionCode 17. El envío a EAS, la
+compilación terminada y la prueba en teléfono se registran por separado en
+[Estado y validación](docs/estado-y-validacion.md) y
+[Publicación](docs/configuracion/publicacion.md). Falta comprobar visualmente
+esta APK en el teléfono. La APK 0.9.2 / Android 16 validada anteriormente es un
+antecedente; no contiene automáticamente estas correcciones. El backend
+coordinado sigue siendo 0.3.3 y su despliegue es manual.
 
 ```powershell
 npm run typecheck

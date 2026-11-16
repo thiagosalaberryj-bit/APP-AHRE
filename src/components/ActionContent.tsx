@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Animated, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { StyleProp, TextStyle } from 'react-native';
@@ -15,7 +15,7 @@ export default function ContenidoAccion({texto,color,cargando=false,completado=f
   const mostrado=useRef<EstadoContenido>({etiqueta,tipo});
   const [contenido,cambiarContenido]=useState<{actual:EstadoContenido;anterior:EstadoContenido|null}>({actual:mostrado.current,anterior:null});
   const progreso=useRef(new Animated.Value(1)).current;
-  useEffect(()=>{
+  useLayoutEffect(()=>{
     const anterior=mostrado.current,actual:EstadoContenido={etiqueta,tipo};
     if(anterior.etiqueta===etiqueta&&anterior.tipo===tipo){if(reducido)progreso.setValue(1);return;}
     mostrado.current=actual;
@@ -27,15 +27,26 @@ export default function ContenidoAccion({texto,color,cargando=false,completado=f
     if(reducido||!contenido.anterior)return;
     // Arranca después del commit de ambas filas, sin intercambios a mitad del recorrido.
     const animacion=Animated.timing(progreso,{toValue:1,duration:ANIMACION_ACCION.transicion,useNativeDriver:true,isInteraction:false});
-    animacion.start();
+    animacion.start(({finished})=>{
+      if(finished)cambiarContenido(actual=>actual===contenido?{...actual,anterior:null}:actual);
+    });
     return()=>animacion.stop();
   },[contenido,reducido,progreso]);
-  const representar=(estado:EstadoContenido,anterior=false)=><>
-    {estado.tipo==='carga'?<PuntosCarga color={color} animado={!anterior}/>:estado.tipo==='exito'?<Ionicons name="checkmark" size={20} color={color}/>:null}
+  const representar=(estado:EstadoContenido)=><>
+    {estado.tipo==='carga'?<PuntosCarga color={color} animado/>:estado.tipo==='exito'?<Ionicons name="checkmark" size={20} color={color}/>:null}
     <Text style={[estilos.accionTexto,estiloTexto,{color}]}>{estado.etiqueta}</Text>
   </>;
   return <View style={estilos.accionContenido} accessibilityLiveRegion="polite" accessibilityLabel={contenido.actual.etiqueta}>
-    {contenido.anterior?<Animated.View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={[estilos.accionFila,estilos.accionAnterior,{opacity:progreso.interpolate({inputRange:[0,1],outputRange:[1,0]}),transform:[{translateY:progreso.interpolate({inputRange:[0,1],outputRange:[0,-24]})}]}]}>{representar(contenido.anterior,true)}</Animated.View>:null}
-    <Animated.View style={[estilos.accionFila,{opacity:progreso,transform:[{translateY:progreso.interpolate({inputRange:[0,1],outputRange:[24,0]})}]}]}>{representar(contenido.actual)}</Animated.View>
+    {[contenido.anterior,contenido.actual].map((estado,indice)=>{
+      if(!estado)return null;
+      const anterior=indice===0;
+      // La clave conserva la fila y sus puntos al pasar de actual a saliente.
+      return <Animated.View key={estado.tipo+':'+estado.etiqueta}
+        accessibilityElementsHidden={anterior} importantForAccessibility={anterior?'no-hide-descendants':'auto'} pointerEvents={anterior?'none':'auto'}
+        style={[estilos.accionFila,anterior&&estilos.accionAnterior,{
+          opacity:anterior?progreso.interpolate({inputRange:[0,1],outputRange:[1,0]}):progreso,
+          transform:[{translateY:progreso.interpolate({inputRange:[0,1],outputRange:anterior?[0,-24]:[24,0]})}],
+        }]}>{representar(estado)}</Animated.View>;
+    })}
   </View>;
 }

@@ -1,3 +1,4 @@
+import {operacionFinancieraEnCurso} from '../../social/financialOperation';
 import {conRespuestaVisual} from '../../utils/pressFeedback';
 import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { AvisosEnModal } from '../../contexts/ToastContext';
@@ -23,13 +24,14 @@ export default function ModalPersona(propiedades: import('../../social/types').A
     estilos,
     estilosGlobales
   } = aspecto;
-  return <Modal transparent animationType="fade" visible={visible} onRequestClose={() => alCerrar()}><AvisosEnModal visible={visible}>
+  const cerrar=()=>{if(!operacionFinancieraEnCurso())alCerrar();};
+  return <Modal transparent animationType="fade" visible={visible} onRequestClose={cerrar}><AvisosEnModal visible={visible}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Cerrar formulario de persona" onPress={() => alCerrar()} style={estilos.cierreFondo} />
+        <Pressable accessibilityRole="button" accessibilityLabel="Cerrar formulario de persona" onPress={cerrar} style={estilos.cierreFondo} />
         <View accessibilityViewIsModal style={estilos.tarjetaModal}>
           <View style={estilos.filaModal}>
             <Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>{personaInicial ? 'Editar persona' : 'Agregar persona'}</Text>
-            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar edición de persona" onPress={conRespuestaVisual(() => alCerrar())} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar edición de persona" onPress={conRespuestaVisual(cerrar)} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable>
           </View>
           <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal}>
             {visible ? <FormularioPersona personaInicial={personaInicial} alCerrar={alCerrar} abrirPersona={id => {

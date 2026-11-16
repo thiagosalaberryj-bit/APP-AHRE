@@ -12,12 +12,11 @@ export interface OpcionMenuSocial {
   id:string;texto:string;descripcion:string;icono:NombreIcono;peligro?:boolean;deshabilitada?:boolean;alElegir:()=>void;
 }
 
-export default function MenuOpcionesSocial({tema,titulo,descripcion,opciones,alCerrar}: {
-  tema:Tema;titulo:string;descripcion:string;opciones:OpcionMenuSocial[];alCerrar:()=>void;
+export default function MenuOpcionesSocial({tema,titulo,descripcion,opciones,alCerrar,sinVentana=false}: {
+  tema:Tema;titulo:string;descripcion:string;sinVentana?:boolean;opciones:OpcionMenuSocial[];alCerrar:()=>void;
 }){
   const estilos=crearEstilosMenuSocial(tema),bordes=useSafeAreaInsets();
-  return <Modal transparent animationType="fade" visible onRequestClose={alCerrar}>
-    <View style={[estilos.fondo,{paddingTop:Math.max(bordes.top,ESPACIADO.pantalla),paddingBottom:Math.max(bordes.bottom,ESPACIADO.pantalla)}]}>
+  const contenido=<View style={[estilos.fondo,{paddingTop:Math.max(bordes.top,ESPACIADO.pantalla),paddingBottom:Math.max(bordes.bottom,ESPACIADO.pantalla)}]}>
       <Pressable accessibilityRole="button" accessibilityLabel="Cerrar opciones tocando fuera" onPress={alCerrar} style={estilos.cierre}/>
       <View accessibilityViewIsModal style={estilos.tarjeta}>
         <View style={estilos.cabecera}>
@@ -35,6 +34,6 @@ export default function MenuOpcionesSocial({tema,titulo,descripcion,opciones,alC
           </View>)}
         </ScrollView>
       </View>
-    </View>
-  </Modal>;
+    </View>;
+  return sinVentana?contenido:<Modal transparent animationType="fade" visible onRequestClose={alCerrar}>{contenido}</Modal>;
 }

@@ -20,7 +20,7 @@ import SelectorSegmentado from '../SegmentedSelector';
 import crearEstilosConfirmacion from '../../styles/social/SocialMovementModalStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 
-export default function ModalMovimientoSocial({ plan, guardando, completado=false, alCerrar, alConfirmar, ...aspecto }: import('../../social/types').AspectoSocial & ({plan:import('../../social/types').PlanOperaciones;guardando:boolean;completado?:boolean;alCerrar:()=>void;alConfirmar:(financiaciones:import('../../social/types').Financiaciones)=>void})) {
+export default function ModalMovimientoSocial({ plan, guardando, completado=false, alCerrar, alConfirmar, sinVentana=false, ...aspecto }: import('../../social/types').AspectoSocial & ({sinVentana?:boolean;plan:import('../../social/types').PlanOperaciones;guardando:boolean;completado?:boolean;alCerrar:()=>void;alConfirmar:(financiaciones:import('../../social/types').Financiaciones)=>unknown})) {
   const { tema, estilosGlobales, estilosMovimiento } = aspecto;
   const estilos = { ...crearEstilosCompartidos(tema), ...crearEstilosConfirmacion(tema) }, social = useDatosSociales();
   const [indice, establecerIndice] = useState(0), [selecciones, establecerSelecciones] = useState<Record<string, Financiacion>>({});
@@ -42,11 +42,11 @@ export default function ModalMovimientoSocial({ plan, guardando, completado=fals
   const cerrar = () => { if (!guardando&&!operacionFinancieraEnCurso()) alCerrar(); };
   const avanzar = () => {
     const datos = operacion ? { ...selecciones, [operacion.clave]: modo === 'nuevo' ? { depositoId, fecha: combinarFechaYHora(fecha, hora) } : { movimientoId } } : selecciones;
-    if (!operacion || indice === plan.operaciones.length - 1) alConfirmar(datos);
+    if (!operacion || indice === plan.operaciones.length - 1) return alConfirmar(datos);
     else { establecerSelecciones(datos); establecerIndice(indice + 1); establecerModo('nuevo'); establecerMovimientoId(null); }
   };
   const valida = !operacion || (modo === 'nuevo' ? social.depositos.some((d) => d.id === depositoId) && combinarFechaYHora(fecha, hora) : movimientoId && !cargando && !error);
-  return <Modal visible transparent animationType="fade" onRequestClose={cerrar}><AvisosEnModal>
+  const contenido=<AvisosEnModal>
     <View style={estilos.fondoModal}>
       <Pressable accessibilityRole="button" accessibilityLabel="Volver al formulario" onPress={cerrar} style={estilos.cierreFondo} />
       <View accessibilityViewIsModal style={estilos.tarjetaModal}>
@@ -86,5 +86,6 @@ export default function ModalMovimientoSocial({ plan, guardando, completado=fals
         </View>
       </View>
     </View>
-  </AvisosEnModal></Modal>;
+  </AvisosEnModal>;
+  return sinVentana?contenido:<Modal visible transparent animationType="fade" onRequestClose={cerrar}>{contenido}</Modal>;
 }

@@ -1,3 +1,4 @@
+import {actualizarTrasOperacion} from '../financialOperation';
 import {useEffect,useState} from 'react';
 import {leerDatosOnline,observarSocialOnline,observarSincronizacion,obtenerVistaSincronizacion} from '../socialService';
 import type {VinculoOnline} from './types';
@@ -8,7 +9,7 @@ export default function useVinculosOnline(usuarioId:string){
   useEffect(()=>observarSincronizacion(cambiarConexion),[]);
   useEffect(()=>{
     let activo=true;
-    const cargar=()=>{void leerDatosOnline<VinculoOnline[]>(usuarioId,'vinculos',[]).then(datos=>{if(activo)cambiarVinculos(datos);}).catch(()=>{});};
+    const cargar=()=>{void leerDatosOnline<VinculoOnline[]>(usuarioId,'vinculos',[]).then(datos=>{actualizarTrasOperacion(()=>{if(activo)cambiarVinculos(datos);});}).catch(()=>{});};
     cargar();const dejar=observarSocialOnline(cargar);
     return()=>{activo=false;dejar();};
   },[usuarioId]);

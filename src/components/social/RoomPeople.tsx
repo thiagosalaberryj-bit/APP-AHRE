@@ -1,3 +1,5 @@
+import BotonAccion from '../ActionButton';
+import {useAccionConfirmada} from '../../hooks/useConfirmedAction';
 import {conRespuestaVisual} from '../../utils/pressFeedback';
 import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { useDatosSociales } from '../../social/SocialDataContext';
@@ -8,10 +10,10 @@ import { View, TextInput, Pressable, Text, Modal, ScrollView } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import ModalAgregarPersonasSala from './AddRoomPeopleModal';
 import AvatarPersona from './PersonAvatar';
-import { COLORES_NEUTROS } from '../../styles/colors';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/RoomPeopleStyles';
 export default function PersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[];gastos?:import('../../social/types').GastoVista[];alCambiar:(ids:string[])=>void;cerrada?:boolean;alCrearPersona:()=>void})) {
+ const respuesta=useAccionConfirmada();
   const {
     obtenerPersona,
     personaActual
@@ -42,7 +44,7 @@ export default function PersonasSala(propiedades: import('../../social/types').A
   const cambiar = async (ids: string[], alTerminar:()=>void) => {
     if (enCurso.current) return;
     enCurso.current = true; establecerGuardando(true);
-    try { await alCambiar(ids); alTerminar(); }
+    try { await respuesta.ejecutar(async()=>{await alCambiar(ids);},alTerminar); }
     catch (error) { mostrarAviso((error instanceof Error ? error.message : '') || 'No se pudo actualizar la sala.', { tipo: 'error' }); }
     finally { enCurso.current = false; establecerGuardando(false); }
   };
@@ -74,20 +76,20 @@ export default function PersonasSala(propiedades: import('../../social/types').A
             {!cerrada && persona.id !== 'vos' ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Quitar a ${nombreCompletoPersona(persona)} de la sala`} onPress={conRespuestaVisual(() => establecerPersonaAQuitar(persona))} style={estilos.accionIcono}><Ionicons color={tema.error} name="remove-circle-outline" size={20} /></Pressable> : null}
           </View>) : <Text style={estilosGlobales.textoSecundario}>No encontramos personas con esos datos.</Text>}
       </View>
-      {agregando ? <ModalAgregarPersonasSala personasSala={personasSala} guardando={guardando} alAgregar={ids => cambiar([...personasSala, ...ids], () => {
+      {agregando ? <ModalAgregarPersonasSala personasSala={personasSala} completado={respuesta.completado} guardando={guardando} alAgregar={ids => cambiar([...personasSala, ...ids], () => {
       establecerPersonaQuitada(null); establecerAgregando(false);
     })} alCerrar={() => { if (!guardando) establecerAgregando(false); }} alCrear={() => {
       establecerAgregando(false);
       alCrearPersona();
     }} {...aspecto} /> : null}
       {personaQuitada ? <Text numberOfLines={1} ellipsizeMode="tail" accessibilityLiveRegion="polite" style={estilosGlobales.textoAyuda}>{nombreCompletoPersona(personaQuitada)} ya no figura en las personas de la sala. Su agenda, gastos y pagos se conservaron.</Text> : null}
-      <Modal transparent animationType="fade" visible={Boolean(personaAQuitar)} onRequestClose={() => establecerPersonaAQuitar(null)}>
+      <Modal transparent animationType="fade" visible={Boolean(personaAQuitar)} onRequestClose={() => {if(!enCurso.current)establecerPersonaAQuitar(null);}}>
         <View style={estilos.fondoModal}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Cancelar eliminación de persona" onPress={() => establecerPersonaAQuitar(null)} style={estilos.cierreFondo} />
+          <Pressable accessibilityRole="button" accessibilityLabel="Cancelar eliminación de persona" disabled={guardando} onPress={() => establecerPersonaAQuitar(null)} style={estilos.cierreFondo} />
           <View accessibilityViewIsModal style={estilos.tarjetaModal}>
             <View style={estilos.filaModal}>
               <View style={estilos.iconoConfirmacionEliminar}><Ionicons color={tema.error} name="trash-outline" size={25} /></View>
-              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar confirmación de quitar persona" onPress={conRespuestaVisual(() => establecerPersonaAQuitar(null))} style={estilos.botonCerrar}><Ionicons color={tema.textoSecundario} name="close" size={22} /></Pressable>
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={guardando} accessibilityLabel="Cerrar confirmación de quitar persona" onPress={conRespuestaVisual(() => establecerPersonaAQuitar(null))} style={estilos.botonCerrar}><Ionicons color={tema.textoSecundario} name="close" size={22} /></Pressable>
             </View>
             <ScrollView style={estilos.desplazamientoModal}>
               <View style={estilos.grupo}>
@@ -101,11 +103,7 @@ export default function PersonasSala(propiedades: import('../../social/types').A
               </View>
             </ScrollView>
             <View style={estilos.filaCampos}>
-              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={guardando} onPress={conRespuestaVisual(() => cambiar(personasSala.filter(id => id !== personaAQuitar?.id), () => {
-              establecerPersonaQuitada(personaAQuitar); establecerPersonaAQuitar(null);
-            }))} style={estilos.confirmarQuitarPersona}><Text style={[estilosGlobales.etiqueta, {
-                color: COLORES_NEUTROS.superficie
-              }]}>Quitar de la sala</Text></Pressable>
+              <BotonAccion tema={tema} texto="Quitar de la sala" variante="peligro" cargando={guardando} completado={respuesta.completado} deshabilitado={guardando} alPresionar={()=>cambiar(personasSala.filter(id=>id!==personaAQuitar?.id),()=>{establecerPersonaQuitada(personaAQuitar);establecerPersonaAQuitar(null);})} estilo={estilos.confirmarQuitarPersona}/>
             </View>
           </View>
         </View>

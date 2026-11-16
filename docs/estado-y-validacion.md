@@ -1,14 +1,14 @@
 # Estado y validación de AHRE
 
 Referencia vigente: **16 de noviembre de 2026**, rama
-`codex/modo-oscuro-neutro`, versión configurada 0.9.2 / Android versionCode 16.
+`codex/modo-oscuro-neutro`, versión configurada 0.9.2 / Android versionCode 17.
 Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
 
 ## Interfaz clara y oscura · 16 de noviembre de 2026
 
 Esta revisión unifica fondos oscuros en tonos azulados neutros, botones e inputs
 reutilizables en ambos temas, avatares y controles del encabezado. Retira la
-pantalla temporal de estilos, compacta las solicitudes de integrantes y mejora
+pantalla temporal de estilos, unifica las acciones de las solicitudes de integrantes y mejora
 los selectores y la respuesta visual de las acciones.
 
 Guardar muestra «Procesando» con tres puntos durante al menos 2 segundos;
@@ -18,19 +18,40 @@ una pausa artificial. Las operaciones pendientes conservan el bloqueo y los
 errores permiten reintentar sin confirmar éxito.
 
 - Tipos de app y herramientas: correctos con `npm run typecheck`.
-- Suite de app: **593 casos, 544 aprobados, cero fallos y 49 omitidos**.
-  Las omisiones corresponden a las integraciones MySQL sin entorno habilitado;
-  no se consideran verificadas en esta ejecución.
+- Suite completa de esta entrega: **611 casos**, 560 aprobados, 49 integraciones
+  MySQL omitidas y dos fallos en expectativas de los antiguos iconos compactos.
+  Se actualizaron esas dos pruebas para verificar el botón compartido y ambas
+  pasaron al repetirlas (**2/2**). No se repitió la suite completa después de ese
+  ajuste exclusivo de pruebas; el código enviado a EAS no cambió.
+- Los 49 casos MySQL omitidos no se consideran verificados en esta ejecución.
+  El registro anterior de 593 casos queda como antecedente de esta rama.
 - Exportación Android/Hermes: correcta.
 - La transición desplaza juntas las filas anterior y nueva (texto e icono),
-  usando una sola animación nativa sin callback intermedio; los puntos salientes
-  detienen su bucle y la máscara del botón queda fija.
+  conservando la identidad de la fila saliente: los puntos siguen animados y
+  salen junto con «Procesando». Un único ciclo nativo mueve los tres puntos
+  sin combinar bucles nativos con secuencias de JavaScript; la máscara queda fija.
 - Cobertura específica: tiempos de carga y éxito, cancelación al desmontar,
   bloqueo de doble envío, estados en ambos temas y marcado masivo de 2.000 avisos.
-- Pendiente: comprobar los nuevos tiempos y la fluidez final en Expo Go en el
-  teléfono. La exportación no equivale a generar ni instalar una APK nueva.
-- No se cambian dependencias ni contratos del servidor. El PR se entrega para
-  revisión sobre `main`, sin merge ni despliegue.
+- Modales de Social: 14 pruebas de continuidad aprobadas en ambos temas y
+  10 regresiones de interfaz aprobadas. Se verifica una sola ventana durante
+  la carga, «Listo», errores y reintentos, sin cierres ni reaperturas intermedias.
+- Las operaciones de Social, Mercado Pago y corrección de correo comparten
+  los tiempos; las recargas conservan el contenido mientras se confirma.
+- Pendiente: comprobar los nuevos tiempos y la fluidez final en la APK instalada
+  en el teléfono. La exportación no equivale a una APK finalizada.
+- No se cambian dependencias ni contratos del servidor. La rama se prepara
+  con documentación, changelog y commit/push por pedido del usuario, sin merge
+  ni despliegue.
+
+### Envío de APK de esta revisión
+
+[APK interna 0.9.2 / Android 17 enviada a EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/df14e9e9-9e8f-4295-b242-bb5ec5bef9db)
+el 16/11/2026 desde las fuentes locales de `codex/modo-oscuro-neutro`
+posteriores a `58e3fb0`. Perfil `ocr-comparison`, firma existente y entorno
+`preview`. Se confirmaron carga y fingerprint con `--non-interactive --no-wait`.
+No se esperó ni verificó la compilación, por indicación del usuario. No se
+publica la descarga ni se despliega el servidor; el commit y push de esta rama
+se preparan sin merge. La APK Android 16 probada previamente es un antecedente.
 
 Los resultados siguientes pertenecen a la preparación anterior de 0.9.2 y
 se conservan como antecedente; no describen una repetición de MySQL en esta rama.

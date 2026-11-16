@@ -37,7 +37,7 @@ test('se reutilizan los estilos de un mismo tema sin construirlos por cada botó
 test('un botón recién montado no simula una pulsación ni una transición de texto',()=>{
  let animaciones=0;
  const {cargar}=crearCargadorComponentes(process.cwd(),{
-  react:{useState:(v:unknown)=>[v,()=>{}],useRef:(v:unknown)=>({current:v}),useEffect:(f:()=>unknown)=>f()},
+  react:{useState:(v:unknown)=>[v,()=>{}],useRef:(v:unknown)=>({current:v}),useEffect:(f:()=>unknown)=>f(),useLayoutEffect:(f:()=>unknown)=>f()},
   '../hooks/useReducedMotion':{useMovimientoReducido:()=>false},
   'react-native':{StyleSheet:{create:(v:unknown)=>v},Text:'Text',Animated:{View:'AnimatedView',Value:class{setValue(){}interpolate(){return 0;}},timing:()=>{animaciones++;return{start(){},stop(){}};}}},
  });
