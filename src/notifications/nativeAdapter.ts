@@ -30,6 +30,6 @@ export async function obtenerTokenPush() {
 }
 export async function programarAviso(aviso: Aviso, usuarioId: string, detalles: boolean) {
   const n = await notificacionesNativas(); if (!n || !(await n.getPermissionsAsync()).granted) return null;
-  return n.scheduleNotificationAsync({ identifier: usuarioId + ':' + aviso.id, content: { title: detalles ? aviso.titulo : 'AHRE', body: detalles ? aviso.mensaje : 'Tenés un recordatorio para revisar en AHRE.', sound: 'default', data: { aplicacion: 'ahre', usuarioId, avisoId: aviso.id, destino: aviso.destino } }, trigger: { type: n.SchedulableTriggerInputTypes.DATE, date: new Date(aviso.fecha), channelId: aviso.tipo } });
+  return n.scheduleNotificationAsync({ identifier: usuarioId + ':' + aviso.id, content: { title: aviso.titulo, body: aviso.mensaje, sound: 'default', data: { aplicacion: 'ahre', usuarioId, avisoId: aviso.id, destino: aviso.destino } }, trigger: { type: n.SchedulableTriggerInputTypes.DATE, date: new Date(aviso.fecha), channelId: aviso.tipo } });
 }
 export async function cancelarAviso(id: string) { const n = await notificacionesNativas(); if (n) await n.cancelScheduledNotificationAsync(id); }

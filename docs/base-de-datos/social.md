@@ -45,9 +45,10 @@ pero no interpreta husos horarios ni actualiza automáticamente las fechas.
 | `es_usuario_actual`, `activa` | Indicadores 0/1. Una sola fila por cuenta representa a Vos y no puede desactivarse ni convertirse en contacto. |
 | `fecha_creacion`, `fecha_actualizacion` | Marcas de auditoría obligatorias. |
 
-Los índices únicos de apodo y nombre/apellido normalizados incluyen contactos
-inactivos y excluyen la representación interna de Vos. La fila interna puede
-tener apellido, apodo y sus claves correspondientes en `NULL`. Eliminar significa
+El índice único de apodo normalizado incluye contactos inactivos y excluye
+la representación interna de Vos. Se permiten iguales nombre y apellido con
+apodos distintos. La fila interna puede
+tener apellido, apodo y sus claves correspondientes en `NULL`. Archivar significa
 `activa = 0`: el borrado físico está bloqueado, incluso sin referencias previas.
 
 ### Salas y pertenencias
@@ -64,7 +65,7 @@ validarlos contra los catálogos de AHRE.
 
 La pertenencia sala/persona es única y se reactiva sobre la misma fila. Una baja
 requiere `activa = 0` y `fecha_baja`; una pertenencia activa no tiene fecha de baja.
-Vos no puede retirarse. Agregar exige persona activa y sala abierta; después del
+Vos no puede retirarse. Agregar exige persona propia y sala abierta; después del
 cierre no se cambia el listado. Ninguna de estas tablas admite borrado físico.
 El servicio incluye a Vos al crear cada sala; la base no lo inserta sola.
 
@@ -109,6 +110,7 @@ Se conserva la comprobación de versión. No se modifica un ítem de sala cerrad
 | `id`, `usuario_id` | Identidad y propietario. |
 | `deudor_id`, `acreedor_id` | Personas distintas de la misma cuenta. Exactamente una representa a Vos. |
 | `participante_gasto_id` | Opcional para deuda manual; único y obligatorio para identificar el origen de una deuda de sala. |
+| `origen_sala_online_id`, `origen_participacion_online_id` | Procedencia inmutable de deudas personales con invitados, confirmada por el servidor al cerrar una sala online. No duplica la compra. |
 | `monto`, `descripcion`, `fecha`, `fecha_vencimiento` | Importe original, descripción y fecha obligatorios; vencimiento opcional. |
 | `estado` | `pendiente`, `parcial`, `pagada` o `cancelada`. |
 | `fecha_cancelacion`, `motivo_cancelacion` | Fecha requerida al cancelar; motivo opcional. Cancelar no permite reactivar la deuda. |
@@ -116,7 +118,7 @@ Se conserva la comprobación de versión. No se modifica un ítem de sala cerrad
 
 La deuda de sala debe coincidir con persona, pagador e importe original de su
 participación. Una parte completamente pagada no puede originar una nueva deuda.
-La deuda manual requiere personas activas al crearla; las deudas de sala y los
+La deuda manual admite fichas propias archivadas al crearla; las deudas de sala y los
 pagos previos conservan referencias a personas retiradas o desactivadas.
 
 No se guardan `tipo` ni `persona_id` redundantes: la dirección se deriva de los
@@ -264,3 +266,9 @@ La instantánea local de publicación contiene también las financiaciones de lo
 gastos vigentes. El servidor las confirma con la sala en una transacción; la
 cuenta conserva el mismo envío cuando se pierde la respuesta. La corrección de
 esta revisión no agrega columnas SQLite ni requiere recrear la base local.
+
+## Archivo de fichas y esquema de desarrollo · noviembre de 2026
+
+`personas.activa` controla la visibilidad de la agenda, no la autorización para operar. Los triggers iniciales de pertenencia, pagador, partes y deuda personal ya no exigen que esa ficha esté visible. Sí exigen propiedad, pertenencia activa a la sala cuando corresponde y las restantes reglas financieras.
+
+Se modifica únicamente `001_initialSchema.ts`, manteniendo la versión y el mecanismo existentes. Las bases Expo de desarrollo creadas con los triggers anteriores necesitan recrearse mediante una base de pruebas limpia. No se incorpora una migración de transición ni se descartan datos remotos. Los datos nuevos de autoría, salidas y registros propios se guardan dentro de los cachés JSON online existentes.

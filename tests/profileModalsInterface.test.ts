@@ -25,7 +25,7 @@ function invocar(nodo: Nodo, propiedad: string) {
 
 for (const nombreTema of ['claro', 'oscuro'] as const) {
   const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  const { cargar } = crearCargadorComponentes(raiz);
+  const { cargar } = crearCargadorComponentes(raiz, {'../contexts/ToastContext': {AvisosEnModal: ({children}: {children: unknown}) => children}});
   const { TEMAS } = cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
   const tema = TEMAS[nombreTema];
   const { crearEstilosPerfil } = cargar<typeof import('../src/styles/ProfileScreenStyles.ts')>('src/styles/ProfileScreenStyles.ts');
@@ -94,7 +94,7 @@ for (const nombreTema of ['claro', 'oscuro'] as const) {
 }
 
 for(const nombre of ['claro','oscuro'] as const)test('modal de notificaciones separa el fondo del scroll y mantiene fija la X en '+nombre,()=>{
- const {cargar}=crearCargadorComponentes(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'));
+ const {cargar}=crearCargadorComponentes(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),{'../contexts/ToastContext':{AvisosEnModal:({children}:{children:unknown})=>children}});
  const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');const {crearEstilosPerfil}=cargar<typeof import('../src/styles/ProfileScreenStyles.ts')>('src/styles/ProfileScreenStyles.ts');
  const ModalPerfil=cargar<typeof import('../src/components/ProfileModal.tsx')>('src/components/ProfileModal.tsx').default;let cierres=0;
  const arbol=expandir(ModalPerfil({tema:TEMAS[nombre],estilos:crearEstilosPerfil(TEMAS[nombre]),visible:true,separarFondo:true,desplazable:true,estiloTarjeta:{height:'85%'},estiloDesplazamiento:{flex:1},titulo:'Notificaciones',descripcion:'Ajustes',icono:'notifications-outline',etiquetaCerrar:'Cerrar ajustes',etiquetaCerrarFondo:'Cerrar fondo',alCerrar:()=>cierres++,children:{type:'Text',props:{children:'Contenido largo'}} as never}));

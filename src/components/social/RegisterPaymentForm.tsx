@@ -1,3 +1,4 @@
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import {useEffect,useRef,useState} from 'react';
 import {ActivityIndicator,Text,View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
@@ -20,7 +21,7 @@ import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 
 export default function FormularioRegistrarPago({parametros,...aspecto}:import('../../social/types').AspectoSocial&{parametros:import('../../social/types').ParametrosSociales}){
   const social=useDatosSociales(),deuda=social.deudas.find(d=>d.id===parametros.deudaId),estilos=crearEstilosCompartidos(aspecto.tema);
-  const [monto,cambiarMonto]=useState(deuda?montoParaEntrada(deuda.pendienteNumero):''),[modalidad,cambiarModalidad]=useState('todo'),[deposito,cambiarDeposito]=useState<string|null>(null),[enlace,cambiarEnlace]=useState('deposito'),[movimiento,cambiarMovimiento]=useState(''),[acuerdo,cambiarAcuerdo]=useState<DeudaOnline|null>(null),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[compatibles,cambiarCompatibles]=useState<Awaited<ReturnType<typeof consultarMovimientosOnline>>>([]),[error,cambiarError]=useState('');
+  const [monto,cambiarMonto]=useState(deuda?montoParaEntrada(deuda.pendienteNumero):''),[modalidad,cambiarModalidad]=useState('todo'),[deposito,cambiarDeposito]=useState<string|null>(null),[enlace,cambiarEnlace]=useState('deposito'),[movimiento,cambiarMovimiento]=useState(''),[acuerdo,cambiarAcuerdo]=useState<DeudaOnline|null>(null),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[compatibles,cambiarCompatibles]=useState<Awaited<ReturnType<typeof consultarMovimientosOnline>>>([]),[, cambiarError]=useErrorNotificado('');
   const [cargando,cambiarCargando]=useState(!!deuda?.acuerdoOnlineId),[procesando,cambiarProcesando]=useState(false);
   const estilosPago=crearEstilosRegistroPago(aspecto.tema);
   const enviando=useRef(false);
@@ -51,7 +52,7 @@ export default function FormularioRegistrarPago({parametros,...aspecto}:import('
       <MontoSocial etiqueta={esPago?'Monto que pagaste':'Monto recibido'} valor={monto} alCambiar={v=>{cambiarMonto(v);cambiarModalidad(v===montoParaEntrada(deuda.pendienteNumero)?'todo':'otro');}} {...aspecto}/>
     </>}
     {online?<View style={estilos.grupoCampo}><Text style={aspecto.estilosGlobales.etiqueta}>Cómo registrarlo en tus movimientos</Text><SelectorSegmentado tema={aspecto.tema} opciones={[{id:'deposito',nombre:'Crear movimiento'},{id:'existente',nombre:'Adjuntar movimiento'}]} valor={enlace} alSeleccionar={cambiarEnlace} etiqueta="Origen del movimiento"/><Text style={aspecto.estilosGlobales.textoAyuda}>{enlace==='existente'?'Elegí uno del mismo importe y dirección. Se vincula sin volver a modificar tu saldo.':tipo==='ingreso'?'Se creará un ingreso en el depósito que elijas.':'Se creará un egreso en el depósito que elijas.'}</Text>{enlace==='deposito'?<SelectorDeposito depositos={social.depositos} seleccionadoId={deposito} alSeleccionar={cambiarDeposito} {...aspecto}/>:<><OpcionesSeleccion opciones={compatibles.map(m=>({id:m.id,nombre:m.descripcion+' · '+m.deposito}))} elegida={movimiento} alElegir={cambiarMovimiento} {...aspecto}/>{!compatibles.length?<Text style={aspecto.estilosGlobales.textoAyuda}>No hay movimientos disponibles con ese importe y dirección.</Text>:null}</>}</View>:null}
-    {error?<Text style={aspecto.estilosGlobales.textoError}>{error}</Text>:null}
+
     {sinConexion?<Text style={aspecto.estilosGlobales.textoAyuda}>Necesitás conexión para registrar este pago online.</Text>:null}
     <View style={estilos.filaCampos}><View style={estilos.columnaCampo}><AccionesFormulario texto={operacion?'Asociar a mis movimientos':online?(confirmando?'Confirmar':esPago?'Informar pago realizado':'Registrar pago nuevo'):esPago?'Registrar pago realizado':'Registrar pago recibido'} deshabilitado={procesando||(online?sinConexion||!acuerdo||(enlace==='deposito'?!deposito:!movimiento)||!importe:!monto.trim())}
       preparar={()=>{const valor=operacion?unidades(operacion.monto):online&&!esPago&&pago?unidades(pago.monto):centavos(monto);exigir(!!operacion||valor<=unidades(deuda.pendienteNumero),'El pago no puede superar el pendiente.');solicitud.current={deudaId:deuda.id,monto,claveOperacion:clave.current};return {operaciones:online?[]:[{clave:'pago',tipo:esPago?'egreso':'ingreso',monto:valor/100,descripcion:deuda.descripcion}]};}}

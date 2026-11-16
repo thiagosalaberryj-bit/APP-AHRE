@@ -4,6 +4,7 @@ import type { Conexion } from '../database/types';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { ErrorBaseDatos } from '../database/errors';
 import { ejecutarTransaccion } from '../database/transactions';
+import { ejecutarLecturaConConexion } from '../database/connectionQueue';
 import {
   categoriasRepositorio,
   depositosRepositorio,
@@ -52,8 +53,7 @@ function formatearSaldo(saldo: number) {
   if (!Number.isFinite(saldoNumerico)) return 'Saldo actual no disponible';
 
   return `Saldo actual: $${new Intl.NumberFormat('es-AR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(saldoNumerico)}`;
 }
 
@@ -116,7 +116,22 @@ export async function cargarMesesHistorialMovimientos(usuarioId: string, filtros
 
 export async function consultarDetalleHistorialMovimiento(movimientoId: string) {
   const usuario = await consultarUsuarioHistorial();
-  return movimientosRepositorio.consultarHistorialPorId(usuario.id, movimientoId);
+  const movimiento=await movimientosRepositorio.consultarHistorialPorId(usuario.id,movimientoId);
+  if(!movimiento)return null;
+  const origen=await ejecutarLecturaConConexion(async c=>{
+    const local=await c.getFirstAsync<{sala_id:string;sala_nombre:string;concepto:string}>(`SELECT s.id sala_id,s.nombre sala_nombre,g.descripcion concepto FROM pagos_sociales p LEFT JOIN participantes_gasto pg ON pg.id=p.participante_gasto_id JOIN gastos_compartidos g ON g.id=COALESCE(p.gasto_compartido_id,pg.gasto_compartido_id) JOIN salas s ON s.id=g.sala_id WHERE p.usuario_id=? AND p.movimiento_id=? LIMIT 1`,[usuario.id,movimientoId]);
+    if(local)return local;
+    const personal=await c.getFirstAsync<{sala_id:string;concepto:string}>(`SELECT d.origen_sala_online_id sala_id,d.descripcion concepto FROM pagos_sociales p JOIN deudas d ON d.id=p.deuda_id WHERE p.usuario_id=? AND p.movimiento_id=? AND d.origen_sala_online_id IS NOT NULL LIMIT 1`,[usuario.id,movimientoId]);
+    if(personal){const sala=await c.getFirstAsync<{datos:string}>('SELECT datos FROM salas_online_locales WHERE usuario_id=? AND sala_id=?',[usuario.id,personal.sala_id]);return {...personal,sala_nombre:sala?JSON.parse(sala.datos).sala.nombre:'Sala compartida'};}
+    const enlace=await c.getFirstAsync<{clave:string}>('SELECT clave FROM incorporaciones_sociales_locales WHERE usuario_id=? AND movimiento_id=?',[usuario.id,movimientoId]);
+    const cache=await c.getFirstAsync<{datos:string}>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='operaciones'",[usuario.id]);
+    const operaciones=cache?JSON.parse(cache.datos) as (import('../social/online/types').OperacionPersonal&{movimientoId?:string})[]:[];
+    const operacion=operaciones.find(o=>o.clave===enlace?.clave||o.movimientoId===movimientoId);
+    if(!operacion?.salaId)return null;
+    const sala=await c.getFirstAsync<{datos:string}>('SELECT datos FROM salas_online_locales WHERE usuario_id=? AND sala_id=?',[usuario.id,operacion.salaId]);
+    return {sala_id:operacion.salaId,sala_nombre:sala?JSON.parse(sala.datos).sala.nombre:'Sala compartida',concepto:operacion.descripcion};
+  });
+  return {...movimiento,origenSala:origen};
 }
 
 async function consultarDepositoDisponible(usuarioId: string, depositoId: string | null, baseDatos: Conexion) {

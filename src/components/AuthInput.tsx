@@ -16,6 +16,7 @@ export type PropiedadesCampoAutenticacion = TextInputProps & {
   valor: string;
   alCambiarTexto: (valor: string) => void;
   error?: string;
+  lineasError?: number;
   icono?: ComponentProps<typeof Ionicons>['name'];
   accesorioDerecho?: ReactNode;
   deshabilitado?: boolean;
@@ -31,6 +32,7 @@ export default forwardRef<TextInput, PropiedadesCampoAutenticacion>(function Cam
     valor,
     alCambiarTexto,
     error,
+    lineasError,
     icono,
     accesorioDerecho,
     deshabilitado = false,
@@ -85,7 +87,7 @@ export default forwardRef<TextInput, PropiedadesCampoAutenticacion>(function Cam
           <Ionicons color={tema.exito} name="checkmark-circle" size={20} />
         ) : null)}
       </View>
-      {error ? <Text style={[estilosGlobales.textoError, estilosAutenticacion.errorCampo]}>{error}</Text> : null}
+      {error ? <Text numberOfLines={lineasError} ellipsizeMode="tail" style={[estilosGlobales.textoError, estilosAutenticacion.errorCampo]}>{error}</Text> : null}
     </View>
   );
 });

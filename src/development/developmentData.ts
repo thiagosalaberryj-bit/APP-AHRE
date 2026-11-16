@@ -5,6 +5,7 @@ import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos'
 
 export const CUENTA_PRUEBA = Object.freeze({
   nombre: 'Cuenta de pruebas',
+  apellido: 'AHRE',
   correo: 'pruebas@ahre.test',
   contrasena: 'AhrePruebas2026!',
 });

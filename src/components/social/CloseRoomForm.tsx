@@ -1,3 +1,4 @@
+import {pendientesCierreLocales} from '../../social/roomClosing';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { obtenerVistaSincronizacion, cerrarSala } from '../../social/socialService';
 import { View, Text } from 'react-native';
@@ -9,6 +10,7 @@ import { nombreCompletoPersona } from '../../social/socialHelpers';
 import { COLOR_ICONO_DEPOSITO } from '../../styles/colors';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/CloseRoomFormStyles';
+import useSalaOnline from '../../social/online/useRoomOnline';
 export default function FormularioCerrarSala({
   sala,
   ...aspecto
@@ -24,6 +26,10 @@ export default function FormularioCerrarSala({
     ...crearEstilosCompartidos(tema),
     ...crearEstilosPropios(tema)
   };
+  const remota = useSalaOnline(sala.id, sala.online);
+  const faltantesLocales = pendientesCierreLocales(sala).map(p=>p.descripcion);
+  const verificado=!sala.online||Array.isArray(remota?.pendientesCierre);
+  const faltantes = sala.online ? (remota?.pendientesCierre || []).map(p => p.nombre + ' · ' + p.descripcion) : faltantesLocales;
   if (!sala || !sala.administrador || sala.estado === 'cerrada') return <RegistroNoDisponible {...aspecto} />;
   const partes = sala.gastos.flatMap(gasto => gasto.partes);
   const pagadas = partes.filter((parte) => parte.tipo === 'saldado');
@@ -32,6 +38,7 @@ export default function FormularioCerrarSala({
     parte
   })));
   return <>
+    {!verificado?<Text style={estilosGlobales.textoAyuda}>Esperá a verificar los registros de todos los integrantes. Actualizá la sala si no se completa.</Text>:null}
     <View style={[estilos.resumenPrincipal, estilos.perfilCompacto]}>
       <View style={estilos.filaCampos}>
         <View style={[estilos.iconoSala, {
@@ -67,8 +74,8 @@ export default function FormularioCerrarSala({
       <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>Al confirmar el cierre</Text>
       <View style={estilos.filaCampos}><Ionicons color={tema.foco} name="lock-closed-outline" size={20} /><Text style={[estilosGlobales.textoSecundario, estilos.textoFlexible]}>La sala quedará en el historial, en solo lectura. No podrás editar sus ítems ni sus personas.</Text></View>
       <Text style={estilosGlobales.textoSecundario}>{pendientes.length ? (sala.online?'Se fijarán las obligaciones de todas las personas de la sala.':'Las partes pendientes que te involucren se registrarán como deudas. Los pendientes entre otras personas quedarán solo en la sala.') : 'No quedarán pagos pendientes de esta sala.'}</Text>
-      <Text style={estilosGlobales.textoSecundario}>{sala.online?'Cada persona incorporará sus compras y pagos en sus propios depósitos después del cierre. Los movimientos pendientes no impiden cerrar.':'Se aplicarán los movimientos nuevos a los depósitos asociados. Los movimientos que ya existían se vincularán sin duplicarlos.'}</Text>
+      <Text style={estilosGlobales.textoSecundario}>Todas las cuentas deben asociar sus compras y pagos a un depósito o movimiento antes del cierre. El cierre los confirma en sus cuentas. El administrador puede confirmar pagos de invitados sin exigirles un depósito. Las deudas pendientes con invitados quedan como deudas personales.</Text>
     </View>
-    <AccionesFormulario deshabilitado={!sala.demo&&sala.online&&(['offline','revocado','sesion'].includes(obtenerVistaSincronizacion().estado)||sala.pendientesOnline>0)} texto="Confirmar cierre" alGuardar={() => cerrarSala(sala.id)} {...aspecto} />
+    <AccionesFormulario deshabilitado={!verificado||faltantes.length>0||(!sala.demo&&sala.online&&(!remota||['offline','revocado','sesion'].includes(obtenerVistaSincronizacion().estado)||sala.pendientesOnline>0))} texto="Confirmar cierre" alGuardar={() => cerrarSala(sala.id)} {...aspecto} />
   </>;
 }

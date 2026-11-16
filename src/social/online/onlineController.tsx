@@ -1,3 +1,4 @@
+import {iniciarActividadReinicio} from '../../development/testResetState';
 import {useEffect} from 'react';
 import {AppState} from 'react-native';
 import {obtenerSesionActual} from '../../authentication/sessionService';
@@ -12,6 +13,7 @@ export default function ControladorSocialOnline(){
     const suscribir=(canales:string[])=>{if(socket?.readyState===WebSocket.OPEN)for(const canal of canales)if(!suscritos.has(canal)&&suscritos.size<99){socket.send(JSON.stringify({canal}));suscritos.add(canal);}};
     const actualizar=async(forzar=false)=>{
       if(cerrado||ocupado||AppState.currentState!=='active')return;
+      const terminar=iniciarActividadReinicio();if(!terminar)return;
       ocupado=true;
       try{
         const {usuario}=await obtenerSesionActual();
@@ -33,7 +35,7 @@ export default function ControladorSocialOnline(){
           conexion.onclose=()=>{if(socket===conexion){socket=null;suscritos.clear();proximaConexion=Date.now()+Math.min(30000,1000*2**Math.min(++fallos,5))+Math.random()*500;}};
         }
       }catch{socket?.close();socket=null;suscritos.clear();}
-      finally{ocupado=false;}
+      finally{ocupado=false;terminar();}
     };
     const temporizador=setInterval(()=>{void actualizar();},15000);
     const dejar=observarSocialOnline(()=>{if(!ocupado)void actualizar();});

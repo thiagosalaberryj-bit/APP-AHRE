@@ -24,6 +24,7 @@ for(const tipo of ['egreso','ingreso'] as const)test('pago online con depósito:
     if(ruta.endsWith('/social/salas'))return Response.json({salas:[]});
     if(ruta.endsWith('/social/deudas'))return Response.json({deudas:[]});
     if(ruta.endsWith('/social/vinculos'))return Response.json({vinculos:[]});
+    if(ruta.endsWith('/social/registros-pendientes'))return Response.json({operaciones:[]});
     if(ruta.endsWith('/social/operaciones-personales'))return Response.json({operaciones:registrado?[operacion()]:[]});
     return Response.json({revision,generacion:1,lotes:[],mas:false});
   };

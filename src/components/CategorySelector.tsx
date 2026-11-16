@@ -58,6 +58,7 @@ export default function SelectorCategoria({
     borderStyle: 'solid' as const,
   };
   const enGrilla = variante === 'grilla';
+  const enLista = variante === 'lista';
   const categoriasOrdenadas = ordenarCategoriasPorColor(categorias, tema, tipoMovimiento);
   const categoriasPrioritarias = [
     ...categoriasPrincipalesIds.flatMap(id => categoriasOrdenadas.filter(categoria => categoria.id === id)),
@@ -84,6 +85,16 @@ export default function SelectorCategoria({
   const categoriaActiva = (categoriaId: string) => (seleccionMultiple
     ? seleccionadasIds.includes(categoriaId)
     : seleccionadaId === categoriaId);
+
+  const mostrarOpcion = (categoria: (typeof categorias)[number]) => {
+    const activa=categoriaActiva(categoria.id);
+    const color=obtenerColorCategoria(categoria.id,tema,tipoMovimiento);
+    return <Pressable key={categoria.id} accessibilityRole={seleccionMultiple?'checkbox':'button'} accessibilityLabel={categoria.nombre} accessibilityState={seleccionMultiple?{checked:activa}:{selected:activa}} onPress={()=>seleccionarCategoria(categoria.id)} style={[estilosMovimiento.opcionCategoria,{backgroundColor:activa?tema.encabezado:crearFondoCategoria(color,tema)},bordeCampo]}>
+      <Ionicons name={categoria.icono} size={22} color={activa?tema.encabezadoTexto:obtenerTintaCategoria(categoria.id,tema,tipoMovimiento)}/>
+      <Text style={[estilosMovimiento.textoOpcionCategoria,{color:activa?tema.encabezadoTexto:tema.textoPrincipal}]}>{categoria.nombre}</Text>
+      <Ionicons name={activa?'checkbox':'square-outline'} size={20} color={activa?tema.encabezadoTexto:tema.textoSecundario}/>
+    </Pressable>;
+  };
 
   const mostrarTarjeta = (categoria: NonNullable<import('../types/ui').SelectorCategoriaProps['categorias']>[number], abrirSelector = false) => {
     const activa = categoriaActiva(categoria.id);
@@ -127,7 +138,7 @@ export default function SelectorCategoria({
     <View style={estilosMovimiento.grupo}>
       {modalAbierto === undefined ? <>
       {etiqueta ? <Text style={estilosGlobales.etiqueta}>{etiqueta}</Text> : null}
-      {carrusel ? (
+      {enLista ? <View style={estilosMovimiento.listaOpcionesCategoria}>{categoriasOrdenadas.map(mostrarOpcion)}</View> : carrusel ? (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={estilosMovimiento.listaCategorias}>
           {categoriasOrdenadas.map((categoria) => mostrarTarjeta(categoria))}
@@ -165,7 +176,7 @@ export default function SelectorCategoria({
       ) : null}
 
       </> : null}
-      {enGrilla ? null : (
+      {enGrilla || enLista ? null : (
       <Modal statusBarTranslucent navigationBarTranslucent
         animationType="fade"
         onRequestClose={() => establecerModalVisible(false)}

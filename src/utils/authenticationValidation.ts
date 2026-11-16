@@ -25,7 +25,7 @@ export function validarContrasena(contrasena: unknown) {
   return errores;
 }
 
-export function validarRegistro({ nombre, correo, contrasena, confirmacion }: Partial<import('../types/forms').DatosRegistro>) {
+export function validarRegistro({ nombre, apellido, correo, contrasena, confirmacion }: Partial<import('../types/forms').DatosRegistro>) {
   const errores: Record<string, string> = {};
   const nombreNormalizado = String(nombre || '').trim();
   const correoNormalizado = normalizarCorreo(correo);
@@ -35,6 +35,7 @@ export function validarRegistro({ nombre, correo, contrasena, confirmacion }: Pa
   if (!nombreNormalizado) {
     errores.nombre = 'Ingresá tu nombre.';
   }
+  if (apellido !== undefined && (!apellido.trim() || Array.from(apellido.trim()).length > 80)) errores.apellido = 'Ingresá tu apellido.';
   if (!correoNormalizado) {
     errores.correo = 'Ingresá tu correo electrónico.';
   } else if (!EXPRESION_CORREO.test(correoNormalizado)) {
@@ -66,7 +67,7 @@ export function validarInicioSesion({ correo, contrasena }: Partial<import('../t
   return errores;
 }
 
-export function validarDatosPerfil({ nombre, correo }: Partial<import('../types/forms').DatosPerfil>) {
+export function validarDatosPerfil({ nombre, apellido, correo }: Partial<import('../types/forms').DatosPerfil>) {
   const errores: Record<string, string> = {};
   const nombreNormalizado = String(nombre || '').trim();
   const correoNormalizado = normalizarCorreo(correo);
@@ -76,6 +77,8 @@ export function validarDatosPerfil({ nombre, correo }: Partial<import('../types/
   } else if (Array.from(nombreNormalizado).length > LONGITUD_MAXIMA_NOMBRE) {
     errores.nombre = `El nombre puede tener hasta ${LONGITUD_MAXIMA_NOMBRE} caracteres.`;
   }
+
+  if (apellido !== undefined && (!apellido.trim() || Array.from(apellido.trim()).length > LONGITUD_MAXIMA_NOMBRE)) errores.apellido = 'Ingresá tu apellido.';
 
   if (!correoNormalizado) {
     errores.correo = 'Ingresá tu correo electrónico.';

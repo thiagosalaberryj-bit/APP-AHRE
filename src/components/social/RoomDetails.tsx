@@ -1,3 +1,10 @@
+import Confirmacion from './SocialConfirmationModal';
+import {revisarSalidaSala} from '../../social/socialService';
+import {useContext,useRef} from 'react';
+import {ContextoAvisos} from '../../contexts/ToastContext';
+import {pendientesCierreLocales} from '../../social/roomClosing';
+import BotonSocial from './SocialButton';
+import PendientesCierre from './RoomClosingPending';
 import { pendientesSala } from '../../social/roomPending';
 import IndicadorPendientesSala from './RoomPendingBadge';
 import AccesoSala from './RoomAccessControl';
@@ -6,7 +13,7 @@ import PanelSalaOnline from './OnlineRoomPanel';
 import SelectorSegmentado from '../SegmentedSelector';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useEffect,useState } from 'react';
-import { leerDatosOnline,observarSocialOnline,consultarMovimientosSociales,obtenerVistaSincronizacion, cambiarPersonasSala } from '../../social/socialService';
+import { leerDatosOnline,observarSocialOnline,consultarMovimientosSociales,obtenerVistaSincronizacion, cambiarPersonasSala,enviarAccionSocial } from '../../social/socialService';
 import { SECCIONES_SALA } from "../../social/socialConstants";
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,24 +57,28 @@ export default function DetalleSala(propiedades: import('../../social/types').As
   const personasSala = sala.participantes;
   const cerrada = sala.estado === 'cerrada'||!sala.administrador||sala.cierrePendiente||sala.publicacionPendiente;
   const cierreSinConexion=!sala.demo&&sala.online&&['offline','revocado','sesion'].includes(obtenerVistaSincronizacion().estado);
+  const faltantesCierre=sala.online?detalleOnline?.pendientesCierre||[]:pendientesCierreLocales(sala);
+  const [simulando,cambiarSimulando]=useState(false),bloqueoDemo=useRef(false),{mostrarAviso}=useContext(ContextoAvisos);
+  const cierreBloqueado=simulando||cierreSinConexion||sala.pendientesOnline>0||(sala.online&&!Array.isArray(detalleOnline?.pendientesCierre))||faltantesCierre.length>0;
+  const simularRegistros=async()=>{if(bloqueoDemo.current)return;bloqueoDemo.current=true;cambiarSimulando(true);try{await enviarAccionSocial('registros-demo:'+sala.id,'/salas/'+sala.id+'/registrar-integrantes-demo',{});await recargar();mostrarAviso('Registros de los demás simulados. Tus registros pendientes se conservan.',{tipo:'informacion'});}catch(e){mostrarAviso(e instanceof Error?e.message:'No se pudo simular.',{tipo:'error'});}finally{bloqueoDemo.current=false;cambiarSimulando(false);}};
+  const [confirmarRevision,cambiarConfirmarRevision]=useState<string|null>(null);
+  const revisiones=detalleOnline?.sala.salidas?.filter(s=>!s.revisada)||[];
   const participantes = [personaActual, ...personasSala.map(obtenerPersona)];
   return <>
       {sala.demo?<Text style={estilosGlobales.textoAyuda}>Demo interactiva · Los cambios y pagos se guardan solo en tu cuenta de prueba.</Text>:null}
       <View style={[estilosGlobales.tarjeta, estilos.tarjetaSala, estilos.grupo]}>
         <View style={estilos.filaCampos}><View style={[estilos.iconoSala, {
           backgroundColor: sala.color
-        }]}><Ionicons color={COLOR_ICONO_DEPOSITO} name={sala.icono as import('../../constants/movimientos').NombreIcono} size={20} /></View><View style={estilos.textoFlexible}><View style={estilos.filaCampos}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.tituloSala,estilos.textoFlexible]}>{sala.nombre}</Text></View><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoSala}>{sala.gastos.length} gastos · Categoría por gasto</Text></View></View>
-        <Text style={estilos.textoSala}>{sala.fecha} · {sala.estado==='cerrada'?'Cerrada · Solo lectura':sala.puedeEditarGastos&&!sala.cierrePendiente&&!sala.publicacionPendiente?'Activa':'Abierta · Solo lectura'} · {participantes.length} participantes</Text>
-        <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoSala}>{sala.descripcion}</Text>
+        }]}><Ionicons color={COLOR_ICONO_DEPOSITO} name={sala.icono as import('../../constants/movimientos').NombreIcono} size={20} /></View><View style={estilos.textoFlexible}><View style={estilos.filaCampos}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.tituloSala,estilos.textoFlexible]}>{sala.nombre}</Text><Ionicons name={sala.estado==='cerrada'?'lock-closed-outline':'lock-open-outline'} color={sala.estado==='cerrada'?tema.textoSecundario:tema.exito} size={18}/><Text style={estilos.textoSala}>{sala.estado==='cerrada'?'Cerrada':'Abierta'}</Text></View><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoSala}>{sala.fecha} · {participantes.length} participantes</Text></View></View>
+        <Text style={estilos.textoSala}>{sala.descripcion}</Text>
         <View style={estilos.resumenGastosSala}>
           <ResumenImporteSocial etiqueta="Total gastado" valor={sala.totalGastado} icono="receipt-outline" compacto estiloValor={estilos.importeSala} {...aspecto} />
           {sala.puedeEditarGastos&&sala.estado==='abierta'&&!sala.cierrePendiente&&!sala.publicacionPendiente ? <Pressable accessibilityRole="button" accessibilityLabel="Agregar gasto" onPress={() => abrirRegistro('gasto', {
           salaId: sala.id
         })} style={estilos.accionPanel}><Ionicons color={tema.botonPrincipalTexto} name="add-circle-outline" size={20} /><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoAccionPanel}>Agregar gasto</Text></Pressable> : null}
         </View>
-        <Text style={estilos.textoSala}>{sala.gastos.length} gastos</Text>
         {sala.publicacionPendiente?<Text style={estilosGlobales.textoAyuda}>Publicación pendiente. Reintentá compartir con conexión.</Text>:null}
-      {sala.online?<View style={estilos.filaCampos}><IndicadorPendientesSala cantidad={pendientes.length} tema={tema}/><View style={estilos.textoFlexible}><Text accessibilityLiveRegion="polite" style={estilosGlobales.etiqueta}>{pendientes.length ? ' movimientos por registrar' : 'Sin movimientos por registrar'}</Text><Text style={estilos.textoSala}>{sala.estado==='abierta'?'Elegí el depósito en cada gasto; se aplicará al cerrar.':'Elegí dónde incorporar tus movimientos pendientes.'}</Text></View></View>:null}
+      {sala.online?<View style={estilos.filaCampos}><IndicadorPendientesSala cantidad={pendientes.length} tema={tema}/><View style={estilos.textoFlexible}><Text accessibilityLiveRegion="polite" style={estilosGlobales.etiqueta}>{pendientes.length ? ' movimientos por registrar' : 'Sin movimientos por registrar'}</Text><Text style={estilos.textoSala}>{sala.estado==='abierta'?'Elegí el depósito en cada gasto; se aplicará al cerrar.':'Movimientos confirmados al cerrar la sala.'}</Text></View></View>:null}
       <AccesoSala sala={sala} {...aspecto}/>
       </View>
 
@@ -77,16 +88,20 @@ export default function DetalleSala(propiedades: import('../../social/types').As
           {sala.gastos.length ? sala.gastos.map(gasto => <TarjetaGastoSala key={gasto.id} gasto={gasto} pendientesPorRegistrar={pendientes.filter(o=>o.gastoId===gasto.id).length} alAbrir={() => alAbrirGasto(gasto.id)} {...aspecto}/>) : <EstadoVacio icono="receipt-outline" titulo="Todavía no hay gastos" descripcion="Registrá quién pagó y cómo se reparten las partes." {...aspecto} />}
         </View>}
       {seccion === 'gastos' && pendientes.some(o=>!o.gastoId) ? <View style={estilos.grupo}><Text style={estilosGlobales.etiqueta}>Pagos por registrar</Text><Text style={estilos.textoSala}>Estos movimientos pertenecen a deudas de la sala.</Text>{pendientes.filter(o=>!o.gastoId).map(op=>{const deuda=deudas.find(d=>d.id===op.deudaId||d.acuerdoOnlineId===op.deudaId);return <Pressable key={op.clave} accessibilityRole="button" accessibilityLabel={'Registrar '+op.descripcion} style={[estilosGlobales.tarjeta,estilos.tarjetaSala,estilos.filaCampos]} onPress={()=>{if(deuda)abrirRegistro('pago',{deudaId:deuda.id,pagoId:op.pagoId,operacionClave:op.clave});}} disabled={!deuda}><Ionicons name="wallet-outline" color={tema.foco} size={20}/><View style={estilos.textoFlexible}><Text style={estilosGlobales.texto}>{op.descripcion}</Text><Text style={estilos.textoSala}>Elegir depósito · {op.monto.toLocaleString('es-AR',{style:'currency',currency:'ARS'})}</Text></View><Ionicons name="chevron-forward" color={tema.textoSecundario} size={16}/></Pressable>;})}</View>:null}
+      {sala.administrador&&sala.estado==='abierta'?revisiones.map(salida=><View key={salida.personaId} style={[estilosGlobales.tarjeta,estilos.grupo]}><Text style={estilosGlobales.encabezadoSeccion}>{'Revisión pendiente por salida de '+salida.nombre}</Text><Text style={estilosGlobales.textoAyuda}>Revisá quién pagó y los avisos pendientes. Los importes no se trasladan a otra persona.</Text>{salida.gastoIds.map(id=>{const gasto=sala.gastos.find(g=>g.id===id);return gasto?<Pressable key={id} accessibilityRole="button" accessibilityLabel={'Revisar gasto: '+gasto.descripcion} style={estilos.filaCampos} onPress={()=>alAbrirGasto(id)}><Text style={[estilosGlobales.texto,estilos.textoFlexible]}>{gasto.descripcion}</Text><Ionicons name="chevron-forward" size={20} color={tema.foco}/></Pressable>:null;})}<BotonSocial secundario texto={'Confirmar revisión de '+salida.nombre} deshabilitado={simulando} alPresionar={()=>cambiarConfirmarRevision(salida.personaId)} {...aspecto}/></View>):null}
+      {confirmarRevision?<Confirmacion {...aspecto} titulo="Confirmar revisión" descripcion="Confirmás que revisaste los gastos y pagos de esta persona. Los registros financieros propios pendientes seguirán siendo obligatorios para cerrar." textoConfirmar="Sí, revisé los gastos" alCerrar={()=>cambiarConfirmarRevision(null)} alConfirmar={()=>{const personaId=confirmarRevision;cambiarConfirmarRevision(null);if(bloqueoDemo.current)return;bloqueoDemo.current=true;cambiarSimulando(true);void revisarSalidaSala(sala.id,personaId).then(()=>recargar()).catch(e=>mostrarAviso(e instanceof Error?e.message:'No se pudo confirmar la revisión.',{tipo:'error'})).finally(()=>{bloqueoDemo.current=false;cambiarSimulando(false);});}}/>:null}
+      {sala.estado==='abierta'&&!sala.cierrePendiente&&!sala.publicacionPendiente?<PendientesCierre pendientes={faltantesCierre.filter(p=>!p.clave.startsWith('revision-salida:'))} personaPropiaId={sala.online?detalleOnline?.personaPropiaId:'vos'} gastos={sala.gastos} alAbrirGasto={alAbrirGasto} {...aspecto}/>:null}
+      {!cerrada&&sala.demo&&detalleOnline?.pendientesCierre?.some(p=>p.personaId!==detalleOnline.personaPropiaId&&!p.clave.startsWith('solicitud:'))?<BotonSocial secundario texto="Simular registros de los demás" deshabilitado={simulando} alPresionar={()=>{void simularRegistros();}} {...aspecto}/>:null}
       {!cerrada ? <View style={estilos.grupoCampo}>
-        <Pressable accessibilityRole="button" disabled={cierreSinConexion} accessibilityLabel="Cerrar sala" accessibilityHint="Abre la revisión del cierre y del reparto pendiente." onPress={() => abrirRegistro('cerrar', {
+        <Pressable accessibilityRole="button" disabled={cierreBloqueado} accessibilityState={{disabled:cierreBloqueado}} accessibilityLabel="Cerrar sala" accessibilityHint="Abre la revisión del cierre y del reparto pendiente." onPress={() => abrirRegistro('cerrar', {
         salaId: sala.id
       })} style={({
         pressed: presionado
-      }) => [estilosGlobales.botonSecundario, estilos.cerrarSala, estilos.filaSimple, presionado && estilos.deudaHistorialPresionada]}>
+      }) => [estilosGlobales.botonSecundario, estilos.cerrarSala, estilos.filaSimple, cierreBloqueado && estilosGlobales.botonDeshabilitado, presionado && estilos.deudaHistorialPresionada]}>
           <Ionicons color={tema.botonSecundarioTexto} name="lock-closed-outline" size={22} />
           <Text style={estilosGlobales.textoBotonSecundario}>Cerrar sala</Text>
         </Pressable>
-        <Text style={[estilosGlobales.textoAyuda, estilos.textoCentrado]}>{cierreSinConexion?'El cierre de una sala compartida requiere conexión.':'Confirmá el reparto para pasar la sala al historial.'}</Text>
+        <Text style={[estilosGlobales.textoAyuda, estilos.textoCentrado]}>{cierreSinConexion?'El cierre de una sala compartida requiere conexión.':faltantesCierre.length?'Completá los registros pendientes para habilitar el cierre.':cierreBloqueado?'Esperá a confirmar los registros de todos los integrantes.':'Confirmá el reparto para pasar la sala al historial.'}</Text>
       </View> : null}
     </>;
 }

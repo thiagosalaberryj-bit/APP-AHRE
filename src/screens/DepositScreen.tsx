@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import FormularioDeposito from '../components/DepositForm';
@@ -25,6 +26,7 @@ import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
 import { validarDatosDeposito } from '../utils/depositValidation';
 
 export default function PantallaDeposito({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => guardandoRef.current);
   const insets = useSafeAreaInsets();
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
@@ -73,7 +75,7 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
       guardandoRef.current = false;
       establecerGuardando(false);
       mostrarAviso(`Se creó el depósito «${depositoCreado.nombre}».`, { tipo: 'exito' });
-      navegacion.goBack();
+      volverProtegido();
     } catch (error) {
       guardandoRef.current = false;
       establecerGuardando(false);
@@ -88,7 +90,7 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
   };
 
   const volver = () => {
-    if (!guardandoRef.current) navegacion.goBack();
+    if (!guardandoRef.current) volverProtegido();
   };
 
   const seleccionarIcono = (idIcono: string) => {
@@ -151,21 +153,6 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
                 cargando={guardando}
                 alPresionar={guardarDeposito}
               />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ disabled: guardando }}
-                disabled={guardando}
-                onPress={volver}
-                style={({ pressed }) => [
-                  estilosGlobales.botonSecundario,
-                  pressed && !guardando && estilos.elementoPresionado,
-                  guardando && estilosGlobales.botonDeshabilitado,
-                ]}
-              >
-                <Text style={guardando ? estilosGlobales.textoDeshabilitado : estilosGlobales.textoBotonSecundario}>
-                  Cancelar
-                </Text>
-              </Pressable>
             </View>
 
           </DesplazamientoEncabezado>

@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../globalStyles';
 export default function crearEstilosPropios(tema: Tema) {
   return StyleSheet.create({
+    textoDetalleAccion:{color:tema.botonPrincipalTexto,fontSize:TIPOGRAFIA.tamanos.auxiliar,textAlign:'center'},
     resumenPrincipal: {
       backgroundColor: tema.superficie,
       borderColor: tema.borde,

@@ -308,3 +308,14 @@ a pendientes. Se conserva la confirmación explícita, la explicación de los
 pagos bloqueados y el registro offline. No cambia importes, categorías ni cupos.
 Sin selección se explica cómo seleccionar; con una operación en curso se impiden
 envíos adicionales. El modal cierra con X, Atrás o al tocar el fondo.
+
+Los filtros del detalle usan el mismo panel y las secciones de Movimientos:
+catálogo completo por tipo, categorías en listado vertical y
+selección implícita de todas sin marcar casillas. Estadísticas comparte categorías
+y monto y mantiene sus períodos fuera del panel. La superficie del panel reserva
+el área segura inferior para no superponer controles con la navegación Android.
+
+El desplegable compartido de depósitos también descuenta las áreas seguras del
+teléfono al calcular su posición y altura. Abre encima del control cuando no
+cabe debajo y conserva el scroll de la lista y la acción Listo dentro de la zona
+visible, incluso con muchos depósitos. La corrección alcanza todos sus usos.

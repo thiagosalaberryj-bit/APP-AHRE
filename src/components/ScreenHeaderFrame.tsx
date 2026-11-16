@@ -84,10 +84,6 @@ export default function MarcoEncabezado({ encabezado, tema, children, style, ref
       </Animated.View>
       <Animated.View pointerEvents={estado.desplazado ? 'auto' : 'none'} style={[estilos.recorte, estilos.barraCompacta, { height: alturaBarra }]}>
       {estado.desplazado ? <View style={estilos.flechas}>
-        <Pressable accessibilityRole="button" accessibilityLabel={estado.desplegado ? 'Plegar encabezado' : 'Desplegar encabezado'}
-          accessibilityState={{ expanded: estado.desplegado }} onPress={() => control.current?.alternar()} style={estilos.flecha}>
-          <Ionicons name={estado.desplegado ? 'chevron-up' : 'chevron-down'} size={22} color={tema.botonPrincipal}/>
-        </Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Volver al inicio de la pantalla"
           onPress={() => control.current?.volverArriba()} style={estilos.flecha}>
           <Ionicons name="arrow-up" size={22} color={tema.botonPrincipal}/>

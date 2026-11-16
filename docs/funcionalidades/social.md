@@ -51,14 +51,13 @@ utiliza Vos como representación visible, sin guardar ese alias como clave.
 
 Nombre, apellido y apodo son obligatorios para contactos; nombre y apellido
 admiten hasta 80 caracteres y apodo hasta 20. La comparación ignora mayúsculas,
-tildes y espacios exteriores o repetidos. No se permite repetir apodo ni nombre
-y apellido dentro de una agenda, incluyendo fichas desactivadas.
+tildes y espacios exteriores o repetidos. No se permite repetir apodo dentro de una agenda, incluyendo fichas archivadas.
+Nombre y apellido pueden coincidir si el apodo es distinto.
 
-Editar conserva el identificador y sus relaciones. Eliminar marca activa = 0,
-previa confirmación. No borra salas, partes, pagos o deudas; las obligaciones
-anteriores siguen visibles y pueden saldarse. La ficha inactiva puede abrirse
-desde una deuda o una coincidencia del formulario y reactivarse desde edición.
-Eliminarla desde el perfil vuelve a la agenda, sin dejar el perfil desactivado
+Editar conserva el identificador y sus relaciones. Archivar marca activa = 0,
+previa confirmación. Solo oculta la ficha de la agenda principal: conserva vínculos, avisos, propuestas, pagos y deudas, y permite crear operaciones nuevas. La ficha inactiva puede abrirse
+desde una deuda o una coincidencia del formulario y desarchivarse desde sus opciones. Debajo de la lista activa, Ver personas archivadas abre un modal con búsqueda, acceso a la ficha y acción directa de desarchivar.
+Archivarla desde el perfil vuelve a la agenda, sin dejar el perfil desactivado
 como pantalla actual. Editar datos y reactivar mantienen la vista actual.
 
 Las pertenencias a salas son independientes de la actividad de la ficha. Quitar
@@ -120,7 +119,7 @@ El parser conserva productos y total existentes y agrega items con descripción 
 un importe candidato por línea. Los campos dudosos permanecen revisables; no se
 reparte el total automáticamente ni se inventan importes faltantes.
 
-La siguiente tabla describe las operaciones locales. En las salas publicadas, el cierre fija el acuerdo y cada cuenta incorpora sus movimientos por separado.
+La siguiente tabla describe las operaciones locales. En las salas publicadas, cada cuenta prepara sus asociaciones privadas; el cierre espera a todas y confirma el dinero y las obligaciones de forma atómica. Los invitados quedan exentos de depósito y sus deudas con cuentas son personales. Ver [ajustes acordados](../ajustes-acordados.md).
 
 | Operación | Efecto en tus depósitos |
 | --- | --- |

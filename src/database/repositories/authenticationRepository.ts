@@ -21,7 +21,7 @@ async function existeCorreoRegistrado(correo: string) {
 async function consultarCredencialesPorCorreo(correo: string) {
   return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) =>
     baseDatos.getFirstAsync<Pick<Tablas['usuarios'], 'id' | 'nombre' | 'correo_electronico' | 'activo'> & { contrasena_verificador: string }>(
-      `SELECT usuarios.id, usuarios.nombre, usuarios.correo_electronico, usuarios.activo,
+      `SELECT usuarios.id, usuarios.nombre, usuarios.apellido, usuarios.correo_electronico, usuarios.activo,
         credenciales_usuario.contrasena_verificador
       FROM usuarios
       INNER JOIN credenciales_usuario ON credenciales_usuario.usuario_id = usuarios.id
@@ -35,7 +35,7 @@ async function consultarCredencialesPorCorreo(correo: string) {
 async function consultarUsuarioActivoPorId(usuarioId: string) {
   return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) =>
     baseDatos.getFirstAsync<Tablas['usuarios']>(
-      `SELECT id, nombre, correo_electronico, activo, fecha_creacion, fecha_actualizacion
+      `SELECT id, nombre, apellido, correo_electronico, activo, fecha_creacion, fecha_actualizacion
       FROM usuarios
       WHERE id = ? AND activo = 1
       LIMIT 1;`,
@@ -70,7 +70,7 @@ async function actualizarVerificadorContrasena(usuarioId: string, contrasenaVeri
   }));
 }
 
-async function crearCuenta({ nombre, correo, contrasenaVerificador, id, omitirPreferencias = false }: { nombre: string; correo: string; contrasenaVerificador: string; id?:string; omitirPreferencias?:boolean }) {
+async function crearCuenta({ nombre, apellido = '', correo, contrasenaVerificador, id, omitirPreferencias = false }: { nombre: string; apellido?: string; correo: string; contrasenaVerificador: string; id?:string; omitirPreferencias?:boolean }) {
   const ahora = new Date().toISOString();
   const usuarioId = id || generarIdentificador();
 
@@ -87,9 +87,9 @@ async function crearCuenta({ nombre, correo, contrasenaVerificador, id, omitirPr
       }
 
       await baseDatos.runAsync(
-        `INSERT INTO usuarios (id, nombre, correo_electronico, activo, fecha_creacion, fecha_actualizacion)
-        VALUES (?, ?, ?, 1, ?, ?);`,
-        [usuarioId, nombre.trim(), normalizarCorreo(correo), ahora, ahora],
+        `INSERT INTO usuarios (id, nombre, apellido, correo_electronico, activo, fecha_creacion, fecha_actualizacion)
+        VALUES (?, ?, ?, ?, 1, ?, ?);`,
+        [usuarioId, nombre.trim(), apellido.trim(), normalizarCorreo(correo), ahora, ahora],
       );
       await baseDatos.runAsync(
         `INSERT INTO credenciales_usuario
@@ -111,6 +111,7 @@ async function crearCuenta({ nombre, correo, contrasenaVerificador, id, omitirPr
       return {
         id: usuarioId,
         nombre: nombre.trim(),
+        apellido: apellido.trim(),
         correo_electronico: normalizarCorreo(correo),
         activo: 1,
         fecha_creacion: ahora,

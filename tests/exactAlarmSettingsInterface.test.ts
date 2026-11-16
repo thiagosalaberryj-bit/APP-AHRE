@@ -15,9 +15,12 @@ for(const nombre of ['claro','oscuro'] as const)test('ajustes de alarmas refleja
  const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
  const Ajustes=cargar<typeof import('../src/components/ExactAlarmSettings.tsx')>('src/components/ExactAlarmSettings.tsx').default;
  const render=()=>nodos(Ajustes({tema:TEMAS[nombre],visible:true}));
- render();await Promise.resolve();let filas=render();assert.ok(filas.some(n=>n.props.children==='Activar horario preciso'));
+ render();await Promise.resolve();let filas=render();assert.ok(filas.some(n=>n.props.children==='Horarios precisos'));
  filas.find(n=>n.type==='Pressable')!.props.onPress();await Promise.resolve();assert.equal(aperturas,1);assert.equal(estado,'desactivadas','Abrir ajustes no concede permiso');
- permiso='permitidas';retorno!('active');await Promise.resolve();assert.ok(render().some(n=>n.props.children==='Configurar horario preciso'));
- permiso='expo_go';retorno!('active');await Promise.resolve();filas=render();assert.ok(!filas.some(n=>n.type==='Pressable'));assert.ok(filas.some(n=>String(n.props.children).includes('Expo Go conserva')));
+ const pasoDos=nodos(Ajustes({tema:TEMAS[nombre],visible:true,aviso:true}));assert.ok(pasoDos.some(n=>n.props.accessibilityLabel==='Paso 2: configurar horarios precisos'));
+ permiso='permitidas';retorno!('active');await Promise.resolve();assert.ok(render().some(n=>n.props.etiquetaAccesibilidad==='Horarios precisos'));assert.equal(Ajustes({tema:TEMAS[nombre],visible:true,aviso:true}),null);
+ render().find(n=>n.props.etiquetaAccesibilidad==='Horarios precisos')!.props.alCambiar(false);await Promise.resolve();assert.equal(aperturas,2);assert.equal(estado,'permitidas','Desactivar abre Android y espera su estado real');
+ permiso='desactivadas';retorno!('active');await Promise.resolve();assert.ok(nodos(Ajustes({tema:TEMAS[nombre],visible:true,aviso:true})).some(n=>n.props.accessibilityLabel==='Paso 2: configurar horarios precisos'));
+ permiso='expo_go';retorno!('active');await Promise.resolve();filas=render();assert.ok(filas.filter(n=>n.type==='Pressable').every(n=>n.props.disabled));assert.ok(filas.some(n=>String(n.props.children).includes('Expo Go conserva')));
  cerrar!();assert.equal(retiradas,1);
 });

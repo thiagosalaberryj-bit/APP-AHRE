@@ -1,3 +1,5 @@
+import { useErrorNotificado } from '../hooks/useErrorNotice';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { useCallback, useContext, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator, Image, Keyboard, Pressable, Text, TextInput, View } from 'react-native';
@@ -8,7 +10,7 @@ import SelectorDeposito from '../components/DepositSelector';
 import EntradaMonto from '../components/MoneyInput';
 import BotonPrincipal from '../components/PrimaryButton';
 import SelectorHora from '../components/TimeSelector';
-import { RUTAS } from '../constants/routes';
+import { Ionicons } from '@expo/vector-icons';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { ErrorBaseDatos } from '../database/errors';
 import { cargarDatosMovimiento, crearMovimiento, ErrorMovimiento } from '../movements/movementService';
@@ -16,12 +18,13 @@ import { validarDatosMovimiento } from '../utils/movementValidation';
 import { prepararEgresoReconocido } from './ocrExpenseDraft';
 
 export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tema, estilos, estilosGlobales, estilosMovimiento, alVolverAEscanear, alCambiarGuardado }: import('../social/types').AspectoSocial & {resultado:Awaited<ReturnType<typeof import('./ocrService').reconocerComprobante>>;imagen:{uri:string;width:number;height:number;fileName?:string|null}|null;navegacion:import('../navigation/types').NavegacionRaiz;estilos:ReturnType<typeof import('../styles/OcrScreenStyles').crearEstilosOcr>;alVolverAEscanear:()=>void;alCambiarGuardado:(valor:boolean)=>void}) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => accionEnCurso.current && !egresoGuardado.current);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const [datos, establecerDatos] = useState<import('../types/forms').DatosMovimiento>(() => prepararEgresoReconocido(resultado));
   const [depositos, establecerDepositos] = useState<(import('../database/types').Deposito & {saldoTexto:string})[]>([]);
   const [categorias, establecerCategorias] = useState<import('../constants/movimientos').Categoria[]>([]);
   const [cargando, establecerCargando] = useState(true);
-  const [errorCarga, establecerErrorCarga] = useState('');
+  const [errorCarga, establecerErrorCarga] = useErrorNotificado('');
   const [guardando, establecerGuardando] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [mostrarTexto, establecerMostrarTexto] = useState(false);
@@ -71,7 +74,7 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
       await crearMovimiento(datos, 'egreso');
       egresoGuardado.current = true;
       mostrarAviso('El egreso se guardó correctamente.', { tipo: 'exito' });
-      navegacion.goBack();
+      volverProtegido();
     } catch (error) {
       mostrarAviso(error instanceof ErrorMovimiento || error instanceof ErrorBaseDatos
         ? error.message : 'No se pudo guardar el egreso. Intentá nuevamente.', { tipo: 'error' });
@@ -112,18 +115,10 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
         {cargando ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando depósitos y categorías" /> : null}
         {errorCarga ? (
           <View style={estilos.tarjetaInformacion}>
-            <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{errorCarga}</Text>
+
             <Pressable accessibilityRole="button" onPress={() => cargarDatos()} style={estilos.botonGaleria}>
               <Text style={estilos.textoBotonGaleria}>Reintentar carga</Text>
             </Pressable>
-          </View>
-        ) : !cargando && depositos.length === 0 ? (
-          <View style={estilos.tarjetaInformacion}>
-            <Text style={estilosGlobales.texto}>Todavía no tenés depósitos. Creá uno para guardar este egreso.</Text>
-            <Pressable accessibilityRole="button" onPress={() => navegacion.navigate(RUTAS.DEPOSITO)} style={estilos.botonGaleria}>
-              <Text style={estilos.textoBotonGaleria}>Crear depósito</Text>
-            </Pressable>
-            <Text style={estilosGlobales.textoAyuda}>El comprobante y las correcciones se conservan al regresar.</Text>
           </View>
         ) : !cargando ? (
           <>
@@ -146,14 +141,19 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
       </View>
       <Image accessibilityLabel="Foto temporal del comprobante" resizeMode="contain" source={{ uri: imagen!.uri }} style={estilos.imagenComprobante} />
       <Text style={estilosGlobales.textoAyuda}>La foto se usa para revisar y no se guarda junto al egreso.</Text>
-      <Pressable accessibilityRole="button" onPress={() => establecerMostrarTexto(!mostrarTexto)} disabled={guardando} style={estilos.botonGaleria}>
-        <Text style={estilos.textoBotonGaleria}>{mostrarTexto ? 'Ocultar texto reconocido' : 'Ver texto reconocido'}</Text>
-      </Pressable>
-      {mostrarTexto ? <Text selectable style={estilosGlobales.texto}>{resultado.texto}</Text> : null}
+      <View style={estilos.desplegableTexto}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Texto reconocido" accessibilityState={{expanded:mostrarTexto,disabled:guardando}} onPress={()=>establecerMostrarTexto(!mostrarTexto)} disabled={guardando} style={estilos.encabezadoTexto}>
+          <Ionicons name="document-text-outline" size={22} color={tema.textoSecundario}/>
+          <Text style={[estilosGlobales.etiqueta,{flex:1}]}>Texto reconocido</Text>
+          <Ionicons name={mostrarTexto?'chevron-up':'chevron-down'} size={20} color={tema.textoSecundario}/>
+        </Pressable>
+        {mostrarTexto?<Text selectable style={[estilosGlobales.texto,estilos.contenidoTexto]}>{resultado.texto}</Text>:null}
+      </View>
       <BotonPrincipal estilosGlobales={estilosGlobales} estilosAutenticacion={estilosMovimiento} titulo="Confirmar egreso"
         cargando={guardando} deshabilitado={cargando || Boolean(errorCarga) || !depositos.length} alPresionar={guardarEgreso} />
-      <Pressable accessibilityRole="button" disabled={guardando} onPress={alVolverAEscanear} style={estilos.botonGaleria}>
-        <Text style={estilos.textoBotonGaleria}>Volver a escanear</Text>
+      <Pressable accessibilityRole="button" disabled={guardando} onPress={alVolverAEscanear} style={estilos.accionReescanear}>
+        <Ionicons name="camera-reverse-outline" size={21} color={tema.foco}/>
+        <Text style={estilos.textoReescanear}>Escanear otro comprobante</Text>
       </Pressable>
     </>
   );

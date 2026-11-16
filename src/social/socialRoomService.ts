@@ -24,7 +24,7 @@ export function crearSala(datos: import('./types').DatosSala) {
     const cantidad=abiertas.filter(s=>!s.publicada).length+compartidas.filter(s=>JSON.parse(s.datos).sala.estado==='abierta').length;
     exigir(cantidad < LIMITE_SALAS_ACTIVAS, 'Ya tenés tres salas abiertas. Cerrá una para crear otra.');
     const ids = [...new Set([contexto.propia.id, ...(datos.personasIds || []).map((id) => idPersistente(id, contexto))])];
-    for (const id of ids) exigir((await registroPropio(personasRepositorio, id, contexto)).activa, 'Una persona seleccionada está desactivada.');
+    for (const id of ids) await registroPropio(personasRepositorio, id, contexto);
     const sala = await salasRepositorio.crear({ id: datos.id, usuario_id: contexto.usuario.id, nombre, descripcion: textoSocial(datos.descripcion),
       icono: datos.icono, color: datos.color, fecha, estado: 'abierta' }, contexto.conexion);
     for (const persona_id of ids) await personasSalaRepositorio.crear({ usuario_id: contexto.usuario.id, sala_id: sala.id, persona_id, activa: 1, fecha_alta: new Date().toISOString() }, contexto.conexion);
@@ -42,7 +42,7 @@ export async function cambiarPersonasSala(salaId: string, personasIds: string[])
     for (const id of ids) {
       const previa = previas.find(p => p.persona_id === id);
       if (previa?.activa) continue; // Una identidad histórica inactiva no se elimina al guardar otra selección.
-      exigir((await registroPropio(personasRepositorio, id, contexto)).activa, 'Reactivá la persona antes de agregarla.');
+      await registroPropio(personasRepositorio, id, contexto);
       if (previa) await personasSalaRepositorio.actualizar(previa.id, { activa: 1, fecha_baja: null }, contexto.conexion);
       else await personasSalaRepositorio.crear({ usuario_id: contexto.usuario.id, sala_id: salaId, persona_id: id, activa: 1, fecha_alta: new Date().toISOString() }, contexto.conexion);
     }

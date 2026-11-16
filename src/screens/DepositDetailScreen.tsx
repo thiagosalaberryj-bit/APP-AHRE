@@ -1,3 +1,6 @@
+import { AvisosEnModal } from '../contexts/ToastContext';
+import { useAvisoError } from '../hooks/useErrorNotice';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import FormularioDeposito from '../components/DepositForm';
@@ -82,7 +85,7 @@ function formatearFechaCorta(fecha: Date) {
 function formatearSaldo(monto: number) {
   const saldo = Number(monto);
   if (!Number.isFinite(saldo)) return '—';
-  return `$ ${saldo.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `$ ${saldo.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatearComparacionMensual(comparacion: Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null) {
@@ -159,6 +162,7 @@ function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: impo
 }
 
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => operacionFinancieraEnCurso() || operacionDepositoEnCurso.current);
   const operacionDepositoEnCurso=useRef(false);
   useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(operacionFinancieraEnCurso()||operacionDepositoEnCurso.current)evento.preventDefault();}),[navegacion]);
   const { width: anchoVentana } = useWindowDimensions();
@@ -185,7 +189,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const estilosFiltros = crearEstilosMovimientos(tema, anchoVentana);
   const estilosAccesos=crearEstilosBusquedaFiltros(tema);
   const [cantidadMovimientos, establecerCantidadMovimientos] = useState(0);
-  const [categoriasMovimientos, establecerCategoriasMovimientos] = useState<string[]>([]);
   const [revisionMovimientos, establecerRevisionMovimientos] = useState(0);
   const [enfocada, establecerEnfocada] = useState(false);
   const [comparacionMensual, establecerComparacionMensual] = useState<Awaited<ReturnType<typeof consultarDetalleDeposito>>['comparacionMensual'] | null>(null);
@@ -262,7 +265,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       establecerComparacionMensual(detalle.comparacionMensual);
       establecerCantidadRecurrencias(recurrencias.length);
       establecerCantidadMovimientos(detalle.cantidadMovimientos);
-      establecerCategoriasMovimientos(detalle.categoriasMovimientos);
       establecerRevisionMovimientos(valor => valor + 1);
     } catch (error) {
       if (secuencia !== secuenciaCarga.current) return;
@@ -272,7 +274,6 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         : 'No se pudo cargar el depósito. Intentá nuevamente.';
       establecerDeposito(null);
       establecerCantidadMovimientos(0);
-      establecerCategoriasMovimientos([]);
       establecerComparacionMensual(null);
       establecerErrorCarga(mensaje);
       if (!noEncontrado) mostrarAviso(mensaje, { tipo: 'error' });
@@ -300,14 +301,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   }, [cargarDetalle]));
 
   const categoriasDisponiblesFiltro = useMemo(() => {
-    const idsDisponibles = new Set(categoriasMovimientos);
     const categoriasPorTipo = tipoFiltro === 'ingreso'
       ? [...CATEGORIAS_INGRESO, ...CATEGORIAS_EGRESO.filter((categoria) => IDS_TRANSFERENCIA.has(categoria.id))]
       : tipoFiltro === 'egreso'
         ? CATEGORIAS_EGRESO
         : CATEGORIAS_FILTRO;
-    return categoriasPorTipo.filter((categoria) => seccionDeposito==='recurrentes'||idsDisponibles.has(categoria.id));
-  }, [categoriasMovimientos, tipoFiltro,seccionDeposito]);
+    return categoriasPorTipo;
+  }, [tipoFiltro]);
 
   const cambiarTipoFiltro = (tipo: SetStateAction<string>) => {
     establecerTipoFiltro(tipo);
@@ -395,6 +395,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const consultarPagina = useCallback((criterios: import('../types/forms').FiltrosHistorial, cursor: {fecha_hora:string;id:string}|null) => consultarPaginaMovimientosDeposito(depositoId || '', criterios, cursor), [depositoId]);
   const datosMeses = useMovimientosPorMes({ habilitado: enfocada && deposito?.id === depositoId && seccionDeposito === 'movimientos',
     revision: revisionMovimientos, filtros: filtrosConsulta, invalido: !!errorMontoFiltro || !!errorFechaFiltro, consultarMeses, consultarPagina });
+  useAvisoError(datosMeses.error || Object.values(datosMeses.paginas).find(pagina => pagina.error)?.error);
 
   const filtrosActivos = useMemo(() => {
     const filtros: {id:string;etiqueta:string;alQuitar:()=>void}[] = [];
@@ -553,7 +554,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       await eliminarDeposito(deposito.id);
       establecerModalEliminacionVisible(false);
       mostrarAviso('El depósito se desactivó y su historial quedó conservado.', { tipo: 'exito' });
-      operacionDepositoEnCurso.current=false;navegacion.goBack();
+      operacionDepositoEnCurso.current=false;volverProtegido();
     } catch (error) {
       mostrarAviso(error instanceof ErrorDeposito
         ? error.message
@@ -625,7 +626,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           tema={tema}
           titulo="Detalle de depósito"
           descripcion="Consultá el saldo y los movimientos de este depósito."
-          alVolver={() => navegacion.goBack()}
+          alVolver={() => volverProtegido()}
         />}>
 
         <DesplazamientoEncabezado ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} alVolverAlInicio={datosMeses.detenerDesplazamiento} contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -636,8 +637,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             </View>
           ) : errorCarga || !deposito ? (
             <View style={estilos.estadoVacio}>
-              <Ionicons color={tema.error} name="alert-circle-outline" size={32} />
-              <Text style={estilosGlobales.etiqueta}>{errorCarga || 'No se encontró el depósito.'}</Text>
+
+              {!errorCarga ? <Text style={estilosGlobales.etiqueta}>No se encontró el depósito.</Text> : null}
               {errorCarga ? (
                 <Pressable accessibilityRole="button" onPress={cargarDetalle} style={estilos.botonLimpiar}>
                   <Text style={estilos.textoBotonLimpiar}>Intentar nuevamente</Text>
@@ -727,7 +728,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             {seccionDeposito==='movimientos'?<>
               {datosMeses.cargando ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses del depósito"/> : datosMeses.error ? (
                 <View style={estilos.estadoVacio}>
-                  <Text style={estilosGlobales.textoError}>{datosMeses.error}</Text>
+
                   <Pressable accessibilityRole="button" onPress={datosMeses.reintentar} style={estilos.botonLimpiar}><Text style={estilos.textoBotonLimpiar}>Reintentar</Text></Pressable>
                 </View>
               ) : datosMeses.meses.length ? <ListaMesesMovimientos datos={datosMeses} tema={tema} alPresionar={abrirDetalleMovimiento}/> : (
@@ -745,12 +746,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
       <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtrosVisibles} alCerrar={()=>establecerFiltrosVisibles(false)} limpiarFiltros={limpiarFiltros} cantidadFiltros={cantidadFiltros}>
               <View style={estilosFiltros.listaSeccionesFiltro}>
-                <FiltroTipoMovimientos tema={tema} estilos={estilosFiltros} estilosChips={estilosAccesos} resumen={resumenTipo}
+                <FiltroTipoMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenTipo}
                     abierta={seccionesFiltrosAbiertas.includes('tipo')} alAlternar={() => alternarSeccionFiltro('tipo')}
                     tipoFiltro={tipoFiltro} cambiarTipoFiltro={cambiarTipoFiltro}
                   />
 
-                <FiltroFechaMovimientos tema={tema} estilos={estilosFiltros} estilosChips={estilosAccesos} resumen={resumenFecha}
+                <FiltroFechaMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenFecha}
                     abierta={seccionesFiltrosAbiertas.includes('fecha')} alAlternar={() => alternarSeccionFiltro('fecha')}
                     estilosSelectores={estilos} estilosGlobales={estilosGlobales}
                     fechaFiltro={fechaFiltro} cambiarFechaFiltro={cambiarFechaFiltro}
@@ -758,7 +759,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                     anioMesVisible={anioMesVisible} establecerAnioMesVisible={establecerAnioMesVisible}
                     mesSeleccionado={mesSeleccionado} establecerMesSeleccionado={establecerMesSeleccionado}
                     fechaInicial={fechaInicial} fechaFinal={fechaFinal}
-                    seleccionarFechaPersonalizada={seleccionarFechaPersonalizada} errorFechaFiltro={errorFechaFiltro}
+                    seleccionarFechaPersonalizada={seleccionarFechaPersonalizada} errorFechaFiltro={errorFechaFiltro} mostrarSelectorSemana
                   />
 
                 <FiltroCategoriasMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenCategorias}
@@ -776,7 +777,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </View>
       </PanelFiltrosMovimientos>
 
-      <Modal animationType="fade" transparent visible={saldoAmpliado && saldoVisible && Boolean(deposito)} onRequestClose={()=>establecerSaldoAmpliado(false)}>
+      <Modal animationType="fade" transparent visible={saldoAmpliado && saldoVisible && Boolean(deposito)} onRequestClose={()=>establecerSaldoAmpliado(false)}><AvisosEnModal visible={saldoAmpliado && saldoVisible && Boolean(deposito)}>
         <SafeAreaView style={estilos.fondoModalOpciones}>
           <Pressable accessibilityRole="button" accessibilityLabel="Cerrar saldo completo" style={estilos.fondoCierre} onPress={()=>establecerSaldoAmpliado(false)}/>
           <View accessibilityViewIsModal style={estilos.tarjetaOpciones}>
@@ -792,9 +793,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             <Pressable accessibilityRole="button" style={estilosGlobales.botonPrincipal} onPress={()=>establecerSaldoAmpliado(false)}><Text style={estilosGlobales.textoBotonPrincipal}>Cerrar</Text></Pressable>
           </View>
         </SafeAreaView>
-      </Modal>
+      </AvisosEnModal></Modal>
 
-      <Modal animationType="fade" onRequestClose={() => establecerModalOpcionesVisible(false)} transparent visible={modalOpcionesVisible}>
+      <Modal animationType="fade" onRequestClose={() => establecerModalOpcionesVisible(false)} transparent visible={modalOpcionesVisible}><AvisosEnModal visible={modalOpcionesVisible}>
         <View style={estilos.fondoModalOpciones}>
           <Pressable style={estilos.fondoCierre} onPress={() => establecerModalOpcionesVisible(false)} />
           <View accessibilityViewIsModal style={estilos.tarjetaOpciones}>
@@ -887,9 +888,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             </ScrollView>
           </View>
         </View>
-      </Modal>
+      </AvisosEnModal></Modal>
 
-      <Modal animationType="fade" onRequestClose={cerrarEdicion} transparent visible={modalEdicionVisible}>
+      <Modal animationType="fade" onRequestClose={cerrarEdicion} transparent visible={modalEdicionVisible}><AvisosEnModal visible={modalEdicionVisible}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
           <View accessibilityViewIsModal style={estilos.tarjetaEdicion}>
             <View style={estilos.encabezadoModal}>
@@ -936,7 +937,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             </View>
           </View>
         </KeyboardAvoidingView>
-      </Modal>
+      </AvisosEnModal></Modal>
 
       <ModalIconosDeposito
         tema={tema} estilos={estilosFormularioDeposito} estiloFondo={estilos.fondoModal} variante="edicion"
@@ -945,7 +946,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         alSeleccionar={icono => { actualizarBorrador('icono', icono); establecerModalIconosEdicionVisible(false); }}
       />
 
-      <Modal animationType="fade" onRequestClose={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} transparent visible={modalEliminacionVisible && Boolean(deposito)}>
+      <Modal animationType="fade" onRequestClose={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} transparent visible={modalEliminacionVisible && Boolean(deposito)}><AvisosEnModal visible={modalEliminacionVisible && Boolean(deposito)}>
         <View style={estilos.fondoModal}>
           <Pressable style={estilos.fondoCierre} disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} />
           <View accessibilityViewIsModal style={estilos.tarjetaConfirmacion}>
@@ -1003,7 +1004,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             </View>
           </View>
         </View>
-      </Modal>
+      </AvisosEnModal></Modal>
     </SafeAreaView>
   );
 }

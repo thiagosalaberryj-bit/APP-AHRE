@@ -1,3 +1,4 @@
+import { AvisosEnModal } from '../../contexts/ToastContext';
 import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FormularioPersona from './PersonForm';
@@ -20,7 +21,7 @@ export default function ModalPersona(propiedades: import('../../social/types').A
     estilos,
     estilosGlobales
   } = aspecto;
-  return <Modal transparent animationType="fade" visible={visible} onRequestClose={() => alCerrar()}>
+  return <Modal transparent animationType="fade" visible={visible} onRequestClose={() => alCerrar()}><AvisosEnModal visible={visible}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
         <Pressable accessibilityRole="button" accessibilityLabel="Cerrar formulario de persona" onPress={() => alCerrar()} style={estilos.cierreFondo} />
         <View accessibilityViewIsModal style={estilos.tarjetaModal}>
@@ -36,5 +37,5 @@ export default function ModalPersona(propiedades: import('../../social/types').A
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>;
+    </AvisosEnModal></Modal>;
 }

@@ -1,3 +1,5 @@
+import { useAvisoError } from '../hooks/useErrorNotice';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import GraficoCircular from '../components/StatisticsPieChart';
@@ -24,7 +26,7 @@ import SelectorSegmentado from '../components/SegmentedSelector';
 import FilaFiltrosHorizontal from '../components/HorizontalFilterRow';
 import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
 import PanelFiltrosMovimientos, { SeccionFiltro } from '../components/MovementFiltersPanel';
-import SelectorCategoria from '../components/CategorySelector';
+import { FiltroCategoriasMovimientos, FiltroMontoMovimientos } from '../components/MovementFilterSections';
 import SelectorDeposito from '../components/DepositSelector';
 import EntradaMonto from '../components/MoneyInput';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
@@ -59,6 +61,7 @@ import { crearEstilosEstadisticas } from '../styles/StatisticsScreenStyles';
 import { cargarEstadisticas } from '../statistics/statisticsService';
 
 export default function PantallaEstadisticas({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
+  useRegresoProtegido(navegacion);
   const raizSelectores = useRef<View>(null);
   const controlesSelectores = useRef<Record<string, View | null>>({});
   const [anclaSelector, establecerAnclaSelector] = useState<{left:number;top:number;width:number;altoMaximo:number} | null>(null);
@@ -78,6 +81,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [depositos, establecerDepositos] = useState<Awaited<ReturnType<typeof cargarOpcionesHistorialMovimientos>>['depositos']>([]);
   const [depositosIds, establecerDepositosIds] = useState<string[] | null>(null);
   const [errorDepositos, establecerErrorDepositos] = useState(false);
+  useAvisoError(errorDepositos ? 'No se pudieron cargar los depósitos. Volvé a abrir la pantalla para reintentar.' : null);
   const [seccionesAbiertas, establecerSeccionesAbiertas] = useState(['categorias', 'monto']);
   const estilosFiltros = crearEstilosMovimientos(tema, anchoPantalla);
   const minimo = montoMinimo.trim() ? convertirSaldoInicial(montoMinimo) : undefined;
@@ -105,17 +109,18 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [anioColumnas, establecerAnioColumnas] = useState(ANIO_ACTUAL);
   const [selectorActual, establecerSelectorActual] = useState<string | null>(null);
   const [selectorFechaActual, establecerSelectorFechaActual] = useState<string | null>(null);
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!selectorActual && !selectorFechaActual) return;
     const suscripcion = BackHandler.addEventListener('hardwareBackPress', () => { establecerSelectorActual(null); establecerSelectorFechaActual(null); return true; });
     return () => suscripcion.remove();
-  }, [selectorActual, selectorFechaActual]);
+  }, [selectorActual, selectorFechaActual]));
   useEffect(() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); }, [indiceGrafico, anchoPantalla]);
   const [filtroCategoriasAbierto, establecerFiltroCategoriasAbierto] = useState(false);
   const [categoriaSeleccionada, establecerCategoriaSeleccionada] = useState<string | null>(null);
   const [indiceColumnaSeleccionada, establecerIndiceColumnaSeleccionada] = useState(0);
   const [estadisticas, establecerEstadisticas] = useState<{ resumen: { categorias: { categoria: string; total: number; cantidad: number; }[]; total: number; cantidad: number; }; columnas: { periodo: string; categoria: string; total: number; }[]; } | null>(null);
   const [estadoCarga, establecerEstadoCarga] = useState('cargando');
+  useAvisoError(estadoCarga === 'error' ? '— Reintentá la consulta.' : null);
   const ultimaConsultaCompletada = useRef<string|null>(null);
   const [intentoCarga, establecerIntentoCarga] = useState(0);
 
@@ -363,7 +368,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
   const filtrosActivosEstadistica = [
     ...gruposCategoriasActivos.map(grupo => ({ id:'categorias-' + grupo.id, etiqueta:grupo.nombre, alQuitar:() => {
-      establecerCategoriasSeleccionadas(actuales => actuales.filter(id => !grupo.categorias.includes(id)));
+      establecerCategoriasSeleccionadas(actuales => {const restantes=actuales.filter(id => !grupo.categorias.includes(id));return restantes.length?restantes:todasLasCategorias;});
       establecerCategoriaSeleccionada(null);
     } })),
     ...(!todasSeleccionadas && !categoriasSeleccionadas.length ? [{ id:'sin-categorias', etiqueta:'Sin categorías', alQuitar:() => establecerCategoriasSeleccionadas(todasLasCategorias) }] : []),
@@ -434,7 +439,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
             <BuscadorFiltrosMovimientos tema={tema} mostrarBuscador={false} alAbrirFiltros={() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); establecerFiltroCategoriasAbierto(true); }} alLimpiar={limpiarFiltrosEstadistica} filtrosActivos={filtrosActivosEstadistica} cantidad={cantidadFiltrosActivos}>
               {preajustesCategorias.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: esPreajusteActivo(opcion) }}
-                onPress={() => { establecerCategoriasSeleccionadas(actuales => opcion.id === 'todos' ? todasLasCategorias : alternarGrupoCategorias(actuales, opcion.categorias, todasLasCategorias)); establecerCategoriaSeleccionada(null); }}
+                onPress={() => { establecerCategoriasSeleccionadas(actuales => {const nuevas=opcion.id === 'todos' ? todasLasCategorias : alternarGrupoCategorias(actuales, opcion.categorias, todasLasCategorias);return nuevas.length?nuevas:todasLasCategorias;}); establecerCategoriaSeleccionada(null); }}
                 style={[estilosAccesos.filtro, esPreajusteActivo(opcion) && estilosAccesos.filtroActivo]}>
                 <Text style={[estilosAccesos.textoFiltro, esPreajusteActivo(opcion) && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
               </Pressable>)}
@@ -476,7 +481,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                       onPress={() => establecerIntentoCarga((intento) => intento + 1)}
                       style={estilos.botonReintentar}
                     >
-                      <Text style={estilos.textoSinCategorias}>No se pudieron cargar las estadísticas. Tocá para reintentar.</Text>
+                      <Text style={estilos.textoSinCategorias}>Reintentar</Text>
                     </Pressable>
                   ) : !hayMovimientosResumen ? (
                     <Text style={estilos.textoSinCategorias}>No hay movimientos con estos filtros. Probá restablecerlos o cambiar el período.</Text>
@@ -507,7 +512,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                     onPress={() => establecerIntentoCarga((intento) => intento + 1)}
                     style={estilos.estadoGrafico}
                   >
-                    <Text style={estilos.textoSinCategorias}>No se pudieron cargar las estadísticas. Tocá para reintentar.</Text>
+                    <Text style={estilos.textoSinCategorias}>Reintentar</Text>
                   </Pressable>
                 ) : !hayDatosColumnas ? (
                   <Text style={estilos.textoSinCategorias}>No hay movimientos en este período.</Text>
@@ -546,7 +551,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
               <>
                 <View style={estilos.detalleSeleccion}>
                   {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
-                    <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
+                    <Text style={estilos.textoDetalleSeleccion}>—</Text>
                   ) : !hayMovimientosResumen ? (
                     <Text style={estilos.textoDetalleSeleccion}>No hay movimientos con estos filtros.</Text>
                   ) : !hayDatosResumen ? (
@@ -601,7 +606,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
             ) : (
               <View style={estilos.detalleColumna}>
                 {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
-                  <Text style={estilos.textoDetalleSeleccion}>No se pudieron cargar las estadísticas.</Text>
+                  <Text style={estilos.textoDetalleSeleccion}>—</Text>
                 ) : !hayDatosColumnas ? (
                   <Text style={estilos.textoDetalleSeleccion}>No hay movimientos en el período seleccionado.</Text>
                 ) : !hayDatosColumnasVisibles ? (
@@ -647,23 +652,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
         </View> : null}
 
         <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtroCategoriasAbierto} alCerrar={() => establecerFiltroCategoriasAbierto(false)} limpiarFiltros={limpiarFiltrosEstadistica} cantidadFiltros={cantidadFiltrosActivos}>
-          <SeccionFiltro titulo="Categorías" resumen={textoCategoriasActivas} abierta={seccionesAbiertas.includes('categorias')} alAlternar={() => alternarSeccion('categorias')} colorAcento={tema.foco} estilos={estilosFiltros}>
-            <View style={estilos.encabezadoFiltrosRapidos}>
-              <Pressable accessibilityRole="button" onPress={() => establecerCategoriasSeleccionadas(catalogo.map(categoria => categoria.id))} style={estilos.accionFiltroRapido}><Text style={estilos.textoAccionFiltroRapido}>Todas</Text></Pressable>
-              <Pressable accessibilityRole="button" onPress={() => establecerCategoriasSeleccionadas([])} style={estilos.accionFiltroRapido}><Text style={estilos.textoAccionFiltroRapido}>Ninguna</Text></Pressable>
-            </View>
-            <SelectorCategoria tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} categorias={categorias} tipoMovimiento={tipoMovimiento} etiqueta="" variante="grilla" seleccionMultiple seleccionadasIds={categoriasSeleccionadas} alCambiarMulti={establecerCategoriasSeleccionadas} estiloTarjeta={estilosFiltros.tarjetaCategoriaFiltro}/>
-          </SeccionFiltro>
+          <FiltroCategoriasMovimientos tema={tema} estilos={estilosFiltros} estilosSelectores={estilosFiltros} estilosGlobales={estilosGlobales} resumen={textoCategoriasActivas} abierta={seccionesAbiertas.includes('categorias')} alAlternar={()=>alternarSeccion('categorias')} categoriasDisponiblesFiltro={categorias} tipoMovimiento={tipoMovimiento} categoriaFiltroIds={todasSeleccionadas?[]:categoriasSeleccionadas} establecerCategoriaFiltroIds={ids=>{establecerCategoriasSeleccionadas(ids.length?ids:todasLasCategorias);establecerCategoriaSeleccionada(null);}}/>
           <SeccionFiltro titulo="Depósitos" resumen={depositosIds === null ? 'Todos los depósitos' : depositosIds.length + ' seleccionados'} abierta={seccionesAbiertas.includes('depositos')} alAlternar={() => alternarSeccion('depositos')} colorAcento={tema.foco} estilos={estilosFiltros}>
-            {errorDepositos ? <Text style={estilosGlobales.textoError}>No se pudieron cargar los depósitos. Volvé a abrir la pantalla para reintentar.</Text> : <SelectorDeposito tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} etiqueta="" depositos={depositos} seleccionMultiple seleccionadasIds={depositosIds ?? depositos.map(deposito => deposito.id)} alCambiarMulti={establecerDepositosIds} impedirSeleccionVacia/>}
+            {errorDepositos ? <Text style={estilosGlobales.textoAyuda}>Volvé a abrir el selector para reintentar.</Text> : <SelectorDeposito tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} etiqueta="" depositos={depositos} seleccionMultiple seleccionadasIds={depositosIds ?? depositos.map(deposito => deposito.id)} alCambiarMulti={establecerDepositosIds} impedirSeleccionVacia/>}
           </SeccionFiltro>
-          <SeccionFiltro titulo="Monto" resumen={textoMontoActivo} abierta={seccionesAbiertas.includes('monto')} alAlternar={() => alternarSeccion('monto')} colorAcento={tema.foco} estilos={estilosFiltros}>
-            <View style={estilosFiltros.filaRango}>
-              <View style={estilosFiltros.grupoCampoRango}><Text style={estilosFiltros.textoEtiquetaCampoRango}>Mínimo</Text><EntradaMonto tema={tema} estilosGlobales={estilosGlobales} etiqueta="Monto mínimo" mostrarEtiqueta={false} mostrarLimpiar={false} compacto valor={montoMinimo} alCambiarTexto={valor => { establecerMontoMinimo(valor); establecerPreajusteMontoId('personalizado'); }} estiloContenedor={estilosFiltros.campoRango}/></View>
-              <View style={estilosFiltros.grupoCampoRango}><Text style={estilosFiltros.textoEtiquetaCampoRango}>Máximo</Text><EntradaMonto tema={tema} estilosGlobales={estilosGlobales} etiqueta="Monto máximo" mostrarEtiqueta={false} mostrarLimpiar={false} compacto valor={montoMaximo} alCambiarTexto={valor => { establecerMontoMaximo(valor); establecerPreajusteMontoId('personalizado'); }} estiloContenedor={estilosFiltros.campoRango}/></View>
-            </View>
-            {errorMonto ? <Text style={estilosGlobales.textoError}>{errorMonto}</Text> : null}
-          </SeccionFiltro>
+          <FiltroMontoMovimientos tema={tema} estilos={estilosFiltros} estilosGlobales={estilosGlobales} resumen={textoMontoActivo} abierta={seccionesAbiertas.includes('monto')} alAlternar={()=>alternarSeccion('monto')} montoMinimo={montoMinimo} montoMaximo={montoMaximo} establecerMontoMinimo={valor=>{establecerMontoMinimo(valor);establecerPreajusteMontoId('personalizado');}} establecerMontoMaximo={valor=>{establecerMontoMaximo(valor);establecerPreajusteMontoId('personalizado');}} errorMontoFiltro={errorMonto}/>
         </PanelFiltrosMovimientos>
 
       </MarcoEncabezado>

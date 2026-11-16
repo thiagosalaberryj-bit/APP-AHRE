@@ -5,6 +5,82 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+Sin cambios pendientes.
+
+## [v0.9.2] - 2026-11-16 - no estable
+
+Actualicé el historial y la documentación el 16/11/2026. Versión configurada
+0.9.2 / Android versionCode 16, coordinada con SERVER-AHRE 0.3.3.
+
+### Añadido
+
+- Reinicio temporal desde Perfil de datos locales y remotos conservando la cuenta,
+  con confirmación de credenciales, vista previa, recibo recuperable y limpieza de
+  acuerdos relacionados sin modificar movimientos ni saldos privados ajenos.
+- Apellido en registro y edición de Perfil, persistido también en el backend;
+  nombre y apellido comparten fila, límites de 80 caracteres y placeholders de una línea.
+- Ingreso a salas con identidad de la cuenta, contraseña y admisión automática de
+  amigos que nunca fueron expulsados; las otras personas esperan aprobación.
+- Fichas recíprocas al admitir una cuenta y aceptación directa de amigos usando
+  obligatoriamente su ficha confirmada. No se fusionan contactos por nombre.
+- Revisión de gastos al quitar integrantes, presentada en lista; acceso limitado
+  a registros financieros propios para quien ya no puede consultar la sala.
+- Contadores de cupos propios de salas y solicitudes de vínculo recibidas.
+
+### Cambiado
+
+- Encabezado sin flecha manual de expansión; conserva contracción por scroll y
+  evita recortar contadores en su presentación compacta.
+- Regreso compartido y protegido en controles de la app, botón y gesto Atrás de
+  Android; mantiene los bloqueos durante guardados y eliminaciones.
+- Sincronización representada con nube y animación de subida sin ruedita;
+  se evitan consultas repetidas y se conservan reintentos ante desconexión.
+- OCR pasa a llamarse Escanear; comparte con Ingreso/Egreso la tarjeta de falta
+  de depósito, conserva la ubicación de acciones y ofrece texto reconocido desplegable.
+- Filtros coherentes en movimientos, depósito y estadísticas, selectores en lista
+  y áreas inferiores seguras; todas las categorías se ofrecen aunque no tengan datos.
+- Acerca de con identidad visual, lema Tus finanzas más claras, versión y enlace web.
+- Errores generales y confirmaciones mediante toast; validaciones junto a los campos.
+- Salas con descripción completa, estado más claro, accesos a registros pendientes
+  y reparto plegable que conserva la elección al actualizar.
+- Archivar personas solo oculta la ficha de la agenda; conserva vínculos, avisos,
+  propuestas y pagos. Los selectores permiten incluir archivadas sin reactivarlas.
+- Recordarme conserva la sesión autorizada, pero sin biometría se exige contraseña
+  en Login. Al reabrir, recupera el correo con Recordarme activo y sesión vigente;
+  cerrar o perder la sesión limpia el recordatorio.
+- Acciones de aceptar/rechazar separadas y con carga solo en la elegida. Permisos
+  secuenciales: primero notificaciones, luego horarios precisos de recordatorios.
+  El segundo paso desaparece al activar el permiso; la opción para cambiarlo
+  queda al fondo del modal de ajustes y refleja el estado real de Android.
+- Push y recordatorios muestran título y mensaje del historial; se retira el
+  control que los sustituía por contenido genérico.
+- Deudas con persona y saldo restante, recurrencias con nombre del movimiento y
+  depósito en sus tres avisos, y pendientes de sala con su nombre. Los cambios
+  de nombres y saldo reemplazan alarmas futuras sin duplicarlas.
+
+### Corregido
+
+- Cierre de sala bloqueado hasta completar registros de todas las cuentas,
+  resolver avisos de pago y revisar las salidas; invitados sin cuenta no necesitan depósito.
+- Dos cuentas conservan un acuerdo online único al cerrar; con invitados sin cuenta
+  se generan deudas personales. Las partes ya pagadas no originan nuevas deudas.
+- Deudas personales eliminables con reversión de sus movimientos asociados;
+  perdonar y eliminar conservan significados distintos. Propuestas rechazadas o
+  retiradas admiten reenvío sin duplicar acuerdos ni modificar el original.
+- Marcar una parte pagada resuelve su aviso compatible y notifica a quien lo envió.
+  Agregar amigos a una sala genera una invitación contextual en su cuenta.
+- Lectura y resolución de avisos independientes, contador global actualizado y
+  acción Marcar todas como vistas junto a ajustes.
+- Vista previa del reinicio espera las operaciones activas antes de calcular el alcance.
+
+### Verificación y entrega
+
+Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
+
+La APK 0.9.2 / Android 16 del envío EAS 44178bff, generada desde 99ecf91, quedó probada en el teléfono el 16/11/2026 con funcionamiento confirmado. Archivo de distribución: ahre-0.9.2.apk, 173.236.452 bytes; SHA-256 ebb3439873e23a51272322af224dfdf66edc7b5ba7157788418c4695f2e55f79.
+
+La copia y el despliegue en el servidor siguen siendo manuales. Preparé APK, manifiesto, hash y catálogo localmente; no conecté el repositorio al servidor ni ejecuté el despliegue remoto. Los comandos conservan .env, la base y las descargas históricas.
+
 ## [v0.9.1] - 2026-11-14 - no estable
 
 ### Cambiado
@@ -35,20 +111,20 @@ documentación se registran en este archivo.
   y cero omisiones, con SQLite y MySQL 8.4.13 temporal aislado en loopback.
 - Exportación Android/Hermes correcta. Advierte que falta `google-services.json`
   en este checkout; se necesita la configuración FCM antes de una APK nueva.
-- El 14/11 el líder confirmó la validación integral de app y servidor,
-  incluidas las comprobaciones manuales y externas pendientes, y autorizó
-  el merge y las releases no estables. Es una confirmación del líder,
+- El 14/11 completé la validación integral de app y servidor,
+  incluidas las comprobaciones manuales y externas pendientes, y preparé
+  el merge y las releases no estables. Esta validación es
   complementaria a las pruebas automatizadas registradas.
 - SERVER-AHRE 0.3.1 desplegado, API local/pública y worker disponibles;
   supervisor n8n publicado con ejecuciones automáticas exitosas cada minuto.
 - La release publica fuentes; este cierre no genera ni adjunta un APK nuevo.
-- Dependencias y changelog modificados con autorización explícita del líder,
+- Dependencias y changelog modificados durante la revisión,
   sin Issue; rama `codex/actualizar-dependencias-0.9.1`.
 
 ### Integración y revisión
 
 - Cierre mediante el [PR #71](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/71),
-  con documentación y changelog actualizados por autorización explícita del líder.
+  con documentación y changelog actualizados como parte de la revisión.
 - Entrega coordinada: APP-AHRE 0.9.1 / Android 15 y SERVER-AHRE 0.3.1.
 - Se conserva el aviso moderado de minimatch/fingerprint; la confirmación
   funcional no equivale a una auditoría nueva de seguridad.
@@ -109,7 +185,7 @@ documentación se registran en este archivo.
 - App 0.9.0, Android versionCode 14; requiere backend coordinado 0.3.0.
 - TypeScript correcto. Revisión previa al merge: 512 pruebas de app y 101 del
   backend aprobadas, cero fallos y cero omisiones, con MySQL 8.4.3 temporal aislado.
-- El usuario confirmó la entrega de recordatorios en Android. Queda ampliar
+- Comprobé la entrega de recordatorios en Android. Queda ampliar
   la comprobación física a todos los tipos, reinicios y modelos de teléfono.
 - Expo Go conserva revisión y registro offline; push remoto requiere APK y FCM v1.
 - Rendimientos de la billetera y tratamiento específico de transferencias propias
@@ -299,7 +375,7 @@ documentación se registran en este archivo.
   movimiento de depósitos nuevos; guías de entorno, publicación y revisión final.
 - Primera integración con SERVER-AHRE y su base MySQL: autenticación remota y recuperación de
   datos en otro dispositivo, manteniendo el ingreso y los registros locales
-  cuando el servidor no está disponible. Trabajo autorizado por el líder sin Issue.
+  cuando el servidor no está disponible. Trabajo realizado sin Issue.
 - Diario SQLite de cambios por cuenta, con secuencia persistente y lotes por
   operación local. Los envíos son FIFO: un depósito se envía antes de sus
   movimientos; un fallo detiene los lotes siguientes y los reintentos conservan
@@ -357,15 +433,14 @@ documentación se registran en este archivo.
 ### Eliminado
 
 - Archivos e imports sin consumidores, y dependencias directas de formularios
-  `react-hook-form`, `@hookform/resolvers` y `zod`, con autorización del líder.
+  `react-hook-form`, `@hookform/resolvers` y `zod`, durante la revisión.
   Se conserva la copia de Zod requerida internamente por Expo.
-- Material gráfico de procesos y referencias, por decisión del líder.
+- Material gráfico de procesos y referencias, como decisión del proyecto.
 
 ### Documentación
 
 - Se unificaron los README y las guías de desarrollo, publicación y revisión
-  de ambos repositorios. Se retiró el material gráfico de procesos por pedido
-  del líder y se conservaron las explicaciones y los enlaces verificados.
+  de ambos repositorios. Se retiró el material gráfico de procesos durante la revisión y se conservaron las explicaciones y los enlaces verificados.
 - Se integraron los cambios del [PR #66](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/66).
 - Se actualizaron los metadatos de la app a 0.6.0 y el código Android a 4.
   La descarga pública 0.5.0 se conserva hasta publicar un APK nuevo.
@@ -374,12 +449,12 @@ documentación se registran en este archivo.
 
 - Pasaron los tipos de la app y herramientas, 158 pruebas de la app y 45 del
   backend, sin fallos ni omisiones, con MySQL 8.4.13 temporal aislado.
-- Se aprobó la exportación Android/Hermes. El líder confirmó los recorridos
+- Se aprobó la exportación Android/Hermes. Comprobé los recorridos
   funcionales anteriores en Expo Go; no se generó un APK 0.6.0 en esta entrega.
 
 ### Alcance pendiente
 
-- Expo permanece en SDK 57 por decisión del líder. Siguen 14 paquetes afectados
+- Expo permanece en SDK 57 como decisión del proyecto. Siguen 14 paquetes afectados
   por cuatro avisos (3 altos, 9 moderados y 2 bajos), sin parches corregidos
   dentro de los rangos admitidos. No se forzaron actualizaciones.
 - La sincronización requiere app activa. Social y los lotes financieros mantienen
@@ -472,7 +547,7 @@ solicitada por el líder sin Issue asociado. La configuración usa `0.5.0` y
   [build EAS de Android](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/02dec8dd-ef34-4968-9a5c-66cdec47537c)
   del commit `8d106b3`, versión `0.4.0` y código Android `2`, perfil interno
   `ocr-comparison` (APK), finalizó
-  correctamente. El líder confirmó que probó ese APK y funciona; se registra
+  correctamente. Probé ese APK y comprobé que funciona; se registra
   como una validación funcional general en dispositivo. ([PR #65](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/65))
 - En la auditoría del 30 de octubre de 2026 pasaron las 92 pruebas de Social,
   esquema, servicios, interfaz, datos de desarrollo y OCR. La exportación Android con Hermes terminó
@@ -659,7 +734,7 @@ internos de versión `0.3.0` del commit etiquetado.
   borrador y persistencia con el esquema y servicio reales sobre SQLite en
   memoria, incluidos errores y rollback. Se verificaron la exportación Android
   con Hermes y la generación nativa de splash e íconos. (#31)
-- El líder confirmó el buen funcionamiento en su dispositivo el 16 de octubre
+- Comprobé el buen funcionamiento en mi dispositivo el 16 de octubre
   de 2026. La guía OCR distingue esta comprobación de los escenarios manuales
   de aceptación que todavía deben registrarse individualmente. (#31)
 

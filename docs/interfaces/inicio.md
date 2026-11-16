@@ -5,9 +5,9 @@
 Inicio es la primera pantalla visible cada vez que se abre AHRE. Después de
 preparar SQLite, queda esperando que la persona deslice el control para
 continuar. El gesto consulta la sesión local y conduce a Login o, luego de
-validar la huella, al Dashboard.
+validar la sesión y, si está configurada, la huella, al Dashboard.
 
-Abrir AHRE muestra Inicio. Al deslizar, una cuenta sin sesión pasa a Login; una sesión válida requiere huella y muestra la carga animada antes de Dashboard.
+Abrir AHRE muestra Inicio. Al deslizar, una cuenta sin sesión pasa a Login; una sesión válida con biometría configurada pide huella y muestra la carga. Sin huella, se exige contraseña en Login.
 
 ## Elementos visuales
 
@@ -34,15 +34,14 @@ Abrir AHRE muestra Inicio. Al deslizar, una cuenta sin sesión pasa a Login; una
 La sesión no se valida al abrir la aplicación. Si SecureStore conserva el
 identificador recordado, AHRE carga su apariencia guardada antes de mostrar
 Inicio; esto no abre ni valida la sesión. El logo y la barra de carga aparecen
-únicamente después de autenticar la huella. Al completar el deslizador, una
-sesión válida activa el diálogo biométrico nativo y conserva el tema cargado; si
+después de validar la sesión y la biometría si está configurada. Al completar el deslizador, una
+sesión válida con huella configurada activa el diálogo biométrico nativo y conserva el tema cargado; si
 no hay sesión, Inicio se reemplaza por Login sin solicitar la huella. El flujo
 y sus casos de error están documentados en
 [`docs/funcionalidades/inicio.md`](../funcionalidades/inicio.md).
 
 Cancelar o fallar la huella deja a la persona en Inicio con el deslizador listo
-para reintentar. Si el dispositivo no tiene biometría configurada, se ofrece
-Login con contraseña.
+para reintentar. Si el dispositivo no tiene biometría configurada, se exige contraseña en Login.
 
 ## Acceso temporal a datos de prueba
 

@@ -5,6 +5,11 @@ import { BORDES, ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from './global
 
 export function crearEstilosOcr(tema: Tema) {
   return StyleSheet.create({
+    desplegableTexto:{borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.campo},
+    encabezadoTexto:{minHeight:48,flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno,padding:ESPACIADO.medio},
+    contenidoTexto:{padding:ESPACIADO.medio,borderTopWidth:BORDES.anchos.fino,borderTopColor:tema.borde},
+    accionReescanear:{minHeight:48,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:ESPACIADO.pequeno,padding:ESPACIADO.medio},
+    textoReescanear:{color:tema.foco,fontSize:TIPOGRAFIA.tamanos.secundario,fontWeight:TIPOGRAFIA.pesos.seminegrita},
     contenido: {
       flexGrow: 1,
       gap: ESPACIADO.formulario,
@@ -90,9 +95,9 @@ export function crearEstilosOcr(tema: Tema) {
       padding: ESPACIADO.medio,
     },
     botonCaptura: {
-      alignSelf: 'center',
-      minWidth: 168,
-      height: 58,
+      alignSelf: 'stretch',
+      minWidth: 0,
+      minHeight: 58,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',

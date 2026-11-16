@@ -27,9 +27,9 @@ for(const tema of ['claro','oscuro'] as const)test(`la invitación copia el enla
   await vista.abrirInvitacion({enlace,nombre:'Sofi',alCerrar:()=>{}});
   const campo=presente(vista.todos().find(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Enlace personal para compartir'));
   assert.equal(campo.props.multiline,false);assert.equal(campo.props.value,enlace);
-  assert.ok(!vista.texto().includes('Enlace copiado'));
+  assert.ok(!vista.avisos.some(m=>m.includes('Enlace copiado')));
   await vista.pulsar('Copiar enlace de invitación');
-  assert.deepEqual(vista.copias,[enlace]);assert.ok(vista.texto().includes('Enlace copiado'));
+  assert.deepEqual(vista.copias,[enlace]);assert.ok(vista.avisos.some(m=>m.includes('Enlace copiado')));
   assert.equal(vista.compartidos.length,0);
   await vista.pulsar('Compartir por una app');
   assert.equal(vista.compartidos.length,1);assert.ok(vista.compartidos[0].message.includes(enlace));
@@ -50,8 +50,8 @@ for(const tema of ['claro','oscuro'] as const)test(`el administrador ve las soli
   assert.ok(!vista.texto().includes('Cambiar la descripción a Cena'));
   await vista.pulsar('Solicitudes de '+datos.personas[0].nombre);await vista.abrir(vista.rutas.REGISTRO_SOCIAL,vista.destinos.at(-1)![1] as import('../src/social/types.ts').ParametrosSociales);
   assert.ok(vista.texto().includes('Cambiar la descripción a Cena'));
-  assert.equal(vista.buscarBoton('Aceptar').props.disabled,false);
-  assert.equal(vista.buscarBoton('Rechazar').props.disabled,false);
+  assert.equal(vista.buscarBoton('Aceptar solicitud').props.disabled,false);
+  assert.equal(vista.buscarBoton('Rechazar solicitud').props.disabled,false);
   assert.equal(actualizaciones,0);
   assert.ok(!vista.texto().includes('Volver a integrantes'));(vista.todos().find(n=>n.type==='Header')!.props.alVolver as ()=>void)();await vista.asentar();await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');
   await vista.pulsar('Agregar personas a la sala');
@@ -63,7 +63,7 @@ for(const fallo of ['rechazo','error'] as const)test(`la copia con ${fallo} mues
   const e=await preparar(prueba),vista=interfazSocial(e,'claro',{copiarTexto:async()=>{if(fallo==='error')throw new Error('sin portapapeles');return false;}});
   await vista.abrirInvitacion({enlace:'https://ahre.example.test/invitacion/#'+'a'.repeat(64),nombre:'Sofi',alCerrar:()=>{}});
   await vista.pulsar('Copiar enlace de invitación');
-  assert.ok(vista.texto().includes('No se pudo copiar'));assert.ok(!vista.texto().includes('Enlace copiado'));
+  assert.ok(vista.avisos.some(m=>m.includes('No se pudo copiar')));assert.ok(!vista.texto().includes('No se pudo copiar'));assert.ok(!vista.avisos.some(m=>m.includes('Enlace copiado')));
   assert.equal(vista.buscarBoton('Compartir por una app').props.disabled,false);
 });
 
@@ -94,7 +94,7 @@ for(const tema of ['claro','oscuro'] as const)test(`Social ubica los acuerdos en
   await vista.pulsar('Unirme a sala');
   await vista.llenar('Enlace de invitación','https://otro.test/no-valido');
   await vista.pulsar('Aceptar invitación');
-  assert.ok(vista.texto().includes('no es una invitación válida'));
+  assert.ok(vista.avisos.some(m=>m.includes('no es una invitación válida')));assert.ok(!vista.texto().includes('no es una invitación válida'));
   await vista.pulsar('Cerrar invitación');
   assert.ok(!vista.texto().includes('Aceptar invitación'));
 });
@@ -338,7 +338,7 @@ for (const tema of ['claro', 'oscuro'] as const) test(`interfaces principales gu
   await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
   assert.equal((await servicios.cargarSocial()).deudas[0].pendienteNumero, 499.5);
   await vista.abrir(rutas.PERSONAS_SOCIAL);
-  assert.ok(vista.texto().includes('$ 499,5'));
+  assert.ok(vista.texto().includes('$ 499,50'));
   await vista.llenar('Buscar deudas por persona', 'lucita');
   assert.ok(vista.texto().includes('Pizzas reales'));
   await vista.abrir(rutas.REGISTRO_SOCIAL, { tipo: 'eliminarDeuda', deudaId: deuda.id });
@@ -370,12 +370,12 @@ test('agenda, selección de integrantes y baja de personas persisten sin borrar 
   await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
   assert.equal((await e.cargarSocial()).deudas[0].pendienteNumero, 123.45);
   await vista.abrir(rutas.PERSONA_SOCIAL, { personaId: presente(persona).id });
-  await vista.pulsar('Opciones de persona'); await vista.pulsar('Eliminar persona'); await vista.pulsar('Sí, eliminar persona');
+  await vista.pulsar('Opciones de persona'); await vista.pulsar('Archivar persona'); await vista.pulsar('Sí, archivar persona');
   assert.deepEqual(vista.destinos.at(-1), [rutas.PERSONAS_SOCIAL, { todas: true }]);
   const snapshot = await e.cargarSocial();
   assert.equal(snapshot.personas[0].activa, false); assert.equal(snapshot.deudas.length, 1);
   await vista.abrir(rutas.PERSONAS_SOCIAL, { todas: true }); assert.ok(!vista.texto().includes('Ana Pérez'));
-  await vista.abrir(rutas.PERSONA_SOCIAL, { personaId: presente(persona).id }); await vista.pulsar('Opciones de persona'); await vista.pulsar('Reactivar persona');
+  await vista.abrir(rutas.PERSONA_SOCIAL, { personaId: presente(persona).id }); await vista.pulsar('Opciones de persona'); await vista.pulsar('Desarchivar persona');
   assert.equal((await e.cargarSocial()).personas[0].activa, true);
 });
 
@@ -429,7 +429,7 @@ test('registrar deuda a cobrar exige elegir origen y el cobro recupera el adelan
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'deuda', personaId: presente(persona).id });
   await vista.llenar('Monto de la deuda', '800'); await vista.llenar('Descripción', 'Adelanto del almuerzo');
   await vista.pulsar('Registrar deuda');
-  assert.ok(vista.texto().includes('Pagás') && vista.texto().includes('$ 800'));
+  assert.ok(vista.texto().includes('Pagás') && vista.texto().includes('$ 800,00'));
   await vista.pulsar('Cerrar selección de movimiento');
   assert.equal(saldo(), inicial); assert.equal((await e.cargarSocial()).deudas.length, 0);
   await vista.pulsar('Registrar deuda'); await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
@@ -443,7 +443,7 @@ test('registrar deuda a cobrar exige elegir origen y el cobro recupera el adelan
   assert.equal(vista.avisos.at(-1), 'Deuda saldada.');
   assert.deepEqual(vista.destinos.at(-1), [vista.rutas.PRINCIPAL, { screen: vista.rutas.SOCIAL }]);
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'detalleDeuda', deudaId: deuda.id });
-  assert.ok(!vista.texto().includes('Eliminar deuda'));
+  assert.ok(vista.texto().includes('Eliminar deuda'));
 });
 
 test('Le debo no pide depósito al crearla y registra solo el egreso al pagarla', async prueba => {
@@ -461,7 +461,7 @@ test('Le debo no pide depósito al crearla y registra solo el egreso al pagarla'
   assert.deepEqual(vista.destinos.at(-1), ['Atrás']);
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL, { tipo: 'pago', deudaId: deuda.id });
   await vista.pulsar('Registrar pago realizado');
-  assert.ok(vista.texto().includes('Pagás') && vista.texto().includes('$ 400'));
+  assert.ok(vista.texto().includes('Pagás') && vista.texto().includes('$ 400,00'));
   await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
   assert.equal(saldo(), Number(inicial) - 400); assert.ok((await e.cargarSocial()).deudas[0].saldada);
   assert.equal(presente(e.base.prepare('SELECT COUNT(*) AS n FROM movimientos').get()).n, e.MOVIMIENTOS_PRUEBA.length + 1);
@@ -595,16 +595,16 @@ for(const tema of ['claro','oscuro'] as const)test(`el perfil solicita un víncu
   assert.ok(vista.texto().includes('Cuenta vinculada'));
   assert.ok(!vista.todos().some(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Correo de la cuenta a vincular'));
   await vista.pulsar('Opciones de persona');await vista.pulsar('Ver cuenta vinculada');
-  assert.ok(vista.texto().includes('Cuenta vinculada: Sofi Cuenta'));
+  assert.ok(vista.texto().includes('Sofi Cuenta'));
   await vista.pulsar('Cerrar vínculo de cuenta');
   await vista.pulsar('Opciones de persona'); await vista.pulsar('Editar persona');
   const modal=presente(vista.todos().filter(n=>n.type==='Modal').at(-1));
-  assert.ok(!vista.texto(modal).includes('Eliminar persona'));
-  await vista.pulsar('Cerrar edición de persona');await vista.pulsar('Opciones de persona');assert.ok(!vista.buscarBoton('Eliminar persona').props.disabled);
+  assert.ok(!vista.texto(modal).includes('Archivar persona'));
+  await vista.pulsar('Cerrar edición de persona');await vista.pulsar('Opciones de persona');assert.ok(!vista.buscarBoton('Archivar persona').props.disabled);
   const despues=await e.cargarSocial();assert.deepEqual(despues.deudas,datos.deudas);assert.deepEqual(despues.salas,datos.salas);
 });
 
-for(const decision of ['aceptado','rechazado'] as const)test(`Personas permite responder un vínculo recibido: ${decision}, sin crear fichas ni deudas`,async prueba=>{
+for(const decision of ['aceptado','rechazado'] as const)test(`Personas permite responder un vínculo recibido: ${decision}, con ficha obligatoria al aceptar`,async prueba=>{
   const e=await preparar(prueba);await e.prepararDatosPrueba();const datos=await e.cargarSocial();
   const solicitudes=[{id:'solicitud-directa',persona_id:'',cuenta_id:'otra-cuenta',nombre:'Juan',estado:'solicitado',direccion:'recibida'}];
   e.base.prepare('INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,?,?)').run(datos.usuarioId,'vinculos',JSON.stringify(solicitudes));
@@ -613,14 +613,15 @@ for(const decision of ['aceptado','rechazado'] as const)test(`Personas permite r
     obtenerVistaSincronizacion:()=>({...e.obtenerVistaSincronizacion(),estado:'online'}),
     observarSincronizacion:f=>{f({...e.obtenerVistaSincronizacion(),estado:'online'});return()=>{};},
     observarSocialOnline:f=>{observadores.add(f);return()=>{observadores.delete(f);};},
-    responderVinculoOnline:async(id,respuesta)=>{respondidas.push([id,respuesta]);e.base.prepare("UPDATE datos_sociales_online SET datos='[]' WHERE usuario_id=? AND clave='vinculos'").run(datos.usuarioId);for(const f of observadores)f();},
+    responderVinculoOnline:async(id,respuesta,personaId,personaNueva)=>{if(respuesta==='aceptado'&&personaNueva)await e.guardarPersona(personaNueva);respondidas.push([id,respuesta]);e.base.prepare("UPDATE datos_sociales_online SET datos='[]' WHERE usuario_id=? AND clave='vinculos'").run(datos.usuarioId);for(const f of observadores)f();},
   },'claro');
   await vista.abrir(vista.rutas.PERSONAS_SOCIAL,{todas:true});
   assert.ok(vista.texto().includes('Solicitudes de vínculo'));
-  await vista.pulsar(decision==='aceptado'?'Aceptar vínculo':'Rechazar vínculo');
+  await vista.pulsar(decision==='aceptado'?'Aceptar vínculo de Juan':'Rechazar vínculo de Juan');
+  if(decision==='aceptado'){await vista.pulsar('Registrar y aceptar vínculo');assert.equal(respondidas.length,0);await vista.llenar('Apellido','Prueba');await vista.llenar('Apodo','Juan distinto');await vista.pulsar('Registrar y aceptar vínculo');}
   assert.deepEqual(respondidas,[['solicitud-directa',decision]]);
   assert.ok(!vista.texto().includes('Solicitudes de vínculo'));
-  const despues=await e.cargarSocial();assert.deepEqual(despues.deudas,datos.deudas);assert.deepEqual(despues.personas,datos.personas);
+  const despues=await e.cargarSocial();assert.deepEqual(despues.deudas,datos.deudas);assert.equal(despues.personas.length,datos.personas.length+(decision==='aceptado'?1:0));
 });
 
 
@@ -645,11 +646,11 @@ for(const tema of ['claro','oscuro'] as const)test(`el menú Salas separa creaci
 for(const tema of ['claro','oscuro'] as const)test(`los tres puntos separan edición y eliminación y cancelar conserva el perfil en ${tema}`,async prueba=>{
   const e=await preparar(prueba);await e.prepararDatosPrueba();const datos=await e.cargarSocial(),persona=datos.personas[0];
   const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.PERSONA_SOCIAL,{personaId:persona.id});
-  assert.ok(!vista.texto().includes('Eliminar persona'));
+  assert.ok(!vista.texto().includes('Archivar persona'));
   await vista.pulsar('Opciones de persona');await vista.pulsar('Cerrar opciones tocando fuera');
   assert.ok(!vista.texto().includes('Editar persona'));
-  await vista.pulsar('Opciones de persona');await vista.pulsar('Eliminar persona');
-  assert.ok(vista.texto().includes('Sí, eliminar persona'));
+  await vista.pulsar('Opciones de persona');await vista.pulsar('Archivar persona');
+  assert.ok(vista.texto().includes('Sí, archivar persona'));
   await vista.pulsar('Cerrar confirmación');
   assert.deepEqual((await e.cargarSocial()).personas,datos.personas);
   assert.deepEqual((await e.cargarSocial()).deudas,datos.deudas);
@@ -670,7 +671,7 @@ for(const tema of ['claro','oscuro'] as const)test(`filtros por dirección y res
   const deuda=presente(datos.deudas.find(d=>d.tipo==='me_deben'));
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
   await vista.pulsar('Ver importe Original');assert.ok(vista.texto().includes('Importe completo'));assert.ok(vista.texto().includes(deuda.monto));await vista.pulsar('Cerrar importe');
-  assert.ok(vista.texto().includes('Historial de la deuda'));assert.ok(vista.texto().includes('Deuda registrada'));assert.ok(vista.texto().includes('Te pagó · $ 15'));
+  assert.ok(vista.texto().includes('Historial de la deuda'));assert.ok(vista.texto().includes('Deuda registrada'));assert.ok(vista.texto().includes('Te pagó · $ 15,00'));
   await vista.pulsar('Ver persona');assert.deepEqual(vista.destinos.at(-1),[vista.rutas.PERSONA_SOCIAL,{personaId:deuda.personaId}]);
 });
 
@@ -686,14 +687,17 @@ for(const tema of ['claro','oscuro'] as const)test(`perdonar una deuda local con
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
   const pago=vista.buscarBoton('Registrar pago recibido'),perdon=vista.buscarBoton('Perdonar deuda');
   const fila=presente(vista.todos().find(n=>n.type==='View'&&Array.isArray(n.children)&&n.children.includes(pago)&&n.children.includes(perdon)));
-  assert.ok(fila);assert.ok(!vista.texto().includes('Eliminar deuda'));
+  assert.ok(fila);assert.ok(vista.texto().includes('Eliminar deuda'));
+  const eliminar=vista.buscarBoton('Eliminar deuda personal');
+  assert.ok(!Array.isArray(fila.children)||!fila.children.includes(eliminar));
+  assert.equal((eliminar.props.style as {alignSelf:string}).alignSelf,'center');
   await vista.pulsar('Perdonar deuda');await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'eliminarDeuda',deudaId:deuda.id});
   await vista.pulsar('Confirmar perdón');await vista.pulsar('Sí, perdonar deuda');
   const cerrada=presente((await e.cargarSocial()).deudas.find(d=>d.id===deuda.id));
   assert.equal(cerrada.pendienteNumero,0);assert.equal(cerrada.perdonadoNumero,75);assert.equal(cerrada.estado,'Perdonada');
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'detalleDeuda',deudaId:deuda.id});
-  assert.ok(vista.texto().includes('Perdonaste · $ 75'));assert.ok(vista.texto().includes('Te pagó · $ 25'));
-  assert.deepEqual(vista.buscarBoton('Ver importe Recibiste').props.accessibilityValue,{text:'$ 25'});
+  assert.ok(vista.texto().includes('Perdonaste · $ 75,00'));assert.ok(vista.texto().includes('Te pagó · $ 25,00'));
+  assert.deepEqual(vista.buscarBoton('Ver importe Recibiste').props.accessibilityValue,{text:'$ 25,00'});
   await e.perdonarDeudaPersonal(deuda.id,75);await vista.asentar();
   assert.equal(e.base.prepare('SELECT SUM(saldo_actual) saldo FROM depositos').get()!.saldo,saldo);
   assert.equal(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n,cantidad);

@@ -1,5 +1,8 @@
+import {obtenerSesionActual} from '../authentication/sessionService';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { ErrorAutenticacion } from '../authentication/errors';
-import { SetStateAction, useContext, useRef, useState } from 'react';
+import { SetStateAction, useContext, useEffect, useRef, useState } from 'react';
+import {leerRecordatorioIngreso,guardarRecordatorioIngreso} from '../authentication/loginMemory';
 import { Alert,Animated, Pressable, Text, View } from 'react-native';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -16,18 +19,21 @@ import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
 export default function PantallaInicioSesion({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  useRegresoProtegido(navegacion, () => cargando);
   const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilosAutenticacion = crearEstilosAutenticacion(tema);
   const referenciaContrasena = useRef<import('react-native').TextInput | null>(null);
   const accionEnCurso = useRef(false);
+  const recordatorioCambiado=useRef(false);
   const progresoRecordarme = useRef(new Animated.Value(1)).current;
   const [correo, establecerCorreo] = useState('');
   const [contrasena, establecerContrasena] = useState('');
   const [recordarme, establecerRecordarme] = useState(true);
   const [cargando, establecerCargando] = useState(false);
   const [errores, establecerErrores] = useState<Partial<Record<string, string>>>({});
+  useEffect(()=>{let vigente=true;void Promise.all([leerRecordatorioIngreso(),obtenerSesionActual()]).then(([datos,sesion])=>{if(vigente&&!recordatorioCambiado.current){establecerCorreo(actual=>actual||(datos.recordar&&sesion.usuario?sesion.usuario.correo_electronico:''));establecerRecordarme(datos.recordar);progresoRecordarme.setValue(datos.recordar?1:0);}}).catch(()=>{if(vigente)mostrarAviso('No se pudo recuperar el correo recordado.',{tipo:'informacion'});});return()=>{vigente=false;};},[]);
   const moverControlRecordarme = progresoRecordarme.interpolate({ inputRange: [0, 1], outputRange: [0, 24] });
   const colorFondoRecordarme = progresoRecordarme.interpolate({
     inputRange: [0, 1],
@@ -40,8 +46,10 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
 
   const alternarRecordarme = () => {
     if (cargando) return;
+    recordatorioCambiado.current=true;
     const nuevoEstado = !recordarme;
     establecerRecordarme(nuevoEstado);
+    void guardarRecordatorioIngreso(correo,nuevoEstado).catch(()=>mostrarAviso('No se pudo guardar la preferencia de ingreso.',{tipo:'error'}));
     Animated.spring(progresoRecordarme, {
       toValue: nuevoEstado ? 1 : 0,
       damping: 16,
@@ -78,6 +86,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           {text:'Usar esta instalación',style:'destructive',onPress:()=>{void manejarInicioSesion(true);}},
         ]);return;
       }
+      if(error instanceof ErrorAutenticacion&&error.codigo==='credenciales_invalidas'){establecerErrores({correo:'Revisá el correo o la contraseña.',contrasena:'Revisá el correo o la contraseña.'});return;}
       if ((error instanceof ErrorAutenticacion ? error.detalles : null)) establecerErrores((error instanceof ErrorAutenticacion ? error.detalles : null) || {});
       else mostrarAviso((error instanceof Error ? error.message : "") || 'No se pudo iniciar sesión. Intentá nuevamente.', { tipo: 'error' });
     } finally {

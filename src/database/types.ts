@@ -13,6 +13,7 @@ export interface OpcionesConsulta {
 
 export interface Usuario {
   id: string;
+  apellido?: string;
   nombre: string;
   correo_electronico: string;
   activo: number;
@@ -188,6 +189,8 @@ export interface ParticipanteGasto {
 }
 
 export interface Deuda {
+  origen_sala_online_id?: string | null;
+  origen_participacion_online_id?: string | null;
   id: string;
   usuario_id: string;
   deudor_id: string;

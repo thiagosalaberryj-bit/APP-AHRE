@@ -1,3 +1,5 @@
+import {recuperarReinicios} from '../development/resetSync';
+import {iniciarActividadReinicio} from '../development/testResetState';
 import { ejecutarConConexion, ejecutarLecturaConConexion } from '../database/connectionQueue';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { prepararCuentaLocal, aplicarCambios, consultarReparacion, aplicarReparacion, restaurarReparacion } from './journal';
@@ -99,6 +101,7 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
     const reconectando=vista.estado==='offline'||vista.estado==='comprobando';
     if(pendientes||!silenciosa||vista.estado!=='online')publicar({estado:reconectando||!pendientes?'comprobando':'sincronizando',pendientes});
     await solicitarRemoto('/auth/status',undefined,remota.token);
+    if(await recuperarReinicios(usuarioId,remota,validarVersiones))pendientes=await contar();
     if(pendientes)publicar({estado:'sincronizando',pendientes});
     // Un único consumidor. Nunca usar Promise.all para enviar estos lotes.
     while(true) {
@@ -174,7 +177,8 @@ async function ejecutar(usuarioId:string,silenciosa=false) {
 }
 export function sincronizarCuenta(usuarioId:string,silenciosa=false):Promise<void> {
   if(enCurso)return enCurso.usuarioId===usuarioId?enCurso.promesa:enCurso.promesa.then(()=>sincronizarCuenta(usuarioId,silenciosa));
-  const promesa=ejecutar(usuarioId,silenciosa).finally(()=>{enCurso=null;});enCurso={usuarioId,promesa};return promesa;
+  const terminar=iniciarActividadReinicio();if(!terminar)return Promise.resolve();
+  const promesa=ejecutar(usuarioId,silenciosa).finally(()=>{enCurso=null;terminar();});enCurso={usuarioId,promesa};return promesa;
 }
 export async function sincronizarSesion(silenciosa=false){const {usuario}=await obtenerSesionActual();if(!usuario&&vista.estado==='revocado')return;return sincronizarCuenta(usuario?.id||'',silenciosa);}
 

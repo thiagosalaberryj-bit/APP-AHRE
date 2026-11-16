@@ -8,6 +8,25 @@ import {preparar} from './helpers/localDatabase.ts';
 import type {CambioSync,LoteSync} from '../src/sync/protocol.ts';
 import {TABLAS_SYNC} from '../src/sync/protocol.ts';
 const rutaServidor=process.env.AHRE_SERVER_SOURCE;
+
+test('MySQL: editar nombre y apellido actualiza el backend y se recupera al ingresar',{skip:!rutaServidor||process.env.AHRE_MYSQL_TEST!=='1'},async t=>{
+ const e=await escenarioNegocio(t);
+ await e.actualizarPerfil({nombre:'Juana',apellido:'Pérez García',correo:'negocio@example.test'});
+ await e.comprobar();
+ const remota=await e.db.get('SELECT nombre,apellido FROM usuarios WHERE id=?',[e.usuario.id]);
+ assert.equal(remota!.nombre,'Juana');assert.equal(remota!.apellido,'Pérez García');
+ await e.cerrarSesion();e.conectar();
+ const recuperada=await e.iniciarSesion({correo:'negocio@example.test',contrasena:'NegocioPrueba123!'});
+ assert.equal(recuperada.apellido,'Pérez García');
+ const sesion=(await e.obtenerSesionRemota(e.usuario.id))!;
+ const revision=Number((await e.db.get('SELECT revision FROM versiones WHERE usuario_id=?',[e.usuario.id]))!.revision);
+ const fila=e.base.prepare('SELECT * FROM usuarios WHERE id=?').get(e.usuario.id)!;
+ await assert.rejects(e.solicitarRemoto('/sync',{id:randomUUID(),base:revision,generacion:sesion.generacion,cambios:[{tabla:'usuarios',accion:'guardar',datos:{...fila,apellido:'A'.repeat(81)}}]},sesion.token),{estado:400});
+ assert.equal((await e.db.get('SELECT apellido FROM usuarios WHERE id=?',[e.usuario.id]))!.apellido,'Pérez García');
+ await assert.rejects(e.actualizarPerfil({nombre:'Juana',apellido:'A'.repeat(81),correo:'negocio@example.test'}),{codigo:'datos_invalidos'});
+ await e.actualizarPerfil({nombre:'N'.repeat(80),apellido:'A'.repeat(80),correo:'negocio@example.test'});await e.comprobar();
+ assert.equal(String((await e.db.get('SELECT apellido FROM usuarios WHERE id=?',[e.usuario.id]))!.apellido).length,80);
+});
 type Fila=Record<string,string|number|null>;
 interface BaseRemota {get:(sql:string,parametros?:(string|number|null)[])=>Promise<Fila|undefined>;close:()=>Promise<void>;}
 

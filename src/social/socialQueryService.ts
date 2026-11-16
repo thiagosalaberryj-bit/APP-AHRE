@@ -60,7 +60,7 @@ export function cargarSocial() {
       const pendiente = acuerdo?unidades(acuerdo.pendiente):Math.max(0, unidades(deuda.monto) - pagado - perdonado), esPago = deuda.deudor_id === contexto.propia.id;
       const parte = partesPorId.get(deuda.participante_gasto_id || '');
       const gasto = gastosPorId.get(parte?.gasto_compartido_id || '');
-      const sala = salasPorId.get(gasto?.sala_id || '');
+      const sala = salasPorId.get(gasto?.sala_id || '') || online.find(o=>o.sala.id===deuda.origen_sala_online_id)?.sala;
       const movimientoOrigen = origenesPorDeuda.get(deuda.id)?.[0];
       return { fechaPerdon:acuerdo?.perdon?.fecha || (perdonado ? deuda.fecha_cancelacion : null), perdonadoNumero:perdonado/100,acuerdoOnlineId:acuerdo?.id,id: deuda.id, personaId: visibles(esPago ? deuda.acreedor_id : deuda.deudor_id), tipo: esPago ? 'debo' : 'me_deben',
         descripcion: deuda.descripcion, fecha: diaLocal(deuda.fecha), fechaISO: deuda.fecha, ultimaActividad:[deuda.fecha,deuda.fecha_actualizacion,...(pagosPorDeuda.get(deuda.id)||[]).flatMap(p=>[p.fecha,p.fecha_anulacion||p.fecha])].sort().at(-1)!, monto: formatearMontoSocial(deuda.monto), montoNumero: deuda.monto,
@@ -98,7 +98,8 @@ export function cargarSocial() {
         });
         return { id: gasto.id, categoriaId: gasto.categoria, descripcion: gasto.descripcion, monto: formatearMontoSocial(gasto.monto_total), montoNumero: gasto.monto_total,
           fecha: fechaCorta(gasto.fecha), fechaISO: gasto.fecha, pagadorId: visibles(gasto.pagador_id), reparto: gasto.reparto, version: gasto.version,
-          distribucion: gasto.reparto === 'manual' ? 'Montos manuales' : 'Partes iguales', partes, asociaciones: plan.financiaciones,
+          distribucion: gasto.reparto === 'manual' ? 'Montos manuales' : 'Partes iguales', partes,
+          asociaciones: Object.fromEntries(Object.entries(plan.financiaciones).map(([clave,financiacion])=>[clave.startsWith('parte:')?'parte:'+visibles(clave.slice('parte:'.length)):clave,financiacion])),
           depositosAsociados: [...new Set(Object.values(plan.financiaciones).map(f => f.depositoNombre).filter(Boolean))].join(' · ') };
       });
       return { online:false,administrador:true,puedeEditarGastos:true,publicacionPendiente:Boolean(sala.publicada||publicando.has(sala.id)),cierrePendiente:false,pendientesOnline:0,ultimaActualizacion:sala.fecha_actualizacion,id: sala.id, nombre: sala.nombre, descripcion: sala.descripcion, icono: sala.icono, color: sala.color,
@@ -118,9 +119,9 @@ export function cargarSocial() {
     }
     const salas=[...salasLocales,...proyectarSalasOnline(online)].map(sala=>({...sala,demo,movimientosPorRegistrar:pendientesPorSala.get(sala.id)?.size||0}));
     const personasOnline=online.flatMap(o=>o.sala.participantes.filter(p=>p.id!==o.personaPropiaId).map(p=>({id:p.id,nombre:p.nombre,apellido:'',apodo:'',iniciales:p.nombre.slice(0,2).toLocaleUpperCase('es'),activa:p.activa})));
-    const deudas=deudasPrivadas.map(d=>{const a=acuerdos.find(a=>a.origenLocalId===d.id&&a.estado!=='rechazada');return {...d,ultimaActividad:[d.ultimaActividad,...(a?.pagos||[]).map(p=>p.fecha_decision||p.fecha),...(a?.perdon?[a.perdon.fecha]:[])].sort().at(-1)!,acuerdoOnlineId:a?.id||d.acuerdoOnlineId,invitacionOnline:a?.estado==='pendiente',soloOnline:false,estadoOnline:a?.estado,estado:a?.perdon?'Perdonada':d.estado};});
+    const deudas=deudasPrivadas.map(d=>{const a=acuerdos.find(a=>a.origenLocalId===d.id&&!['rechazada','retirada'].includes(a.estado));return {...d,ultimaActividad:[d.ultimaActividad,...(a?.pagos||[]).map(p=>p.fecha_decision||p.fecha),...(a?.perdon?[a.perdon.fecha]:[])].sort().at(-1)!,acuerdoOnlineId:a?.id||d.acuerdoOnlineId,invitacionOnline:a?.estado==='pendiente',soloOnline:false,estadoOnline:a?.estado,estado:a?.perdon?'Perdonada':d.estado};});
     const privadas=new Set(deudas.map(d=>d.id));
-    for(const a of acuerdos.filter(a=>a.estado!=='rechazada'&&(!a.origenLocalId||!privadas.has(a.origenLocalId)))){
+    for(const a of acuerdos.filter(a=>!['rechazada','retirada'].includes(a.estado)&&(!a.origenLocalId||!privadas.has(a.origenLocalId)))){
       const fecha=a.fecha||online.find(s=>s.sala.id===a.salaId)?.sala.fecha||new Date().toISOString();
       deudas.push({fechaPerdon:a.perdon?.fecha||null,perdonadoNumero:a.perdon?.monto||0,id:a.id,acuerdoOnlineId:a.id,personaId:a.otraPersonaId||'online:'+a.id,tipo:a.esDeudor?'debo':'me_deben',descripcion:a.descripcion,fecha:diaLocal(fecha),fechaISO:fecha,ultimaActividad:[fecha,...a.pagos.map(p=>p.fecha_decision||p.fecha),...(a.perdon?[a.perdon.fecha]:[])].sort().at(-1)!,monto:formatearMontoSocial(a.monto),montoNumero:a.monto,pendiente:formatearMontoSocial(a.pendiente),pendienteNumero:a.pendiente,saldada:a.estado==='aceptada'&&a.pendiente===0,estado:a.perdon?'Perdonada':a.estado==='pendiente'?'Invitación pendiente':a.estado==='rechazada'?'Propuesta rechazada':a.pendiente===0?'Saldada':a.pendiente<a.monto?'Pago parcial':'Pendiente',origen:a.salaId?'Sala compartida':'Deuda online',salaId:a.salaId||undefined,movimientoOrigen:null,invitacionOnline:a.estado==='pendiente',soloOnline:true,estadoOnline:a.estado});
       if(!personas.some(p=>p.id===a.otraPersonaId)&&!personasOnline.some(p=>p.id===a.otraPersonaId))personasOnline.push({id:a.otraPersonaId||'online:'+a.id,nombre:a.otraPersonaNombre||'Participante',apellido:'',apodo:'',iniciales:(a.otraPersonaNombre||'PA').slice(0,2).toUpperCase(),activa:true});

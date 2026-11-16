@@ -9,7 +9,7 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.9.1-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.9.2-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
@@ -38,7 +38,7 @@ cuenta puede sincronizar. AHRE registra información; no mueve dinero bancario.
 
 ## Empezar
 
-Requisitos: Node 24, dependencias preparadas por el líder desde el lockfile y
+Requisitos: Node 24, dependencias preparadas desde el lockfile y
 Expo Go compatible con SDK 57. Desde la raíz de APP-AHRE:
 
 ```powershell
@@ -58,10 +58,14 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
-Cierre 0.9.1 (14/11/2026): validación integral confirmada por el líder.
-SERVER-AHRE 0.3.1 está desplegado y su supervisor n8n fue comprobado cada minuto.
+Revisión del 16/11/2026: tipos correctos y 579 pruebas de app aprobadas sin
+omisiones; backend coordinado 0.3.3: 116 aprobadas. Exportación Android/Hermes
+correcta. La preparación actual incluye recordatorios descriptivos, correo
+recordado y horarios precisos. La APK 0.9.2 está probada en el teléfono. Las fuentes se entregan como release
+no estable, coordinada con servidor 0.3.3; el despliegue remoto es manual.
+El cierre 0.9.1 y su servidor desplegado del 14/11 son antecedentes.
 El detalle y la procedencia de las verificaciones están en
-[Estado y validación](docs/estado-y-validacion.md#dependencias-091).
+[Estado y validación](docs/estado-y-validacion.md).
 
 ```powershell
 npm run typecheck

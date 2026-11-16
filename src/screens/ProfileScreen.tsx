@@ -1,3 +1,6 @@
+import ReinicioDatosPerfil from '../components/ProfileDataReset';
+import { useErrorNotificado } from '../hooks/useErrorNotice';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { consultarPermisoAvisos, activarAvisosTelefono } from '../notifications/nativeAdapter';
 import OpcionNotificacionesPerfil from '../components/ProfileNotificationOption';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -14,6 +17,7 @@ import {
   AppState,
   ActivityIndicator,
   Image,
+  Linking,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -84,18 +88,23 @@ function formatearFechaRegistro(fecha: string|number|Date|null) {
 }
 
 export default function PantallaPerfil({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion);
   const { tema, apariencia, establecerApariencia } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosPerfil(tema);
   const accionPreferenciaEnCurso = useRef(false);
   const [cargandoInfo, establecerCargandoInfo] = useState(true);
-  const [errorCarga, establecerErrorCarga] = useState<string | null>(null);
+  const [errorCarga, establecerErrorCarga] = useErrorNotificado(null);
   const [nombre, establecerNombre] = useState('');
+  const [apellido, establecerApellido] = useState('');
+  const nombreCompleto = [nombre, apellido].filter(Boolean).join(' ');
   const [correo, establecerCorreo] = useState('');
   const [fechaRegistro, establecerFechaRegistro] = useState<string | null>(null);
   const [fotoPerfil, establecerFotoPerfil] = useState<string | null>(null);
   const [nombreEdicion, establecerNombreEdicion] = useState('');
+  const [apellidoEdicion, establecerApellidoEdicion] = useState('');
+  const referenciaApellidoEdicion = useRef<TextInput | null>(null);
   const [correoEdicion, establecerCorreoEdicion] = useState('');
   const [modalEdicion, establecerModalEdicion] = useState(false);
   const [modalContrasena, establecerModalContrasena] = useState(false);
@@ -141,9 +150,11 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
         const datos = await cargarPerfil();
         if (!componenteActivo) return;
         establecerNombre(datos.usuario.nombre);
+        establecerApellido(datos.usuario.apellido || '');
         establecerCorreo(datos.usuario.correo_electronico);
         establecerFechaRegistro(datos.usuario.fecha_creacion);
         establecerNombreEdicion(datos.usuario.nombre);
+        establecerApellidoEdicion(datos.usuario.apellido || '');
         establecerCorreoEdicion(datos.usuario.correo_electronico);
         establecerIdioma(datos.preferencias.idioma);
         establecerNotificaciones(datos.preferencias.notificaciones_activas);
@@ -169,6 +180,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const idiomaActual = IDIOMAS.find((item) => item.id === idioma);
   const aparienciaActual = APARIENCIAS.find((item) => item.id === apariencia);
   const errorEdicion = intentoGuardar ? erroresEdicion.nombre : null;
+  const errorApellidoEdicion = intentoGuardar ? erroresEdicion.apellido : null;
   const errorCorreoEdicion = intentoGuardar ? erroresEdicion.correo : null;
 
   const abrirConfirmacionEdicion = () => {
@@ -180,6 +192,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
 
   const abrirEdicion = () => {
     establecerNombreEdicion(nombre);
+    establecerApellidoEdicion(apellido);
     establecerCorreoEdicion(correo);
     establecerContrasenaConfirmacion('');
     establecerErrorContrasena(null);
@@ -328,7 +341,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
 
   const guardarCambios = async () => {
     if (guardando) return;
-    const datos = { nombre: nombreEdicion, correo: correoEdicion };
+    const datos = { nombre: nombreEdicion, apellido: apellidoEdicion, correo: correoEdicion };
     const nuevosErrores = validarDatosPerfil(datos);
     establecerIntentoGuardar(true);
     establecerErroresEdicion(nuevosErrores);
@@ -340,6 +353,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
     try {
       const resultadoPerfil = await actualizarPerfil(datos);
       establecerNombre(nuevoNombre);
+      establecerApellido(apellidoEdicion.trim());
       establecerCorreo(nuevoCorreo);
       establecerModalEdicion(false);
       mostrarAviso(resultadoPerfil.correoModificado
@@ -454,7 +468,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           tema={tema}
           titulo="Perfil"
           descripcion="Consultá los datos de tu cuenta y personalizá AHRE a tu gusto."
-          alVolver={() => navegacion.goBack()}
+          alVolver={() => volverProtegido()}
         />}>
 
         <KeyboardAvoidingView
@@ -465,7 +479,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
             <View style={estilos.contenido}>
               {cargandoInfo ? null : errorCarga ? (
                 <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
-                  <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{errorCarga}</Text>
+
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => navegacion.replace(RUTAS.INICIO_SESION)}
@@ -483,9 +497,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                         <View style={estilos.columnaAvatar}>
                           <View style={estilos.avatar}>
                             {fotoPerfil ? (
-                              <Image accessibilityLabel={`Foto de perfil de ${nombre}`} source={{ uri: fotoPerfil }} style={estilos.imagenAvatar} />
+                              <Image accessibilityLabel={`Foto de perfil de ${nombreCompleto}`} source={{ uri: fotoPerfil }} style={estilos.imagenAvatar} />
                             ) : (
-                              <Text style={estilos.inicialesAvatar}>{obtenerIniciales(nombre) || 'A'}</Text>
+                              <Text style={estilos.inicialesAvatar}>{obtenerIniciales(nombreCompleto) || 'A'}</Text>
                             )}
                           </View>
                           {fotoPerfil ? (
@@ -520,7 +534,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                         </View>
                         <View style={estilos.detalleUsuario}>
                           <View style={estilos.datosUsuario}>
-                            <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.nombreUsuario}>{nombre}</Text>
+                            <Text ellipsizeMode="tail" numberOfLines={1} style={estilos.nombreUsuario}>{nombreCompleto}</Text>
                             <Text style={estilos.correoUsuario}>{correo}</Text>
                           </View>
                           <View style={estilos.fechaRegistro}>
@@ -618,6 +632,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   <View style={estilos.grupo}>
                     <Text style={estilos.tituloGrupo}>Ajustes avanzados</Text>
                     <View style={estilos.tarjetaOpciones}>
+                      <ReinicioDatosPerfil navegacion={navegacion} />
                       {OPCIONES_AVANZADAS_FUTURAS.map((opcion) => (
                         <View key={opcion.id}>
                           <View style={[estilos.filaOpcion, estilos.filaOpcionDeshabilitada]}>
@@ -850,7 +865,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           visible={modalEdicion}
           desplazable
           alCerrar={() => establecerModalEdicion(false)}
-          descripcion="Los cambios se guardan en este teléfono. Si cambiás el correo, usá el anterior para ingresar con conexión hasta que se sincronice."
+          descripcion="Los cambios se guardan en este teléfono y se sincronizan con el servidor. Si cambiás el correo, usá el anterior para ingresar con conexión hasta que se sincronice."
           etiquetaCerrar="Cerrar edición de perfil"
           estilos={estilos}
           icono="person-outline"
@@ -870,7 +885,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   establecerNombreEdicion(valor);
                   establecerIntentoGuardar(false);
                 }}
-                onSubmitEditing={() => referenciaCorreoEdicion.current?.focus()}
+                onSubmitEditing={() => referenciaApellidoEdicion.current?.focus()}
                 placeholder="Tu nombre"
                 placeholderTextColor={tema.textoSecundario}
                 returnKeyType="next"
@@ -880,6 +895,19 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
               />
             </View>
             {errorEdicion ? <Text style={estilosGlobales.textoError}>{errorEdicion}</Text> : null}
+          </View>
+          <View style={estilos.grupoCampoModal}>
+            <View style={estilosGlobales.encabezadoCampo}>
+              <Text style={[estilosGlobales.etiqueta,estilosGlobales.etiquetaCampo]}>Apellido</Text>
+              <Text style={estilosGlobales.contadorCampo}>{apellidoEdicion.length}/80</Text>
+            </View>
+            <View style={[estilos.campoEdicion, errorApellidoEdicion ? estilosGlobales.campoError : null]}>
+              <TextInput ref={referenciaApellidoEdicion} accessibilityLabel="Apellido" autoCapitalize="words" autoComplete="family-name" maxLength={80} editable={!guardando}
+                onChangeText={valor=>{establecerApellidoEdicion(valor);establecerIntentoGuardar(false);}}
+                onSubmitEditing={()=>referenciaCorreoEdicion.current?.focus()} placeholder="Tu apellido" placeholderTextColor={tema.textoSecundario}
+                returnKeyType="next" selectionColor={tema.foco} style={estilos.entradaEdicion} value={apellidoEdicion}/>
+            </View>
+            {errorApellidoEdicion ? <Text style={estilosGlobales.textoError}>{errorApellidoEdicion}</Text> : null}
           </View>
           <View style={estilos.grupoCampoModal}>
             <View style={estilosGlobales.encabezadoCampo}>
@@ -952,14 +980,37 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
         <ModalPerfil
           visible={modalAcercaDe}
           alCerrar={() => establecerModalAcercaDe(false)}
-          descripcion="Organizá tus finanzas, registrá movimientos y seguí tus depósitos, incluso sin conexión."
+          descripcion="Administrador de Historial y Recursos Económicos"
           etiquetaCerrar="Cerrar acerca de AHRE"
           estilos={estilos}
           icono="information-circle-outline"
           tema={tema}
           titulo="Acerca de AHRE"
+          desplazable
         >
-          <Text style={estilos.valorOpcion}>Versión {Constantes.expoConfig?.version ?? 'no disponible'}</Text>
+          <View style={estilos.presentacionAcerca}>
+            <View style={estilos.cabeceraAcerca}>
+              <Image source={require('../../assets/ahre-mark.png')} style={estilos.marcaAcerca} resizeMode="contain" accessible={false}/>
+              <Text style={estilos.tituloAcerca}>{'Tus finanzas,\nmás claras.'}</Text>
+            </View>
+            <Text style={estilos.descripcionAcerca}>Organizá tu dinero y compartí gastos con otras personas, desde un solo lugar.</Text>
+            <View style={estilos.filaVersionAcerca}>
+              <Text style={estilos.detalleAcerca}>Versión actual</Text>
+              <View style={estilos.versionAcerca}><Text style={estilos.detalleAcerca}>{Constantes.expoConfig?.version ?? 'no disponible'}</Text></View>
+            </View>
+          </View>
+          <View style={estilos.resumenAcerca}>
+            {[
+              {icono:'wallet-outline' as const,texto:'Ingresos, gastos y depósitos'},
+              {icono:'people-outline' as const,texto:'Salas y deudas compartidas'},
+              {icono:'phone-portrait-outline' as const,texto:'Tus registros disponibles sin conexión'},
+            ].map(({icono,texto})=><View key={icono} style={estilos.filaAcerca}><Ionicons name={icono} size={21} color={tema.foco}/><Text style={estilos.textoAcerca}>{texto}</Text></View>)}
+          </View>
+          <Pressable accessibilityRole="link" accessibilityLabel="Visitar la web de AHRE" accessibilityHint="Abre el sitio de AHRE en el navegador." onPress={()=>{void Linking.openURL('https://ahre-server.tailc5dfc5.ts.net/').catch(()=>mostrarAviso('No se pudo abrir la web de AHRE. Intentá nuevamente.',{tipo:'error'}));}} style={({pressed:presionado})=>[estilos.enlaceAcerca,presionado&&estilosGlobales.botonDeshabilitado]}>
+            <Ionicons name="globe-outline" size={23} color={tema.botonPrincipalTexto}/>
+            <Text style={estilos.textoEnlaceAcerca}>Visitar la web de AHRE</Text>
+            <Ionicons name="open-outline" size={20} color={tema.botonPrincipalTexto}/>
+          </Pressable>
         </ModalPerfil>
 
         <ModalPerfil

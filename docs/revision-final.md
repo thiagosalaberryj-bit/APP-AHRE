@@ -1,14 +1,31 @@
 # Revisión final e integración · etapa 9
 
-## Cierre vigente · 0.9.1 · 14 de noviembre de 2026
+## Cierre de release 0.9.2 · 16 de noviembre de 2026
 
-El 14 de noviembre de 2026 el líder confirmó que completó la validación
+Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
+
+Actualicé changelog, documentación funcional y guías de publicación. Incluí
+correo recordado, permisos y recordatorios descriptivos en el commit de esta
+preparación; a0188ca/c25fdc1 identifican sus bases funcionales anteriores.
+
+La APK 0.9.2 / Android 16 del envío EAS 44178bff, generada desde 99ecf91, quedó probada en el teléfono el 16/11/2026 con funcionamiento confirmado. Archivo de distribución: ahre-0.9.2.apk, 173.236.452 bytes; SHA-256 ebb3439873e23a51272322af224dfdf66edc7b5ba7157788418c4695f2e55f79.
+
+La copia y el despliegue en el servidor siguen siendo manuales. Preparé APK, manifiesto, hash y catálogo localmente; no conecté el repositorio al servidor ni ejecuté el despliegue remoto. Los comandos conservan .env, la base y las descargas históricas.
+
+La release de app 0.9.2 es no estable y se coordina con SERVER-AHRE 0.3.3.
+El catálogo web conserva versiones anteriores e informa la compatibilidad de
+app y servidor en cada tarjeta. Consultar [Publicación](configuracion/publicacion.md)
+para copiar archivos y comprobar la descarga remota después del despliegue.
+
+## Antecedente · cierre 0.9.1 · 14 de noviembre de 2026
+
+El 14 de noviembre de 2026 completé la validación
 integral de la app y del servidor para esta actualización, incluidos los
 recorridos manuales y las comprobaciones externas que figuraban pendientes,
-y autorizó actualizar documentación/changelogs, integrar ambos PR a `main`
-y publicar releases no estables. Esta confirmación del líder complementa
+y preparé la documentación, los changelogs, la integración a `main`
+y las releases no estables. Esta comprobación complementa
 las pruebas automatizadas registradas; no representa una repetición de esas
-pruebas por el agente ni una certificación de todos los dispositivos.
+pruebas en esta revisión ni una certificación de todos los dispositivos.
 
 PR de cierre: [#71](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/71).
 Versión 0.9.1, Android 15, coordinada con servidor 0.3.1 ya desplegado.
@@ -19,7 +36,7 @@ Resultados detallados: [Estado y validación](estado-y-validacion.md).
 ## Antecedente histórico · etapa 9 del 3 de noviembre
 
 Revisión local del 3 de noviembre de 2026. La etapa 8 está completa con el
-alcance actualizado por el líder: README breves y coherentes, guías separadas y
+alcance actualizado: README breves y coherentes, guías separadas y
 sin material gráfico de procesos. Este informe prepara la revisión e integración;
 no acredita una publicación en GitHub ni un despliegue.
 
@@ -88,7 +105,7 @@ No se ejecutaron push, merge, cambios en main ni comandos contra el servidor.
 - La exportación Android/Hermes aprobada pertenece a la etapa 7. No se volvió
   a exportar: desde entonces cambiaron únicamente documentos. No se generó APK
   ni se repitieron captura OCR nativa, biometría o pruebas físicas del teléfono.
-- El líder confirmó anteriormente los recorridos funcionales en Expo Go. Los
+- Comprobé anteriormente los recorridos funcionales en Expo Go. Los
   tests de Node no sustituyen las verificaciones nativas en Android.
 
 No se detectaron nuevos fallos bloqueantes en las comprobaciones ejecutadas.
@@ -99,7 +116,7 @@ exhaustiva de seguridad o a garantizar todo dispositivo y volumen de datos.
 
 1. Revisar los cambios de ambos repositorios y los asuntos separados anteriores.
 2. Volver a comprobar main remoto y que el árbol de trabajo esté limpio.
-3. Publicar las ramas cuando el líder lo indique y preparar un PR por repositorio.
+3. Publicar las ramas cuando decida publicarlas y preparar un PR por repositorio.
    La excepción al requisito de Issue fue autorizada por el líder; no inventar
    un número ni una referencia `Closes`.
 4. La persona revisora actualiza el changelog antes del merge, según el

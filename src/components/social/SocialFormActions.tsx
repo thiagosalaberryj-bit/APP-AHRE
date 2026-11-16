@@ -56,7 +56,7 @@ export default function AccionesFormulario<Resultado>({ texto, peligro = false, 
     if (montado.current) await guardar({});
   };
   return <>
-    <BotonSocial peligro={peligro} deshabilitado={deshabilitado || guardando || Boolean(plan)} texto={guardando ? 'Guardando…' : texto}
+    <BotonSocial cargando={guardando} peligro={peligro} deshabilitado={deshabilitado || guardando || Boolean(plan)} texto={guardando ? 'Guardando…' : texto}
       alPresionar={() => confirmacion ? establecerConfirmando(true) : iniciar()} {...aspecto} />    {confirmando && confirmacion ? <ModalConfirmacionSocial {...confirmacion} peligro={peligro} alCerrar={() => establecerConfirmando(false)} alConfirmar={iniciar} {...aspecto} /> : null}
     {plan ? <ModalMovimientoSocial plan={plan} guardando={guardando} alCerrar={() => { if (!guardando) establecerPlan(null); }} alConfirmar={guardar} {...aspecto} /> : null}
   </>;

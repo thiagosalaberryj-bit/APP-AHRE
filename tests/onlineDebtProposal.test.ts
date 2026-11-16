@@ -26,6 +26,7 @@ test('la propuesta espera la sincronización privada y reutiliza su identificado
     if(ruta.endsWith('/social/salas'))return Response.json({salas:[]});
     if(ruta.endsWith('/social/deudas'))return Response.json({deudas:[]});
     if(ruta.endsWith('/social/vinculos'))return Response.json({vinculos:[]});
+    if(ruta.endsWith('/social/registros-pendientes'))return Response.json({operaciones:[]});
     if(ruta.endsWith('/social/operaciones-personales'))return Response.json({operaciones:[]});
     return Response.json({revision,generacion:1,lotes:[],mas:false});
   };
@@ -41,7 +42,7 @@ test('la propuesta espera la sincronización privada y reutiliza su identificado
   offline=false;
   await assert.rejects(e.proponerDeudaOnline(deuda.id),/conexión|respuesta/i);
   await e.proponerDeudaOnline(deuda.id);
-  assert.deepEqual(intentos,['propuesta:'+deuda.id,'propuesta:'+deuda.id]);
+  assert.equal(intentos.length,2);assert.equal(intentos[0],intentos[1]);
   assert.equal(propuestas.size,1);
   assert.equal((await e.cargarSocial()).deudas.length,1);
 });

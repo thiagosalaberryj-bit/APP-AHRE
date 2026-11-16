@@ -1,3 +1,5 @@
+import { AvisosEnModal } from '../../contexts/ToastContext';
+import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import {operacionFinancieraEnCurso} from '../../social/financialOperation';
 import type { Financiacion } from '../../social/types';
 import { useEffect, useState } from 'react';
@@ -23,7 +25,7 @@ export default function ModalMovimientoSocial({ plan, guardando, alCerrar, alCon
   const [movimientoId, establecerMovimientoId] = useState<string | null>(null), [movimientos, establecerMovimientos] = useState<Awaited<ReturnType<typeof consultarMovimientosCompatibles>>>([]);
   const [fecha, establecerFecha] = useState(() => new Date());
   const [hora, establecerHora] = useState(() => `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`);
-  const [error, establecerError] = useState<string | null>(null), [cargando, establecerCargando] = useState(false);
+  const [error, establecerError] = useErrorNotificado(null), [cargando, establecerCargando] = useState(false);
   const operacion = plan.operaciones[indice];
   useEffect(() => {
     let vigente = true;
@@ -41,7 +43,7 @@ export default function ModalMovimientoSocial({ plan, guardando, alCerrar, alCon
     else { establecerSelecciones(datos); establecerIndice(indice + 1); establecerModo('nuevo'); establecerMovimientoId(null); }
   };
   const valida = !operacion || (modo === 'nuevo' ? social.depositos.some((d) => d.id === depositoId) && combinarFechaYHora(fecha, hora) : movimientoId && !cargando && !error);
-  return <Modal visible transparent animationType="fade" onRequestClose={cerrar}>
+  return <Modal visible transparent animationType="fade" onRequestClose={cerrar}><AvisosEnModal>
     <View style={estilos.fondoModal}>
       <Pressable accessibilityRole="button" accessibilityLabel="Volver al formulario" onPress={cerrar} style={estilos.cierreFondo} />
       <View accessibilityViewIsModal style={estilos.tarjetaModal}>
@@ -67,7 +69,7 @@ export default function ModalMovimientoSocial({ plan, guardando, alCerrar, alCon
               </View></View>
             </> : <>
               {cargando ? <Text style={estilosGlobales.textoSecundario}>Buscando movimientos…</Text> : null}
-              {error ? <Text accessibilityRole="alert" style={estilosGlobales.textoError}>{error}</Text> : null}
+
               {!cargando && !error && !movimientos.length ? <Text style={estilosGlobales.textoSecundario}>No hay movimientos disponibles con ese importe y dirección.</Text> : null}
               {movimientos.filter(m => !Object.values(selecciones).some(s => s.movimientoId === m.id)).map(m => <Pressable key={m.id} accessibilityRole="radio" accessibilityState={{ checked: m.id === movimientoId }} onPress={() => establecerMovimientoId(m.id)} style={[estilos.movimientoDisponible, m.id === movimientoId && estilos.movimientoSeleccionado]}>
                 <Ionicons name={m.id === movimientoId ? 'radio-button-on' : 'radio-button-off'} color={tema.foco} size={22} /><View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.descripcionOperacion}>{m.descripcion}</Text><Text style={estilos.ayudaConfirmacion}>{m.deposito} · {new Date(m.fecha_hora).toLocaleString('es-AR')}</Text></View>
@@ -83,5 +85,5 @@ export default function ModalMovimientoSocial({ plan, guardando, alCerrar, alCon
         </View>
       </View>
     </View>
-  </Modal>;
+  </AvisosEnModal></Modal>;
 }

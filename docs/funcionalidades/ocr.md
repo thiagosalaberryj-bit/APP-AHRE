@@ -99,10 +99,17 @@ sigue siendo 500 caracteres: se conserva una propuesta larga y se pide resumirla
 antes de guardar, sin truncarla silenciosamente.
 
 `cargarDatosMovimiento('egreso')` obtiene depósitos activos de la sesión y las
-categorías reales. Sin depósitos se informa y se ofrece crear uno mediante la
-ruta existente; el formulario conserva foto y correcciones al regresar y
-recarga las opciones con `useFocusEffect`. No permite confirmar hasta contar
-con depósitos. Categoría y depósito requieren selección manual.
+categorías reales. La pantalla verifica depósitos al entrar y recuperar foco:
+sin ellos muestra una tarjeta con Nuevo depósito y oculta toda la interfaz OCR.
+El formulario del resultado ya no incluye Crear depósito. No permite confirmar
+sin depósitos. Categoría y depósito requieren selección manual.
+
+El comercio se propone buscando en las primeras cinco líneas reconstruidas una
+línea con al menos tres letras consecutivas, sin importes ni información
+administrativa, y descartando nombres que anteceden una fila numérica de producto.
+Es una heurística local, no una consulta de comercios: puede equivocarse y la
+descripción se conserva editable. Texto reconocido se presenta como una sección
+desplegable con chevron, sin apariencia de botón de acción.
 
 La confirmación reutiliza `validarDatosMovimiento` y
 `crearMovimiento(datos, 'egreso')`. No hay SQL ni un repositorio paralelo en OCR.
@@ -150,7 +157,8 @@ confirmó el funcionamiento en su dispositivo el 16 de octubre de 2026.
 Las pruebas en SQLite de Node no sustituyen la ejecución en Expo SQLite.
 Para una regresión manual completa deben registrarse individualmente:
 permisos rechazados/aceptados, seis tipos de ticket del Issue,
-correcciones, crear depósito y regresar, guardar un único egreso, historial,
+correcciones, bloqueo inicial sin depósitos, crear depósito y regresar, posición
+estable de Galería, desplegable de texto, guardar un único egreso, historial,
 saldo, cancelar, errores y flujo completo en modo avión desde el primer uso.
 
 ## Uso desde Social

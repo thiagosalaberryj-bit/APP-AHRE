@@ -1,7 +1,7 @@
+import {reinicioEnCurso} from '../development/testResetState';
 import {observarSocialOnline} from '../social/online/onlineStore';
 import {useContext,useEffect,useRef,useState} from 'react';
-import {ActivityIndicator,AccessibilityInfo,Animated,AppState,Pressable,StyleSheet,Text,View} from 'react-native';
-import Svg,{Circle,Path} from 'react-native-svg';
+import {AccessibilityInfo,Animated,AppState,Pressable,StyleSheet,Text,View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {ContextoApariencia} from '../contexts/AppearanceContext';
@@ -15,7 +15,6 @@ import {crearProgramadorSincronizacion} from '../sync/syncScheduler';
 import ControladorSocialOnline from '../social/online/onlineController';
 import {procesarRecurrencias} from '../recurrences/recurrenceService';
 import {registrarTareaRecurrencias} from '../recurrences/recurrenceTask';
-const ArcoAnimado=Animated.createAnimatedComponent(Path);
 
 export const TEXTOS_SYNC={local:'Solo local',comprobando:'Comprobando conexión',sincronizando:'Sincronizando',offline:'Sin conexión con el servidor',online:'Sincronizado',sesion:'Iniciá sesión para sincronizar',conflicto:'Error de sincronización',revocado:'Instalación desvinculada'};
 
@@ -27,7 +26,7 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
     const procesar=async()=>{if(procesandoRecurrencias)return;procesandoRecurrencias=true;try{await procesarRecurrencias();}catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudieron registrar las recurrencias.',{tipo:'error'});}finally{procesandoRecurrencias=false;}};
     void registrarTareaRecurrencias().catch(()=>{});
     void procesar();
-    const programador=crearProgramadorSincronizacion({sincronizar:sincronizarSesion,obtenerVista:obtenerVistaSincronizacion,estaActiva:()=>AppState.currentState==='active'});
+    const programador=crearProgramadorSincronizacion({sincronizar:sincronizarSesion,obtenerVista:obtenerVistaSincronizacion,estaActiva:()=>AppState.currentState==='active'&&!reinicioEnCurso()});
     const dejar=observarSincronizacion(v=>{
       if(v.estado==='revocado'&&anterior!=='revocado'){
         mostrarAviso('Esta instalación fue desvinculada. Los pendientes se conservaron.',{tipo:'informacion'});alRevocar();
@@ -65,12 +64,8 @@ export default function EstadoSincronizacion({soloIcono=false}:{soloIcono?:boole
   const [cantidadVisible,establecerCantidad]=useState<number|null>(null);
   const vista={...vistaPrivada,pendientes:cantidadVisible??vistaPrivada.pendientes};
   useEffect(()=>{let activo=true,consulta=0;const recargar=()=>{const numero=++consulta;void consultarPendientes(1).then(d=>{if(activo&&numero===consulta)establecerCantidad(d.total);}).catch(()=>{});};recargar();const dejar=observarSocialOnline(recargar),dejarPrivado=observarSincronizacion(recargar);return()=>{activo=false;dejar();dejarPrivado();};},[]);
-  const progreso=useRef(new Animated.Value(3)).current;
+  const progreso=useRef(new Animated.Value(1)).current;
   const [reducirMovimiento,establecerReducirMovimiento]=useState(false);
-  const [reconectando,establecerReconectando]=useState(false);
-  const estadoActual=useRef(vista.estado);estadoActual.current=vista.estado;
-  const animacion=useRef<Animated.CompositeAnimation|null>(null),animando=useRef(false),montado=useRef(true);
-  useEffect(()=>{montado.current=true;return()=>{montado.current=false;animacion.current?.stop();animando.current=false;};},[]);
   useEffect(()=>{
     let activo=true;
     void AccessibilityInfo.isReduceMotionEnabled().then(v=>{if(activo)establecerReducirMovimiento(v);}).catch(()=>{});
@@ -79,50 +74,37 @@ export default function EstadoSincronizacion({soloIcono=false}:{soloIcono?:boole
   },[]);
   useEffect(()=>observarSincronizacion(establecerVista),[]);
   useEffect(()=>{
-    if(reducirMovimiento){animacion.current?.stop();animando.current=false;progreso.setValue(3);establecerReconectando(false);return;}
-    if(vista.estado!=='comprobando'||animando.current)return;
-    animando.current=true;establecerReconectando(true);
-    const ciclo=()=>{
-      progreso.setValue(0);
-      animacion.current=Animated.sequence([
-        Animated.timing(progreso,{toValue:1,duration:220,useNativeDriver:false}),Animated.delay(90),
-        Animated.timing(progreso,{toValue:2,duration:220,useNativeDriver:false}),Animated.delay(90),
-        Animated.timing(progreso,{toValue:3,duration:220,useNativeDriver:false}),Animated.delay(120),
-      ]);
-      animacion.current.start(({finished})=>{
-        if(!montado.current||!finished)return;
-        if(estadoActual.current==='comprobando')ciclo();
-        else{animando.current=false;establecerReconectando(false);}
-      });
-    };
-    ciclo();
+    progreso.stopAnimation();
+    progreso.setValue(1);
+    if(reducirMovimiento||!['comprobando','sincronizando'].includes(vista.estado))return;
+    const animacion=Animated.loop(Animated.sequence([
+      Animated.timing(progreso,{toValue:0.35,duration:650,useNativeDriver:true}),
+      Animated.timing(progreso,{toValue:1,duration:650,useNativeDriver:true}),
+    ]));
+    animacion.start();
+    return()=>{animacion.stop();progreso.setValue(1);};
   },[vista.estado,reducirMovimiento,progreso]);
-  const estadoMostrado=reconectando?'comprobando':vista.estado;
   const error=['conflicto','sesion','revocado'].includes(vista.estado);
-  const arcos=['M9.17 14.92 A4 4 0 0 1 14.83 14.92','M6.34 12.09 A8 8 0 0 1 17.66 12.09','M3.51 9.26 A12 12 0 0 1 20.49 9.26'];
+  const iconoNube=['offline','local'].includes(vista.estado)?'cloud-offline-outline'
+    :vista.estado==='sincronizando'?'cloud-upload-outline'
+    :vista.estado==='online'&&vista.pendientes===0?'cloud-done-outline':'cloud-outline';
   const fondoMarca=soloIcono?tema.encabezado:tema.contenedorVerde;
   return <Pressable accessibilityRole="button" accessibilityLabel={`${TEXTOS_SYNC[vista.estado]}. ${vista.pendientes} registros pendientes. Ver sincronización.`}
     onPress={()=>navegacion.navigate(RUTAS.SINCRONIZACION)} style={[estilos.boton,soloIcono&&estilos.soloIcono,{backgroundColor:soloIcono?'transparent':tema.contenedorVerde}]}>
     <View style={estilos.icono}>
-      <Svg width={24} height={24} viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
-        {arcos.map((d,i)=><ArcoAnimado key={d} d={d} fill="none" stroke={tema.botonPrincipal} strokeWidth={2} strokeLinecap="round" strokeOpacity={reconectando?progreso.interpolate({inputRange:[i,i+1],outputRange:[0.15,1],extrapolate:'clamp'}):1}/>)}
-        <Circle cx={12} cy={17.75} r={1.5} fill={tema.botonPrincipal}/>
-      </Svg>
-      {estadoMostrado==='sincronizando'?<ActivityIndicator style={[StyleSheet.absoluteFill,estilos.centrar]} size={32} color={tema.botonPrincipal}/>:null}
-      {estadoMostrado==='online'&&vista.pendientes===0?<Ionicons name="checkmark-circle" size={14} color={tema.botonPrincipal} style={[estilos.marca,{backgroundColor:fondoMarca}]}/>:null}
-      {!reconectando&&error?<Ionicons name="close-circle" size={14} color={tema.error} style={[estilos.marca,{backgroundColor:fondoMarca}]}/>:null}
-      {['offline','local'].includes(estadoMostrado)?<View style={[estilos.tachado,{backgroundColor:tema.botonPrincipal}]}/>:null}
+      <Animated.View style={{opacity:progreso,transform:[{translateY:vista.estado==='sincronizando'&&!reducirMovimiento?progreso.interpolate({inputRange:[0.35,1],outputRange:[-2,1]}):0}]}}>
+        <Ionicons name={iconoNube} size={26} color={tema.botonPrincipal}/>
+      </Animated.View>
+      {error?<Ionicons name="close-circle" size={14} color={tema.error} style={[estilos.marca,{backgroundColor:fondoMarca}]}/>:null}
     </View>
-    {vista.pendientes>0?<View style={[estilos.insignia,{backgroundColor:tema.botonPrincipal,borderColor:tema.encabezado}]}><Text numberOfLines={1} style={[estilos.cantidad,{color:tema.botonPrincipalTexto}]}>{formatearCantidadPendientes(vista.pendientes)}</Text></View>:null}
+    {vista.pendientes>0?<View style={[estilos.insignia,soloIcono&&{top:6},{backgroundColor:tema.botonPrincipal,borderColor:tema.encabezado}]}><Text numberOfLines={1} style={[estilos.cantidad,{color:tema.botonPrincipalTexto}]}>{formatearCantidadPendientes(vista.pendientes)}</Text></View>:null}
   </Pressable>;
 }
 const estilos=StyleSheet.create({
   boton:{width:40,height:40,alignItems:'center',justifyContent:'center',borderRadius:BORDES.radios.boton,flexShrink:0},
   soloIcono:{width:44,height:44,borderRadius:0},
   icono:{height:32,width:32,alignItems:'center',justifyContent:'center'},
-  centrar:{alignItems:'center',justifyContent:'center'},
   marca:{position:'absolute',right:0,bottom:0,borderRadius:BORDES.radios.circular},
-  tachado:{position:'absolute',height:2,width:30,transform:[{rotate:'-45deg'}]},
   insignia:{position:'absolute',right:-4,top:-5,minWidth:18,height:18,paddingHorizontal:3,borderRadius:BORDES.radios.circular,borderWidth:2,alignItems:'center',justifyContent:'center'},
   cantidad:{fontSize:TIPOGRAFIA.tamanos.auxiliar-2,lineHeight:12,fontWeight:TIPOGRAFIA.pesos.seminegrita,textAlign:'center'},
 });

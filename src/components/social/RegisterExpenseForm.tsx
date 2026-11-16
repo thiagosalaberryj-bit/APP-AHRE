@@ -32,7 +32,7 @@ export default function FormularioRegistrarGasto(propiedades: import('../../soci
   const listaBorrador = useRef<import('../../social/types').BorradorLista | null>(null);
   const alCambiar = useCallback((datos: import('../../social/types').EditorGasto) => { borrador.current = datos; }, []);
   const personasIds = [...new Set<string>([...(sala?.participantes || []), ...(gastoInicial?.partes.map(p => p.personaId) || []), ...(gastoInicial ? [gastoInicial.pagadorId] : [])])].filter(idPersona => idPersona !== 'vos');
-  const participantes = sala ? [personaActual, ...personasIds.map(idPersona => obtenerPersona(idPersona)).filter((p): p is NonNullable<typeof p> => !!p && !!(gastoInicial || p.activa))] : [];
+  const participantes = sala ? [personaActual, ...personasIds.map(idPersona => obtenerPersona(idPersona)).filter((p): p is NonNullable<typeof p> => !!p)] : [];
   const etiqueta = parametros.gastoId ? 'Guardar cambios' : 'Agregar gasto';
   if (!sala || !sala.puedeEditarGastos || sala.cierrePendiente || sala.estado === 'cerrada' || parametros.gastoId && !gastoInicial) return <RegistroNoDisponible {...aspecto} />;
   return <>

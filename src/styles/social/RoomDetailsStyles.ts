@@ -3,6 +3,8 @@ import { StyleSheet } from 'react-native';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../globalStyles';
 export default function crearEstilosPropios(tema: Tema) {
   return StyleSheet.create({
+    detalleBalances:{gap:ESPACIADO.pequeno},
+    encabezadoBalances:{minHeight:48,flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno},
     grupo: { gap: ESPACIADO.pequeno },
     tarjetaSala: { padding: ESPACIADO.medio, borderRadius: BORDES.radios.campo },
     resumenPrincipal: { backgroundColor: tema.superficie, borderColor: tema.borde, borderWidth: BORDES.anchos.fino, borderRadius: BORDES.radios.campo, padding: ESPACIADO.medio, gap: ESPACIADO.pequeno },

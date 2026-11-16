@@ -186,17 +186,16 @@ debajo de la fila del título.
 
 Los encabezados existentes se alojan en `ScreenHeaderFrame.tsx`, fuera del
 contenido desplazable. Al bajar con un gesto más de 144 puntos se pliegan
-automáticamente; queda una barra del mismo color `tema.encabezado`, con dos
-flechas a la izquierda y los íconos de sincronización, notificaciones y perfil
-a la derecha. Todos conservan áreas táctiles de 44 puntos, sin fondos individuales
-y sin superponerse a los registros. La primera flecha
-despliega o pliega el encabezado y la segunda vuelve al inicio de la pantalla.
-Una elección manual se mantiene durante la inercia del mismo gesto. Al llegar
-arriba se muestra de nuevo el encabezado y desaparecen ambas flechas.
+automáticamente; queda una barra del mismo color `tema.encabezado`, con una
+flecha para volver al inicio a la izquierda y los íconos de sincronización,
+notificaciones y perfil a la derecha. Todos conservan áreas táctiles de 44 puntos,
+sin fondos individuales y sin superponerse a los registros. No hay un control
+para desplegar o plegar manualmente el encabezado. Al llegar arriba se muestra
+de nuevo el encabezado y desaparece la barra compacta.
 
 Los accesos compactos conservan los íconos, colores y acciones del encabezado;
-sincronización también mantiene sus estados e insignias. Al desplegar el
-encabezado manualmente se ocultan los accesos compactos para evitar duplicarlos.
+sincronización también mantiene sus estados e insignias. Al volver al inicio
+se ocultan los accesos compactos para evitar duplicarlos.
 La pantalla de Sincronización conserva su opción de no mostrar ese acceso.
 
 El cambio de altura dura 280 ms, con aceleración y frenado suaves, y se desactiva
@@ -211,6 +210,29 @@ la lista de Sincronización; conserva referencias, eventos y opciones existentes
 Los desplazamientos horizontales, listas flotantes y contenidos de modales
 conservan su comportamiento. Los estilos viven en `ScreenHeaderFrameStyles.ts`
 y el controlador de estado en `src/navigation/headerScrollController.ts`.
+
+### Indicador de sincronización
+
+`SyncStatus.tsx` usa la familia de nubes de Ionicons en los encabezados
+completos y compactos, en lugar de la señal de wifi:
+
+- Nube con check: sincronización completa, sin pendientes.
+- Nube tachada: sin conexión con el servidor o modo solo local.
+- Nube con pulsación suave: comprobando conexión, con un ciclo de 1,3 segundos.
+- Nube con flecha de subida y desplazamiento vertical suave: sincronización en curso, sin indicador circular superpuesto.
+- Nube con marca de error: conflicto, sesión requerida o instalación desvinculada.
+
+Se conserva el contador de pendientes, los colores de ambos temas, la etiqueta
+accesible con estado y cantidad, y el acceso a Sincronización al tocar el botón.
+Con reducir movimiento se desactivan la pulsación y el desplazamiento; la nube
+con flecha permanece estática. No se interpreta una conexión
+wifi como confirmación de que los datos llegaron al servidor.
+
+
+La pantalla de Sincronización consulta sus pendientes al entrar y al recibir
+avisos. Las actualizaciones de fondo conservan el contenido sin mostrar otra
+carga; si llegan varios avisos durante una consulta se agrupan en una lectura
+posterior. Tocar la nube abre la pantalla; «Sincronizar ahora» sí inicia el envío.
 
 ## Tema claro y oscuro
 
@@ -395,3 +417,7 @@ el cambio es inmediato, sin temporizadores ni duplicación de accesos.
 Una única máscara exterior contiene el encabezado y la barra compacta con
 radio inferior constante. El recorte sigue la altura combinada durante toda
 la animación: ninguna capa rectangular tapa las esquinas al plegar o desplegar.
+
+En el encabezado plegado, las insignias de notificaciones y sincronización se
+ubican seis puntos debajo del borde superior de sus controles para evitar
+el recorte por la máscara. El encabezado desplegado conserva su posición.

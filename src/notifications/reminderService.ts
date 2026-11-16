@@ -1,7 +1,6 @@
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { ejecutarLecturaConConexion } from '../database/connectionQueue';
 import { ejecutarTransaccion } from '../database/transactions';
-import type { Recurrencia } from '../database/types';
 import { avisarIntegraciones, leerDato } from '../integrations/integrationStore';
 import { ESTADO_MP_INICIAL } from '../mercadoPago/mercadoPagoService';
 import type { OperacionMp } from '../mercadoPago/types';
@@ -29,23 +28,32 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
   const ajustes = await cargarAjustesAvisos();
   const contexto = await ejecutarLecturaConConexion(async c => {
     const registros = await c.getAllAsync<{ fecha: string }>('SELECT m.fecha_creacion AS fecha FROM movimientos m JOIN depositos d ON d.id=m.deposito_id WHERE d.usuario_id=? AND m.reversion_de_id IS NULL AND m.fecha_creacion>?', [usuario.id, new Date(Date.now() - 2 * 86400000).toISOString()]);
-    const deudas = await c.getAllAsync<{ id: string; tipo: 'debo' | 'me_deben' }>("SELECT d.id,CASE WHEN propia.id=d.deudor_id THEN 'debo' ELSE 'me_deben' END AS tipo FROM deudas d JOIN personas propia ON propia.usuario_id=d.usuario_id AND propia.es_usuario_actual=1 WHERE d.usuario_id=? AND d.estado IN('pendiente','parcial')", [usuario.id]);
-    const recurrencias = await c.getAllAsync<Recurrencia>('SELECT r.* FROM recurrencias r JOIN depositos d ON d.id=r.deposito_id WHERE d.usuario_id=? AND d.activo=1 AND r.activa=1', [usuario.id]);
+    const deudas = await c.getAllAsync<DatosRecordatorios['deudas'][number]>(`SELECT d.id,
+      CASE WHEN propia.id=d.deudor_id THEN 'debo' ELSE 'me_deben' END AS tipo,
+      TRIM(otra.nombre || ' ' || COALESCE(otra.apellido,'')) AS persona,
+      MAX(0,ROUND(d.monto*100)-COALESCE((SELECT SUM(ROUND(p.monto*100)) FROM pagos_sociales p
+        WHERE p.deuda_id=d.id AND p.usuario_id=d.usuario_id AND p.estado='vigente' AND p.clase<>'origen_deuda'),0))/100.0 AS pendiente
+      FROM deudas d JOIN personas propia ON propia.usuario_id=d.usuario_id AND propia.es_usuario_actual=1
+      JOIN personas otra ON otra.id=CASE WHEN propia.id=d.deudor_id THEN d.acreedor_id ELSE d.deudor_id END AND otra.usuario_id=d.usuario_id
+      WHERE d.usuario_id=? AND d.estado IN('pendiente','parcial')`, [usuario.id]);
+    const recurrencias = await c.getAllAsync<DatosRecordatorios['recurrencias'][number]>('SELECT r.*,d.nombre AS depositoNombre FROM recurrencias r JOIN depositos d ON d.id=r.deposito_id WHERE d.usuario_id=? AND d.activo=1 AND r.activa=1', [usuario.id]);
     const estado = await leerDato(usuario.id, 'mp:estado', ESTADO_MP_INICIAL, c), operaciones = await leerDato<OperacionMp[]>(usuario.id, 'mp:operaciones', [], c);
     const datosSociales = await c.getFirstAsync<{ datos: string }>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='operaciones'", [usuario.id]);
     const personales = datosSociales ? JSON.parse(datosSociales.datos) as OperacionPersonal[] : [];
     const incorporadas = new Set((await c.getAllAsync<{ clave: string }>('SELECT clave FROM incorporaciones_sociales_locales WHERE usuario_id=?', [usuario.id])).map(f => f.clave));
-    const salas = new Map<string, number>(); for (const p of personales) if (p.salaId && !p.incorporada && !incorporadas.has(p.clave)) salas.set(p.salaId, (salas.get(p.salaId) || 0) + 1);
+    const nombresSalas = new Map((await c.getAllAsync<{id:string;nombre:string}>('SELECT id,nombre FROM salas WHERE usuario_id=?',[usuario.id])).map(s=>[s.id,s.nombre]));
+    const salas = new Map<string, number>(); for (const p of personales) if (p.salaId && !p.incorporada && !incorporadas.has(p.clave)) {salas.set(p.salaId, (salas.get(p.salaId) || 0) + 1);if(p.salaNombre)nombresSalas.set(p.salaId,p.salaNombre);}
     for(const detalle of await leerSalasOnline(usuario.id,c)){
+      nombresSalas.set(detalle.sala.id,detalle.sala.nombre);
       const pendientes=pendientesSala(detalle,personales,incorporadas).length;
       if(pendientes)salas.set(detalle.sala.id,pendientes);else salas.delete(detalle.sala.id);
     }
     const cacheDeudas = await c.getFirstAsync<{ datos: string }>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='deudas'", [usuario.id]);
     const acuerdos = cacheDeudas ? JSON.parse(cacheDeudas.datos) as DeudaOnline[] : [];
-    const deudasCompletas:DatosRecordatorios['deudas'] = deudas.filter(d => !acuerdos.some(a => a.estado === 'aceptada' && (a.origenLocalId === d.id || a.id === d.id)));
-    for (const a of acuerdos) if (a.estado === 'aceptada' && a.pendiente > 0) deudasCompletas.push({ id: a.id, tipo: a.esDeudor ? 'debo' : 'me_deben',origenLocalId:a.origenLocalId??undefined });
+    const deudasCompletas:DatosRecordatorios['deudas'] = deudas.filter(d => d.pendiente>0&&!acuerdos.some(a => a.estado === 'aceptada' && (a.origenLocalId === d.id || a.id === d.id)));
+    for (const a of acuerdos) if (a.estado === 'aceptada' && a.pendiente > 0) deudasCompletas.push({ id: a.id, tipo: a.esDeudor ? 'debo' : 'me_deben',persona:a.otraPersonaNombre||deudas.find(d=>d.id===a.origenLocalId)?.persona||'esta persona',pendiente:a.pendiente,origenLocalId:a.origenLocalId??undefined });
     const activo = await c.getFirstAsync<{ notificaciones_activas: number }>('SELECT notificaciones_activas FROM preferencias WHERE usuario_id=?', [usuario.id]);
-    return { activa: !!activo?.notificaciones_activas, datos: { registros: registros.map(f => f.fecha), deudas: deudasCompletas, recurrencias, mercadoPago: estado.vinculacion ? { pendientes: operaciones.filter(f => f.decision === 'pendiente' || f.revisionPendiente).length, depositoId: estado.vinculacion.deposito_id } : null, salas: [...salas].map(([id, pendientes]) => ({ id, pendientes })) } satisfies DatosRecordatorios };
+    return { activa: !!activo?.notificaciones_activas, datos: { registros: registros.map(f => f.fecha), deudas: deudasCompletas, recurrencias, mercadoPago: estado.vinculacion ? { pendientes: operaciones.filter(f => f.decision === 'pendiente' || f.revisionPendiente).length, depositoId: estado.vinculacion.deposito_id } : null, salas: [...salas].map(([id, pendientes]) => ({ id, nombre:nombresSalas.get(id)||'Sala compartida', pendientes })) } satisfies DatosRecordatorios };
   });
   const anteriores = await ejecutarLecturaConConexion(c => c.getAllAsync<{ clave: string; fecha: string; datos: string; nativo: string | null }>('SELECT * FROM programaciones_avisos WHERE usuario_id=?', [usuario.id]));
   let historialCambiado = false;
@@ -67,7 +75,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
   const n = await notificacionesNativas(), permitida = n ? (await n.getPermissionsAsync()).granted : false;
   const programadasNativas=n?await n.getAllScheduledNotificationsAsync():[];
   const pendientesNativas=new Set(programadasNativas.map(p=>p.identifier));
-  const siguientes = contexto.activa ? planificarRecordatorios(contexto.datos, ajustes).map(aviso => ({ ...aviso, detalles: ajustes.mostrarDetalles,precision })) : [];
+  const siguientes = contexto.activa ? planificarRecordatorios(contexto.datos, ajustes).map(aviso => ({ ...aviso, detalles: true,precision })) : [];
   const mapa = new Map(siguientes.map(f => [f.clave, f]));
   const formatoDia=new Intl.DateTimeFormat('en-CA',{timeZone:ajustes.zona,year:'numeric',month:'2-digit',day:'2-digit'});
   const diasRegistrados=new Set(contexto.datos.registros.map(fecha=>formatoDia.format(new Date(fecha))));
@@ -92,7 +100,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
     const anterior = anteriores.find(f => f.clave === aviso.clave && f.datos === JSON.stringify(aviso));
     if (anterior?.nativo && permitida && pendientesNativas.has(anterior.nativo) && !forzarProgramacion) continue;
     if (anterior?.nativo) await cancelarAviso(anterior.nativo);
-    const nativo = permitida ? await programarAviso(aviso, usuario.id, ajustes.mostrarDetalles) : null;
+    const nativo = permitida ? await programarAviso(aviso, usuario.id, true) : null;
     await ejecutarTransaccion(c => c.runAsync('INSERT INTO programaciones_avisos(usuario_id,clave,fecha,datos,nativo) VALUES(?,?,?,?,?) ON CONFLICT(usuario_id,clave) DO UPDATE SET fecha=excluded.fecha,datos=excluded.datos,nativo=excluded.nativo', [usuario.id, aviso.clave, aviso.fecha, JSON.stringify(aviso), nativo]));
   }
   if (historialCambiado) avisarIntegraciones();

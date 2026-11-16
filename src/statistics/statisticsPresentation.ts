@@ -84,7 +84,7 @@ export function obtenerCategorias(tipoMovimiento: string, tema: Tema) {
 
 export function formatearMonto(monto: number) {
   return `$ ${new Intl.NumberFormat('es-AR', {
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(Number(monto) || 0)}`;
 }
 

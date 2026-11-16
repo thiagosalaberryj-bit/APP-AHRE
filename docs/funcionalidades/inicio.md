@@ -31,8 +31,8 @@ cambiar el tema en ese momento.
 - Si la sesión es válida, se consulta si el dispositivo tiene hardware
   biométrico y una huella configurada; después se muestra el diálogo nativo de
   autenticación local.
-- Si el dispositivo no permite autenticar con biometría, se ofrece Login con
-  contraseña como alternativa.
+- Sin hardware o sin huella configurada, se abre Login y se exige contraseña.
+- Si existe biometría configurada pero el sistema no puede autenticar, se ofrece Login con contraseña.
 - Si la persona cancela o no se valida la huella, no se abre el Dashboard. El
   deslizador vuelve al inicio para permitir otro intento.
 - Si falla SecureStore o una consulta local, se muestra un aviso y se puede
@@ -40,7 +40,7 @@ cambiar el tema en ese momento.
 
 Sin sesión, deslizar abre Login. Con una sesión válida, la huella correcta permite mostrar la carga animada durante 1,5 segundos y abrir Dashboard. Cancelar o fallar la huella conserva Inicio.
 
-La pantalla de carga aparece solo después de validar la huella. El logo completo
+La pantalla de carga aparece después de validar la sesión y la huella cuando está configurada. El logo completo
 queda fijo mientras la barra inferior verde brillante avanza. La fila sobre la
 barra muestra el porcentaje y cambia entre «Acceso confirmado», «Preparando tu
 inicio…» y «Abriendo AHRE…». La pista y el porcentaje respetan los temas claro
@@ -179,8 +179,7 @@ de distribución.
    cambio de apariencia después de validar la sesión.
 4. Cancelar o fallar la huella y confirmar que no se abre el Dashboard y el
    deslizador queda disponible para reintentar.
-5. Con una sesión válida pero sin biometría configurada, confirmar que se ofrece
-   Login con contraseña.
+5. Sin biometría configurada, confirmar que se abre Login y se exige contraseña.
 6. Probar una referencia local obsoleta y confirmar que se limpia y se abre
    Login, sin alterar depósitos ni movimientos.
 7. Repetir en modo avión y comprobar el reintento ante errores locales.

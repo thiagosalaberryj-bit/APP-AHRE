@@ -1,3 +1,6 @@
+import { useErrorNotificado } from '../hooks/useErrorNotice';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
+import { operacionFinancieraEnCurso } from './financialOperation';
 import { useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -13,6 +16,7 @@ export default function usePantallaSocial({
   navigation: navegacion,
   route: ruta
 }: import('../navigation/types').PropiedadesPantalla | import('../navigation/types').PropiedadesPestana) {
+  const volverProtegido = useRegresoProtegido(navegacion, operacionFinancieraEnCurso);
   const {
     tema
   } = useContext(ContextoApariencia);
@@ -41,7 +45,7 @@ export default function usePantallaSocial({
   const esSala = Boolean(parametros.salaId) && !esRegistro && !esGasto;
   const esSecundaria = esRegistro || esPersona || esListado || esGasto || esSala || esListaSalas;
   const [registros, establecerRegistros] = useState<import('./socialQueryService').DatosSocialesVisibles | null>(null);
-  const [error, establecerError] = useState<string | null>(null);
+  const [error, establecerError] = useErrorNotificado(null);
   const [cargando, establecerCargando] = useState(true);
   const montado = useRef(true);
   const solicitud = useRef(0);
@@ -64,7 +68,7 @@ export default function usePantallaSocial({
     abrirPago: (deudaId:string,pagoId?:string,operacionClave?:string)=>raiz.push(RUTAS.REGISTRO_SOCIAL,{tipo:'pago',deudaId,pagoId,operacionClave}),
     personasActivas: registros.personas.filter(p => p.activa),
     obtenerPersona: (id: string | undefined) => id === 'vos' ? registros.personaActual : registros.personas.find(p => p.id === id) || registros.personasOnline.find(p=>p.id===id),
-    volver: () => navegacion.goBack(),
+    volver: volverProtegido,
     irInicioSocial: () => raiz.popTo(RUTAS.PRINCIPAL, { screen: RUTAS.SOCIAL }),
     irAgenda: () => raiz.popTo(RUTAS.PERSONAS_SOCIAL, { todas: true }),
     abrirDeposito: () => raiz.push(RUTAS.DEPOSITO),
@@ -98,7 +102,7 @@ export default function usePantallaSocial({
     persona: ['Registrar persona', 'Agregá una persona a tu listado personal.'],
     deuda: ['Registrar deuda', 'Indicá quién debe y cuánto queda pendiente.'],
     gasto: [parametros.gastoId ? 'Editar gasto' : 'Agregar gasto', 'Elegí quién pagó y cómo se reparte.'],
-    eliminarDeuda: ['Perdonar deuda', 'Cerrá el pendiente sin registrar un pago.'],
+    eliminarDeuda: ruta.params?.modo==='eliminar-personal'?['Eliminar deuda personal','Corregí sus movimientos y saldos asociados.']:['Perdonar deuda', 'Cerrá el pendiente sin registrar un pago.'],
     detalleDeuda: ['Detalle de deuda', 'Información y acciones de esta deuda.'],
     pago: ['Registrar pago', 'Registrá dinero entregado o recibido.'],
     cerrar: ['Cerrar sala', 'Revisá el reparto antes de finalizar la ocasión.']
@@ -108,6 +112,7 @@ export default function usePantallaSocial({
   return {
     aspecto,
     navegacion,
+    volverProtegido,
     esSecundaria,
     esRegistro,
     parametros,

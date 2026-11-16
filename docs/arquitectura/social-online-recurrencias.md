@@ -79,8 +79,11 @@ Una respuesta perdida se recupera con el mismo identificador.
 
 El egreso completo corresponde a quien pagó la compra. Las partes ajenas crean
 obligaciones, sin registrar otra vez la parte propia como egreso.
-Cada cuenta incorpora después su compra o pago en un depósito propio, o asocia un
-movimiento existente compatible. Esa incorporación es independiente del cierre.
+Cada cuenta elige antes del cierre su depósito o un movimiento compatible para
+las compras y partes efectivamente pagadas. El cierre espera las asociaciones
+válidas de todas las cuentas y confirma movimientos y saldos en la misma
+transacción. Los invitados sin cuenta no necesitan depósito: sus pendientes
+con una cuenta quedan como deudas personales. Ver [ajustes acordados](../ajustes-acordados.md).
 
 ## Personas e invitados
 
@@ -89,7 +92,7 @@ se vincula a una cuenta mediante invitación aceptada y confirmación del dueño
 la ficha. También puede solicitarse un vínculo directo desde el perfil usando
 el correo exacto de la cuenta; el envío expresa el consentimiento del dueño
 de la ficha y solo la cuenta destinataria puede aceptarlo desde Personas.
-No se vincula automáticamente ni se fusiona por nombre o correo. Otra ficha ya vinculada a
+No se vincula ni se fusiona por coincidencia de nombre o correo. La admisión de una cuenta confirma el vínculo con el administrador según el flujo vigente detallado al final. Otra ficha ya vinculada a
 esa cuenta impide confirmar un vínculo equivalente; se conservan ambas.
 
 El acceso habitual utiliza un enlace global estable y QR con contraseña y
@@ -103,7 +106,7 @@ anterior sin duplicar al integrante. La sesión de invitado solo accede a esa sa
 y a sus obligaciones. Registrarse o ingresar conserva su identidad y participación.
 
 La web vive en SERVER-AHRE, ruta `/invitacion/`, y no expone un buscador público.
-Ofrece abrir `ahre://invitation` en la app; la app conserva el enlace durante el
+Declara Android App Links HTTPS y ofrece también `ahre://invitation`; la app conserva el enlace durante el
 ingreso. Un fallo muestra una invitación pendiente, que puede conservarse o descartarse.
 
 Las deudas anteriores son privadas. Compartir crea una propuesta; rechazarla no
@@ -238,14 +241,15 @@ Las asociaciones privadas se guardan por cuenta, sala y clave financiera, con
 huella del importe, pagador y reparto. La cola local usa datos_sociales_online
 y se envía antes de los comandos de cierre, después de sincronizar depósitos y
 movimientos propios. Un rechazo queda para revisión; un fallo de red conserva el
-identificador. Al recibir el cierre, la app incorpora una vez las operaciones con
-selección válida; las demás permanecen en el detalle del gasto.
+identificador. El servidor rechaza el cierre si falta alguna asociación requerida
+y devuelve pendientesCierre con persona y concepto. Una asociación incompatible
+debe corregirse antes del cierre; no quedan compras pendientes después.
 
-El contrato privado conserva su versión: no se agregan columnas SQLite ni se
-reinterpretan lotes. El contrato social añade respuestas opcionales y tablas
-aditivas en MySQL. Los pagos generados al cerrar llevan origen_cierre para que
-una selección preparada no se aplique a un pago posterior. La incorporación y
-su reconocimiento en servidor conservan las claves existentes.
+La revisión de los 22 ajustes agrega apellido y procedencia de deudas de invitados
+al esquema inicial SQLite y a la actualización controlada MySQL. Requiere una
+entrega coordinada de clientes y servidor. Los lotes privados actualizacionSocial
+se recuperan antes del outbox y conservan los saldos de operaciones offline
+independientes. Los pagos posteriores de deudas siguen su propio flujo.
 
 ## Matriz vigente de roles y estados
 
@@ -269,3 +273,26 @@ su reconocimiento en servidor conservan las claves existentes.
 Las simulaciones requieren `__DEV__`, cuenta `pruebas@ahre.test`, autorización
 local vigente y generación cero. Expo Go y builds de desarrollo pueden usarlas;
 release y cuentas reales no. No sirven como comprobación del transporte real.
+
+## Flujo vigente de admisión y salida
+
+Esta sección precisa el acceso global y reemplaza la aprobación obligatoria para todos los ingresos descrita como antecedente.
+
+| Situación al abrir enlace o QR | Resultado |
+| --- | --- |
+| Cuenta ya integrante activa | Recupera su participación. |
+| Vínculo confirmado con el administrador, sin expulsión anterior | Contraseña correcta y admisión automática. |
+| Cuenta sin ese vínculo o con una participación expulsada | Contraseña correcta y espera de aprobación. |
+| Invitado web sin cuenta | Nombre, apellido y contraseña; espera aprobación. |
+
+El servidor obtiene la identidad autenticada del perfil y no confía en el nombre del cuerpo. Al admitir una cuenta, una transacción registra/reutiliza la ficha privada del administrador y crea/reutiliza la ficha recíproca del solicitante. Si la cuenta ya es amiga se reutiliza obligatoriamente su ficha confirmada y basta aceptar; cualquier intento de reasignarla se rechaza. Para una cuenta nueva, el administrador completa apodo o elige una ficha existente; la recíproca nueva usa nombre y apellido del administrador y un apodo inicial de dos letras con sufijo si hace falta. No se fusionan personas por coincidencia de nombre. Una cuenta antigua sin apellido debe completarlo en Perfil antes de generar una ficha recíproca nueva.
+
+Aceptar el ingreso confirma el vínculo entre administrador y solicitante. No crea amistad con todos los integrantes. Una ficha archivada conserva su estado y todas sus funciones; su ausencia de la lista principal no impide recibir propuestas o pagos.
+
+Expulsar desactiva la pertenencia y revoca permisos de edición, conservando autoría, pagador, repartos, pagos y obligaciones. Las salidas con gastos requieren revisión explícita del administrador. Las operaciones financieras propias pendientes se consultan por GET `/social/registros-pendientes`; el expulsado puede completarlas por el endpoint existente de mis-finanzas, pero no leer toda la sala ni elegir depósitos ajenos. Esta revisión y todas las asociaciones necesarias bloquean el cierre.
+
+Al cerrar, dos participantes con cuenta comparten un único acuerdo aceptado: se crean/reutilizan sus fichas privadas con relación `relacionado`, sin confirmar amistad. Con una sola cuenta y un invitado, se registra una deuda personal en esa cuenta; entre invitados queda el balance de sala. Una parte pagada no genera nueva deuda. Los movimientos se confirman una vez en el cierre y luego se pagan obligaciones desde la deuda.
+
+Una propuesta personal pendiente puede retirarse por quien la envió. Conserva el original, desaparece de las invitaciones del destinatario y admite un nuevo envío con otra operación. Los reintentos de una operación incierta conservan su identificador.
+
+Publicación coordinada: desplegar primero SERVER-AHRE con la ruta de registros pendientes y la ampliación aditiva `admisiones_sala.apellido`. No hay nuevo protocolo privado ni dependencia. Después distribuir la app; las bases Expo anteriores necesitan recrear el esquema inicial de desarrollo para quitar las restricciones antiguas del archivo de fichas.

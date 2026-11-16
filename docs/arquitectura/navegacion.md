@@ -45,8 +45,8 @@ muestran la barra inferior.
 
 `ScreenHeaderFrame.tsx` mantiene los encabezados fuera del contenido vertical
 en todas las pantallas que los utilizan, incluido el marco de Social. Al bajar
-se pliegan y se muestran dos flechas compactas: alternar el encabezado y volver
-al inicio. La barra comparte el color del encabezado y, cuando está plegado,
+se pliegan y se muestra una única flecha compacta para volver al inicio.
+Se retiró el control para alternar manualmente el encabezado. La barra comparte el color del encabezado y, cuando está plegado,
 incluye accesos sin fondos individuales a sincronización, notificaciones y perfil,
 con las mismas acciones. Arriba vuelve a mostrarse el encabezado completo y se ocultan los
 controles. Se conectan únicamente el scroll principal o la SectionList de
@@ -175,9 +175,39 @@ sección Nuevo.
 ## Regreso entre pantallas
 
 Las pantallas secundarias utilizan el comportamiento normal del Stack Navigator.
-La flecha del encabezado ejecuta `navigation.goBack()` para volver a la pantalla
-anterior. Las pestañas principales no necesitan un botón de regreso porque se
+La flecha del encabezado y las demás acciones de regreso usan
+`useRegresoProtegido`, definido en `src/navigation/useSafeGoBack.ts`. El hook
+comprueba foco e historial y permite un solo regreso hasta recuperar el foco.
+Los bloqueos de guardado, eliminación y operaciones financieras se consultan
+antes de registrar el regreso; se conservan las barreras `beforeRemove`.
+Las pestañas principales no necesitan un botón de regreso porque se
 cambian directamente desde la barra inferior.
+
+### Cobertura del regreso protegido
+
+La revisión incluye los 34 archivos de pantalla y los frames compartidos:
+
+| Grupo | Pantallas o componentes | Uso |
+| --- | --- | --- |
+| Secundarias | Detalle de categoría, crear depósito, detalle de depósito, Ingreso, Mercado Pago, detalle de movimiento, Notificaciones, OCR, Perfil y Sincronización | Usan directamente `useRegresoProtegido`. |
+| Egreso | `ExpenseScreen.tsx` | Delega en `FormularioMovimiento`, que comparte la protección con Ingreso. |
+| Social | Sus 16 pantallas, incluida la principal y las 15 secundarias | Obtienen la acción desde `useSocialScreen.ts`; `SocialScreenFrame.tsx` y `social.volver` comparten la misma instancia. Los adaptadores de `socialRoutes.tsx` conservan esta delegación. |
+| Principales | Panel, Movimientos, Nuevo y Estadísticas | Registran el hook para Atrás de Android; sus botones abren destinos o cambian de pestaña. |
+| Inicio y autenticación | Inicio, Login y Registro | Registran el hook para Atrás de Android; sus botones mantienen los destinos explícitos de autenticación. |
+| Encabezados | `SectionHeader.tsx`, `MainHeader.tsx` y `HeaderCompactActions.tsx` | El secundario recibe la acción protegida; los otros abren destinos. |
+| Marco y desplazamiento | `ScreenHeaderFrame.tsx` y `HeaderScrollView.tsx` | «Volver al inicio» desplaza el contenido; no cambia de pantalla. |
+| Confirmación OCR | `OcrExpenseForm.tsx` | Protege el regreso al completar el guardado. |
+
+La única llamada directa a `goBack()` de la app queda dentro del hook compartido.
+Los cierres de modales/selectores y los destinos específicos con `popTo`
+conservan sus acciones propias.
+
+El hook registra `hardwareBackPress` mientras la pantalla tiene foco en Android.
+El botón y el gesto del sistema usan la misma acción protegida que la flecha.
+Un bloqueo de operación consume Atrás sin salir; sin historial se permite la
+salida normal de Android. Una ventana compartida de 400 ms absorbe repeticiones
+entre pantallas, también después de tocar la flecha de AHRE. Los selectores
+conservan sus manejadores prioritarios y los modales sus cierres nativos.
 
 ## Controles de navegación del sistema
 

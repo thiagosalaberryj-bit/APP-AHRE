@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { ErrorAutenticacion } from '../authentication/errors';
 import { useContext, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -15,6 +16,7 @@ import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
 export default function PantallaRegistro({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  useRegresoProtegido(navegacion, () => cargando);
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
@@ -24,6 +26,8 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
   const referenciaConfirmacion = useRef<import('react-native').TextInput | null>(null);
   const accionEnCurso = useRef(false);
   const [nombre, establecerNombre] = useState('');
+  const [apellido, establecerApellido] = useState('');
+  const referenciaApellido=useRef<import('react-native').TextInput|null>(null);
   const [correo, establecerCorreo] = useState('');
   const [contrasena, establecerContrasena] = useState('');
   const [confirmacion, establecerConfirmacion] = useState('');
@@ -33,14 +37,14 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
   const manejarRegistro = async () => {
     if (accionEnCurso.current) return;
 
-    const nuevosErrores = validarRegistro({ nombre, correo, contrasena, confirmacion });
+    const nuevosErrores = validarRegistro({ nombre, apellido, correo, contrasena, confirmacion });
     establecerErrores(nuevosErrores);
     if (Object.keys(nuevosErrores).length > 0) return;
 
     accionEnCurso.current = true;
     establecerCargando(true);
     try {
-      await registrarUsuario({ nombre, correo, contrasena, confirmacion });
+      await registrarUsuario({ nombre, apellido, correo, contrasena, confirmacion });
       establecerContrasena('');
       establecerConfirmacion('');
       mostrarAviso('Tu cuenta quedó creada. Iniciá sesión para continuar.', { tipo: 'exito' });
@@ -65,25 +69,26 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
   return (
     <ContenedorAutenticacion tema={tema} titulo="Creá tu cuenta" descripcion="Conectate para crear y autorizar tu cuenta. Después vas a poder usar AHRE sin internet.">
       <View style={estilosAutenticacion.formulario}>
-        <CampoAutenticacion
+        <View style={estilosAutenticacion.filaIdentidad}><View style={estilosAutenticacion.columnaIdentidad}><CampoAutenticacion
           estilosAutenticacion={estilosAutenticacion}
           autoCapitalize="words"
           autoComplete="name"
           blurOnSubmit={false}
           deshabilitado={cargando}
           error={errores.nombre}
+          lineasError={1}
           estilosGlobales={estilosGlobales}
           icono="person-outline"
           etiqueta="Nombre"
           limiteCaracteres={80}
           alCambiarTexto={cambiarCampo('nombre', establecerNombre)}
-          onSubmitEditing={() => referenciaCorreo.current?.focus()}
-          placeholder="Ingresá tu nombre"
+          onSubmitEditing={() => referenciaApellido.current?.focus()}
+          multiline={false} numberOfLines={1} placeholder="Ingresá tu nombre"
           returnKeyType="next"
           textContentType="name"
           valor={nombre}
           tema={tema}
-        />
+        /></View><View style={estilosAutenticacion.columnaIdentidad}><CampoAutenticacion ref={referenciaApellido} estilosAutenticacion={estilosAutenticacion} estilosGlobales={estilosGlobales} tema={tema} etiqueta="Apellido" valor={apellido} alCambiarTexto={cambiarCampo('apellido',establecerApellido)} error={errores.apellido} lineasError={1} multiline={false} numberOfLines={1} placeholder="Ingresá tu apellido" icono="person-outline" limiteCaracteres={80} autoCapitalize="words" autoComplete="family-name" textContentType="familyName" deshabilitado={cargando} returnKeyType="next" onSubmitEditing={()=>referenciaCorreo.current?.focus()}/></View></View>
 
         <CampoAutenticacion
           ref={referenciaCorreo}

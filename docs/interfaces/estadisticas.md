@@ -47,6 +47,20 @@ filtros seleccionados», para no desplazar el contenido al elegir un filtro.
 «Filtros» abre `MovementFiltersPanel.tsx`, el mismo
 panel inferior de Movimientos, con las mismas secciones plegables, selectores
 de categorías y depósitos, y entradas de monto mínimo/máximo con formato local.
+Categorías y Monto usan también las secciones compartidas de Movimientos y
+Detalle de depósito. Las categorías se muestran en un listado vertical de filas
+con icono, nombre completo y casilla de selección, usando la presentación del
+selector de Ingreso/Egreso dentro del panel. Todas las categorías del tipo aparecen aunque
+no tengan movimientos. Sin filtro específico, ninguna casilla queda marcada;
+tocar una categoría inicia la selección, y quitar la última vuelve a incluir todas.
+Se retiraron las acciones Todas/Ninguna dentro de la sección de categorías del
+panel. Limpiar y el preajuste Todas de la fila rápida siguen restableciendo el
+catálogo sin marcar cada casilla. Quitar el último grupo rápido también
+restablece el catálogo.
+El panel reserva una franja sólida inferior del mismo color de su superficie,
+según el área segura del dispositivo, para que sus controles queden por encima
+de los botones de navegación Android. Se aplica en las tres pantallas, con y
+sin filtros activos.
 Los períodos de Estadísticas conservan sus selectores propios según el gráfico.
 El botón indica cuántos filtros están activos; «Limpiar» permite restablecerlos.
 

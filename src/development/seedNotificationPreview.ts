@@ -6,10 +6,10 @@ const ejemplos:Record<TipoAviso,[string,string]>={
  debo:['Recordá revisar tus deudas','Tenés una deuda pendiente para revisar'],
  me_deben:['Recordá las deudas que te deben','Tenés un cobro pendiente'],
  recurrencias:['Mañana se repite un movimiento','Hay una recurrencia pendiente de aceptar'],
- salas:['Hay gastos de sala por registrar','Un pago de la sala está listo para incorporar'],
+ salas:['Hay gastos de sala por registrar','La sala tiene pagos por revisar'],
  mensual:['Revisá cómo cerraste el mes','Compará tu balance con el mes anterior'],
  mercado_pago:['Mercado Pago tiene movimientos nuevos','Todavía tenés movimientos de Mercado Pago por revisar'],
- social:['Recibiste una solicitud en Social','Hay una decisión sobre un pago compartido'],
+ social:['Martina te envió una solicitud de vínculo','Bruno rechazó tu aviso de pago'],
  cuenta:['Mercado Pago necesita autorización','No se pudo completar la búsqueda de Mercado Pago'],
 };
 export async function prepararAvisosDemo(usuarioId:string,c:Conexion){
@@ -19,7 +19,7 @@ export async function prepararAvisosDemo(usuarioId:string,c:Conexion){
  let indice=0;
  for(const tipo of TIPOS_AVISO)for(const titulo of ejemplos[tipo]){
   const id=`demo-aviso:${tipo}:${indice}`;
-  const destino:DestinoAviso=tipo==='debo'||tipo==='me_deben'?deuda?{tipo:'deuda',id:deuda.id}:{tipo:'movimientos'}:tipo==='salas'?sala?{tipo:'sala',id:sala.id,seccion:'gastos'}:{tipo:'movimientos'}:tipo==='mensual'?{tipo:'estadisticas'}:tipo==='social'?{tipo:'personas'}:tipo==='mercado_pago'||tipo==='cuenta'?{tipo:'mercado_pago'}:tipo==='recurrencias'?{tipo:'recurrencia',depositoId:deposito?.id}:{tipo:'movimientos'};
+  const destino:DestinoAviso=tipo==='debo'||tipo==='me_deben'?deuda?{tipo:'deuda',id:deuda.id}:{tipo:'movimientos'}:tipo==='salas'?sala?{tipo:'sala',id:sala.id,seccion:'gastos'}:{tipo:'movimientos'}:tipo==='mensual'?{tipo:'estadisticas'}:tipo==='social'?{tipo:'personas',evento:titulo.startsWith('Martina')?'solicitud_vinculo':'pago:rechazado'}:tipo==='mercado_pago'||tipo==='cuenta'?{tipo:'mercado_pago'}:tipo==='recurrencias'?{tipo:'recurrencia',depositoId:deposito?.id}:{tipo:'movimientos'};
   const aviso:Aviso={id,tipo,titulo:'Demo · '+titulo,mensaje:'Ejemplo de notificación. Tocá para abrir su apartado en la cuenta de prueba.',destino,fecha:new Date(Date.now()-indice*60000).toISOString(),vista:indice%4===0,resuelta:indice%3===0};
   await c.runAsync('INSERT INTO avisos_locales(usuario_id,id,datos,fecha,vista,resuelta) VALUES(?,?,?,?,?,?) ON CONFLICT(usuario_id,id) DO UPDATE SET datos=json_set(excluded.datos,\'$.fecha\',avisos_locales.fecha)',[usuarioId,id,JSON.stringify(aviso),aviso.fecha,aviso.vista?1:0,aviso.resuelta?1:0]);indice++;
  }

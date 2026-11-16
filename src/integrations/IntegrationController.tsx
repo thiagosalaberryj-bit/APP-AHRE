@@ -1,3 +1,4 @@
+import {iniciarActividadReinicio} from '../development/testResetState';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
@@ -27,7 +28,7 @@ export default function ControladorIntegraciones() {
       void ejecutar();
     };
     const ejecutar = async (forzar = false) => {
-      if (cerrado || ocupado || AppState.currentState !== 'active') return; ocupado = true;
+      if (cerrado || ocupado || AppState.currentState !== 'active') return; const terminar=iniciarActividadReinicio();if(!terminar)return; ocupado = true;
       try {
         const { usuario } = await obtenerSesionActual();
         if (usuarioAnterior && usuarioAnterior !== usuario?.id) { const n = await notificacionesNativas(); if (n) { await n.cancelAllScheduledNotificationsAsync(); await n.dismissAllNotificationsAsync(); } tokenRegistrado = ''; ultimoRemoto = 0; }
@@ -50,7 +51,7 @@ export default function ControladorIntegraciones() {
             try { const token = await obtenerTokenPush(); if (token) { await solicitarRemoto('/notificaciones/dispositivo', { activo: true, token }, remota.token); tokenRegistrado = token; } } catch { /* Expo Go y equipos sin FCM conservan el historial. */ }
           }
         }
-      } finally { ocupado = false; if (recargaPendiente && !cerrado) { recargaPendiente = false; queueMicrotask(() => ejecutarSeguro(true)); } }
+      } finally { terminar(); ocupado = false; if (recargaPendiente && !cerrado) { recargaPendiente = false; queueMicrotask(() => ejecutarSeguro(true)); } }
     };
     void prepararCanales().catch(() => {});
     void notificacionesNativas().then(async n => {

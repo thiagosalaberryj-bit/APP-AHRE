@@ -33,11 +33,11 @@ export default function FormularioPersona(propiedades: import('../../social/type
   const nombreNormalizado = normalizarNombrePersona(nombre);
   const apellidoNormalizado = normalizarNombrePersona(apellido);
   const apodoNormalizado = normalizarNombrePersona(apodo);
-  const existente = personasSociales.find(persona => persona.id !== personaInicial?.id && (nombreNormalizado && apellidoNormalizado && normalizarNombrePersona(persona.nombre) === nombreNormalizado && normalizarNombrePersona(persona.apellido || '') === apellidoNormalizado || apodoNormalizado && normalizarNombrePersona(persona.apodo || '') === apodoNormalizado));
+  const existente = personasSociales.find(persona => persona.id !== personaInicial?.id && (apodoNormalizado && normalizarNombrePersona(persona.apodo || '') === apodoNormalizado));
   const cambiar = (establecer: (valor:string)=>void) => (valor:string) => {
     establecer(valor);
   };
-  return <RequisitoCreacionSocial aplicar={!personaInicial} {...aspecto}><View style={estilos.grupo}>
+  return <RequisitoCreacionSocial aplicar={false} {...aspecto}><View style={estilos.grupo}>
       <CampoFormulario etiqueta="Nombre" ejemplo="Ej.: Ana" valor={nombre} limite={80} alCambiar={cambiar(establecerNombre)} {...aspecto} />
       <CampoFormulario etiqueta="Apellido" ejemplo="Ej.: Pérez" valor={apellido} limite={80} alCambiar={cambiar(establecerApellido)} {...aspecto} />
       <CampoFormulario etiqueta="Apodo" ejemplo="Ej.: Ani" valor={apodo} limite={20} alCambiar={valor => cambiar(establecerApodo)(valor.slice(0, 20))} {...aspecto} />

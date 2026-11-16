@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import EntradaMonto from '../MoneyInput';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-export default function MontoSocial(propiedades: import('../../social/types').AspectoSocial & ({etiqueta:string;valor:string;alCambiar:(valor:string)=>void})) {
+export default function MontoSocial(propiedades: import('../../social/types').AspectoSocial & ({etiqueta:string;valor:string;alCambiar:(valor:string)=>void;error?:string})) {
   const {
     etiqueta,
     valor,

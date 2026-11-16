@@ -98,6 +98,8 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       start(alTerminar?: (resultado: { finished: boolean }) => void) { animaciones.forEach(animacion => animacion.start()); alTerminar?.({ finished: true }); },
     }),
   };
+  nativo.Platform = { OS: 'android' };
+  nativo.BackHandler = { addEventListener: () => ({ remove() {} }) };
   nativo.PanResponder = { create: (manejadores: Record<string, unknown>) => ({ panHandlers: manejadores }) };
   nativo.StyleSheet = { create: <T>(x: T) => x, flatten: (x: unknown): unknown => Array.isArray(x) ? Object.assign({}, ...x.flat(Infinity).filter(Boolean)) : x, absoluteFill: { position: 'absolute' } };
   function cargar<T>(archivo: string): T {
@@ -116,11 +118,11 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
       if (nombre === '@react-navigation/native') return { useFocusEffect: (callback:()=>void|(()=>void)) => react.useEffect(callback, [callback]), useNavigation: () => propiedades.navigation };
       if (nombre.endsWith('/NotificationUnreadBadge')) return {__esModule:true,default:'NotificationBadge'};
       if (nombre.endsWith('/SyncStatus')) return { __esModule: true, default: 'SyncStatus' };
-      if (nombre === 'react-native-safe-area-context') return { SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ bottom: 24 }) };
+      if (nombre === 'react-native-safe-area-context') return { SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => ({ top:24,bottom: 24 }) };
       if (nombre.endsWith('/MainHeader') || nombre.endsWith('/SectionHeader')) return { __esModule: true, default: 'Header' };
       if (nombre.endsWith('/AppearanceContext')) return { ContextoApariencia: apariencia };
-      if (nombre.endsWith('/ToastContext')) return { ContextoAvisos: notificaciones };
-      if (nombre.endsWith('/socialService')) return servicios;
+      if (nombre.endsWith('/ToastContext')) return { ContextoAvisos: notificaciones, AvisosEnModal: ({children}: {children: unknown}) => children };
+      if (nombre.endsWith('/socialService')||nombre.endsWith('/authentication/sessionService')) return servicios;
       if (nombre.endsWith('/sync/remote')) return {URL_SERVIDOR:'https://ahre.example.test/api/v1'};
       if (nombre.startsWith('.')) return cargar(resolverFuente(path.resolve(path.dirname(archivo), nombre)));
       return require(nombre);
@@ -179,7 +181,7 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
     for (const valores of instancias.values()) valores.forEach(v => v?.limpiar?.());
     instancias = new Map();
     const navegar = (...args: unknown[]) => destinos.push(args);
-    propiedades = { route: { name: nombre, params }, navigation: { push: navegar, replace: navegar, navigate: navegar, popTo: navegar, getParent: () => ({ navigate: navegar }), goBack: () => destinos.push(['Atrás']) } };
+    propiedades = { route: { name: nombre, params }, navigation: { isFocused: () => true, canGoBack: () => true, push: navegar, replace: navegar, navigate: navegar, popTo: navegar, getParent: () => ({ navigate: navegar }), goBack: () => destinos.push(['Atrás']) } };
     renderizar(); await asentar();
   }
   function todos(nodo: Nodo = arbol): Elemento[] {

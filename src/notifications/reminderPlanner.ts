@@ -1,13 +1,14 @@
 import { instanteCalendario, partesCalendario } from '../recurrences/recurrenceCalendar';
+import { formatearMontoSocial } from '../social/socialHelpers';
 import type { Recurrencia } from '../database/types';
 import type { AjustesAvisos, Aviso, TipoAviso, DestinoAviso } from './types';
 export interface Recordatorio extends Aviso { clave: string; }
 export interface DatosRecordatorios {
   registros: string[];
-  deudas: { id: string; tipo: 'debo' | 'me_deben'; origenLocalId?: string }[];
-  recurrencias: Recurrencia[];
+  deudas: { id: string; tipo: 'debo' | 'me_deben'; persona: string; pendiente: number; origenLocalId?: string }[];
+  recurrencias: (Recurrencia & { depositoNombre: string })[];
   mercadoPago: { pendientes: number; depositoId: string } | null;
-  salas: { id: string; pendientes: number }[];
+  salas: { id: string; nombre: string; pendientes: number }[];
 }
 export function planificarRecordatorios(datos: DatosRecordatorios, ajustes: AjustesAvisos, ahora = new Date()): Recordatorio[] {
   const salida: Recordatorio[] = [], zona = ajustes.zona, hoy = partesCalendario(ahora.toISOString(), zona);
@@ -28,9 +29,9 @@ export function planificarRecordatorios(datos: DatosRecordatorios, ajustes: Ajus
     if (!registrados.has(claveDia)) agregar('registro', 'registro:' + claveDia, aHora(fecha, ajustes.tipos.registro.hora), 'Registrá tus movimientos', 'Recordá registrar tus movimientos de hoy.', { tipo: 'movimientos' }, true);
     if (datos.mercadoPago?.pendientes) agregar('mercado_pago', 'mp:' + datos.mercadoPago.depositoId + ':' + claveDia, aHora(fecha, ajustes.tipos.mercado_pago.hora), 'Mercado Pago pendiente', `Tenés ${datos.mercadoPago.pendientes} movimientos por revisar.`, { tipo: 'mercado_pago', depositoId: datos.mercadoPago.depositoId });
     if (p.dia === 1) agregar('mensual', 'mensual:' + claveDia, aHora(fecha, ajustes.tipos.mensual.hora), 'Revisá el cierre del mes', 'Consultá tu balance y comparalo con el mes anterior.', { tipo: 'estadisticas' }, true);
-    for (const deuda of datos.deudas) agregar(deuda.tipo,deuda.tipo+':'+deuda.id+':'+claveDia,aHora(fecha,ajustes.tipos[deuda.tipo].hora),deuda.tipo==='debo'?'Tenés una deuda pendiente':'Tenés una deuda a cobrar','Revisá el saldo pendiente de esta deuda.',{tipo:'deuda',id:deuda.id});
-    for (const sala of datos.salas.filter(s=>s.pendientes)) agregar('salas','sala:'+sala.id+':'+claveDia,aHora(fecha,ajustes.tipos.salas.hora),'Movimientos de sala pendientes',`Tenés ${sala.pendientes} movimientos para incorporar a un depósito.`,{tipo:'sala',id:sala.id});
-    for (const r of datos.recurrencias.filter(r=>r.activa&&claveDia!==dia(r.proxima_ejecucion)&&Date.parse(aHora(fecha,ajustes.tipos.recurrencias.hora))>Date.parse(r.proxima_ejecucion))) agregar('recurrencias','recurrente-pendiente:'+r.id+':'+r.proxima_ejecucion+':'+claveDia,aHora(fecha,ajustes.tipos.recurrencias.hora),'Movimiento recurrente pendiente','Revisá y confirmá el movimiento de tu depósito.',{tipo:'recurrencia',id:r.id,depositoId:r.deposito_id},false,r.proxima_ejecucion);
+    for (const deuda of datos.deudas) agregar(deuda.tipo,deuda.tipo+':'+deuda.id+':'+claveDia,aHora(fecha,ajustes.tipos[deuda.tipo].hora),deuda.tipo==='debo'?`Le debés a ${deuda.persona}`:`${deuda.persona} te debe`,`Saldo pendiente: ${formatearMontoSocial(deuda.pendiente)}.`,{tipo:'deuda',id:deuda.id});
+    for (const sala of datos.salas.filter(s=>s.pendientes)) agregar('salas','sala:'+sala.id+':'+claveDia,aHora(fecha,ajustes.tipos.salas.hora),`${sala.nombre}: movimientos pendientes`,`Tenés ${sala.pendientes} ${sala.pendientes===1?'movimiento':'movimientos'} para incorporar a un depósito.`,{tipo:'sala',id:sala.id});
+    for (const r of datos.recurrencias.filter(r=>r.activa&&claveDia!==dia(r.proxima_ejecucion)&&Date.parse(aHora(fecha,ajustes.tipos.recurrencias.hora))>Date.parse(r.proxima_ejecucion))) agregar('recurrencias','recurrente-pendiente:'+r.id+':'+r.proxima_ejecucion+':'+claveDia,aHora(fecha,ajustes.tipos.recurrencias.hora),`Movimiento pendiente: ${r.descripcion}`,`Depósito: ${r.depositoNombre}. Revisá y confirmá el movimiento.`,{tipo:'recurrencia',id:r.id,depositoId:r.deposito_id},false,r.proxima_ejecucion);
   }
   const fin = ahora.getTime() + 60 * 86400000;
   for (const r of datos.recurrencias) {
@@ -41,8 +42,8 @@ export function planificarRecordatorios(datos: DatosRecordatorios, ajustes: Ajus
     }
     if (Date.parse(fecha) < fin && (!r.fecha_fin || fecha <= r.fecha_fin)) {
       const previa = new Date(Date.parse(fecha) - ajustes.tipos.recurrencias.anticipacion * 86400000);
-      agregar('recurrencias', 'recurrente-previo:' + r.id + ':' + fecha, aHora(previa, ajustes.tipos.recurrencias.hora), 'Se acerca un movimiento recurrente', 'Revisá la próxima ocurrencia de tu depósito.', { tipo: 'recurrencia', id: r.id, depositoId: r.deposito_id },false,fecha);
-      agregar('recurrencias', 'recurrente:' + r.id + ':' + fecha, fecha, 'Movimiento recurrente para revisar', 'Confirmalo desde las recurrencias del depósito.', { tipo: 'recurrencia', id: r.id, depositoId: r.deposito_id },false,fecha);
+      agregar('recurrencias', 'recurrente-previo:' + r.id + ':' + fecha, aHora(previa, ajustes.tipos.recurrencias.hora), `Se acerca: ${r.descripcion}`, `Depósito: ${r.depositoNombre}. Revisá la próxima ocurrencia.`, { tipo: 'recurrencia', id: r.id, depositoId: r.deposito_id },false,fecha);
+      agregar('recurrencias', 'recurrente:' + r.id + ':' + fecha, fecha, `Movimiento para revisar: ${r.descripcion}`, `Depósito: ${r.depositoNombre}. Confirmalo desde las recurrencias.`, { tipo: 'recurrencia', id: r.id, depositoId: r.deposito_id },false,fecha);
     }
   }
   return [...new Map(salida.map(f => [f.clave, f])).values()].sort((a, b) => a.fecha.localeCompare(b.fecha));

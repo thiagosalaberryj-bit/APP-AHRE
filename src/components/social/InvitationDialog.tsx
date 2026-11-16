@@ -1,3 +1,4 @@
+import { AvisosEnModal } from '../../contexts/ToastContext';
 import {operacionFinancieraEnCurso} from '../../social/financialOperation';
 import type {ReactNode} from 'react';
 import {KeyboardAvoidingView,Modal,Platform,Pressable,ScrollView,Text,View} from 'react-native';
@@ -12,7 +13,7 @@ export default function DialogoInvitacion({titulo,descripcion,icono,alCerrar,eti
   titulo:string;descripcion:string;icono:NombreIcono;alCerrar:()=>void;etiquetaCerrar?:string;ocupado?:boolean;pie?:ReactNode;children:ReactNode;
 }){
   const estilos=crearEstilosSocialOnline(aspecto.tema),bordes=useSafeAreaInsets();
-  return <Modal transparent statusBarTranslucent navigationBarTranslucent animationType="fade" visible onRequestClose={()=>!ocupado&&!operacionFinancieraEnCurso()&&alCerrar()}>
+  return <Modal transparent statusBarTranslucent navigationBarTranslucent animationType="fade" visible onRequestClose={()=>!ocupado&&!operacionFinancieraEnCurso()&&alCerrar()}><AvisosEnModal>
     <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':'height'} style={[estilos.fondo,{paddingTop:Math.max(ESPACIADO.grande,bordes.top),paddingBottom:Math.max(ESPACIADO.grande,bordes.bottom)}]}>
       <Pressable accessibilityRole="button" accessibilityLabel="Cerrar tocando fuera del modal" disabled={ocupado} onPress={()=>{if(!ocupado&&!operacionFinancieraEnCurso())alCerrar();}} style={estilos.fondoCerrar}/>
       <View accessibilityViewIsModal style={[estilos.modal,estilos.dialogo]}>
@@ -25,5 +26,5 @@ export default function DialogoInvitacion({titulo,descripcion,icono,alCerrar,eti
         {pie?<View style={estilos.pieInvitacion}>{pie}</View>:null}
       </View>
     </KeyboardAvoidingView>
-  </Modal>;
+  </AvisosEnModal></Modal>;
 }

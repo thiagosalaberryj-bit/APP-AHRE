@@ -199,12 +199,73 @@ la paginación y la suite de formularios de Social.
 
 En el teléfono, revisar Inicio, Movimientos, Estadísticas, Social, un formulario,
 un detalle y Sincronización. Arriba no deben aparecer flechas; al bajar debe
-plegarse el encabezado y quedar una barra del mismo verde, con dos flechas y los
+plegarse el encabezado y quedar una barra del mismo verde, con una flecha y los
 íconos de sincronización, notificaciones y perfil, sin tapar contenido ni
 mostrar fondos individuales. Comprobar sus acciones y estados de sincronización;
-al desplegar el encabezado no deben duplicarse los accesos.
-Alternar manualmente, seguir subiendo y bajando, y usar la segunda flecha para
-volver al inicio. Repetir con teclado abierto y reducir movimiento. En
+al llegar arriba no deben duplicarse los accesos. No debe haber una flecha
+para expandir manualmente el encabezado. Seguir subiendo y bajando, y usar la
+única flecha compacta para volver al inicio. Repetir con teclado abierto y reducir movimiento. En
 Movimientos, comprobar que el regreso no dispara más páginas ni una restauración
 antigua de posición. Inicio debe describir «Tu balance, depósitos y movimientos.».
 Esta verificación no mide FPS ni reemplaza la comprobación visual en el dispositivo.
+
+## Regreso protegido y simplificación del encabezado · 14/11/2026
+
+Se retiraron el control de expansión manual del encabezado y su estado asociado;
+se mantienen plegado por scroll, regreso al inicio, temas y reducción de movimiento.
+La cobertura anterior de elección manual describe la implementación histórica.
+
+Verificación final de esta rama: `npm run typecheck` correcto; `npm test`
+con 514 casos, 475 aprobados, cero fallos y 39 omitidos.
+
+La protección compartida cubre las flechas de AHRE y el botón/gesto Atrás de
+Android en las 34 pantallas, directamente o mediante formularios y el frame de
+Social. Los tests de `safeGoBack.test.ts` y `androidBackController.test.ts`
+comprueban foco, historial, repetición, bloqueos, recuperación del foco,
+limpieza de escucha y la ventana de 400 ms entre pantallas. Los dobles de
+interfaz no ejecutan el sistema de gestos ni las transiciones físicas de Android.
+
+Las 39 integraciones omitidas se reparten en 31 casos de
+`onlineIntegration.test.ts` y 8 de `syncIntegration.test.ts`. Se omiten si faltan
+`AHRE_SERVER_SOURCE` o `AHRE_MYSQL_TEST=1`; ambas variables estaban ausentes en
+esta sesión. Esto no valida MySQL/HTTP/WebSocket del backend.
+
+Pendiente en dispositivo Android: probar flecha seguida de Atrás y repeticiones
+rápidas de botón y gesto desde Notificaciones, detalles, formularios y Social;
+confirmar que un guardado o eliminación no permite salir, que luego se puede
+volver y que los selectores/modales cierran primero. En las pantallas principales,
+comprobar cambio de pestaña por historial y salida normal cuando se agota.
+Repetir al recuperar el foco y en los temas claro/oscuro.
+
+## Indicador de nube y actualización de Sincronización
+
+El indicador usa nubes de Ionicons; se retiraron arcos del wifi, estados de
+reconexión de esa animación y el indicador circular superpuesto. Al enviar,
+la nube con flecha de subida pulsa y se desplaza suavemente; reducir movimiento
+la mantiene estática. Los servicios y sus intervalos automáticos se conservan.
+
+La pantalla agrupa avisos que llegan durante una consulta en una lectura posterior,
+elimina la lectura duplicada al entrar y actualiza en segundo plano sin mostrar
+una nueva carga. Tocar la nube abre la pantalla; Sincronizar ahora inicia el envío.
+
+Verificación: TypeScript correcto y ocho pruebas de interfaz aprobadas, incluida
+la regresión de lectura inicial única y agrupación de avisos. Falta comprobar
+visualmente la animación en Android y ambos temas.
+
+## Errores generales y resultados por toast · 14/11/2026
+
+El inventario de interfaces está en
+[Notificaciones toast](../funcionalidades/notificaciones-toast.md#interfaces-revisadas).
+Se conservan errores de campo, bloqueos de guardado y recuperación; los errores
+generales y confirmaciones se muestran arriba, también sobre los modales nativos.
+
+Verificación: TypeScript correcto; suite completa con 517 casos, 478 aprobados,
+cero fallos y 39 integraciones MySQL omitidas (entorno no habilitado). Los casos
+de routing comprueban prioridad de modal anidado, continuidad del aviso al cerrar,
+duración y deduplicación/reintento. Las regresiones de Social comprueban que
+fallos de QR/copia llegan al toast y dejan de repetirse como texto en la vista.
+
+Pendiente en Android: QR inválido/válido, solicitud de ingreso enviada, copiar
+enlace, admitir con reemplazo de acceso, guardado fallido en modal y confirmación
+tras cerrarlo, con teclado abierto y en ambos temas. Las pruebas de componentes
+no ejecutan las ventanas nativas ni certifican el aspecto físico del toast.

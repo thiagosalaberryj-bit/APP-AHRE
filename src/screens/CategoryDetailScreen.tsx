@@ -1,3 +1,5 @@
+import { useAvisoError } from '../hooks/useErrorNotice';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useCallback, useContext, useMemo, useRef, useState } from 'react';
@@ -35,12 +37,13 @@ const MESES = Object.freeze([
 ]);
 function formatearMonto(monto: number, tipo: string) {
   const valor = new Intl.NumberFormat('es-AR', {
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(Number(monto) || 0);
   return tipo === 'ingreso' ? `+$ ${valor}` : `−$ ${valor}`;
 }
 
 export default function PantallaDetalleCategoria({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion);
   const { tema } = useContext(ContextoApariencia);
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleCategoria(tema);
@@ -104,6 +107,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
   );
   const [datosDetalle, establecerDatosDetalle] = useState<{ anio: number; anioMinimoDisponible: number; evolucion: { mes: number; total: number; }[]; resumenMes: { total: number; cantidad: number; }; movimientos: import("../database/types").MovimientoHistorial[]; } | null>(null);
   const [estadoCarga, establecerEstadoCarga] = useState('cargando');
+  useAvisoError(estadoCarga === 'error' ? 'No se pudieron cargar los datos de la categoría. Reintentá la consulta.' : null);
   const [intentoCarga, establecerIntentoCarga] = useState(0);
 
   useFocusEffect(useCallback(() => {
@@ -146,7 +150,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
-      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion alVolver={() => navegacion.goBack()} descripcion="Consultá la evolución y los movimientos de esta categoría." tema={tema} titulo="Detalle de categoría" />}>
+      <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion alVolver={() => volverProtegido()} descripcion="Consultá la evolución y los movimientos de esta categoría." tema={tema} titulo="Detalle de categoría" />}>
 
         <View ref={raizContenido} collapsable={false} style={estilos.cuerpo}>
           <DesplazamientoEncabezado contentContainerStyle={estilos.contenidoCategoria} showsVerticalScrollIndicator={false} onScrollBeginDrag={() => establecerSelectorPeriodo(null)}>
@@ -181,8 +185,8 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                 </View>
               </> : (
                 <Pressable accessibilityRole="button" onPress={() => establecerIntentoCarga(intento => intento + 1)} style={estilos.estadoDetalle}>
-                  <Ionicons color={tema.error} name="alert-circle-outline" size={22} />
-                  <Text style={estilos.textoEstado}>No se pudieron cargar los datos. Tocá para reintentar.</Text>
+
+                  <Text style={estilos.textoEstado}>Reintentar</Text>
                 </Pressable>
               )}
             </View>

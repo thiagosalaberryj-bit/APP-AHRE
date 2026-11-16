@@ -1,3 +1,6 @@
+import { ContextoAvisos } from '../contexts/ToastContext';
+import { useAvisoError, useErrorNotificado } from '../hooks/useErrorNotice';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { SeccionesEncabezado } from '../components/HeaderScrollView';
 import {useCallback,useContext,useMemo,useRef,useState} from 'react';
@@ -24,20 +27,22 @@ const fechaValida=(valor:string)=>{const fecha=new Date(valor);return Number.isN
 const formatearFecha=(valor:string)=>fechaValida(valor)?.toLocaleString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})??'Fecha no disponible';
 
 export default function PantallaSincronizacion({navigation:navegacion}:import('../navigation/types').PropiedadesPantalla){
+  const { mostrarAviso } = useContext(ContextoAvisos);
+  const volverProtegido = useRegresoProtegido(navegacion);
   const {tema}=useContext(ContextoApariencia),{bottom}=useSafeAreaInsets();
   const globales=crearEstilosGlobales(tema),estilos=crearEstilosSincronizacion(tema,bottom);
   const [vista,establecerVista]=useState(obtenerVistaSincronizacion);
   const [datos,establecerDatos]=useState<DatosPendientes>({total:0,registros:[],soloLocal:false,ultimaSincronizacion:null});
-  const [cargando,establecerCargando]=useState(true),[error,establecerError]=useState(''),[oculto,establecerOculto]=useState(true);
+  const [cargando,establecerCargando]=useState(true),[error,establecerError]=useErrorNotificado(''),[oculto,establecerOculto]=useState(true);
   const [mesesAbiertos,establecerMesesAbiertos]=useState<string[]>([]);
-  const [errorReparacion,establecerErrorReparacion]=useState('');
+  const [errorReparacion,establecerErrorReparacion]=useErrorNotificado('');
   const [reparacion,establecerReparacion]=useState<ReparacionPerfil|null>(null);
   const [reparando,establecerReparando]=useState(false);
   const [enviando,establecerEnviando]=useState(false);
-  const secuencia=useRef(0),datosActuales=useRef(datos),cargaActiva=useRef(false);
-  const cargar=useCallback(async(reemplazar=true)=>{
-    if(!reemplazar&&cargaActiva.current)return;
-    const peticion=++secuencia.current;cargaActiva.current=true;establecerCargando(true);
+  const secuencia=useRef(0),datosActuales=useRef(datos),cargaActiva=useRef(false),recargaPendiente=useRef(false);
+  const cargar=useCallback(async(reemplazar=true,mostrarCarga=true)=>{
+    if(cargaActiva.current){if(reemplazar)recargaPendiente.current=true;return;}
+    const peticion=++secuencia.current;cargaActiva.current=true;if(mostrarCarga)establecerCargando(true);
     try{
       const actuales=datosActuales.current;
       const resultado=await consultarPendientes(30,reemplazar?0:actuales.registros.length);
@@ -47,7 +52,10 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       const nuevos={...resultado,registros:reemplazar?resultado.registros:[...actuales.registros,...resultado.registros]};
       datosActuales.current=nuevos;establecerDatos(nuevos);establecerError('');
     }catch{if(peticion===secuencia.current)establecerError('No se pudieron consultar los pendientes. Volvé a intentar.');}
-    finally{if(peticion===secuencia.current){cargaActiva.current=false;establecerCargando(false);}}
+    finally{if(peticion===secuencia.current){
+      cargaActiva.current=false;establecerCargando(false);
+      if(recargaPendiente.current){recargaPendiente.current=false;void cargar(true,false);}
+    }}
   },[]);
   useFocusEffect(useCallback(()=>{
     let activa=true;
@@ -55,10 +63,12 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       const privado=usuario?await consultarSaldoOculto(usuario.id):true;
       if(activa)establecerOculto(privado);
     }).catch(()=>{if(activa)establecerOculto(true);});
-    const dejar=observarSincronizacion(v=>{establecerVista(v);void cargar();});
-    void cargar();const dejarSocial=observarSocialOnline(()=>{void cargar();});
-    return()=>{activa=false;secuencia.current++;cargaActiva.current=false;dejar();dejarSocial();};
+    const dejar=observarSincronizacion(v=>{establecerVista(v);void cargar(true,false);});
+    const dejarSocial=observarSocialOnline(()=>{void cargar(true,false);});
+    return()=>{activa=false;secuencia.current++;cargaActiva.current=false;recargaPendiente.current=false;dejar();dejarSocial();};
   },[cargar]));
+  useAvisoError(['conflicto','sesion','revocado'].includes(vista.estado) ? vista.detalle : null);
+  useAvisoError(reparacion ? 'El servidor rechazó el correo de un cambio pendiente. Corregilo en Perfil y volvé aquí para confirmarlo.' : null);
   const secciones=useMemo(()=>{
     const grupos=new Map<string,{titulo:string;data:RegistroPendiente[]}>();
     for(const registro of datos.registros){
@@ -82,7 +92,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       }},
     ]);
   };
-  return <SafeAreaView edges={['top']} style={globales.areaSegura}><MarcoEncabezado style={globales.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>navegacion.goBack()} mostrarSincronizacion={false}/>}>
+  return <SafeAreaView edges={['top']} style={globales.areaSegura}><MarcoEncabezado style={globales.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Sincronización" descripcion="Tus cambios, del teléfono a la nube." alVolver={()=>volverProtegido()} mostrarSincronizacion={false}/>}>
 
     <SeccionesEncabezado sections={secciones} keyExtractor={r=>r.id} contentContainerStyle={estilos.contenido} stickySectionHeadersEnabled={false}
       ListHeaderComponent={<View style={estilos.resumen}>
@@ -101,16 +111,16 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
           </View>
         </View>
         {datos.soloLocal?<Text style={estilos.texto}>Esta cuenta contiene ejemplos locales y no se envía al servidor.</Text>:null}
-        {vista.detalle&&vista.estado!=='offline'?<Text style={estilos.texto}>{vista.detalle}</Text>:null}
-        <Pressable accessibilityRole="button" accessibilityState={{disabled:deshabilitado,busy:ocupado}} disabled={deshabilitado} onPress={()=>{establecerEnviando(true);void sincronizarSesion().then(()=>sincronizarSocialOnline()).then(()=>cargar()).catch(async fallo=>{await cargar();establecerError(fallo instanceof Error?fallo.message:'No se pudo sincronizar. Volvé a intentar.');}).finally(()=>establecerEnviando(false));}} style={[estilos.boton,deshabilitado&&estilos.deshabilitado]}>
+
+        <Pressable accessibilityRole="button" accessibilityState={{disabled:deshabilitado,busy:ocupado}} disabled={deshabilitado} onPress={()=>{establecerEnviando(true);void sincronizarSesion().then(()=>sincronizarSocialOnline()).then(async()=>{await cargar();const actual=obtenerVistaSincronizacion();if(actual.estado==='online'&&!actual.pendientes)mostrarAviso('Sincronización completada.',{tipo:'exito'});}).catch(async fallo=>{await cargar();establecerError(fallo instanceof Error?fallo.message:'No se pudo sincronizar. Volvé a intentar.');}).finally(()=>establecerEnviando(false));}} style={[estilos.boton,deshabilitado&&estilos.deshabilitado]}>
           <Ionicons name="sync-outline" size={18} color={tema.botonPrincipalTexto}/><Text style={estilos.textoBoton}>{ocupado?'Sincronizando…':'Sincronizar ahora'}</Text>
         </Pressable>
         {reparacion?<View style={estilos.reparacion}>
-          <Text style={estilos.texto}>El servidor rechazó el correo de un cambio pendiente. Corregilo en Perfil y volvé aquí para confirmarlo.</Text>
+
           <Pressable accessibilityRole="button" disabled={ocupado} onPress={()=>navegacion.navigate(RUTAS.PERFIL)} style={estilos.boton}><Text style={estilos.textoBoton}>Corregir en Perfil</Text></Pressable>
           <Pressable accessibilityRole="button" disabled={ocupado||reparacion.correoAnterior===reparacion.correoNuevo} onPress={confirmarReparacion} style={[estilos.boton,(ocupado||reparacion.correoAnterior===reparacion.correoNuevo)&&{opacity:0.5}]}><Text style={estilos.textoBoton}>Aplicar correo corregido</Text></Pressable>
         </View>:null}
-        {errorReparacion||error?<View style={estilos.error}><Text accessibilityRole="alert" style={estilos.textoError}>{errorReparacion||error}</Text><Pressable accessibilityRole="button" onPress={()=>{void cargar();}} style={estilos.reintentar}><Text style={estilos.valor}>Volver a intentar</Text></Pressable></View>:null}
+        {errorReparacion||error?<View><Pressable accessibilityRole="button" onPress={()=>{void cargar();}} style={estilos.reintentar}><Text style={estilos.valor}>Volver a intentar</Text></Pressable></View>:null}
         {datos.total>0?<View style={estilos.encabezadoLista}><Text style={estilos.titulo}>Cambios pendientes</Text><Text style={estilos.ayuda}>Más recientes primero · Hora local</Text></View>:null}
       </View>}
       renderSectionHeader={({section})=><EncabezadoSeccionPlegable tema={tema} titulo={section.titulo} expandido={mesesAbiertos.includes(section.key)}

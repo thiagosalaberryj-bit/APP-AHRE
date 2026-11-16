@@ -1,5 +1,22 @@
 # Interfaces de Social
 
+## Balance y reparto de sala
+
+«Quién le debe a quién» es una sección plegable, abierta al entrar a una sala.
+El encabezado tiene una flecha e informa su estado expandido a accesibilidad.
+El reparto conserva una separación pequeña con el recuadro de balance; al abrirlo
+se conservan los importes, las direcciones de deuda y los accesos a cada gasto.
+Plegar la sección no modifica el cálculo del balance ni los pagos.
+Si se pliega, los refrescos y el regreso desde un gasto no la vuelven a abrir
+mientras se conserva la pantalla de sala.
+
+Las asociaciones financieras locales usan los mismos identificadores visibles
+que las partes (incluido «vos»). Esto evita marcar como pendiente un pago propio
+ya asociado a un depósito o movimiento. Se corrigió el caso «Café ya pagado de
+prueba»: su parte de $750 está saldada y financiada, y no bloquea el cierre.
+Si se quita la asociación, sigue siendo necesario registrar dónde se pagó antes
+de cerrar; no se presenta como una nueva deuda ni se repite el pago.
+
 ## Personas, solicitudes y permisos de la sala
 
 Personas separa Integrantes e Ingresos. Integrantes reutiliza la búsqueda, los
@@ -668,7 +685,7 @@ una sola tarjeta; Mis movimientos muestra una tarjeta por operación. Los avisos
 también se consultan desde la persona, en su historial de solicitudes.
 Los permisos siguen comprobándose en el servicio y en el servidor. Una solicitud
 sobre una sala cerrada ya no presenta acciones de aceptación. Los fallos al
-agregar integrantes se muestran dentro del modal, conservando la selección.
+agregar integrantes se muestran con el toast por encima del modal, conservando la selección.
 
 `useRoomOnline.ts` comparte únicamente lecturas simultáneas por cuenta/sala y
 vuelve a leer si recibe novedades durante una consulta. No mantiene una copia
@@ -785,3 +802,32 @@ operaciones financieras, incluso en la primera entrada offline y con cachés
 creadas por versiones anteriores. Calcular el indicador no escribe en SQLite
 ni necesita una sincronización para que aparezca el número. Las selecciones
 y decisiones de incorporación existentes se conservan.
+
+## Avisos de resultados
+
+Los errores generales y los resultados de acciones se anuncian con el toast
+superior, también en modales de Social. Escanear un QR válido que requiere
+completar la contraseña muestra un aviso informativo; solicitud enviada,
+enlace copiado, respuesta a un vínculo e ingreso aceptado usan confirmaciones.
+Las validaciones de campos y los estados de negocio permanecen en su lugar.
+El inventario de componentes y las reglas están en
+[Notificaciones toast](../funcionalidades/notificaciones-toast.md#interfaces-revisadas).
+
+## Ingresos, decisiones y registros pendientes
+
+- Ingreso/egreso y Escanear reutilizan `DepositRequiredState` cuando falta un depósito; muestran la misma tarjeta y acceso a Nuevo depósito.
+- Personas muestra el contador de solicitudes de vínculo recibidas. Salas indica cuántas de las tres salas propias abiertas todavía pueden crearse; unirse sigue disponible sin cupos.
+- Aceptar/rechazar reutiliza `RequestDecisionActions`: mismo tamaño, indicador solo en la acción elegida y ambas acciones bloqueadas durante el envío. El formulario de aceptación también muestra carga al confirmar.
+- Buscar persona, nombre, apellido y apodo usan `SocialTextField`: borde gris permanente, foco del tema y errores junto al campo. Nueva persona/Seleccionar persona conserva el selector segmentado y una lista buscable. Los selectores permiten incluir fichas archivadas sin desarchivarlas.
+- QR y enlace usan el mismo ingreso. Una cuenta autenticada ve su identidad del perfil y solo completa la contraseña. La espera queda visible y evita reenviar; aceptación/rechazo actualiza el modal y genera el aviso correspondiente.
+- Una salida con gastos muestra Revisión pendiente y accesos a los gastos afectados. Confirmar revisión no cambia importes ni pagadores. El botón Cerrar sala permanece bloqueado mientras falte esa revisión o registros de cualquier cuenta.
+- Social muestra Registros propios pendientes a la persona expulsada. El modal existente permite elegir únicamente sus propios depósitos o movimientos, sin abrir el detalle completo de la sala.
+
+
+## Correcciones de acceso, permisos e invitaciones · 16/11/2026
+
+Sin hardware biométrico o sin huella configurada, Inicio deriva a Login y exige contraseña; nunca abre Dashboard directamente. Login recupera el correo de la cuenta al reabrir si «Recordarme» está activo y la sesión sigue vigente; la contraseña permanece vacía. Cerrar sesión o perder su autorización limpia el correo recordado.
+
+Nombre y apellido del registro fuerzan una única línea en el input desde el primer render. Aceptar/rechazar tienen separación explícita. Quitar de una sala muestra los gastos afectados como lista desplazable, con confirmación visible. Una solicitud de una cuenta amiga se acepta directamente con su ficha confirmada; el servidor rechaza cualquier intento de asignarla a otra.
+
+Notificaciones muestra primero Paso 1 para habilitar los avisos y, al concederlo, Paso 2 para configurar horarios precisos, con el mismo contenedor y acceso por flecha. El Paso 2 desaparece cuando Android confirma el permiso. Al fondo del modal de ajustes queda la fila Horarios precisos, con el estilo de Perfil y el estado real; abre los ajustes de Android para activar o desactivar el permiso y vuelve a consultarlo al regresar. Los horarios precisos reducen retrasos de recordatorios locales, no cambian la entrega del proveedor push. Las push y los recordatorios muestran el mismo título y mensaje del historial, sin sustituirlos por «Tenés que revisar algo en AHRE»; se retira el control que ocultaba ese contenido. El campo mostrarDetalles se conserva solo por compatibilidad del contrato.

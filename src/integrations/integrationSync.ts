@@ -1,3 +1,5 @@
+import {obtenerRevisionLectura} from '../notifications/notificationService';
+import {iniciarActividadReinicio} from '../development/testResetState';
 import { obtenerSesionActual } from '../authentication/sessionService';
 import { obtenerSesionRemota, solicitarRemoto } from '../sync/remote';
 import { ejecutarLecturaConConexion } from '../database/connectionQueue';
@@ -10,7 +12,8 @@ import type { AjustesAvisos, Aviso } from '../notifications/types';
 let enCurso: Promise<void> | null = null;
 export function sincronizarIntegraciones(soloCancelaciones = false, pedirAutomatica = true): Promise<void> {
   if (enCurso) return enCurso;
-  enCurso = ejecutarSincronizacion(soloCancelaciones, pedirAutomatica).finally(() => { enCurso = null; });
+  const terminar=iniciarActividadReinicio();if(!terminar)return Promise.resolve();
+  enCurso = ejecutarSincronizacion(soloCancelaciones, pedirAutomatica).finally(() => { enCurso = null; terminar(); });
   return enCurso;
 }
 async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatica: boolean) {
@@ -61,10 +64,11 @@ async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatic
     // Solo la página reciente. Las anteriores se solicitan desde el historial.
     let antes: string | null = '';
     {
+      const revisionLectura=obtenerRevisionLectura(usuario.id);
       const pagina: { avisos: Aviso[]; siguiente: string | null; noVistas?:number } = await solicitarRemoto('/notificaciones?limite=10&antes=' + encodeURIComponent(antes || ''), undefined, remota.token);
       if (!await vigente()) return;
       await ejecutarTransaccion(async c => {
-        if(Number.isFinite(pagina.noVistas))await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',pagina.noVistas);
+        if(revisionLectura===obtenerRevisionLectura(usuario.id)&&Number.isFinite(pagina.noVistas))await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',pagina.noVistas);
         for (const aviso of pagina.avisos) {
           const vistaLocal = await leerDato<string | null>(usuario.id, 'avisos:visto:' + aviso.id, null, c);
           if (vistaLocal && vistaLocal >= aviso.fecha) aviso.vista = true;

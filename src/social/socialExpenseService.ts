@@ -15,7 +15,7 @@ async function prepararGasto(datos: import('./types').BorradorGasto, contexto: C
   exigir(!previo || previo.version === datos.version, 'El gasto cambió desde que lo abriste. Volvé a abrirlo antes de editar.');
   const anteriores = registros.partes.filter(p => p.gasto_compartido_id === previo?.id);
   exigir(!previo || !registros.pagos.some(p => p.gasto_compartido_id === previo.id || anteriores.some(a => a.id === p.participante_gasto_id)), 'Este gasto ya tiene movimientos confirmados y no puede editarse como borrador.');
-  const integrantes = registros.integrantes.filter(p => p.sala_id === sala.id && p.activa && registros.personas.some(x => x.id === p.persona_id && x.activa)).map(p => p.persona_id);
+  const integrantes = registros.integrantes.filter(p => p.sala_id === sala.id && p.activa && registros.personas.some(x => x.id === p.persona_id)).map(p => p.persona_id);
   const permitidas = [...new Set([...integrantes, ...anteriores.map(p => p.persona_id)])];
   const pagadorId = idPersistente(datos.pagadorId, contexto);
   exigir(integrantes.includes(pagadorId) || previo?.pagador_id === pagadorId, 'El pagador ya no está disponible en la sala.');

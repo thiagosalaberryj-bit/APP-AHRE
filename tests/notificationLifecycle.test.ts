@@ -17,17 +17,22 @@ test('deuda: pago parcial mantiene avisos; saldo cero resuelve todos y cancela p
  const e=await escenario(t),persona=await e.guardarPersona({nombre:'Lucía',apellido:'Pérez',apodo:'Lu'});assert.ok(persona);
  const deuda=await e.crearDeudaPersonal({personaId:persona.id,direccion:'debo',monto:'100',descripcion:'Préstamo'});
  await e.reconciliarRecordatorios();
+ const programada=()=>JSON.parse(String(e.base.prepare("SELECT datos FROM programaciones_avisos WHERE json_extract(datos,'$.destino.id')=? ORDER BY fecha LIMIT 1").get(deuda.id)!.datos));
+ assert.equal(programada().titulo,'Le debés a Lucía Pérez');assert.equal(programada().mensaje,'Saldo pendiente: $ 100,00.');
  const programadas=()=>e.base.prepare("SELECT COUNT(*) n FROM programaciones_avisos WHERE json_extract(datos,'$.destino.id')=?").get(deuda.id)!.n;
  assert.equal(programadas(),60);
  e.viajar('2026-11-09T13:00:00Z');await e.reconciliarRecordatorios();
  await e.registrarPagoDeuda({deudaId:deuda.id,monto:'40',claveOperacion:'parcial-notificacion'},{depositoId:e.deposito.id});
  await e.reconciliarRecordatorios();
+ assert.equal(programada().mensaje,'Saldo pendiente: $ 60,00.','El aviso futuro muestra el saldo restante');
  assert.equal(e.base.prepare("SELECT resuelta FROM avisos_locales WHERE json_extract(datos,'$.destino.id')=?").get(deuda.id)!.resuelta,0);
  e.viajar('2026-11-10T13:00:00Z');await e.reconciliarRecordatorios();
  assert.equal(e.base.prepare("SELECT COUNT(*) n FROM avisos_locales WHERE json_extract(datos,'$.destino.id')=? AND resuelta=0").get(deuda.id)!.n,2);
- e.base.prepare("INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,'deudas',?)").run(e.usuario.id,JSON.stringify([{id:'acuerdo-online',estado:'aceptada',origenLocalId:deuda.id,pendiente:60,esDeudor:true}]));
+ e.base.prepare("INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,'deudas',?)").run(e.usuario.id,JSON.stringify([{id:'acuerdo-online',estado:'aceptada',origenLocalId:deuda.id,otraPersonaNombre:'Lucía Pérez',pendiente:60,esDeudor:true}]));
  await e.reconciliarRecordatorios();
  assert.equal(e.base.prepare("SELECT COUNT(*) n FROM avisos_locales WHERE json_extract(datos,'$.destino.id')=? AND resuelta=0").get(deuda.id)!.n,2,'Vincular la deuda online no la salda');
+ assert.equal(programadas(),0,'No duplica los recordatorios del acuerdo con los de la deuda personal');
+ const online=[...e.avisosNativos.values()].find(a=>a.destino.id==='acuerdo-online')!;assert.equal(online.titulo,'Le debés a Lucía Pérez');assert.equal(online.mensaje,'Saldo pendiente: $ 60,00.');
  e.base.prepare("DELETE FROM datos_sociales_online WHERE clave='deudas'").run();
  await e.registrarPagoDeuda({deudaId:deuda.id,monto:'60',claveOperacion:'final-notificacion'},{depositoId:e.deposito.id});await e.reconciliarRecordatorios();
  assert.equal(programadas(),0);
@@ -49,7 +54,14 @@ test('no registrar un día conserva el aviso informativo y programa el siguiente
 test('recurrencia anticipada queda pendiente hasta confirmar su ocurrencia; los recordatorios posteriores se cancelan',async t=>{
  const e=await escenario(t),fecha='2026-11-10T12:00:00.000Z';
  const r=await e.recurrenciasRepositorio.crear({deposito_id:e.deposito.id,categoria:'alimentacion',tipo:'egreso',monto:10,descripcion:'Recurrente',frecuencia:'mensual',fecha_inicio:fecha,fecha_fin:null,proxima_ejecucion:fecha,zona_horaria:'America/Argentina/Buenos_Aires',dia_ancla:10,activa:1});
- await e.reconciliarRecordatorios();e.viajar('2026-11-09T13:00:00Z');await e.reconciliarRecordatorios();
+ await e.reconciliarRecordatorios();
+ const recordatorios=()=>[...e.avisosNativos.values()].filter(a=>a.destino.id===r.id);
+ assert.ok(recordatorios().some(a=>a.titulo==='Se acerca: Recurrente'&&a.mensaje==='Depósito: Caja. Revisá la próxima ocurrencia.'));
+ assert.ok(recordatorios().some(a=>a.titulo==='Movimiento para revisar: Recurrente'&&a.mensaje==='Depósito: Caja. Confirmalo desde las recurrencias.'));
+ assert.ok(recordatorios().some(a=>a.titulo==='Movimiento pendiente: Recurrente'&&a.mensaje==='Depósito: Caja. Revisá y confirmá el movimiento.'));
+ e.base.prepare('UPDATE depositos SET nombre=? WHERE id=?').run('Efectivo',e.deposito.id);e.base.prepare('UPDATE recurrencias SET descripcion=? WHERE id=?').run('Almuerzo',r.id);await e.reconciliarRecordatorios();
+ assert.ok(recordatorios().every(a=>a.titulo.includes('Almuerzo')&&a.mensaje.includes('Depósito: Efectivo.')),'Actualiza los nombres en las alarmas futuras');
+ e.viajar('2026-11-09T13:00:00Z');await e.reconciliarRecordatorios();
  const aviso=e.base.prepare("SELECT id,resuelta FROM avisos_locales WHERE json_extract(datos,'$.destino.id')=?").get(r.id)!;assert.equal(aviso.resuelta,0);
  e.viajar('2026-11-11T13:00:00Z');await e.reconciliarRecordatorios();
  assert.equal(e.base.prepare('SELECT resuelta FROM avisos_locales WHERE id=?').get(aviso.id)!.resuelta,0);
@@ -61,8 +73,10 @@ test('recurrencia anticipada queda pendiente hasta confirmar su ocurrencia; los 
 test('sala: repetición offline usa días fijos y se cancela al incorporar todas las operaciones',async t=>{
  const e=await escenario(t);
  await e.ejecutarTransaccion(c=>e.guardarDato(c,e.usuario.id,'dato-prueba',{}));
- e.base.prepare("INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,'operaciones',?)").run(e.usuario.id,JSON.stringify([{clave:'op-sala',salaId:'sala-prueba',incorporada:false}]));
- await e.reconciliarRecordatorios();e.viajar('2026-11-10T13:00:00Z');await e.reconciliarRecordatorios();
+ e.base.prepare("INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,'operaciones',?)").run(e.usuario.id,JSON.stringify([{clave:'op-sala',salaId:'sala-prueba',salaNombre:'Encuentro de prueba',incorporada:false}]));
+ await e.reconciliarRecordatorios();
+ const aviso=[...e.avisosNativos.values()].find(a=>a.tipo==='salas')!;assert.equal(aviso.titulo,'Encuentro de prueba: movimientos pendientes');assert.equal(aviso.mensaje,'Tenés 1 movimiento para incorporar a un depósito.');
+ e.viajar('2026-11-10T13:00:00Z');await e.reconciliarRecordatorios();
  assert.equal(e.base.prepare("SELECT COUNT(*) n FROM avisos_locales WHERE json_extract(datos,'$.tipo')='salas' AND resuelta=0").get()!.n,2);
  e.base.prepare("UPDATE datos_sociales_online SET datos='[]' WHERE clave='operaciones'").run();await e.reconciliarRecordatorios();
  assert.equal(e.base.prepare("SELECT COUNT(*) n FROM avisos_locales WHERE json_extract(datos,'$.tipo')='salas' AND resuelta=0").get()!.n,0);
@@ -146,4 +160,33 @@ test('el error nativo de programación llega a Guardar y el siguiente intento pu
 test('si el sistema pierde una alarma futura, la app la repone aunque SQLite conserve el identificador',async t=>{
  const e=await escenario(t);await e.reconciliarRecordatorios();const id=[...e.avisosNativos.keys()][0];
  e.avisosNativos.delete(id);await e.reconciliarRecordatorios();assert.ok(e.avisosNativos.has(id));
+});
+
+test('acuerdo online sin deuda local identifica a la persona y usa el saldo remoto restante',async t=>{
+ const e=await escenario(t);
+ const acuerdos=[{id:'cobro-online',estado:'aceptada',otraPersonaNombre:'Martina Gómez',pendiente:1250.5,monto:2000,esDeudor:false}];
+ e.base.prepare("INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,'deudas',?)").run(e.usuario.id,JSON.stringify(acuerdos));
+ await e.reconciliarRecordatorios();
+ const avisos=()=>[...e.avisosNativos.values()].filter(a=>a.destino.id==='cobro-online');
+ assert.equal(avisos().length,60);assert.ok(avisos().every(a=>a.titulo==='Martina Gómez te debe'&&a.mensaje==='Saldo pendiente: $ 1.250,50.'));
+ acuerdos[0].pendiente=1000.25;acuerdos[0].otraPersonaNombre='Martina Pérez';
+ e.base.prepare("UPDATE datos_sociales_online SET datos=? WHERE usuario_id=? AND clave='deudas'").run(JSON.stringify(acuerdos),e.usuario.id);
+ await e.reconciliarRecordatorios();
+ assert.equal(avisos().length,60);assert.ok(avisos().every(a=>a.titulo==='Martina Pérez te debe'&&a.mensaje==='Saldo pendiente: $ 1.000,25.'));
+});
+
+test('sala usa el nombre del detalle actualizado y sus pendientes sin duplicar los de operaciones',async t=>{
+ const e=await escenario(t);
+ const detalle:import('../src/social/online/types.ts').RespuestaSala={
+  sala:{id:'sala-online',nombre:'Cena compartida',descripcion:'',icono:'people',color:'verde',fecha:'2026-11-09',estado:'abierta',revision:1,
+   participantes:[{id:'yo',nombre:'Prueba',activa:true}],gastos:[{id:'gasto',pagadorId:'yo',categoriaId:'alimentacion',descripcion:'Cena',monto:20,fecha:'2026-11-09',version:1,reparto:'iguales',partes:[{personaId:'yo',monto:20,orden:0}],pagaron:[],estado:'vigente'}]},
+  personaPropiaId:'yo',administrador:true,solicitudes:[],misFinanzas:[{clave:'compra:gasto',tipo:'egreso',monto:20,categoria:'alimentacion',descripcion:'Cena',fecha:'2026-11-09',salaId:'sala-online',gastoId:'gasto'}],
+ };
+ e.base.prepare("INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,'operaciones',?)").run(e.usuario.id,JSON.stringify([{...detalle.misFinanzas![0],salaNombre:'Nombre viejo'}]));
+ e.base.prepare('INSERT INTO salas_online_locales(usuario_id,sala_id,datos,administrador,persona_propia_id,fecha_actualizacion) VALUES(?,?,?,1,?,?)').run(e.usuario.id,detalle.sala.id,JSON.stringify(detalle),'yo','2026-11-09');
+ await e.reconciliarRecordatorios();
+ const avisos=()=>[...e.avisosNativos.values()].filter(a=>a.tipo==='salas');
+ assert.equal(avisos().length,60);assert.ok(avisos().every(a=>a.titulo==='Cena compartida: movimientos pendientes'&&a.mensaje==='Tenés 1 movimiento para incorporar a un depósito.'));
+ detalle.sala.nombre='Cena de amigos';e.base.prepare('UPDATE salas_online_locales SET datos=? WHERE usuario_id=? AND sala_id=?').run(JSON.stringify(detalle),e.usuario.id,detalle.sala.id);
+ await e.reconciliarRecordatorios();assert.equal(avisos().length,60);assert.ok(avisos().every(a=>a.titulo==='Cena de amigos: movimientos pendientes'));
 });

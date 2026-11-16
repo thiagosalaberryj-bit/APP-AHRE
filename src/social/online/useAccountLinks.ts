@@ -12,5 +12,5 @@ export default function useVinculosOnline(usuarioId:string){
     cargar();const dejar=observarSocialOnline(cargar);
     return()=>{activo=false;dejar();};
   },[usuarioId]);
-  return {vinculos,sinConexion:['offline','sesion','revocado','local'].includes(conexion.estado)};
+  return {vinculos,sinConexion:!vinculos.some(v=>v.id.startsWith('demo-social:'))&&['offline','sesion','revocado','local'].includes(conexion.estado)};
 }

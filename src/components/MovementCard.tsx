@@ -7,7 +7,7 @@ import {crearEstilosTarjetaMovimiento} from '../styles/MovementCardStyles';
 
 function formatearMontoLista(monto: number, tipo: string) {
   if (!Number.isFinite(monto)) return '—';
-  const valor = `$${monto.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
+  const valor = `$${monto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   return tipo === 'ingreso' || tipo === 'transferencia_entrada' ? `+${valor}` : `-${valor}`;
 }
 

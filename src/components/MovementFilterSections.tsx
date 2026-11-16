@@ -292,6 +292,7 @@ export function FiltroCategoriasMovimientos({
   categoriaFiltroIds: string[];
   establecerCategoriaFiltroIds: (ids: string[]) => void;
 }) {
+  const seleccionadas= categoriaFiltroIds.length===(categoriasDisponiblesFiltro||[]).length&&(categoriasDisponiblesFiltro||[]).every(c=>categoriaFiltroIds.includes(c.id))?[]:categoriaFiltroIds;
   return (
     <SeccionFiltro
       titulo="Categorías"
@@ -304,15 +305,14 @@ export function FiltroCategoriasMovimientos({
       <SelectorCategoria
         tema={tema}
         estilosGlobales={estilosGlobales}
-        estilosMovimiento={estilosSelectores}
-        estiloTarjeta={estilos.tarjetaCategoriaFiltro}
+        estilosMovimiento={estilos}
         etiqueta=""
         categorias={categoriasDisponiblesFiltro}
         tipoMovimiento={tipoMovimiento}
-        variante="grilla"
+        variante="lista"
         seleccionMultiple
-        seleccionadasIds={categoriaFiltroIds}
-        alCambiarMulti={establecerCategoriaFiltroIds}
+        seleccionadasIds={seleccionadas}
+        alCambiarMulti={ids=>establecerCategoriaFiltroIds(ids.length===(categoriasDisponiblesFiltro||[]).length&&(categoriasDisponiblesFiltro||[]).every(c=>ids.includes(c.id))?[]:ids)}
       />
     </SeccionFiltro>
   );

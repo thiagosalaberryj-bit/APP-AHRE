@@ -1,3 +1,4 @@
+import {prepararAjustesVisuales} from './seedVisualAdjustments';
 import { prepararAvisosDemo } from './seedNotificationPreview';
 import {prepararVistaSocialOnline} from './seedSocialOnlinePreview';
 import type { Deposito } from '../database/types';
@@ -81,6 +82,7 @@ async function prepararCuentaYDatos(incluirSocial: boolean,sincronizar:boolean,v
     if (incluirSocial) await prepararSocialPrueba(usuario, conexion, depositos, diasAntes(1));
     if(incluirSocial&&vistaSocialOnline&&!sincronizar)await prepararVistaSocialOnline(usuario.id,conexion,depositos);
     if(incluirSocial&&vistaSocialOnline&&!sincronizar)await prepararAvisosDemo(usuario.id,conexion);
+    if(incluirSocial&&vistaSocialOnline&&!sincronizar)await prepararAjustesVisuales(usuario.id,conexion);
     if (volumenMovimientos) await prepararVolumenMovimientos(usuario.id, conexion);
   });
 

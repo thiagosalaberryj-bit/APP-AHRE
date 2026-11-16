@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import type { NombreIcono } from '../constants/movimientos';
@@ -47,10 +48,11 @@ function prepararMovimiento(movimiento: import('../database/types').Movimiento, 
 const ACCIONES_RAPIDAS = Object.freeze([
   { etiqueta: 'Ingreso', icono: 'add-circle', ruta: RUTAS.INGRESO },
   { etiqueta: 'Egreso', icono: 'remove-circle', ruta: RUTAS.EGRESO },
-  { etiqueta: 'OCR', icono: 'scan-sharp', ruta: RUTAS.OCR },
+  { etiqueta: 'Escanear', icono: 'scan-sharp', ruta: RUTAS.OCR },
 ]);
 
 export default function PantallaPanel({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
+  useRegresoProtegido(navegacion);
   const { tema } = useContext(ContextoApariencia);
   const contextoAvisos = useContext(ContextoAvisos);
   const mostrarAviso = contextoAvisos?.mostrarAviso;
@@ -256,8 +258,8 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
             </View>
 
             {errorCarga ? (
-              <View accessibilityRole="alert" style={estilos.estadoError}>
-                <Text style={estilos.textoError}>{errorCarga}</Text>
+              <View>
+
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => cargarDatos(!datosCargados.current)}

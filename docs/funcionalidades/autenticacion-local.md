@@ -63,6 +63,8 @@ el Dashboard. Si no hay sesión, reemplaza Inicio por Login sin solicitar
 biometría. Si el dispositivo no tiene biometría configurada, ofrece Login con
 contraseña. Inicio no queda en la pila después del destino.
 
+Login recupera el correo actual de la cuenta al reabrir solo si Recordarme está activo y la sesión sigue vigente. La contraseña siempre permanece vacía. Cerrar o perder la sesión elimina el correo recordado, por lo que el siguiente Login empieza vacío.
+
 El botón de Perfil elimina la sesión local y el token guardado, sin borrar la cuenta ni los pendientes. También ofrece sincronizar y desvincular, que necesita conexión y confirmar todos los pendientes.
 
 ## Navegación

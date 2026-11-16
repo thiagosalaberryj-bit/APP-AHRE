@@ -5,6 +5,8 @@ import { ESPACIADO, TIPOGRAFIA } from './globalStyles';
 
 export function crearEstilosAutenticacion(tema: Tema) {
   const estilos = StyleSheet.create({
+    filaIdentidad:{flexDirection:'row',gap:ESPACIADO.pequeno,alignItems:'flex-start'},
+    columnaIdentidad:{flex:1,minWidth:0},
     formulario: {
       gap: ESPACIADO.grande,
     },

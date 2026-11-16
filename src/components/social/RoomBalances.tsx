@@ -1,4 +1,5 @@
 import EtiquetaImporte from '../AmountLabel';
+import {useState} from 'react';
 import crearEstilosSala from '../../styles/social/RoomDetailsStyles';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { View, Text, Pressable } from 'react-native';
@@ -28,6 +29,7 @@ export default function BalancesSala(propiedades: import('../../social/types').A
     tema
   } = aspecto;
   const provisional = sala.estado === 'abierta';
+  const [desplegado,cambiarDesplegado]=useState(true);
   const pendientes = sala.gastos.flatMap(gasto => gasto.partes.filter(parte => parte.tipo !== 'saldado' && !parte.cancelada).map(parte => ({
     gasto,
     parte
@@ -41,8 +43,12 @@ export default function BalancesSala(propiedades: import('../../social/types').A
         </View>
         {provisional ? <Text style={estilosGlobales.textoAyuda}>Reparto provisional. Al cerrar la sala, las partes sin pagar quedarán como deudas.</Text> : null}
       </View>
-      <Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.tituloFila]}>Quién le debe a quién</Text>
-      {pendientes.length ? pendientes.map(({
+      <View style={estilos.detalleBalances}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Quién le debe a quién" accessibilityState={{expanded:desplegado}} onPress={()=>cambiarDesplegado(actual=>!actual)} style={estilos.encabezadoBalances}>
+        <Text style={[estilosGlobales.encabezadoSeccion,estilos.tituloFila,estilos.textoFlexible]}>Quién le debe a quién</Text>
+        <Ionicons name={desplegado?'chevron-up':'chevron-down'} size={22} color={tema.foco}/>
+      </Pressable>
+      {desplegado ? pendientes.length ? pendientes.map(({
       gasto,
       parte
     }) => {
@@ -70,6 +76,7 @@ export default function BalancesSala(propiedades: import('../../social/types').A
               </View>
             </View>
           </Pressable>;
-    }) : <EstadoVacio icono="checkmark-circle-outline" titulo="Sin balances pendientes" descripcion={sala.gastos.length ? 'Todos pagaron su parte. No quedó ninguna deuda pendiente.' : 'Todavía no hay gastos ni deudas en esta sala.'} {...aspecto} />}
+    }) : <EstadoVacio icono="checkmark-circle-outline" titulo="Sin balances pendientes" descripcion={sala.gastos.length ? 'Todos pagaron su parte. No quedó ninguna deuda pendiente.' : 'Todavía no hay gastos ni deudas en esta sala.'} {...aspecto} /> : null}
+      </View>
     </View>;
 }

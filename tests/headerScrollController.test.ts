@@ -9,17 +9,6 @@ test('solo pliega al bajar con un gesto y vuelve a mostrar el encabezado al lleg
   control.iniciarArrastre(300); control.desplazar(320); assert.deepEqual(estado, { desplegado: false, desplazado: true });
   control.desplazar(100); assert.deepEqual(estado, { desplegado: false, desplazado: true });
   control.desplazar(0); assert.deepEqual(estado, { desplegado: true, desplazado: false });
-  control.alternar(); assert.deepEqual(estado, { desplegado: true, desplazado: false });
-});
-
-test('permite desplegar y plegar abajo sin que la inercia anule la elección manual', () => {
-  let estado: EstadoEncabezado = { desplegado: true, desplazado: false };
-  const control = crearControlEncabezado(nuevo => { estado = nuevo; control.terminarTransicion(); }, () => {});
-  control.iniciarArrastre(0); control.desplazar(200); control.terminarArrastre(); control.iniciarInercia();
-  control.alternar(); control.desplazar(230); assert.equal(estado.desplegado, true);
-  control.alternar(); assert.equal(estado.desplegado, false);
-  control.alternar(); control.terminarMovimiento(); control.iniciarArrastre(230); control.desplazar(260);
-  assert.equal(estado.desplegado, false);
 });
 
 test('volver al inicio muestra el encabezado, oculta las flechas y descarta la inercia anterior', () => {

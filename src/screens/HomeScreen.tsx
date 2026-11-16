@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import * as AutenticacionLocal from 'expo-local-authentication';
@@ -37,6 +38,7 @@ const ETAPAS_CARGA = [
 ];
 
 export default function PantallaInicio({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+  useRegresoProtegido(navegacion);
   const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const contextoAvisos = useContext(ContextoAvisos);
   const mostrarAviso = contextoAvisos?.mostrarAviso;
@@ -107,10 +109,6 @@ export default function PantallaInicio({ navigation: navegacion }: import('../na
       ]);
 
       if (!hayHardware || !hayHuellaConfigurada) {
-        mostrarAviso?.(
-          'No hay una huella configurada en este dispositivo. Iniciá sesión con tu contraseña.',
-          { tipo: 'informacion' },
-        );
         navegacion.replace(RUTAS.INICIO_SESION);
         return;
       }

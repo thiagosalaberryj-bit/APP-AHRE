@@ -19,3 +19,13 @@ test('activar avisos usa el permiso actual, abre Ajustes al estar bloqueado y no
  await a.activarAvisosTelefono();assert.equal(solicitudes,1);assert.equal(ajustes,1);
  granted=false;plataforma.Version=32;await a.activarAvisosTelefono();assert.equal(ajustes,2);assert.equal(solicitudes,1);
 });
+
+
+test('el recordatorio nativo conserva título y mensaje del historial aunque la preferencia antigua oculte detalles',async()=>{
+ let contenido:any=null;const {cargar}=crearCargadorComponentes(process.cwd(),{
+ 'react-native':{Platform:{OS:'android'}},'expo-constants':{__esModule:true,default:{},ExecutionEnvironment:{StoreClient:'expoGo'}},expo:{requireOptionalNativeModule:()=>null},
+ 'expo-notifications':{setNotificationHandler:()=>{},getPermissionsAsync:async()=>({granted:true}),SchedulableTriggerInputTypes:{DATE:'date'},scheduleNotificationAsync:async(datos:any)=>{contenido=datos.content;return 'nativo';}}});
+ const servicio=cargar<typeof import('../src/notifications/nativeAdapter.ts')>('src/notifications/nativeAdapter.ts');
+ await servicio.programarAviso({id:'aviso',tipo:'social',titulo:'DD te invitó a Sala',mensaje:'Cena de prueba',fecha:new Date().toISOString(),vista:false,resuelta:true,destino:{tipo:'sala',id:'sala'}},'cuenta',false);
+ assert.equal(contenido.title,'DD te invitó a Sala');assert.equal(contenido.body,'Cena de prueba');
+});

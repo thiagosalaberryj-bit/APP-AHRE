@@ -1,3 +1,4 @@
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useContext } from 'react';
@@ -11,6 +12,7 @@ import { crearEstilosGlobales } from '../styles/globalStyles';
 import EncabezadoPrincipal from '../components/MainHeader';
 
 export default function PantallaNuevo({ navigation: navegacion }: import('../navigation/types').PropiedadesPestana) {
+  useRegresoProtegido(navegacion);
   const { tema } = useContext(ContextoApariencia);
   const estilos = crearEstilosGlobales(tema);
   const abrirPantalla = (ruta: string) => navegacion.getParent()?.navigate(ruta);

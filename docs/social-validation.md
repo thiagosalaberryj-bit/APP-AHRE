@@ -1,5 +1,35 @@
 # Prueba completa de Social
 
+## Recorrido visual local actualizado
+
+En Inicio, tocar **Entrar con datos de prueba** otra vez para añadir estos ejemplos
+a la cuenta local existente. No hay que borrar sus datos: los ejemplos nuevos se
+agregan una sola vez y no revierten ediciones, pagos, decisiones ni desarchivados.
+
+| Dónde entrar | Qué se puede comprobar sin servidor |
+| --- | --- |
+| Perfil → Editar perfil | Nombre y apellido separados, límites de 80 caracteres y nombre completo en la tarjeta. La cuenta de ejemplo tiene apellido AHRE. |
+| Social → Personas | Solicitud de Martina Ruiz con tick/X. Aceptar exige ficha existente o nueva con apodo. Se puede rechazar o aceptar localmente. |
+| Debajo de Personas → Ver personas archivadas | Modal con Diego Medina, búsqueda, apertura de ficha y desarchivado directo. No reemplaza la lista de personas activas. |
+| Ficha de Bruno → Ver cuenta vinculada | Nombre, apellido y correo ficticio de la cuenta. |
+| Otra ficha → Vincular cuenta | Solicitar un vínculo con correo ficticio y cancelarlo; queda solo en la simulación local. |
+| Notificaciones | Avisos vistos/no vistos y resueltos/pendientes, contador y marcado global con el tick doble junto a Ajustes. |
+| Crear sala / Registrar deuda | Campos obligatorios, errores junto al campo, contraseña con candado y ojo, importes con dos decimales. No es necesario guardar para revisar errores. |
+| Demo · Viaje con amigos → Personas | Solicitudes de pago de Bruno e ingresos de invitados con controles compactos. Marcar su parte pagada resuelve el aviso compatible. |
+| Demo · Viaje con amigos → Compartir sala | Contraseña de ocho caracteres, mostrar/ocultar contraseña y QR/enlace ficticios. |
+| Salas → Historial | Candado y estado Cerrada, gastos en solo lectura y sin incorporación atrasada desde el gasto. |
+| Demo · Del lado de quien debe | Ejemplos de pago confirmado, rechazado, pendiente y deuda perdonada; respuestas simuladas desde una misma cuenta. |
+| Deuda personal Entrada adelantada de prueba | Registrar un pago parcial y eliminar la deuda personal, comprobando la corrección del movimiento y saldo. |
+| Encuentro de prueba | Repartos, depósitos preparados y cierre local. Sus movimientos muestran sala y concepto de origen en el detalle. |
+| Crear depósito y barra inferior | Una sola acción de guardado y texto Escanear. |
+
+La simulación no prueba recepción en otro dispositivo, persistencia MySQL,
+sincronización entre cuentas, requisitos financieros de todos los miembros de una
+sala remota, entrega push con la app cerrada ni Android App Links desde la cámara.
+Esos recorridos conservan su comprobación real con APK y backend. Los enlaces demo
+no invitan a otra persona. Las pantallas y acciones compartidas son las mismas de
+la app, con datos ficticios y un transporte local autorizado solo en desarrollo.
+
 ## Preparación
 
 Comprobar que backend y clientes incluyan las correcciones de la misma revisión.
@@ -7,7 +37,9 @@ Esta revisión se verifica localmente: no genera APK ni despliega cambios. Una A
 anterior no incorpora el JavaScript actual. Para pruebas entre dispositivos,
 actualizar SERVER-AHRE con su guía social y utilizar una build Android identificada
 por versión/código y revisión, o dos clientes de desarrollo compatibles.
-Estos ajustes no cambian el esquema SQLite ni requieren borrar los datos locales.
+La revisión de los 22 ajustes cambia el esquema inicial SQLite: recrear únicamente
+las bases descartables Expo de desarrollo. Para datos reales del servidor usar
+la actualización controlada con respaldo. Ver [ajustes acordados](ajustes-acordados.md).
 
 Usar A en la APK, B en Expo Go y C en un navegador sin cuenta. Las cuentas de
 prueba existentes son a@pruebas.ahre.test y b@pruebas.ahre.test; su contraseña
@@ -22,7 +54,8 @@ Sus enlaces son ficticios, no se conectan con otro cliente ni prueban MySQL o WS
 ## 1. Agenda y vínculo sin sala
 
 1. En A: Social → Personas → ficha de B → tres puntos → Vincular cuenta.
-2. Enviar a b@pruebas.ahre.test. B acepta en Social → Personas → Solicitudes de vínculo.
+2. Enviar a b@pruebas.ahre.test. B acepta en Social → Personas → Solicitudes de vínculo, eligiendo una ficha
+   existente o registrando una con apodo obligatorio. Comprobar el vínculo en ambos lados.
 3. En A debe aparecer Cuenta vinculada. Si ya estaban vinculados, no repetir.
 4. Una segunda ficha no debe poder vincularse a esa misma cuenta automáticamente.
 
@@ -32,20 +65,21 @@ Sus enlaces son ficticios, no se conectan con otro cliente ni prueban MySQL o WS
 2. Activa Compartir online, escribe una contraseña de al menos ocho caracteres y crea.
 3. Abre Compartir sala: debe aparecer un enlace global, QR e ícono para copiar.
 4. Copia y comparte varias veces: el enlace y QR deben mantenerse y abrir sin regeneración.
-5. B usa Social → Salas → Unirme a sala. Pega el enlace, escribe su nombre y la contraseña.
+5. B usa Social → Salas → Unirme a sala. Pega el enlace y escribe solo la contraseña; nombre y apellido provienen del perfil.
 6. Como B ya está vinculado y asignado a la sala, recupera su participación sin duplicarse.
 7. C abre el mismo enlace desde el navegador. Una contraseña incorrecta debe mostrar error
-   y permitir corregirla. Con nombre y contraseña correctos, queda esperando aprobación.
+   y permitir corregirla. Sin cuenta, completa nombre, apellido y contraseña y queda esperando aprobación. Con cuenta usa el perfil; un vínculo confirmado con el administrador permite entrar automáticamente si nunca fue expulsado.
 8. Mientras espera, C no ve gastos, participantes, importes ni depósitos.
 9. A abre la pestaña Personas de la sala → Ingresos: debe ver el contador. Toca la solicitud de C,
-   elige Persona de mi agenda o Crear persona y confirma Admitir.
+   elige Seleccionar persona o Nueva persona y confirma Admitir.
 10. Intentar asignarlo a B debe rechazarse por pertenecer a otra cuenta. Luego debe poder
     corregir la elección y asignarlo a C. Si C tenía una sesión invitada anterior, confirmar
     Reemplazar acceso anterior; esto revoca el acceso anterior, sin borrar su historia.
 11. La web de C debe mostrar la sala tras la aprobación y conectarse en tiempo real.
 
 En WhatsApp, usar el enlace HTTPS completo. La cámara normal del teléfono abre
-la web con el QR; el escáner de Social abre el ingreso en la app. Abrir en la app
+la APK instalada con App Links verificado o la alternativa web sin app.
+El escáner de Social abre el ingreso en la app. Abrir en la app
 está pensado para la APK instalada, no para iniciar Expo Go por enlace nativo.
 
 ## 3. Gastos, solicitudes y depósitos privados
@@ -75,8 +109,8 @@ Nadie debe ver o elegir los depósitos de otra cuenta.
 También probar marcar directamente una parte pagada desde el detalle como
 administrador y volver a marcarla pendiente antes del cierre. No debe crear
 movimientos ni deudas permanentes. Si el administrador confirma un pago ajeno
-sin que esa persona elija depósito, conservar Pagado con incorporación pendiente;
-la falta de depósito no vuelve a convertir el pago en deuda.
+sin que esa persona elija depósito, conservar Pagado y bloquear el cierre hasta
+que registre su asociación. Un invitado sin cuenta no necesita depósito.
 
 ## 4. Desconexión, cambios y cierre
 
@@ -99,10 +133,12 @@ Resultado esperado tras recibir el cierre:
 | B | Pago de parte $40 y compra $60 | −$100 | A le debe $30 |
 | C | Ningún movimiento privado | No aplica | Debe $40 a A |
 
-Las deudas deben aparecer automáticamente en Online. No hay que crearlas ni
-aceptarlas otra vez. La sala queda en solo lectura. Abrir y sincronizar varias
-veces no debe repetir movimientos. Si falta una selección, el detalle del gasto
-permite incorporarla después; no debe bloquear el cierre ni crear otra deuda.
+Las deudas A/B aparecen automáticamente en Online. La deuda de C, sin cuenta,
+es personal en A. No hay que crearla ni aceptarla otra vez. La sala queda en solo lectura. Abrir y sincronizar varias
+veces no debe repetir movimientos. Si falta una selección de cualquier cuenta,
+se informa quién y qué falta y se bloquea el cierre. En una sala cerrada no se
+pueden incorporar compras o partes atrasadas. Los pagos posteriores de deudas
+se gestionan desde la deuda.
 
 ## 5. Pagar una deuda de sala
 
@@ -165,3 +201,114 @@ movimiento de origen, sin repetir una fila Adelanto registrado ni otro cargo.
 Prueba física pendiente: nueva APK en Android, funcionamiento sin red, apertura
 tras fechas vencidas, doble toque, navegación Atrás y resumen después de aceptar.
 La APK build 11 anterior no incluye estos cambios; no se generó otra en esta revisión.
+
+## Eliminación personal y repropuestas
+
+Eliminar una deuda personal con pagos parciales debe corregir adelanto y pagos
+asociados y devolver el saldo correspondiente; perdonar conserva esos movimientos.
+Rechazar y reenviar una propuesta debe generar un aviso nuevo en la otra cuenta,
+tanto para Debo como Me deben. Reintentar una respuesta perdida no duplica avisos
+ni propuestas. Los importes siempre muestran dos decimales y rechazan una tercera
+cifra decimal de entrada.
+
+## Ajustes de solicitudes y cierre
+
+El estado Abierta/Cerrada aparece junto al nombre, sin repetirse junto a la fecha.
+En la sala se muestra Pendientes para cerrar, agrupado por persona y con líneas
+entre integrantes. Las compras, cobros y pagos propios abren directamente su
+gasto; los registros ajenos y avisos no son accesos. Cerrar sala permanece
+deshabilitado desde el detalle hasta verificar todos los registros; desconocer
+el estado remoto no equivale a estar listo. La revisión de cierre no repite esa
+lista y conserva la protección de Confirmar cierre. El servidor conserva su
+validación transaccional para todas las cuentas.
+
+La demo ahora aplica el mismo bloqueo: preparar cada operación propia en Mis
+movimientos y resolver los avisos de pago. En el detalle de sala, Simular
+registros de los demás representa exclusivamente las acciones de otras cuentas
+ficticias y no completa los registros propios. En una cuenta real esa acción no
+existe. Modificar el reparto o importe exige revisar los registros simulados.
+
+El resumen muestra fecha y cantidad de participantes debajo del nombre, sin
+contador de gastos ni Categoría por gasto. La descripción se muestra completa,
+sin límite de líneas. Eliminar deuda personal aparece centrado debajo de las
+acciones Registrar pago / Perdonar deuda y conserva su confirmación destructiva.
+
+Validación de estos ajustes: 135 pruebas de interfaz y demo Social aprobadas,
+sin omisiones, en temas claro y oscuro; comprobación TypeScript de app y
+herramientas correcta. Se verifica el acceso al gasto propio, los registros ajenos
+sin acceso, la habilitación del cierre al completar registros y la separación de
+Eliminar deuda. Estas pruebas no sustituyen una revisión visual en el teléfono.
+
+Aceptar un vínculo o un ingreso utiliza el selector deslizante Nueva persona /
+Seleccionar persona y una lista con búsqueda, en lugar de etiquetas. Nombre,
+apellido y apodo muestran siempre el borde habitual en Registrar vínculo; en
+el ingreso a sala usan borde fino al enfocar (o al mostrar un error). Se
+conservan la selección de una ficha existente y el apodo obligatorio al crearla.
+
+Se corrigió un espacio literal dentro de la tarjeta de aceptación del gasto:
+React Native exige que incluso ese texto esté dentro de Text. La prueba de
+regresión abre el gasto con una solicitud pendiente y comprueba sus hijos nativos.
+
+## Revisión de escaneo y filtros
+
+Escanear verifica depósitos antes de mostrar cámara/galería y ofrece Nuevo
+depósito desde una tarjeta de estado si no hay ninguno. El resultado ya no
+incluye creación de depósito. Escanear/Tomar foto conserva su ubicación junto
+a Galería; Texto reconocido es desplegable y Escanear otro comprobante es una
+acción secundaria. El comercio continúa siendo una propuesta heurística editable.
+
+Estadísticas, Movimientos y Detalle de depósito usan categorías en listado
+vertical con icono, nombre y casilla. El catálogo completo permanece disponible
+sin movimientos. Incluir todas no marca cada opción; elegir una inicia el filtro.
+Se retiraron Todas/Ninguna del panel de Estadísticas. Los paneles reservan la
+zona segura inferior; el selector de depósitos también limita su altura y puede
+abrirse arriba para mantener opciones y Listo fuera de la navegación Android.
+Los contadores del encabezado plegado se bajaron sin cambiar el desplegado.
+
+Validaciones de esta revisión: TypeScript de app/herramientas correcto; 25 pruebas
+OCR, 54 de filtros/estadísticas/detalle/posición del selector y dos regresiones del
+selector de depósitos aprobadas. No acreditan una prueba visual en el teléfono.
+
+## Validación del flujo acordado de salas
+
+Casos automatizados adicionales: Recordarme mantiene la sesión autorizada; sin huella exige Login y cerrar sesión limpia el correo; Inicio conserva la validación biométrica cuando está configurada; decisiones con carga estable en ambos temas; fichas archivadas que admiten nuevas deudas y salas; revisión por expulsión y bloqueo de cierre. El servidor prueba identidad autenticada, admisión atómica con apodo repetido, reciprocidad, reingreso de amigos, expulsión y acceso financiero limitado, cierre entre cuentas sin amistad y retiro/reenvío idempotente de propuestas.
+
+Comprobar manualmente en una APK: teclado y botones Android dentro de los modales, ingreso por enlace/QR con dos cuentas, recepción push y la tarjeta de registros propios después de expulsión. Las pruebas de componentes y la exportación Hermes no sustituyen esa prueba física. Para las restricciones SQLite de archivo, usar una base local de desarrollo recreada. No es necesario borrar la base del servidor.
+
+
+### Resultado automatizado del 15/11/2026
+
+Tipos de app y servidor correctos. App: **572 pruebas aprobadas, cero fallos y cero omisiones**. Servidor coordinado: **115 pruebas aprobadas, cero fallos y cero omisiones**. MySQL 8.4.3 desechable en loopback, puerto 13347, con bases sintéticas por escenario. Las integraciones se habilitaron con `AHRE_MYSQL_TEST=1` y `AHRE_SERVER_SOURCE=C:/Programacion/AHRE/SERVER-AHRE`; no se omitieron por falta de configuración. Exportación Android/Hermes correcta con Expo local, sin instalar dependencias.
+
+El rechazo del reinicio por una confirmación todavía en vuelo se cubre con espera de actividad antes de la vista previa y cinco ejecuciones consecutivas correctas. La limpieza del reinicio contempla autoría y revisiones de salida, sin dejar bloqueada la sala que conserva otro administrador.
+
+Estos resultados validan código local; no acreditan despliegue ni recepción push, teclado o gestos en una APK física. Esa verificación precede a los commits a0188ca/c25fdc1 y al envío EAS posterior; consultar el estado vigente.
+
+
+Correcciones del 16/11: acceso sin huella exige Login y cerrar sesión limpia correo; inputs de identidad de una línea; pasos de permisos secuenciales; aceptación directa de amigos con protección de ficha; invitación al agregar integrantes; push con título/cuerpo del historial. Verificación: suite de app y servidor con MySQL aislado y prueba específica del contenido nativo y del Paso 2. Los commits locales a0188ca/c25fdc1 incluyen el trabajo pendiente anterior y estas correcciones. La APK se envió después; consultar [Publicación](configuracion/publicacion.md). El despliegue de este backend no se ha verificado.
+
+
+### Ajustes locales de correo y horarios precisos · 16/11/2026
+
+Comprobé 20 casos enfocados sin fallos ni omisiones y los tipos de app/herramientas
+y backend. Login recupera el correo con Recordarme y sesión vigente al reabrir;
+no recupera la contraseña y queda vacío después de cerrar o perder la sesión.
+La prueba de reapertura usa un contexto nuevo con SQLite y almacenamiento
+persistentes. El Paso 2 desaparece al activar el permiso; la opción de horarios
+precisos queda al fondo del modal, abre Android y consulta el estado al regresar.
+Estos ajustes se incorporan al commit y al nuevo envío de esta preparación;
+no estaban en la APK enviada anteriormente.
+
+
+### Preparación de release · 16/11/2026
+
+Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
+
+La validación automatizada está completa para estas fuentes. Falta comprobar la nueva APK instalada (teclado, gestos y recepción de notificaciones), verificar el despliegue coordinado y publicar por separado la descarga. No publiqué etiquetas, releases ni hice merge a main.
+
+
+### Cierre de APK · 16/11/2026
+
+La APK 0.9.2 / Android 16 del envío EAS 44178bff, generada desde 99ecf91, quedó probada en el teléfono el 16/11/2026 con funcionamiento confirmado. Archivo de distribución: ahre-0.9.2.apk, 173.236.452 bytes; SHA-256 ebb3439873e23a51272322af224dfdf66edc7b5ba7157788418c4695f2e55f79.
+
+La copia y el despliegue en el servidor siguen siendo manuales. Preparé APK, manifiesto, hash y catálogo localmente; no conecté el repositorio al servidor ni ejecuté el despliegue remoto. Los comandos conservan .env, la base y las descargas históricas.

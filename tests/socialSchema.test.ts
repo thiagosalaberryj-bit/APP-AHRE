@@ -103,7 +103,7 @@ test('personas requieren apellido y apodo, detectan duplicados inactivos y conse
   assert.throws(() => persona('apodo-largo', 'u', false, { apodo: 'a'.repeat(21) }));
   assert.throws(() => persona('duplicada', 'u', false, { apodo_normalizado: 'lucia' }));
   base.exec("UPDATE personas SET activa = 0 WHERE id = 'lucia'");
-  assert.throws(() => persona('otra-lucia', 'u', false, { nombre_normalizado: 'lucia', apellido_normalizado: 'perez' }));
+  persona('otra-lucia', 'u', false, { nombre_normalizado: 'lucia', apellido_normalizado: 'perez' });
   assert.throws(() => base.exec("DELETE FROM personas WHERE id = 'lucia'"));
   assert.throws(() => persona('otro-vos', 'u', true));
   assert.throws(() => base.exec("UPDATE personas SET activa = 0 WHERE id = 'u-vos'"));
@@ -172,7 +172,7 @@ test('retirar o desactivar personas conserva partes y permite deudas y pagos his
   base.exec("UPDATE personas SET activa = 0 WHERE id = 'lucia'");
   base.exec("UPDATE gastos_compartidos SET descripcion = 'Pizzas anteriores' WHERE id = 'g'");
   assert.throws(() => gasto('nuevo', 'lucia'));
-  assert.throws(() => deuda('manual-inactiva'));
+  deuda('manual-archivada');
   deuda('historica', { participante_gasto_id: 'p' });
   movimiento('m', 'egreso', 1000);
   pago('pago', 'parte', 1000, { participante_gasto_id: 'p', deuda_id: 'historica', movimiento_id: 'm' });

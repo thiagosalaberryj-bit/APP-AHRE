@@ -1,7 +1,8 @@
 import type { OperacionPersonal, RespuestaSala } from './online/types';
 
 export function pendientesSala(detalle: RespuestaSala, operaciones: OperacionPersonal[], incorporadas: ReadonlySet<string>): OperacionPersonal[] {
-  const abierta = detalle.sala.estado === 'abierta';
+  if(detalle.sala.estado==='cerrada')return [];
+  const abierta = true;
   const candidatas = abierta ? detalle.misFinanzas || [] : operaciones.filter(o => o.salaId === detalle.sala.id);
   const claves = new Set<string>();
   return candidatas.filter(o => {

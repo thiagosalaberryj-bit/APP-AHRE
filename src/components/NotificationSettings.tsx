@@ -20,7 +20,7 @@ export default function AjustesNotificaciones({tema,ajustes,alCambiar,alCerrar,a
  return <ModalPerfil visible={!!ajustes} alCerrar={()=>{if(!guardando)alCerrar();}} estilos={p} separarFondo estiloTarjeta={{height:'85%'}} estiloDesplazamiento={{flex:1}} tema={tema} titulo="Notificaciones" descripcion="Elegí qué recordar y a qué hora." icono="notifications-outline" etiquetaCerrar="Cerrar ajustes de notificaciones" etiquetaCerrarFondo="Cerrar ajustes tocando afuera" desplazable>
   {ajustes?<>
    {!generales?<><Text style={g.textoAyuda}>Activá las notificaciones en Perfil para editar estas opciones. Tu configuración se conserva.</Text>{alActivarGenerales?<Pressable style={g.botonSecundario} accessibilityRole="button" onPress={alActivarGenerales}><Text style={g.textoBotonSecundario}>Ir a Perfil</Text></Pressable>:null}</>:null}
-   <AjustesAlarmasExactas tema={tema} visible={!!ajustes} deshabilitado={bloqueados}/>
+
    {generales&&['Sin permiso','Desactivadas en Ajustes'].includes(permiso)?<Text style={g.textoError}>Android bloquea las notificaciones de AHRE.</Text>:null}
    {generales&&['Sin permiso','Desactivadas en Ajustes'].includes(permiso)?<Pressable accessibilityRole="button" style={g.botonSecundario} onPress={()=>{if(permiso==='Desactivadas en Ajustes')void Linking.openSettings();else void solicitarPermisoAvisos().then(alCambiarPermiso);}}><Text style={g.textoBotonSecundario}>Activar en Android</Text></Pressable>:null}
    <View pointerEvents={bloqueados?'none':'auto'} accessibilityState={{disabled:bloqueados}} style={e.opcionesAjuste}>
@@ -32,10 +32,10 @@ export default function AjustesNotificaciones({tema,ajustes,alCambiar,alCerrar,a
      </View>:null}
      {canales[tipo]===false?<Text style={g.textoError}>Canal desactivado en Android</Text>:null}
     </View>;})}
-    <View style={e.filaAjuste}><Text style={e.textoAjuste}>Mostrar nombres e importes</Text><Conmutador deshabilitado={bloqueados} tema={tema} valor={ajustes.mostrarDetalles} alCambiar={mostrarDetalles=>{if(!bloqueados)alCambiar({...ajustes,mostrarDetalles});}}/></View>
    </View>
    {generales?<Text style={g.textoAyuda}>Si la hora elegida ya pasó, el aviso se programa para el próximo día que corresponda.</Text>:null}
    <Pressable accessibilityRole="button" disabled={bloqueados} style={[g.botonPrincipal,bloqueados&&g.botonDeshabilitado]} onPress={()=>{if(!bloqueados)alGuardar();}}><Text style={g.textoBotonPrincipal}>{guardando?'Guardando…':'Guardar ajustes'}</Text></Pressable>
+   {generales&&permiso==='Permitidas'?<AjustesAlarmasExactas tema={tema} visible={!!ajustes} deshabilitado={bloqueados}/>:null}
   </>:null}
  </ModalPerfil>;
 }

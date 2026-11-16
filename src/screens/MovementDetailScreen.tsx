@@ -1,3 +1,5 @@
+import { useErrorNotificado } from '../hooks/useErrorNotice';
+import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import {useFocusEffect} from '@react-navigation/native';
@@ -20,7 +22,7 @@ import { crearEstilosDetalleMovimiento } from '../styles/MovementDetailScreenSty
 function formatearMonto(monto: number|null|undefined, tipo: string|undefined) {
   const importe = Number(monto);
   if (monto === null || monto === undefined || !Number.isFinite(importe)) return '—';
-  const valor = `$ ${Math.abs(importe).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
+  const valor = `$ ${Math.abs(importe).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   if (tipo === 'ingreso' || tipo === 'transferencia_entrada') return `+ ${valor}`;
   return `− ${valor}`;
@@ -45,6 +47,7 @@ function obtenerNombreTipo(tipo: string|undefined) {
 }
 
 export default function PantallaDetalleMovimiento({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+  const volverProtegido = useRegresoProtegido(navegacion, () => bloqueoEliminacion.current);
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const [confirmandoEliminacion, establecerConfirmandoEliminacion] = useState(false);
@@ -55,9 +58,9 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   const estilosGlobales = crearEstilosGlobales(tema);
   const estilos = crearEstilosDetalleMovimiento(tema);
   const movimientoId = ruta.params?.movimientoId || ruta.params?.movimiento?.id;
-  const [movimientoHistorial, establecerMovimientoHistorial] = useState<import('../database/types').MovimientoHistorial | null>(null);
+  const [movimientoHistorial, establecerMovimientoHistorial] = useState<Awaited<ReturnType<typeof consultarDetalleHistorialMovimiento>>>(null);
   const [cargandoHistorial, establecerCargandoHistorial] = useState(Boolean(movimientoId));
-  const [errorHistorial, establecerErrorHistorial] = useState<string | null>(null);
+  const [errorHistorial, establecerErrorHistorial] = useErrorNotificado(null);
   const [intentoConsulta, establecerIntentoConsulta] = useState(0);
   const [importeVisible, establecerImporteVisible] = useState(false);
 
@@ -132,7 +135,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
     return (
       <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
         <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
-            alVolver={() => {if(!bloqueoEliminacion.current)navegacion.goBack();}}
+            alVolver={() => {if(!bloqueoEliminacion.current)volverProtegido();}}
             descripcion="Consultá la descripción, el depósito, la fecha y el importe."
             tema={tema}
             titulo="Detalle de movimiento"
@@ -152,7 +155,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
     return (
       <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
         <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
-            alVolver={() => navegacion.goBack()}
+            alVolver={() => volverProtegido()}
             descripcion="Consultá la descripción, el depósito, la fecha y el importe."
             tema={tema}
             titulo="Detalle de movimiento"
@@ -167,7 +170,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
             <Text style={estilos.textoEstadoHistorial}>
               {noEncontrado
                 ? 'No se encontró este movimiento. Puede que ya no esté disponible.'
-                : errorHistorial}
+                : 'Reintentá la consulta del movimiento.'}
             </Text>
             {!noEncontrado ? (
               <Pressable
@@ -180,7 +183,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
             ) : null}
             <Pressable
               accessibilityRole="button"
-              onPress={() => navegacion.goBack()}
+              onPress={() => volverProtegido()}
               style={estilos.botonEstadoHistorial}
             >
               <Text style={estilos.textoBotonEstadoHistorial}>Volver</Text>
@@ -194,7 +197,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   return (
     <SafeAreaView edges={['top', 'bottom']} style={estilosGlobales.areaSegura}>
       <MarcoEncabezado style={estilosGlobales.pantalla} tema={tema} encabezado={<EncabezadoSeccion
-          alVolver={() => navegacion.goBack()}
+          alVolver={() => volverProtegido()}
           descripcion="Consultá la descripción, el depósito, la fecha y el importe."
           tema={tema}
           titulo="Detalle de movimiento"
@@ -233,6 +236,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
                 </View>:null}
               </View>
               <Text selectable style={estilos.nombreMovimiento}>{movimiento.descripcion || 'Movimiento'}</Text>
+              {movimientoHistorial?.origenSala?<View style={estilos.detalleDato}><Ionicons name="people-outline" size={20} color={tema.foco}/><Text style={estilosGlobales.textoSecundario}>Sala: {movimientoHistorial.origenSala.sala_nombre}{'\n'}{movimientoHistorial.origenSala.concepto}</Text></View>:null}
             </View>
             <View style={estilos.tarjetaDatos}>
               {datosMovimiento.map((dato,indice)=><View key={dato.etiqueta} style={[estilos.dato,indice>0&&estilos.datoSeparado]}>

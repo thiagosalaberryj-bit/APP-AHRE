@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/PeopleSelectorStyles';
-export default function SelectorPersonas(propiedades: import('../../social/types').AspectoSocial & ({etiqueta:string;personas:import('../../social/types').PersonaVista[];seleccionadas:string[];alCambiar:(ids:string[])=>void;multiple?:boolean;alRegistrar?:()=>void;compacto?:boolean;etiquetaCorta?:string;desplegable?:boolean})) {
+export default function SelectorPersonas(propiedades: import('../../social/types').AspectoSocial & ({etiqueta:string;personas:import('../../social/types').PersonaVista[];seleccionadas:string[];alCambiar:(ids:string[])=>void;multiple?:boolean;alRegistrar?:()=>void;compacto?:boolean;etiquetaCorta?:string;desplegable?:boolean;ocultarArchivadas?:boolean})) {
   const {
     etiqueta,
     personas,
@@ -14,7 +14,7 @@ export default function SelectorPersonas(propiedades: import('../../social/types
     alRegistrar,
     compacto = false,
     etiquetaCorta,
-    desplegable = false,
+    desplegable = false,ocultarArchivadas=false,
     ...aspecto
   } = {
     ...propiedades,
@@ -31,6 +31,9 @@ export default function SelectorPersonas(propiedades: import('../../social/types
   } = aspecto;
   const control = useRef<View>(null);
   const capaDesplegable = useRef<View>(null);
+  const [archivadas,mostrarArchivadas]=useState(false);
+  const visibles=personas.filter(p=>!ocultarArchivadas||p.activa||archivadas||seleccionadas.includes(p.id));
+  const alternarArchivadas=ocultarArchivadas&&personas.some(p=>!p.activa)?<Pressable accessibilityRole="checkbox" accessibilityLabel="Incluir personas archivadas" accessibilityState={{checked:archivadas}} onPress={()=>mostrarArchivadas(!archivadas)} style={estilos.opcionPersona}><Ionicons name={archivadas?'checkbox':'square-outline'} size={22} color={tema.foco}/><Text style={estilosGlobales.texto}>Incluir personas archivadas</Text></Pressable>:null;
   const [visible, establecerVisible] = useState(false);
   const [posicionado, establecerPosicionado] = useState(false);
   const [ancla, establecerAncla] = useState({ left: 12, top: 0, width: 200, maxHeight: 224 });
@@ -80,14 +83,15 @@ export default function SelectorPersonas(propiedades: import('../../social/types
           <Pressable accessibilityLabel="Cerrar selector" accessibilityRole="button" onPress={() => establecerVisible(false)} style={estilos.cierreFondo} />
           <View accessibilityViewIsModal style={[estilos.menuDesplegable, ancla, !posicionado && estilos.desplegableSinPosicion]}>
             <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: ancla.maxHeight - (multiple ? 36 : 0) }}>
-              {personas.map(persona => {
+              {alternarArchivadas}
+              {visibles.map(persona => {
                 const elegida = seleccionadas.includes(persona.id);
                 return <Pressable key={persona.id} accessibilityLabel={persona.nombre} accessibilityRole={multiple ? 'checkbox' : 'radio'} accessibilityState={{ checked: elegida }} onPress={() => elegir(persona.id)} style={[estilos.opcionDesplegable, elegida && estilos.opcionDesplegableActiva]}>
                   <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.textoOpcionDesplegable}>{persona.nombre}</Text>
                   <Ionicons color={tema.foco} name={multiple ? elegida ? 'checkbox' : 'square-outline' : 'checkmark'} size={16} style={{ opacity: multiple || elegida ? 1 : 0 }} />
                 </Pressable>;
               })}
-              {!personas.length ? <Text style={estilos.textoOpcionDesplegable}>No hay personas disponibles.</Text> : null}
+              {!visibles.length ? <Text style={estilos.textoOpcionDesplegable}>No hay personas disponibles.</Text> : null}
             </ScrollView>
             {multiple ? <Pressable accessibilityRole="button" accessibilityLabel="Listo" onPress={() => establecerVisible(false)} style={estilos.confirmarDesplegable}><Text style={estilos.textoConfirmar}>Listo · {elegidas.length}</Text></Pressable> : null}
           </View>
@@ -99,7 +103,8 @@ export default function SelectorPersonas(propiedades: import('../../social/types
           <View accessibilityViewIsModal style={estilos.tarjetaModal}>
             <View style={estilos.filaModal}><Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>{etiqueta}</Text><Pressable accessibilityLabel="Cerrar selector" accessibilityRole="button" onPress={() => establecerVisible(false)} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable></View>
             <ScrollView style={estilos.desplazamientoModal} keyboardShouldPersistTaps="handled">
-              {personas.length ? personas.map(persona => <Pressable key={persona.id} accessibilityLabel={persona.nombre} accessibilityRole={multiple ? 'checkbox' : 'radio'} accessibilityState={{
+              {alternarArchivadas}
+              {visibles.length ? visibles.map(persona => <Pressable key={persona.id} accessibilityLabel={persona.nombre} accessibilityRole={multiple ? 'checkbox' : 'radio'} accessibilityState={{
               checked: seleccionadas.includes(persona.id)
             }} onPress={() => elegir(persona.id)} style={estilos.opcionPersona}>
                   <Ionicons color={tema.foco} name={multiple ? seleccionadas.includes(persona.id) ? 'checkbox' : 'square-outline' : seleccionadas.includes(persona.id) ? 'radio-button-on' : 'radio-button-off'} size={24} />

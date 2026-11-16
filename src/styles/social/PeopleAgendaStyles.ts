@@ -3,6 +3,8 @@ import { StyleSheet } from 'react-native';
 import { BORDES, ESPACIADO } from '../globalStyles';
 export default function crearEstilosPropios(tema: Tema) {
   return StyleSheet.create({
+    separadorPersona:{borderTopWidth:BORDES.anchos.fino,borderTopColor:tema.borde},
+    accionDesarchivar:{minWidth:44,minHeight:44,alignItems:'center',justifyContent:'center',borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.boton},
     contactoAgenda: {
       minHeight: 72,
       flexDirection: 'row',
