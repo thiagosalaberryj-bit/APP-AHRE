@@ -16,7 +16,7 @@ normal de la cuenta, incluida la biometría, sin abrir pantallas privadas desde 
 
 Los ajustes por usuario permiten elegir tipos, hora y anticipación. La zona horaria se toma del teléfono al guardar.
 El interruptor general de Perfil controla los avisos del teléfono; no elimina el
-historial. Los avisos ocultan detalles por defecto. Rechazar permisos no bloquea
+historial. Los avisos del teléfono muestran el mismo título y mensaje del historial. Rechazar permisos no bloquea
 la app: se muestra su estado y se ofrece abrir Ajustes sin volver a insistir.
 
 Los recordatorios conocidos se programan mediante el sistema operativo para
@@ -32,7 +32,11 @@ invita a consultar estadísticas, sin mostrar cifras futuras o desactualizadas.
 Los avisos de servidor se conservan aunque no se entregue su push.
 
 Los recordatorios diarios de deudas y salas cubren ese mismo horizonte de
-60 días. Una deuda parcialmente pagada continúa pendiente; saldo cero,
+60 días. Identifican a la otra persona y su saldo pendiente, o a la sala y su
+cantidad de movimientos. Los avisos de recurrencias incluyen el nombre del
+movimiento y del depósito en sus tres momentos. Al cambiar nombres o saldo,
+la reconciliación reemplaza las alarmas futuras sin duplicarlas. Una deuda
+parcialmente pagada continúa pendiente; saldo cero,
 perdón o cancelación resuelven sus avisos sin marcarlos vistos. Las salas usan
 los mismos pendientes de sus tarjetas, tanto abiertas como cerradas. Una
 recurrencia conserva su ocurrencia específica y solo se resuelve al avanzar

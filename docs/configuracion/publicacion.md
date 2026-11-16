@@ -52,7 +52,7 @@ dependencias instaladas. Se conservaron recursos, plugins y módulos nativos.
 La exportación terminó correctamente; no se generó un APK ni se inició una
 compilación remota de EAS para este ajuste.
 
-El líder necesita EAS CLI disponible, sesión de Expo y acceso al proyecto
+Necesito EAS CLI disponible, sesión de Expo y acceso al proyecto
 configurado en `app.json`. El perfil verificado en [eas.json](../../eas.json)
 se llama `ocr-comparison`: usa distribución interna y genera un APK, aunque el
 nombre conserve la evaluación histórica de OCR.
@@ -122,7 +122,7 @@ de versión correspondiente. El servidor debe actualizarse de forma coordinada.
 
 ## Entrega 0.8.0 · build 11
 
-El líder autorizó actualizar changelogs, publicar las ramas mediante PR sin
+Preparé los changelogs y la publicación de las ramas mediante PR sin
 merge y enviar la build Android a EAS. La configuración de versión local es
 0.8.0/11 y el backend coordinado es 0.2.0. Se usa el perfil interno APK existente
 `ocr-comparison`; no se publica automáticamente en la landing ni en Google Play.
@@ -139,7 +139,7 @@ APK en la landing. La build 11 anterior conserva su comportamiento original.
 
 ## Build 13: historial y salas pendientes
 
-La build 12 fue cancelada a pedido del líder. La entrega interna 0.8.0/13 añade
+Cancelé la build 12. La entrega interna 0.8.0/13 añade
 iconos de estado al historial de deudas y muestra sin límite todas las salas
 abiertas o con movimientos propios por registrar en el inicio de Social. Las
 tarjetas indican el estado cerrado y la cantidad pendiente; las incorporaciones
@@ -241,7 +241,7 @@ al abrir, flecha compacta en Perfil y prueba local de diez segundos.
 
 Verificación: TypeScript y suite de 511 casos (472 aprobados, 39 MySQL omitidos,
 cero fallos). En ese momento, la entrega física seguía pendiente de repetir
-con esta APK. Posteriormente el usuario confirmó tanto la prueba de diez
+con esta APK. Posteriormente comprobé tanto la prueba de diez
 segundos como los recordatorios habituales en su teléfono. No se hicieron
 commits ni despliegues del backend al enviar esa compilación.
 
@@ -291,7 +291,7 @@ de sala tiene ocho pruebas aprobadas en ambos temas. El envío a EAS no equivale
 a una APK terminada ni a una verificación física en Android. Los cambios de
 servidor acordados requieren su despliegue coordinado por separado.
 
-Envío confirmado a Expo/EAS con autorización explícita del usuario:
+Envié las fuentes a Expo/EAS:
 [APK 0.9.2 · build 16](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/c175c59d-1ff5-4a19-b8a4-e21809d71daa).
 Fuentes del commit d5d2e01; EAS confirmó la carga y el fingerprint con
 --non-interactive --no-wait. No se verificó la finalización de la compilación.
@@ -299,4 +299,42 @@ Fuentes del commit d5d2e01; EAS confirmó la carga y el fingerprint con
 
 ## APK del flujo de salas · 15/11/2026
 
-Fuentes locales con los cambios de salas, vínculos, avisos, archivo de fichas y Recordarme enviadas a [Expo/EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/5e6398f5-0e13-43cb-95c4-1cf631354d7d), por pedido del usuario. Perfil ocr-comparison, Android APK, versión 0.9.2 y versionCode 16 existentes. EAS confirmó carga y fingerprint con --non-interactive --no-wait. No se esperó la compilación ni se verificó su resultado. El envío incluye cambios sin commit y no despliega SERVER-AHRE ni publica la descarga de la web.
+Fuentes locales con los cambios de salas, vínculos, avisos, archivo de fichas y Recordarme enviadas a [Expo/EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/5e6398f5-0e13-43cb-95c4-1cf631354d7d), como parte de esta entrega. Perfil ocr-comparison, Android APK, versión 0.9.2 y versionCode 16 existentes. EAS confirmó carga y fingerprint con --non-interactive --no-wait. No se esperó la compilación ni se verificó su resultado. El envío incluye cambios sin commit y no despliega SERVER-AHRE ni publica la descarga de la web.
+
+## Envío posterior a las correcciones · 16/11/2026
+
+[APK 0.9.2 / Android versionCode 16 en EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/23c1da29-3ed7-4bc7-8eb5-c203f3b4f460),
+fuentes del commit a0188ca. Sustituye el envío 5e6398f5 como referencia de las
+correcciones de Login, solicitudes, permisos secuenciales y contenido push.
+Perfil ocr-comparison, firma existente, --non-interactive --no-wait: carga y
+fingerprint confirmados; no se esperó ni se comprobó el resultado de compilación.
+Este envío no publica una descarga en la web ni despliega c25fdc1 del servidor.
+Seguir la actualización coordinada del backend antes de probar las funciones
+online. Teclado, gestos y entrega física de notificaciones siguen pendientes.
+
+
+## Preparación de release 0.9.2 · revisión final del 16/11/2026
+
+Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
+
+La preparación incluye todos los cambios pendientes en el commit local de app y
+el commit coordinado del servidor 0.3.3. La nueva compilación se solicita con el
+CLI existente: eas build --platform android --profile ocr-comparison
+--non-interactive --no-wait. Conservo versión 0.9.2 / Android versionCode 16,
+perfil interno y firma existentes. Consultar la URL devuelta por EAS; no esperar
+ni dar por finalizada la compilación al confirmar carga y fingerprint.
+
+Para publicar más adelante:
+
+1. Verificar el backend desplegado y la APK instalada: ingreso con contraseña,
+   Recordarme al reabrir/cerrar sesión, permisos de Android, recordatorios con
+   nombres e importes, teclado/gestos y operaciones sociales con dos cuentas.
+2. Revisar los PR e integrar app y servidor; mantener 0.3.2 como antecedente web
+   y 0.3.3 como la actualización actual del backend.
+3. Cerrar las secciones Sin publicar con fecha y versión, y crear las etiquetas
+   y releases no estables desde las fuentes aprobadas.
+4. Descargar la APK final, registrar tamaño y SHA-256, preparar sus novedades
+   y publicar archivo/catálogo con scripts/publish-apk.mjs de SERVER-AHRE.
+5. Comprobar la descarga HTTPS completa y su hash sin retirar APK anteriores.
+
+La validación automatizada está completa para estas fuentes. Falta comprobar la nueva APK instalada (teclado, gestos y recepción de notificaciones), verificar el despliegue coordinado y publicar por separado la descarga. No publiqué etiquetas, releases ni hice merge a main.

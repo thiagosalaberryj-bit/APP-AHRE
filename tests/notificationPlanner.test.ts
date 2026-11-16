@@ -9,8 +9,10 @@ import type { DatosRecordatorios } from '../src/notifications/reminderPlanner.ts
 const contexto = createContext({ Date, Intl, Map, Set });
 const calendario = new SourceTextModule(compilarFuente(await readFile(new URL('../src/recurrences/recurrenceCalendar.ts', import.meta.url), 'utf8'), 'recurrenceCalendar.ts'), { context: contexto });
 await calendario.link(() => { throw new Error('Import inesperado'); }); await calendario.evaluate();
+const formato = new SourceTextModule(compilarFuente(await readFile(new URL('../src/social/socialHelpers.ts', import.meta.url), 'utf8'), 'socialHelpers.ts'), { context: contexto });
+await formato.link(() => { throw new Error('Import inesperado'); }); await formato.evaluate();
 const planificador = new SourceTextModule(compilarFuente(await readFile(new URL('../src/notifications/reminderPlanner.ts', import.meta.url), 'utf8'), 'reminderPlanner.ts'), { context: contexto });
-await planificador.link(nombre => { assert.equal(nombre, '../recurrences/recurrenceCalendar'); return calendario; }); await planificador.evaluate();
+await planificador.link(nombre => { if(nombre==='../social/socialHelpers')return formato;assert.equal(nombre, '../recurrences/recurrenceCalendar'); return calendario; }); await planificador.evaluate();
 const { planificarRecordatorios } = planificador.namespace as unknown as typeof import('../src/notifications/reminderPlanner.ts');
 const datos = (): DatosRecordatorios => ({ registros: [], deudas: [], recurrencias: [], mercadoPago: null, salas: [] });
 test('programa fechas concretas sin ejecutar JavaScript al momento del aviso y omite el registro del día ya realizado', () => {
@@ -34,10 +36,12 @@ test('respeta una zona distinta del teléfono y el cambio de horario de verano',
   assert.ok(avisos.some(a => a.tipo === 'registro' && a.fecha === '2026-03-08T13:00:00.000Z'));
 });
 test('las deudas generan recordatorios de saldo sin vencimientos; el cierre mensual no inventa cifras',()=>{
- const d=datos();d.deudas=[{id:'deuda',tipo:'debo'},{id:'cobro',tipo:'me_deben'}];
+ const d=datos();d.deudas=[{id:'deuda',tipo:'debo',persona:'Lucía Pérez',pendiente:1234.5},{id:'cobro',tipo:'me_deben',persona:'Martina Gómez',pendiente:60.05}];
  const avisos=planificarRecordatorios(d,ajustesPredeterminados(),new Date('2026-11-09T16:00:00Z'));
  const deudas=avisos.filter(a=>a.tipo==='debo'||a.tipo==='me_deben');assert.equal(deudas.length,118);
  assert.equal(deudas[0].fecha,'2026-11-10T12:00:00.000Z');
+ assert.equal(deudas.find(a=>a.tipo==='debo')!.titulo,'Le debés a Lucía Pérez');assert.equal(deudas.find(a=>a.tipo==='debo')!.mensaje,'Saldo pendiente: $ 1.234,50.');
+ assert.equal(deudas.find(a=>a.tipo==='me_deben')!.titulo,'Martina Gómez te debe');assert.equal(deudas.find(a=>a.tipo==='me_deben')!.mensaje,'Saldo pendiente: $ 60,05.');
  assert.ok(deudas.every(a=>!/vence|vencimiento|vencida/i.test(a.titulo+' '+a.mensaje)));
  assert.ok(avisos.some(a=>a.tipo==='mensual'&&a.fecha==='2026-12-01T13:00:00.000Z'&&!a.mensaje.includes('$')));
 });

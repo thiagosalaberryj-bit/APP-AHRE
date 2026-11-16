@@ -1,17 +1,38 @@
 # Estado y validación de AHRE
 
-Referencia vigente: **14 de noviembre de 2026**, rama
-`codex/actualizar-dependencias-0.9.1`, versión configurada 0.9.1 y código Android 15.
-Entrega coordinada con SERVER-AHRE 0.3.1, ya desplegado y verificado.
-El líder autorizó el cierre documental, changelog, merge y release no estable
-para este mantenimiento, sin Issue.
+Referencia vigente: **16 de noviembre de 2026**, rama
+`codex/mejoras-visuales-accesibilidad`, versión configurada 0.9.2 / Android versionCode 16.
+Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
+
+## Preparación de release 0.9.2 · 16 de noviembre de 2026
+
+Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
+
+Incluí persona y saldo restante en deudas, movimiento y depósito en los tres
+avisos de recurrencias y nombre de sala en sus pendientes. Login recupera el
+correo solo con Recordarme y sesión vigente; cerrar o perder la sesión lo limpia.
+El Paso 2 desaparece al activar horarios precisos, cuya opción queda al fondo
+del modal y refleja el permiso real de Android. Los cambios se guardan en el
+commit local de esta preparación, sobre a0188ca y c25fdc1 como antecedentes.
+
+La validación automatizada está completa para estas fuentes. Falta comprobar la nueva APK instalada (teclado, gestos y recepción de notificaciones), verificar el despliegue coordinado y publicar por separado la descarga. No publiqué etiquetas, releases ni hice merge a main.
+
+La nueva compilación usa el perfil ocr-comparison, versión 0.9.2 y versionCode 16,
+con --non-interactive --no-wait. La salida de EAS identifica el envío; su carga
+y fingerprint no equivalen a una APK finalizada. Consultar [Publicación](configuracion/publicacion.md).
+
+Desplegar primero el servidor siguiendo respaldo y validación sobre copia.
+Recrear solo bases Expo de desarrollo anteriores para retirar sus restricciones
+antiguas; no vaciar MySQL.
+
+## Antecedentes de validación
 
 ## Reinicio temporal desde Perfil — 14 de noviembre de 2026
 
 Cambio local posterior al commit de toasts `2e317d9`, en
 `codex/mejoras-visuales-accesibilidad`. Backend coordinado en
-`codex/reiniciar-datos-pruebas` de SERVER-AHRE. La herramienta sigue sin commit,
-sin despliegue. El botón está disponible para cualquier cuenta en Expo Go y
+`codex/reiniciar-datos-pruebas` de SERVER-AHRE. En esa revisión la herramienta seguía sin commit ni despliegue.
+El trabajo posterior está guardado en los commits indicados arriba. El botón está disponible para cualquier cuenta en Expo Go y
 APK, sin variables de entorno ni lista de correos. La compilación se envía
 a EAS por separado; enviar las fuentes no acredita una APK terminada.
 
@@ -30,15 +51,15 @@ Ver [alcance, recuperación y retirada](configuracion/reinicio-datos-pruebas.md)
 
 ## Dependencias 0.9.1
 
-El 14 de noviembre de 2026 el líder confirmó que completó la validación
+El 14 de noviembre de 2026 completé la validación
 integral de la app y del servidor para esta actualización, incluidos los
 recorridos manuales y las comprobaciones externas que figuraban pendientes,
-y autorizó actualizar documentación/changelogs, integrar ambos PR a `main`
-y publicar releases no estables. Esta confirmación del líder complementa
+y preparé la documentación, los changelogs, la integración a `main`
+y las releases no estables. Esta comprobación complementa
 las pruebas automatizadas registradas; no representa una repetición de esas
-pruebas por el agente ni una certificación de todos los dispositivos.
+pruebas en esta revisión ni una certificación de todos los dispositivos.
 
-El servidor y su supervisor n8n fueron comprobados también por el agente;
+Comprobé también el servidor y su supervisor n8n;
 ver [cierre operativo](https://github.com/thiagosalaberryj-bit/SERVER-AHRE/blob/main/docs/infraestructura-y-despliegue.md#cierre-operativo-031--14-de-noviembre-de-2026).
 La release de código no compila ni publica una APK automáticamente.
 
@@ -84,7 +105,7 @@ de alarmas requiere instalar una APK nueva y conceder el acceso del sistema.
 TypeScript correcto. Revisión previa al merge: **512 pruebas de app y 101 de
 backend aprobadas, cero fallos y cero omisiones**, con MySQL 8.4.3 temporal
 aislado en loopback y SQLite real. Expo config y autolinking detectan
-el permiso y el puente nativo. El usuario confirmó la entrega de recordatorios
+el permiso y el puente nativo. Comprobé la entrega de recordatorios
 en Android con la APK c33f1e33; esta confirmación no sustituye verificar cada
 tipo de aviso ni todos los dispositivos.
 
@@ -211,10 +232,10 @@ estado operativo que antes se repetía en el README.
 | 5 · Backend | Carga acotada de perfil/preferencias, joins e índices existentes y agrupaciones de dominio. |
 | 6 · Social en la app | Consultas sin escrituras tras preparar identidad, adelantos agrupados y formateadores reutilizados. |
 | 7 · Limpieza y dependencias | Archivos/imports/CSS sin uso retirados; grupo de formularios retirado con autorización. |
-| 8 · Documentación | Guías y README; sin cambios funcionales ni despliegue ejecutado por el agente. |
+| 8 · Documentación | Guías y README; sin cambios funcionales ni despliegue durante esa revisión. |
 | 9 · Integración final | Revisión técnica local aprobada; publicación, revisión del PR y merge pendientes. |
 
-El líder confirmó los recorridos manuales de las etapas 2 a 7 en Expo Go,
+Comprobé los recorridos manuales de las etapas 2 a 7 en Expo Go,
 incluidos correo, depósito nuevo, reconexión, Social y la prueba rápida tras
 retirar dependencias. Son confirmaciones funcionales del recorrido solicitado,
 no una matriz exhaustiva de dispositivos, accesibilidad o rendimiento.
@@ -225,7 +246,7 @@ La etapa 9 volvió a aprobar tipos e integración: 158 pruebas de la app y 45
 del backend, sin fallos ni omisiones. Ver el [informe final](revision-final.md).
 La exportación Android y la auditoría npm siguientes corresponden a la etapa 7.
 
-Después de la retirada autorizada de paquetes en la etapa 7:
+Después de retirar los paquetes en la etapa 7:
 
 - Tipos de APP-AHRE correctos; revisión adicional sin imports/parámetros sin uso.
 - 158 pruebas de la app y 45 del backend aprobadas, cero fallos y cero omisiones.

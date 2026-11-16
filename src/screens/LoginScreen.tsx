@@ -1,3 +1,4 @@
+import {obtenerSesionActual} from '../authentication/sessionService';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { ErrorAutenticacion } from '../authentication/errors';
 import { SetStateAction, useContext, useEffect, useRef, useState } from 'react';
@@ -32,7 +33,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
   const [recordarme, establecerRecordarme] = useState(true);
   const [cargando, establecerCargando] = useState(false);
   const [errores, establecerErrores] = useState<Partial<Record<string, string>>>({});
-  useEffect(()=>{let vigente=true;void leerRecordatorioIngreso().then(datos=>{if(vigente&&!recordatorioCambiado.current){establecerCorreo('');establecerRecordarme(datos.recordar);progresoRecordarme.setValue(datos.recordar?1:0);}}).catch(()=>{if(vigente)mostrarAviso('No se pudo recuperar el correo recordado.',{tipo:'informacion'});});return()=>{vigente=false;};},[]);
+  useEffect(()=>{let vigente=true;void Promise.all([leerRecordatorioIngreso(),obtenerSesionActual()]).then(([datos,sesion])=>{if(vigente&&!recordatorioCambiado.current){establecerCorreo(actual=>actual||(datos.recordar&&sesion.usuario?sesion.usuario.correo_electronico:''));establecerRecordarme(datos.recordar);progresoRecordarme.setValue(datos.recordar?1:0);}}).catch(()=>{if(vigente)mostrarAviso('No se pudo recuperar el correo recordado.',{tipo:'informacion'});});return()=>{vigente=false;};},[]);
   const moverControlRecordarme = progresoRecordarme.interpolate({ inputRange: [0, 1], outputRange: [0, 24] });
   const colorFondoRecordarme = progresoRecordarme.interpolate({
     inputRange: [0, 1],

@@ -271,7 +271,7 @@ selector de depósitos aprobadas. No acreditan una prueba visual en el teléfono
 
 ## Validación del flujo acordado de salas
 
-Casos automatizados adicionales: Recordarme conserva correo sin contraseña y funciona sin huella; Inicio conserva la validación biométrica cuando está configurada; decisiones con carga estable en ambos temas; fichas archivadas que admiten nuevas deudas y salas; revisión por expulsión y bloqueo de cierre. El servidor prueba identidad autenticada, admisión atómica con apodo repetido, reciprocidad, reingreso de amigos, expulsión y acceso financiero limitado, cierre entre cuentas sin amistad y retiro/reenvío idempotente de propuestas.
+Casos automatizados adicionales: Recordarme mantiene la sesión autorizada; sin huella exige Login y cerrar sesión limpia el correo; Inicio conserva la validación biométrica cuando está configurada; decisiones con carga estable en ambos temas; fichas archivadas que admiten nuevas deudas y salas; revisión por expulsión y bloqueo de cierre. El servidor prueba identidad autenticada, admisión atómica con apodo repetido, reciprocidad, reingreso de amigos, expulsión y acceso financiero limitado, cierre entre cuentas sin amistad y retiro/reenvío idempotente de propuestas.
 
 Comprobar manualmente en una APK: teclado y botones Android dentro de los modales, ingreso por enlace/QR con dos cuentas, recepción push y la tarjeta de registros propios después de expulsión. Las pruebas de componentes y la exportación Hermes no sustituyen esa prueba física. Para las restricciones SQLite de archivo, usar una base local de desarrollo recreada. No es necesario borrar la base del servidor.
 
@@ -282,7 +282,26 @@ Tipos de app y servidor correctos. App: **572 pruebas aprobadas, cero fallos y c
 
 El rechazo del reinicio por una confirmación todavía en vuelo se cubre con espera de actividad antes de la vista previa y cinco ejecuciones consecutivas correctas. La limpieza del reinicio contempla autoría y revisiones de salida, sin dejar bloqueada la sala que conserva otro administrador.
 
-Estos resultados validan código local; no acreditan despliegue ni recepción push, teclado o gestos en una APK física. Los cambios permanecen sin commit, push, despliegue ni envío de una nueva compilación a EAS.
+Estos resultados validan código local; no acreditan despliegue ni recepción push, teclado o gestos en una APK física. Esa verificación precede a los commits a0188ca/c25fdc1 y al envío EAS posterior; consultar el estado vigente.
 
 
-Correcciones del 16/11: acceso sin huella exige Login y cerrar sesión limpia correo; inputs de identidad de una línea; pasos de permisos secuenciales; aceptación directa de amigos con protección de ficha; invitación al agregar integrantes; push con título/cuerpo del historial. Verificación: suite de app y servidor con MySQL aislado y prueba específica del contenido nativo y del Paso 2. Los commits locales incluyen el trabajo pendiente anterior y estas correcciones, sin desplegar ni generar una nueva APK.
+Correcciones del 16/11: acceso sin huella exige Login y cerrar sesión limpia correo; inputs de identidad de una línea; pasos de permisos secuenciales; aceptación directa de amigos con protección de ficha; invitación al agregar integrantes; push con título/cuerpo del historial. Verificación: suite de app y servidor con MySQL aislado y prueba específica del contenido nativo y del Paso 2. Los commits locales a0188ca/c25fdc1 incluyen el trabajo pendiente anterior y estas correcciones. La APK se envió después; consultar [Publicación](configuracion/publicacion.md). El despliegue de este backend no se ha verificado.
+
+
+### Ajustes locales de correo y horarios precisos · 16/11/2026
+
+Comprobé 20 casos enfocados sin fallos ni omisiones y los tipos de app/herramientas
+y backend. Login recupera el correo con Recordarme y sesión vigente al reabrir;
+no recupera la contraseña y queda vacío después de cerrar o perder la sesión.
+La prueba de reapertura usa un contexto nuevo con SQLite y almacenamiento
+persistentes. El Paso 2 desaparece al activar el permiso; la opción de horarios
+precisos queda al fondo del modal, abre Android y consulta el estado al regresar.
+Estos ajustes se incorporan al commit y al nuevo envío de esta preparación;
+no estaban en la APK enviada anteriormente.
+
+
+### Preparación de release · 16/11/2026
+
+Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
+
+La validación automatizada está completa para estas fuentes. Falta comprobar la nueva APK instalada (teclado, gestos y recepción de notificaciones), verificar el despliegue coordinado y publicar por separado la descarga. No publiqué etiquetas, releases ni hice merge a main.

@@ -2,13 +2,13 @@
 
 ## Alcance
 
-Registro y primer ingreso consultan SERVER-AHRE y necesitan conexión para autorizar la instalación. SQLite permite ingresos offline posteriores en la instalación previamente autorizada. Al abrir AHRE, Inicio permanece visible hasta que la persona completa el deslizador. Sin sesión, abre Login; con sesión válida, solicita huella si está configurada y luego abre el Dashboard.
+Registro y primer ingreso consultan SERVER-AHRE y necesitan conexión para autorizar la instalación. SQLite permite ingresos offline posteriores en la instalación previamente autorizada. Al abrir AHRE, Inicio permanece visible hasta que la persona completa el deslizador. Sin sesión abre Login. Con sesión válida y biometría configurada pide huella; sin huella abre Login y exige contraseña.
 
 ## Login
 
 `src/screens/LoginScreen.tsx` solicita correo electrónico y contraseña. Antes de consultar SQLite comprueba que ambos estén completos y que el correo tenga un formato válido. El correo se recorta y normaliza a minúsculas. Las credenciales inválidas muestran el mismo mensaje para un usuario inexistente o una contraseña incorrecta. El rechazo marca correo y contraseña junto a sus campos.
 
-El botón «Recordarme» está activo inicialmente. Al activarlo, el identificador de usuario de la sesión se guarda con `expo-secure-store`. Si se desactiva, la sesión se conserva solo mientras la aplicación está abierta. `authentication/loginMemory.ts` guarda por separado la preferencia y el correo normalizado; Login abre con correo y contraseña vacíos. Cerrar sesión limpia el recordatorio de correo. Después de inicializar SQLite, AHRE permanece en Inicio; la sesión se consulta al completar el deslizador. «¿Olvidaste tu contraseña?» permanece sin un flujo asociado; la recuperación remota no forma parte de esta funcionalidad.
+El botón «Recordarme» está activo inicialmente. Al activarlo, el identificador de usuario de la sesión se guarda con `expo-secure-store`. Si se desactiva, la sesión se conserva solo mientras la aplicación está abierta. `authentication/loginMemory.ts` guarda por separado la preferencia y el correo normalizado; Login recupera el correo de la cuenta al reabrir si «Recordarme» está activo y la sesión sigue vigente; la contraseña permanece vacía. Cerrar sesión o perder su autorización limpia el correo recordado. Después de inicializar SQLite, AHRE permanece en Inicio; la sesión se consulta al completar el deslizador. «¿Olvidaste tu contraseña?» permanece sin un flujo asociado; la recuperación remota no forma parte de esta funcionalidad.
 
 El botón de Login muestra carga durante la verificación, impide pulsaciones repetidas y permite mostrar u ocultar la contraseña sin alterar su contenido. Al autenticar correctamente reemplaza la pila de navegación por el Dashboard, así el botón de regreso no vuelve al formulario.
 
@@ -80,8 +80,8 @@ Registro y primer ingreso usan la API remota y requieren conexión. Los ingresos
 
 ## Correcciones de acceso, permisos e invitaciones · 16/11/2026
 
-Sin hardware biométrico o sin huella configurada, Inicio deriva a Login y exige contraseña; nunca abre Dashboard directamente. Login siempre abre con correo vacío. Cerrar sesión o invalidar la referencia guardada limpia también el recordatorio de correo.
+Sin hardware biométrico o sin huella configurada, Inicio deriva a Login y exige contraseña; nunca abre Dashboard directamente. Login recupera el correo de la cuenta al reabrir si «Recordarme» está activo y la sesión sigue vigente; la contraseña permanece vacía. Cerrar sesión o perder su autorización limpia el correo recordado.
 
 Nombre y apellido del registro fuerzan una única línea en el input desde el primer render. Aceptar/rechazar tienen separación explícita. Quitar de una sala muestra los gastos afectados como lista desplazable, con confirmación visible. Una solicitud de una cuenta amiga se acepta directamente con su ficha confirmada; el servidor rechaza cualquier intento de asignarla a otra.
 
-Notificaciones muestra primero Paso 1 para habilitar los avisos y, al concederlo, Paso 2 para configurar horarios precisos, con el mismo contenedor y acceso por flecha. Los horarios precisos reducen retrasos de recordatorios locales, no cambian la entrega del proveedor push. Las push y los recordatorios muestran el título y mensaje del historial, sin texto genérico; se retira el control que ocultaba ese contenido. El campo mostrarDetalles se conserva solo por compatibilidad del contrato.
+Notificaciones muestra primero Paso 1 para habilitar los avisos y, al concederlo, Paso 2 para configurar horarios precisos, con el mismo contenedor y acceso por flecha. El Paso 2 desaparece cuando Android confirma el permiso. Al fondo del modal de ajustes queda la fila Horarios precisos, con el estilo de Perfil y el estado real; abre los ajustes de Android para activar o desactivar el permiso y vuelve a consultarlo al regresar. Los horarios precisos reducen retrasos de recordatorios locales, no cambian la entrega del proveedor push. Las push y los recordatorios muestran el mismo título y mensaje del historial, sin sustituirlos por «Tenés que revisar algo en AHRE»; se retira el control que ocultaba ese contenido. El campo mostrarDetalles se conserva solo por compatibilidad del contrato.

@@ -28,7 +28,7 @@ test('configuración pide permiso solo si falta y no insiste al volver a renderi
  const {TEMAS}=cargar<typeof import('../src/styles/colors.ts')>('src/styles/colors.ts');
  const Ajustes=cargar<typeof import('../src/components/NotificationSettings.tsx')>('src/components/NotificationSettings.tsx').default;
  const props={tema:TEMAS.claro,ajustes:ajustesPredeterminados(),alCambiar:()=>{},alCerrar:()=>{},alGuardar:()=>{},guardando:false,alCambiarPermiso:(p:string)=>cambios.push(p),canales:{}};
- const permitido=Ajustes({...props,permiso:'Permitidas'});assert.equal(solicitudes,0);assert.ok(!nodos(permitido).some(n=>String(n.props.children).includes('Permitir avisos')));
+ const permitido=Ajustes({...props,permiso:'Permitidas'});const lista=nodos(permitido),ultimo=lista[lista.length-1];assert.equal(typeof ultimo.type,'function');assert.equal((ultimo.type as Function).name,'AjustesAlarmasExactas');assert.equal(solicitudes,0);assert.ok(!nodos(permitido).some(n=>String(n.props.children).includes('Permitir avisos')));
  Ajustes({...props,permiso:'Sin permiso'});await Promise.resolve();assert.equal(solicitudes,1);assert.deepEqual(cambios,['Permitidas']);
  Ajustes({...props,permiso:'Sin permiso'});await Promise.resolve();assert.equal(solicitudes,1);
 });

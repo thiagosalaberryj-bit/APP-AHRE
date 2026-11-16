@@ -1,8 +1,10 @@
 # Documentación de APP-AHRE
 
-Guía vigente al 14 de noviembre de 2026, versión 0.9.1 (no estable), Android 15.
-Entrega coordinada con SERVER-AHRE 0.3.1, desplegado y verificado. El [README](../README.md) presenta la app;
-este índice enlaza el detalle. El [estado y las verificaciones](estado-y-validacion.md)
+Guía vigente al 16 de noviembre de 2026, versión configurada 0.9.2 (no estable),
+Android versionCode 16, coordinada con SERVER-AHRE 0.3.3. La revisión actual
+completa las suites automatizadas y prepara commits locales y una nueva APK
+sin esperar la compilación. La release y su descarga siguen sin publicar.
+El [README](../README.md) presenta la app; este índice enlaza el detalle. El [estado y las verificaciones](estado-y-validacion.md)
 separan lo implementado, las pruebas automáticas, las confirmaciones del líder y
 el trabajo pendiente. Los documentos históricos de TypeScript y dependencias
 conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
