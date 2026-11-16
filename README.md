@@ -58,10 +58,10 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
-Revisión de interfaz del 16/11/2026: tipos correctos, 542 pruebas de app
+Revisión de interfaz del 16/11/2026: tipos correctos, 544 pruebas de app
 aprobadas y 49 integraciones MySQL omitidas por no tener ese entorno habilitado.
 Exportación Android/Hermes correcta. Esta rama incorpora los temas y controles
-compartidos, con 2 segundos mínimos de carga y 2 segundos de «Listo» antes del
+compartidos, con 2 segundos mínimos de carga y 1 segundo de «Listo» antes del
 cierre; falta validar esos tiempos en el teléfono. La preparación anterior de
 0.9.2 registró 579 pruebas sin omisiones y 116 del backend coordinado 0.3.3. La preparación actual incluye recordatorios descriptivos, correo
 recordado y horarios precisos. La APK 0.9.2 está probada en el teléfono. Las fuentes se entregan como release

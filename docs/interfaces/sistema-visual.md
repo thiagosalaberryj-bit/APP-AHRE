@@ -202,7 +202,9 @@ estilos de campos y botones, el feedback de presión y las constantes de animaci
   el icono activos usan el foco del tema. No hay relleno verde de foco.
 
 `ActionButton.tsx` comparte la interacción, `ActionContent.tsx` el cambio
-vertical del texto y `LoadingDots.tsx` los tres puntos. La carga dice
+vertical de dos filas sincronizadas (texto e icono) con una sola animación nativa,
+sin callbacks intermedios de JavaScript. El contenedor queda fijo y recorta solo
+la salida y entrada de las filas. `LoadingDots.tsx` muestra los tres puntos. La carga dice
 «Procesando», sin puntos suspensivos escritos. Las animaciones respetan Reducir
 movimiento y se detienen al desmontar. Los pulsables conservan feedback nativo.
 
@@ -488,7 +490,7 @@ La navegación, los selectores y las aperturas responden al toque sin pausas art
 
 Las acciones que guardan muestran «Procesando» y tres puntos durante la
 operación real, con un mínimo de 2 segundos también para escrituras locales
-rápidas. Solo tras el éxito muestran «Listo» durante otros 2 segundos antes de
+rápidas. Solo tras el éxito muestran «Listo» durante otro segundo antes de
 cerrar el formulario o navegar. Si una solicitud online tarda más de 2 segundos,
 los puntos continúan hasta terminar la respuesta y sincronización necesarias;
 recién entonces comienza el tiempo de «Listo». Los errores permiten reintentar
@@ -505,4 +507,5 @@ comprobarse también en el teléfono.
 
 La pulsación no agrega una capa ni un marco gris sobre los controles. Los
 botones de encabezado, opciones, interruptores y navegación usan un cambio
-sutil de opacidad; las operaciones muestran la carga de tres puntos.
+sutil de opacidad; las operaciones muestran la carga de tres puntos. Las animaciones de carga y
+transición no crean interacciones que bloqueen otras tareas de la interfaz.

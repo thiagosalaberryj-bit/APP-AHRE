@@ -12,16 +12,19 @@ pantalla temporal de estilos, compacta las solicitudes de integrantes y mejora
 los selectores y la respuesta visual de las acciones.
 
 Guardar muestra «Procesando» con tres puntos durante al menos 2 segundos;
-«Listo» permanece otros 2 segundos antes de cerrar o navegar. Una operación
+«Listo» permanece otro segundo antes de cerrar o navegar. Una operación
 online espera su resultado real antes de confirmar. La navegación responde sin
 una pausa artificial. Las operaciones pendientes conservan el bloqueo y los
 errores permiten reintentar sin confirmar éxito.
 
 - Tipos de app y herramientas: correctos con `npm run typecheck`.
-- Suite de app: **591 casos, 542 aprobados, cero fallos y 49 omitidos**.
+- Suite de app: **593 casos, 544 aprobados, cero fallos y 49 omitidos**.
   Las omisiones corresponden a las integraciones MySQL sin entorno habilitado;
   no se consideran verificadas en esta ejecución.
 - Exportación Android/Hermes: correcta.
+- La transición desplaza juntas las filas anterior y nueva (texto e icono),
+  usando una sola animación nativa sin callback intermedio; los puntos salientes
+  detienen su bucle y la máscara del botón queda fija.
 - Cobertura específica: tiempos de carga y éxito, cancelación al desmontar,
   bloqueo de doble envío, estados en ambos temas y marcado masivo de 2.000 avisos.
 - Pendiente: comprobar los nuevos tiempos y la fluidez final en Expo Go en el

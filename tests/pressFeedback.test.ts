@@ -39,7 +39,7 @@ test('un botón recién montado no simula una pulsación ni una transición de t
  const {cargar}=crearCargadorComponentes(process.cwd(),{
   react:{useState:(v:unknown)=>[v,()=>{}],useRef:(v:unknown)=>({current:v}),useEffect:(f:()=>unknown)=>f()},
   '../hooks/useReducedMotion':{useMovimientoReducido:()=>false},
-  'react-native':{StyleSheet:{create:(v:unknown)=>v},Text:'Text',Animated:{View:'AnimatedView',Value:class{setValue(){}},timing:()=>{animaciones++;return{start(){},stop(){}};}}},
+  'react-native':{StyleSheet:{create:(v:unknown)=>v},Text:'Text',Animated:{View:'AnimatedView',Value:class{setValue(){}interpolate(){return 0;}},timing:()=>{animaciones++;return{start(){},stop(){}};}}},
  });
  const Contenido=cargar<typeof import('../src/components/ActionContent.tsx')>('src/components/ActionContent.tsx').default;
  Contenido({texto:'Guardar',color:'#024C42'});assert.equal(animaciones,0);

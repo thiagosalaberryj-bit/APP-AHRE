@@ -39,7 +39,7 @@ test('un éxito explícito muestra Listo y vuelve a habilitar la acción tras co
  const promesa=e.renderizar(props).props.onPress();resolver(true);await Promise.resolve();
  t.mock.timers.tick(2000);await Promise.resolve();await Promise.resolve();
  const listo=e.renderizar(props);assert.equal(listo.props.children.props.completado,true);assert.equal(listo.props.children.props.cargando,false);assert.equal(listo.props.disabled,true);
- t.mock.timers.tick(2000);await promesa;
+ t.mock.timers.tick(1000);await promesa;
  const siguiente={...props,texto:'Quitar permiso'};e.renderizar(siguiente);
  assert.equal(e.renderizar(siguiente).props.disabled,false);e.cerrar();
 });

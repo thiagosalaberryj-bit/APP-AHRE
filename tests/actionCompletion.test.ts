@@ -16,19 +16,19 @@ function preparar(t:any){
  return {accion,avanzar,completado:()=>completado,cerrar:()=>cerrar()};
 }
 
-test('una escritura local muestra dos segundos de carga y dos de Listo antes de cerrar',async t=>{
+test('una escritura local muestra dos segundos de carga y uno de Listo antes de cerrar',async t=>{
  const e=preparar(t);e.accion.iniciar();let cerrado=false;
  const terminar=e.accion.confirmar().then(ok=>{cerrado=ok;});
  await e.avanzar(1999);assert.equal(e.completado(),false);assert.equal(cerrado,false);
  await e.avanzar(1);assert.equal(e.completado(),true);assert.equal(cerrado,false);
- await e.avanzar(1999);assert.equal(cerrado,false);await e.avanzar(1);await terminar;assert.equal(cerrado,true);
+ await e.avanzar(999);assert.equal(cerrado,false);await e.avanzar(1);await terminar;assert.equal(cerrado,true);
 });
 
 test('una operación online espera la respuesta y luego mantiene Listo visible',async t=>{
  const e=preparar(t);e.accion.iniciar();await e.avanzar(5000);assert.equal(e.completado(),false);
  let cerrado=false;const terminar=e.accion.confirmar().then(ok=>{cerrado=ok;});await e.avanzar(0);
  assert.equal(e.completado(),true);assert.equal(cerrado,false);
- await e.avanzar(2000);await terminar;assert.equal(cerrado,true);
+ await e.avanzar(1000);await terminar;assert.equal(cerrado,true);
 });
 
 test('desmontar cancela el cierre pendiente y un error no confirma éxito',async t=>{

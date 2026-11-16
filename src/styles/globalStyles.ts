@@ -17,7 +17,7 @@ export const ESPACIADO = Object.freeze({
 });
 
 export const RETROALIMENTACION_PULSACION = Object.freeze({color:'transparent', foreground:false});
-export const ANIMACION_ACCION = Object.freeze({cargaMinima:2000,exitoVisible:2000,transicion:260,punto:240,separacionPuntos:130});
+export const ANIMACION_ACCION = Object.freeze({cargaMinima:2000,exitoVisible:1000,transicion:260,punto:240,separacionPuntos:130});
 export const MARGEN_LATERAL_PANTALLA = ESPACIADO.medio;
 
 export const BORDES = Object.freeze({
@@ -173,7 +173,9 @@ function construirEstilosGlobales(tema: Tema) {
     botonCancelar: { minHeight:48, alignItems:'center', justifyContent:'center', backgroundColor:tema.fondoDeshabilitado, borderRadius:BORDES.radios.boton, paddingHorizontal:ESPACIADO.grande, paddingVertical:ESPACIADO.medio },
     textoBotonCancelar: { color:tema.textoPrincipal, fontSize:TIPOGRAFIA.tamanos.boton, fontWeight:TIPOGRAFIA.pesos.seminegrita },
     botonPresionado: {opacity:0.78},
-    accionContenido: {minHeight:24,overflow:'hidden',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:ESPACIADO.pequeno},
+    accionContenido: {minHeight:28,overflow:'hidden',alignSelf:'stretch',justifyContent:'center'},
+    accionFila: {minHeight:28,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:ESPACIADO.pequeno},
+    accionAnterior: {position:'absolute',top:0,bottom:0,left:0,right:0},
     accionPuntos: {flexDirection:'row',alignItems:'center',gap:4,minHeight:20},
     accionPunto: {width:5,height:5,borderRadius:BORDES.radios.circular},
     accionTexto: {fontSize:TIPOGRAFIA.tamanos.boton,fontWeight:TIPOGRAFIA.pesos.seminegrita,textAlign:'center',flexShrink:1},
