@@ -245,4 +245,4 @@ no requiere un nuevo contrato del servidor.
 Comprobé 49 casos de notificaciones, permisos y acceso sin fallos ni omisiones,
 y los tipos de app/herramientas. Después completé la suite integral y preparé
 el commit local de esta entrega; la recepción y presentación
-física en Android requieren una APK con estos cambios.
+física en Android quedaron confirmadas en la prueba general de la APK 0.9.2.

@@ -1,6 +1,6 @@
 # Revisión final e integración · etapa 9
 
-## Preparación local de release 0.9.2 · 16 de noviembre de 2026
+## Cierre de release 0.9.2 · 16 de noviembre de 2026
 
 Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
 
@@ -8,12 +8,14 @@ Actualicé changelog, documentación funcional y guías de publicación. Incluí
 correo recordado, permisos y recordatorios descriptivos en el commit de esta
 preparación; a0188ca/c25fdc1 identifican sus bases funcionales anteriores.
 
-La validación automatizada está completa para estas fuentes. Falta comprobar la nueva APK instalada (teclado, gestos y recepción de notificaciones), verificar el despliegue coordinado y publicar por separado la descarga. No publiqué etiquetas, releases ni hice merge a main.
+La APK 0.9.2 / Android 16 del envío EAS 44178bff, generada desde 99ecf91, quedó probada en el teléfono el 16/11/2026 con funcionamiento confirmado. Archivo de distribución: ahre-0.9.2.apk, 173.236.452 bytes; SHA-256 ebb3439873e23a51272322af224dfdf66edc7b5ba7157788418c4695f2e55f79.
 
-Para continuar la publicación: comprobar la APK resultante y el backend
-desplegado, revisar e integrar los PR y preparar las etiquetas 0.9.2 de app y
-0.3.3 de servidor. Mover Sin publicar a la versión fechada solo al cerrar esa
-entrega; publicar la descarga Android por separado con hash y catálogo.
+La copia y el despliegue en el servidor siguen siendo manuales. Preparé APK, manifiesto, hash y catálogo localmente; no conecté el repositorio al servidor ni ejecuté el despliegue remoto. Los comandos conservan .env, la base y las descargas históricas.
+
+La release de app 0.9.2 es no estable y se coordina con SERVER-AHRE 0.3.3.
+El catálogo web conserva versiones anteriores e informa la compatibilidad de
+app y servidor en cada tarjeta. Consultar [Publicación](configuracion/publicacion.md)
+para copiar archivos y comprobar la descarga remota después del despliegue.
 
 ## Antecedente · cierre 0.9.1 · 14 de noviembre de 2026
 

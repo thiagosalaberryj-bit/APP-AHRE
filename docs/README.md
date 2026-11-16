@@ -2,8 +2,8 @@
 
 Guía vigente al 16 de noviembre de 2026, versión configurada 0.9.2 (no estable),
 Android versionCode 16, coordinada con SERVER-AHRE 0.3.3. La revisión actual
-completa las suites automatizadas y prepara commits locales y una nueva APK
-sin esperar la compilación. La release y su descarga siguen sin publicar.
+completa las suites automatizadas y la APK ya fue probada en el teléfono.
+El cierre prepara la release no estable; el despliegue y la descarga web son manuales.
 El [README](../README.md) presenta la app; este índice enlaza el detalle. El [estado y las verificaciones](estado-y-validacion.md)
 separan lo implementado, las pruebas automáticas, las confirmaciones del líder y
 el trabajo pendiente. Los documentos históricos de TypeScript y dependencias

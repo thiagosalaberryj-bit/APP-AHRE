@@ -338,3 +338,21 @@ Para publicar más adelante:
 5. Comprobar la descarga HTTPS completa y su hash sin retirar APK anteriores.
 
 La validación automatizada está completa para estas fuentes. Falta comprobar la nueva APK instalada (teclado, gestos y recepción de notificaciones), verificar el despliegue coordinado y publicar por separado la descarga. No publiqué etiquetas, releases ni hice merge a main.
+
+
+## Cierre de APK 0.9.2 · 16/11/2026
+
+La APK 0.9.2 / Android 16 del envío EAS 44178bff, generada desde 99ecf91, quedó probada en el teléfono el 16/11/2026 con funcionamiento confirmado. Archivo de distribución: ahre-0.9.2.apk, 173.236.452 bytes; SHA-256 ebb3439873e23a51272322af224dfdf66edc7b5ba7157788418c4695f2e55f79.
+
+Preparé el nombre público de AHRE, manifiesto y archivo .sha256 con el catálogo
+de SERVER-AHRE. Las novedades se presentan en cada tarjeta; desde tres versiones
+se usa carrusel, dos tarjetas en escritorio y una en móvil, sin avance automático.
+Cada entrega explica qué actualización de app y servidor corresponde.
+
+La copia y el despliegue en el servidor siguen siendo manuales. Preparé APK, manifiesto, hash y catálogo localmente; no conecté el repositorio al servidor ni ejecuté el despliegue remoto. Los comandos conservan .env, la base y las descargas históricas.
+
+La validación automatizada completa fue 579 pruebas de app y 116 del servidor,
+sin fallos ni omisiones. Los 12 casos de publicación/carrusel se comprobaron por
+separado; no se suman a las suites por solapamiento. Tipos y Android/Hermes correctos.
+La prueba manual de la APK quedó confirmada; la comprobación pública de la nueva
+descarga corresponde al despliegue posterior.

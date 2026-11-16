@@ -61,8 +61,8 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 Revisión del 16/11/2026: tipos correctos y 579 pruebas de app aprobadas sin
 omisiones; backend coordinado 0.3.3: 116 aprobadas. Exportación Android/Hermes
 correcta. La preparación actual incluye recordatorios descriptivos, correo
-recordado y horarios precisos. Se solicita una nueva APK 0.9.2 sin esperar
-su finalización; faltan despliegue y prueba física. Release sin publicar.
+recordado y horarios precisos. La APK 0.9.2 está probada en el teléfono. Las fuentes se entregan como release
+no estable, coordinada con servidor 0.3.3; el despliegue remoto es manual.
 El cierre 0.9.1 y su servidor desplegado del 14/11 son antecedentes.
 El detalle y la procedencia de las verificaciones están en
 [Estado y validación](docs/estado-y-validacion.md).

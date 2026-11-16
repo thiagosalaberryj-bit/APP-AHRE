@@ -5,8 +5,12 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+Sin cambios pendientes.
+
+## [v0.9.2] - 2026-11-16 - no estable
+
 Actualicé el historial y la documentación el 16/11/2026. Versión configurada
-0.9.2 / Android versionCode 16; estos cambios aún no constituyen una nueva release de fuentes.
+0.9.2 / Android versionCode 16, coordinada con SERVER-AHRE 0.3.3.
 
 ### Añadido
 
@@ -69,16 +73,13 @@ Actualicé el historial y la documentación el 16/11/2026. Versión configurada
   acción Marcar todas como vistas junto a ajustes.
 - Vista previa del reinicio espera las operaciones activas antes de calcular el alcance.
 
-### Verificación y preparación de release
+### Verificación y entrega
 
 Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
 
-La validación automatizada está completa para estas fuentes. Falta comprobar la nueva APK instalada (teclado, gestos y recepción de notificaciones), verificar el despliegue coordinado y publicar por separado la descarga. No publiqué etiquetas, releases ni hice merge a main.
+La APK 0.9.2 / Android 16 del envío EAS 44178bff, generada desde 99ecf91, quedó probada en el teléfono el 16/11/2026 con funcionamiento confirmado. Archivo de distribución: ahre-0.9.2.apk, 173.236.452 bytes; SHA-256 ebb3439873e23a51272322af224dfdf66edc7b5ba7157788418c4695f2e55f79.
 
-Guardé los cambios pendientes de app y documentación en el commit local de esta
-preparación. El backend coordinado queda en 0.3.3 con manifiestos consistentes y
-sin cambios de dependencias. Solicito la nueva APK 0.9.2 / Android 16 desde estas
-fuentes con el perfil ocr-comparison y --no-wait; el envío no publica una release.
+La copia y el despliegue en el servidor siguen siendo manuales. Preparé APK, manifiesto, hash y catálogo localmente; no conecté el repositorio al servidor ni ejecuté el despliegue remoto. Los comandos conservan .env, la base y las descargas históricas.
 
 ## [v0.9.1] - 2026-11-14 - no estable
 
