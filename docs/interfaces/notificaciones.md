@@ -246,3 +246,14 @@ Comprobé 49 casos de notificaciones, permisos y acceso sin fallos ni omisiones,
 y los tipos de app/herramientas. Después completé la suite integral y preparé
 el commit local de esta entrega; la recepción y presentación
 física en Android quedaron confirmadas en la prueba general de la APK 0.9.2.
+
+
+## Marcado masivo sin acciones individuales
+
+Marcar todas como vistas conserva las marcas por aviso mediante un único
+INSERT … SELECT y un UPDATE en la misma transacción, sin recorrer cada aviso
+desde JavaScript. No abre avisos ni ejecuta sus acciones y encola una sola
+confirmación remota. El botón muestra tres puntos, evita envíos repetidos y
+actualiza el contador tras guardar. Las recargas se agrupan si llegan eventos
+durante una lectura. Una prueba con 2.000 avisos comprueba que la cantidad de
+consultas no crece por cada aviso y que se conserva el marcado del historial.

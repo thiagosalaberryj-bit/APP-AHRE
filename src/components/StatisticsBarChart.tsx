@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useCallback, useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { formatearMonto, type crearDatosColumnas } from '../statistics/statisticsPresentation';
@@ -86,18 +88,18 @@ export default function GraficoColumnas({
         const altura = montoMaximo ? Math.max(2, (total / montoMaximo) * altoMaximoBarra) : 2;
 
         return (
-          <Pressable
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityLabel={`${barra.etiqueta}, ${formatearMonto(total)}`}
             accessibilityRole="button"
             accessibilityState={{ selected: indice === indiceSeleccionado }}
             key={barra.id}
-            onPress={() => {
+            onPress={conRespuestaVisual(() => {
               if (arrastreIniciado.current) {
                 arrastreIniciado.current = false;
                 return;
               }
               alSeleccionar(indice);
-            }}
+            })}
             style={estilos.columna}
           >
             <View

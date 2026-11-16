@@ -1,3 +1,4 @@
+import {programarCargaVisible} from '../utils/visibleScreenWork';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { operacionFinancieraEnCurso } from './financialOperation';
@@ -61,7 +62,7 @@ export default function usePantallaSocial({
       if (montado.current && numero === solicitud.current) establecerCargando(false);
     }
   }, []);
-  useFocusEffect(useCallback(() => { recargar();return observarSocialOnline(()=>{void recargar();}); }, [recargar]));
+  useFocusEffect(useCallback(() => {let limpieza:(()=>void)|undefined;const cancelar=programarCargaVisible(()=>{const resultado=(()=>{ recargar();return observarSocialOnline(()=>{void recargar();}); })();if(typeof resultado==='function')limpieza=resultado;});return()=>{cancelar();limpieza?.();};}, [recargar]));
   const social = registros ? {
     ...registros, recargar,
     abrirMovimiento: (movimientoId:string) => raiz.push(RUTAS.DETALLE_MOVIMIENTO,{movimientoId}),
@@ -78,7 +79,7 @@ export default function usePantallaSocial({
   const sala = registros?.salas.find(elemento => elemento.id === parametros.salaId);
   const persona = social?.obtenerPersona(parametros.personaId);
   const gasto = sala?.gastos.find(elemento => elemento.id === parametros.gastoId);
-  const irA = (destino: import('../navigation/types').NombreRuta, datos: import('../navigation/types').ParametrosPantalla = {}) => {
+  const irA = (destino: typeof RUTAS.SALA_SOCIAL | typeof RUTAS.PERSONA_SOCIAL | typeof RUTAS.PERSONAS_SOCIAL | typeof RUTAS.REGISTRO_SOCIAL | typeof RUTAS.GASTO_SOCIAL, datos: import('../navigation/types').ParametrosPantalla = {}) => {
     if (esSecundaria) raiz.push(destino, datos);else navegacion.getParent()?.navigate(destino, datos);
   };
   const abrirSala = (salaId: string) => irA(RUTAS.SALA_SOCIAL, {

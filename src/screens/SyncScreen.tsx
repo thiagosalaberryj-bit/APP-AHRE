@@ -1,10 +1,14 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import BotonAccion from '../components/ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from '../components/LoadingDots';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { useAvisoError, useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { SeccionesEncabezado } from '../components/HeaderScrollView';
 import {useCallback,useContext,useMemo,useRef,useState} from 'react';
-import {Alert,ActivityIndicator,Pressable,Text,View} from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect} from '@react-navigation/native';
 import {SafeAreaView,useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -97,7 +101,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
     <SeccionesEncabezado sections={secciones} keyExtractor={r=>r.id} contentContainerStyle={estilos.contenido} stickySectionHeadersEnabled={false}
       ListHeaderComponent={<View style={estilos.resumen}>
         <View style={estilos.fila}>
-          <View style={estilos.iconoEstado}>{ocupado?<ActivityIndicator color={tema.foco}/>:<Ionicons name={datos.soloLocal?'phone-portrait-outline':vista.estado==='online'?'cloud-done-outline':vista.estado==='offline'?'cloud-offline-outline':'cloud-upload-outline'} size={24} color={tema.foco}/>}</View>
+          <View style={estilos.iconoEstado}>{ocupado?<PuntosCarga color={tema.foco}/>:<Ionicons name={datos.soloLocal?'phone-portrait-outline':vista.estado==='online'?'cloud-done-outline':vista.estado==='offline'?'cloud-offline-outline':'cloud-upload-outline'} size={24} color={tema.foco}/>}</View>
           <View style={estilos.flexible}>
             <Text style={estilos.etiqueta}>ESTADO ACTUAL</Text>
             <Text accessibilityLiveRegion="polite" style={estilos.titulo}>{vista.estado==='online'&&datos.total?'Cambios pendientes de confirmar':TEXTOS_SYNC[vista.estado]}</Text>
@@ -112,15 +116,13 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
         </View>
         {datos.soloLocal?<Text style={estilos.texto}>Esta cuenta contiene ejemplos locales y no se envía al servidor.</Text>:null}
 
-        <Pressable accessibilityRole="button" accessibilityState={{disabled:deshabilitado,busy:ocupado}} disabled={deshabilitado} onPress={()=>{establecerEnviando(true);void sincronizarSesion().then(()=>sincronizarSocialOnline()).then(async()=>{await cargar();const actual=obtenerVistaSincronizacion();if(actual.estado==='online'&&!actual.pendientes)mostrarAviso('Sincronización completada.',{tipo:'exito'});}).catch(async fallo=>{await cargar();establecerError(fallo instanceof Error?fallo.message:'No se pudo sincronizar. Volvé a intentar.');}).finally(()=>establecerEnviando(false));}} style={[estilos.boton,deshabilitado&&estilos.deshabilitado]}>
-          <Ionicons name="sync-outline" size={18} color={tema.botonPrincipalTexto}/><Text style={estilos.textoBoton}>{ocupado?'Sincronizando…':'Sincronizar ahora'}</Text>
-        </Pressable>
+        <BotonAccion tema={tema} texto={'Sincronizar ahora'} variante="principal" cargando={ocupado} deshabilitado={deshabilitado} alPresionar={()=>{establecerEnviando(true);void sincronizarSesion().then(()=>sincronizarSocialOnline()).then(async()=>{await cargar();const actual=obtenerVistaSincronizacion();if(actual.estado==='online'&&!actual.pendientes)mostrarAviso('Sincronización completada.',{tipo:'exito'});}).catch(async fallo=>{await cargar();establecerError(fallo instanceof Error?fallo.message:'No se pudo sincronizar. Volvé a intentar.');}).finally(()=>establecerEnviando(false));}} estilo={[estilos.boton]} />
         {reparacion?<View style={estilos.reparacion}>
 
-          <Pressable accessibilityRole="button" disabled={ocupado} onPress={()=>navegacion.navigate(RUTAS.PERFIL)} style={estilos.boton}><Text style={estilos.textoBoton}>Corregir en Perfil</Text></Pressable>
-          <Pressable accessibilityRole="button" disabled={ocupado||reparacion.correoAnterior===reparacion.correoNuevo} onPress={confirmarReparacion} style={[estilos.boton,(ocupado||reparacion.correoAnterior===reparacion.correoNuevo)&&{opacity:0.5}]}><Text style={estilos.textoBoton}>Aplicar correo corregido</Text></Pressable>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={ocupado} onPress={conRespuestaVisual(()=>navegacion.navigate(RUTAS.PERFIL))} style={estilos.boton}><Text style={estilos.textoBoton}>Corregir en Perfil</Text></Pressable>
+          <BotonAccion tema={tema} texto={"Aplicar correo corregido"} variante="principal" cargando={false} deshabilitado={ocupado||reparacion.correoAnterior===reparacion.correoNuevo} alPresionar={confirmarReparacion} estilo={[estilos.boton]} />
         </View>:null}
-        {errorReparacion||error?<View><Pressable accessibilityRole="button" onPress={()=>{void cargar();}} style={estilos.reintentar}><Text style={estilos.valor}>Volver a intentar</Text></Pressable></View>:null}
+        {errorReparacion||error?<View><Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(()=>{void cargar();})} style={estilos.reintentar}><Text style={estilos.valor}>Volver a intentar</Text></Pressable></View>:null}
         {datos.total>0?<View style={estilos.encabezadoLista}><Text style={estilos.titulo}>Cambios pendientes</Text><Text style={estilos.ayuda}>Más recientes primero · Hora local</Text></View>:null}
       </View>}
       renderSectionHeader={({section})=><EncabezadoSeccionPlegable tema={tema} titulo={section.titulo} expandido={mesesAbiertos.includes(section.key)}
@@ -142,7 +144,7 @@ export default function PantallaSincronizacion({navigation:navegacion}:import('.
       }}
       ItemSeparatorComponent={()=> <View style={estilos.separador}/>}
       ListEmptyComponent={!cargando&&!error?<View style={estilos.vacio}><View style={estilos.iconoEstado}><Ionicons name={datos.soloLocal?'phone-portrait-outline':'checkmark-done-outline'} size={28} color={tema.foco}/></View><Text style={estilos.titulo}>{datos.soloLocal?'Datos de prueba':'Sin pendientes'}</Text><Text style={estilos.texto}>{datos.soloLocal?'Los ejemplos se guardan solo en este teléfono.':'Todos los cambios locales están confirmados.'}</Text></View>:null}
-      ListFooterComponent={cargando?<ActivityIndicator style={estilos.carga} color={tema.foco}/>:!error&&datos.registros.length<datos.total?<Pressable accessibilityRole="button" onPress={()=>{void cargar(false);}} style={estilos.reintentar}><Text style={estilos.valor}>Cargar más pendientes</Text></Pressable>:null}
+      ListFooterComponent={cargando?<PuntosCarga style={estilos.carga} color={tema.foco}/>:!error&&datos.registros.length<datos.total?<Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(()=>{void cargar(false);})} style={estilos.reintentar}><Text style={estilos.valor}>Cargar más pendientes</Text></Pressable>:null}
     />
   </MarcoEncabezado></SafeAreaView>;
 }

@@ -48,10 +48,28 @@ for(const tema of ['claro','oscuro'] as const)test(`el administrador ve las soli
   await vista.pulsar('Sección de sala: Personas');
   assert.ok(vista.todos().some(n=>n.type==='Pressable'&&n.props.accessibilityLabel==='Solicitudes de '+datos.personas[0].nombre&&vista.texto(n).includes('1')));
   assert.ok(!vista.texto().includes('Cambiar la descripción a Cena'));
+  assert.ok(vista.texto().includes('Administrador'));
+  assert.ok(!vista.todos().some(n=>n.type==='Pressable'&&n.props.accessibilityLabel==='Solicitudes de Vos'));
+  const propiaVista=interfazSocial({...e,sincronizarSocialOnline:async()=>{}},tema);
+  await propiaVista.abrir(propiaVista.rutas.REGISTRO_SOCIAL,{tipo:'personaSala',salaId:sala.id,personaId:String(propia.id)});
+  assert.ok(propiaVista.texto().includes('Administrador'));
+  assert.ok(!propiaVista.texto().includes('Historial de solicitudes'));
+  assert.ok(!propiaVista.texto().includes('Enviar solicitud'));
+  assert.ok(!propiaVista.texto().includes('Simular permiso para editar gastos'));
+
   await vista.pulsar('Solicitudes de '+datos.personas[0].nombre);await vista.abrir(vista.rutas.REGISTRO_SOCIAL,vista.destinos.at(-1)![1] as import('../src/social/types.ts').ParametrosSociales);
   assert.ok(vista.texto().includes('Cambiar la descripción a Cena'));
   assert.equal(vista.buscarBoton('Aceptar solicitud').props.disabled,false);
   assert.equal(vista.buscarBoton('Rechazar solicitud').props.disabled,false);
+  await vista.pulsar('Quitar');
+  assert.ok(vista.todos().some(n=>n.type==='Modal'));
+  assert.ok(vista.texto().includes('Quitar integrante'));
+  assert.ok(vista.texto().includes(datos.personas[0].nombre));
+  assert.ok(vista.texto().includes('Sus gastos y obligaciones se conservan'));
+  assert.ok(vista.buscarBoton('Quitar de la sala'));
+  await vista.pulsar('Cancelar');
+  assert.ok(!vista.todos().some(n=>n.type==='Modal'));
+
   assert.equal(actualizaciones,0);
   assert.ok(!vista.texto().includes('Volver a integrantes'));(vista.todos().find(n=>n.type==='Header')!.props.alVolver as ()=>void)();await vista.asentar();await vista.abrir(vista.rutas.SALA_SOCIAL,vista.destinos.findLast(d=>(d[1] as {tipo?:string}|undefined)?.tipo==='personaSala')![1] as import('../src/social/types.ts').ParametrosSociales);await vista.pulsar('Sección de sala: Personas');
   await vista.pulsar('Agregar personas a la sala');
@@ -333,7 +351,7 @@ for (const tema of ['claro', 'oscuro'] as const) test(`interfaces principales gu
   await vista.pulsar('Ver sala de origen');
   assert.deepEqual(vista.destinos.at(-1), [rutas.SALA_SOCIAL, { salaId: sala.id }]);
   await vista.abrir(rutas.REGISTRO_SOCIAL, { tipo: 'pago', deudaId: deuda.id });
-  await vista.pulsar('Otro importe'); await vista.llenar('Monto recibido', '100,50');
+  await vista.pulsar('Importe del pago: Otro importe'); await vista.llenar('Monto recibido', '100,50');
   await vista.pulsar('Registrar pago recibido');
   await vista.pulsar('Depósito'); await vista.pulsar('Efectivo de prueba', true); await vista.pulsar('Confirmar y guardar');
   assert.equal((await servicios.cargarSocial()).deudas[0].pendienteNumero, 499.5);

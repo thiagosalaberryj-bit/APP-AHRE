@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { AvisosEnModal } from '../../contexts/ToastContext';
 import {operacionFinancieraEnCurso} from '../../social/financialOperation';
 import type {ReactNode} from 'react';
@@ -20,9 +22,9 @@ export default function DialogoInvitacion({titulo,descripcion,icono,alCerrar,eti
         <View style={estilos.cabeceraInvitacion}>
           <View style={estilos.iconoCabecera}><Ionicons name={icono} size={24} color={aspecto.tema.foco}/></View>
           <View style={estilos.flexible}><Text accessibilityRole="header" style={estilos.tituloInvitacion}>{titulo}</Text><Text style={estilos.descripcionInvitacion}>{descripcion}</Text></View>
-          <Pressable accessibilityRole="button" accessibilityLabel={etiquetaCerrar} disabled={ocupado} onPress={()=>{if(!ocupado&&!operacionFinancieraEnCurso())alCerrar();}} style={estilos.cerrar}><Ionicons name="close" size={22} color={aspecto.tema.textoSecundario}/></Pressable>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={etiquetaCerrar} disabled={ocupado} onPress={conRespuestaVisual(()=>{if(!ocupado&&!operacionFinancieraEnCurso())alCerrar();})} style={estilos.cerrar}><Ionicons name="close" size={22} color={aspecto.tema.textoSecundario}/></Pressable>
         </View>
-        <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={estilos.cuerpoInvitacion} contentContainerStyle={estilos.contenidoInvitacion}>{children}</ScrollView>
+        <ScrollView pointerEvents={ocupado?'none':'auto'} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={estilos.cuerpoInvitacion} contentContainerStyle={estilos.contenidoInvitacion}>{children}</ScrollView>
         {pie?<View style={estilos.pieInvitacion}>{pie}</View>:null}
       </View>
     </KeyboardAvoidingView>

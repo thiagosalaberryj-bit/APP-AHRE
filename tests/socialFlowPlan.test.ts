@@ -46,11 +46,11 @@ for(const huella of [false,true])test('Inicio usa la sesión recordada con huell
 });
 
 for(const nombre of ['claro','oscuro'] as const)test('las decisiones muestran carga solo en la acción elegida y conservan tamaño en '+nombre,()=>{
- const {cargar}=crearCargadorComponentes(process.cwd());
+ const {cargar}=crearCargadorComponentes(process.cwd(),{'../contexts/ToastContext':{ContextoAvisos:{}}});
  const Componente=cargar<typeof import('../src/components/social/RequestDecisionActions.tsx')>('src/components/social/RequestDecisionActions.tsx').default;
  const resultado=Componente({tema:TEMAS[nombre],alAceptar:()=>{},alRechazar:()=>{},etiquetaAceptar:'Aceptar',etiquetaRechazar:'Rechazar',procesando:'rechazar'}) as any;
  const botones=resultado.props.children;assert.equal(botones.length,2);assert.equal(botones[0].props.disabled,true);assert.equal(botones[1].props.disabled,true);
- assert.equal(botones[0].props.children.type,'Icon');assert.equal(botones[1].props.children.type,'ActivityIndicator');assert.deepEqual(botones[0].props.style,botones[1].props.style);
+ assert.equal(botones[0].props.children.type,'Icon');assert.equal(botones[1].props.children.type.name,'PuntosCarga');assert.deepEqual(botones[0].props.style,botones[1].props.style);
 });
 
 for(const tema of ['claro','oscuro'] as const)test('archivar oculta la ficha sin impedir nuevas deudas ni participación y la salida bloquea el cierre en '+tema,async t=>{

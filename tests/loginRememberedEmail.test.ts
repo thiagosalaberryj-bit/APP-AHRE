@@ -19,6 +19,8 @@ for(const caso of [
   if(nombre.endsWith('/loginMemory'))return {leerRecordatorioIngreso:async()=>({recordar:caso.recordar,correo:'viejo@ahre.test'})};
   if(nombre.endsWith('/sessionService'))return {obtenerSesionActual:async()=>({usuario:caso.sesion?{correo_electronico:'actual@ahre.test'}:null})};
   if(nombre.endsWith('/useSafeGoBack'))return {useRegresoProtegido:()=>{}};
+  if(nombre.endsWith('/useActionCompletion'))return {useFinalizacionAccion:()=>({completado:false,iniciar(){},confirmar:async()=>true})};
+  if(nombre.endsWith('/pressFeedback'))return {conRespuestaVisual:(accion:unknown)=>accion};
   if(nombre.endsWith('/globalStyles'))return {crearEstilosGlobales:()=>({})};
   if(nombre.endsWith('/authStyles'))return {crearEstilosAutenticacion:()=>({})};
   return {};

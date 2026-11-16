@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import EtiquetaImporte from '../AmountLabel';
 import {CATEGORIAS_EGRESO} from '../../constants/movimientos';
 import {obtenerColorCategoria,obtenerColorIconoCategoria} from '../../styles/categoryColors';
@@ -11,9 +13,9 @@ import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function TarjetaGastoSala({ gasto, alAbrir, tema, estilosGlobales, pendientesPorRegistrar = 0 }: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & ({gasto:import('../../social/types').GastoVista;alAbrir:()=>void;pendientesPorRegistrar?:number})) {
   const { obtenerPersona } = useDatosSociales();
   const estilos = { ...crearEstilosCompartidos(tema), ...crearEstilosSala(tema) };
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Ver gasto ${gasto.descripcion}`}
+  return <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Ver gasto ${gasto.descripcion}`}
     accessibilityValue={pendientesPorRegistrar > 0 ? { text: `${pendientesPorRegistrar} movimientos por registrar` } : undefined}
-    accessibilityHint="Abre el reparto y los pagos de este gasto." onPress={alAbrir}
+    accessibilityHint="Abre el reparto y los pagos de este gasto." onPress={conRespuestaVisual(alAbrir)}
     style={({ pressed: presionado }) => [estilosGlobales.tarjeta, estilos.tarjetaSala, estilos.deudaHistorial, presionado && estilos.deudaHistorialPresionada]}>
     <View style={estilos.filaCampos}>
       <View style={[estilos.iconoHistorialDeuda, { backgroundColor: obtenerColorCategoria(gasto.categoriaId,tema,'egreso')+'26' }]}>

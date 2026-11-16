@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import useVinculosOnline from '../../social/online/useAccountLinks';
 import ResumenImporteSocial from './SocialAmountSummary';
 import OpcionesPersona from './PersonOptionsMenu';
@@ -52,7 +54,7 @@ export default function DetallePersona(propiedades: import('../../social/types')
           <ResumenImporteSocial etiqueta="Te debe" valor={persona.porCobrar||formatearMontoSocial(0)} icono="arrow-up-outline" color={tema.foco} estiloValor={estilosGlobales.monto} {...aspecto}/>
           <ResumenImporteSocial etiqueta="Le debés" valor={persona.porPagar||formatearMontoSocial(0)} icono="arrow-down-outline" color={tema.error} estiloValor={estilosGlobales.monto} {...aspecto}/>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Registrar deuda" onPress={() => abrirRegistro('deuda', { personaId: persona.id })} style={estilos.registrar}><Text style={estilos.textoRegistrar}>Registrar deuda</Text></Pressable>
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Registrar deuda" onPress={conRespuestaVisual(() => abrirRegistro('deuda', { personaId: persona.id }))} style={estilos.registrar}><Text style={estilos.textoRegistrar}>Registrar deuda</Text></Pressable>
       </View>
       {[
         {id:'me_deben',titulo:'Lo que te debe',icono:'arrow-up-outline' as const,color:tema.exito},
@@ -62,7 +64,7 @@ export default function DetallePersona(propiedades: import('../../social/types')
         const registros=deudas.filter(d=>grupo.id==='saldadas'?d.saldada:!d.saldada&&d.tipo===grupo.id).sort((a,b)=>(b.ultimaActividad||b.fechaISO).localeCompare(a.ultimaActividad||a.fechaISO));
         const expandida=!cerradas.includes(grupo.id);
         return <View key={grupo.id} style={estilos.seccionDeudas}>
-          <Pressable accessibilityRole="button" accessibilityLabel={grupo.titulo} accessibilityValue={{text:registros.length?registros.length+' deudas':'Sin deudas'}} accessibilityState={{expanded:expandida}} onPress={()=>cambiarCerradas(actual=>expandida?[...actual,grupo.id]:actual.filter(id=>id!==grupo.id))} style={estilos.cabeceraDeudas}>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={grupo.titulo} accessibilityValue={{text:registros.length?registros.length+' deudas':'Sin deudas'}} accessibilityState={{expanded:expandida}} onPress={conRespuestaVisual(()=>cambiarCerradas(actual=>expandida?[...actual,grupo.id]:actual.filter(id=>id!==grupo.id)))} style={estilos.cabeceraDeudas}>
             <Ionicons name={grupo.icono} color={grupo.color} size={20}/>
             <Text style={estilos.tituloDeudas}>{grupo.titulo}</Text>
             <Text style={estilos.cantidadDeudas}>{registros.length?registros.length+' '+(registros.length===1?'deuda':'deudas'):'Sin deudas'}</Text>

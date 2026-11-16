@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import type { NombreIcono } from '../../constants/movimientos';
 import { useEffect, useState } from 'react';
 import { COLORES_DEPOSITOS, COLOR_DEPOSITO_PREDETERMINADO, COLOR_ICONO_DEPOSITO } from '../../styles/colors';
@@ -33,11 +35,11 @@ export default function PersonalizacionSala(propiedades: import('../../social/ty
   return <View style={estilos.grupo}>
       <View style={estilos.grupoCampo}>
         <Text style={estilosGlobales.etiqueta}>Icono de la sala</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Elegir icono de la sala" accessibilityState={{
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Elegir icono de la sala" accessibilityState={{
         expanded: mostrarIconos
       }} accessibilityValue={{
         text: ICONOS_SALA.find(opcion => opcion.id === icono)?.nombre
-      }} onPress={() => establecerMostrarIconos(true)} style={estilosMovimiento.botonDeposito}>
+      }} onPress={conRespuestaVisual(() => establecerMostrarIconos(true))} style={estilosMovimiento.botonDeposito}>
           <View style={[estilos.iconoLista, {
           backgroundColor: color
         }]}><Ionicons color={COLOR_ICONO_DEPOSITO} name={icono as NombreIcono} size={24} /></View>
@@ -48,9 +50,9 @@ export default function PersonalizacionSala(propiedades: import('../../social/ty
       <View style={estilos.grupoCampo}>
         <Text style={estilosGlobales.etiqueta}>Color de la sala</Text>
         <View style={estilosColor.listaColores}>
-          {colores.map(valor => <Pressable key={valor} accessibilityRole="radio" accessibilityLabel={`Color de sala: ${NOMBRES_COLORES_SALA[COLORES_DEPOSITOS.indexOf(valor)]}`} accessibilityState={{
+          {colores.map(valor => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={valor} accessibilityRole="radio" accessibilityLabel={`Color de sala: ${NOMBRES_COLORES_SALA[COLORES_DEPOSITOS.indexOf(valor)]}`} accessibilityState={{
           checked: color === valor
-        }} onPress={() => establecerColor(valor)} style={({pressed}) => [estilosColor.opcionColor, pressed && estilosColor.elementoPresionado]}><View style={[estilosColor.muestraColor, color === valor && estilosColor.muestraColorSeleccionada, {
+        }} onPress={conRespuestaVisual(() => establecerColor(valor))} style={({pressed}) => [estilosColor.opcionColor, pressed && estilosColor.elementoPresionado]}><View style={[estilosColor.muestraColor, color === valor && estilosColor.muestraColorSeleccionada, {
             backgroundColor: valor
           }]}>{color === valor ? <Ionicons color={tema.botonPrincipalTexto} name="checkmark" size={22} /> : null}</View>
             <Text numberOfLines={1} adjustsFontSizeToFit style={[estilosColor.nombreColor, color === valor && estilosColor.nombreColorSeleccionado]}>{NOMBRES_COLORES_SALA[COLORES_DEPOSITOS.indexOf(valor)].replace(/ suave$/, '')}</Text>
@@ -65,14 +67,14 @@ export default function PersonalizacionSala(propiedades: import('../../social/ty
         <View style={estilos.fondoModal}>
           <Pressable accessibilityRole="button" accessibilityLabel="Cancelar selección de icono" onPress={() => establecerMostrarIconos(false)} style={estilos.cierreFondo} />
           <View accessibilityViewIsModal style={estilos.tarjetaModal}>
-            <View style={estilos.filaModal}><Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>Icono de la sala</Text><Pressable accessibilityRole="button" accessibilityLabel="Cerrar selector de iconos" onPress={() => establecerMostrarIconos(false)} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable></View>
+            <View style={estilos.filaModal}><Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>Icono de la sala</Text><Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar selector de iconos" onPress={conRespuestaVisual(() => establecerMostrarIconos(false))} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable></View>
             <ScrollView style={estilos.desplazamientoModal} contentContainerStyle={estilos.opciones}>
-              {ICONOS_SALA.map(opcion => <Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={`Icono de sala: ${opcion.nombre}`} accessibilityState={{
+              {ICONOS_SALA.map(opcion => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="radio" accessibilityLabel={`Icono de sala: ${opcion.nombre}`} accessibilityState={{
               checked: icono === opcion.id
-            }} onPress={() => {
+            }} onPress={conRespuestaVisual(() => {
               establecerIcono(opcion.id);
               establecerMostrarIconos(false);
-            }} style={[estilos.opcionIconoSala, icono === opcion.id && estilos.iconoSalaSeleccionado]}><Ionicons color={tema.foco} name={opcion.id as NombreIcono} size={24} /><Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.textoSecundario, estilos.textoCentrado]}>{opcion.nombre}</Text></Pressable>)}
+            })} style={[estilos.opcionIconoSala, icono === opcion.id && estilos.iconoSalaSeleccionado]}><Ionicons color={tema.foco} name={opcion.id as NombreIcono} size={24} /><Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.textoSecundario, estilos.textoCentrado]}>{opcion.nombre}</Text></Pressable>)}
             </ScrollView>
           </View>
         </View>

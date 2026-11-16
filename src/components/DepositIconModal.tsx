@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { ICONOS_ADICIONALES_DEPOSITO } from '../constants/deposits';
@@ -24,15 +26,15 @@ export default function ModalIconosDeposito({
 }) {
   return (
     <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}>
-      <Pressable accessibilityLabel="Cerrar selector de íconos" onPress={alCerrar} style={estiloFondo ?? estilos.fondoModal}>
-        <Pressable onPress={() => {}} style={estilos.tarjetaModal}>
+      <Pressable accessibilityLabel="Cerrar selector de íconos" onPress={conRespuestaVisual(alCerrar)} style={estiloFondo ?? estilos.fondoModal}>
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} onPress={conRespuestaVisual(() => {})} style={estilos.tarjetaModal}>
           <View style={estilos.encabezadoModal}>
             <Text style={estilos.tituloModal}>Más íconos</Text>
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityLabel={variante === 'creacion' ? 'Cerrar' : 'Cerrar selector de íconos'}
               accessibilityRole="button"
               hitSlop={8}
-              onPress={alCerrar}
+              onPress={conRespuestaVisual(alCerrar)}
               style={estilos.botonCerrarModal}
             >
               <Ionicons color={tema.textoPrincipal} name="close" size={22} />
@@ -41,13 +43,13 @@ export default function ModalIconosDeposito({
           {ICONOS_ADICIONALES_DEPOSITO.map(opcion => {
             const seleccionado = icono === opcion.id;
             return (
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 key={opcion.id}
                 accessibilityLabel={`Ícono ${opcion.nombre}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: seleccionado }}
                 disabled={deshabilitado}
-                onPress={() => alSeleccionar(opcion.id)}
+                onPress={conRespuestaVisual(() => alSeleccionar(opcion.id))}
                 style={[estilos.opcionIconoModal, seleccionado && estilos.opcionIconoModalSeleccionada]}
               >
                 <Ionicons color={tema.foco} name={opcion.id} size={22} />

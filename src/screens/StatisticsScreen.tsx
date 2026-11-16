@@ -1,3 +1,6 @@
+import {programarCargaVisible} from '../utils/visibleScreenWork';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useAvisoError } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -91,11 +94,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
     ...(preajusteMontoId === 'personalizado' ? { minimo: minimo ?? undefined, maximo: maximo ?? undefined } : PREAJUSTES_MONTOS.find(opcion => opcion.id === preajusteMontoId)!.rango),
     ...(depositosIds === null ? {} : { depositos: depositosIds }),
   }), [preajusteMontoId, minimo, maximo, depositosIds]);
-  useFocusEffect(useCallback(() => {
+  useFocusEffect(useCallback(() => {let limpieza:(()=>void)|undefined;const cancelar=programarCargaVisible(()=>{const resultado=(()=>{
     let vigente = true;
     cargarOpcionesHistorialMovimientos().then(datos => { if (vigente) { establecerDepositos(datos.depositos); establecerErrorDepositos(false); } }).catch(() => { if (vigente) establecerErrorDepositos(true); });
     return () => { vigente = false; };
-  }, []));
+  })();if(typeof resultado==='function')limpieza=resultado;});return()=>{cancelar();limpieza?.();};}, []));
   const [categoriasSeleccionadas, establecerCategoriasSeleccionadas] = useState(
     CATEGORIAS_EGRESO.map((categoria) => categoria.id),
   );
@@ -109,11 +112,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
   const [anioColumnas, establecerAnioColumnas] = useState(ANIO_ACTUAL);
   const [selectorActual, establecerSelectorActual] = useState<string | null>(null);
   const [selectorFechaActual, establecerSelectorFechaActual] = useState<string | null>(null);
-  useFocusEffect(useCallback(() => {
+  useFocusEffect(useCallback(() => {let limpieza:(()=>void)|undefined;const cancelar=programarCargaVisible(()=>{const resultado=(()=>{
     if (!selectorActual && !selectorFechaActual) return;
     const suscripcion = BackHandler.addEventListener('hardwareBackPress', () => { establecerSelectorActual(null); establecerSelectorFechaActual(null); return true; });
     return () => suscripcion.remove();
-  }, [selectorActual, selectorFechaActual]));
+  })();if(typeof resultado==='function')limpieza=resultado;});return()=>{cancelar();limpieza?.();};}, [selectorActual, selectorFechaActual]));
   useEffect(() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); }, [indiceGrafico, anchoPantalla]);
   const [filtroCategoriasAbierto, establecerFiltroCategoriasAbierto] = useState(false);
   const [categoriaSeleccionada, establecerCategoriaSeleccionada] = useState<string | null>(null);
@@ -147,7 +150,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
     [modoColumnas, semanaColumnas, anioColumnas],
   );
 
-  useFocusEffect(useCallback(() => {
+  useFocusEffect(useCallback(() => {let limpieza:(()=>void)|undefined;const cancelar=programarCargaVisible(()=>{const resultado=(()=>{
     let vigente = true;
     if (errorMonto) { establecerEstadisticas(null); establecerEstadoCarga('listo'); return; }
     const claveConsulta = JSON.stringify({tipoMovimiento,rangoResumen,rangoColumnas,modoColumnas,rangoMonto});
@@ -173,7 +176,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
     return () => {
       vigente = false;
     };
-  }, [tipoMovimiento, rangoResumen, rangoColumnas, modoColumnas, rangoMonto, errorMonto, intentoCarga]));
+  })();if(typeof resultado==='function')limpieza=resultado;});return()=>{cancelar();limpieza?.();};}, [tipoMovimiento, rangoResumen, rangoColumnas, modoColumnas, rangoMonto, errorMonto, intentoCarga]));
 
   const { totalResumen, hayMovimientosResumen, hayDatosResumen } = calcularResumenVisible(
     estadisticas?.resumen.categorias || [], categoriasSeleccionadas,
@@ -419,13 +422,13 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
             <FilaFiltrosHorizontal tema={tema} estiloContenido={estilos.filaSelectores}>
               {selectoresActuales.map((selector) => (
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityLabel={selector.etiqueta || selector.texto}
                   accessibilityRole="button"
                   key={selector.id}
                   accessibilityState={{ expanded: selectorActual === selector.id || selectorFechaActual === selector.id }}
                   ref={elemento => { controlesSelectores.current[selector.id] = elemento; }}
-                  onPress={() => abrirSelectorAnclado(selector.id, selector.calendario)}
+                  onPress={conRespuestaVisual(() => abrirSelectorAnclado(selector.id, selector.calendario))}
                   style={estilos.botonSelector}
                 >
                   <Text numberOfLines={1} style={estilos.textoSelector}>{selector.texto}</Text>
@@ -438,12 +441,12 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
 
             <BuscadorFiltrosMovimientos tema={tema} mostrarBuscador={false} alAbrirFiltros={() => { establecerSelectorActual(null); establecerSelectorFechaActual(null); establecerFiltroCategoriasAbierto(true); }} alLimpiar={limpiarFiltrosEstadistica} filtrosActivos={filtrosActivosEstadistica} cantidad={cantidadFiltrosActivos}>
-              {preajustesCategorias.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: esPreajusteActivo(opcion) }}
-                onPress={() => { establecerCategoriasSeleccionadas(actuales => {const nuevas=opcion.id === 'todos' ? todasLasCategorias : alternarGrupoCategorias(actuales, opcion.categorias, todasLasCategorias);return nuevas.length?nuevas:todasLasCategorias;}); establecerCategoriaSeleccionada(null); }}
+              {preajustesCategorias.map(opcion => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: esPreajusteActivo(opcion) }}
+                onPress={conRespuestaVisual(() => { establecerCategoriasSeleccionadas(actuales => {const nuevas=opcion.id === 'todos' ? todasLasCategorias : alternarGrupoCategorias(actuales, opcion.categorias, todasLasCategorias);return nuevas.length?nuevas:todasLasCategorias;}); establecerCategoriaSeleccionada(null); })}
                 style={[estilosAccesos.filtro, esPreajusteActivo(opcion) && estilosAccesos.filtroActivo]}>
                 <Text style={[estilosAccesos.textoFiltro, esPreajusteActivo(opcion) && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
               </Pressable>)}
-              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: preajusteMontoId === opcion.id }} onPress={() => elegirRango(preajusteMontoId === opcion.id ? 'todos' : opcion.id)} style={[estilosAccesos.filtro, preajusteMontoId === opcion.id && estilosAccesos.filtroActivo]}>
+              {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: preajusteMontoId === opcion.id }} onPress={conRespuestaVisual(() => elegirRango(preajusteMontoId === opcion.id ? 'todos' : opcion.id))} style={[estilosAccesos.filtro, preajusteMontoId === opcion.id && estilosAccesos.filtroActivo]}>
                 <Text style={[estilosAccesos.textoFiltro, preajusteMontoId === opcion.id && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
               </Pressable>)}
             </BuscadorFiltrosMovimientos>
@@ -476,9 +479,9 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                 </View>
                 <View style={estilos.contenedorGraficoCircular}>
                   {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
-                    <Pressable
+                    <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                       accessibilityRole="button"
-                      onPress={() => establecerIntentoCarga((intento) => intento + 1)}
+                      onPress={conRespuestaVisual(() => establecerIntentoCarga((intento) => intento + 1))}
                       style={estilos.botonReintentar}
                     >
                       <Text style={estilos.textoSinCategorias}>Reintentar</Text>
@@ -507,9 +510,9 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                   <Text style={estilos.subtituloGrafico}>{tituloColumnas}</Text>
                 </View>
                 {estadoCarga === 'cargando' ? null : estadoCarga === 'error' ? (
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityRole="button"
-                    onPress={() => establecerIntentoCarga((intento) => intento + 1)}
+                    onPress={conRespuestaVisual(() => establecerIntentoCarga((intento) => intento + 1))}
                     style={estilos.estadoGrafico}
                   >
                     <Text style={estilos.textoSinCategorias}>Reintentar</Text>
@@ -580,11 +583,11 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
                     return (
                       <Fragment key={categoria.id}>
                       {iniciaFamilia ? <Text accessibilityRole="header" style={estilos.tituloFamilia}>{familia.nombre}</Text> : null}
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityLabel={`Ver detalle de ${categoria.nombre}, ${formatearMonto(categoria.monto)}, ${porcentaje}, ${categoria.cantidad} movimientos`}
                         accessibilityRole="button"
                         key={categoria.id}
-                        onPress={() => abrirDetalleCategoria(categoria)}
+                        onPress={conRespuestaVisual(() => abrirDetalleCategoria(categoria))}
                         style={[estilos.filaCategoria, activa && estilos.filaCategoriaActiva]}
                       >
                         <View style={[estilos.muestraColor, { backgroundColor: categoria.color }]} />
@@ -624,7 +627,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
 
 
         {anclaSelector && (selectorActual || selectorFechaActual) ? <View pointerEvents="box-none" style={estilos.capaSelectores}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Cerrar desplegable" onPress={cerrarSelectores} style={estilos.fondoSelectorFlotante}/>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar desplegable" onPress={conRespuestaVisual(cerrarSelectores)} style={estilos.fondoSelectorFlotante}/>
           <View style={[estilos.selectorFlotante, { left:anclaSelector.left, top:anclaSelector.top, width:anclaSelector.width }]}>
             {selectorActual ? (
             <SelectorDesplegable

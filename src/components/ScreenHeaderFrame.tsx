@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { createContext, isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Animated, Easing, Keyboard, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ViewProps } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,8 +86,8 @@ export default function MarcoEncabezado({ encabezado, tema, children, style, ref
       </Animated.View>
       <Animated.View pointerEvents={estado.desplazado ? 'auto' : 'none'} style={[estilos.recorte, estilos.barraCompacta, { height: alturaBarra }]}>
       {estado.desplazado ? <View style={estilos.flechas}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Volver al inicio de la pantalla"
-          onPress={() => control.current?.volverArriba()} style={estilos.flecha}>
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Volver al inicio de la pantalla"
+          onPress={conRespuestaVisual(() => control.current?.volverArriba())} style={estilos.flecha}>
           <Ionicons name="arrow-up" size={22} color={tema.botonPrincipal}/>
         </Pressable>
         {!estado.desplegado && accionesCompactasListas ? <AccionesEncabezadoCompacto tema={tema}

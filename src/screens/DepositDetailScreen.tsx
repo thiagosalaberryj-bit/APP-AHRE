@@ -1,3 +1,8 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import BotonAccion from '../components/ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from '../components/LoadingDots';
 import { AvisosEnModal } from '../contexts/ToastContext';
 import { useAvisoError } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
@@ -28,22 +33,7 @@ import type { NombreIcono } from '../constants/movimientos';
 import { observarIntegraciones } from '../integrations/integrationStore';
 import { consultarResumenMp, desvincularMercadoPago, cargarMercadoPago, iniciarVinculacion } from '../mercadoPago/mercadoPagoService';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  AccessibilityInfo,
-  Animated,
-  Easing,
-  KeyboardAvoidingView,
-  Linking,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Alert, AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -162,6 +152,8 @@ function ComparacionDesplazable({ texto, estilo }: { texto: string; estilo: impo
 }
 
 export default function PantallaDetalleDeposito({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+ const finalizacion=useFinalizacionAccion();
+
   const volverProtegido = useRegresoProtegido(navegacion, () => operacionFinancieraEnCurso() || operacionDepositoEnCurso.current);
   const operacionDepositoEnCurso=useRef(false);
   useEffect(()=>navegacion.addListener('beforeRemove',evento=>{if(operacionFinancieraEnCurso()||operacionDepositoEnCurso.current)evento.preventDefault();}),[navegacion]);
@@ -525,12 +517,13 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const guardarEdicion = async () => {
     if (guardandoEdicion || !deposito || operacionDepositoEnCurso.current) return;
     operacionDepositoEnCurso.current=true;
-    establecerGuardandoEdicion(true);
+    finalizacion.iniciar();establecerGuardandoEdicion(true);
     establecerErroresEdicion({});
     try {
       const actualizado = await actualizarDeposito(deposito.id, borrador as import('../types/forms').DatosDeposito);
       establecerDeposito(actualizado);
       establecerBorrador(actualizado);
+      if(!await finalizacion.confirmar())return;
       establecerModalEdicionVisible(false);
       establecerModalIconosEdicionVisible(false);
       mostrarAviso('Los cambios del depósito se guardaron.', { tipo: 'exito' });
@@ -549,9 +542,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const confirmarEliminacion = async () => {
     if (eliminando || !deposito || operacionDepositoEnCurso.current) return;
     operacionDepositoEnCurso.current=true;
-    establecerEliminando(true);
+    finalizacion.iniciar();establecerEliminando(true);
     try {
       await eliminarDeposito(deposito.id);
+      if(!await finalizacion.confirmar())return;
       establecerModalEliminacionVisible(false);
       mostrarAviso('El depósito se desactivó y su historial quedó conservado.', { tipo: 'exito' });
       operacionDepositoEnCurso.current=false;volverProtegido();
@@ -632,7 +626,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
         <DesplazamientoEncabezado ref={datosMeses.referenciaScroll} {...datosMeses.eventosScroll} alVolverAlInicio={datosMeses.detenerDesplazamiento} contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {cargando ? (
             <View style={estilos.estadoVacio}>
-              <ActivityIndicator color={tema.foco} size="large" />
+              <PuntosCarga color={tema.foco} size="large" />
               <Text style={estilosGlobales.textoSecundario}>Cargando depósito…</Text>
             </View>
           ) : errorCarga || !deposito ? (
@@ -640,7 +634,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
               {!errorCarga ? <Text style={estilosGlobales.etiqueta}>No se encontró el depósito.</Text> : null}
               {errorCarga ? (
-                <Pressable accessibilityRole="button" onPress={cargarDetalle} style={estilos.botonLimpiar}>
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(cargarDetalle)} style={estilos.botonLimpiar}>
                   <Text style={estilos.textoBotonLimpiar}>Intentar nuevamente</Text>
                 </Pressable>
               ) : null}
@@ -658,11 +652,11 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   <Text style={estilos.tipoDeposito}>{TIPOS_DEPOSITO.find(tipo=>tipo.id===deposito.tipo)?.nombre || deposito.tipo}</Text>
                 </View>
               </View>
-              <Pressable style={estilos.resumenSaldo} disabled={!saldoLargo}
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} style={estilos.resumenSaldo} disabled={!saldoLargo}
                 accessibilityRole={saldoLargo ? 'button' : undefined}
                 accessibilityLabel={saldoVisible ? 'Saldo: ' + saldoFormateado : 'Saldo oculto'}
                 accessibilityHint={saldoLargo ? 'Abre el saldo completo.' : undefined}
-                onPress={() => establecerSaldoAmpliado(true)}>
+                onPress={conRespuestaVisual(() => establecerSaldoAmpliado(true))}>
                 <View style={estilos.encabezadoSaldo}>
                   <Text style={estilos.etiquetaSaldo}>Saldo</Text>
                   {saldoLargo ? <Ionicons name="expand-outline" size={16} color={tema.foco} accessible={false}/> : null}
@@ -708,7 +702,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                 </>}
               </View>
               </View>
-              <Pressable accessibilityLabel={`Opciones del depósito${resumenMercadoPago?.pendientes ? `, ${resumenMercadoPago.pendientes} movimientos de Mercado Pago por revisar` : ''}`} accessibilityRole="button" onPress={() => establecerModalOpcionesVisible(true)} style={estilos.botonOpciones}>
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel={`Opciones del depósito${resumenMercadoPago?.pendientes ? `, ${resumenMercadoPago.pendientes} movimientos de Mercado Pago por revisar` : ''}`} accessibilityRole="button" onPress={conRespuestaVisual(() => establecerModalOpcionesVisible(true))} style={estilos.botonOpciones}>
                 <Ionicons color={tema.textoSecundario} name="ellipsis-horizontal" size={22}/>
                 {resumenMercadoPago&&resumenMercadoPago.pendientes>0?<View style={estilos.indicadorMp}><Text style={estilos.textoIndicadorMp}>{resumenMercadoPago.pendientes>99?'99+':resumenMercadoPago.pendientes}</Text></View>:null}
               </Pressable>
@@ -726,15 +720,15 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             </BuscadorFiltrosMovimientos>
             {seccionDeposito==='recurrentes'&&depositoId?<PanelRecurrencias depositoId={depositoId} tema={tema} alCambiar={()=>{void cargarDetalle();}} alCambiarCantidad={establecerCantidadRecurrencias} filtrar={fila=>cumpleFiltros({...fila,fecha_hora:fila.proxima_ejecucion})}/>:null}
             {seccionDeposito==='movimientos'?<>
-              {datosMeses.cargando ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses del depósito"/> : datosMeses.error ? (
+              {datosMeses.cargando ? <PuntosCarga color={tema.foco} accessibilityLabel="Cargando meses del depósito"/> : datosMeses.error ? (
                 <View style={estilos.estadoVacio}>
 
-                  <Pressable accessibilityRole="button" onPress={datosMeses.reintentar} style={estilos.botonLimpiar}><Text style={estilos.textoBotonLimpiar}>Reintentar</Text></Pressable>
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(datosMeses.reintentar)} style={estilos.botonLimpiar}><Text style={estilos.textoBotonLimpiar}>Reintentar</Text></Pressable>
                 </View>
               ) : datosMeses.meses.length ? <ListaMesesMovimientos datos={datosMeses} tema={tema} alPresionar={abrirDetalleMovimiento}/> : (
                 <View style={estilos.estadoVacio}>
                   <Text style={estilosGlobales.textoSecundario}>{cantidadMovimientos === 0 ? 'Este depósito todavía no tiene movimientos.' : busquedaAplicada.trim() ? 'Sin resultados para la búsqueda.' : 'Sin resultados para los filtros elegidos.'}</Text>
-                  {cantidadMovimientos > 0 ? <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}><Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text></Pressable> : null}
+                  {cantidadMovimientos > 0 ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(limpiarFiltros)} style={estilos.botonLimpiar}><Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text></Pressable> : null}
                 </View>
               )}
             </>:null}
@@ -779,44 +773,44 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
       <Modal animationType="fade" transparent visible={saldoAmpliado && saldoVisible && Boolean(deposito)} onRequestClose={()=>establecerSaldoAmpliado(false)}><AvisosEnModal visible={saldoAmpliado && saldoVisible && Boolean(deposito)}>
         <SafeAreaView style={estilos.fondoModalOpciones}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Cerrar saldo completo" style={estilos.fondoCierre} onPress={()=>establecerSaldoAmpliado(false)}/>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar saldo completo" style={estilos.fondoCierre} onPress={conRespuestaVisual(()=>establecerSaldoAmpliado(false))}/>
           <View accessibilityViewIsModal style={estilos.tarjetaOpciones}>
             <View style={estilos.encabezadoOpciones}>
               <Text accessibilityRole="header" style={[estilos.tituloOpciones,{flex:1}]}>Saldo del depósito</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Cerrar" style={estilos.botonCerrarModal} onPress={()=>establecerSaldoAmpliado(false)}><Ionicons name="close" size={24} color={tema.textoSecundario}/></Pressable>
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar" style={estilos.botonCerrarModal} onPress={conRespuestaVisual(()=>establecerSaldoAmpliado(false))}><Ionicons name="close" size={24} color={tema.textoSecundario}/></Pressable>
             </View>
             <Text style={estilos.descripcionOpciones}>{deposito?.nombre}</Text>
             <View style={estilos.valorSaldoCompleto}>
               <ScrollView horizontal showsHorizontalScrollIndicator><Text selectable style={estilos.saldoCompleto}>{saldoVisible && deposito?formatearSaldo(deposito.saldo_actual):'$ •••••••'}</Text></ScrollView>
             </View>
             <Text style={estilos.descripcionOpciones}>Podés deslizar el saldo para verlo completo y mantenerlo presionado para copiarlo.</Text>
-            <Pressable accessibilityRole="button" style={estilosGlobales.botonPrincipal} onPress={()=>establecerSaldoAmpliado(false)}><Text style={estilosGlobales.textoBotonPrincipal}>Cerrar</Text></Pressable>
+            <BotonAccion completado={finalizacion.completado} tema={tema} texto={"Cerrar"} variante="cancelar" cargando={false} deshabilitado={false} alPresionar={()=>establecerSaldoAmpliado(false)} estilo={estilosGlobales.botonPrincipal} />
           </View>
         </SafeAreaView>
       </AvisosEnModal></Modal>
 
       <Modal animationType="fade" onRequestClose={() => establecerModalOpcionesVisible(false)} transparent visible={modalOpcionesVisible}><AvisosEnModal visible={modalOpcionesVisible}>
         <View style={estilos.fondoModalOpciones}>
-          <Pressable style={estilos.fondoCierre} onPress={() => establecerModalOpcionesVisible(false)} />
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} style={estilos.fondoCierre} onPress={conRespuestaVisual(() => establecerModalOpcionesVisible(false))} />
           <View accessibilityViewIsModal style={estilos.tarjetaOpciones}>
             <View style={estilos.encabezadoOpciones}>
               <View style={estilos.detalleEncabezadoOpciones}>
                 <Text style={estilos.tituloOpciones}>Opciones del depósito</Text>
                 <Text style={estilos.descripcionOpciones}>Elegí qué querés hacer con este depósito.</Text>
               </View>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityLabel="Cerrar opciones"
                 accessibilityRole="button"
-                onPress={() => establecerModalOpcionesVisible(false)}
+                onPress={conRespuestaVisual(() => establecerModalOpcionesVisible(false))}
                 style={estilos.botonCerrarModal}
               >
                 <Ionicons color={tema.textoSecundario} name="close" size={22} />
               </Pressable>
             </View>
             <ScrollView contentContainerStyle={estilos.listaOpcionesDeposito}>
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityRole="button"
-              onPress={abrirEdicion}
+              onPress={conRespuestaVisual(abrirEdicion)}
               style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.opcionPresionada : null]}
             >
               <View style={estilos.iconoOpcionModal}>
@@ -829,12 +823,12 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
             </Pressable>
             <View style={estilos.separadorOpcionModal} />
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityRole="button"
-              onPress={() => {
+              onPress={conRespuestaVisual(() => {
                 establecerModalOpcionesVisible(false);
                 navegacion.navigate(RUTAS.MERCADO_PAGO, { depositoId });
-              }}
+              })}
               style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.opcionPresionada : null]}
             >
               <View style={estilos.iconoOpcionModal}>
@@ -850,7 +844,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             {resumenMercadoPago ? <>
               {requiereAutorizacionMp ? <>
               <View style={estilos.separadorOpcionModal} />
-              <Pressable accessibilityRole="button" disabled={guardandoConexionMp} style={({pressed})=>[estilos.opcionModal,pressed&&estilos.opcionPresionada]} onPress={()=>{
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={guardandoConexionMp} style={({pressed})=>[estilos.opcionModal,pressed&&estilos.opcionPresionada]} onPress={conRespuestaVisual(()=>{
                 if(operacionDepositoEnCurso.current)return;
                 operacionDepositoEnCurso.current=true;establecerGuardandoConexionMp(true);
                 void cargarMercadoPago().then(async({estado})=>{
@@ -858,22 +852,22 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                   const respuesta=await iniciarVinculacion(depositoId!,estado.vinculacion.meses,true);
                   await Linking.openURL(respuesta.url);
                 }).catch(error=>mostrarAviso(error instanceof Error?error.message:'No se pudo renovar la conexión.',{tipo:'error'})).finally(()=>{operacionDepositoEnCurso.current=false;establecerGuardandoConexionMp(false);});
-              }}><View style={estilos.iconoOpcionModal}><Ionicons name="refresh-outline" size={21} color={tema.foco}/></View><View style={estilos.detalleOpcionModal}><Text style={estilos.tituloOpcionModal}>Renovar autorización</Text><Text style={estilos.subtituloOpcionModal}>Volver a permitir el acceso a Mercado Pago</Text></View>{guardandoConexionMp?<ActivityIndicator color={tema.foco}/>:null}</Pressable>
+              })}><View style={estilos.iconoOpcionModal}><Ionicons name="refresh-outline" size={21} color={tema.foco}/></View><View style={estilos.detalleOpcionModal}><Text style={estilos.tituloOpcionModal}>Renovar autorización</Text><Text style={estilos.subtituloOpcionModal}>Volver a permitir el acceso a Mercado Pago</Text></View>{guardandoConexionMp?<PuntosCarga color={tema.foco}/>:null}</Pressable>
               </> : null}
               <View style={estilos.separadorOpcionModal} />
-              <Pressable accessibilityRole="button" disabled={guardandoConexionMp} style={({pressed})=>[estilos.opcionModal,pressed&&estilos.opcionPresionada]} onPress={()=>Alert.alert('Desvincular Mercado Pago',`Se descartarán ${resumenMercadoPago.pendientes} pendientes. Los movimientos registrados se conservan. Podés hacerlo sin conexión.`,[{text:'Cancelar',style:'cancel'},{text:'Desvincular',style:'destructive',onPress:()=>{
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={guardandoConexionMp} style={({pressed})=>[estilos.opcionModal,pressed&&estilos.opcionPresionada]} onPress={conRespuestaVisual(()=>Alert.alert('Desvincular Mercado Pago',`Se descartarán ${resumenMercadoPago.pendientes} pendientes. Los movimientos registrados se conservan. Podés hacerlo sin conexión.`,[{text:'Cancelar',style:'cancel'},{text:'Desvincular',style:'destructive',onPress:()=>{
                 if(operacionDepositoEnCurso.current)return;
                 operacionDepositoEnCurso.current=true;establecerGuardandoConexionMp(true);
                 void desvincularMercadoPago().then(()=>{establecerModalOpcionesVisible(false);mostrarAviso('Cuenta desvinculada. Se confirmará al reconectar.',{tipo:'exito'});}).catch(error=>mostrarAviso(error instanceof Error?error.message:'No se pudo desvincular.',{tipo:'error'})).finally(()=>{operacionDepositoEnCurso.current=false;establecerGuardandoConexionMp(false);});
-              }}])}><View style={[estilos.iconoOpcionModal,estilos.iconoOpcionEliminar]}><Ionicons name="unlink-outline" size={21} color={tema.error}/></View><View style={estilos.detalleOpcionModal}><Text style={[estilos.tituloOpcionModal,estilos.textoOpcionEliminar]}>Desvincular Mercado Pago</Text><Text style={estilos.subtituloOpcionModal}>Conservar los movimientos registrados</Text></View></Pressable>
+              }}]))}><View style={[estilos.iconoOpcionModal,estilos.iconoOpcionEliminar]}><Ionicons name="unlink-outline" size={21} color={tema.error}/></View><View style={estilos.detalleOpcionModal}><Text style={[estilos.tituloOpcionModal,estilos.textoOpcionEliminar]}>Desvincular Mercado Pago</Text><Text style={estilos.subtituloOpcionModal}>Conservar los movimientos registrados</Text></View></Pressable>
             </> : null}
             <View style={estilos.separadorOpcionModal} />
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityRole="button"
-              onPress={() => {
+              onPress={conRespuestaVisual(() => {
                 establecerModalOpcionesVisible(false);
                 establecerModalEliminacionVisible(true);
-              }}
+              })}
               style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.opcionPresionada : null]}
             >
               <View style={[estilos.iconoOpcionModal, estilos.iconoOpcionEliminar]}>
@@ -898,10 +892,10 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
                 <Text style={estilos.tituloEdicion}>Editar depósito</Text>
                 <Text style={estilos.subtituloEdicion}>Actualizá los datos de tu depósito.</Text>
               </View>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityLabel="Cerrar edición"
                 accessibilityRole="button"
-                onPress={cerrarEdicion}
+                onPress={conRespuestaVisual(cerrarEdicion)}
                 style={estilos.botonCerrarModal}
               >
                 <Ionicons color={tema.textoSecundario} name="close" size={24} />
@@ -923,10 +917,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               />
             </ScrollView>
             <View style={estilos.accionesEdicion}>
-              <Pressable accessibilityRole="button" onPress={cerrarEdicion} style={estilos.botonSecundarioModal}>
-                <Text style={estilos.textoSecundarioModal}>Cancelar</Text>
-              </Pressable>
-              <BotonPrincipal
+              <BotonAccion completado={finalizacion.completado} tema={tema} texto={"Cancelar"} variante="cancelar" cargando={false} deshabilitado={false} alPresionar={cerrarEdicion} estilo={estilos.botonSecundarioModal} />
+              <BotonPrincipal completado={finalizacion.completado}
                 estilosAutenticacion={estilosFormularioEdicion}
                 estilosGlobales={estilosGlobales}
                 titulo="Guardar cambios"
@@ -948,16 +940,16 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
       <Modal animationType="fade" onRequestClose={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} transparent visible={modalEliminacionVisible && Boolean(deposito)}><AvisosEnModal visible={modalEliminacionVisible && Boolean(deposito)}>
         <View style={estilos.fondoModal}>
-          <Pressable style={estilos.fondoCierre} disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} />
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} style={estilos.fondoCierre} disabled={eliminando} onPress={conRespuestaVisual(() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);})} />
           <View accessibilityViewIsModal style={estilos.tarjetaConfirmacion}>
             <View style={estilos.encabezadoConfirmacion}>
               <View style={estilos.iconoEliminar}>
                 <Ionicons color={tema.error} name="trash-outline" size={25} />
               </View>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityLabel="Cerrar confirmación"
                 accessibilityRole="button"
-                disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}}
+                disabled={eliminando} onPress={conRespuestaVisual(() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);})}
                 style={estilos.botonCerrarModal}
               >
                 <Ionicons color={tema.textoSecundario} name="close" size={22} />
@@ -988,19 +980,8 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
               </Text>
             </View>
             <View style={estilos.accionesModal}>
-              <Pressable accessibilityRole="button" disabled={eliminando} onPress={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} style={estilos.botonSecundarioModal}>
-                <Text style={estilos.textoSecundarioModal}>Cancelar</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                disabled={eliminando}
-                onPress={confirmarEliminacion}
-                style={estilos.botonEliminar}
-              >
-                {eliminando
-                  ? <ActivityIndicator color="#FFFFFF" />
-                  : <Text style={estilos.textoEliminar}>Eliminar</Text>}
-              </Pressable>
+              <BotonAccion completado={finalizacion.completado} tema={tema} texto={"Cancelar"} variante="cancelar" cargando={false} deshabilitado={eliminando} alPresionar={() => {if(!operacionDepositoEnCurso.current)establecerModalEliminacionVisible(false);}} estilo={estilos.botonSecundarioModal} />
+              <BotonAccion tema={tema} texto="Eliminar" variante="peligro" cargando={eliminando} completado={finalizacion.completado} alPresionar={confirmarEliminacion} estilo={estilos.botonEliminar} />
             </View>
           </View>
         </View>

@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import * as SecureStore from 'expo-secure-store';
 import {observarSocialOnline} from '../../social/socialService';
 import {URL_SERVIDOR} from '../../sync/remote';
@@ -19,7 +21,7 @@ export default function OpcionesSalas({abrirRegistro,abrirSala,...aspecto}:Aspec
   const limite=social.salas.filter(s=>s.administrador&&s.estado==='abierta').length>=LIMITE_SALAS_ACTIVAS;
   const disponibles=Math.max(0,LIMITE_SALAS_ACTIVAS-social.salas.filter(s=>s.administrador&&s.estado==='abierta').length);
   return <>
-    <Pressable accessibilityRole="button" accessibilityLabel="Salas" onPress={()=>abrir('opciones')} style={estilos.accionPanel}>
+    <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Salas" onPress={conRespuestaVisual(()=>abrir('opciones'))} style={estilos.accionPanel}>
       <Ionicons name="people-outline" size={20} color={aspecto.tema.botonPrincipalTexto}/><Text style={estilos.textoAccionPanel}>Salas</Text>
       <Text style={estilos.textoDetalleAccion}>{disponibles?'Podés crear '+disponibles+(disponibles===1?' sala':' salas'):'Sin cupos disponibles'}</Text>
     </Pressable>

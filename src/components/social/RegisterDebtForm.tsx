@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import {ContextoAvisos} from '../../contexts/ToastContext';
 import type {VinculoOnline} from '../../social/online/types';
 import {crearEstilosSocialOnline} from '../../styles/social/OnlineSocialStyles';
@@ -72,7 +74,7 @@ export default function FormularioRegistrarDeuda({
       <Text style={estilosGlobales.textoAyuda}>Registraremos el dinero que adelantaste como un egreso. Podés elegir el depósito o vincular un egreso existente para no duplicarlo.</Text>
     </> : <Text style={estilosGlobales.textoAyuda}>Registrar lo que debés no genera un ingreso ni modifica tus depósitos. Al pagar, elegirás el depósito y se registrará el egreso.</Text>}
     <View style={estilosOnline.grupo}>
-      <Pressable accessibilityRole="checkbox" accessibilityLabel="Proponer deuda online al registrar" accessibilityState={{checked:compartir,disabled:!disponible&&!compartir}} disabled={!disponible&&!compartir} onPress={()=>cambiarCompartir(!compartir)} style={[estilosOnline.opcionCompartir,!disponible&&estilosOnline.deshabilitado]}>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityLabel="Proponer deuda online al registrar" accessibilityState={{checked:compartir,disabled:!disponible&&!compartir}} disabled={!disponible&&!compartir} onPress={conRespuestaVisual(()=>cambiarCompartir(!compartir))} style={[estilosOnline.opcionCompartir,!disponible&&estilosOnline.deshabilitado]}>
         <Ionicons name={compartir?'checkbox':'square-outline'} color={tema.foco} size={23}/><Text style={estilosGlobales.etiqueta}>Proponer deuda online</Text>
       </Pressable>
       <Text style={estilosGlobales.textoAyuda}>{!personaId?'Elegí una persona para compartir la deuda.':!vinculada?'La persona necesita una cuenta vinculada y confirmada.':sinConexion?'Necesitás conexión para enviar la propuesta.':compartir?'Se enviará al guardar y esperará la aceptación de la otra persona.':'Opcional. Si no lo activás, queda solo en tus registros.'}</Text>

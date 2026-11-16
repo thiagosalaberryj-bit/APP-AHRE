@@ -1,4 +1,7 @@
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from './LoadingDots';
+import { Pressable, Text, View } from 'react-native';
 import { memo } from 'react';
 import EncabezadoSeccionPlegable from './CollapsibleSectionHeader';
 import TarjetaMovimiento from './MovementCard';
@@ -24,16 +27,16 @@ export default function ListaMesesMovimientos({ datos, tema, alPresionar }: {
         </View>
         {datos.abiertos[mes] ? <View style={estilos.movimientos}>
           {!pagina || pagina.preparando ? <View style={estilos.cargaInicial} accessibilityRole="progressbar" accessibilityLabel={`Cargando movimientos de ${titulo}`} accessibilityState={{ busy: true }}>
-            <ActivityIndicator color={tema.foco} size="small"/>
+            <PuntosCarga color={tema.foco} size="small"/>
             <Text style={estilos.textoBoton}>Cargando movimientos…</Text>
           </View> : <>
           {pagina?.movimientos.map(movimiento => <TarjetaMovimientoMemorizada key={movimiento.id} tema={tema} movimiento={movimiento} alPresionar={alPresionar}/>)}
 
           {pagina.cargando || pagina.hayMas || pagina.error ? <View collapsable={false} nativeID={`cargar-mes-${mes}`} ref={nodo => { datos.referenciaBoton(mes, nodo); }}>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Cargar más movimientos de ${titulo}`}
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Cargar más movimientos de ${titulo}`}
               accessibilityState={{ disabled: !!pagina?.cargando, busy: !!pagina?.cargando }} disabled={!!pagina?.cargando}
-              onPress={() => { void datos.cargarMes(mes); }} style={estilos.boton}>
-              {pagina?.cargando ? <ActivityIndicator color={tema.foco} size="small" accessibilityLabel="Cargando movimientos"/> : null}
+              onPress={conRespuestaVisual(() => { void datos.cargarMes(mes); })} style={estilos.boton}>
+              {pagina?.cargando ? <PuntosCarga color={tema.foco} size="small" accessibilityLabel="Cargando movimientos"/> : null}
               <Text style={estilos.textoBoton}>{pagina?.cargando ? 'Cargando movimientos…' : pagina?.error ? 'Reintentar cargar movimientos' : 'Cargar más movimientos'}</Text>
             </Pressable>
           </View> : null}

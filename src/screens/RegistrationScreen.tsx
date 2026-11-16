@@ -1,3 +1,6 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { ErrorAutenticacion } from '../authentication/errors';
 import { useContext, useRef, useState } from 'react';
@@ -16,6 +19,8 @@ import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
 export default function PantallaRegistro({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+ const finalizacion=useFinalizacionAccion();
+
   useRegresoProtegido(navegacion, () => cargando);
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
@@ -42,9 +47,10 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
     if (Object.keys(nuevosErrores).length > 0) return;
 
     accionEnCurso.current = true;
-    establecerCargando(true);
+    finalizacion.iniciar();establecerCargando(true);
     try {
       await registrarUsuario({ nombre, apellido, correo, contrasena, confirmacion });
+      if(!await finalizacion.confirmar())return;
       establecerContrasena('');
       establecerConfirmacion('');
       mostrarAviso('Tu cuenta quedó creada. Iniciá sesión para continuar.', { tipo: 'exito' });
@@ -148,7 +154,7 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
           tema={tema}
         />
 
-        <BotonPrincipal
+        <BotonPrincipal completado={finalizacion.completado}
           estilosAutenticacion={estilosAutenticacion}
           estilosGlobales={estilosGlobales}
           cargando={cargando}
@@ -168,10 +174,10 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
 
       <View style={estilosAutenticacion.pie}>
         <Text style={estilosAutenticacion.textoPie}>¿Ya tenés una cuenta?</Text>
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityRole="button"
           disabled={cargando}
-          onPress={() => navegacion.navigate(RUTAS.INICIO_SESION)}
+          onPress={conRespuestaVisual(() => navegacion.navigate(RUTAS.INICIO_SESION))}
           style={estilosAutenticacion.accionPie}
         >
           <Text style={estilosAutenticacion.textoAccionPie}>Volver a Login</Text>

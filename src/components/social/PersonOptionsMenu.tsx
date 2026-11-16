@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import {useContext,useRef,useState} from 'react';
 import {Pressable} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
@@ -25,7 +27,7 @@ export default function OpcionesPersona({persona,alEditar,vinculo,sinConexion,..
     finally{bloqueo.current=false;cambiarOcupado(false);}
   };
   return <>
-    <Pressable accessibilityRole="button" accessibilityLabel="Opciones de persona" accessibilityState={{expanded:menu}} disabled={ocupado} onPress={()=>abrirMenu(true)} style={estilos.editar}><Ionicons name="ellipsis-horizontal" size={22} color={aspecto.tema.textoSecundario}/></Pressable>
+    <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Opciones de persona" accessibilityState={{expanded:menu}} disabled={ocupado} onPress={conRespuestaVisual(()=>abrirMenu(true))} style={estilos.editar}><Ionicons name="ellipsis-horizontal" size={22} color={aspecto.tema.textoSecundario}/></Pressable>
     {menu?<MenuOpcionesSocial tema={aspecto.tema} titulo="Opciones de persona" descripcion={persona.nombre} alCerrar={()=>abrirMenu(false)} opciones={[
       {id:'editar',texto:'Editar persona',descripcion:'Cambiar nombre, apellido y apodo.',icono:'create-outline',alElegir:()=>{abrirMenu(false);alEditar();}},
       {id:'cuenta',texto:vinculo?.estado==='confirmado'?'Ver cuenta vinculada':vinculo&&['solicitado','pendiente'].includes(vinculo.estado)?'Gestionar vínculo':'Vincular cuenta',descripcion:vinculo?.estado==='confirmado'?'Consultar la cuenta asociada a esta ficha.':vinculo&&['solicitado','pendiente'].includes(vinculo.estado)?'Consultar o resolver la solicitud de vínculo.':'Vincular por correo y esperar la aceptación de la otra cuenta.',icono:'link-outline',alElegir:()=>{abrirMenu(false);abrirCuenta(true);}},

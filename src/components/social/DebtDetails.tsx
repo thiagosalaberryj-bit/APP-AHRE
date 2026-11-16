@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import HistorialActividadDeuda from './DebtActivityHistory';
 import InvitacionDeuda from './DebtInvitation';
 import ImporteDeuda from './DebtAmountCard';
@@ -26,7 +28,7 @@ export default function DetalleDeuda({ deudaId, abrirPersona, abrirSala, abrirRe
   const pagado = formatearMontoSocial(deuda.montoNumero - deuda.pendienteNumero - deuda.perdonadoNumero);
   return <>
     <View style={[estilos.resumenPrincipal, estilos.perfilCompacto]}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Ver persona" disabled={!tieneFicha} onPress={()=>abrirPersona(persona.id)} style={estilos.filaCampos}>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Ver persona" disabled={!tieneFicha} onPress={conRespuestaVisual(()=>abrirPersona(persona.id))} style={estilos.filaCampos}>
         <AvatarPersona persona={persona} />
         <View style={estilos.textoFlexible}>
           <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.nombrePersona}>{nombreCompletoPersona(persona)}</Text>

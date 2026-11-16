@@ -1,3 +1,4 @@
+import {crearEstilosGlobales} from '../../styles/globalStyles';
 import { useContext } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
 import { useErrorNotificado } from '../../hooks/useErrorNotice';
@@ -13,6 +14,9 @@ import BotonSocial from './SocialButton';
 import {crearEstilosSocialOnline} from '../../styles/social/OnlineSocialStyles';
 
 export default function ModalVinculoCuenta({persona,vinculo,sinConexion,alCerrar,...aspecto}:AspectoSocial&{persona:PersonaVista;vinculo?:VinculoOnline;sinConexion:boolean;alCerrar:()=>void}){
+ const [focoEntrada,cambiarFocoEntrada]=useState<string|null>(null);
+ const estilosEntrada=crearEstilosGlobales(aspecto.tema);
+
   const { mostrarAviso } = useContext(ContextoAvisos);
   const [correo,cambiarCorreo]=useState(''),[, cambiarError]=useErrorNotificado(''),[ocupado,cambiarOcupado]=useState(false);
   const bloqueo=useRef(false),estilos=crearEstilosSocialOnline(aspecto.tema);
@@ -31,7 +35,7 @@ export default function ModalVinculoCuenta({persona,vinculo,sinConexion,alCerrar
       <Text style={aspecto.estilosGlobales.textoSecundario}>{vinculo.nombre} aceptó una invitación. Confirmá si es la cuenta de esta persona.</Text>
       {['confirmado','rechazado'].map(decision=><BotonSocial texto={decision==='confirmado'?'Confirmar vínculo':'Rechazar vínculo'} key={decision} deshabilitado={ocupado||sinConexion} alPresionar={()=>ejecutar(async()=>{await enviarAccionSocial('vinculo:'+vinculo.id,'/vinculos/'+vinculo.id+'/decidir',{decision});await sincronizarSocialOnline();})} {...aspecto}/>)}
     </>:<>
-        <TextInput accessibilityLabel="Correo de la cuenta a vincular" value={correo} onChangeText={cambiarCorreo} placeholder="Correo de su cuenta AHRE" placeholderTextColor={aspecto.tema.textoSecundario} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} editable={!ocupado} style={estilos.entrada}/>
+        <TextInput onFocus={()=>cambiarFocoEntrada("0")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Correo de la cuenta a vincular" value={correo} onChangeText={cambiarCorreo} placeholder="Correo de su cuenta AHRE" placeholderTextColor={aspecto.tema.textoSecundario} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} editable={!ocupado} style={[estilos.entrada,estilosEntrada.campo,focoEntrada==="0"&&estilosEntrada.campoEnfocado]}/>
         <Text style={aspecto.estilosGlobales.textoAyuda}>La otra persona debe aceptar. Sus deudas anteriores siguen siendo privadas.</Text>
         <BotonSocial texto="Enviar solicitud de vínculo" deshabilitado={ocupado||sinConexion||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())} alPresionar={()=>ejecutar(()=>solicitarVinculoOnline(persona.id,correo),'Solicitud de vínculo enviada. La otra persona debe aceptarla.')} {...aspecto}/>
     </>}

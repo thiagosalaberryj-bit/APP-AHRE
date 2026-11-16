@@ -1,3 +1,6 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import {obtenerSesionActual} from '../authentication/sessionService';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import { ErrorAutenticacion } from '../authentication/errors';
@@ -19,6 +22,8 @@ import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
 export default function PantallaInicioSesion({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+ const finalizacion=useFinalizacionAccion();
+
   useRegresoProtegido(navegacion, () => cargando);
   const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
@@ -37,7 +42,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
   const moverControlRecordarme = progresoRecordarme.interpolate({ inputRange: [0, 1], outputRange: [0, 24] });
   const colorFondoRecordarme = progresoRecordarme.interpolate({
     inputRange: [0, 1],
-    outputRange: [tema.nombre === 'oscuro' ? tema.fondoDeshabilitado : '#D6D6D6', tema.encabezado],
+    outputRange: [tema.nombre === 'oscuro' ? tema.fondoDeshabilitado : '#D6D6D6', tema.seleccion],
   });
   const colorControlRecordarme = progresoRecordarme.interpolate({
     inputRange: [0, 1],
@@ -66,7 +71,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
     if (Object.keys(nuevosErrores).length > 0) return;
 
     accionEnCurso.current = true;
-    establecerCargando(true);
+    finalizacion.iniciar();establecerCargando(true);
     try {
       await iniciarSesion({ correo, contrasena, recordar: recordarme,reemplazarDispositivo });
       try {
@@ -77,6 +82,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           tipo: 'informacion',
         });
       }
+      if(!await finalizacion.confirmar())return;
       establecerContrasena('');
       navegacion.reset({ index: 0, routes: [{ name: RUTAS.PRINCIPAL }] });
     } catch (error) {
@@ -146,12 +152,12 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
         />
 
         <View style={estilosAutenticacion.opcionesContrasena}>
-          <Pressable
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityLabel="Recordarme"
             accessibilityRole="switch"
             accessibilityState={{ checked: recordarme, disabled: cargando }}
             disabled={cargando}
-            onPress={alternarRecordarme}
+            onPress={conRespuestaVisual(alternarRecordarme)}
             style={estilosAutenticacion.recordarme}
           >
             <Animated.View style={[estilosAutenticacion.conmutadorRecordarme, { backgroundColor: colorFondoRecordarme }]}>
@@ -169,21 +175,21 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           </Pressable>
         </View>
 
-        <BotonPrincipal
+        <BotonPrincipal completado={finalizacion.completado}
           estilosAutenticacion={estilosAutenticacion}
           estilosGlobales={estilosGlobales}
           cargando={cargando}
-          alPresionar={()=>{void manejarInicioSesion();}}
+          alPresionar={()=>manejarInicioSesion()}
           titulo="Iniciar sesión"
         />
       </View>
 
       <View style={estilosAutenticacion.pie}>
         <Text style={estilosAutenticacion.textoPie}>¿Todavía no tenés una cuenta?</Text>
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityRole="button"
           disabled={cargando}
-          onPress={() => navegacion.navigate(RUTAS.REGISTRO)}
+          onPress={conRespuestaVisual(() => navegacion.navigate(RUTAS.REGISTRO))}
           style={estilosAutenticacion.accionPie}
         >
           <Text style={estilosAutenticacion.textoAccionPie}>Ir a Registro</Text>

@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
@@ -19,7 +21,7 @@ export default function TituloSeccionSocial(propiedades: Omit<import('../../soci
   };
   return <View style={estilos.tituloSeccionPanel}>
       <Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>{titulo}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={etiqueta} onPress={alAbrir} hitSlop={4} style={estilos.flechaSeccionPanel}>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={etiqueta} onPress={conRespuestaVisual(alAbrir)} hitSlop={4} style={estilos.flechaSeccionPanel}>
         <Text style={estilos.textoVerTodas}>{etiqueta}</Text>
         <Ionicons color={tema.foco} name="chevron-forward" size={20} />
       </Pressable>

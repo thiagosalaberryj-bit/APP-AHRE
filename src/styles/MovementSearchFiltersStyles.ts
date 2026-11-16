@@ -13,13 +13,13 @@ export function crearEstilosBusquedaFiltros(tema:Tema) {
     sinFiltros: { color:tema.textoSecundario, fontSize:TIPOGRAFIA.tamanos.auxiliar },
     deshabilitado: { opacity:0.45 },
     contenedor: { gap: ESPACIADO.medio },
-    buscador: { flexDirection:'row', alignItems:'center', gap:ESPACIADO.pequeno, minHeight:52, borderColor:tema.borde, borderWidth:BORDES.anchos.fino, paddingRight:ESPACIADO.pequeno },
+    buscador: { backgroundColor: tema.campoFondo, flexDirection:'row', alignItems:'center', gap:ESPACIADO.pequeno, minHeight:52, borderColor: tema.campoBorde, borderWidth:BORDES.anchos.fino, paddingRight:ESPACIADO.pequeno },
     entrada: { flex:1,minWidth:0,color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.cuerpo,paddingVertical:ESPACIADO.pequeno },
     accion: { width:44,height:44,alignItems:'center',justifyContent:'center' },
     fila: { flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno },
     filtro: { minHeight:38,flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo,paddingHorizontal:ESPACIADO.medio,borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.campo / 2,backgroundColor:tema.superficie },
-    filtroActivo: { backgroundColor:tema.encabezado },
+    filtroActivo: { backgroundColor:tema.seleccion },
     textoFiltro: { color:tema.textoPrincipal,fontFamily:TIPOGRAFIA.familias.principal,fontSize:TIPOGRAFIA.tamanos.secundario,fontWeight:TIPOGRAFIA.pesos.medio,lineHeight:20 },
-    textoActivo: { color:tema.encabezadoTexto },
+    textoActivo: { color:tema.seleccionTexto },
   });
 }

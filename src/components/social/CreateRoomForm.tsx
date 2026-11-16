@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import AccionesFormulario from './SocialFormActions';
 import { useRef, useState } from 'react';
@@ -47,7 +49,7 @@ export default function FormularioCrearSala(propiedades: import('../../social/ty
           <CampoFormulario etiqueta="Nombre de la ocasión" ejemplo="Ej.: Cena del viernes" valor={nombre} error={errores.nombre} alCambiar={establecerNombre} limite={100} {...aspecto} /><CampoFormulario etiqueta="Descripción (opcional)" multilinea valor={descripcion} error={errores.descripcion} alCambiar={establecerDescripcion} limite={500} {...aspecto} />
           <View style={aspecto.estilos.grupoCampo}>
             <Text style={estilosGlobales.etiqueta}>Participantes</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Participantes" accessibilityState={{ expanded: seleccionandoPersonas }} onPress={() => establecerSeleccionandoPersonas(true)} style={estilosMovimiento.botonDeposito}>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Participantes" accessibilityState={{ expanded: seleccionandoPersonas }} onPress={conRespuestaVisual(() => establecerSeleccionandoPersonas(true))} style={estilosMovimiento.botonDeposito}>
               <Ionicons name="people-outline" size={24} color={tema.foco} />
               <Text style={[estilosGlobales.texto, aspecto.estilos.textoFlexible]}>{seleccionadas.length ? personasSociales.filter(persona => seleccionadas.includes(persona.id)).map(nombreCompletoPersona).join(', ') : 'Seleccioná participantes'}</Text>
               <Ionicons name="chevron-down" size={22} color={tema.textoSecundario} />
@@ -58,7 +60,7 @@ export default function FormularioCrearSala(propiedades: import('../../social/ty
             alCrear={() => { establecerSeleccionandoPersonas(false); registrarPersona(); }} {...aspecto} /> : null}
           <Text style={estilosGlobales.textoAyuda}>Vos ya estás incluido. Elegí del listado o registrá una persona desde el selector.</Text>
           <PersonalizacionSala alCambiar={establecerApariencia} {...aspecto} />
-          <Pressable accessibilityRole="checkbox" accessibilityState={{checked:compartir}} onPress={()=>cambiarCompartir(!compartir)} style={aspecto.estilos.filaCampos}><Ionicons name={compartir?'checkbox':'square-outline'} size={24} color={tema.foco}/><Text style={estilosGlobales.etiqueta}>Compartir online</Text></Pressable>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityState={{checked:compartir}} onPress={conRespuestaVisual(()=>cambiarCompartir(!compartir))} style={aspecto.estilos.filaCampos}><Ionicons name={compartir?'checkbox':'square-outline'} size={24} color={tema.foco}/><Text style={estilosGlobales.etiqueta}>Compartir online</Text></Pressable>
           {compartir?<><CampoFormulario secreto etiqueta="Contraseña de la sala" valor={contrasena} error={errores.contrasena} alCambiar={cambiarContrasena} limite={128} {...aspecto}/><Text style={estilosGlobales.textoAyuda}>Mínimo 8 caracteres. Tendrás un enlace y QR para todas las personas; tus amigos pueden entrar directamente; las demás personas esperan tu aprobación. Se requiere conexión.</Text></>:null}
           <View style={estilosMovimiento.tarjetaInformacion}><SelectorFecha etiqueta="Fecha de la ocasión" valor={fecha} alSeleccionar={establecerFecha} tema={tema} estilosMovimiento={estilosMovimiento} /></View>
           <Text style={estilosGlobales.textoAyuda}>Máximo de {LIMITE_SALAS_ACTIVAS} salas activas por vez.</Text>

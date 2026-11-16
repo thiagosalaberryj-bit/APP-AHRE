@@ -23,7 +23,7 @@ for (const tema of ['claro', 'oscuro'] as const) for (const variante of ['creaci
       focoNombre: { enfocado: false, alCambiar: (valor: boolean) => { focoNombre = valor; } },
       focoDescripcion: { enfocado: false, alCambiar: (valor: boolean) => { focoDescripcion = valor; } },
       iconosAdicionalesVisibles: false, alAbrirIconos: () => { iconosAbiertos = true; },
-      deshabilitado: variante === 'creacion' ? false : undefined,
+      deshabilitado: false,
     };
     const arbol = e.formulario(propiedades);
     const nombre = control(arbol, 'Nombre del depósito'), descripcion = control(arbol, 'Descripción opcional');
@@ -49,7 +49,7 @@ for (const tema of ['claro', 'oscuro'] as const) for (const variante of ['creaci
     const vacio = e.formulario({ ...propiedades, valores: { nombre: '', descripcion: '', tipo: null, icono: 'cash-outline', color: null } });
     assert.ok(!nodosFormulario(vacio).some(nodo => nodo.props.accessibilityLabel === 'Limpiar nombre'));
     assert.deepEqual(control(vacio, 'Color azul suave predeterminado').props.accessibilityState, { selected: true });
-    assert.equal(control(vacio, 'Ver más íconos').props.disabled, variante === 'creacion' ? false : undefined);
+    assert.equal(control(vacio, 'Ver más íconos').props.disabled, false);
     assert.ok(!nodosFormulario(vacio).some(nodo => nodo.props.accessibilityLabel === 'Saldo inicial'));
   });
 
@@ -61,7 +61,7 @@ for (const tema of ['claro', 'oscuro'] as const) for (const variante of ['creaci
       iconosAdicionalesVisibles: false, alAbrirIconos() {}, deshabilitado: variante === 'creacion' ? true : undefined,
     });
     const nombre = control(arbol, 'Nombre del depósito');
-    assert.equal(nombre.props.editable, variante === 'creacion' ? false : undefined);
+    assert.equal(nombre.props.editable, variante === 'creacion' ? false : true);
     assert.equal(nombre.props.accessibilityHint, variante === 'creacion' ? 'Error de nombre' : undefined);
     assert.equal(control(arbol, 'Banco').props.disabled, variante === 'creacion' ? true : undefined);
     const texto = textoFormulario(arbol);

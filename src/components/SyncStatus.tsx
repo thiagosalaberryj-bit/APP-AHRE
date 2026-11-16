@@ -1,3 +1,7 @@
+import {conEstiloDePulsacion} from '../styles/globalStyles';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import {useAccionEnCurso} from '../hooks/useActionInProgress';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import {reinicioEnCurso} from '../development/testResetState';
 import {observarSocialOnline} from '../social/online/onlineStore';
 import {useContext,useEffect,useRef,useState} from 'react';
@@ -58,6 +62,7 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
 }
 
 export default function EstadoSincronizacion({soloIcono=false}:{soloIcono?:boolean}={}){
+  const accionOcupada=useAccionEnCurso();
   const {tema}=useContext(ContextoApariencia);
   const navegacion=useNavigation<import('../navigation/types').NavegacionRaiz>();
   const [vistaPrivada,establecerVista]=useState(obtenerVistaSincronizacion);
@@ -88,9 +93,9 @@ export default function EstadoSincronizacion({soloIcono=false}:{soloIcono?:boole
   const iconoNube=['offline','local'].includes(vista.estado)?'cloud-offline-outline'
     :vista.estado==='sincronizando'?'cloud-upload-outline'
     :vista.estado==='online'&&vista.pendientes===0?'cloud-done-outline':'cloud-outline';
-  const fondoMarca=soloIcono?tema.encabezado:tema.contenedorVerde;
-  return <Pressable accessibilityRole="button" accessibilityLabel={`${TEXTOS_SYNC[vista.estado]}. ${vista.pendientes} registros pendientes. Ver sincronización.`}
-    onPress={()=>navegacion.navigate(RUTAS.SINCRONIZACION)} style={[estilos.boton,soloIcono&&estilos.soloIcono,{backgroundColor:soloIcono?'transparent':tema.contenedorVerde}]}>
+  const fondoMarca=soloIcono?tema.encabezado:tema.botonEncabezado;
+  return <Pressable disabled={accionOcupada} android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`${TEXTOS_SYNC[vista.estado]}. ${vista.pendientes} registros pendientes. Ver sincronización.`}
+    onPress={conRespuestaVisual(()=>navegacion.navigate(RUTAS.SINCRONIZACION))} style={conEstiloDePulsacion([estilos.boton,soloIcono&&estilos.soloIcono,{backgroundColor:soloIcono?'transparent':tema.botonEncabezado}])}>
     <View style={estilos.icono}>
       <Animated.View style={{opacity:progreso,transform:[{translateY:vista.estado==='sincronizando'&&!reducirMovimiento?progreso.interpolate({inputRange:[0.35,1],outputRange:[-2,1]}):0}]}}>
         <Ionicons name={iconoNube} size={26} color={tema.botonPrincipal}/>

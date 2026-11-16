@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import {obtenerColorCategoria,obtenerColorIconoCategoria} from '../../styles/categoryColors';
 import AccionesOnline from './ExpenseOnlineActions';
 import { useDatosSociales } from '../../social/SocialDataContext';
@@ -33,10 +35,10 @@ export default function DetalleGasto(propiedades: import('../../social/types').A
         <View style={estilos.filaCampos}>
           <View style={[estilos.iconoCategoria,{backgroundColor:obtenerColorCategoria(gasto.categoriaId,tema,'egreso')+'26'}]}><Ionicons color={obtenerColorIconoCategoria(gasto.categoriaId,tema,'egreso')} name={CATEGORIAS_EGRESO.find(c=>c.id===gasto.categoriaId)?.icono||'receipt-outline'} size={22} /></View>
           <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.encabezadoSeccion}>{gasto.descripcion}</Text><Text style={estilosGlobales.textoSecundario}>{gasto.fecha} · {CATEGORIAS_EGRESO.find(c => c.id === gasto.categoriaId)?.nombre}</Text></View>
-          {sala.estado === 'abierta' && sala.puedeEditarGastos && !sala.cierrePendiente ? <Pressable accessibilityRole="button" accessibilityLabel="Editar gasto" onPress={() => abrirRegistro('gasto', {
+          {sala.estado === 'abierta' && sala.puedeEditarGastos && !sala.cierrePendiente ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Editar gasto" onPress={conRespuestaVisual(() => abrirRegistro('gasto', {
           salaId: sala.id,
           gastoId: gasto.id
-        })} style={estilos.editarPersona}><Ionicons color={tema.foco} name="create-outline" size={24} /></Pressable> : <Text style={estilosGlobales.textoSecundario}>Solo lectura</Text>}
+        }))} style={estilos.editarPersona}><Ionicons color={tema.foco} name="create-outline" size={24} /></Pressable> : <Text style={estilosGlobales.textoSecundario}>Solo lectura</Text>}
         </View>
         <View style={estilos.resumenImportesPersona}>
           <View style={estilos.importePersona}><Text style={estilosGlobales.textoSecundario}>Importe</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.titulo}>{gasto.monto}</Text></View>

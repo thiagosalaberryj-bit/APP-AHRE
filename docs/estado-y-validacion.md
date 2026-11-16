@@ -1,8 +1,36 @@
 # Estado y validación de AHRE
 
 Referencia vigente: **16 de noviembre de 2026**, rama
-`codex/mejoras-visuales-accesibilidad`, versión configurada 0.9.2 / Android versionCode 16.
+`codex/modo-oscuro-neutro`, versión configurada 0.9.2 / Android versionCode 16.
 Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
+
+## Interfaz clara y oscura · 16 de noviembre de 2026
+
+Esta revisión unifica fondos oscuros en tonos azulados neutros, botones e inputs
+reutilizables en ambos temas, avatares y controles del encabezado. Retira la
+pantalla temporal de estilos, compacta las solicitudes de integrantes y mejora
+los selectores y la respuesta visual de las acciones.
+
+Guardar muestra «Procesando» con tres puntos durante al menos 2 segundos;
+«Listo» permanece otros 2 segundos antes de cerrar o navegar. Una operación
+online espera su resultado real antes de confirmar. La navegación responde sin
+una pausa artificial. Las operaciones pendientes conservan el bloqueo y los
+errores permiten reintentar sin confirmar éxito.
+
+- Tipos de app y herramientas: correctos con `npm run typecheck`.
+- Suite de app: **591 casos, 542 aprobados, cero fallos y 49 omitidos**.
+  Las omisiones corresponden a las integraciones MySQL sin entorno habilitado;
+  no se consideran verificadas en esta ejecución.
+- Exportación Android/Hermes: correcta.
+- Cobertura específica: tiempos de carga y éxito, cancelación al desmontar,
+  bloqueo de doble envío, estados en ambos temas y marcado masivo de 2.000 avisos.
+- Pendiente: comprobar los nuevos tiempos y la fluidez final en Expo Go en el
+  teléfono. La exportación no equivale a generar ni instalar una APK nueva.
+- No se cambian dependencias ni contratos del servidor. El PR se entrega para
+  revisión sobre `main`, sin merge ni despliegue.
+
+Los resultados siguientes pertenecen a la preparación anterior de 0.9.2 y
+se conservan como antecedente; no describen una repetición de MySQL en esta rama.
 
 ## Cierre de release 0.9.2 · 16 de noviembre de 2026
 

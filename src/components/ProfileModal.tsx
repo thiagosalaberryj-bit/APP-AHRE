@@ -1,3 +1,6 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import {operacionFinancieraEnCurso} from '../social/financialOperation';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { AvisosEnModal } from '../contexts/ToastContext';
 import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,10 +31,10 @@ function EncabezadoModalPerfil({ alCerrar, colorIcono, descripcion, etiquetaCerr
         <Text style={estilos.tituloFormularioModal}>{titulo}</Text>
         <Text style={estilos.descripcionFormularioModal}>{descripcion}</Text>
       </View>
-      <Pressable
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
         accessibilityLabel={etiquetaCerrar}
         accessibilityRole="button"
-        onPress={alCerrar}
+        onPress={conRespuestaVisual(alCerrar)}
         style={({ pressed: presionado }) => [
           estilos.botonCerrarFormularioModal,
           presionado && estilos.botonCerrarFormularioModalPresionado,
@@ -55,17 +58,18 @@ export default function ModalPerfil({
   estiloDesplazamiento?: StyleProp<ViewStyle>;
   children: ReactNode;
 }) {
+  const cerrar=()=>{if(!operacionFinancieraEnCurso())alCerrar();};
   const contenido = <>
-    <EncabezadoModalPerfil {...encabezado} alCerrar={alCerrar} estilos={estilos} etiquetaCerrar={etiquetaCerrar} />
+    <EncabezadoModalPerfil {...encabezado} alCerrar={cerrar} estilos={estilos} etiquetaCerrar={etiquetaCerrar} />
     {desplazable ? <View style={estilos.separadorModal} /> : null}
     {children}
   </>;
 
-  if (separarFondo) return <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}><AvisosEnModal visible={visible}>
+  if (separarFondo) return <Modal animationType="fade" onRequestClose={cerrar} transparent visible={visible}><AvisosEnModal visible={visible}>
     <View style={estilos.fondoSuperpuesto}>
-      <Pressable accessibilityLabel={etiquetaCerrarFondo} onPress={alCerrar} style={StyleSheet.absoluteFill}/>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel={etiquetaCerrarFondo} onPress={cerrar} style={StyleSheet.absoluteFill}/>
       <View style={[estilos.tarjetaSuperpuesta,estiloTarjeta]} accessibilityViewIsModal>
-        <EncabezadoModalPerfil {...encabezado} alCerrar={alCerrar} estilos={estilos} etiquetaCerrar={etiquetaCerrar}/>
+        <EncabezadoModalPerfil {...encabezado} alCerrar={cerrar} estilos={estilos} etiquetaCerrar={etiquetaCerrar}/>
         <View style={estilos.separadorModal}/>
         <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={[estilos.desplazamientoModal,estiloDesplazamiento]} contentContainerStyle={estilos.contenidoScrollModal}>
           <View style={estilos.formularioModal}>{children}</View>
@@ -74,8 +78,8 @@ export default function ModalPerfil({
     </View>
   </AvisosEnModal></Modal>;
   return (
-    <Modal animationType="fade" onRequestClose={alCerrar} transparent visible={visible}><AvisosEnModal visible={visible}>
-      <Pressable accessibilityLabel={etiquetaCerrarFondo} onPress={alCerrar} style={estilos.fondoSuperpuesto}>
+    <Modal animationType="fade" onRequestClose={cerrar} transparent visible={visible}><AvisosEnModal visible={visible}>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel={etiquetaCerrarFondo} onPress={conRespuestaVisual(cerrar)} style={estilos.fondoSuperpuesto}>
         <Pressable style={estilos.tarjetaSuperpuesta}>
           {desplazable ? (
             <ScrollView

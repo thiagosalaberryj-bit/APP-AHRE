@@ -1,3 +1,5 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {iniciarOperacionFinanciera} from '../social/financialOperation';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
@@ -26,6 +28,8 @@ import { crearEstilosGlobales, ESPACIADO } from '../styles/globalStyles';
 import { validarDatosDeposito } from '../utils/depositValidation';
 
 export default function PantallaDeposito({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+ const finalizacion=useFinalizacionAccion();
+
   const volverProtegido = useRegresoProtegido(navegacion, () => guardandoRef.current);
   const insets = useSafeAreaInsets();
   const { tema } = useContext(ContextoApariencia);
@@ -67,16 +71,20 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
       return;
     }
 
+    const liberarAccion=iniciarOperacionFinanciera();if(!liberarAccion)return;
     guardandoRef.current = true;
-    establecerGuardando(true);
+    finalizacion.iniciar();establecerGuardando(true);
 
     try {
       const depositoCreado = await crearDeposito(datosFormulario);
+      if(!await finalizacion.confirmar())return;
       guardandoRef.current = false;
+      liberarAccion();
       establecerGuardando(false);
       mostrarAviso(`Se creó el depósito «${depositoCreado.nombre}».`, { tipo: 'exito' });
       volverProtegido();
     } catch (error) {
+      liberarAccion();
       guardandoRef.current = false;
       establecerGuardando(false);
       if (error instanceof ErrorDeposito && error.errores) {
@@ -86,6 +94,10 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
         ? error.message
         : 'No se pudo crear el depósito. Intentá nuevamente.';
       mostrarAviso(mensaje, { tipo: 'error' });
+    } finally {
+      liberarAccion();
+      guardandoRef.current=false;
+      establecerGuardando(false);
     }
   };
 
@@ -146,7 +158,7 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
             />
 
             <View style={estilos.acciones}>
-              <BotonPrincipal
+              <BotonPrincipal completado={finalizacion.completado}
                 estilosAutenticacion={estilos}
                 estilosGlobales={estilosGlobales}
                 titulo="Crear depósito"

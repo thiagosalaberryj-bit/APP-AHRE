@@ -3,6 +3,22 @@ import assert from 'node:assert/strict';
 import { preparar } from './helpers/localDatabase.ts';
 import { TIPOS_AVISO } from '../src/notifications/types.ts';
 
+test('marcar miles de avisos usa una escritura de marcas en lote y una sola operación remota',async t=>{
+ const sentencias:string[]=[];
+ const e=await preparar(t,true,{url:'https://prueba.invalid',fetch:async()=>{throw new Error('Sin red');},registrarSql:sql=>sentencias.push(sql)});
+ await e.prepararDatosPrueba();const {usuario}=await e.obtenerSesionActual();assert.ok(usuario);
+ const fecha='2026-01-01T10:00:00.000Z';
+ const insertar=e.base.prepare('INSERT INTO avisos_locales(usuario_id,id,datos,fecha,vista,resuelta) VALUES(?,?,?,?,0,0)');
+ for(let i=0;i<2000;i++)insertar.run(usuario.id,'masivo-'+i,JSON.stringify({id:'masivo-'+i,tipo:'registro',titulo:'Ejemplo',mensaje:'Prueba',fecha,destino:{tipo:'inicio'}}),fecha);
+ e.base.exec("DELETE FROM integraciones_outbox WHERE ruta='/notificaciones/vistas'");sentencias.length=0;
+ await e.marcarTodosAvisosVistos();
+ assert.equal(sentencias.filter(sql=>sql.includes("'avisos:visto:'||id")).length,1);
+ assert.ok(sentencias.length<30,'La cantidad de consultas no debe crecer con los avisos');
+ assert.equal(e.base.prepare("SELECT COUNT(*) n FROM integraciones_locales WHERE clave LIKE 'avisos:visto:masivo-%'").get()!.n,2000);
+ assert.equal(e.base.prepare("SELECT COUNT(*) n FROM integraciones_outbox WHERE ruta='/notificaciones/vistas'").get()!.n,1);
+ assert.equal(await e.contarAvisosNoVistos(),0);
+});
+
 test('la demo cubre todos los tipos y pagina 10 + 8 sin repetir ni restablecer las vistas',async t=>{
  const e=await preparar(t);await e.prepararDatosPrueba({vistaSocialOnline:true});
  const primera=await e.cargarPaginaAvisos('todas');assert.equal(primera.avisos.length,10);assert.ok(primera.siguiente);

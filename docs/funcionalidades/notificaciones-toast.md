@@ -78,7 +78,9 @@ mostrarAviso('La sincronización sigue en curso.', {
 La notificación también se puede cerrar con la X o deslizando hacia un costado.
 Si se muestra otro aviso, reemplaza al que estaba visible. El color del icono
 depende del tipo; los colores compartidos están en
-`src/styles/colors.ts` (`COLORES_NOTIFICACIONES`).
+`src/styles/colors.ts` (`COLORES_NOTIFICACIONES`). El fondo sigue la apariencia:
+verde oscuro en claro y `tema.superficieElevada` en oscuro. El texto y los iconos
+mantienen contraste en ambas superficies.
 
 ## Uso actual
 

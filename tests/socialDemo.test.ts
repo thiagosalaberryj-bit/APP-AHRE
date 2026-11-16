@@ -99,7 +99,7 @@ test('el historial aceptado no vuelve a mostrar una invitación durante la carga
 test('el acreedor puede registrar por su cuenta un ingreso; el pago informado anterior sigue sin confirmar',async prueba=>{
   const {e,datos,comprobarRed}=await prepararDemo(prueba),deuda=presente(datos.deudas.find(d=>d.descripcion==='Cena con pago parcial'));
   const vista=interfazSocial(e,'claro');await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'pago',deudaId:deuda.id});
-  await vista.pulsar('Otro importe');await vista.llenar('Monto recibido','100');
+  await vista.pulsar('Importe del pago: Otro importe');await vista.llenar('Monto recibido','100');
   await vista.pulsar('Depósito');await vista.pulsar('Efectivo de prueba',true);await vista.pulsar('Registrar pago nuevo');
   const acuerdo=presente((await e.leerDatosOnline<import('../src/social/online/types.ts').DeudaOnline[]>(datos.usuarioId,'deudas',[])).find(d=>d.id===deuda.id));
   assert.equal(acuerdo.pendiente,1400);assert.ok(acuerdo.pagos.some(p=>p.monto===100&&p.estado==='confirmado'));assert.ok(acuerdo.pagos.some(p=>p.monto===250&&p.estado==='informado'));comprobarRed();
@@ -148,7 +148,7 @@ for(const tema of ['claro','oscuro'] as const)test(`la deuda online aceptada usa
   await vista.pulsar('Registrar mi pago');
   assert.ok(vista.destinos.some(d=>d[0]===vista.rutas.REGISTRO_SOCIAL&&(d[1] as {tipo?:string}).tipo==='pago'));
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'pago',deudaId:deuda.id});
-  await vista.pulsar('Otro importe');await vista.llenar('Monto que pagaste','10');
+  await vista.pulsar('Importe del pago: Otro importe');await vista.llenar('Monto que pagaste','10');
   await vista.pulsar('Depósito');await vista.pulsar('Efectivo de prueba',true);await vista.pulsar('Informar pago realizado');
   const acuerdo=presente((await e.leerDatosOnline<import('../src/social/online/types.ts').DeudaOnline[]>(datos.usuarioId,'deudas',[])).find(d=>d.id===deuda.id));
   assert.equal(acuerdo.pagos.length,1);assert.equal(acuerdo.pagos[0].monto,10);assert.equal(acuerdo.pendiente,4500);
@@ -207,7 +207,7 @@ test('confirmar un pago bloquea rechazar y solo muestra carga en la acción eleg
  await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'pago',deudaId:deuda.id,pagoId:deuda.id.replace(':deuda',':por-confirmar')});
  await vista.pulsar('Depósito');await vista.pulsar('Efectivo de prueba',true);
  const confirmar=vista.buscarBoton('Confirmar');(confirmar.props.onPress as ()=>void)();await inicio;await vista.asentar();
- assert.equal(vista.buscarBoton('Rechazar').props.disabled,true);assert.ok(vista.texto().includes('Guardando…'));
+ assert.equal(vista.buscarBoton('Rechazar').props.disabled,true);assert.ok(vista.texto().includes('Procesando'));
  (confirmar.props.onPress as ()=>void)();await vista.asentar();assert.equal(llamadas,1);
  liberar();await vista.asentar();
 });
@@ -348,7 +348,7 @@ for(const tema of ['claro','oscuro'] as const)test(`la misma deuda demo permite 
   const cache=async()=>presente((await e.leerDatosOnline<import('../src/social/online/types.ts').DeudaOnline[]>(datos.usuarioId,'deudas',[])).find(d=>d.id===deuda.id));
   await abrirDetalle();assert.ok(vista.texto().includes('Simular respuesta de Bruno'));
   await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'pago',deudaId:deuda.id});
-  await vista.pulsar('Otro importe');await vista.llenar('Monto que pagaste','100');
+  await vista.pulsar('Importe del pago: Otro importe');await vista.llenar('Monto que pagaste','100');
   await vista.pulsar('Depósito');await vista.pulsar(deposito.nombre,true);await vista.pulsar('Informar pago realizado');
   assert.equal(saldo(),inicial-100);assert.equal((await cache()).pendiente,1000);
   await abrirDetalle();assert.ok(vista.texto().includes('En espera de Bruno'));

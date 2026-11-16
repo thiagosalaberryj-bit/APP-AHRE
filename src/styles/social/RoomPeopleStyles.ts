@@ -10,7 +10,7 @@ export default function crearEstilosPropios(tema: Tema) {
     agregarPersonaAgenda: { width: 44, height: 44, minHeight: 44, backgroundColor: tema.botonPrincipal, borderRadius: BORDES.radios.campo, alignItems: 'center', justifyContent: 'center' },
     accionIcono: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
     personaAgenda: { flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.pequeno, minHeight: 52, paddingVertical: ESPACIADO.minimo, borderBottomWidth: BORDES.anchos.fino, borderBottomColor: tema.borde },
-    avatarAgenda: { width: 32, height: 32, borderRadius: BORDES.radios.circular, alignItems: 'center', justifyContent: 'center', backgroundColor: tema.contenedorVerde },
+    avatarAgenda: { width: 32, height: 32, borderRadius: BORDES.radios.circular, alignItems: 'center', justifyContent: 'center', backgroundColor: tema.avatarFondo },
     nombrePersona: { fontSize: TIPOGRAFIA.tamanos.secundario },
     detallePersona: { fontSize: TIPOGRAFIA.tamanos.auxiliar },
     iconoConfirmacionEliminar: {
@@ -45,7 +45,7 @@ export default function crearEstilosPropios(tema: Tema) {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: BORDES.radios.boton,
-      backgroundColor: tema.error,
+      backgroundColor: tema.botonPeligro,
       padding: ESPACIADO.pequeno
     },
     agenda: {

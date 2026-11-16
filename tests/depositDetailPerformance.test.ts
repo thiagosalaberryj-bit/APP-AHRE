@@ -92,7 +92,7 @@ probar('carga automática solo con botón visible y desplazamiento hacia abajo; 
   const evento = (y: number) => ({ nativeEvent: { contentOffset: { y } } });
   e.invocar(scroll, 'onScroll', evento(10)); await e.asentar(); assert.equal(e.consultas.length, 1);
   e.invocar(scroll, 'onScrollBeginDrag', evento(10)); e.invocar(scroll, 'onScroll', evento(20));
-  assert.ok(e.nodos().some(n => n.type === 'ActivityIndicator'));
+  assert.ok(e.nodos().some(n => typeof n.type === 'function' && (n.type as Function).name === 'PuntosCarga'));
   e.invocar(scroll, 'onScroll', evento(25)); await e.asentar(); assert.equal(e.consultas.length, 2);
   assert.equal(tarjetas(e).length, 100);
   e.invocar(scroll, 'onScroll', evento(25)); e.invocar(scroll, 'onScroll', evento(20)); await e.asentar(); assert.equal(e.consultas.length, 2);

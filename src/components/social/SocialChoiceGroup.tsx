@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { View, Pressable, Text } from 'react-native';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import crearEstilosPropios from '../../styles/social/SocialChoiceGroupStyles';
@@ -16,8 +18,8 @@ export default function OpcionesSeleccion(propiedades: Omit<import('../../social
     }
   };
   return <View style={enLinea ? estilos.repartoEnLinea : estilos.opciones}>
-      {opciones.map(opcion => <Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{
+      {opciones.map(opcion => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{
       checked: elegida === opcion.id
-    }} onPress={() => alElegir(opcion.id)} style={[enLinea ? estilos.opcionReparto : estilos.pestana, elegida === opcion.id && estilos.pestanaActiva]}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, elegida === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
+    }} onPress={conRespuestaVisual(() => alElegir(opcion.id))} style={[enLinea ? estilos.opcionReparto : estilos.pestana, elegida === opcion.id && estilos.pestanaActiva]}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, elegida === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
     </View>;
 }

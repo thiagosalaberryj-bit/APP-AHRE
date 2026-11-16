@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import {Pressable,Text,View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import type {Tema} from '../styles/colors';
@@ -15,7 +17,7 @@ interface PropiedadesEncabezadoPlegable {
 export default function EncabezadoSeccionPlegable({tema,titulo,resumen,expandido,alAlternar}:PropiedadesEncabezadoPlegable){
   const estilos=crearEstilosEncabezado();
   const globales=crearEstilosGlobales(tema);
-  return <Pressable accessibilityRole="button" accessibilityLabel={titulo} accessibilityState={{expanded:expandido}} onPress={alAlternar} style={estilos.encabezado}>
+  return <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={titulo} accessibilityState={{expanded:expandido}} onPress={conRespuestaVisual(alAlternar)} style={estilos.encabezado}>
     <View style={estilos.textoFlexible}>
       <Text style={globales.encabezadoSeccion}>{titulo}</Text>
       {resumen?<Text style={globales.textoSecundario}>{resumen}</Text>:null}

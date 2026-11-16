@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { AvisosEnModal } from '../../contexts/ToastContext';
 import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,7 +29,7 @@ export default function ModalPersona(propiedades: import('../../social/types').A
         <View accessibilityViewIsModal style={estilos.tarjetaModal}>
           <View style={estilos.filaModal}>
             <Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>{personaInicial ? 'Editar persona' : 'Agregar persona'}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar edición de persona" onPress={() => alCerrar()} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar edición de persona" onPress={conRespuestaVisual(() => alCerrar())} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable>
           </View>
           <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal}>
             {visible ? <FormularioPersona personaInicial={personaInicial} alCerrar={alCerrar} abrirPersona={id => {

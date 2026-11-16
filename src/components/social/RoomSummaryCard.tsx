@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import EtiquetaImporte from '../AmountLabel';
 import { Pressable, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,9 +21,9 @@ export default function TarjetaResumenSala(propiedades: Omit<import('../../socia
       ...crearEstilosPanel(propiedades.tema)
     }
   };
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Abrir ${sala.nombre}`} accessibilityValue={{
+  return <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Abrir ${sala.nombre}`} accessibilityValue={{
     text: `${sala.participantes.length + 1} personas, creada el ${sala.creadaEl.split('-').reverse().join('/')}, gastado ${sala.totalGastado}, ${sala.estado === 'cerrada' ? 'cerrada' : 'abierta'}, ${sala.movimientosPorRegistrar} movimientos por registrar`
-  }} accessibilityHint="Abre los gastos, balances y personas de esta sala." onPress={alAbrir} style={({
+  }} accessibilityHint="Abre los gastos, balances y personas de esta sala." onPress={conRespuestaVisual(alAbrir)} style={({
     pressed: presionado
   }) => [estilosGlobales.tarjeta, estilos.deudaHistorial, estilos.tarjetaPanel, presionado && estilos.deudaHistorialPresionada]}>
       <View style={estilos.filaCampos}>

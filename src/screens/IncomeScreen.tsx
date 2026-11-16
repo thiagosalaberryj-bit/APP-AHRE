@@ -1,3 +1,8 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {iniciarOperacionFinanciera} from '../social/financialOperation';
+import BotonAccion from '../components/ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from '../components/LoadingDots';
 import RequisitoDeposito from '../components/DepositRequiredState';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
@@ -6,17 +11,7 @@ import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  ActivityIndicator,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ContextoAvisos } from '../contexts/ToastContext';
@@ -55,6 +50,7 @@ const obtenerHoraActual = () => {
 };
 
 export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 'ingreso' }: {navigation:import('../navigation/types').NavegacionRaiz;route?:import('../navigation/types').PropiedadesPantalla['route'];tipo?:'ingreso'|'egreso'}) {
+  const finalizacion=useFinalizacionAccion();
   const volverProtegido = useRegresoProtegido(navegacion, () => accionEnCurso.current);
   const movimientoEditarId=ruta?.params?.movimientoId;
   const inicializado=useRef(false),claveEdicion=useRef(generarIdentificador());
@@ -140,13 +136,15 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
       return;
     }
 
+    const liberarAccion=iniciarOperacionFinanciera();if(!liberarAccion)return;
     accionEnCurso.current = true;
     Keyboard.dismiss();
-    establecerGuardando(true);
+    finalizacion.iniciar();establecerGuardando(true);
 
     try {
       if(movimientoEditarId)await corregirMovimiento(movimientoEditarId,datosFormulario,tipo,claveEdicion.current);
       else await crearMovimiento(datosFormulario, tipo);
+      if(!await finalizacion.confirmar())return;
       mostrarAviso(`El ${nombreMovimiento} se guardó correctamente.`, { tipo: 'exito' });
       accionEnCurso.current=false;volverProtegido();
     } catch (error) {
@@ -160,6 +158,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
       mostrarAviso(mensaje, { tipo: 'error' });
     } finally {
       accionEnCurso.current = false;
+      liberarAccion();
       establecerGuardando(false);
     }
   };
@@ -177,7 +176,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
     if (cargandoDatos) {
       return (
         <View style={[estilosGlobales.tarjeta, { alignItems: 'center', gap: ESPACIADO.medio }]}>
-          <ActivityIndicator color={tema.foco} size="large" />
+          <PuntosCarga color={tema.foco} size="large" />
           <Text style={estilosGlobales.texto}>Cargando depósitos y categorías…</Text>
         </View>
       );
@@ -187,13 +186,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
       return (
         <View style={[estilosGlobales.tarjeta, { gap: ESPACIADO.medio }]}>
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={cargarDatos}
-            style={estilosGlobales.botonPrincipal}
-          >
-            <Text style={estilosGlobales.textoBotonPrincipal}>Reintentar</Text>
-          </Pressable>
+          <BotonAccion completado={finalizacion.completado} tema={tema} texto={"Reintentar"} variante="principal" cargando={false} deshabilitado={false} alPresionar={cargarDatos} estilo={estilosGlobales.botonPrincipal} />
         </View>
       );
     }
@@ -235,7 +228,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
                   : null,
             ]}
           >
-            <Ionicons color={tema.textoSecundario} name="document-text-outline" size={20} />
+            <Ionicons color={guardando ? tema.deshabilitado : errorDescripcion ? tema.error : descripcionEnfocada ? tema.foco : tema.textoSecundario} name="document-text-outline" size={20} />
             <TextInput
               accessibilityLabel="Descripción"
               accessibilityHint={errorDescripcion || undefined}
@@ -325,7 +318,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
         </View>
 
         <View style={estilosMovimiento.acciones}>
-          <BotonPrincipal
+          <BotonPrincipal completado={finalizacion.completado}
             estilosAutenticacion={estilosMovimiento}
             estilosGlobales={estilosGlobales}
             titulo={movimientoEditarId?'Guardar corrección':`Guardar ${nombreMovimiento}`}

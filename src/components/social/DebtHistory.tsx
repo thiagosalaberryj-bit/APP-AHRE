@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import SelectorSegmentado from '../SegmentedSelector';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
@@ -62,15 +64,15 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
       <View style={estilos.grupo}>
         <View style={estilos.filaCampos}>
           <View style={[estilos.buscador, enfocado && estilos.buscadorEnfocado]}>
-            <Ionicons color={tema.textoSecundario} name="search-outline" size={20} />
+            <Ionicons color={enfocado?tema.foco:tema.textoSecundario} name="search-outline" size={20} />
             <TextInput accessibilityLabel="Buscar deudas por persona" value={busqueda} onChangeText={cambiarBusqueda} onFocus={() => establecerEnfocado(true)} onBlur={() => establecerEnfocado(false)} placeholder="Persona, apodo o deuda" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={estilos.entradaBusqueda} />
-            {busqueda ? <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda de deudas" onPress={() => cambiarBusqueda('')} style={estilos.accionBusqueda}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
+            {busqueda ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Limpiar búsqueda de deudas" onPress={conRespuestaVisual(() => cambiarBusqueda(''))} style={estilos.accionBusqueda}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Registrar deuda" onPress={() => abrirRegistro('deuda')} style={estilos.agregarDeuda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={24} /></Pressable>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Registrar deuda" onPress={conRespuestaVisual(() => abrirRegistro('deuda'))} style={estilos.agregarDeuda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={24} /></Pressable>
         </View>
         <SelectorSegmentado tema={tema} opciones={[{id:'todas',nombre:'Todas'},{id:'locales',nombre:'Locales'},{id:'online',nombre:'Online'}]} valor={origen} alSeleccionar={valor=>{cambiarOrigen(valor);if(estado==='invitaciones')cambiarEstado('todas');}} etiqueta="Origen de deudas"/>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.filaFiltros}>
-          {[{id:'todas',nombre:'Todas'},...(origen==='online'?[{id:'invitaciones',nombre:'Invitaciones'}]:[]),{id:'saldadas',nombre:'Saldadas'},{id:'perdonadas',nombre:'Perdonadas'},{id:'me_deben',nombre:'Me deben'},{id:'debo',nombre:'Debo'}].map(opcion=><Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{checked:estado===opcion.id}} onPress={()=>cambiarEstado(opcion.id)} style={[estilosFiltros.filtro,estado===opcion.id&&estilosFiltros.filtroActivo]}><Text numberOfLines={1} style={[estilosFiltros.textoFiltro,estado===opcion.id&&estilosFiltros.textoActivo]}>{opcion.nombre}{opcion.id==='invitaciones'?' · '+deudasSociales.filter(d=>d.invitacionOnline).length:''}</Text></Pressable>)}
+          {[{id:'todas',nombre:'Todas'},...(origen==='online'?[{id:'invitaciones',nombre:'Invitaciones'}]:[]),{id:'saldadas',nombre:'Saldadas'},{id:'perdonadas',nombre:'Perdonadas'},{id:'me_deben',nombre:'Me deben'},{id:'debo',nombre:'Debo'}].map(opcion=><Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{checked:estado===opcion.id}} onPress={conRespuestaVisual(()=>cambiarEstado(opcion.id))} style={[estilosFiltros.filtro,estado===opcion.id&&estilosFiltros.filtroActivo]}><Text numberOfLines={1} style={[estilosFiltros.textoFiltro,estado===opcion.id&&estilosFiltros.textoActivo]}>{opcion.nombre}{opcion.id==='invitaciones'?' · '+deudasSociales.filter(d=>d.invitacionOnline).length:''}</Text></Pressable>)}
         </ScrollView>
         <Text accessibilityLiveRegion="polite" style={estilos.resultado}>{deudas.length} de {deudasSociales.length} deudas</Text>
       </View>

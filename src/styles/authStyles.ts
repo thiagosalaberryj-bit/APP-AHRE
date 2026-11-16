@@ -13,12 +13,12 @@ export function crearEstilosAutenticacion(tema: Tema) {
     campoGrupo: {
       gap: ESPACIADO.pequeno,
     },
-    campo: {
+    campo: { backgroundColor: tema.campoFondo,
       minHeight: 56,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
-      borderColor: tema.borde,
+      borderColor: tema.campoBorde,
       borderWidth: 1,
       paddingHorizontal: ESPACIADO.grande,
     },
@@ -141,14 +141,14 @@ export function crearEstilosAutenticacion(tema: Tema) {
       flexDirection: 'row',
       gap: ESPACIADO.pequeno,
       marginTop: ESPACIADO.pequeno,
-      backgroundColor: tema.nombre === 'claro' ? tema.encabezado : tema.botonPrincipal,
+      backgroundColor: tema.botonPrincipal,
     },
     botonPresionado: {
       opacity: 0.82,
       transform: [{ scale: 0.99 }],
     },
     textoBoton: {
-      color: tema.nombre === 'claro' ? tema.botonPrincipal : tema.botonPrincipalTexto,
+      color: tema.botonPrincipalTexto,
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
     textoProcesando: {

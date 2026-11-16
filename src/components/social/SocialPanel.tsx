@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import OpcionesSalas from './RoomActionsMenu';
 import useVinculos from '../../social/online/useAccountLinks';
 import RegistrosPropiosSala from './OwnRoomRecords';
@@ -73,9 +75,9 @@ export default function PanelSocial(propiedades: import('../../social/types').As
           icono: 'people-outline'
         }].map(accion => {
           const bloqueada = accion.tipo !== 'personas' && !habilitadoParaCrear;
-          return <Pressable key={accion.tipo} accessibilityRole="button" accessibilityLabel={accion.etiqueta} accessibilityHint={bloqueada ? 'No se puede registrar una deuda en este momento.' : undefined} accessibilityState={{
+          return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={accion.tipo} accessibilityRole="button" accessibilityLabel={accion.etiqueta} accessibilityHint={bloqueada ? 'No se puede registrar una deuda en este momento.' : undefined} accessibilityState={{
             disabled: bloqueada
-          }} disabled={bloqueada} onPress={() => accion.tipo === 'personas' ? alVerAgenda() : abrirRegistro(accion.tipo)} style={[estilos.accionPanel, bloqueada && estilos.accionPanelDeshabilitada]}>
+          }} disabled={bloqueada} onPress={conRespuestaVisual(() => accion.tipo === 'personas' ? alVerAgenda() : abrirRegistro(accion.tipo))} style={[estilos.accionPanel, bloqueada && estilos.accionPanelDeshabilitada]}>
               <Ionicons color={tema.botonPrincipalTexto} name={accion.icono as NombreIcono} size={20} />
               <Text style={estilos.textoAccionPanel}>{accion.texto}</Text>
               {accion.tipo==='personas'&&solicitudes>0?<Text accessibilityLabel={solicitudes+' solicitudes de vínculo pendientes'} style={estilos.textoDetalleAccion}>{solicitudes+(solicitudes===1?' solicitud':' solicitudes')}</Text>:null}

@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useContext, useRef, useState } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
@@ -56,20 +58,20 @@ export default function PersonasSala(propiedades: import('../../social/types').A
   return <View style={estilos.grupo}>
       <View style={estilos.filaCampos}>
         <View style={[estilosMovimiento.botonDeposito, estilos.columnaCampo, estilos.busquedaAgenda, enfocado && estilos.busquedaEnfocada]}>
-          <Ionicons color={tema.textoSecundario} name="search-outline" size={20} />
+          <Ionicons color={enfocado?tema.foco:tema.textoSecundario} name="search-outline" size={20} />
           <TextInput accessibilityLabel="Buscar personas de la sala" value={busqueda} onChangeText={establecerBusqueda} onFocus={() => establecerEnfocado(true)} onBlur={() => establecerEnfocado(false)} placeholder="Nombre, apellido o apodo" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosMovimiento.entradaDescripcion, estilos.entradaBusquedaAgenda]} />
-          {busqueda ? <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda en la sala" onPress={() => establecerBusqueda('')} style={estilos.accionIcono}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
+          {busqueda ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Limpiar búsqueda en la sala" onPress={conRespuestaVisual(() => establecerBusqueda(''))} style={estilos.accionIcono}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
         </View>
-        {!cerrada ? <Pressable accessibilityRole="button" accessibilityLabel="Agregar personas a la sala" accessibilityState={{
+        {!cerrada ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Agregar personas a la sala" accessibilityState={{
         expanded: agregando
-      }} onPress={() => establecerAgregando(true)} style={estilos.agregarPersonaAgenda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={24} /></Pressable> : null}
+      }} onPress={conRespuestaVisual(() => establecerAgregando(true))} style={estilos.agregarPersonaAgenda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={24} /></Pressable> : null}
       </View>
       <Text style={estilosGlobales.textoSecundario}>{personasSala.length + 1} personas en esta sala</Text>
       <View style={estilos.agenda}>
         {personas.length ? personas.map(persona => <View key={persona.id} style={estilos.personaAgenda}>
             <View style={estilos.avatarAgenda}><Text style={estilos.textoAvatar}>{persona.iniciales}</Text></View>
             <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.texto, estilos.nombrePersona]}>{nombreCompletoPersona(persona)}</Text>{persona.apodo ? <Text ellipsizeMode="tail" numberOfLines={1} style={[estilosGlobales.textoSecundario, estilos.detallePersona]}>{persona.apodo}</Text> : null}</View>
-            {!cerrada && persona.id !== 'vos' ? <Pressable accessibilityRole="button" accessibilityLabel={`Quitar a ${nombreCompletoPersona(persona)} de la sala`} onPress={() => establecerPersonaAQuitar(persona)} style={estilos.accionIcono}><Ionicons color={tema.error} name="remove-circle-outline" size={20} /></Pressable> : null}
+            {!cerrada && persona.id !== 'vos' ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Quitar a ${nombreCompletoPersona(persona)} de la sala`} onPress={conRespuestaVisual(() => establecerPersonaAQuitar(persona))} style={estilos.accionIcono}><Ionicons color={tema.error} name="remove-circle-outline" size={20} /></Pressable> : null}
           </View>) : <Text style={estilosGlobales.textoSecundario}>No encontramos personas con esos datos.</Text>}
       </View>
       {agregando ? <ModalAgregarPersonasSala personasSala={personasSala} guardando={guardando} alAgregar={ids => cambiar([...personasSala, ...ids], () => {
@@ -85,7 +87,7 @@ export default function PersonasSala(propiedades: import('../../social/types').A
           <View accessibilityViewIsModal style={estilos.tarjetaModal}>
             <View style={estilos.filaModal}>
               <View style={estilos.iconoConfirmacionEliminar}><Ionicons color={tema.error} name="trash-outline" size={25} /></View>
-              <Pressable accessibilityRole="button" accessibilityLabel="Cerrar confirmación de quitar persona" onPress={() => establecerPersonaAQuitar(null)} style={estilos.botonCerrar}><Ionicons color={tema.textoSecundario} name="close" size={22} /></Pressable>
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar confirmación de quitar persona" onPress={conRespuestaVisual(() => establecerPersonaAQuitar(null))} style={estilos.botonCerrar}><Ionicons color={tema.textoSecundario} name="close" size={22} /></Pressable>
             </View>
             <ScrollView style={estilos.desplazamientoModal}>
               <View style={estilos.grupo}>
@@ -99,9 +101,9 @@ export default function PersonasSala(propiedades: import('../../social/types').A
               </View>
             </ScrollView>
             <View style={estilos.filaCampos}>
-              <Pressable accessibilityRole="button" disabled={guardando} onPress={() => cambiar(personasSala.filter(id => id !== personaAQuitar?.id), () => {
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={guardando} onPress={conRespuestaVisual(() => cambiar(personasSala.filter(id => id !== personaAQuitar?.id), () => {
               establecerPersonaQuitada(personaAQuitar); establecerPersonaAQuitar(null);
-            })} style={estilos.confirmarQuitarPersona}><Text style={[estilosGlobales.etiqueta, {
+            }))} style={estilos.confirmarQuitarPersona}><Text style={[estilosGlobales.etiqueta, {
                 color: COLORES_NEUTROS.superficie
               }]}>Quitar de la sala</Text></Pressable>
             </View>

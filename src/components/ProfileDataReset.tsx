@@ -1,5 +1,9 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import BotonAccion from './ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from './LoadingDots';
 import { useContext, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
@@ -13,7 +17,11 @@ import ModalPerfil from './ProfileModal';
 
 // Temporal y aislado para poder retirar la herramienta antes de la versión final.
 export default function ReinicioDatosPerfil({ navegacion }: { navegacion: NavegacionRaiz }) {
+ const [focoEntrada,cambiarFocoEntrada]=useState<string|null>(null);
+
+
   const { tema } = useContext(ContextoApariencia), { mostrarAviso } = useContext(ContextoAvisos);
+ const estilosEntrada=crearEstilosGlobales(tema);
   const estilos = crearEstilosPerfil(tema), globales = crearEstilosGlobales(tema);
   const [visible, cambiarVisible] = useState(false), [ocupado, cambiarOcupado] = useState(false);
   const [vista, cambiarVista] = useState<VistaReinicio | null>(null);
@@ -45,7 +53,7 @@ export default function ReinicioDatosPerfil({ navegacion }: { navegacion: Navega
     }
   };
   return <>
-    <Pressable accessibilityRole="button" onPress={abrir} style={estilos.filaOpcion}>
+    <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(abrir)} style={estilos.filaOpcion}>
       <View style={estilos.iconoSelector}><Ionicons color={tema.error} name="trash-outline" size={21} /></View>
       <View style={estilos.contenidoOpcionAvanzada}>
         <Text style={[estilos.textoFilaSelector, { color: tema.error }]}>Reiniciar mis datos</Text>
@@ -61,17 +69,14 @@ export default function ReinicioDatosPerfil({ navegacion }: { navegacion: Navega
         <Text style={estilos.descripcionFormularioModal}>Salas de otras personas a actualizar: {vista.salasActualizadas}. Cuentas relacionadas: {vista.cuentas.map(c => c.correo).join(', ')}. Se eliminarán los acuerdos compartidos relacionados; sus movimientos privados y otros acuerdos se conservan.</Text>
         <Text style={estilos.descripcionFormularioModal}>También se descartarán los cambios locales todavía sin sincronizar. Al finalizar cerrarás sesión y podrás ingresar con la misma cuenta.</Text>
         <Text style={globales.etiqueta}>Tu correo actual</Text>
-        <TextInput accessibilityLabel="Confirmar correo para reiniciar" editable={!ocupado} autoCapitalize="none" keyboardType="email-address" value={correo} onChangeText={cambiarCorreo} style={globales.campo} />
+        <TextInput onFocus={()=>cambiarFocoEntrada("0")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Confirmar correo para reiniciar" editable={!ocupado} autoCapitalize="none" keyboardType="email-address" value={correo} onChangeText={cambiarCorreo} style={[globales.campo,estilosEntrada.campo,focoEntrada==="0"&&estilosEntrada.campoEnfocado]} />
         <Text style={globales.etiqueta}>Contraseña actual</Text>
-        <TextInput accessibilityLabel="Contraseña para reiniciar" editable={!ocupado} secureTextEntry autoCapitalize="none" value={contrasena} onChangeText={cambiarContrasena} style={globales.campo} />
+        <TextInput onFocus={()=>cambiarFocoEntrada("1")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Contraseña para reiniciar" editable={!ocupado} secureTextEntry autoCapitalize="none" value={contrasena} onChangeText={cambiarContrasena} style={[globales.campo,estilosEntrada.campo,focoEntrada==="1"&&estilosEntrada.campoEnfocado]} />
         <Text style={globales.etiqueta}>Escribí BORRAR MIS DATOS</Text>
-        <TextInput accessibilityLabel="Frase de confirmación de borrado" editable={!ocupado} autoCapitalize="characters" value={frase} onChangeText={cambiarFrase} style={globales.campo} />
-        <Pressable accessibilityRole="button" disabled={ocupado || !correo.trim() || !contrasena || frase !== 'BORRAR MIS DATOS'} onPress={confirmar}
-          style={[globales.botonPrincipal, { backgroundColor: tema.error }, (ocupado || !correo.trim() || !contrasena || frase !== 'BORRAR MIS DATOS') && globales.botonDeshabilitado]}>
-          <Text style={globales.textoBotonPrincipal}>Eliminar todos mis datos</Text>
-        </Pressable>
+        <TextInput onFocus={()=>cambiarFocoEntrada("2")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Frase de confirmación de borrado" editable={!ocupado} autoCapitalize="characters" value={frase} onChangeText={cambiarFrase} style={[globales.campo,estilosEntrada.campo,focoEntrada==="2"&&estilosEntrada.campoEnfocado]} />
+        <BotonAccion tema={tema} texto={"Eliminar todos mis datos"} variante="peligro" cargando={false} deshabilitado={ocupado || !correo.trim() || !contrasena || frase !== 'BORRAR MIS DATOS'} alPresionar={confirmar} estilo={[globales.botonPrincipal,{ backgroundColor: tema.botonPeligro }]} />
       </> : null}
-      {ocupado ? <View accessibilityLiveRegion="polite"><ActivityIndicator color={tema.foco} /><Text style={estilos.descripcionFormularioModal}>{vista ? 'Reiniciando. Si hay una interrupción, reabrí AHRE con conexión para recuperar el resultado.' : 'Consultando el alcance…'}</Text></View> : null}
+      {ocupado ? <View accessibilityLiveRegion="polite"><PuntosCarga color={tema.foco} /><Text style={estilos.descripcionFormularioModal}>{vista ? 'Reiniciando. Si hay una interrupción, reabrí AHRE con conexión para recuperar el resultado.' : 'Consultando el alcance…'}</Text></View> : null}
     </ModalPerfil>
   </>;
 }

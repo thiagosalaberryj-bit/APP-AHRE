@@ -33,7 +33,7 @@ segura inferior del dispositivo. El botón central «Nuevo» usa una sombra
 neutra y discreta. Solo aparece dentro de las cinco secciones principales
 posteriores al dashboard.
 
-Las pantallas de inicio, login y registro no muestran el encabezado verde ni la
+Las pantallas de inicio, login y registro no muestran el encabezado principal ni la
 barra inferior. El Dashboard, Movimientos, Nuevo, Estadísticas y Social
 utilizan `src/components/MainHeader.tsx`, con el logo de AHRE, título,
 descripción y accesos a notificaciones y perfil. Las pantallas secundarias

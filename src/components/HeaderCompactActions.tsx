@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import IndicadorAvisosNoVistos from './NotificationUnreadBadge';
 import { Pressable, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,12 +16,12 @@ export default function AccionesEncabezadoCompacto({ tema, alAbrirNotificaciones
   const estilos = crearEstilosMarcoEncabezado(tema);
   return <View style={estilos.acciones}>
     {mostrarSincronizacion ? <EstadoSincronizacion soloIcono/> : null}
-    <Pressable accessibilityRole="button" accessibilityLabel="Notificaciones"
-      onPress={alAbrirNotificaciones || (() => navegacion.navigate(RUTAS.NOTIFICACIONES))} style={estilos.flecha}>
+    <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Notificaciones"
+      onPress={conRespuestaVisual(alAbrirNotificaciones || (() => navegacion.navigate(RUTAS.NOTIFICACIONES)))} style={estilos.flecha}>
       <Ionicons name="notifications-outline" size={22} color={tema.botonPrincipal}/><IndicadorAvisosNoVistos tema={tema} compacto/>
     </Pressable>
-    <Pressable accessibilityRole="button" accessibilityLabel="Perfil"
-      onPress={alAbrirPerfil || (() => navegacion.navigate(RUTAS.PERFIL))} style={estilos.flecha}>
+    <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Perfil"
+      onPress={conRespuestaVisual(alAbrirPerfil || (() => navegacion.navigate(RUTAS.PERFIL)))} style={estilos.flecha}>
       <Ionicons name="person-circle-outline" size={22} color={tema.botonPrincipal}/>
     </Pressable>
   </View>;

@@ -1,3 +1,7 @@
+import {conEstiloDePulsacion} from '../styles/globalStyles';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import {useAccionEnCurso} from '../hooks/useActionInProgress';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import IndicadorAvisosNoVistos from './NotificationUnreadBadge';
 import type { Tema } from '../styles/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +19,7 @@ export default function EncabezadoPrincipal({
   tema = TEMAS.claro as Tema,
   altura = 120,
 }: import('../types/ui').EncabezadoProps) {
+  const accionOcupada=useAccionEnCurso();
   return (
     <View
       style={[
@@ -40,14 +45,14 @@ export default function EncabezadoPrincipal({
         </Text>
         <View style={estilos.acciones}>
           <EstadoSincronizacion />
-          <Pressable
+          <Pressable disabled={accionOcupada} android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityLabel="Notificaciones"
             accessibilityRole="button"
-            onPress={alAbrirNotificaciones}
-            style={[
+            onPress={conRespuestaVisual(alAbrirNotificaciones)}
+            style={conEstiloDePulsacion([
               estilos.botonAccion,
-              { backgroundColor: tema.contenedorVerde },
-            ]}
+              { backgroundColor: tema.botonEncabezado },
+            ])}
           >
             <Ionicons
               name="notifications-outline"
@@ -55,14 +60,14 @@ export default function EncabezadoPrincipal({
               color={tema.botonPrincipal}
             /><IndicadorAvisosNoVistos tema={tema}/>
           </Pressable>
-          <Pressable
+          <Pressable disabled={accionOcupada} android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityLabel="Perfil"
             accessibilityRole="button"
-            onPress={alAbrirPerfil}
-            style={[
+            onPress={conRespuestaVisual(alAbrirPerfil)}
+            style={conEstiloDePulsacion([
               estilos.botonAccion,
-              { backgroundColor: tema.contenedorVerde },
-            ]}
+              { backgroundColor: tema.botonEncabezado },
+            ])}
           >
             <Ionicons
               name="person-circle-outline"

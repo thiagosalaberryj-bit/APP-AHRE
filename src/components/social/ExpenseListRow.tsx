@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import EntradaMonto from '../MoneyInput';
 import { View, Text, TextInput, Pressable } from 'react-native';
 import { useState } from 'react';
@@ -12,8 +14,8 @@ export default function FilaListaGastos({ fila, indice, resumen, alCambiar, alEd
     <View style={estilos.cabecera}>
       <Text style={[estilos.tituloItem, estilos.textoFlexible]}>Ítem {indice + 1}</Text>
       <Text style={estilosGlobales.contadorCampo}>{fila.descripcion.length}/500</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Ajustar ítem ${indice + 1}`} hitSlop={4} onPress={alEditar} style={[estilos.accion, estilos.editar]}><Ionicons name="create-outline" size={20} color={tema.foco} /></Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Quitar ítem ${indice + 1}`} hitSlop={4} onPress={alQuitar} style={[estilos.accion, estilos.borrar]}><Ionicons name="trash-outline" size={20} color={tema.error} /></Pressable>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Ajustar ítem ${indice + 1}`} hitSlop={4} onPress={conRespuestaVisual(alEditar)} style={[estilos.accion, estilos.editar]}><Ionicons name="create-outline" size={20} color={tema.foco} /></Pressable>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Quitar ítem ${indice + 1}`} hitSlop={4} onPress={conRespuestaVisual(alQuitar)} style={[estilos.accion, estilos.borrar]}><Ionicons name="trash-outline" size={20} color={tema.error} /></Pressable>
     </View>
     <View style={estilos.filaCampos}>
       <TextInput accessibilityLabel={`Ítem ${indice + 1}`} value={fila.descripcion} maxLength={500} onChangeText={descripcion => alCambiar({ descripcion })} onFocus={() => establecerEnfocado('nombre')} onBlur={() => establecerEnfocado(null)} placeholder="Qué se pagó" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosGlobales.campo, estilos.campo, estilos.nombre, enfocado === 'nombre' && estilosGlobales.campoEnfocado]} />

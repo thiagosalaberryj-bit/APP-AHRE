@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Keyboard, Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
@@ -60,7 +62,7 @@ export default function SelectorDeposito({ tema, etiqueta = 'Depósito', deposit
   };
   return <View style={estilos.grupo}>
     {etiqueta ? <Text style={estilos.etiqueta}>{etiqueta}</Text> : null}
-    <Pressable ref={control} collapsable={false} accessibilityRole="button" accessibilityLabel={etiqueta || 'Depósitos'} accessibilityValue={{ text: detalle ? titulo + '. ' + detalle : titulo }} accessibilityState={{ expanded: visible, disabled: !depositos.length }} disabled={!depositos.length} onPress={abrir}
+    <Pressable android_ripple={RETROALIMENTACION_PULSACION} ref={control} collapsable={false} accessibilityRole="button" accessibilityLabel={etiqueta || 'Depósitos'} accessibilityValue={{ text: detalle ? titulo + '. ' + detalle : titulo }} accessibilityState={{ expanded: visible, disabled: !depositos.length }} disabled={!depositos.length} onPress={conRespuestaVisual(abrir)}
       style={[estilos.control, visible && estilos.controlAbierto, !!error && estilos.controlError]}>
       <View style={estilos.iconoCampo}><Ionicons color={tema.textoSecundario} name={iconoDeposito(elegido)} size={22} /></View>
       <View style={estilos.textos}><Text numberOfLines={1} style={estilos.nombreCampo}>{titulo}</Text>{detalle ? <Text numberOfLines={1} style={estilos.detalleCampo}>{detalle}</Text> : null}</View>
@@ -69,21 +71,21 @@ export default function SelectorDeposito({ tema, etiqueta = 'Depósito', deposit
     {error ? <Text accessibilityRole="alert" style={estilos.error}>{error}</Text> : null}
     <Modal statusBarTranslucent navigationBarTranslucent transparent visible={visible} animationType="none" onShow={() => { modalListo.current = true; posicionar(); }} onRequestClose={() => establecerVisible(false)}>
       <View collapsable={false} onLayout={evento => { dimensionesCapa.current = evento.nativeEvent.layout; posicionar(); }} style={estilos.capa}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Cerrar selector de depósito" onPress={() => establecerVisible(false)} style={estilos.cierre} />
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar selector de depósito" onPress={conRespuestaVisual(() => establecerVisible(false))} style={estilos.cierre} />
         <View accessibilityViewIsModal style={[estilos.menu, ancla, !posicionado && estilos.sinPosicion]}>
-          {seleccionMultiple ? <View style={estilos.cabeceraLista}><Text style={estilos.detalle}>Elegí los depósitos</Text><Pressable accessibilityRole="button" accessibilityLabel="Seleccionar todos los depósitos" onPress={() => alCambiarMulti?.(depositos.map(deposito => deposito.id))} style={estilos.accion}><Text style={estilos.textoAccion}>Todos</Text></Pressable></View> : null}
+          {seleccionMultiple ? <View style={estilos.cabeceraLista}><Text style={estilos.detalle}>Elegí los depósitos</Text><Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Seleccionar todos los depósitos" onPress={conRespuestaVisual(() => alCambiarMulti?.(depositos.map(deposito => deposito.id)))} style={estilos.accion}><Text style={estilos.textoAccion}>Todos</Text></Pressable></View> : null}
           <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: Math.max(0,ancla.maxHeight - (seleccionMultiple ? 76 : 0)) }}>
             {depositos.map(deposito => {
               const activa = elegidos.some(elegido => elegido.id === deposito.id);
               const bloqueada = seleccionMultiple && impedirSeleccionVacia && activa && elegidos.length === 1;
-              return <Pressable key={deposito.id} accessibilityRole={seleccionMultiple ? 'checkbox' : 'button'} accessibilityState={seleccionMultiple ? { checked: activa, disabled: bloqueada } : { selected: activa }} accessibilityHint={bloqueada ? 'Seleccioná otro depósito antes de quitar este.' : undefined} disabled={bloqueada} onPress={() => seleccionar(deposito.id)} style={[estilos.opcion, activa && estilos.opcionActiva]}>
+              return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={deposito.id} accessibilityRole={seleccionMultiple ? 'checkbox' : 'button'} accessibilityState={seleccionMultiple ? { checked: activa, disabled: bloqueada } : { selected: activa }} accessibilityHint={bloqueada ? 'Seleccioná otro depósito antes de quitar este.' : undefined} disabled={bloqueada} onPress={conRespuestaVisual(() => seleccionar(deposito.id))} style={[estilos.opcion, activa && estilos.opcionActiva]}>
                 <View style={[estilos.icono, { backgroundColor: deposito.color || COLOR_DEPOSITO_PREDETERMINADO }]}><Ionicons color={COLOR_ICONO_DEPOSITO} name={iconoDeposito(deposito)} size={18} /></View>
                 <View style={estilos.textos}><Text numberOfLines={1} style={estilos.nombre}>{deposito.nombre}</Text>{deposito.saldoTexto ? <Text numberOfLines={1} style={estilos.detalle}>{deposito.saldoTexto}</Text> : null}</View>
                 <Ionicons color={activa ? tema.foco : tema.textoSecundario} name={seleccionMultiple ? activa ? 'checkbox' : 'square-outline' : 'checkmark'} size={18} style={{ opacity: seleccionMultiple || activa ? 1 : 0 }} />
               </Pressable>;
             })}
           </ScrollView>
-          {seleccionMultiple ? <Pressable accessibilityRole="button" accessibilityLabel="Listo" onPress={() => establecerVisible(false)} style={estilos.confirmar}><Text style={estilos.textoAccion}>Listo · {elegidos.length}</Text></Pressable> : null}
+          {seleccionMultiple ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Listo" onPress={conRespuestaVisual(() => establecerVisible(false))} style={estilos.confirmar}><Text style={estilos.textoAccion}>Listo · {elegidos.length}</Text></Pressable> : null}
         </View>
       </View>
     </Modal>

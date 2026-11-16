@@ -31,7 +31,7 @@ confirmación de cierre de sesión.
 ## Información del usuario
 
 Tarjeta superior compacta en dos columnas: avatar circular a la izquierda
-(iniciales sobre `contenedorVerde` hasta seleccionar una foto) y los datos
+(iniciales con `avatarTexto` sobre `avatarFondo` hasta seleccionar una foto) y los datos
 alineados a su lado. Nombre completo y correo se agrupan arriba; la fecha queda abajo a
 la altura de las acciones bajo el avatar. `Editar perfil` aparece dentro de la
 misma tarjeta, debajo de un separador. El nombre completo usa una sola línea,

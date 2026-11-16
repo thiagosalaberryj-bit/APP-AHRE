@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { repartirGasto } from '../../social/socialValidation';
 import { convertirMontoMovimiento } from '../../utils/movementValidation';
 import SelectorSegmentado from '../SegmentedSelector';
@@ -110,17 +112,17 @@ export default function FormularioGasto(propiedades: import('../../social/types'
         </>}
       </View>
       <View style={estilos.ticket}>
-        <Pressable accessibilityRole="button" accessibilityLabel={mostrarPagos ? 'Ocultar pagos' : 'Ver pagos'} accessibilityState={{
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={mostrarPagos ? 'Ocultar pagos' : 'Ver pagos'} accessibilityState={{
         expanded: mostrarPagos
-      }} onPress={() => establecerMostrarPagos(!mostrarPagos)} style={estilos.filaTactil}>
+      }} onPress={conRespuestaVisual(() => establecerMostrarPagos(!mostrarPagos))} style={estilos.filaTactil}>
           <View style={estilos.textoFlexible}><Text style={estilosGlobales.etiqueta}>Pagos y pendientes</Text><Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoAyuda}>{partesPagadas} de {personasGasto.length} partes pagadas · {pagadorId === 'vos' ? 'Cobrás vos' : `Cobra ${pagador.nombre}`}</Text></View>
           <Ionicons color={tema.textoSecundario} name={mostrarPagos ? 'chevron-up' : 'chevron-down'} size={20} />
         </Pressable>
         {mostrarPagos ? <>
             <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoAyuda}>{pagadorId === 'vos' ? '¿Quién ya te dio su parte?' : `¿Quién ya le dio su parte a ${pagador.nombre}?`}</Text>
-            <Pressable accessibilityRole="checkbox" accessibilityState={{
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityState={{
           checked: todasPagaron
-        }} onPress={() => establecerPagaron(todasPagaron ? [] : personasGasto.map(persona => persona.id))} style={estilos.opcionPersona}>
+        }} onPress={conRespuestaVisual(() => establecerPagaron(todasPagaron ? [] : personasGasto.map(persona => persona.id)))} style={estilos.opcionPersona}>
               <Ionicons color={tema.foco} name={todasPagaron ? 'checkbox' : 'square-outline'} size={24} /><Text style={[estilosGlobales.texto, estilos.textoFlexible]}>Todos ya pagaron su parte</Text>
             </Pressable>
             {personasGasto.map(persona => <OpcionPersona key={persona.id} persona={persona} marcada={persona.id === pagadorId || pagaron.includes(persona.id)} deshabilitada={persona.id === pagadorId} detalle={estadoPago(persona)} alPresionar={() => establecerPagaron(alternar(pagaron, persona.id))} {...aspecto} />)}

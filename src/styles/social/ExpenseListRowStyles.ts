@@ -11,7 +11,7 @@ export default function crearEstilosFila(tema: Tema) {
     tarjetaItem: { backgroundColor: tema.superficie, borderColor: tema.borde, borderWidth: BORDES.anchos.fino, borderRadius: BORDES.radios.campo, padding: ESPACIADO.medio, gap: ESPACIADO.pequeno },
     tituloItem: { color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.secundario, fontWeight: TIPOGRAFIA.pesos.seminegrita },
     resumenItem: { color: tema.textoSecundario, fontSize: TIPOGRAFIA.tamanos.auxiliar, lineHeight: 18 },
-    campo: { borderColor: tema.borde, borderWidth: BORDES.anchos.fino, borderRadius: BORDES.radios.campo / 2 },
+    campo: { backgroundColor: tema.campoFondo, borderColor: tema.campoBorde, borderWidth: BORDES.anchos.fino, borderRadius: BORDES.radios.campo / 2 },
     cabecera: { flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.pequeno },
     accion: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', borderRadius: BORDES.radios.campo / 2 },
     editar: { backgroundColor: `${tema.foco}18` },

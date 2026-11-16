@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -22,15 +24,15 @@ export function SelectorDesplegable({
               const seleccionada = opcion.id === valorSeleccionado;
 
               return (
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityRole="button"
                   accessibilityLabel={titulo + ': ' + opcion.nombre}
                   accessibilityState={{ selected: seleccionada }}
                   key={opcion.id}
-                  onPress={() => alSeleccionar(opcion.id)}
+                  onPress={conRespuestaVisual(() => alSeleccionar(opcion.id))}
                   style={[
                     estilos.opcionFechaCompacta,
-                    seleccionada && { backgroundColor: tema.nombre === 'oscuro' ? '#1B443C' : '#EDF5E8' },
+                    seleccionada && { backgroundColor: tema.seleccionSuave },
                   ]}
                 >
                   <Text numberOfLines={1} adjustsFontSizeToFit style={estilos.textoOpcionFechaCompacta}>
@@ -77,18 +79,18 @@ export function CalendarioDesplegable({ visible, fecha, tema, estilos, alCerrar,
         <View style={estilos.contenidoCalendarioFecha}>
           <View style={estilos.encabezadoModal}>
             <Text style={[estilos.tituloModal, { color: tema.textoPrincipal }]}>Elegí una fecha</Text>
-            <Pressable accessibilityLabel="Cerrar calendario" accessibilityRole="button" onPress={alCerrar} style={estilos.botonCerrarModal}>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel="Cerrar calendario" accessibilityRole="button" onPress={conRespuestaVisual(alCerrar)} style={estilos.botonCerrarModal}>
               <Ionicons color={tema.textoPrincipal} name="close" size={22} />
             </Pressable>
           </View>
           <View style={estilos.encabezadoCalendario}>
-            <Pressable accessibilityLabel="Mes anterior" accessibilityRole="button" onPress={() => cambiarMes(-1)} style={estilos.botonMesCalendario}>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel="Mes anterior" accessibilityRole="button" onPress={conRespuestaVisual(() => cambiarMes(-1))} style={estilos.botonMesCalendario}>
               <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
             </Pressable>
             <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.mesCalendario, estilos.nombreMesCompacto, { color: tema.textoPrincipal }]}>
               {MESES[mesVisible.getMonth()].nombre} {mesVisible.getFullYear()}
             </Text>
-            <Pressable accessibilityLabel="Mes siguiente" accessibilityRole="button" onPress={() => cambiarMes(1)} style={estilos.botonMesCalendario}>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel="Mes siguiente" accessibilityRole="button" onPress={conRespuestaVisual(() => cambiarMes(1))} style={estilos.botonMesCalendario}>
               <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
             </Pressable>
           </View>
@@ -106,11 +108,11 @@ export function CalendarioDesplegable({ visible, fecha, tema, estilos, alCerrar,
               const esHoy = fechaDia.getTime() === normalizarFecha(new Date()).getTime();
               return (
                 <View key={dia} style={estilos.celdaCalendario}>
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityLabel={formatearFecha(fechaDia, { day: 'numeric', month: 'long', year: 'numeric' })}
                     accessibilityRole="button"
                     accessibilityState={{ selected: seleccionada }}
-                    onPress={() => alSeleccionar(fechaDia)}
+                    onPress={conRespuestaVisual(() => alSeleccionar(fechaDia))}
                     style={[
                       estilos.diaCalendario,
                       esHoy && estilos.diaCalendarioHoy,
@@ -120,7 +122,7 @@ export function CalendarioDesplegable({ visible, fecha, tema, estilos, alCerrar,
                     <Text style={[
                       estilos.textoDiaCalendario,
                       { color: tema.textoPrincipal },
-                      seleccionada && { color: tema.nombre === 'oscuro' ? tema.encabezado : tema.encabezadoTexto },
+                      seleccionada && { color: tema.nombre === 'oscuro' ? tema.botonPrincipalTexto : tema.encabezadoTexto },
                       seleccionada && estilos.textoDiaCalendarioSeleccionado,
                     ]}>
                       {dia}
@@ -130,9 +132,9 @@ export function CalendarioDesplegable({ visible, fecha, tema, estilos, alCerrar,
               );
             })}
           </View>
-          <Pressable
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityRole="button"
-            onPress={() => alSeleccionar(normalizarFecha(new Date()))}
+            onPress={conRespuestaVisual(() => alSeleccionar(normalizarFecha(new Date())))}
             style={estilos.botonHoyCalendario}
           >
             <Text style={[estilos.textoBotonHoyCalendario, { color: tema.foco }]}>Ir a hoy</Text>

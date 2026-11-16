@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 import type { NombreIcono } from '../constants/movimientos';
@@ -19,14 +21,14 @@ export default function ListaOpcionesPerfil<Identificador extends string>({
         const activo = valor === opcion.id;
         return (
           <View key={opcion.id} style={estilos.contenedorOpcionModal}>
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityRole="button"
               accessibilityState={{ selected: activo }}
-              onPress={() => alSeleccionar(opcion.id)}
+              onPress={conRespuestaVisual(() => alSeleccionar(opcion.id))}
               style={[estilos.opcionSelector, activo && estilos.opcionSelectorActiva]}
             >
               <View style={[estilos.iconoSelectorModal, activo && estilos.iconoSelectorModalActivo]}>
-                <Ionicons color={activo ? tema.contenedorVerdeTexto : tema.textoSecundario} name={opcion.icono} size={21} />
+                <Ionicons color={activo ? tema.superficieElevadaTexto : tema.textoSecundario} name={opcion.icono} size={21} />
               </View>
               <View style={estilos.contenidoOpcionSelector}>
                 <Text style={estilos.textoOpcionSelector}>{opcion.nombre}</Text>

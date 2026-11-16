@@ -41,7 +41,7 @@ export interface MontoProps extends Aspecto {
 export interface BotonPrincipalProps {
   estilosGlobales: EstilosGlobales;
   estilosAutenticacion: {colorIndicador:string;botonPrincipal:StyleProp<ViewStyle>;botonPresionado:StyleProp<ViewStyle>;textoBoton:StyleProp<TextStyle>;textoProcesando:StyleProp<TextStyle>};
-  titulo: string; cargando?: boolean; deshabilitado?: boolean; alPresionar: () => void;
+  titulo: string; completado?:boolean; cargando?: boolean; deshabilitado?: boolean; alPresionar: () => void;
 }
 export interface EncabezadoProps {
   mostrarSincronizacion?:boolean;

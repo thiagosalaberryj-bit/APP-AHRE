@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { forwardRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
@@ -17,13 +19,13 @@ export default forwardRef<TextInput, PropiedadesCampoAutenticacion>(function Cam
       autoCapitalize="none"
       autoComplete={propiedades.autoComplete || 'password'}
       accesorioDerecho={(
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           accessibilityRole="button"
           accessibilityState={{ disabled: deshabilitado }}
           disabled={deshabilitado}
           hitSlop={8}
-          onPress={() => establecerVisible((actual) => !actual)}
+          onPress={conRespuestaVisual(() => establecerVisible((actual) => !actual))}
           style={estilosAutenticacion.accionContrasena}
         >
           <Ionicons

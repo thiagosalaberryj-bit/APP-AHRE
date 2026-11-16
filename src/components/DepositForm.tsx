@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import {
@@ -76,11 +78,11 @@ export default function FormularioDeposito({
             : [errorNombre ? estilosGlobales.campoError : nombreEnfocado ? estilosGlobales.campoEnfocado : null]),
         ]}
       >
-        <Ionicons color={tema.textoSecundario} name="wallet-outline" size={21} />
+        <Ionicons color={deshabilitado ? tema.deshabilitado : errorNombre ? tema.error : nombreEnfocado ? tema.foco : tema.textoSecundario} name="wallet-outline" size={21} />
         <TextInput
           accessibilityLabel="Nombre del depósito"
           accessibilityHint={esEdicion ? undefined : errorNombre || undefined}
-          editable={esEdicion ? undefined : !deshabilitado}
+          editable={!deshabilitado}
           maxLength={30}
           onBlur={() => establecerNombreEnfocado(false)}
           onChangeText={(valor) => alCambiar('nombre', valor)}
@@ -93,11 +95,11 @@ export default function FormularioDeposito({
           value={nombre}
         />
         {nombre ? (
-          <Pressable
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityLabel="Limpiar nombre"
             accessibilityRole="button"
             disabled={deshabilitado}
-            onPress={() => alCambiar('nombre', '')}
+            onPress={conRespuestaVisual(() => alCambiar('nombre', ''))}
             style={estilos.botonLimpiar}
           >
             <Ionicons color={tema.textoSecundario} name="close-circle" size={22} />
@@ -113,15 +115,15 @@ export default function FormularioDeposito({
         {TIPOS_DEPOSITO.map((opcion) => {
           const seleccionada = tipo === opcion.id;
           return (
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityLabel={opcion.nombre}
               accessibilityRole="button"
               accessibilityState={{ selected: seleccionada }}
               disabled={deshabilitado}
               key={opcion.id}
-              onPress={() => {
+              onPress={conRespuestaVisual(() => {
                 alCambiar('tipo', opcion.id);
-              }}
+              })}
               style={({ pressed }) => [
                 estilos.tarjetaTipo,
                 seleccionada && estilos.tarjetaTipoSeleccionada,
@@ -152,13 +154,13 @@ export default function FormularioDeposito({
         {ICONOS_PRINCIPALES_DEPOSITO.map((opcion) => {
           const seleccionado = icono === opcion.id;
           return (
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityLabel={`Ícono ${obtenerNombreIcono(opcion, variante)}`}
               accessibilityRole="button"
               accessibilityState={{ selected: seleccionado }}
               disabled={deshabilitado}
               key={opcion.id}
-              onPress={() => alCambiar('icono', opcion.id)}
+              onPress={conRespuestaVisual(() => alCambiar('icono', opcion.id))}
               style={({ pressed }) => [
                 estilos.botonIcono,
                 seleccionado && estilos.botonIconoSeleccionado,
@@ -176,12 +178,12 @@ export default function FormularioDeposito({
             </Pressable>
           );
         })}
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel={iconoAdicionalSeleccionado ? `Ícono ${iconoAdicionalSeleccionado.nombre}. Ver más íconos` : 'Ver más íconos'}
           accessibilityRole="button"
           accessibilityState={{ expanded: iconosAdicionalesVisibles, selected: Boolean(iconoAdicionalSeleccionado) }}
           disabled={deshabilitado}
-          onPress={() => alAbrirIconos()}
+          onPress={conRespuestaVisual(() => alAbrirIconos())}
           style={({ pressed }) => [
             estilos.botonIcono,
             iconoAdicionalSeleccionado ? estilos.botonIconoSeleccionado : estilos.botonMasIconos,
@@ -206,14 +208,14 @@ export default function FormularioDeposito({
         <Text style={estilos.textoOpcional}>Opcional</Text>
       </View>
       <View style={estilos.listaColores}>
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Color azul suave predeterminado"
           accessibilityRole="button"
           accessibilityState={{ selected: colorPredeterminadoSeleccionado }}
           disabled={deshabilitado}
-          onPress={() => {
+          onPress={conRespuestaVisual(() => {
             alCambiar('color', esEdicion ? COLOR_DEPOSITO_PREDETERMINADO : null);
-          }}
+          })}
           style={({ pressed }) => [
             estilos.opcionColor,
             pressed && estilos.elementoPresionado,
@@ -235,13 +237,13 @@ export default function FormularioDeposito({
         {COLORES_SELECTOR.map(({ nombre, valor }) => {
           const seleccionado = color === valor;
           return (
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityLabel={`Color ${nombre}`}
               accessibilityRole="button"
               accessibilityState={{ selected: seleccionado }}
               disabled={deshabilitado}
               key={valor}
-              onPress={() => alCambiar('color', valor)}
+              onPress={conRespuestaVisual(() => alCambiar('color', valor))}
               style={({ pressed }) => [
                 estilos.opcionColor,
                 pressed && estilos.elementoPresionado,
@@ -300,10 +302,10 @@ export default function FormularioDeposito({
           esEdicion && errorDescripcion ? estilosGlobales.campoError : null,
         ]}
       >
-        <Ionicons color={tema.textoSecundario} name="document-text-outline" size={20} />
+        <Ionicons color={deshabilitado ? tema.deshabilitado : errorDescripcion ? tema.error : descripcionEnfocada ? tema.foco : tema.textoSecundario} name="document-text-outline" size={20} />
         <TextInput
           accessibilityLabel="Descripción opcional"
-          editable={esEdicion ? undefined : !deshabilitado}
+          editable={!deshabilitado}
           maxLength={60}
           multiline
           onBlur={() => establecerDescripcionEnfocada(false)}
@@ -316,11 +318,11 @@ export default function FormularioDeposito({
           value={descripcion}
         />
         {descripcion ? (
-          <Pressable
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityLabel="Limpiar descripción"
             accessibilityRole="button"
             disabled={deshabilitado}
-            onPress={() => alCambiar('descripcion', '')}
+            onPress={conRespuestaVisual(() => alCambiar('descripcion', ''))}
             style={estilos.botonLimpiar}
           >
             <Ionicons color={tema.textoSecundario} name="close-circle" size={22} />

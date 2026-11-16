@@ -1,3 +1,9 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import {esperarDibujo} from '../utils/renderFrame';
+import BotonAccion from '../components/ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from '../components/LoadingDots';
 import AjustesAlarmasExactas from '../components/ExactAlarmSettings';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
@@ -9,7 +15,7 @@ import TarjetaNotificacion from '../components/NotificationCard';
 import { guardarYProgramarAvisos } from '../notifications/reminderService';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { ActivityIndicator, AppState, Pressable, Text, View } from 'react-native';
+import { AppState, Pressable, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -27,6 +33,8 @@ import { navegarAviso } from '../notifications/notificationNavigation';
 import { observarIntegraciones } from '../integrations/integrationStore';
 
 export default function PantallaNotificaciones({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+ const finalizacion=useFinalizacionAccion();
+
   const volverProtegido = useRegresoProtegido(navegacion);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const { tema } = useContext(ContextoApariencia), { bottom } = useSafeAreaInsets();
@@ -35,7 +43,8 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
   const [vista, establecerVista] = useState<{avisos:Aviso[];noVistas:number;siguiente:string|null}>({avisos:[],noVistas:0,siguiente:null});
   const generacion=useRef(0);
   const [marcandoTodas,cambiarMarcandoTodas]=useState(false);
-  const marcarTodas=async()=>{if(marcandoTodas)return;cambiarMarcandoTodas(true);try{await marcarTodosAvisosVistos();mostrarAviso('Notificaciones marcadas como vistas.',{tipo:'exito'});}catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudieron marcar los avisos.',{tipo:'error'});}finally{cambiarMarcandoTodas(false);}};
+  const bloqueoMarcarTodas=useRef(false);
+  const marcarTodas=async()=>{if(bloqueoMarcarTodas.current)return;bloqueoMarcarTodas.current=true;cambiarMarcandoTodas(true);try{await esperarDibujo();await marcarTodosAvisosVistos();establecerVista(prev=>({...prev,noVistas:0,avisos:filtro==='no_vistas'?[]:prev.avisos.map(aviso=>({...aviso,vista:true}))}));mostrarAviso('Notificaciones marcadas como vistas.',{tipo:'exito'});}catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudieron marcar los avisos.',{tipo:'error'});}finally{bloqueoMarcarTodas.current=false;cambiarMarcandoTodas(false);}};
   const [generales,establecerGenerales]=useState<boolean|null>(null);
   const [cargandoMas,establecerCargandoMas]=useState(false);
   const [ajustes, establecerAjustes] = useState<AjustesAvisos | null>(null), [permiso, establecerPermiso] = useState('Comprobando permisos');
@@ -49,7 +58,13 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
   }, []);
   useFocusEffect(useCallback(() => {
     let activa = true; ++generacion.current;
-    const cargar = () => { void cargarPaginaAvisos(filtro).then(async pagina=>({...pagina,noVistas:await contarAvisosNoVistos()})).then(v => { if (activa) { establecerVista(v); establecerCargando(false); } }).catch(err => { if (activa) { establecerError(err instanceof Error ? err.message : 'No se pudo cargar el historial.'); establecerCargando(false); } }); };
+    let leyendo=false,repetir=false;
+    const cargar = async () => {
+      if(leyendo){repetir=true;return;}leyendo=true;
+      try{const pagina=await cargarPaginaAvisos(filtro),noVistas=await contarAvisosNoVistos();if(activa){establecerVista({...pagina,noVistas});establecerCargando(false);}}
+      catch(err){if(activa){establecerError(err instanceof Error?err.message:'No se pudo cargar el historial.');establecerCargando(false);}}
+      finally{leyendo=false;if(repetir&&activa){repetir=false;void cargar();}}
+    };
     cargar(); void Promise.all([consultarPermisoAvisos(),cargarPreferenciasActuales()]).then(([p,v])=>{if(activa){establecerPermiso(p);establecerGenerales(!!v.notificaciones_activas);}}).catch(()=>{});
     const dejar = observarIntegraciones(cargar); return () => { activa = false; ++generacion.current; dejar(); };
   }, [filtro]));
@@ -61,24 +76,24 @@ export default function PantallaNotificaciones({ navigation: navegacion }: impor
     grupo.push(aviso);
     gruposPorFecha.set(fecha, grupo);
   }
-  const guardar = async () => { if (!ajustes || guardando || generales!==true) return; establecerGuardando(true); try { await guardarYProgramarAvisos({...ajustes,zona:Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Argentina/Buenos_Aires'}); establecerAjustes(null);mostrarAviso('Preferencias de notificaciones guardadas.',{tipo:'exito'}); } catch (err) { establecerError(err instanceof Error ? err.message : 'No se pudieron programar los recordatorios. Intentá guardar de nuevo.'); } finally { establecerGuardando(false); } };
+  const guardar = async () => { if (!ajustes || guardando || generales!==true) return; finalizacion.iniciar();establecerGuardando(true); try { await guardarYProgramarAvisos({...ajustes,zona:Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Argentina/Buenos_Aires'}); if(!await finalizacion.confirmar())return;establecerAjustes(null);mostrarAviso('Preferencias de notificaciones guardadas.',{tipo:'exito'}); } catch (err) { establecerError(err instanceof Error ? err.message : 'No se pudieron programar los recordatorios. Intentá guardar de nuevo.'); } finally { establecerGuardando(false); } };
   return <SafeAreaView edges={['top']} style={g.areaSegura}>
     <MarcoEncabezado style={g.pantalla} tema={tema} encabezado={<EncabezadoSeccion tema={tema} titulo="Notificaciones" descripcion="Tus avisos, recordatorios y pendientes." alVolver={volverProtegido} />}>
       <DesplazamientoEncabezado contentContainerStyle={e.contenido}>
-        <View style={e.filaEncabezado}><Text style={e.textoNuevas}>{vista.noVistas ? `${vista.noVistas} sin ver` : 'Estás al día'}</Text><View style={e.accionesEncabezado}><Pressable accessibilityRole="button" accessibilityLabel={`Marcar todas como vistas. ${vista.noVistas} sin ver`} disabled={marcandoTodas||!vista.noVistas} onPress={()=>{void marcarTodas();}} style={e.botonAjustes}><Ionicons name="checkmark-done-outline" color={vista.noVistas?tema.foco:tema.textoSecundario} size={22}/></Pressable><Pressable style={e.botonAjustes} accessibilityRole="button" accessibilityLabel="Ajustes de notificaciones" onPress={() => { void Promise.all([cargarAjustesAvisos(),consultarPermisoAvisos(),cargarPreferenciasActuales()]).then(([a,p,v])=>{establecerPermiso(p);establecerGenerales(!!v.notificaciones_activas);establecerAjustes(a);}).catch(()=>establecerError('No se pudieron cargar los ajustes')); }}><Ionicons name="settings-outline" color={tema.textoPrincipal} size={22} /></Pressable></View></View>
+        <View style={e.filaEncabezado}><Text style={e.textoNuevas}>{vista.noVistas ? `${vista.noVistas} sin ver` : 'Estás al día'}</Text><View style={e.accionesEncabezado}><Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Marcar todas como vistas. ${vista.noVistas} sin ver`} accessibilityState={{busy:marcandoTodas,disabled:marcandoTodas||!vista.noVistas}} disabled={marcandoTodas||!vista.noVistas} onPress={conRespuestaVisual(()=>{void marcarTodas();})} style={e.botonAjustes}>{marcandoTodas?<PuntosCarga color={tema.foco}/>:<Ionicons name="checkmark-done-outline" color={vista.noVistas?tema.foco:tema.textoSecundario} size={22}/>}</Pressable><Pressable android_ripple={RETROALIMENTACION_PULSACION} style={e.botonAjustes} accessibilityRole="button" accessibilityLabel="Ajustes de notificaciones" onPress={conRespuestaVisual(() => { void Promise.all([cargarAjustesAvisos(),consultarPermisoAvisos(),cargarPreferenciasActuales()]).then(([a,p,v])=>{establecerPermiso(p);establecerGenerales(!!v.notificaciones_activas);establecerAjustes(a);}).catch(()=>establecerError('No se pudieron cargar los ajustes')); })}><Ionicons name="settings-outline" color={tema.textoPrincipal} size={22} /></Pressable></View></View>
         <SelectorSegmentado tema={tema} opciones={[{ id: 'todas', nombre: 'Todas' }, { id: 'pendientes', nombre: 'Pendientes' }, { id: 'no_vistas', nombre: 'No vistas' }]} valor={filtro} alSeleccionar={v => { establecerFiltro(v as typeof filtro); establecerCargando(true); }} etiqueta="Filtrar notificaciones" />
-        {generales===false||generales&&['Sin permiso','Desactivadas en Ajustes'].includes(permiso)?<Pressable accessibilityRole="button" accessibilityLabel={generales===false?'Activar notificaciones en Perfil':'Activar notificaciones de la app'} style={e.avisoPermisos} onPress={()=>{if(generales===false)navegacion.navigate(RUTAS.PERFIL);else void activarAvisosTelefono().then(establecerPermiso).catch(()=>establecerError('No se pudieron abrir los permisos'));}}><Ionicons name="notifications-outline" color={tema.foco} size={24}/><Text style={e.textoPermisos}>{generales===false?'Paso 1 · Activá las notificaciones de la app desde Perfil para recibir avisos aunque esté cerrada.':'Paso 1 · Activá las notificaciones de la app para recibir avisos aunque esté cerrada.'}</Text><Ionicons name="chevron-forward" color={tema.textoSecundario} size={20}/></Pressable>:null}
+        {generales===false||generales&&['Sin permiso','Desactivadas en Ajustes'].includes(permiso)?<Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={generales===false?'Activar notificaciones en Perfil':'Activar notificaciones de la app'} style={e.avisoPermisos} onPress={conRespuestaVisual(()=>{if(generales===false)navegacion.navigate(RUTAS.PERFIL);else void activarAvisosTelefono().then(establecerPermiso).catch(()=>establecerError('No se pudieron abrir los permisos'));})}><Ionicons name="notifications-outline" color={tema.foco} size={24}/><Text style={e.textoPermisos}>{generales===false?'Paso 1 · Activá las notificaciones de la app desde Perfil para recibir avisos aunque esté cerrada.':'Paso 1 · Activá las notificaciones de la app para recibir avisos aunque esté cerrada.'}</Text><Ionicons name="chevron-forward" color={tema.textoSecundario} size={20}/></Pressable>:null}
         {generales&&permiso==='Permitidas'?<AjustesAlarmasExactas tema={tema} visible aviso/>:null}
 
-        {cargando ? <ActivityIndicator color={tema.foco} /> : !vista.avisos.length ? <Text style={g.textoAyuda}>No tenés notificaciones en este filtro.</Text> : [...gruposPorFecha].map(([fecha, avisos]) =>
+        {cargando ? <PuntosCarga color={tema.foco} /> : !vista.avisos.length ? <Text style={g.textoAyuda}>No tenés notificaciones en este filtro.</Text> : [...gruposPorFecha].map(([fecha, avisos]) =>
           <View key={fecha} style={e.grupoDia}>
             <View style={e.encabezadoDia}><Text style={e.tituloDia}>{fecha}</Text><View style={e.lineaDia}/></View>
             <View style={e.notificacionesDia}>{avisos.map(aviso=><TarjetaNotificacion key={aviso.id} aviso={aviso} tema={tema} alVer={()=>{void marcarAvisoVisto(aviso.id).catch(()=>establecerError('No se pudo marcar el aviso como visto.'));}} alAbrir={()=>{void abrir(aviso).catch(()=>establecerError('El recurso ya no está disponible. Podés continuar desde el historial.'));}}/>)}</View>
           </View>
         )}
-        {vista.siguiente?<Pressable accessibilityRole="button" disabled={cargandoMas} style={g.botonSecundario} onPress={()=>{if(cargandoMas)return;establecerCargandoMas(true);const cursor=vista.siguiente!,version=generacion.current;void cargarPaginaAvisos(filtro,cursor).then(pagina=>{if(version!==generacion.current)return;establecerVista(prev=>({...prev,avisos:[...prev.avisos,...pagina.avisos.filter(a=>!prev.avisos.some(p=>p.id===a.id))],siguiente:pagina.siguiente}));}).catch(()=>establecerError('No se pudieron cargar más avisos.')).finally(()=>establecerCargandoMas(false));}}><Text style={g.textoBotonSecundario}>{cargandoMas?'Cargando…':'Cargar 10 más'}</Text></Pressable>:null}
+        {vista.siguiente?<BotonAccion completado={finalizacion.completado} tema={tema} texto={'Cargar 10 más'} variante="secundario" cargando={cargandoMas} deshabilitado={cargandoMas} alPresionar={()=>{if(cargandoMas)return;establecerCargandoMas(true);const cursor=vista.siguiente!,version=generacion.current;void cargarPaginaAvisos(filtro,cursor).then(pagina=>{if(version!==generacion.current)return;establecerVista(prev=>({...prev,avisos:[...prev.avisos,...pagina.avisos.filter(a=>!prev.avisos.some(p=>p.id===a.id))],siguiente:pagina.siguiente}));}).catch(()=>establecerError('No se pudieron cargar más avisos.')).finally(()=>establecerCargandoMas(false));}} estilo={g.botonSecundario} />:null}
       </DesplazamientoEncabezado>
-      <AjustesNotificaciones generales={generales===true} alActivarGenerales={()=>{establecerAjustes(null);navegacion.navigate(RUTAS.PERFIL);}} tema={tema} ajustes={ajustes} alCambiar={establecerAjustes} alCerrar={()=>establecerAjustes(null)} alGuardar={()=>{void guardar();}} guardando={guardando} permiso={permiso} alCambiarPermiso={establecerPermiso} canales={canales}/>
+      <AjustesNotificaciones completado={finalizacion.completado} generales={generales===true} alActivarGenerales={()=>{establecerAjustes(null);navegacion.navigate(RUTAS.PERFIL);}} tema={tema} ajustes={ajustes} alCambiar={establecerAjustes} alCerrar={()=>establecerAjustes(null)} alGuardar={()=>{void guardar();}} guardando={guardando} permiso={permiso} alCambiarPermiso={establecerPermiso} canales={canales}/>
     </MarcoEncabezado>
   </SafeAreaView>;
 }

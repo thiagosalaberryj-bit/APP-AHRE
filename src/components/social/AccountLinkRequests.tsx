@@ -50,7 +50,7 @@ export default function SolicitudesVinculo(aspecto:AspectoSocial){
    {modo==='agenda'?<ListaPersonas personas={social.personas} elegida={personaId} alElegir={cambiarPersonaId} ocupado={ocupado} {...aspecto}/>:null}
    {errores.persona?<Text style={aspecto.estilosGlobales.textoError}>{errores.persona}</Text>:null}
    {modo==='nueva'?<><CampoFormulario etiqueta="Nombre" valor={nombre} alCambiar={v=>{if(!bloqueo.current)cambiarNombre(v);}} limite={80} error={errores.nombre} {...aspecto}/><CampoFormulario etiqueta="Apellido" valor={apellido} alCambiar={v=>{if(!bloqueo.current)cambiarApellido(v);}} limite={80} error={errores.apellido} {...aspecto}/><CampoFormulario etiqueta="Apodo" valor={apodo} alCambiar={v=>{if(!bloqueo.current)cambiarApodo(v);}} limite={20} error={errores.apodo} {...aspecto}/><Text style={aspecto.estilosGlobales.textoAyuda}>Podés repetir nombre y apellido usando un apodo distinto.</Text></>:null}
-   <BotonSocial cargando={ocupado} texto="Registrar y aceptar vínculo" deshabilitado={ocupado||sinConexion} alPresionar={()=>{void responder(seleccion.id,'aceptado');}} {...aspecto}/>
+   <BotonSocial cargando={ocupado} texto="Registrar y aceptar vínculo" deshabilitado={ocupado||sinConexion} alPresionar={()=>responder(seleccion.id,'aceptado')} {...aspecto}/>
   </DialogoInvitacion>:null}
  </View>;
 }

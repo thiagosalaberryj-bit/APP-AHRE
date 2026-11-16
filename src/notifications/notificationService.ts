@@ -35,9 +35,8 @@ export async function marcarTodosAvisosVistos(){
  cambiarRevisionLectura(usuario.id);
  const hasta=new Date().toISOString();
  await ejecutarTransaccion(async c=>{
-  const filas=await c.getAllAsync<{id:string;fecha:string}>('SELECT id,fecha FROM avisos_locales WHERE usuario_id=? AND fecha<=?',[usuario.id,hasta]);
-  for(const fila of filas)await guardarDato(c,usuario.id,'avisos:visto:'+fila.id,fila.fecha);
-  await c.runAsync('UPDATE avisos_locales SET vista=1 WHERE usuario_id=? AND fecha<=?',[usuario.id,hasta]);
+  await c.runAsync("INSERT INTO integraciones_locales(usuario_id,clave,datos) SELECT usuario_id,'avisos:visto:'||id,json_quote(fecha) FROM avisos_locales WHERE usuario_id=? AND vista=0 AND fecha<=? ON CONFLICT(usuario_id,clave) DO UPDATE SET datos=excluded.datos",[usuario.id,hasta]);
+  await c.runAsync('UPDATE avisos_locales SET vista=1 WHERE usuario_id=? AND vista=0 AND fecha<=?',[usuario.id,hasta]);
   await guardarDato(c,usuario.id,'avisos:remotas-no-vistas',0);
   await encolarIntegracion(c,usuario.id,'/notificaciones/vistas',{hasta});
  });avisarIntegraciones();
