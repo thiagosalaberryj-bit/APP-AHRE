@@ -1,3 +1,4 @@
+import RequisitoDeposito from '../components/DepositRequiredState';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -197,24 +198,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
       );
     }
 
-    if (depositos.length === 0) {
-      return (
-        <View style={[estilosGlobales.tarjeta, { alignItems: 'center', gap: ESPACIADO.medio }]}>
-          <Ionicons color={tema.foco} name="wallet-outline" size={42} />
-          <Text style={[estilosGlobales.subtitulo, { textAlign: 'center' }]}>Todavía no tenés depósitos.</Text>
-          <Text style={[estilosGlobales.textoSecundario, { textAlign: 'center' }]}>
-            Creá un depósito antes de registrar un {nombreMovimiento}.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={abrirNuevoDeposito}
-            style={estilosGlobales.botonPrincipal}
-          >
-            <Text style={estilosGlobales.textoBotonPrincipal}>Nuevo depósito</Text>
-          </Pressable>
-        </View>
-      );
-    }
+    if (depositos.length === 0) return <RequisitoDeposito tema={tema} descripcion={'Creá un depósito antes de registrar un '+nombreMovimiento+'.'} alCrear={abrirNuevoDeposito}/>;
 
     const errorMonto = intentoGuardar ? errores.monto : null;
     const errorDescripcion = intentoGuardar ? errores.descripcion : null;

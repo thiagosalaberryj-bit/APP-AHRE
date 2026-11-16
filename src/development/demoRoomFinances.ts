@@ -37,6 +37,7 @@ export function finanzasDemo<T extends RespuestaSala>(detalle: T, simulacion=fal
    const opcion=opciones.find(o=>o.gastoId===_gasto&&(tipo==='compra'?o.clave.startsWith('compra:'):tipo==='salida'?o.tipo==='egreso':o.tipo==='ingreso'&&o.clave.endsWith(tipo.slice('entrada:'.length))));
    return !opcion?.seleccion;
   });
+  faltantes.push(...(detalle.sala.salidas||[]).filter(s=>!s.revisada).map(s=>({personaId:s.personaId,nombre:s.nombre,descripcion:'Revisar gastos y pagos por su salida',clave:'revision-salida:'+s.personaId})));
   for(const q of detalle.solicitudes.filter(q=>q.tipo==='parte_pagada'&&q.estado==='pendiente'))faltantes.push({personaId:q.personaId||'',nombre:detalle.sala.participantes.find(p=>p.id===q.personaId)?.nombre||'Participante',descripcion:'Responder aviso de pago',clave:'solicitud:'+q.id});
   return {...detalle, misFinanzas: opciones,pendientesCierre:detalle.sala.estado==='abierta'?faltantes:[]};
 }

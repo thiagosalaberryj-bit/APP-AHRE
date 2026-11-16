@@ -6,9 +6,10 @@ import type {VistaReinicio} from '../src/development/dataResetService.ts';
 
 const vista:VistaReinicio={huella:'vista',cantidades:{},cuentas:[],salasActualizadas:0};
 async function escenario(t:import('node:test').TestContext,perderRespuesta=false){
- let servidorBorrado=false,usuarioId='',fallar=false;
+ let servidorBorrado=false,usuarioId='',fallar=false,consultasVista=0;
  const e=await preparar(t,true,{url:'https://ahre.test/api/v1',fetch:async(url,opciones)=>{
   if(fallar)throw new Error('sin conexión');
+  if(String(url).endsWith('/testing/reset/preview')){consultasVista++;return Response.json(vista);}
   if(String(url).endsWith('/testing/reset')){servidorBorrado=true;if(perderRespuesta)throw new Error('respuesta perdida');return Response.json({reiniciado:true,usuarioId});}
   if(String(url).includes('/testing/reset/receipt'))return Response.json({reiniciado:servidorBorrado,usuarioId});
   return new Response(null,{status:204});
@@ -19,7 +20,7 @@ async function escenario(t:import('node:test').TestContext,perderRespuesta=false
  await e.guardarSesionRemota(usuario.id,{token:'a'.repeat(64),vence:Date.now()+86400000,usuario,dispositivoId:await e.obtenerInstalacion(),generacion:1,revision:0},true);
  const otra=await e.usuariosRepositorio.crear({id:randomUUID(),nombre:'Otra',correo_electronico:'otra@example.test',activo:1});
  const deposito=await e.depositosRepositorio.crear({usuario_id:otra.id,nombre:'Ajeno',tipo:'efectivo',saldo_inicial:500,icono:'cash-outline'});
- return {...e,usuario,otra,deposito,desconectar:()=>{fallar=true;}};
+ return {...e,usuario,otra,deposito,consultasVista:()=>consultasVista,desconectar:()=>{fallar=true;}};
 }
 for(const perderRespuesta of [false,true])test('reinicio local limpia relaciones, colas y cachés y conserva cuentas y datos ajenos'+(perderRespuesta?' con respuesta perdida':''),async t=>{
  const e=await escenario(t,perderRespuesta);
@@ -72,4 +73,13 @@ test('un rechazo explícito conserva datos y no deja una recuperación bloqueada
  await assert.rejects(e.reiniciarDatos(vista,usuario.correo_electronico,'clave','BORRAR MIS DATOS'),/alcance cambió/);
  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n,antes);
  assert.equal(e.reinicioEnCurso(),false);assert.equal(e.almacenamiento.has('ahre.pruebas.reinicio'),false);
+});
+
+
+test('la vista previa espera operaciones activas antes de calcular el alcance del reinicio',async t=>{
+ const e=await escenario(t),terminar=e.iniciarActividadReinicio();assert.ok(terminar);
+ const consulta=e.consultarReinicio();await new Promise<void>(r=>setImmediate(r));
+ assert.equal(e.reinicioEnCurso(),true);assert.equal(e.consultasVista(),0);
+ terminar();assert.equal((await consulta).huella,'vista');assert.equal(e.consultasVista(),1);assert.equal(e.reinicioEnCurso(),false);
+ assert.ok(Number(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n)>0);
 });

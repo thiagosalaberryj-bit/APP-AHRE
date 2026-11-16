@@ -15,7 +15,7 @@ import SelectorFecha from '../DateSelector';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function FormularioCrearSala(propiedades: import('../../social/types').AspectoSocial & (Pick<import('../../social/types').AccionesSociales,'abrirRegistro'>)) {
   const {
-    personasActivas: personasSociales,
+    personas: personasSociales,
     alCrearSala
   } = useDatosSociales();
   const {
@@ -59,7 +59,7 @@ export default function FormularioCrearSala(propiedades: import('../../social/ty
           <Text style={estilosGlobales.textoAyuda}>Vos ya estás incluido. Elegí del listado o registrá una persona desde el selector.</Text>
           <PersonalizacionSala alCambiar={establecerApariencia} {...aspecto} />
           <Pressable accessibilityRole="checkbox" accessibilityState={{checked:compartir}} onPress={()=>cambiarCompartir(!compartir)} style={aspecto.estilos.filaCampos}><Ionicons name={compartir?'checkbox':'square-outline'} size={24} color={tema.foco}/><Text style={estilosGlobales.etiqueta}>Compartir online</Text></Pressable>
-          {compartir?<><CampoFormulario secreto etiqueta="Contraseña de la sala" valor={contrasena} error={errores.contrasena} alCambiar={cambiarContrasena} limite={128} {...aspecto}/><Text style={estilosGlobales.textoAyuda}>Mínimo 8 caracteres. Tendrás un enlace y QR para todas las personas; cada ingreso requiere aprobación y conexión.</Text></>:null}
+          {compartir?<><CampoFormulario secreto etiqueta="Contraseña de la sala" valor={contrasena} error={errores.contrasena} alCambiar={cambiarContrasena} limite={128} {...aspecto}/><Text style={estilosGlobales.textoAyuda}>Mínimo 8 caracteres. Tendrás un enlace y QR para todas las personas; tus amigos pueden entrar directamente; las demás personas esperan tu aprobación. Se requiere conexión.</Text></>:null}
           <View style={estilosMovimiento.tarjetaInformacion}><SelectorFecha etiqueta="Fecha de la ocasión" valor={fecha} alSeleccionar={establecerFecha} tema={tema} estilosMovimiento={estilosMovimiento} /></View>
           <Text style={estilosGlobales.textoAyuda}>Máximo de {LIMITE_SALAS_ACTIVAS} salas activas por vez.</Text>
       <AccionesFormulario texto={compartir?'Crear y compartir sala':etiqueta} alGuardar={async() => {const campos:Record<string,string>={};if(!nombre.trim()||nombre.trim().length>100)campos.nombre='Completá un nombre de hasta 100 caracteres.';if(descripcion.trim().length>500)campos.descripcion='La descripción admite hasta 500 caracteres.';if(compartir&&contrasena.length<8)campos.contrasena='La contraseña requiere al menos 8 caracteres.';cambiarErrores(campos);if(Object.keys(campos).length)throw new Error('Revisá los campos marcados.');const sala=await crearSala({ id: id.current, nombre, descripcion, ...apariencia, personasIds: seleccionadas,

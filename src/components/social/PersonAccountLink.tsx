@@ -33,7 +33,7 @@ export default function ModalVinculoCuenta({persona,vinculo,sinConexion,alCerrar
     </>:<>
         <TextInput accessibilityLabel="Correo de la cuenta a vincular" value={correo} onChangeText={cambiarCorreo} placeholder="Correo de su cuenta AHRE" placeholderTextColor={aspecto.tema.textoSecundario} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} editable={!ocupado} style={estilos.entrada}/>
         <Text style={aspecto.estilosGlobales.textoAyuda}>La otra persona debe aceptar. Sus deudas anteriores siguen siendo privadas.</Text>
-        <BotonSocial texto="Enviar solicitud de vínculo" deshabilitado={!persona.activa||ocupado||sinConexion||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())} alPresionar={()=>ejecutar(()=>solicitarVinculoOnline(persona.id,correo),'Solicitud de vínculo enviada. La otra persona debe aceptarla.')} {...aspecto}/>
+        <BotonSocial texto="Enviar solicitud de vínculo" deshabilitado={ocupado||sinConexion||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())} alPresionar={()=>ejecutar(()=>solicitarVinculoOnline(persona.id,correo),'Solicitud de vínculo enviada. La otra persona debe aceptarla.')} {...aspecto}/>
     </>}
     {sinConexion?<Text style={aspecto.estilosGlobales.textoAyuda}>Iniciá sesión con conexión para vincular una cuenta.</Text>:null}
 

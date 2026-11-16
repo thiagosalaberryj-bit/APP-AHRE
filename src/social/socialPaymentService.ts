@@ -60,7 +60,7 @@ export async function guardarOperacion(contexto: ContextoSocial, operacion: impo
 
 async function prepararDeudaPersonal(datos: import('./types').DatosDeuda, contexto: ContextoSocial) {
   const persona = await registroPropio(personasRepositorio, datos.personaId, contexto);
-  exigir(persona.activa && !persona.es_usuario_actual, 'Elegí una persona activa de tu agenda.');
+  exigir(!persona.es_usuario_actual, 'Elegí una persona de tu agenda.');
   await exigirDepositoConDinero(contexto);
   exigir(['debo', 'me_deben'].includes(datos.direccion), 'Elegí la dirección de la deuda.');
   const descripcion = textoSocial(datos.descripcion), monto = centavos(datos.monto) / 100;
@@ -165,7 +165,7 @@ export function perdonarDeudaPersonal(id: string, pendienteEsperado: number) {
     exigir(deuda.acreedor_id === contexto.propia.id, 'Solo quien cobra puede perdonar una deuda.');
     const fila = await contexto.conexion.getFirstAsync<{datos:string}>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='deudas'", [contexto.usuario.id]);
     const acuerdos: import('./online/types').DeudaOnline[] = fila ? JSON.parse(fila.datos) : [];
-    exigir(!acuerdos.some(a => a.origenLocalId === id && a.estado !== 'rechazada'), 'Esta deuda tiene una propuesta online. Revisá su acuerdo antes de perdonarla.');
+    exigir(!acuerdos.some(a => a.origenLocalId === id && !['rechazada','retirada'].includes(a.estado)), 'Esta deuda tiene una propuesta online. Revisá su acuerdo antes de perdonarla.');
     if (perdonLocal(deuda) === unidades(pendienteEsperado) && perdonLocal(deuda) > 0) return deuda;
     exigir(deuda.estado !== 'cancelada', 'La deuda ya fue cerrada.');
     const pagos = await pagosSocialesRepositorio.consultar({usuario_id:contexto.usuario.id, deuda_id:id}, {}, contexto.conexion);
@@ -190,7 +190,7 @@ export function eliminarDeudaPersonal(id:string){
   if(deuda.estado==='cancelada'&&deuda.motivo_cancelacion==='eliminada')return deuda;
   const cache=await contexto.conexion.getFirstAsync<{datos:string}>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='deudas'",[contexto.usuario.id]);
   const acuerdos=cache?JSON.parse(cache.datos) as import('./online/types').DeudaOnline[]:[];
-  exigir(!acuerdos.some(a=>a.origenLocalId===id&&a.estado!=='rechazada'),'Esta deuda tiene una propuesta o acuerdo online. No puede eliminarse como deuda personal.');
+  exigir(!acuerdos.some(a=>a.origenLocalId===id&&!['rechazada','retirada'].includes(a.estado)),'Esta deuda tiene una propuesta o acuerdo online. No puede eliminarse como deuda personal.');
   const pagos=await pagosSocialesRepositorio.consultar({usuario_id:contexto.usuario.id,deuda_id:id},{},contexto.conexion);
   const ahora=new Date().toISOString();
   // Las correcciones y sus saldos forman una única transacción y un solo lote.

@@ -1,3 +1,4 @@
+import AccionesSolicitud from './RequestDecisionActions';
 import {crearEstilosSocialOnline} from '../../styles/social/OnlineSocialStyles';
 import { useContext } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
@@ -21,6 +22,7 @@ export default function AccionesGastoOnline({sala,gasto,seccion,...aspecto}:Aspe
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosPago=crearEstilosGasto(aspecto.tema),controles=crearEstilosSocialOnline(aspecto.tema);
   const detalle=useSalaOnline(sala.id,sala.online),social=useDatosSociales(),estilos=crearEstilosDetalle(aspecto.tema),compartidos=crearEstilosCompartidos(aspecto.tema),bloqueo=useRef(false);
+  const [enviando,cambiarEnviando]=useState<{id:string;accion:'aceptar'|'rechazar'}|null>(null);
   const [seleccion,abrirSeleccion]=useState<OperacionPersonal|null>(null),[intencion,cambiarIntencion]=useState<'asociar'|'informar'|'marcar'>('asociar'),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[ocupado,cambiarOcupado]=useState(false),[, cambiarError]=useErrorNotificado('');
   useEffect(()=>{let activo=true;const cargar=()=>{void leerDatosOnline<OperacionPersonal[]>(social.usuarioId,'operaciones',[]).then(async o=>{const locales=await consultarMovimientosSociales();if(activo)cambiarOperaciones(o.map(p=>({...p,incorporada:p.incorporada||locales.some(l=>l.clave===p.clave)})));}).catch(()=>{if(activo)cambiarError('No se pudieron cargar tus movimientos.');});};cargar();const dejar=observarSocialOnline(cargar);return()=>{activo=false;dejar();};},[social.usuarioId]);
   if(!sala.online||!detalle)return null;
@@ -43,7 +45,7 @@ export default function AccionesGastoOnline({sala,gasto,seccion,...aspecto}:Aspe
         </View><Text style={aspecto.estilosGlobales.textoAyuda}>{parte?.resumen}</Text></View>;
       })}
 
-    {abierta&&sala.administrador?detalle.solicitudes.filter(s=>s.gasto_id===gasto.id&&s.estado==='pendiente').map(s=><View key={s.id} style={[estilos.registro,controles.filaSolicitud]}><View style={controles.flexible}><Text style={aspecto.estilosGlobales.etiqueta}>{social.obtenerPersona(s.personaId||'')?.nombre} · {s.texto}</Text></View>{(['resuelta','rechazada'] as const).map(decision=><Pressable key={decision} accessibilityRole="button" accessibilityLabel={decision==='resuelta'?'Aceptar solicitud':'Rechazar solicitud'} style={controles.accionSolicitud} disabled={ocupado} onPress={()=>{void ejecutar(()=>enviarAccionSocial('solicitud:'+s.id,'/solicitudes/'+s.id+'/decidir',{decision}));}}><Ionicons name={decision==='resuelta'?'checkmark':'close'} size={23} color={decision==='resuelta'?aspecto.tema.exito:aspecto.tema.error}/></Pressable>)}</View>):null}
+    {abierta&&sala.administrador?detalle.solicitudes.filter(s=>s.gasto_id===gasto.id&&s.estado==='pendiente').map(s=><View key={s.id} style={[estilos.registro,controles.filaSolicitud]}><View style={controles.flexible}><Text style={aspecto.estilosGlobales.etiqueta}>{social.obtenerPersona(s.personaId||'')?.nombre} · {s.texto}</Text></View><AccionesSolicitud tema={aspecto.tema} etiquetaAceptar="Aceptar solicitud" etiquetaRechazar="Rechazar solicitud" deshabilitado={ocupado} procesando={enviando?.id===s.id?enviando.accion:null} alAceptar={()=>{if(bloqueo.current)return;cambiarEnviando({id:s.id,accion:'aceptar'});void ejecutar(()=>enviarAccionSocial('solicitud:'+s.id,'/solicitudes/'+s.id+'/decidir',{decision:'resuelta'})).finally(()=>cambiarEnviando(null));}} alRechazar={()=>{if(bloqueo.current)return;cambiarEnviando({id:s.id,accion:'rechazar'});void ejecutar(()=>enviarAccionSocial('solicitud:'+s.id,'/solicitudes/'+s.id+'/decidir',{decision:'rechazada'})).finally(()=>cambiarEnviando(null));}}/></View>):null}
     </>:null}
     {seccion==='movimientos'?<>
     {abierta&&!sala.administrador&&remoto.pagadorId!==propia&&remoto.partes.some(p=>p.personaId===propia)?<BotonSocial texto={remoto.pagaron.includes(propia)?'Tu parte está pagada':pedido?'Espera aprobación':'Ya pagué mi parte'} deshabilitado={ocupado||!!pedido||remoto.pagaron.includes(propia)} alPresionar={()=>elegirPago('informar')} {...aspecto}/>:null}

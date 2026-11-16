@@ -7,7 +7,7 @@ import {Ionicons} from '@expo/vector-icons';
 import type {AspectoSocial,DeudaVista} from '../../social/types';
 import type {DeudaOnline} from '../../social/online/types';
 import {useDatosSociales} from '../../social/SocialDataContext';
-import {leerDatosOnline,observarSocialOnline,observarSincronizacion,obtenerVistaSincronizacion,enviarAccionSocial,sincronizarSocialOnline} from '../../social/socialService';
+import {leerDatosOnline,observarSocialOnline,observarSincronizacion,obtenerVistaSincronizacion,retirarPropuestaOnline,enviarAccionSocial,sincronizarSocialOnline} from '../../social/socialService';
 import BotonSocial from './SocialButton';
 import OpcionesSeleccion from './SocialChoiceGroup';
 import crearEstilosInvitacion from '../../styles/social/DebtInvitationStyles';
@@ -47,11 +47,12 @@ export default function InvitacionDeuda({deuda,...aspecto}:AspectoSocial&{deuda:
     </View>
     {cargando||decision?<View style={estilos.progreso}><ActivityIndicator color={aspecto.tema.foco}/><Text accessibilityLiveRegion="polite" style={aspecto.estilosGlobales.textoSecundario}>{decision==='aceptada'?'Aceptando invitación…':decision==='rechazada'?'Rechazando invitación…':'Cargando invitación…'}</Text></View>:null}
 
+    {invitacion?.estado==='pendiente'&&!invitacion.puedeDecidir?<BotonSocial texto="Retirar propuesta" secundario cargando={decision==='retirar'} deshabilitado={!!decision||sinConexion} alPresionar={async()=>{if(bloqueo.current)return;bloqueo.current=true;cambiarDecision('retirar');try{await retirarPropuestaOnline(invitacion.id);await social.recargar();mostrarAviso('Propuesta retirada. Tu deuda personal se conserva.',{tipo:'exito'});}catch(error){cambiarError(error instanceof Error?error.message:'No se pudo retirar la propuesta.');}finally{bloqueo.current=false;cambiarDecision('');}}} {...aspecto}/>:null}
     {invitacion?.puedeDecidir&&!rechazada?<>
       <Text style={aspecto.estilosGlobales.textoSecundario}>Al aceptar, esta deuda quedará vinculada online. No se registra ningún pago.</Text>
       {compatibles.length?<View style={estilos.grupo}><Text style={aspecto.estilosGlobales.etiqueta}>¿Ya tenías anotada esta deuda?</Text><Text style={aspecto.estilosGlobales.textoSecundario}>Podés vincular tu registro para evitar duplicarla. Es opcional.</Text><OpcionesSeleccion opciones={compatibles.map(d=>({id:d.id,nombre:(social.obtenerPersona(d.personaId)?.nombre||'Persona')+' · '+d.descripcion+' · '+d.pendiente}))} elegida={asociacion} alElegir={id=>cambiarAsociacion(actual=>actual===id?'':id)} {...aspecto}/></View>:null}
       {sinConexion?<Text style={aspecto.estilosGlobales.textoAyuda}>Necesitás conexión para responder esta invitación.</Text>:null}
-      <View style={estilos.acciones}><View style={estilos.accion}><BotonSocial texto={decision==='aceptada'?'Aceptando…':'Aceptar'} deshabilitado={!!decision||sinConexion} alPresionar={()=>{void responder('aceptada');}} {...aspecto}/></View><View style={estilos.accion}><BotonSocial texto={decision==='rechazada'?'Rechazando…':'Rechazar'} secundario deshabilitado={!!decision||sinConexion} alPresionar={()=>{void responder('rechazada');}} {...aspecto}/></View></View>
+      <View style={estilos.acciones}><View style={estilos.accion}><BotonSocial texto="Aceptar" cargando={decision==='aceptada'} deshabilitado={!!decision||sinConexion} alPresionar={()=>{void responder('aceptada');}} {...aspecto}/></View><View style={estilos.accion}><BotonSocial texto="Rechazar" cargando={decision==='rechazada'} secundario deshabilitado={!!decision||sinConexion} alPresionar={()=>{void responder('rechazada');}} {...aspecto}/></View></View>
     </>:null}
   </View>;
 }

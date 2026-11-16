@@ -16,6 +16,7 @@ test('social: una actualización solicitada durante otra descarga recupera las n
       return Response.json({deudas:[{id:'deuda',pendiente}]});
     }
     if(ruta.endsWith('/social/vinculos'))return Response.json({vinculos:[]});
+    if(ruta.endsWith('/social/registros-pendientes'))return Response.json({operaciones:[]});
     if(ruta.endsWith('/social/operaciones-personales')){
       if(descargas===1){avisarDescarga();await bloqueo;}
       concurrentes--;return Response.json({operaciones:[]});
@@ -44,6 +45,7 @@ test('social: sin novedades no descarga todo ni reescribe el caché; un evento y
     if(ruta.endsWith('/social/salas')){descargas++;return Response.json({salas:[]});}
     if(ruta.endsWith('/social/deudas'))return Response.json({deudas:[]});
     if(ruta.endsWith('/social/vinculos'))return Response.json({vinculos:[]});
+    if(ruta.endsWith('/social/registros-pendientes'))return Response.json({operaciones:[]});
     if(ruta.endsWith('/social/operaciones-personales'))return Response.json({operaciones:[]});
     return Response.json({revision:0,generacion:1,lotes:[],mas:false});
   };

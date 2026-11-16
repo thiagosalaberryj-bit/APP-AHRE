@@ -1,4 +1,6 @@
 import OpcionesSalas from './RoomActionsMenu';
+import useVinculos from '../../social/online/useAccountLinks';
+import RegistrosPropiosSala from './OwnRoomRecords';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
 import type { NombreIcono } from '../../constants/movimientos';
 import { useDatosSociales } from '../../social/SocialDataContext';
@@ -21,6 +23,9 @@ export default function PanelSocial(propiedades: import('../../social/types').As
     obtenerPersona,
     habilitadoParaCrear
   } = useDatosSociales();
+  const {usuarioId}=useDatosSociales();
+  const {vinculos}=useVinculos(usuarioId);
+  const solicitudes=vinculos.filter(v=>v.direccion==='recibida'&&v.estado==='solicitado').length;
   const {
     alVerSalas,
     alVerPersonas,
@@ -44,6 +49,7 @@ export default function PanelSocial(propiedades: import('../../social/types').As
   const pendientes = deudasSociales.filter(deuda => !deuda.saldada);
   const recientes = [...pendientes].sort((a, b) => (b.ultimaActividad||b.fechaISO).localeCompare(a.ultimaActividad||a.fechaISO) || b.id.localeCompare(a.id)).slice(0, 5);
   return <>
+      <RegistrosPropiosSala {...aspecto}/>
       {!habilitadoParaCrear ? <RequisitoCreacionSocial {...aspecto} /> : null}
       <View style={estilos.resumenPrincipal}>
         <View style={estilos.filaCampos}>
@@ -72,6 +78,7 @@ export default function PanelSocial(propiedades: import('../../social/types').As
           }} disabled={bloqueada} onPress={() => accion.tipo === 'personas' ? alVerAgenda() : abrirRegistro(accion.tipo)} style={[estilos.accionPanel, bloqueada && estilos.accionPanelDeshabilitada]}>
               <Ionicons color={tema.botonPrincipalTexto} name={accion.icono as NombreIcono} size={20} />
               <Text style={estilos.textoAccionPanel}>{accion.texto}</Text>
+              {accion.tipo==='personas'&&solicitudes>0?<Text accessibilityLabel={solicitudes+' solicitudes de vínculo pendientes'} style={estilos.textoDetalleAccion}>{solicitudes+(solicitudes===1?' solicitud':' solicitudes')}</Text>:null}
             </Pressable>;
         })}
         <OpcionesSalas {...aspecto} abrirSala={abrirSala} abrirRegistro={abrirRegistro}/>

@@ -17,9 +17,11 @@ export default function OpcionesSalas({abrirRegistro,abrirSala,...aspecto}:Aspec
   useEffect(()=>{let activo=true;const revisar=()=>{void SecureStore.getItemAsync('ahre.invitacion.pendiente').then(async valor=>{if(!valor||!activo)return;const datos=JSON.parse(valor);if(datos.global){cambiarEnlaceInicial(new URL(URL_SERVIDOR).origin+'/invitacion/#sala='+datos.token);abrir('unirse');await SecureStore.deleteItemAsync('ahre.invitacion.pendiente');}}).catch(()=>{});};revisar();const dejar=observarSocialOnline(revisar);return()=>{activo=false;dejar();};},[]);
   const social=useDatosSociales(),estilos=crearEstilosPanel(aspecto.tema);
   const limite=social.salas.filter(s=>s.administrador&&s.estado==='abierta').length>=LIMITE_SALAS_ACTIVAS;
+  const disponibles=Math.max(0,LIMITE_SALAS_ACTIVAS-social.salas.filter(s=>s.administrador&&s.estado==='abierta').length);
   return <>
     <Pressable accessibilityRole="button" accessibilityLabel="Salas" onPress={()=>abrir('opciones')} style={estilos.accionPanel}>
       <Ionicons name="people-outline" size={20} color={aspecto.tema.botonPrincipalTexto}/><Text style={estilos.textoAccionPanel}>Salas</Text>
+      <Text style={estilos.textoDetalleAccion}>{disponibles?'Podés crear '+disponibles+(disponibles===1?' sala':' salas'):'Sin cupos disponibles'}</Text>
     </Pressable>
     {abierto==='opciones'?<MenuOpcionesSocial tema={aspecto.tema} titulo="Salas" descripcion="Elegí cómo querés participar." alCerrar={()=>abrir(null)} opciones={[
       {id:'crear',texto:'Crear sala',descripcion:limite?'Ya tenés tres salas propias activas.': 'Organizá gastos e invitá a otras personas.',icono:'add-circle-outline',deshabilitada:limite||!social.habilitadoParaCrear,alElegir:()=>{abrir(null);abrirRegistro('crear');}},

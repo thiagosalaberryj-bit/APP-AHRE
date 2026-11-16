@@ -172,7 +172,7 @@ test('retirar o desactivar personas conserva partes y permite deudas y pagos his
   base.exec("UPDATE personas SET activa = 0 WHERE id = 'lucia'");
   base.exec("UPDATE gastos_compartidos SET descripcion = 'Pizzas anteriores' WHERE id = 'g'");
   assert.throws(() => gasto('nuevo', 'lucia'));
-  assert.throws(() => deuda('manual-inactiva'));
+  deuda('manual-archivada');
   deuda('historica', { participante_gasto_id: 'p' });
   movimiento('m', 'egreso', 1000);
   pago('pago', 'parte', 1000, { participante_gasto_id: 'p', deuda_id: 'historica', movimiento_id: 'm' });

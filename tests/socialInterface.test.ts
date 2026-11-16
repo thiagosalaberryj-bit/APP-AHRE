@@ -613,7 +613,7 @@ for(const decision of ['aceptado','rechazado'] as const)test(`Personas permite r
     obtenerVistaSincronizacion:()=>({...e.obtenerVistaSincronizacion(),estado:'online'}),
     observarSincronizacion:f=>{f({...e.obtenerVistaSincronizacion(),estado:'online'});return()=>{};},
     observarSocialOnline:f=>{observadores.add(f);return()=>{observadores.delete(f);};},
-    responderVinculoOnline:async(id,respuesta)=>{respondidas.push([id,respuesta]);e.base.prepare("UPDATE datos_sociales_online SET datos='[]' WHERE usuario_id=? AND clave='vinculos'").run(datos.usuarioId);for(const f of observadores)f();},
+    responderVinculoOnline:async(id,respuesta,personaId,personaNueva)=>{if(respuesta==='aceptado'&&personaNueva)await e.guardarPersona(personaNueva);respondidas.push([id,respuesta]);e.base.prepare("UPDATE datos_sociales_online SET datos='[]' WHERE usuario_id=? AND clave='vinculos'").run(datos.usuarioId);for(const f of observadores)f();},
   },'claro');
   await vista.abrir(vista.rutas.PERSONAS_SOCIAL,{todas:true});
   assert.ok(vista.texto().includes('Solicitudes de vínculo'));

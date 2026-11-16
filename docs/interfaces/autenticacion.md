@@ -2,13 +2,13 @@
 
 ## Alcance
 
-Registro y primer ingreso consultan SERVER-AHRE y necesitan conexión para autorizar la instalación. SQLite permite ingresos offline posteriores en la instalación previamente autorizada. Al abrir AHRE, Inicio permanece visible hasta que la persona completa el deslizador. Sin sesión, abre Login; con sesión válida, solicita la huella y luego abre el Dashboard.
+Registro y primer ingreso consultan SERVER-AHRE y necesitan conexión para autorizar la instalación. SQLite permite ingresos offline posteriores en la instalación previamente autorizada. Al abrir AHRE, Inicio permanece visible hasta que la persona completa el deslizador. Sin sesión, abre Login; con sesión válida, solicita huella si está configurada y luego abre el Dashboard.
 
 ## Login
 
 `src/screens/LoginScreen.tsx` solicita correo electrónico y contraseña. Antes de consultar SQLite comprueba que ambos estén completos y que el correo tenga un formato válido. El correo se recorta y normaliza a minúsculas. Las credenciales inválidas muestran el mismo mensaje para un usuario inexistente o una contraseña incorrecta. El rechazo marca correo y contraseña junto a sus campos.
 
-El botón «Recordarme» está activo inicialmente. Al activarlo, el identificador de usuario de la sesión se guarda con `expo-secure-store`. Si se desactiva, la sesión se conserva solo mientras la aplicación está abierta. Después de inicializar SQLite, AHRE permanece en Inicio; la sesión se consulta al completar el deslizador. «¿Olvidaste tu contraseña?» permanece sin un flujo asociado; la recuperación remota no forma parte de esta funcionalidad.
+El botón «Recordarme» está activo inicialmente. Al activarlo, el identificador de usuario de la sesión se guarda con `expo-secure-store`. Si se desactiva, la sesión se conserva solo mientras la aplicación está abierta. `authentication/loginMemory.ts` guarda por separado la preferencia y el correo normalizado; Login abre con correo y contraseña vacíos. Cerrar sesión limpia el recordatorio de correo. Después de inicializar SQLite, AHRE permanece en Inicio; la sesión se consulta al completar el deslizador. «¿Olvidaste tu contraseña?» permanece sin un flujo asociado; la recuperación remota no forma parte de esta funcionalidad.
 
 El botón de Login muestra carga durante la verificación, impide pulsaciones repetidas y permite mostrar u ocultar la contraseña sin alterar su contenido. Al autenticar correctamente reemplaza la pila de navegación por el Dashboard, así el botón de regreso no vuelve al formulario.
 
@@ -55,7 +55,7 @@ informativos está documentado en
 | `comprobarSesion()` | Devuelve si hay una sesión válida. |
 | `cerrarSesion()` | Elimina la sesión de memoria y SecureStore. |
 
-La clave de sesión en SecureStore contiene el identificador del usuario; otra clave conserva la preferencia de visibilidad de saldos. La contraseña y su verificador no se almacenan allí. Tras deslizar en Inicio, `obtenerSesionActual()` confirma que el identificador de sesión corresponde a un usuario activo. Si no hay sesión o la referencia no corresponde a un usuario activo, se abre Login sin mostrar biometría; una referencia obsoleta se limpia. Si la sesión es válida, se solicita la huella del dispositivo antes de abrir el Dashboard. Los fallos de acceso a SecureStore o SQLite muestran un aviso y permiten volver a deslizar.
+La clave de sesión en SecureStore contiene el identificador del usuario; otra clave conserva la preferencia de visibilidad de saldos. La contraseña y su verificador no se almacenan allí. Tras deslizar en Inicio, `obtenerSesionActual()` confirma que el identificador de sesión corresponde a un usuario activo. Si no hay sesión o la referencia no corresponde a un usuario activo, se abre Login sin mostrar biometría; una referencia obsoleta se limpia. Si la sesión es válida y el equipo tiene biometría configurada, se solicita la huella antes de abrir el Dashboard. Sin hardware o sin huella configurada, Inicio deriva a Login y exige contraseña antes de continuar. Los fallos de acceso a SecureStore o SQLite muestran un aviso y permiten volver a deslizar.
 
 Perfil permite cerrar la sesión local o sincronizar y desvincular la instalación con conexión.
 
@@ -76,3 +76,12 @@ Perfil permite cerrar la sesión local o sincronizar y desvincular la instalaci�
 Al deslizar en Inicio sin sesión se abre Login, que permite acceder a Registro y regresar antes de entrar a Dashboard. Con sesión válida se solicita huella y se muestra la carga animada antes de Dashboard.
 
 Registro y primer ingreso usan la API remota y requieren conexión. Los ingresos offline posteriores comprueban el verificador local y la autorización de la instalación. Si se cambia el correo offline, Perfil avisa que se use el anterior para ingresar con conexión hasta confirmar el cambio. El ingreso remoto recupera la cuenta local por ID y conserva sus pendientes; no crea otra cuenta por la diferencia de correo. Una identidad remota distinta produce un aviso y no vincula los datos. El correo nuevo funciona remotamente después de sincronizar.
+
+
+## Correcciones de acceso, permisos e invitaciones · 16/11/2026
+
+Sin hardware biométrico o sin huella configurada, Inicio deriva a Login y exige contraseña; nunca abre Dashboard directamente. Login siempre abre con correo vacío. Cerrar sesión o invalidar la referencia guardada limpia también el recordatorio de correo.
+
+Nombre y apellido del registro fuerzan una única línea en el input desde el primer render. Aceptar/rechazar tienen separación explícita. Quitar de una sala muestra los gastos afectados como lista desplazable, con confirmación visible. Una solicitud de una cuenta amiga se acepta directamente con su ficha confirmada; el servidor rechaza cualquier intento de asignarla a otra.
+
+Notificaciones muestra primero Paso 1 para habilitar los avisos y, al concederlo, Paso 2 para configurar horarios precisos, con el mismo contenedor y acceso por flecha. Los horarios precisos reducen retrasos de recordatorios locales, no cambian la entrega del proveedor push. Las push y los recordatorios muestran el título y mensaje del historial, sin texto genérico; se retira el control que ocultaba ese contenido. El campo mostrarDetalles se conserva solo por compatibilidad del contrato.

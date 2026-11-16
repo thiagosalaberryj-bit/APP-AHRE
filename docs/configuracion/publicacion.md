@@ -295,3 +295,8 @@ Envío confirmado a Expo/EAS con autorización explícita del usuario:
 [APK 0.9.2 · build 16](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/c175c59d-1ff5-4a19-b8a4-e21809d71daa).
 Fuentes del commit d5d2e01; EAS confirmó la carga y el fingerprint con
 --non-interactive --no-wait. No se verificó la finalización de la compilación.
+
+
+## APK del flujo de salas · 15/11/2026
+
+Fuentes locales con los cambios de salas, vínculos, avisos, archivo de fichas y Recordarme enviadas a [Expo/EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/5e6398f5-0e13-43cb-95c4-1cf631354d7d), por pedido del usuario. Perfil ocr-comparison, Android APK, versión 0.9.2 y versionCode 16 existentes. EAS confirmó carga y fingerprint con --non-interactive --no-wait. No se esperó la compilación ni se verificó su resultado. El envío incluye cambios sin commit y no despliega SERVER-AHRE ni publica la descarga de la web.

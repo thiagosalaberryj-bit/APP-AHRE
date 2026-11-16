@@ -1,10 +1,10 @@
 import { AvisosEnModal } from '../../contexts/ToastContext';
-import { Modal, Pressable, View, Text } from 'react-native';
+import { Modal, Pressable, View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 
-export default function ModalConfirmacionSocial({ titulo, descripcion, textoConfirmar, peligro = false, alCerrar, alConfirmar, ...aspecto }: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & (import('../../social/types').ConfirmacionSocial & {peligro?:boolean;alCerrar:()=>void;alConfirmar:()=>void})) {
+export default function ModalConfirmacionSocial({ titulo, descripcion, textoConfirmar, elementos, peligro = false, alCerrar, alConfirmar, ...aspecto }: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & (import('../../social/types').ConfirmacionSocial & {elementos?:string[];peligro?:boolean;alCerrar:()=>void;alConfirmar:()=>void})) {
   const { tema, estilosGlobales } = aspecto;
   const estilos = crearEstilosCompartidos(tema);
   return <Modal transparent animationType="fade" visible onRequestClose={alCerrar}><AvisosEnModal>
@@ -15,7 +15,7 @@ export default function ModalConfirmacionSocial({ titulo, descripcion, textoConf
           <Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>{titulo}</Text>
           <Pressable accessibilityRole="button" accessibilityLabel="Cerrar confirmación" onPress={alCerrar} style={estilos.botonCerrar}><Ionicons color={tema.textoSecundario} name="close" size={24} /></Pressable>
         </View>
-        <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.texto}>{descripcion}</Text>
+        <Text style={estilosGlobales.texto}>{descripcion}</Text>{elementos?.length?<ScrollView style={{maxHeight:240}}>{elementos.map((texto,i)=><Text key={i} style={estilosGlobales.texto}>{"• "+texto}</Text>)}</ScrollView>:null}
         <BotonSocial texto={textoConfirmar} peligro={peligro} alPresionar={alConfirmar} {...aspecto} />
       </View>
     </View>

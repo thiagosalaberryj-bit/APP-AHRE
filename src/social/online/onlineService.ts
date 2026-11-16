@@ -120,7 +120,7 @@ async function ejecutarSincronizacion(){
   if(selecciones.length){await confirmarDatosPrivados(usuario.id);for(const fila of selecciones){const pendiente=JSON.parse(fila.datos) as {salaId:string;datos:Record<string,unknown>;error?:string};if(pendiente.error)continue;try{await pedir('/salas/'+pendiente.salaId+'/mis-finanzas',pendiente.datos);await ejecutarTransaccion(c=>c.runAsync('DELETE FROM datos_sociales_online WHERE usuario_id=? AND clave=?',[usuario.id,fila.clave]));}catch(error){if(error instanceof Error&&'estado' in error&&[400,403,409].includes(Number(error.estado))){await guardarDatosOnline(usuario.id,fila.clave,{...pendiente,error:error.message});continue;}throw error;}}}
   while(true){
     const pendiente=await ejecutarLecturaConConexion(c=>c.getFirstAsync<PendienteOnline>('SELECT id,sala_id,datos,error FROM comandos_sociales_locales WHERE usuario_id=? AND error IS NULL AND sala_id NOT IN (SELECT sala_id FROM comandos_sociales_locales WHERE usuario_id=? AND error IS NOT NULL) ORDER BY secuencia LIMIT 1',[usuario.id,usuario.id]));if(!pendiente)break;
-    try{const respuesta=await pedir<{sala:SalaOnline}>('/salas/'+encodeURIComponent(pendiente.sala_id)+'/comandos',JSON.parse(pendiente.datos));await confirmarComandoOnline(usuario.id,pendiente,respuesta.sala);}catch(error){if(error instanceof Error&&'codigo' in error&&error.codigo==='finanzas_pendientes'){await ejecutarTransaccion(c=>c.runAsync('DELETE FROM comandos_sociales_locales WHERE id=? AND usuario_id=?',[pendiente.id,usuario.id]));throw error;}if(error instanceof Error&&'estado' in error&&[400,403,404,409].includes(Number(error.estado))){await ejecutarTransaccion(c=>c.runAsync('UPDATE comandos_sociales_locales SET error=? WHERE id=? AND usuario_id=?',[error.message,pendiente.id,usuario.id]));continue;}throw error;}
+    try{const respuesta=await pedir<{sala:SalaOnline}>('/salas/'+encodeURIComponent(pendiente.sala_id)+'/comandos',JSON.parse(pendiente.datos));await confirmarComandoOnline(usuario.id,pendiente,respuesta.sala);}catch(error){if(error instanceof Error&&'codigo' in error&&['finanzas_pendientes','perfil_incompleto'].includes(String(error.codigo))){await ejecutarTransaccion(c=>c.runAsync('DELETE FROM comandos_sociales_locales WHERE id=? AND usuario_id=?',[pendiente.id,usuario.id]));throw error;}if(error instanceof Error&&'estado' in error&&[400,403,404,409].includes(Number(error.estado))){await ejecutarTransaccion(c=>c.runAsync('UPDATE comandos_sociales_locales SET error=? WHERE id=? AND usuario_id=?',[error.message,pendiente.id,usuario.id]));continue;}throw error;}
   }
   const solicitudes=await ejecutarLecturaConConexion(c=>c.getAllAsync<{clave:string;datos:string}>("SELECT clave,datos FROM datos_sociales_online WHERE usuario_id=? AND clave LIKE 'solicitud-pendiente:%' ORDER BY clave",[usuario.id]));
   for(const fila of solicitudes){
@@ -129,6 +129,7 @@ async function ejecutarSincronizacion(){
     try{await pedir('/salas/'+encodeURIComponent(pendiente.salaId)+'/solicitudes',pendiente.datos);await ejecutarTransaccion(c=>c.runAsync('DELETE FROM datos_sociales_online WHERE usuario_id=? AND clave=?',[usuario.id,fila.clave]));}
     catch(error){if(error instanceof Error&&'estado' in error&&[400,403,404,409].includes(Number(error.estado))){await guardarDatosOnline(usuario.id,fila.clave,{...pendiente,error:error.message});continue;}throw error;}
   }
+  await guardarDatosOnline(usuario.id,'registros-pendientes',(await pedir<{operaciones:OperacionPersonal[]}>('/registros-pendientes')).operaciones.map(o=>({...o,accesoLimitado:true})));
   await guardarDatosOnline(usuario.id,'ingresos',(await pedir<{ingresos?:unknown[]}>('/ingresos')).ingresos||[]);
   const listado=await pedir<{salas:{id:string}[]}>('/salas');
   const permitidas=new Set(listado.salas.map(s=>s.id));
@@ -310,6 +311,8 @@ export async function proponerDeudaOnline(deudaId:string) {
   return resultado;
 }
 
+export async function retirarPropuestaOnline(id:string){await enviarAccionSocial('retirar-propuesta:'+id,'/deudas/'+encodeURIComponent(id)+'/retirar',{});await sincronizarSocialOnline();}
+
 export async function solicitarVinculoOnline(personaId:string,correo:string){
   if(await usuarioDemoActual())return accionDemo('/vinculos/solicitar',{personaId,correo:correo.trim().toLowerCase()});
   const {usuario}=await sesionOnline();await confirmarDatosPrivados(usuario.id);
@@ -320,10 +323,10 @@ export async function solicitarVinculoOnline(personaId:string,correo:string){
   const resultado=await enviarAccionSocial(clave,'/vinculos/solicitar',{personaId,correo:correo.trim().toLowerCase()});
   await sincronizarSocialOnline();return resultado;
 }
-export async function responderVinculoOnline(id:string,decision:'aceptado'|'rechazado',personaId?:string){
-  if(esRecursoDemo(id)||await usuarioDemoActual()){await accionDemo('/vinculos/'+encodeURIComponent(id)+'/responder',{decision,personaId});return;}
-  if(decision==='aceptado'){exigir(personaId,'Elegí o registrá la persona antes de aceptar.');const {usuario}=await sesionOnline();await confirmarDatosPrivados(usuario.id);}
-  await enviarAccionSocial('responder-vinculo:'+id,'/vinculos/'+encodeURIComponent(id)+'/responder',{decision,...(personaId?{personaId}:{})});await sincronizarSocialOnline();
+export async function responderVinculoOnline(id:string,decision:'aceptado'|'rechazado',personaId?:string,personaNueva?:import('../types').DatosPersona){
+  if(esRecursoDemo(id)||await usuarioDemoActual()){await accionDemo('/vinculos/'+encodeURIComponent(id)+'/responder',{decision,personaId,personaNueva});return;}
+  if(decision==='aceptado'){exigir(personaId||personaNueva,'Elegí o registrá la persona antes de aceptar.');const {usuario}=await sesionOnline();await confirmarDatosPrivados(usuario.id);}
+  await enviarAccionSocial('responder-vinculo:'+id,'/vinculos/'+encodeURIComponent(id)+'/responder',{decision,...(personaId?{personaId}:{}),...(personaNueva?{personaNueva}:{})});await sincronizarSocialOnline();
 }
 export async function cancelarVinculoOnline(id:string){
   await enviarAccionSocial('cancelar-vinculo:'+id,'/vinculos/'+encodeURIComponent(id)+'/cancelar',{});await sincronizarSocialOnline();
@@ -360,10 +363,10 @@ export async function solicitarIngresoSala(codigo:string,nombre:string,contrasen
  await sincronizarSocialOnline();return resultado;
 }
 export async function consultarIngresosSala(){return (await solicitarSocial<{ingresos:{id:string;salaId:string;nombre:string;estado:string}[]}>('/ingresos')).ingresos;}
-export async function decidirIngresoSala(id:string,decision:'aceptada'|'rechazada',personaId?:string,recuperar=false){
- if(esRecursoDemo(id)||await usuarioDemoActual()){await accionDemo('/ingresos/'+id+'/decidir',{decision,personaId,recuperar});return;}
+export async function decidirIngresoSala(id:string,decision:'aceptada'|'rechazada',personaId?:string,recuperar=false,personaNueva?:import('../types').DatosPersona){
+ if(esRecursoDemo(id)||await usuarioDemoActual()){await accionDemo('/ingresos/'+id+'/decidir',{decision,personaId,recuperar,personaNueva});return;}
  await confirmarDatosPrivados((await sesionOnline()).usuario.id);
- await enviarAccionSocial('admision:'+id,'/ingresos/'+id+'/decidir',{decision,...(personaId?{personaId}:{}),recuperar});await sincronizarSocialOnline();
+ await enviarAccionSocial('admision:'+id,'/ingresos/'+id+'/decidir',{decision,...(personaId?{personaId}:{}),recuperar,...(personaNueva?{personaNueva}:{})});await sincronizarSocialOnline();
 }
 export async function marcarPartePagada(salaId:string,gastoId:string,personaId:string,pagada:boolean){const actual=await obtenerSalaOnline(salaId);await encolar(salaId,{tipo:'parte_pagada',gastoId,personaId:personaId==='vos'?actual.personaPropiaId:personaId,pagada});void sincronizarSocialOnline().catch(()=>{});}
 export async function informarPartePagada(salaId:string,gastoId:string){
@@ -373,6 +376,7 @@ export async function elegirFinanciacionSala(salaId:string,opcion:OperacionPerso
  if(esRecursoDemo(salaId)||await usuarioDemoActual())return seleccionarFinanzasDemo(salaId,opcion,seleccion,quitar);
  const {usuario}=await obtenerSesionActual();exigir(usuario,'Iniciá sesión.');
  if(seleccion.depositoId){const deposito=await depositosRepositorio.consultarPorId(seleccion.depositoId);exigir(deposito?.usuario_id===usuario.id&&deposito.activo,'Elegí un depósito propio activo.');}
+ if(opcion.accesoLimitado){await confirmarDatosPrivados(usuario.id);await enviarAccionSocial('registro-retirado:'+salaId+':'+opcion.clave,'/salas/'+salaId+'/mis-finanzas',{clave:opcion.clave,huella:opcion.huella,...seleccion,quitar});await sincronizarSocialOnline();return;}
  const clave='finanza-pendiente:'+salaId+':'+opcion.clave;
  await guardarDatosOnline(usuario.id,clave,{salaId,datos:{clave:opcion.clave,huella:opcion.huella,...seleccion,quitar,idOperacion:generarIdentificador()}});
  const actual=await obtenerSalaOnline(salaId);
@@ -385,3 +389,5 @@ export const confirmarPagoConSeleccion=(id:string,seleccion:{depositoId?:string;
 export async function consultarMovimientosSociales(){const {usuario}=await obtenerSesionActual();exigir(usuario,'Iniciá sesión.');return ejecutarLecturaConConexion(c=>c.getAllAsync<{clave:string;movimiento_id:string}>('SELECT clave,movimiento_id FROM incorporaciones_sociales_locales WHERE usuario_id=?',[usuario.id]));}
 
 export async function perdonarDeudaOnline(id:string,pendienteEsperado:number){await enviarAccionSocial('perdonar:'+id,'/deudas/'+id+'/perdonar',{pendienteEsperado});await sincronizarSocialOnline();}
+
+export async function revisarSalidaSala(salaId:string,personaId:string){await encolar(salaId,{tipo:'revisar_salida',personaId});await sincronizarSocialOnline();}

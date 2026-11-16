@@ -460,7 +460,7 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
   for (const accion of ['INSERT', 'UPDATE']) {
     const sufijo = accion.toLowerCase();
     const cambiaPagador = accion === 'INSERT' ? '1' : 'NEW.pagador_id IS NOT OLD.pagador_id';
-    const integranteActivo = accion === 'INSERT' ? 'AND ps.activa = 1 AND p.activa = 1' : '';
+    const integranteActivo = accion === 'INSERT' ? 'AND ps.activa = 1' : '';
     await baseDatos.execAsync(`
       CREATE TRIGGER IF NOT EXISTS trg_salas_cupo_${sufijo}
       BEFORE ${accion} ON salas WHEN NEW.estado = 'abierta'
@@ -472,8 +472,8 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
       BEGIN
         SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM salas WHERE id = NEW.sala_id AND usuario_id = NEW.usuario_id AND estado = 'abierta')
           THEN RAISE(ABORT, 'la sala debe estar abierta') END;
-        SELECT CASE WHEN NEW.activa = 1 AND NOT EXISTS (SELECT 1 FROM personas WHERE id = NEW.persona_id AND usuario_id = NEW.usuario_id AND activa = 1)
-          THEN RAISE(ABORT, 'la persona debe estar activa') END;
+        SELECT CASE WHEN NEW.activa = 1 AND NOT EXISTS (SELECT 1 FROM personas WHERE id = NEW.persona_id AND usuario_id = NEW.usuario_id)
+          THEN RAISE(ABORT, 'la persona debe pertenecer a la cuenta') END;
         SELECT CASE WHEN NEW.activa = 0 AND EXISTS (SELECT 1 FROM personas WHERE id = NEW.persona_id AND es_usuario_actual = 1)
           THEN RAISE(ABORT, 'no se puede quitar al usuario actual') END;
       END;
@@ -485,7 +485,7 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
           THEN RAISE(ABORT, 'la sala debe estar abierta') END;
         SELECT CASE WHEN (${cambiaPagador}) AND NOT EXISTS (
           SELECT 1 FROM personas_sala ps JOIN personas p ON p.id = ps.persona_id
-          WHERE ps.usuario_id = NEW.usuario_id AND ps.sala_id = NEW.sala_id AND ps.persona_id = NEW.pagador_id AND ps.activa = 1 AND p.activa = 1
+          WHERE ps.usuario_id = NEW.usuario_id AND ps.sala_id = NEW.sala_id AND ps.persona_id = NEW.pagador_id AND ps.activa = 1
         ) THEN RAISE(ABORT, 'el pagador debe estar activo en la sala') END;
       END;
 
@@ -627,9 +627,6 @@ async function aplicarEsquemaSocialInicial(baseDatos: Pick<Conexion, 'execAsync'
 
     CREATE TRIGGER IF NOT EXISTS trg_deuda_nueva_pendiente BEFORE INSERT ON deudas
     BEGIN
-      SELECT CASE WHEN NEW.participante_gasto_id IS NULL AND EXISTS (
-        SELECT 1 FROM personas WHERE id IN (NEW.deudor_id, NEW.acreedor_id) AND activa = 0
-      ) THEN RAISE(ABORT, 'la nueva deuda personal requiere personas activas') END;
       SELECT CASE WHEN NEW.participante_gasto_id IS NOT NULL AND COALESCE((
         SELECT SUM(ROUND(monto * 100)) FROM pagos_sociales WHERE participante_gasto_id = NEW.participante_gasto_id AND estado = 'vigente'
       ), 0) >= ROUND(NEW.monto * 100) THEN RAISE(ABORT, 'la parte ya esta cubierta') END;

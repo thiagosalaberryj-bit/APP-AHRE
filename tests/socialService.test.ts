@@ -111,7 +111,8 @@ test('deudas entre terceros quedan en la sala y personas desactivadas siguen en 
   assert.equal(presente(datos.salas[0].gastos[0].partes.find(p => p.personaId === presente(e.tomas).id)).pendienteNumero, 4000);
   await e.registrarPagoDeuda({ deudaId: datos.deudas[0].id, monto: '4000', claveOperacion: 'inactiva-pago' }, { depositoId: e.deposito.id });
   assert.equal(e.saldo(), 96000);
-  await assert.rejects(e.crearDeudaPersonal({ personaId: presente(e.lucia).id, direccion: 'debo', monto: '20', descripcion: 'Nueva' }), /activa/);
+  await e.crearDeudaPersonal({ personaId: presente(e.lucia).id, direccion: 'debo', monto: '20', descripcion: 'Nueva' });
+  assert.equal((await e.cargarSocial()).personas.find(p=>p.id===e.lucia!.id)!.activa,false);
 });
 
 test('reparto estable de centavos y manual incorrecto no deja compras ni partes parciales', async prueba => {

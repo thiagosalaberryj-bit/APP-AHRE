@@ -8,7 +8,7 @@ import crearEstilosModal from '../../styles/social/AddRoomPeopleModalStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[]; guardando?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean})) {
   const {
-    personasActivas: personasSociales
+    personas: personasSociales
   } = useDatosSociales();
   const {
     personasSala,
@@ -37,9 +37,10 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
   const [enfocado, establecerEnfocado] = useState(false);
   const [busqueda, establecerBusqueda] = useState('');
   const [seleccionadas, establecerSeleccionadas] = useState<string[]>(seleccionInicial);
+  const [archivadas,mostrarArchivadas]=useState(false);
   const disponibles = personasSociales.filter(persona => !personasSala.includes(persona.id));
   const consulta = normalizarNombrePersona(busqueda);
-  const personas = disponibles.filter((persona) => normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo}`).includes(consulta));
+  const personas = disponibles.filter((persona) => (persona.activa||archivadas||seleccionadas.includes(persona.id))&&normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona.apodo}`).includes(consulta));
   return <Modal statusBarTranslucent navigationBarTranslucent transparent animationType="fade" visible onRequestClose={()=>!guardando&&alCerrar()}><AvisosEnModal>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
         <Pressable accessibilityRole="button" accessibilityLabel="Cancelar selección de personas" disabled={guardando} onPress={alCerrar} style={estilos.cierreFondo} />
@@ -53,6 +54,7 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
             <Ionicons color={tema.textoSecundario} name="search-outline" size={22} />
             <TextInput accessibilityLabel="Buscar personas para agregar" editable={!guardando} value={busqueda} onChangeText={establecerBusqueda} onFocus={() => establecerEnfocado(true)} onBlur={() => establecerEnfocado(false)} placeholder="Nombre, apellido o apodo" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={estilos.entradaBusqueda} />
           </View>
+          {disponibles.some(p=>!p.activa)?<Pressable accessibilityRole="checkbox" accessibilityLabel="Incluir personas archivadas" accessibilityState={{checked:archivadas}} onPress={()=>mostrarArchivadas(!archivadas)} style={estilos.filaModal}><Ionicons name={archivadas?'checkbox':'square-outline'} size={22} color={tema.foco}/><Text style={estilosGlobales.texto}>Incluir personas archivadas</Text></Pressable>:null}
           <Text accessibilityLiveRegion="polite" style={estilos.contador}>{seleccionadas.length} seleccionadas</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal} contentContainerStyle={estilos.listaPersonas}>
             {personas.length ? personas.map((persona) => <Pressable key={persona.id} accessibilityRole="checkbox" accessibilityLabel={`Seleccionar a ${nombreCompletoPersona(persona)}`} accessibilityState={{

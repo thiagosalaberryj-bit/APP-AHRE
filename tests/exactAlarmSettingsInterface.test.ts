@@ -17,6 +17,7 @@ for(const nombre of ['claro','oscuro'] as const)test('ajustes de alarmas refleja
  const render=()=>nodos(Ajustes({tema:TEMAS[nombre],visible:true}));
  render();await Promise.resolve();let filas=render();assert.ok(filas.some(n=>n.props.children==='Activar horario preciso'));
  filas.find(n=>n.type==='Pressable')!.props.onPress();await Promise.resolve();assert.equal(aperturas,1);assert.equal(estado,'desactivadas','Abrir ajustes no concede permiso');
+ const pasoDos=nodos(Ajustes({tema:TEMAS[nombre],visible:true,aviso:true}));assert.ok(pasoDos.some(n=>n.props.accessibilityLabel==='Paso 2: configurar horarios precisos'));
  permiso='permitidas';retorno!('active');await Promise.resolve();assert.ok(render().some(n=>n.props.children==='Configurar horario preciso'));
  permiso='expo_go';retorno!('active');await Promise.resolve();filas=render();assert.ok(!filas.some(n=>n.type==='Pressable'));assert.ok(filas.some(n=>String(n.props.children).includes('Expo Go conserva')));
  cerrar!();assert.equal(retiradas,1);

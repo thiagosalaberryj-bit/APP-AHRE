@@ -23,7 +23,7 @@ export default function FormularioRegistrarDeuda({
   const social=useDatosSociales();
   const {mostrarAviso}=useContext(ContextoAvisos);
   const {
-    personasActivas: personasSociales,
+    personas: personasSociales,
     obtenerPersona
   } = social;
   const {
@@ -62,7 +62,7 @@ export default function FormularioRegistrarDeuda({
         id: 'debo',
         nombre: 'Le debo'
       }]} elegida={direccion} alElegir={establecerDireccion} {...aspecto} />
-      <SelectorPersonas etiqueta="Persona" personas={personasSociales} seleccionadas={personaId ? [personaId] : []} alCambiar={ids => {establecerPersonaId(ids[0]);cambiarCompartir(false);}} alRegistrar={() => abrirRegistro('persona')} {...aspecto} />
+      <SelectorPersonas ocultarArchivadas etiqueta="Persona" personas={personasSociales} seleccionadas={personaId ? [personaId] : []} alCambiar={ids => {establecerPersonaId(ids[0]);cambiarCompartir(false);}} alRegistrar={() => abrirRegistro('persona')} {...aspecto} />
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{persona ? direccion === 'debo' ? `Vos le debés a ${nombreCompletoPersona(persona)}.` : `${nombreCompletoPersona(persona)} te debe a vos.` : 'Elegí una persona de tu agenda o registrá una nueva.'}</Text>
     </View>
     {errores.persona?<Text style={estilosGlobales.textoError}>{errores.persona}</Text>:null}

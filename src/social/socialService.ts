@@ -8,3 +8,5 @@ export {usuarioDemoActual, simularRespuestaDemo, simularIngresoDemo, simularResp
 export * from './online/onlineService';
 export {observarSocialOnline,leerDatosOnline} from './online/onlineStore';
 export {obtenerVistaSincronizacion,observarSincronizacion} from '../sync/syncService';
+
+export {revisarSalidaSala} from './online/onlineService';

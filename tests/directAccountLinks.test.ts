@@ -27,6 +27,7 @@ test('vincular sincroniza la ficha, normaliza el correo y permite solicitar otra
     if(ruta.endsWith('/social/vinculos'))return Response.json({vinculos:vinculo?[vinculo]:[]});
     if(ruta.endsWith('/social/salas'))return Response.json({salas:[]});
     if(ruta.endsWith('/social/deudas'))return Response.json({deudas:[]});
+    if(ruta.endsWith('/social/registros-pendientes'))return Response.json({operaciones:[]});
     if(ruta.endsWith('/social/operaciones-personales'))return Response.json({operaciones:[]});
     return Response.json({revision,generacion:1,lotes:[],mas:false});
   };

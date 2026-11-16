@@ -23,7 +23,7 @@ for(const tema of ['claro','oscuro'] as const)test(`los ejemplos sociales permit
  e.base.prepare('UPDATE salas_online_locales SET datos=? WHERE sala_id=?').run(JSON.stringify(detalle),sala.id);
  const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:sala.id});
  await vista.pulsar('Sección de sala: Personas');await vista.pulsar('Personas de la sala: Ingresos');
- await vista.pulsar('Revisar ingreso de Lucía · Invitada nueva');await vista.pulsar('Identidad del invitado: Seleccionar persona');
+ await vista.pulsar('Revisar ingreso de Lucía');await vista.pulsar('Identidad del invitado: Seleccionar persona');
  const asignaciones=vista.todos().filter(n=>n.type==='Pressable').map(n=>vista.texto(n));
  assert.ok(asignaciones.some(t=>t.includes('Ana García')));
  assert.ok(!asignaciones.some(t=>t.trim()==='Bruno'||t.trim()==='Carla'));

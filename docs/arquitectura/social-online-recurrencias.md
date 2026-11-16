@@ -92,7 +92,7 @@ se vincula a una cuenta mediante invitación aceptada y confirmación del dueño
 la ficha. También puede solicitarse un vínculo directo desde el perfil usando
 el correo exacto de la cuenta; el envío expresa el consentimiento del dueño
 de la ficha y solo la cuenta destinataria puede aceptarlo desde Personas.
-No se vincula automáticamente ni se fusiona por nombre o correo. Otra ficha ya vinculada a
+No se vincula ni se fusiona por coincidencia de nombre o correo. La admisión de una cuenta confirma el vínculo con el administrador según el flujo vigente detallado al final. Otra ficha ya vinculada a
 esa cuenta impide confirmar un vínculo equivalente; se conservan ambas.
 
 El acceso habitual utiliza un enlace global estable y QR con contraseña y
@@ -273,3 +273,26 @@ independientes. Los pagos posteriores de deudas siguen su propio flujo.
 Las simulaciones requieren `__DEV__`, cuenta `pruebas@ahre.test`, autorización
 local vigente y generación cero. Expo Go y builds de desarrollo pueden usarlas;
 release y cuentas reales no. No sirven como comprobación del transporte real.
+
+## Flujo vigente de admisión y salida
+
+Esta sección precisa el acceso global y reemplaza la aprobación obligatoria para todos los ingresos descrita como antecedente.
+
+| Situación al abrir enlace o QR | Resultado |
+| --- | --- |
+| Cuenta ya integrante activa | Recupera su participación. |
+| Vínculo confirmado con el administrador, sin expulsión anterior | Contraseña correcta y admisión automática. |
+| Cuenta sin ese vínculo o con una participación expulsada | Contraseña correcta y espera de aprobación. |
+| Invitado web sin cuenta | Nombre, apellido y contraseña; espera aprobación. |
+
+El servidor obtiene la identidad autenticada del perfil y no confía en el nombre del cuerpo. Al admitir una cuenta, una transacción registra/reutiliza la ficha privada del administrador y crea/reutiliza la ficha recíproca del solicitante. El administrador completa apodo o elige una ficha existente; la recíproca nueva usa nombre y apellido del administrador y un apodo inicial de dos letras con sufijo si hace falta. No se fusionan personas por coincidencia de nombre. Una cuenta antigua sin apellido debe completarlo en Perfil antes de generar una ficha recíproca nueva.
+
+Aceptar el ingreso confirma el vínculo entre administrador y solicitante. No crea amistad con todos los integrantes. Una ficha archivada conserva su estado y todas sus funciones; su ausencia de la lista principal no impide recibir propuestas o pagos.
+
+Expulsar desactiva la pertenencia y revoca permisos de edición, conservando autoría, pagador, repartos, pagos y obligaciones. Las salidas con gastos requieren revisión explícita del administrador. Las operaciones financieras propias pendientes se consultan por GET `/social/registros-pendientes`; el expulsado puede completarlas por el endpoint existente de mis-finanzas, pero no leer toda la sala ni elegir depósitos ajenos. Esta revisión y todas las asociaciones necesarias bloquean el cierre.
+
+Al cerrar, dos participantes con cuenta comparten un único acuerdo aceptado: se crean/reutilizan sus fichas privadas con relación `relacionado`, sin confirmar amistad. Con una sola cuenta y un invitado, se registra una deuda personal en esa cuenta; entre invitados queda el balance de sala. Una parte pagada no genera nueva deuda. Los movimientos se confirman una vez en el cierre y luego se pagan obligaciones desde la deuda.
+
+Una propuesta personal pendiente puede retirarse por quien la envió. Conserva el original, desaparece de las invitaciones del destinatario y admite un nuevo envío con otra operación. Los reintentos de una operación incierta conservan su identificador.
+
+Publicación coordinada: desplegar primero SERVER-AHRE con la ruta de registros pendientes y la ampliación aditiva `admisiones_sala.apellido`. No hay nuevo protocolo privado ni dependencia. Después distribuir la app; las bases Expo anteriores necesitan recrear el esquema inicial de desarrollo para quitar las restricciones antiguas del archivo de fichas.

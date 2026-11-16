@@ -20,10 +20,13 @@ export interface VistaReinicio {
 interface ReciboReinicio { usuarioId: string; token: string; operacion: string; confirmado: boolean; }
 
 export async function consultarReinicio(): Promise<VistaReinicio> {
-  const { usuario } = await obtenerSesionActual();
-  const remota = usuario && await obtenerSesionRemota(usuario.id);
-  if (!remota) throw new Error('Iniciá sesión con conexión. El reinicio requiere confirmar también el servidor.');
-  return solicitarRemoto('/testing/reset/preview', undefined, remota.token, 30000);
+  const continuar=await pausarParaReinicio();
+  try {
+    const { usuario } = await obtenerSesionActual();
+    const remota = usuario && await obtenerSesionRemota(usuario.id);
+    if (!remota) throw new Error('Iniciá sesión con conexión. El reinicio requiere confirmar también el servidor.');
+    return await solicitarRemoto('/testing/reset/preview', undefined, remota.token, 30000);
+  } finally { continuar(); }
 }
 
 async function limpiarLocal(usuarioId: string) {

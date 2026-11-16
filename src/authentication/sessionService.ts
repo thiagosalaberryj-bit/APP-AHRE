@@ -4,6 +4,7 @@ import { autenticacionRepositorio } from '../database/repositories/authenticatio
 import { ErrorAutenticacion } from './errors';
 import { quitarSesionRemota,URL_SERVIDOR } from '../sync/remote';
 import {consultarAutorizacion,autorizacionVigenteLocal} from '../sync/deviceAuthorization';
+import {guardarRecordatorioIngreso,limpiarCorreoRecordado} from './loginMemory';
 
 const CLAVE_SESION = 'ahre.sesion.usuario_id';
 let usuarioIdEnMemoria: string | null = null;
@@ -11,6 +12,7 @@ let usuarioIdEnMemoria: string | null = null;
 async function limpiarAlmacenamientoSeguro() {
   try {
     await SecureStore.deleteItemAsync(CLAVE_SESION);
+    await limpiarCorreoRecordado();
     return true;
   } catch (_error) {
     return false;
@@ -28,6 +30,7 @@ export async function crearSesion(usuarioId: string, recordar = true) {
   }
 
   try {
+    await guardarRecordatorioIngreso(usuario.correo_electronico,recordar);
     if (recordar) {
       await SecureStore.setItemAsync(CLAVE_SESION, usuario.id);
     } else {
@@ -93,6 +96,7 @@ export async function cerrarSesion() {
   usuarioIdEnMemoria = null;
   try {
     await SecureStore.deleteItemAsync(CLAVE_SESION);
+    await limpiarCorreoRecordado();
     if(anterior)await quitarSesionRemota(anterior);
   } catch (_error) {
     throw new ErrorAutenticacion('sesion_no_disponible');

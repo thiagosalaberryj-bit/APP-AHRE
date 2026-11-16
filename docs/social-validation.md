@@ -65,10 +65,10 @@ Sus enlaces son ficticios, no se conectan con otro cliente ni prueban MySQL o WS
 2. Activa Compartir online, escribe una contraseña de al menos ocho caracteres y crea.
 3. Abre Compartir sala: debe aparecer un enlace global, QR e ícono para copiar.
 4. Copia y comparte varias veces: el enlace y QR deben mantenerse y abrir sin regeneración.
-5. B usa Social → Salas → Unirme a sala. Pega el enlace, escribe su nombre y la contraseña.
+5. B usa Social → Salas → Unirme a sala. Pega el enlace y escribe solo la contraseña; nombre y apellido provienen del perfil.
 6. Como B ya está vinculado y asignado a la sala, recupera su participación sin duplicarse.
 7. C abre el mismo enlace desde el navegador. Una contraseña incorrecta debe mostrar error
-   y permitir corregirla. Con nombre y contraseña correctos, queda esperando aprobación.
+   y permitir corregirla. Sin cuenta, completa nombre, apellido y contraseña y queda esperando aprobación. Con cuenta usa el perfil; un vínculo confirmado con el administrador permite entrar automáticamente si nunca fue expulsado.
 8. Mientras espera, C no ve gastos, participantes, importes ni depósitos.
 9. A abre la pestaña Personas de la sala → Ingresos: debe ver el contador. Toca la solicitud de C,
    elige Seleccionar persona o Nueva persona y confirma Admitir.
@@ -268,3 +268,21 @@ Los contadores del encabezado plegado se bajaron sin cambiar el desplegado.
 Validaciones de esta revisión: TypeScript de app/herramientas correcto; 25 pruebas
 OCR, 54 de filtros/estadísticas/detalle/posición del selector y dos regresiones del
 selector de depósitos aprobadas. No acreditan una prueba visual en el teléfono.
+
+## Validación del flujo acordado de salas
+
+Casos automatizados adicionales: Recordarme conserva correo sin contraseña y funciona sin huella; Inicio conserva la validación biométrica cuando está configurada; decisiones con carga estable en ambos temas; fichas archivadas que admiten nuevas deudas y salas; revisión por expulsión y bloqueo de cierre. El servidor prueba identidad autenticada, admisión atómica con apodo repetido, reciprocidad, reingreso de amigos, expulsión y acceso financiero limitado, cierre entre cuentas sin amistad y retiro/reenvío idempotente de propuestas.
+
+Comprobar manualmente en una APK: teclado y botones Android dentro de los modales, ingreso por enlace/QR con dos cuentas, recepción push y la tarjeta de registros propios después de expulsión. Las pruebas de componentes y la exportación Hermes no sustituyen esa prueba física. Para las restricciones SQLite de archivo, usar una base local de desarrollo recreada. No es necesario borrar la base del servidor.
+
+
+### Resultado automatizado del 15/11/2026
+
+Tipos de app y servidor correctos. App: **572 pruebas aprobadas, cero fallos y cero omisiones**. Servidor coordinado: **115 pruebas aprobadas, cero fallos y cero omisiones**. MySQL 8.4.3 desechable en loopback, puerto 13347, con bases sintéticas por escenario. Las integraciones se habilitaron con `AHRE_MYSQL_TEST=1` y `AHRE_SERVER_SOURCE=C:/Programacion/AHRE/SERVER-AHRE`; no se omitieron por falta de configuración. Exportación Android/Hermes correcta con Expo local, sin instalar dependencias.
+
+El rechazo del reinicio por una confirmación todavía en vuelo se cubre con espera de actividad antes de la vista previa y cinco ejecuciones consecutivas correctas. La limpieza del reinicio contempla autoría y revisiones de salida, sin dejar bloqueada la sala que conserva otro administrador.
+
+Estos resultados validan código local; no acreditan despliegue ni recepción push, teclado o gestos en una APK física. Los cambios permanecen sin commit, push, despliegue ni envío de una nueva compilación a EAS.
+
+
+Correcciones del 16/11: acceso sin huella exige Login y cerrar sesión limpia correo; inputs de identidad de una línea; pasos de permisos secuenciales; aceptación directa de amigos con protección de ficha; invitación al agregar integrantes; push con título/cuerpo del historial. Verificación: suite de app y servidor con MySQL aislado y prueba específica del contenido nativo y del Paso 2. Los commits locales incluyen el trabajo pendiente anterior y estas correcciones, sin desplegar ni generar una nueva APK.

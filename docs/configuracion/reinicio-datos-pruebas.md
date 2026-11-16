@@ -134,3 +134,6 @@ contraseña, confirmación, integridad de Social y recuperación. Verificación 
 ajuste: 6 pruebas locales y 3 integraciones con MySQL aprobadas; backend: 3 casos
 de reinicio aprobados. Tipos de app y backend correctos. El recuento integral
 anterior corresponde al estado previo a esta simplificación.
+
+
+La vista previa espera ahora las operaciones activas de esta instalación antes de calcular su alcance. Esto evita confirmar una vista previa anterior al último ACK de un pago. Las operaciones posteriores de otra cuenta siguen invalidando la huella y requieren revisar la vista previa; se conserva la protección ante cambios reales. La integración de dos cuentas espera la confirmación del otro participante antes de iniciar su reinicio.

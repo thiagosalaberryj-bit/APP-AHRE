@@ -23,7 +23,8 @@ test('el acceso prepara cuenta, depósitos y movimientos con saldos reales y ses
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM gastos_compartidos').get()).n, 4);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM participantes_gasto').get()).n, 13);
   assert.equal(presente(base.prepare('SELECT COUNT(*) AS n FROM deudas').get()).n, 1);
-  assert.equal(almacenamiento.size, 0);
+  assert.equal(almacenamiento.size, 1);
+  assert.deepEqual(JSON.parse(almacenamiento.get('ahre.ingreso.recordatorio')!),{recordar:false,correo:''});
   assert.deepEqual(base.prepare('PRAGMA foreign_key_check').all(), []);
 });
 

@@ -9,7 +9,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { SourceTextModule, SyntheticModule, createContext } from 'node:vm';
 
 type ServiciosPrueba =
-  typeof import('../../src/development/seedDevelopmentData.ts')
+  typeof import('../../src/authentication/loginMemory.ts')
+  & typeof import('../../src/development/seedDevelopmentData.ts')
   & typeof import('../../src/development/developmentData.ts')
   & typeof import('../../src/authentication/authenticationService.ts')
   & typeof import('../../src/authentication/sessionService.ts')
@@ -89,6 +90,7 @@ export async function preparar(prueba: import('node:test').TestContext, desarrol
     export * from './src/authentication/sessionService.ts';
     export * from './src/profile/profileService.ts';
     export * from './src/movements/movementService.ts';
+    export * from './src/authentication/loginMemory.ts';
     export * from './src/deposits/depositService.ts';
     export * from './src/database/repositories/index.ts';
     export * from './src/database/initialization.ts';

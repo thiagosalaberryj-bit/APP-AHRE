@@ -1,3 +1,4 @@
+import RequisitoDeposito from '../components/DepositRequiredState';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
@@ -400,12 +401,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
             showsVerticalScrollIndicator={false}
           >
           <View style={estilos.contenido}>
-            {cargandoDepositos?<ActivityIndicator color={tema.foco} accessibilityLabel="Cargando depósitos"/>:errorDepositos?<View style={estilos.tarjetaEstado}><Pressable accessibilityRole="button" onPress={()=>{void cargarDepositos();}} style={estilosGlobales.botonPrincipal}><Text style={estilosGlobales.textoBotonPrincipal}>Reintentar</Text></Pressable></View>:!tieneDepositos?<View style={estilos.tarjetaEstado}>
-              <Ionicons name="wallet-outline" color={tema.foco} size={42}/>
-              <Text style={estilos.tituloEstado}>Todavía no tenés depósitos.</Text>
-              <Text style={estilos.textoEstado}>Creá un depósito antes de escanear un comprobante.</Text>
-              <Pressable accessibilityRole="button" onPress={()=>navegacion.navigate(RUTAS.DEPOSITO)} style={estilosGlobales.botonPrincipal}><Text style={estilosGlobales.textoBotonPrincipal}>Nuevo depósito</Text></Pressable>
-            </View>:<>
+            {cargandoDepositos?<ActivityIndicator color={tema.foco} accessibilityLabel="Cargando depósitos"/>:errorDepositos?<View style={estilos.tarjetaEstado}><Pressable accessibilityRole="button" onPress={()=>{void cargarDepositos();}} style={estilosGlobales.botonPrincipal}><Text style={estilosGlobales.textoBotonPrincipal}>Reintentar</Text></Pressable></View>:!tieneDepositos?<RequisitoDeposito tema={tema} descripcion="Creá un depósito antes de escanear un comprobante." alCrear={()=>navegacion.navigate(RUTAS.DEPOSITO)}/>:<>
             {estado === 'camara' && !OCR_DISPONIBLE ? (
               <Text accessibilityRole="alert" style={estilosGlobales.textoError}>Para reconocer comprobantes necesitás el APK Android con ML Kit. Expo Go no incluye el motor.</Text>
             ) : null}

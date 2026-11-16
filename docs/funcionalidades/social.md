@@ -55,8 +55,7 @@ tildes y espacios exteriores o repetidos. No se permite repetir apodo dentro de 
 Nombre y apellido pueden coincidir si el apodo es distinto.
 
 Editar conserva el identificador y sus relaciones. Archivar marca activa = 0,
-previa confirmación. No borra salas, partes, pagos o deudas; las obligaciones
-anteriores siguen visibles y pueden saldarse. La ficha inactiva puede abrirse
+previa confirmación. Solo oculta la ficha de la agenda principal: conserva vínculos, avisos, propuestas, pagos y deudas, y permite crear operaciones nuevas. La ficha inactiva puede abrirse
 desde una deuda o una coincidencia del formulario y desarchivarse desde sus opciones. Debajo de la lista activa, Ver personas archivadas abre un modal con búsqueda, acceso a la ficha y acción directa de desarchivar.
 Archivarla desde el perfil vuelve a la agenda, sin dejar el perfil desactivado
 como pantalla actual. Editar datos y reactivar mantienen la vista actual.

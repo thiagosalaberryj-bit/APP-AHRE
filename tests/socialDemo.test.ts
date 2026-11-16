@@ -439,7 +439,7 @@ for(const tema of ['claro','oscuro'] as const)test(`crear, compartir y admitir u
 for(const tema of ['claro','oscuro'] as const)test(`unirse a la sala demo como participante y recibir respuestas mantiene permisos y dinero en ${tema}`,async prueba=>{
   const {e,datos,comprobarRed}=await prepararDemo(prueba),vista=interfazSocial(e,tema);
   await vista.abrir();await vista.pulsar('Salas');await vista.pulsar('Unirme a sala',true);
-  await vista.pulsar('Usar sala demo como participante');await vista.pulsar('Solicitar ingreso');
+  await vista.pulsar('Usar sala demo como participante');await vista.pulsar('Entrar a la sala');
   const destino=presente(vista.destinos.at(-1));assert.equal(destino[0],vista.rutas.SALA_SOCIAL);
   const salaId=(destino[1] as {salaId:string}).salaId,detalle=await e.obtenerSalaOnline(salaId);
   assert.equal(detalle.administrador,false);

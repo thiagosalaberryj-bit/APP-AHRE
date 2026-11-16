@@ -109,10 +109,6 @@ export default function PantallaInicio({ navigation: navegacion }: import('../na
       ]);
 
       if (!hayHardware || !hayHuellaConfigurada) {
-        mostrarAviso?.(
-          'No hay una huella configurada en este dispositivo. Iniciá sesión con tu contraseña.',
-          { tipo: 'informacion' },
-        );
         navegacion.replace(RUTAS.INICIO_SESION);
         return;
       }

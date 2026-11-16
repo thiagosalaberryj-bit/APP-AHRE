@@ -67,7 +67,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
   const n = await notificacionesNativas(), permitida = n ? (await n.getPermissionsAsync()).granted : false;
   const programadasNativas=n?await n.getAllScheduledNotificationsAsync():[];
   const pendientesNativas=new Set(programadasNativas.map(p=>p.identifier));
-  const siguientes = contexto.activa ? planificarRecordatorios(contexto.datos, ajustes).map(aviso => ({ ...aviso, detalles: ajustes.mostrarDetalles,precision })) : [];
+  const siguientes = contexto.activa ? planificarRecordatorios(contexto.datos, ajustes).map(aviso => ({ ...aviso, detalles: true,precision })) : [];
   const mapa = new Map(siguientes.map(f => [f.clave, f]));
   const formatoDia=new Intl.DateTimeFormat('en-CA',{timeZone:ajustes.zona,year:'numeric',month:'2-digit',day:'2-digit'});
   const diasRegistrados=new Set(contexto.datos.registros.map(fecha=>formatoDia.format(new Date(fecha))));
@@ -92,7 +92,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
     const anterior = anteriores.find(f => f.clave === aviso.clave && f.datos === JSON.stringify(aviso));
     if (anterior?.nativo && permitida && pendientesNativas.has(anterior.nativo) && !forzarProgramacion) continue;
     if (anterior?.nativo) await cancelarAviso(anterior.nativo);
-    const nativo = permitida ? await programarAviso(aviso, usuario.id, ajustes.mostrarDetalles) : null;
+    const nativo = permitida ? await programarAviso(aviso, usuario.id, true) : null;
     await ejecutarTransaccion(c => c.runAsync('INSERT INTO programaciones_avisos(usuario_id,clave,fecha,datos,nativo) VALUES(?,?,?,?,?) ON CONFLICT(usuario_id,clave) DO UPDATE SET fecha=excluded.fecha,datos=excluded.datos,nativo=excluded.nativo', [usuario.id, aviso.clave, aviso.fecha, JSON.stringify(aviso), nativo]));
   }
   if (historialCambiado) avisarIntegraciones();

@@ -178,7 +178,7 @@ async function escenario(t:import('node:test').TestContext,compartirSala=true){
   async function cliente(nombre:string){
     let offline=false,perder='';const transporte:typeof fetch=async(...args)=>{if(offline)throw new Error('sin conexión');const respuesta=await fetch(...args);if(perder&&String(args[0]).includes(perder)&&respuesta.ok){perder='';throw new Error('respuesta perdida');}return respuesta;};
     const e=await preparar(t,true,{url,fetch:transporte}),correo=randomUUID()+'@example.test';
-    const usuario=await e.registrarUsuario({nombre,correo,contrasena:'ClaveOnline123!',confirmacion:'ClaveOnline123!'});await e.crearSesion(usuario.id,false);
+    const usuario=await e.registrarUsuario({nombre,apellido:'Prueba',correo,contrasena:'ClaveOnline123!',confirmacion:'ClaveOnline123!'});await e.crearSesion(usuario.id,false);
     const deposito=await e.depositosRepositorio.crear({usuario_id:usuario.id,nombre:'Depósito '+nombre,tipo:'efectivo',saldo_inicial:1000,icono:'cash-outline',fecha_creacion:'2020-01-01T00:00:00.000Z'});
     await e.cargarSocial();await e.sincronizarCuenta(usuario.id);
     const clienteCreado={...e,usuario,correo,deposito,conectar:()=>{offline=false;},desconectar:()=>{offline=true;},perderRespuesta:(ruta:string)=>{perder=ruta;}};clientes.push(clienteCreado);return clienteCreado;
@@ -566,8 +566,8 @@ test('global: contraseña y aprobación protegen fichas vinculadas y admiten var
  let cookie='';
  const web=async(ruta:string,datos?:unknown)=>{const r=await fetch(e.url+'/social'+ruta,{method:datos?'POST':'GET',headers:{Origin:new URL(e.url).origin,...(datos?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{})},...(datos?{body:JSON.stringify(datos)}:{})});const nueva=r.headers.get('set-cookie');if(nueva)cookie=nueva.split(';')[0];return {estado:r.status,datos:await r.json()};};
  const ruta='/accesos/'+acceso.codigo+'/solicitar';
- assert.equal((await web(ruta,{idOperacion:randomUUID(),nombre:'Ana',contrasena:'incorrecta'})).estado,403);
- const entrada={idOperacion:randomUUID(),nombre:'Ana',contrasena:'Sala1234'},pedido=await web(ruta,entrada);assert.equal(pedido.estado,200);assert.equal(pedido.datos.estado,'pendiente');
+ assert.equal((await web(ruta,{idOperacion:randomUUID(),nombre:'Ana',apellido:'Invitada',contrasena:'incorrecta'})).estado,403);
+ const entrada={idOperacion:randomUUID(),nombre:'Ana',apellido:'Invitada',contrasena:'Sala1234'},pedido=await web(ruta,entrada);assert.equal(pedido.estado,200);assert.equal(pedido.datos.estado,'pendiente');
  assert.equal((await web('/salas/'+e.sala.id)).estado,403);
  assert.equal((await web('/ingresos')).datos.ingresos[0].id,pedido.datos.id);
  await assert.rejects(e.juan.decidirIngresoSala(pedido.datos.id,'aceptada',e.persona.id),/otra cuenta/);
@@ -575,11 +575,11 @@ test('global: contraseña y aprobación protegen fichas vinculadas y admiten var
  // solamente para contenido idéntico; un rechazo no consume la operación.
  await e.juan.decidirIngresoSala(pedido.datos.id,'aceptada',ana.id);
  const admitida=await web('/salas/'+e.sala.id);assert.equal(admitida.estado,200);assert.equal(admitida.datos.personaPropiaId,ana.id);assert.equal(admitida.datos.misFinanzas.length,0);assert.equal(admitida.datos.admisiones.length,0);
- cookie='';const segundo=await web(ruta,{idOperacion:randomUUID(),nombre:'Otra invitada',contrasena:'Sala1234'});assert.equal(segundo.estado,200);assert.notEqual(segundo.datos.id,pedido.datos.id);
+ cookie='';const segundo=await web(ruta,{idOperacion:randomUUID(),nombre:'Otra',apellido:'Invitada',contrasena:'Sala1234'});assert.equal(segundo.estado,200);assert.notEqual(segundo.datos.id,pedido.datos.id);
  await e.juan.solicitarSocial('/ingresos/'+segundo.datos.id+'/decidir',{idOperacion:randomUUID(),decision:'rechazada'});
  assert.equal((await web('/ingresos')).datos.ingresos[0].estado,'rechazada');
  await e.juan.configurarAccesoSala(e.sala.id,'',{renovar:true});assert.notEqual((await e.juan.obtenerSalaOnline(e.sala.id)).acceso!.codigo,acceso.codigo);
- assert.equal((await web(ruta,{idOperacion:randomUUID(),nombre:'No entra',contrasena:'Sala1234'})).estado,403);
+ assert.equal((await web(ruta,{idOperacion:randomUUID(),nombre:'No',apellido:'Entra',contrasena:'Sala1234'})).estado,403);
 });
 
 test('finanzas de sala: elegir depósito no afecta saldo y el cierre incorpora la compra una sola vez',{skip:!disponible},async t=>{
@@ -671,6 +671,7 @@ test('reinicio online retira deudas y pagos contabilizados conservando movimient
  await e.juan.sincronizarCuenta(e.juan.usuario.id);await e.sofi.sincronizarCuenta(e.sofi.usuario.id);
  const saldo=(await e.juan.depositosRepositorio.consultarPorId(e.juan.deposito.id))!.saldo_actual;
  const movimientos=e.juan.base.prepare('SELECT id,monto FROM movimientos ORDER BY id').all();assert.ok(movimientos.length>=2);
+ await e.juan.sincronizarSocialOnline();
  await e.sofi.reiniciarDatos(await e.sofi.consultarReinicio(),e.sofi.correo,'ClaveOnline123!','BORRAR MIS DATOS');
  await e.juan.sincronizarCuenta(e.juan.usuario.id);
  assert.equal(e.juan.obtenerVistaSincronizacion().estado,'online',e.juan.obtenerVistaSincronizacion().detalle);

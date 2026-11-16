@@ -47,12 +47,12 @@ export default function DetallePersona(propiedades: import('../../social/types')
           <View style={estilos.identidad}><Text accessibilityLabel={nombreCompletoPersona(persona)} style={estilos.nombre}>{nombreCompletoPersona(persona)}</Text><View style={estilos.filaApodoCuenta}>{persona.apodo ? <Text accessibilityLabel={persona.apodo} numberOfLines={1} ellipsizeMode="tail" style={[estilos.secundario,estilos.apodoCompacto]}>{persona.apodo}</Text> : null}<View style={estilos.estadoCuenta}><Ionicons name={vinculo?.estado==='confirmado'?'link-outline':vinculo?.estado==='solicitado'||vinculo?.estado==='pendiente'&&vinculo.cuenta_id?'time-outline':'person-outline'} size={15} color={vinculo?.estado==='confirmado'?tema.foco:tema.textoSecundario}/><Text accessibilityLiveRegion="polite" numberOfLines={1} style={estilos.textoEstadoCuenta}>{estadoCuenta}</Text></View></View></View>
           <OpcionesPersona persona={persona} vinculo={vinculo} sinConexion={sinConexion} alEditar={()=>establecerEditando(true)} {...aspecto}/>
         </View>
-        {!persona.activa ? <Text style={estilos.secundario}>Persona inactiva · Su historial se conserva.</Text> : null}
+        {!persona.activa ? <Text style={estilos.secundario}>Persona archivada · Conserva todas sus funciones.</Text> : null}
         <View style={estilos.cifras}>
           <ResumenImporteSocial etiqueta="Te debe" valor={persona.porCobrar||formatearMontoSocial(0)} icono="arrow-up-outline" color={tema.foco} estiloValor={estilosGlobales.monto} {...aspecto}/>
           <ResumenImporteSocial etiqueta="Le debés" valor={persona.porPagar||formatearMontoSocial(0)} icono="arrow-down-outline" color={tema.error} estiloValor={estilosGlobales.monto} {...aspecto}/>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Registrar deuda" disabled={!persona.activa} onPress={() => abrirRegistro('deuda', { personaId: persona.id })} style={[estilos.registrar, !persona.activa && estilos.deshabilitado]}><Text style={estilos.textoRegistrar}>Registrar deuda</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Registrar deuda" onPress={() => abrirRegistro('deuda', { personaId: persona.id })} style={estilos.registrar}><Text style={estilos.textoRegistrar}>Registrar deuda</Text></Pressable>
       </View>
       {[
         {id:'me_deben',titulo:'Lo que te debe',icono:'arrow-up-outline' as const,color:tema.exito},

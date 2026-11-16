@@ -83,12 +83,12 @@ export default function PantallaRegistro({ navigation: navegacion }: import('../
           limiteCaracteres={80}
           alCambiarTexto={cambiarCampo('nombre', establecerNombre)}
           onSubmitEditing={() => referenciaApellido.current?.focus()}
-          placeholder="Ingresá tu nombre"
+          multiline={false} numberOfLines={1} placeholder="Ingresá tu nombre"
           returnKeyType="next"
           textContentType="name"
           valor={nombre}
           tema={tema}
-        /></View><View style={estilosAutenticacion.columnaIdentidad}><CampoAutenticacion ref={referenciaApellido} estilosAutenticacion={estilosAutenticacion} estilosGlobales={estilosGlobales} tema={tema} etiqueta="Apellido" valor={apellido} alCambiarTexto={cambiarCampo('apellido',establecerApellido)} error={errores.apellido} lineasError={1} placeholder="Ingresá tu apellido" icono="person-outline" limiteCaracteres={80} autoCapitalize="words" autoComplete="family-name" textContentType="familyName" deshabilitado={cargando} returnKeyType="next" onSubmitEditing={()=>referenciaCorreo.current?.focus()}/></View></View>
+        /></View><View style={estilosAutenticacion.columnaIdentidad}><CampoAutenticacion ref={referenciaApellido} estilosAutenticacion={estilosAutenticacion} estilosGlobales={estilosGlobales} tema={tema} etiqueta="Apellido" valor={apellido} alCambiarTexto={cambiarCampo('apellido',establecerApellido)} error={errores.apellido} lineasError={1} multiline={false} numberOfLines={1} placeholder="Ingresá tu apellido" icono="person-outline" limiteCaracteres={80} autoCapitalize="words" autoComplete="family-name" textContentType="familyName" deshabilitado={cargando} returnKeyType="next" onSubmitEditing={()=>referenciaCorreo.current?.focus()}/></View></View>
 
         <CampoAutenticacion
           ref={referenciaCorreo}

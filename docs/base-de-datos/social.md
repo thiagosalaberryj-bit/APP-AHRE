@@ -65,7 +65,7 @@ validarlos contra los catálogos de AHRE.
 
 La pertenencia sala/persona es única y se reactiva sobre la misma fila. Una baja
 requiere `activa = 0` y `fecha_baja`; una pertenencia activa no tiene fecha de baja.
-Vos no puede retirarse. Agregar exige persona activa y sala abierta; después del
+Vos no puede retirarse. Agregar exige persona propia y sala abierta; después del
 cierre no se cambia el listado. Ninguna de estas tablas admite borrado físico.
 El servicio incluye a Vos al crear cada sala; la base no lo inserta sola.
 
@@ -118,7 +118,7 @@ Se conserva la comprobación de versión. No se modifica un ítem de sala cerrad
 
 La deuda de sala debe coincidir con persona, pagador e importe original de su
 participación. Una parte completamente pagada no puede originar una nueva deuda.
-La deuda manual requiere personas activas al crearla; las deudas de sala y los
+La deuda manual admite fichas propias archivadas al crearla; las deudas de sala y los
 pagos previos conservan referencias a personas retiradas o desactivadas.
 
 No se guardan `tipo` ni `persona_id` redundantes: la dirección se deriva de los
@@ -266,3 +266,9 @@ La instantánea local de publicación contiene también las financiaciones de lo
 gastos vigentes. El servidor las confirma con la sala en una transacción; la
 cuenta conserva el mismo envío cuando se pierde la respuesta. La corrección de
 esta revisión no agrega columnas SQLite ni requiere recrear la base local.
+
+## Archivo de fichas y esquema de desarrollo · noviembre de 2026
+
+`personas.activa` controla la visibilidad de la agenda, no la autorización para operar. Los triggers iniciales de pertenencia, pagador, partes y deuda personal ya no exigen que esa ficha esté visible. Sí exigen propiedad, pertenencia activa a la sala cuando corresponde y las restantes reglas financieras.
+
+Se modifica únicamente `001_initialSchema.ts`, manteniendo la versión y el mecanismo existentes. Las bases Expo de desarrollo creadas con los triggers anteriores necesitan recrearse mediante una base de pruebas limpia. No se incorpora una migración de transición ni se descartan datos remotos. Los datos nuevos de autoría, salidas y registros propios se guardan dentro de los cachés JSON online existentes.
