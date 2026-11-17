@@ -1,3 +1,4 @@
+import AvisoFormulario from '../components/FormNotice';
 import {conRespuestaVisual} from '../utils/pressFeedback';
 import BotonAccion from '../components/ActionButton';
 import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
@@ -428,7 +429,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                     </>
                   )}
                 </View>
-                <Text style={estilos.instrucciones}>Usá buena luz y evitá sombras o arrugas.</Text>
+                <AvisoFormulario tema={tema}>Usá buena luz y evitá sombras o arrugas.</AvisoFormulario>
                 <View style={estilos.filaBotones}>
                   <View style={estilos.botonMitad}>
                     <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={camaraActiva?'Tomar foto del comprobante':'Escanear'} disabled={camaraActiva&&!camaraLista} onPress={conRespuestaVisual(camaraActiva?capturarComprobante:activarCamara)} style={[estilos.botonCaptura,camaraActiva&&!camaraLista&&estilos.botonDeshabilitado]}>
@@ -448,9 +449,9 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
 
             {estado === 'recorte' ? (
               <>
-                <Text style={estilos.instruccionesRecorte}>
+                <AvisoFormulario tema={tema} titulo="Qué incluir">
                   Incluí el comercio, los productos, la fecha y el total dentro del recorte.
-                </Text>
+                </AvisoFormulario>
                 <View
                   onLayout={({ nativeEvent }) => establecerTamanoVisorRecorte({
                     width: nativeEvent.layout.width,

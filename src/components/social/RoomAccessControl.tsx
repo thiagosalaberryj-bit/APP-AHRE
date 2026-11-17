@@ -1,3 +1,4 @@
+import AvisoFormulario from '../FormNotice';
 import {useAccionConfirmada} from '../../hooks/useConfirmedAction';
 import { useContext } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
@@ -38,9 +39,9 @@ export default function AccesoSala({sala,...aspecto}:AspectoSocial&{sala:SalaVis
     {abierto?<Modal statusBarTranslucent navigationBarTranslucent transparent animationType="fade" visible onRequestClose={()=>{if(!bloqueo.current)abrir(false);}}>
     {detalle?.acceso&&!configurando?<Compartir sinVentana {...aspecto} global enlace={sala.demo?'https://demo.ahre.test/invitacion/#sala='+detalle.acceso.codigo:enlaceGlobalSala(detalle.acceso.codigo)} nombre={sala.nombre} alConfigurar={()=>configurar(true)} alCerrar={()=>abrir(false)}/>:<Dialogo sinVentana {...aspecto} titulo="Acceso a la sala" descripcion={sala.demo?'Simulación local: no usa el servidor':'Un enlace y QR para toda la sala'} icono="lock-closed-outline" ocupado={ocupado} alCerrar={()=>{abrir(false);configurar(false);}}>
       <Campo secreto etiqueta={detalle?.acceso?'Nueva contraseña (opcional)':'Contraseña de la sala'} valor={clave} error={errorClave} alCambiar={cambiarClave} limite={128} {...aspecto}/>
-      <Text style={aspecto.estilosGlobales.textoAyuda}>Usá al menos 8 caracteres. Cada persona necesita esta contraseña y tu aprobación para entrar.</Text>
+      <AvisoFormulario tema={aspecto.tema}>Usá al menos 8 caracteres. Cada persona necesita esta contraseña y tu aprobación para entrar.</AvisoFormulario>
 
-      {detalle?.acceso?<View style={estilos.filaCampos}><View style={estilos.textoFlexible}><Text style={aspecto.estilosGlobales.etiqueta}>Permitir ingresos</Text><Text style={aspecto.estilosGlobales.textoAyuda}>{detalle.acceso.habilitado?'Se pueden solicitar nuevos ingresos':'Los nuevos ingresos están pausados'}</Text></View><View collapsable={false} pointerEvents={ocupado?'none':'auto'}><Conmutador tema={aspecto.tema} valor={!!detalle.acceso.habilitado} etiquetaAccesibilidad="Permitir ingresos" alCambiar={habilitado=>{if(!ocupado)void ejecutar({habilitado});}}/></View></View>:null}
+      {detalle?.acceso?<View style={estilos.filaCampos}><View style={estilos.textoFlexible}><Text style={aspecto.estilosGlobales.etiqueta}>Permitir ingresos</Text><AvisoFormulario tema={aspecto.tema}>{detalle.acceso.habilitado?'Se pueden solicitar nuevos ingresos':'Los nuevos ingresos están pausados'}</AvisoFormulario></View><View collapsable={false} pointerEvents={ocupado?'none':'auto'}><Conmutador tema={aspecto.tema} valor={!!detalle.acceso.habilitado} etiquetaAccesibilidad="Permitir ingresos" alCambiar={habilitado=>{if(!ocupado)void ejecutar({habilitado});}}/></View></View>:null}
       <View style={estilos.filaCampos}><View style={estilos.columnaCampo}><BotonSocial cargando={respuesta.accionActiva==='guardar'} completado={respuesta.completado&&respuesta.accionActiva==='guardar'} texto="Guardar" deshabilitado={ocupado} alPresionar={()=>ejecutar()} {...aspecto}/></View>
       {detalle?.acceso?<View style={estilos.columnaCampo}><BotonSocial cargando={respuesta.accionActiva==='renovar'} completado={respuesta.completado&&respuesta.accionActiva==='renovar'} secundario texto="Renovar enlace" deshabilitado={ocupado} alPresionar={()=>ejecutar({renovar:true})} {...aspecto}/></View>:null}</View>
     </Dialogo>}

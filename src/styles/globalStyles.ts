@@ -234,6 +234,10 @@ function construirEstilosGlobales(tema: Tema) {
       borderColor: tema.borde,
       color: tema.deshabilitado,
     },
+    avisoFormulario: {flexDirection:'row',alignItems:'flex-start',gap:ESPACIADO.pequeno,paddingVertical:ESPACIADO.minimo},
+    avisoFormularioIcono: {marginTop:1},
+    avisoFormularioTexto: {flex:1,color:tema.textoPrincipal,fontFamily:TIPOGRAFIA.familias.principal,fontSize:14,lineHeight:21},
+    avisoFormularioTitulo: {fontWeight:TIPOGRAFIA.pesos.seminegrita},
     textoAyuda: {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,

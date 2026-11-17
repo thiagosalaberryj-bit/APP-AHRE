@@ -58,16 +58,16 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
-Revisión de interfaz del 16/11/2026 en `codex/modo-oscuro-neutro`: temas y
-controles compartidos, puntos animados y confirmaciones uniformes. Guardar
-muestra «Procesando» durante al menos 2 segundos y «Listo» durante otro segundo;
-los modales de Social conservan su ventana hasta terminar. Los recorridos de
-demo respetan la misma secuencia y los errores permiten reintentar.
+Revisión del 17/11/2026: ayudas de formularios con icono de información,
+confirmación OCR organizada y recorridos de Social con continuidad de modales.
+Incluye recordatorios del administrador para cuentas con gastos sin enlazar;
+el servidor recalcula los destinatarios y la demo solo simula el resultado.
 
-Tipos y exportación Android/Hermes correctos. Se comprobaron los 611 casos de
-la suite: 49 integraciones MySQL se omitieron; las dos expectativas antiguas de
-botones se actualizaron y pasaron al repetirlas. El detalle de la ejecución
-completa y la repetición está en el registro de validación.
+Tipos correctos; 566 pruebas aprobadas y 49 integraciones MySQL omitidas.
+Se verificó el bundle Android en Metro. El usuario confirmó los recorridos de
+Social y el recordatorio; las ayudas nuevas requieren revisión visual. La
+incidencia SQLite al preparar datos de prueba está registrada para diagnóstico.
+Ver [estado y validación](docs/estado-y-validacion.md).
 
 La preparación de APK interna
 mantiene la versión 0.9.2 y usa Android versionCode 17. El envío a EAS, la

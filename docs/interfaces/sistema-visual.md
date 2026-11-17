@@ -584,3 +584,20 @@ Confirmación manual del 17/11/2026: el usuario comprobó los recorridos y el
 recordatorio tras actualizar el servidor e indicó que todo funciona. Esta
 confirmación complementa las pruebas automatizadas; no agrega una ejecución
 de las integraciones MySQL omitidas.
+
+
+### Ayudas de formularios · 17/11/2026
+
+FormNotice.tsx presenta las explicaciones con information-circle-outline y
+texto de 14 puntos, interlineado 21 y color principal del tema. No usa relleno,
+borde ni tarjeta: se distingue por el icono, el espacio y un título opcional.
+Los tokens de presentación viven en globalStyles.ts y sirven en claro y oscuro.
+Se utiliza en movimientos, depósitos, formularios de Social, ajustes de avisos
+y revisión OCR. Los errores conservan su presentación propia, y los valores,
+contadores y etiquetas de campos no se convierten en avisos.
+
+En Ingreso/Egreso la explicación de movimientos anteriores al depósito se
+identifica como Cómo afecta al saldo. En OCR se separan revisión, comercio
+sugerido, total a completar, descripción, fechas sugeridas y efecto sobre el
+saldo. La explicación del comercio se despliega bajo demanda. No cambian las
+reglas de interpretación del comprobante ni los datos que se guardan.

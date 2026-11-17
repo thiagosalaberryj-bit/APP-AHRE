@@ -1,3 +1,4 @@
+import AvisoFormulario from '../components/FormNotice';
 import {useFinalizacionAccion} from '../hooks/useActionCompletion';
 import {esperarDibujo} from '../utils/renderFrame';
 import {conRespuestaVisual} from '../utils/pressFeedback';
@@ -973,9 +974,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           titulo="Apariencia"
         >
           <ListaOpcionesPerfil tema={tema} estilos={estilos} opciones={APARIENCIAS} valor={apariencia} alSeleccionar={seleccionarApariencia} />
-          <Text style={[estilosGlobales.textoAyuda, estilos.textoAyudaModal]}>
-            La selección se guarda en este dispositivo y se aplica en toda AHRE.
-          </Text>
+          <AvisoFormulario tema={tema}>La selección se guarda en este dispositivo y se aplica en toda AHRE.</AvisoFormulario>
         </ModalPerfil>
 
         <ModalPerfil

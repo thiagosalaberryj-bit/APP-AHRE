@@ -1,3 +1,4 @@
+import AvisoFormulario from './FormNotice';
 import {conRespuestaVisual} from '../utils/pressFeedback';
 import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
@@ -330,11 +331,11 @@ export default function FormularioDeposito({
         ) : null}
       </View>
       {!esEdicion && errorDescripcion ? <Text style={estilosGlobales.textoError}>{errorDescripcion}</Text> : null}
-      <Text style={estilosGlobales.textoAyuda}>
+      <AvisoFormulario tema={tema}>
         {esEdicion
           ? 'Si la dejás vacía, se generará automáticamente con el nombre y el tipo.'
           : 'Si la dejás vacía, se genera automáticamente con el nombre y el tipo.'}
-      </Text>
+      </AvisoFormulario>
       {esEdicion && errorDescripcion ? <Text style={estilosGlobales.textoError}>{errorDescripcion}</Text> : null}
     </View>
 

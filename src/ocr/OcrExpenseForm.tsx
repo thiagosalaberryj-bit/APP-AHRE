@@ -1,3 +1,4 @@
+import AvisoFormulario from '../components/FormNotice';
 import {useFinalizacionAccion} from '../hooks/useActionCompletion';
 import {conRespuestaVisual} from '../utils/pressFeedback';
 import {crearEstilosGlobales} from '../styles/globalStyles';
@@ -35,6 +36,7 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
   const [categorias, establecerCategorias] = useState<import('../constants/movimientos').Categoria[]>([]);
   const [cargando, establecerCargando] = useState(true);
   const [errorCarga, establecerErrorCarga] = useErrorNotificado('');
+  const [mostrarCriterio,cambiarMostrarCriterio]=useState(false);
   const [guardando, establecerGuardando] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [mostrarTexto, establecerMostrarTexto] = useState(false);
@@ -99,13 +101,18 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
   return (
     <>
       <Text style={estilosGlobales.encabezadoSeccion}>Revisá el egreso</Text>
-      <Text style={estilosGlobales.textoSecundario}>Completá o corregí los datos antes de confirmar. La lectura puede tener errores.</Text>
-      {resultado.comercio ? <Text selectable style={estilosGlobales.texto}>Comercio: {resultado.comercio}</Text> : null}
+      <AvisoFormulario tema={tema} titulo="Antes de guardar">La lectura puede tener errores. Revisá el total, la descripción y la fecha.</AvisoFormulario>
+      <View>
+        <Text style={estilosGlobales.etiqueta}>Comercio sugerido</Text>
+        <Text selectable style={estilosGlobales.texto}>{resultado.comercio||'No identificado'}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Cómo se eligió el comercio" accessibilityState={{expanded:mostrarCriterio}} onPress={()=>cambiarMostrarCriterio(v=>!v)} style={estilos.encabezadoTexto}><Text style={[estilosGlobales.textoBotonTexto,{flex:1}]}>Cómo se eligió el comercio</Text><Ionicons name={mostrarCriterio?'chevron-up':'chevron-down'} size={20} color={tema.foco}/></Pressable>
+        {mostrarCriterio?<AvisoFormulario tema={tema} titulo="Es una sugerencia">Se toma la primera línea candidata entre las cinco primeras: debe contener letras y no parecer un importe, una fecha o un dato administrativo. También se evita tomar una línea seguida solo de un importe. Puede confundirse con un producto. Corregí el nombre en Descripción si hace falta.</AvisoFormulario>:null}
+      </View>
       <View pointerEvents={guardando ? 'none' : 'auto'} style={estilos.formularioResultado}>
         <EntradaMonto tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosMovimiento}
           etiqueta="Total del comprobante" valor={String(datos.monto)} alCambiarTexto={(valor) => cambiarCampo('monto', valor)}
           alLimpiar={() => cambiarCampo('monto', '')} error={intentoGuardar ? errores.monto : null} />
-        {resultado.monto == null ? <Text style={estilosGlobales.textoAyuda}>No se identificó un total único. Ingresá el monto que figura en el comprobante.</Text> : null}
+        {resultado.monto == null ? <AvisoFormulario tema={tema} titulo="Total a completar">No se identificó un total único. Ingresá el monto que figura en el comprobante.</AvisoFormulario> : null}
         <View style={estilosMovimiento.grupo}>
           <View style={estilos.filaEtiqueta}>
             <Text style={estilosGlobales.etiqueta}>Descripción *</Text>
@@ -118,10 +125,10 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
               intentoGuardar && errores.descripcion ? estilosGlobales.campoError : null],estilosEntrada.campo,focoEntrada==="0"&&estilosEntrada.campoEnfocado]}
             textAlignVertical="top" value={datos.descripcion} />
           {intentoGuardar && errores.descripcion ? <Text style={estilosGlobales.textoError}>{errores.descripcion}</Text> : null}
-          <Text style={estilosGlobales.textoAyuda}>
+          <AvisoFormulario tema={tema}>
             {datos.descripcion.length > 500 ? 'Resumí la descripción a 500 caracteres para guardar; el texto reconocido sigue disponible abajo.'
               : 'Conservamos el comercio y el detalle detectado. Podés agregar los productos que falten.'}
-          </Text>
+          </AvisoFormulario>
         </View>
         {cargando ? <PuntosCarga color={tema.foco} accessibilityLabel="Cargando depósitos y categorías" /> : null}
         {errorCarga ? (
@@ -145,13 +152,13 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
           <SelectorFecha tema={tema} estilosMovimiento={estilosMovimiento} valor={new Date(datos.fecha)} alSeleccionar={(valor) => cambiarCampo('fecha', valor)} />
           <SelectorHora tema={tema} estilosMovimiento={estilosMovimiento} valor={datos.hora} alSeleccionar={(valor) => cambiarCampo('hora', valor)} />
         </View>
-        {!resultado.fecha ? <Text style={estilosGlobales.textoAyuda}>No se detectó una fecha única; se propone hoy. Revisala antes de guardar.</Text> : null}
-        {!resultado.hora ? <Text style={estilosGlobales.textoAyuda}>No se detectó la hora; se propone la actual.</Text> : null}
+        {!resultado.fecha ? <AvisoFormulario tema={tema} titulo="Fecha sugerida">No se detectó una fecha única; se propone hoy. Revisala antes de guardar.</AvisoFormulario> : null}
+        {!resultado.hora ? <AvisoFormulario tema={tema} titulo="Hora sugerida">No se detectó la hora; se propone la actual.</AvisoFormulario> : null}
         {intentoGuardar && errores.fecha_hora ? <Text style={estilosGlobales.textoError}>{errores.fecha_hora}</Text> : null}
-        <Text style={estilosGlobales.textoAyuda}>Los egresos anteriores a la creación del depósito quedan en el historial sin cambiar su saldo actual.</Text>
+        <AvisoFormulario tema={tema} titulo="Cómo afecta al saldo">Los egresos anteriores a la creación del depósito quedan en el historial sin cambiar su saldo actual.</AvisoFormulario>
       </View>
       <Image accessibilityLabel="Foto temporal del comprobante" resizeMode="contain" source={{ uri: imagen!.uri }} style={estilos.imagenComprobante} />
-      <Text style={estilosGlobales.textoAyuda}>La foto se usa para revisar y no se guarda junto al egreso.</Text>
+      <AvisoFormulario tema={tema}>La foto se usa para revisar y no se guarda junto al egreso.</AvisoFormulario>
       <View style={estilos.desplegableTexto}>
         <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Texto reconocido" accessibilityState={{expanded:mostrarTexto,disabled:guardando}} onPress={conRespuestaVisual(()=>establecerMostrarTexto(!mostrarTexto))} disabled={guardando} style={estilos.encabezadoTexto}>
           <Ionicons name="document-text-outline" size={22} color={tema.textoSecundario}/>

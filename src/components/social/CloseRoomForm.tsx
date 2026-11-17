@@ -1,3 +1,4 @@
+import AvisoFormulario from '../FormNotice';
 import {pendientesCierreLocales} from '../../social/roomClosing';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { obtenerVistaSincronizacion, cerrarSala } from '../../social/socialService';
@@ -38,7 +39,7 @@ export default function FormularioCerrarSala({
     parte
   })));
   return <>
-    {!verificado?<Text style={estilosGlobales.textoAyuda}>Esperá a verificar los registros de todos los integrantes. Actualizá la sala si no se completa.</Text>:null}
+    {!verificado?<AvisoFormulario tema={aspecto.tema}>Esperá a verificar los registros de todos los integrantes. Actualizá la sala si no se completa.</AvisoFormulario>:null}
     <View style={[estilos.resumenPrincipal, estilos.perfilCompacto]}>
       <View style={estilos.filaCampos}>
         <View style={[estilos.iconoSala, {

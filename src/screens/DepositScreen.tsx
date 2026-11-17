@@ -1,3 +1,4 @@
+import AvisoFormulario from '../components/FormNotice';
 import {useFinalizacionAccion} from '../hooks/useActionCompletion';
 import {iniciarOperacionFinanciera} from '../social/financialOperation';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
@@ -136,9 +137,9 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
                 ayudaAccesibilidad="Ingresá el monto en pesos."
                 estiloContenedor={estilos.filaSaldo} estiloEntrada={estilos.entradaSaldo}
                 estiloSimbolo={estilos.simboloSaldo} estiloLimpiar={estilos.accionLimpiarSaldo}/>
-              <Text style={estilosGlobales.textoAyuda}>
+              <AvisoFormulario tema={tema}>
                 Para ingresar decimales, usá coma.
-              </Text>
+              </AvisoFormulario>
             </View>
 
             <FormularioDeposito

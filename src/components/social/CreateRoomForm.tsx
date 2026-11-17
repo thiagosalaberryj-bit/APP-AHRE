@@ -1,3 +1,4 @@
+import AvisoFormulario from '../FormNotice';
 import {conRespuestaVisual} from '../../utils/pressFeedback';
 import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { useDatosSociales } from '../../social/SocialDataContext';
@@ -58,12 +59,12 @@ export default function FormularioCrearSala(propiedades: import('../../social/ty
           {seleccionandoPersonas ? <ModalAgregarPersonasSala personasSala={[]} seleccionInicial={seleccionadas} titulo="Participantes" textoConfirmar="Listo" permitirVacia
             alAgregar={ids => { establecerSeleccionadas(ids); establecerSeleccionandoPersonas(false); }} alCerrar={() => establecerSeleccionandoPersonas(false)}
             alCrear={() => { establecerSeleccionandoPersonas(false); registrarPersona(); }} {...aspecto} /> : null}
-          <Text style={estilosGlobales.textoAyuda}>Vos ya estás incluido. Elegí del listado o registrá una persona desde el selector.</Text>
+          <AvisoFormulario tema={aspecto.tema}>Vos ya estás incluido. Elegí del listado o registrá una persona desde el selector.</AvisoFormulario>
           <PersonalizacionSala alCambiar={establecerApariencia} {...aspecto} />
           <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityState={{checked:compartir}} onPress={conRespuestaVisual(()=>cambiarCompartir(!compartir))} style={aspecto.estilos.filaCampos}><Ionicons name={compartir?'checkbox':'square-outline'} size={24} color={tema.foco}/><Text style={estilosGlobales.etiqueta}>Compartir online</Text></Pressable>
-          {compartir?<><CampoFormulario secreto etiqueta="Contraseña de la sala" valor={contrasena} error={errores.contrasena} alCambiar={cambiarContrasena} limite={128} {...aspecto}/><Text style={estilosGlobales.textoAyuda}>Mínimo 8 caracteres. Tendrás un enlace y QR para todas las personas; tus amigos pueden entrar directamente; las demás personas esperan tu aprobación. Se requiere conexión.</Text></>:null}
+          {compartir?<><CampoFormulario secreto etiqueta="Contraseña de la sala" valor={contrasena} error={errores.contrasena} alCambiar={cambiarContrasena} limite={128} {...aspecto}/><AvisoFormulario tema={aspecto.tema}>Mínimo 8 caracteres. Tendrás un enlace y QR para todas las personas; tus amigos pueden entrar directamente; las demás personas esperan tu aprobación. Se requiere conexión.</AvisoFormulario></>:null}
           <View style={estilosMovimiento.tarjetaInformacion}><SelectorFecha etiqueta="Fecha de la ocasión" valor={fecha} alSeleccionar={establecerFecha} tema={tema} estilosMovimiento={estilosMovimiento} /></View>
-          <Text style={estilosGlobales.textoAyuda}>Máximo de {LIMITE_SALAS_ACTIVAS} salas activas por vez.</Text>
+          <AvisoFormulario tema={aspecto.tema}>Máximo de {LIMITE_SALAS_ACTIVAS} salas activas por vez.</AvisoFormulario>
       <AccionesFormulario texto={compartir?'Crear y compartir sala':etiqueta} alGuardar={async() => {const campos:Record<string,string>={};if(!nombre.trim()||nombre.trim().length>100)campos.nombre='Completá un nombre de hasta 100 caracteres.';if(descripcion.trim().length>500)campos.descripcion='La descripción admite hasta 500 caracteres.';if(compartir&&contrasena.length<8)campos.contrasena='La contraseña requiere al menos 8 caracteres.';cambiarErrores(campos);if(Object.keys(campos).length)throw new Error('Revisá los campos marcados.');const sala=await crearSala({ id: id.current, nombre, descripcion, ...apariencia, personasIds: seleccionadas,
         fecha: `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}` });if(compartir){await publicarSalaOnline(sala.id);await configurarAccesoSala(sala.id,contrasena);}return sala;}} alExito={alCrearSala} {...aspecto} />
     </>;

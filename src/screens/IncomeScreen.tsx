@@ -1,3 +1,4 @@
+import AvisoFormulario from '../components/FormNotice';
 import {useFinalizacionAccion} from '../hooks/useActionCompletion';
 import {iniciarOperacionFinanciera} from '../social/financialOperation';
 import BotonAccion from '../components/ActionButton';
@@ -300,15 +301,12 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
               frecuencias={FRECUENCIAS_RECURRENCIA}
               frecuenciaSeleccionada={frecuencia}
               alCambiarFrecuencia={establecerFrecuencia}
-            />:<Text style={estilosGlobales.textoAyuda}>Se conserva el original y se registra su corrección junto al movimiento actualizado. Las recurrencias futuras no cambian.</Text>}
+            />:<AvisoFormulario tema={tema}>Se conserva el original y se registra su corrección junto al movimiento actualizado. Las recurrencias futuras no cambian.</AvisoFormulario>}
           </View>
-          <View style={estilosMovimiento.avisoFechaDeposito}>
-            <Ionicons color={tema.textoSecundario} name="information-circle-outline" size={18} />
-            <Text style={estilosMovimiento.textoAvisoFechaDeposito}>
-              Los movimientos con fecha y hora anteriores a la creación del depósito
-              quedan en el historial, pero no afectan su saldo actual.
-            </Text>
-          </View>
+          <AvisoFormulario tema={tema} titulo="Cómo afecta al saldo">
+            Los movimientos con fecha y hora anteriores a la creación del depósito
+            quedan en el historial, pero no afectan su saldo actual.
+          </AvisoFormulario>
           {errorFechaHora ? (
             <Text style={estilosGlobales.textoError}>{errorFechaHora}</Text>
           ) : null}

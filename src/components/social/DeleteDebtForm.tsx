@@ -1,3 +1,4 @@
+import AvisoFormulario from '../FormNotice';
 import {useRef} from 'react';
 import {View,Text} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
@@ -25,7 +26,7 @@ export default function FormularioPerdonarDeuda({parametros,...aspecto}:import('
       <Text style={aspecto.estilosGlobales.textoSecundario}>El pendiente quedará en cero. No se creará un ingreso ni un egreso y los pagos anteriores se conservarán.</Text>
       <Text style={aspecto.estilosGlobales.textoSecundario}>{online?'Ambas personas verán el perdón. Los pagos que todavía esperan confirmación quedarán rechazados.':'La deuda permanecerá en tu historial como perdonada. Solo cambia tu registro personal.'} Esta acción no tiene deshacer.</Text>
     </View>
-    {sinConexion?<Text style={aspecto.estilosGlobales.textoAyuda}>Necesitás conexión para perdonar una deuda online.</Text>:null}
+    {sinConexion?<AvisoFormulario tema={aspecto.tema}>Necesitás conexión para perdonar una deuda online.</AvisoFormulario>:null}
     <AccionesFormulario texto="Confirmar perdón" deshabilitado={sinConexion} alGuardar={async()=>{if(online)await perdonarDeudaOnline(deuda.acuerdoOnlineId!,pendiente.current);else await perdonarDeudaPersonal(deuda.id,pendiente.current);}} recargarAntesDeCerrar alExito={()=>social.volver()} mensajeExito="Deuda perdonada." confirmacion={{titulo:'¿Perdonar esta deuda?',descripcion:deuda.descripcion+' · '+formatearMontoSocial(pendiente.current)+'. No registra un pago.',textoConfirmar:'Sí, perdonar deuda'}} {...aspecto}/>
   </>;
 }

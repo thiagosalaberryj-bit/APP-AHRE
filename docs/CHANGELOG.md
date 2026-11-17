@@ -5,7 +5,21 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+### Añadido
+
+- Recordatorio del administrador para cuentas con gastos sin enlazar a un depósito
+  o movimiento válido; excluye invitados, al administrador y registros completos.
+- Ayudas de formulario con icono de información, mejor contraste y títulos
+  opcionales, sin tarjetas adicionales, en los temas claro y oscuro.
+- Explicación desplegable del comercio sugerido por OCR, diferenciando los datos
+  detectados de las indicaciones para revisar, sin modificar el parser.
+
 ### Cambiado
+
+- Selector individual de persona en nueva deuda basado en el de participantes
+  de sala, con búsqueda, archivadas y confirmación explícita.
+- Tick y cruz compactos sin relleno ni texto; aceptar ingresos de sala abre
+  la confirmación también para personas conocidas. Borde fino en header oscuro.
 
 - Tema oscuro en tonos azulados neutros y controles compartidos en ambos temas;
   se conservan los estilos y tokens de la app.
@@ -17,6 +31,13 @@ documentación se registran en este archivo.
   acción compartido; Android versionCode 17 para la APK interna 0.9.2.
 
 ### Corregido
+
+- Bloqueo de Social sin sustituir la vista nativa antecesora de los modales.
+- Desarchivar cierra todos los estados del menú; cerrar un modal no reproduce
+  su toast en otra ventana. El editor de personas conserva la ventana del menú.
+- Carga duplicada dentro de la tarjeta de invitación: queda solo en el botón.
+- Envío de propuestas de deuda antes de mostrar Listo, evitando trabajo de red
+  posterior a la confirmación y demoras al abandonar el formulario.
 
 - Ciclo nativo de los tres puntos sin congelamientos; la palabra «Procesando»
   y los puntos salen juntos al entrar «Listo», sin repetir la carga al cerrar.
@@ -30,6 +51,20 @@ documentación se registran en este archivo.
   duplicado que cambiaba la altura del modal de acceso a salas.
 
 ### Verificación y entrega
+
+Actualización del 17/11/2026, solicitada por el usuario sin Issue asociado.
+Tipos correctos; suite de app: 615 casos, 566 aprobados, cero fallos y 49
+integraciones MySQL omitidas. Las 40 regresiones de depósitos, avisos y parser
+OCR pasaron después de los ajustes finales de ayudas. Bundle Android de Metro
+servido con HTTP 200. No se generó otra APK para estos cambios.
+
+El usuario confirmó los recorridos de Social y el recordatorio tras actualizar
+el servidor; las ayudas nuevas aún requieren revisión visual en el teléfono.
+Se observó posteriormente un bloqueo SQLite al preparar datos de prueba: queda
+registrado para diagnóstico, sin atribuirlo a la presentación de formularios.
+La publicación de ramas y PR no implica merge ni despliegue.
+
+#### Antecedente de preparación · 16/11/2026
 
 - Tipos de app/herramientas y exportación Android/Hermes correctos.
 - Suite completa de 611 casos: 560 aprobados, 49 integraciones MySQL omitidas

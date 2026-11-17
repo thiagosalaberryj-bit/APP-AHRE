@@ -1,3 +1,4 @@
+import AvisoFormulario from '../FormNotice';
 import {conRespuestaVisual} from '../../utils/pressFeedback';
 import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { AvisosEnModal } from '../../contexts/ToastContext';
@@ -77,7 +78,7 @@ export default function ModalMovimientoSocial({ plan, guardando, completado=fals
               {movimientos.filter(m => !Object.values(selecciones).some(s => s.movimientoId === m.id)).map(m => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={m.id} accessibilityRole="radio" accessibilityState={{ checked: m.id === movimientoId }} onPress={conRespuestaVisual(() => establecerMovimientoId(m.id))} style={[estilos.movimientoDisponible, m.id === movimientoId && estilos.movimientoSeleccionado]}>
                 <Ionicons name={m.id === movimientoId ? 'radio-button-on' : 'radio-button-off'} color={tema.foco} size={22} /><View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.descripcionOperacion}>{m.descripcion}</Text><Text style={estilos.ayudaConfirmacion}>{m.deposito} · {new Date(m.fecha_hora).toLocaleString('es-AR')}</Text></View>
               </Pressable>)}
-              <Text style={estilosGlobales.textoAyuda}>Vincularlo no vuelve a modificar tu saldo.</Text>
+              <AvisoFormulario tema={aspecto.tema}>Vincularlo no vuelve a modificar tu saldo.</AvisoFormulario>
             </>}
           </> : null}
         </ScrollView>

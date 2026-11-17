@@ -1,3 +1,4 @@
+import AvisoFormulario from '../FormNotice';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
 import AccionesFormulario from './SocialFormActions';
@@ -41,11 +42,11 @@ export default function FormularioPersona(propiedades: import('../../social/type
       <CampoFormulario etiqueta="Nombre" ejemplo="Ej.: Ana" valor={nombre} limite={80} alCambiar={cambiar(establecerNombre)} {...aspecto} />
       <CampoFormulario etiqueta="Apellido" ejemplo="Ej.: Pérez" valor={apellido} limite={80} alCambiar={cambiar(establecerApellido)} {...aspecto} />
       <CampoFormulario etiqueta="Apodo" ejemplo="Ej.: Ani" valor={apodo} limite={20} alCambiar={valor => cambiar(establecerApodo)(valor.slice(0, 20))} {...aspecto} />
-      <Text style={estilosGlobales.textoAyuda}>Nombre, apellido y apodo son obligatorios.</Text>
+      <AvisoFormulario tema={aspecto.tema}>Nombre, apellido y apodo son obligatorios.</AvisoFormulario>
       {existente ? <View style={estilos.grupo}>
           <Text numberOfLines={1} ellipsizeMode="tail" accessibilityLiveRegion="polite" style={estilosGlobales.texto}>Estos datos coinciden con {nombreCompletoPersona(existente)}{existente.apodo ? ` (${existente.apodo})` : ''}, que ya está en tu listado.</Text>
           <BotonSocial texto="Ver persona existente" secundario alPresionar={() => abrirPersona(existente.id)} {...aspecto} />
-          <Text style={estilosGlobales.textoAyuda}>Revisá su ficha antes de intentar registrarla nuevamente.</Text>
+          <AvisoFormulario tema={aspecto.tema}>Revisá su ficha antes de intentar registrarla nuevamente.</AvisoFormulario>
         </View> : null}
       <AccionesFormulario texto={personaInicial ? "Guardar cambios" : "Registrar persona"}
         deshabilitado={!nombreNormalizado || !apellidoNormalizado || !apodoNormalizado || Boolean(existente)}

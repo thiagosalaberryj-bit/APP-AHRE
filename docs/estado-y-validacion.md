@@ -1,8 +1,29 @@
 # Estado y validación de AHRE
 
-Referencia vigente: **16 de noviembre de 2026**, rama
+Referencia vigente: **17 de noviembre de 2026**, rama
 `codex/modo-oscuro-neutro`, versión configurada 0.9.2 / Android versionCode 17.
 Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
+
+## Formularios, continuidad de Social y recordatorios · 17/11/2026
+
+- App: tipos correctos; 615 casos, 566 aprobados, cero fallos y 49 integraciones
+  MySQL omitidas. Tras los ajustes finales de ayudas se repitieron 40 regresiones
+  de depósitos, avisos y parser OCR: todas aprobadas.
+- Backend coordinado: tipos y compilación correctos; 117 casos, 57 aprobados,
+  cero fallos y 60 integraciones omitidas por falta de MySQL. No se consideran
+  ejecutadas las integraciones omitidas de ninguno de los repositorios.
+- Metro generó y sirvió el bundle Android con HTTP 200. No se generó otra APK
+  ni se comprobó el resultado de EAS para estos cambios.
+- El usuario confirmó el funcionamiento de los recorridos corregidos y del
+  recordatorio tras actualizar el servidor. El agente no ejecutó ese despliegue.
+- Pendiente de revisión visual: ayudas con icono de información y organización
+  de la confirmación OCR. El criterio de extracción del comercio no cambió.
+- Incidencia observada en logs de Expo: database is locked al preparar datos de
+  prueba (consultar-cuenta-prueba / reservar-escritura). No se presenta como resuelta.
+- Se conservan app 0.9.2 / Android 17 y servidor 0.3.3; se actualizan los PR
+  y la documentación de Sin publicar sin mergear main ni crear una release.
+
+Los resultados siguientes corresponden a las preparaciones anteriores.
 
 ## Interfaz clara y oscura · 16 de noviembre de 2026
 
