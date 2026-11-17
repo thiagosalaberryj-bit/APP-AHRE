@@ -4,11 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import type { StyleProp, TextStyle } from 'react-native';
 import { useMovimientoReducido } from '../hooks/useReducedMotion';
 import { ANIMACION_ACCION, crearEstilosGlobales } from '../styles/globalStyles';
+import type {NombreIcono} from '../constants/movimientos';
 import PuntosCarga from './LoadingDots';
 
 type EstadoContenido = {etiqueta:string;tipo:'carga'|'exito'|'texto'};
 
-export default function ContenidoAccion({texto,color,cargando=false,completado=false,estiloTexto}:{texto:string;color:string;cargando?:boolean;completado?:boolean;estiloTexto?:StyleProp<TextStyle>}) {
+export default function ContenidoAccion({texto,color,cargando=false,completado=false,estiloTexto,icono,ocultarTexto=false}:{icono?:NombreIcono;ocultarTexto?:boolean;texto:string;color:string;cargando?:boolean;completado?:boolean;estiloTexto?:StyleProp<TextStyle>}) {
   const reducido=useMovimientoReducido(),estilos=crearEstilosGlobales();
   const tipo=cargando?'carga':completado?'exito':'texto';
   const etiqueta=cargando?'Procesando':completado?'Listo':texto;
@@ -33,8 +34,8 @@ export default function ContenidoAccion({texto,color,cargando=false,completado=f
     return()=>animacion.stop();
   },[contenido,reducido,progreso]);
   const representar=(estado:EstadoContenido)=><>
-    {estado.tipo==='carga'?<PuntosCarga color={color} animado/>:estado.tipo==='exito'?<Ionicons name="checkmark" size={20} color={color}/>:null}
-    <Text style={[estilos.accionTexto,estiloTexto,{color}]}>{estado.etiqueta}</Text>
+    {estado.tipo==='carga'?<PuntosCarga color={color} animado/>:estado.tipo==='exito'?<Ionicons name="checkmark" size={20} color={color}/>:icono?<Ionicons name={icono} size={22} color={color}/>:null}
+    {!ocultarTexto?<Text style={[estilos.accionTexto,estiloTexto,{color}]}>{estado.etiqueta}</Text>:null}
   </>;
   return <View style={estilos.accionContenido} accessibilityLiveRegion="polite" accessibilityLabel={contenido.actual.etiqueta}>
     {[contenido.anterior,contenido.actual].map((estado,indice)=>{

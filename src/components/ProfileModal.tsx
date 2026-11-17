@@ -79,8 +79,9 @@ export default function ModalPerfil({
   </AvisosEnModal></Modal>;
   return (
     <Modal animationType="fade" onRequestClose={cerrar} transparent visible={visible}><AvisosEnModal visible={visible}>
-      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel={etiquetaCerrarFondo} onPress={conRespuestaVisual(cerrar)} style={estilos.fondoSuperpuesto}>
-        <Pressable style={estilos.tarjetaSuperpuesta}>
+      <View style={estilos.fondoSuperpuesto}>
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel={etiquetaCerrarFondo} onPress={conRespuestaVisual(cerrar)} style={StyleSheet.absoluteFill}/>
+        <View accessibilityViewIsModal style={estilos.tarjetaSuperpuesta}>
           {desplazable ? (
             <ScrollView
               contentContainerStyle={estilos.contenidoScrollModal}
@@ -91,8 +92,8 @@ export default function ModalPerfil({
               <View style={estilos.formularioModal}>{contenido}</View>
             </ScrollView>
           ) : contenido}
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </AvisosEnModal></Modal>
   );
 }

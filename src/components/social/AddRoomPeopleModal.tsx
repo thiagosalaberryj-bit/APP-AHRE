@@ -9,12 +9,13 @@ import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, TextInput
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosModal from '../../styles/social/AddRoomPeopleModalStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[]; guardando?:boolean;completado?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean})) {
+export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[];multiple?:boolean; guardando?:boolean;completado?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean})) {
   const {
     personas: personasSociales
   } = useDatosSociales();
   const {
     personasSala,
+    multiple=true,
     guardando:guardandoExterno,
     completado,
     alAgregar,
@@ -51,7 +52,7 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
         <View accessibilityViewIsModal style={estilos.tarjetaModal}>
           <View style={estilos.filaModal}>
             <View style={estilos.iconoTitulo}><Ionicons name="people-outline" size={23} color={tema.foco}/></View>
-            <View style={estilos.textoFlexible}><Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>{titulo}</Text><Text style={estilos.contador}>Elegí personas de tu agenda</Text></View>
+            <View style={estilos.textoFlexible}><Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>{titulo}</Text><Text style={estilos.contador}>{multiple?'Elegí personas de tu agenda':'Elegí una persona de tu agenda'}</Text></View>
             <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar selección de personas" disabled={guardando} onPress={conRespuestaVisual(alCerrar)} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={22} /></Pressable>
           </View>
           <View style={[estilos.buscador, enfocado && estilos.buscadorEnfocado]}>
@@ -59,11 +60,11 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
             <TextInput accessibilityLabel="Buscar personas para agregar" editable={!guardando} value={busqueda} onChangeText={establecerBusqueda} onFocus={() => establecerEnfocado(true)} onBlur={() => establecerEnfocado(false)} placeholder="Nombre, apellido o apodo" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={estilos.entradaBusqueda} />
           </View>
           {disponibles.some(p=>!p.activa)?<Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityLabel="Incluir personas archivadas" accessibilityState={{checked:archivadas}} onPress={conRespuestaVisual(()=>mostrarArchivadas(!archivadas))} style={estilos.filaModal}><Ionicons name={archivadas?'checkbox':'square-outline'} size={22} color={tema.foco}/><Text style={estilosGlobales.texto}>Incluir personas archivadas</Text></Pressable>:null}
-          <Text accessibilityLiveRegion="polite" style={estilos.contador}>{seleccionadas.length} seleccionadas</Text>
+          <Text accessibilityLiveRegion="polite" style={estilos.contador}>{multiple?seleccionadas.length+' seleccionadas':seleccionadas.length?'Una persona seleccionada':'Sin persona seleccionada'}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal} contentContainerStyle={estilos.listaPersonas}>
-            {personas.length ? personas.map((persona) => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={persona.id} accessibilityRole="checkbox" accessibilityLabel={`Seleccionar a ${nombreCompletoPersona(persona)}`} accessibilityState={{
+            {personas.length ? personas.map((persona) => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={persona.id} accessibilityRole={multiple?"checkbox":"radio"} accessibilityLabel={`Seleccionar a ${nombreCompletoPersona(persona)}`} accessibilityState={{
             checked: seleccionadas.includes(persona.id)
-          }} disabled={guardando} onPress={conRespuestaVisual(() => establecerSeleccionadas(anteriores => anteriores.includes(persona.id) ? anteriores.filter(id => id !== persona.id) : [...anteriores, persona.id]))} style={[estilos.personaAgenda, seleccionadas.includes(persona.id) && estilos.personaSeleccionada]}>
+          }} disabled={guardando} onPress={conRespuestaVisual(() => establecerSeleccionadas(anteriores => !multiple?[persona.id]:anteriores.includes(persona.id) ? anteriores.filter(id => id !== persona.id) : [...anteriores, persona.id]))} style={[estilos.personaAgenda, seleccionadas.includes(persona.id) && estilos.personaSeleccionada]}>
                 <View style={estilos.avatarPersona}><Text style={estilos.inicialesPersona}>{persona.iniciales}</Text></View>
                 <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.nombrePersona}>{nombreCompletoPersona(persona)}</Text>{persona.apodo?<Text ellipsizeMode="tail" numberOfLines={1} style={estilos.apodo}>{persona.apodo}</Text>:null}</View>
                 <Ionicons color={seleccionadas.includes(persona.id)?tema.foco:tema.textoSecundario} name={seleccionadas.includes(persona.id) ? 'checkmark-circle' : 'ellipse-outline'} size={23} />

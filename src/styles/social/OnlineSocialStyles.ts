@@ -2,6 +2,9 @@ import {StyleSheet} from 'react-native';
 import type {Tema} from '../colors';
 import {BORDES,ESPACIADO,TIPOGRAFIA} from '../globalStyles';
 export const crearEstilosSocialOnline=(tema:Tema)=>StyleSheet.create({
+  decisionesCompactas:{alignSelf:'flex-end'},
+  decisionCompacta:{width:48},
+  decisionSimple:{minHeight:48,paddingHorizontal:0,borderWidth:0},
   accionesDecision:{alignSelf:'stretch'},
   filaSolicitud:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio},
   accionSolicitud:{minHeight:44,minWidth:44,alignItems:'center',justifyContent:'center',borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.boton},

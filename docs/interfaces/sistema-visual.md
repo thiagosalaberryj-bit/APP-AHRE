@@ -535,3 +535,52 @@ Los contenidos admiten `sinVentana` cuando la ventana pertenece al recorrido
 contenedor. Guardar no cambia `visible` ni vuelve a presentar el modal para
 mostrar la animación. La ventana permanece montada durante «Procesando»,
 «Listo» y los errores recuperables; solo se cierra al finalizar o cancelar.
+
+
+### Ajustes locales de continuidad · 17/11/2026
+
+Editar persona desde su menú conserva la misma ventana nativa durante la
+edición, el guardado y la confirmación. Agregar integrantes online recibe
+también el estado de éxito. Las decisiones compactas vuelven a usar tick y cruz,
+con etiquetas de accesibilidad y los mismos estados de carga y bloqueo del
+botón compartido; el historial expandido conserva los textos explícitos.
+
+El header oscuro usa un contorno fino del color de borde del navbar, superpuesto
+sin modificar su altura ni el plegado. En los modales de Perfil, el fondo que
+cierra y la tarjeta son hermanos: tocar un control dentro de la tarjeta no
+pertenece al área pulsable que cierra.
+
+
+### Continuidad de Social y recordatorios dirigidos · 17/11/2026
+
+El contenedor de Social conserva una vista nativa (collapsable=false) y bloquea
+nuevos gestos mediante captura, sin alternar pointerEvents de la vista que aloja
+los modales. Evita cambiar la jerarquía nativa al iniciar o terminar una acción.
+Archivar y desarchivar cierran todos los estados del menú tras confirmar; los
+toasts del modal no se vuelven a presentar al cerrarlo. La invitación muestra
+la animación de su acción únicamente en el botón, sin otra carga en la tarjeta.
+
+Las decisiones compactas son símbolos sin relleno ni marco, como los accesos
+de Notificaciones; rechazar conserva puntos y confirmación, aceptar abre la
+selección/confirmación, también para personas conocidas en las salas. El selector
+de persona de una deuda reutiliza el modal de participantes de sala en modo
+individual, con búsqueda, archivadas y confirmación explícita.
+
+En salas online abiertas, el administrador dispone de Recordar registros pendientes.
+El servidor calcula destinatarios con cuenta y selección financiera pendiente o
+inválida; excluye invitados, al administrador y a quienes ya enlazaron sus gastos.
+Se evita repetir el aviso para la misma cuenta, revisión de sala y hora. La demo
+solo simula el resultado. Requiere desplegar el nuevo endpoint del servidor;
+los cambios locales no despliegan servicios.
+
+Verificación local de estos ajustes: tipos de app/herramientas correctos;
+615 casos de app, 566 aprobados y 49 integraciones MySQL omitidas. Tras ajustar
+el momento de envío de la propuesta de deuda, las 27 regresiones de Social y
+toasts pasaron de nuevo. El servidor pasó tipos y 57 pruebas; 60 integraciones
+se omitieron por falta de MySQL. La estabilidad visual nativa queda por confirmar
+en el teléfono. No se hicieron commits, push, merge ni despliegues.
+
+Confirmación manual del 17/11/2026: el usuario comprobó los recorridos y el
+recordatorio tras actualizar el servidor e indicó que todo funciona. Esta
+confirmación complementa las pruebas automatizadas; no agrega una ejecución
+de las integraciones MySQL omitidas.

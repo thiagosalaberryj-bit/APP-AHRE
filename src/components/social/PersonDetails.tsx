@@ -11,7 +11,6 @@ import AvatarPersona from './PersonAvatar';
 import { nombreCompletoPersona, formatearMontoSocial } from '../../social/socialHelpers';
 import { Ionicons } from '@expo/vector-icons';
 import TarjetaDeuda from './DebtCard';
-import ModalPersona from './PersonModal';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function DetallePersona(propiedades: import('../../social/types').AspectoSocial & ({persona:import('../../social/types').PersonaVista} & import('../../social/types').AccionesSociales)) {
   const social=useDatosSociales();
@@ -36,7 +35,6 @@ export default function DetallePersona(propiedades: import('../../social/types')
     estilos,
     estilosGlobales
   } = aspecto;
-  const [editando, establecerEditando] = useState(false);
   const [cerradas,cambiarCerradas]=useState<string[]>([]);
   const {vinculos,sinConexion}=useVinculosOnline(social.usuarioId);
   const vinculo=vinculos.find(v=>v.persona_id===persona.id&&v.direccion!=='recibida');
@@ -47,7 +45,7 @@ export default function DetallePersona(propiedades: import('../../social/types')
         <View style={estilos.cabecera}>
           <AvatarPersona persona={persona} />
           <View style={estilos.identidad}><Text accessibilityLabel={nombreCompletoPersona(persona)} style={estilos.nombre}>{nombreCompletoPersona(persona)}</Text><View style={estilos.filaApodoCuenta}>{persona.apodo ? <Text accessibilityLabel={persona.apodo} numberOfLines={1} ellipsizeMode="tail" style={[estilos.secundario,estilos.apodoCompacto]}>{persona.apodo}</Text> : null}<View style={estilos.estadoCuenta}><Ionicons name={vinculo?.estado==='confirmado'?'link-outline':vinculo?.estado==='solicitado'||vinculo?.estado==='pendiente'&&vinculo.cuenta_id?'time-outline':'person-outline'} size={15} color={vinculo?.estado==='confirmado'?tema.foco:tema.textoSecundario}/><Text accessibilityLiveRegion="polite" numberOfLines={1} style={estilos.textoEstadoCuenta}>{estadoCuenta}</Text></View></View></View>
-          <OpcionesPersona persona={persona} vinculo={vinculo} sinConexion={sinConexion} alEditar={()=>establecerEditando(true)} {...aspecto}/>
+          <OpcionesPersona persona={persona} vinculo={vinculo} sinConexion={sinConexion} abrirPersona={abrirPersona} {...aspecto}/>
         </View>
         {!persona.activa ? <Text style={estilos.secundario}>Persona archivada · Conserva todas sus funciones.</Text> : null}
         <View style={estilos.cifras}>
@@ -73,6 +71,5 @@ export default function DetallePersona(propiedades: import('../../social/types')
           {expandida?registros.map(deuda=><TarjetaDeuda key={deuda.id} deuda={deuda} abrirRegistro={abrirRegistro} {...aspecto}/>):null}
         </View>;
       })}
-      <ModalPersona visible={editando} personaInicial={persona} alCerrar={() => establecerEditando(false)} abrirPersona={abrirPersona} {...aspecto} />
     </View>;
 }

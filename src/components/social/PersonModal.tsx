@@ -6,9 +6,10 @@ import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, ScrollVie
 import { Ionicons } from '@expo/vector-icons';
 import FormularioPersona from './PersonForm';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-export default function ModalPersona(propiedades: import('../../social/types').AspectoSocial & ({visible:boolean;alCerrar:(persona?:Pick<import('../../database/types').Persona,'id'> | null)=>void;personaInicial?:import('../../social/types').PersonaVista | null} & Pick<import('../../social/types').AccionesSociales,'abrirPersona'>)) {
+export default function ModalPersona(propiedades: import('../../social/types').AspectoSocial & ({visible:boolean;sinVentana?:boolean;alCerrar:(persona?:Pick<import('../../database/types').Persona,'id'> | null)=>void;personaInicial?:import('../../social/types').PersonaVista | null} & Pick<import('../../social/types').AccionesSociales,'abrirPersona'>)) {
   const {
     visible,
+    sinVentana=false,
     alCerrar,
     abrirPersona,
     personaInicial,
@@ -25,7 +26,7 @@ export default function ModalPersona(propiedades: import('../../social/types').A
     estilosGlobales
   } = aspecto;
   const cerrar=()=>{if(!operacionFinancieraEnCurso())alCerrar();};
-  return <Modal transparent animationType="fade" visible={visible} onRequestClose={cerrar}><AvisosEnModal visible={visible}>
+  const contenido=<AvisosEnModal visible={visible}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
         <Pressable accessibilityRole="button" accessibilityLabel="Cerrar formulario de persona" onPress={cerrar} style={estilos.cierreFondo} />
         <View accessibilityViewIsModal style={estilos.tarjetaModal}>
@@ -41,5 +42,6 @@ export default function ModalPersona(propiedades: import('../../social/types').A
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </AvisosEnModal></Modal>;
+    </AvisosEnModal>;
+  return sinVentana?contenido:<Modal transparent animationType="fade" visible={visible} onRequestClose={cerrar}>{contenido}</Modal>;
 }

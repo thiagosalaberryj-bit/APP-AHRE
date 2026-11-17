@@ -99,4 +99,16 @@ for(const tema of ['claro','oscuro'] as const){
   await vista.asentar();mismaVentana(vista,id);assert.ok(vista.texto().includes('Procesando'));
   pendiente.resolver();await guardado;await vista.asentar();assert.deepEqual(vista.ventanas(),[]);
  });
+
+ test('editar persona conserva la ventana del menú y el formulario mientras guarda en '+tema,async t=>{
+  const e=await preparar(t);await e.prepararDatosPrueba();const persona=(await e.cargarSocial()).personas[0],pendiente=espera();
+  const vista=interfazSocial({...e,guardarPersona:async(...args)=>{await pendiente.promesa;return e.guardarPersona(...args);}},tema);
+  await vista.abrir(vista.rutas.PERSONA_SOCIAL,{personaId:persona.id});await vista.pulsar('Opciones de persona');const [id]=vista.ventanas();assert.ok(id);
+  await vista.pulsar('Editar persona');mismaVentana(vista,id);
+  await vista.llenar('Nombre','Nombre editado');
+  const guardado=(vista.buscarBoton('Guardar cambios').props.onPress as ()=>Promise<unknown>)();await vista.asentar();mismaVentana(vista,id);
+  assert.ok(vista.texto().includes('Procesando'));
+  (vista.todos().find(n=>n.type==='Modal')!.props.onRequestClose as ()=>void)();await vista.asentar();mismaVentana(vista,id);
+  pendiente.resolver();await guardado;await vista.asentar();assert.deepEqual(vista.ventanas(),[]);
+ });
 }

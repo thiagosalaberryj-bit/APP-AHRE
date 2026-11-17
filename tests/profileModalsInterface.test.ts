@@ -47,7 +47,9 @@ for (const nombreTema of ['claro', 'oscuro'] as const) {
     const fondo = controles.find(nodo => nodo.type === 'Pressable' && nodo.props.accessibilityLabel === 'Cerrar edición' && !nodo.props.accessibilityRole)!;
     const cerrar = controles.find(nodo => nodo.type === 'Pressable' && nodo.props.accessibilityRole === 'button')!;
     invocar(fondo, 'onPress'); invocar(cerrar, 'onPress'); assert.equal(cierres, 3);
-    assert.equal(fondo.props.style, estilos.fondoSuperpuesto);
+    const capa=controles.find(nodo=>nodo.type==='View'&&nodo.props.style===estilos.fondoSuperpuesto)!;
+    assert.ok(capa);assert.ok(Array.isArray(capa.props.children));assert.ok(capa.props.children.includes(fondo));
+    assert.equal(fondo.props.children,undefined,'El fondo pulsable no contiene el formulario');
     const scroll = controles.find(nodo => nodo.type === 'ScrollView');
     assert.equal(Boolean(scroll), desplazable);
     if (scroll) {

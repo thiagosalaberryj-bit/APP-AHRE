@@ -54,6 +54,7 @@ for(const nombre of ['claro','oscuro'] as const)test('las decisiones comparten b
   const resultado=Componente({tema:TEMAS[nombre],alAceptar:aceptar,alRechazar:rechazar,etiquetaAceptar:'Aceptar',etiquetaRechazar:'Rechazar',procesando,completado:true}) as any;
   const columnas=resultado.props.children;assert.equal(columnas.length,2);assert.deepEqual(columnas[0].props.style,columnas[1].props.style);
   for(const columna of columnas){const boton=columna.props.children;assert.equal(boton.type,Boton);assert.equal(boton.props.deshabilitado,true);
+   assert.equal(boton.props.ocultarTexto,true);assert.equal(boton.props.icono,boton.props.etiquetaAccesibilidad==='Aceptar'?'checkmark':'close');
    const elegida=boton.props.etiquetaAccesibilidad===(procesando==='aceptar'?'Aceptar':'Rechazar');
    assert.equal(boton.props.cargando,elegida);assert.equal(boton.props.completado,elegida);
    assert.equal(boton.props.alPresionar,boton.props.etiquetaAccesibilidad==='Aceptar'?aceptar:rechazar);
@@ -73,4 +74,13 @@ for(const tema of ['claro','oscuro'] as const)test('archivar oculta la ficha sin
  const actual=await e.obtenerSalaOnline(sala.id);assert.ok(actual.sala.salidas?.some(s=>s.personaId===bruno.id&&!s.revisada));
  const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.SALA_SOCIAL,{salaId:sala.id});assert.ok(vista.texto().includes('Revisión pendiente'));assert.equal(vista.buscarBoton('Cerrar sala').props.disabled,true);
  await e.revisarSalidaSala(sala.id,bruno.id);assert.ok((await e.obtenerSalaOnline(sala.id)).sala.salidas?.find(s=>s.personaId===bruno.id)!.revisada);
+});
+
+for(const tema of ['claro','oscuro'] as const)test('nueva deuda elige una persona con el selector de salas en '+tema,async t=>{
+ const e=await preparar(t);await e.prepararDatosPrueba();const persona=(await e.cargarSocial()).personas[0];
+ const vista=interfazSocial(e,tema);await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'deuda'});await vista.pulsar('Persona');
+ assert.ok(vista.texto().includes('Persona de la deuda'));assert.ok(vista.todos().some(n=>n.props.accessibilityLabel==='Buscar personas para agregar'));
+ const opcion=vista.todos().find(n=>n.props.accessibilityRole==='radio'&&n.props.accessibilityLabel==='Seleccionar a '+persona.nombre+' '+persona.apellido)!;
+ assert.ok(opcion);await (opcion.props.onPress as ()=>unknown)();await vista.asentar();
+ await vista.pulsar('Elegir persona');assert.deepEqual(vista.ventanas(),[]);assert.ok(vista.texto().includes(persona.nombre));
 });

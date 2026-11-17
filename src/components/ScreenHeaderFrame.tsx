@@ -95,6 +95,7 @@ export default function MarcoEncabezado({ encabezado, tema, children, style, ref
           mostrarSincronizacion={propiedadesEncabezado.mostrarSincronizacion}/> : null}
       </View> : null}
       </Animated.View>
+      <View pointerEvents="none" style={estilos.bordeEncabezado}/>
       </View>
       {children}
     </View>

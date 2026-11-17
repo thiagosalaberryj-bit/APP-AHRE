@@ -5,11 +5,12 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import type { Tema } from '../styles/colors';
 import { crearEstilosGlobales, RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import type {NombreIcono} from '../constants/movimientos';
 import ContenidoAccion from './ActionContent';
 
-export default function BotonAccion({tema,texto,variante='principal',cargando=false,completado:completadoExterno,deshabilitado=false,alPresionar,estilo,etiquetaAccesibilidad}: {
+export default function BotonAccion({tema,texto,variante='principal',cargando=false,completado:completadoExterno,deshabilitado=false,alPresionar,estilo,etiquetaAccesibilidad,icono,ocultarTexto=false}: {
   tema:Tema;texto:string;variante?:'principal'|'secundario'|'peligro'|'texto'|'cancelar'|'contorno';cargando?:boolean;completado?:boolean;deshabilitado?:boolean;
-  alPresionar:()=>unknown;estilo?:StyleProp<ViewStyle>;etiquetaAccesibilidad?:string;
+  icono?:NombreIcono;ocultarTexto?:boolean;alPresionar:()=>unknown;estilo?:StyleProp<ViewStyle>;etiquetaAccesibilidad?:string;
 }) {
   const estilos=crearEstilosGlobales(tema),{mostrarAviso}=useContext(ContextoAvisos);
   const [enCurso,cambiarEnCurso]=useState(false);
@@ -41,5 +42,5 @@ export default function BotonAccion({tema,texto,variante='principal',cargando=fa
         if(promesa&&exito===true&&completadoExterno===undefined&&montado.current&&textoActual.current===textoInicial)await finalizacion.confirmar();
       }catch(error){if(montado.current)mostrarAviso(error instanceof Error?error.message:'No se pudo completar la acción.',{tipo:'error'});}
       finally{bloqueo.current=false;if(montado.current){finalizacion.iniciar();cambiarEnCurso(false);}}
-    }}><ContenidoAccion texto={texto} color={color} cargando={ocupado&&!exitoVisible} completado={exitoVisible}/></Pressable>;
+    }}><ContenidoAccion icono={icono} ocultarTexto={ocultarTexto} texto={texto} color={color} cargando={ocupado&&!exitoVisible} completado={exitoVisible}/></Pressable>;
 }

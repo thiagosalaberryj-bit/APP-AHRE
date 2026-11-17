@@ -7,6 +7,7 @@ export function crearEstilosMarcoEncabezado(tema: Tema) {
     raiz: { flex: 1, backgroundColor: tema.fondo },
     recorte: { overflow: 'hidden', flexShrink: 0 },
     mascaraEncabezado: { overflow: 'hidden', flexShrink: 0, backgroundColor: tema.encabezado, borderBottomLeftRadius: BORDES.radios.contenedor, borderBottomRightRadius: BORDES.radios.contenedor },
+    bordeEncabezado: {position:'absolute',top:0,bottom:0,left:0,right:0,borderWidth:tema.nombre==='oscuro'?1:0,borderTopWidth:0,borderColor:tema.navegacionBorde,borderBottomLeftRadius:BORDES.radios.contenedor,borderBottomRightRadius:BORDES.radios.contenedor},
     unionEncabezado: { backgroundColor: tema.encabezado },
     barraCompacta: { backgroundColor: tema.encabezado },
     encabezado: { height: 120, flexShrink: 0 },
