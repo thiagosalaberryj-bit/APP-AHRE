@@ -7,11 +7,12 @@ documentación se registran en este archivo.
 
 Sin cambios pendientes.
 
-## [v0.9.3] - 2026-11-17 - no estable · en preparación
+## [v0.9.3] - 2026-11-18 - no estable
 
 Preparación solicitada por el usuario: app 0.9.3 / Android versionCode 18,
 coordinada con SERVER-AHRE 0.3.4. APK finalizada en EAS y publicada en la web el
-18/11/2026; backend desplegado. No se creó una release de fuentes ni se mergeó main.
+18/11/2026; backend desplegado. Cierre revisado y aprobado por el usuario
+para integrar el PR #73 en main y publicar v0.9.3 como release no estable.
 
 ### Añadido
 
