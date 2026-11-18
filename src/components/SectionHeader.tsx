@@ -1,3 +1,7 @@
+import {conEstiloDePulsacion} from '../styles/globalStyles';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import {useAccionEnCurso} from '../hooks/useActionInProgress';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import type { Tema } from '../styles/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -7,14 +11,15 @@ import { TEMAS } from '../styles/colors';
 import EstadoSincronizacion from './SyncStatus';
 
 export default function EncabezadoSeccion({ titulo, descripcion, alVolver,mostrarSincronizacion=true, tema = TEMAS.claro as Tema }: import('../types/ui').EncabezadoProps) {
+  const accionOcupada=useAccionEnCurso();
   return (
     <View style={[estilos.contenedor, { backgroundColor: tema.encabezado }]}>
       <View style={estilos.filaSuperior}>
-        <Pressable
+        <Pressable disabled={accionOcupada} android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Volver"
           accessibilityRole="button"
-          onPress={alVolver}
-          style={[estilos.botonVolver, { backgroundColor: tema.contenedorVerde }]}
+          onPress={conRespuestaVisual(alVolver)}
+          style={conEstiloDePulsacion([estilos.botonVolver, { backgroundColor: tema.botonEncabezado }])}
         >
           <Ionicons name="chevron-back" size={30} color={tema.botonPrincipal} />
         </Pressable>

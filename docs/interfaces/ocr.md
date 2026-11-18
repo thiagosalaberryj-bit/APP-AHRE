@@ -70,3 +70,16 @@ revisar: no se almacena como adjunto permanente del movimiento.
 
 La evaluación, heurísticas, límites, imágenes, funcionamiento offline y pruebas
 están documentados en [`../funcionalidades/ocr.md`](../funcionalidades/ocr.md).
+
+
+## Lectura y ayudas de revisión
+
+La confirmación distingue los valores editables de los accesos de ayuda con
+icono, título coloreado y modal de información compartido. El comercio aparece como sugerencia, con una explicación
+en un modal del criterio: el parser recorre las cinco primeras líneas
+reconstruidas por posición y elige la primera con tres letras consecutivas, sin
+moneda ni importe decimal, que no parezca información administrativa ni esté
+seguida solo por un importe. Puede confundir un producto con el nombre del
+negocio; no consulta un registro comercial ni verifica su identidad. El usuario
+puede corregir el nombre en Descripción. No se modificó este algoritmo en el
+cambio de presentación.

@@ -25,7 +25,7 @@ No se muestra una sección de deudas en el Dashboard.
 
 El encabezado reutiliza `MainHeader.tsx` y muestra «Tu balance, depósitos y
 movimientos.» junto con los accesos a Notificaciones y Perfil. La tarjeta de
-balance queda debajo del encabezado verde, separada por 24 puntos como el
+balance queda debajo del encabezado (verde en claro y azul grafito en oscuro), separada por 24 puntos como el
 contenido de Deudas. El encabezado permanece fijo fuera del desplazamiento;
 se desplaza el contenido inferior, sin márgenes negativos ni superposición.
 El marco compartido permite plegarlo al bajar y ofrece las flechas de alternar

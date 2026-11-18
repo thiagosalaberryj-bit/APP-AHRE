@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -16,17 +18,17 @@ export default function BuscadorFiltrosMovimientos({ tema, busqueda = '', alBusc
   const [enfocado, establecerEnfocado] = useState(false);
   return <View style={estilos.contenedor}>
     {mostrarBuscador ? <View style={[globales.campo, estilos.buscador, enfocado && globales.campoEnfocado]}>
-      <Ionicons name="search-outline" size={22} color={tema.textoSecundario}/>
+      <Ionicons name="search-outline" size={22} color={enfocado?tema.foco:tema.textoSecundario}/>
       <TextInput accessibilityLabel="Buscar movimientos" placeholder="Buscar movimientos" value={busqueda}
         onChangeText={alBuscar} onFocus={()=>establecerEnfocado(true)} onBlur={()=>establecerEnfocado(false)}
         placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={estilos.entrada} returnKeyType="search"/>
-      {busqueda ? <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={()=>alBuscar?.('')} style={estilos.accion}>
+      {busqueda ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={conRespuestaVisual(()=>alBuscar?.(''))} style={estilos.accion}>
         <Ionicons name="close-circle-outline" size={22} color={tema.textoSecundario}/>
       </Pressable> : null}
     </View> : null}
     <FilaFiltrosHorizontal tema={tema} estiloContenido={estilos.fila}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Filtros, ${cantidad} activos`} onPress={alAbrirFiltros} style={[estilos.filtro, cantidad > 0 && estilos.filtroActivo]}>
-        <Ionicons name="options-outline" size={18} color={cantidad > 0 ? tema.encabezadoTexto : tema.textoPrincipal}/>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={`Filtros, ${cantidad} activos`} onPress={conRespuestaVisual(alAbrirFiltros)} style={[estilos.filtro, cantidad > 0 && estilos.filtroActivo]}>
+        <Ionicons name="options-outline" size={18} color={cantidad > 0 ? tema.seleccionTexto : tema.textoPrincipal}/>
         <Text style={[estilos.textoFiltro, cantidad > 0 && estilos.textoActivo]}>Filtros{cantidad > 0 ? ` · ${cantidad}` : ''}</Text>
       </Pressable>
       {children}
@@ -34,14 +36,14 @@ export default function BuscadorFiltrosMovimientos({ tema, busqueda = '', alBusc
     <View style={estilos.lineaActivos}>
       <View style={estilos.listaActivos}>
         {filtrosActivos.length ? <FilaFiltrosHorizontal tema={tema}>
-          {filtrosActivos.map(filtro => <Pressable key={filtro.id} accessibilityRole="button" accessibilityLabel={filtro.bloqueado ? filtro.etiqueta + '. Seleccioná otro depósito antes de quitar este filtro.' : 'Quitar ' + filtro.etiqueta}
-            disabled={filtro.bloqueado} accessibilityState={{ disabled: Boolean(filtro.bloqueado) }} onPress={filtro.alQuitar} style={[estilos.filtro, estilos.criterioActivo]}>
+          {filtrosActivos.map(filtro => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={filtro.id} accessibilityRole="button" accessibilityLabel={filtro.bloqueado ? filtro.etiqueta + '. Seleccioná otro depósito antes de quitar este filtro.' : 'Quitar ' + filtro.etiqueta}
+            disabled={filtro.bloqueado} accessibilityState={{ disabled: Boolean(filtro.bloqueado) }} onPress={conRespuestaVisual(filtro.alQuitar)} style={[estilos.filtro, estilos.criterioActivo]}>
             <Text numberOfLines={1} style={[estilos.textoFiltro, estilos.textoCriterio]}>{filtro.etiqueta}</Text>
             <Ionicons name={filtro.bloqueado ? 'lock-closed' : 'close'} size={16} color={tema.textoSecundario}/>
           </Pressable>)}
         </FilaFiltrosHorizontal> : <Text style={estilos.sinFiltros}>Sin filtros seleccionados</Text>}
       </View>
-      {alLimpiar ? <Pressable accessibilityRole="button" accessibilityLabel="Limpiar filtros" disabled={!cantidad} onPress={alLimpiar} style={[estilos.limpiar, !cantidad && estilos.deshabilitado]}>
+      {alLimpiar ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Limpiar filtros" disabled={!cantidad} onPress={conRespuestaVisual(alLimpiar)} style={[estilos.limpiar, !cantidad && estilos.deshabilitado]}>
         <Text style={estilos.textoLimpiar}>Limpiar</Text>
       </Pressable> : null}
     </View>

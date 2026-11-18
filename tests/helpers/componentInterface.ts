@@ -10,6 +10,7 @@ export function crearCargadorComponentes(raiz: string, adaptadores: Record<strin
     const modulo = { exports: {} };
     const importar = (nombre: string): unknown => {
       if (Object.hasOwn(adaptadores, nombre)) return adaptadores[nombre];
+      if (nombre === 'react') return {useState:(v:unknown)=>[v,()=>{}],useEffect:()=>{},useRef:(v:unknown)=>({current:v})};
       if (nombre === 'react/jsx-runtime') return { jsx: elemento, jsxs: elemento, Fragment: 'Fragment' };
       if (nombre === 'react-native') return {
         View: 'View', Text: 'Text', TextInput: 'TextInput', Pressable: 'Pressable', Modal: 'Modal', ScrollView: 'ScrollView', ActivityIndicator: 'ActivityIndicator',

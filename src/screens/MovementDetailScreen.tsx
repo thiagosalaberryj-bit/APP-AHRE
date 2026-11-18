@@ -1,3 +1,8 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import BotonAccion from '../components/ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from '../components/LoadingDots';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -5,7 +10,7 @@ import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import {useFocusEffect} from '@react-navigation/native';
 import { useCallback,useContext, useEffect, useRef,useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -47,6 +52,8 @@ function obtenerNombreTipo(tipo: string|undefined) {
 }
 
 export default function PantallaDetalleMovimiento({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
+ const finalizacion=useFinalizacionAccion();
+
   const volverProtegido = useRegresoProtegido(navegacion, () => bloqueoEliminacion.current);
   const { tema } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
@@ -112,9 +119,10 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
   const confirmarEliminacion = async (desactivar = false) => {
     if (!movimientoId || bloqueoEliminacion.current) return;
     bloqueoEliminacion.current=true;cambiarAccionEliminar(desactivar);
-    establecerEliminando(true);
+    finalizacion.iniciar();establecerEliminando(true);
     try {
       await eliminarMovimiento(movimientoId, desactivar);
+      if(!await finalizacion.confirmar())return;
       establecerConfirmandoEliminacion(false);
       establecerIntentoConsulta(valor => valor + 1);
       mostrarAviso('Movimiento eliminado. Se conserva en el historial.');
@@ -142,7 +150,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
           />}>
 
           <View style={estilos.estadoHistorial}>
-            <ActivityIndicator color={tema.foco} size="large" />
+            <PuntosCarga color={tema.foco} size="large" />
             <Text style={estilos.textoEstadoHistorial}>Cargando el movimiento…</Text>
           </View>
         </MarcoEncabezado>
@@ -173,17 +181,17 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
                 : 'Reintentá la consulta del movimiento.'}
             </Text>
             {!noEncontrado ? (
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityRole="button"
-                onPress={() => establecerIntentoConsulta((intento) => intento + 1)}
+                onPress={conRespuestaVisual(() => establecerIntentoConsulta((intento) => intento + 1))}
                 style={estilos.botonEstadoHistorial}
               >
                 <Text style={estilos.textoBotonEstadoHistorial}>Reintentar</Text>
               </Pressable>
             ) : null}
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityRole="button"
-              onPress={() => volverProtegido()}
+              onPress={conRespuestaVisual(() => volverProtegido())}
               style={estilos.botonEstadoHistorial}
             >
               <Text style={estilos.textoBotonEstadoHistorial}>Volver</Text>
@@ -216,10 +224,10 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
                   <Text style={[estilos.tipoMovimiento,{color:esIngreso?tema.exito:tema.error}]}>{obtenerNombreTipo(movimiento.tipo)}</Text>
                 </View>
               </View>
-              <Pressable style={estilos.resumenImporte} disabled={!importeLargo}
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} style={estilos.resumenImporte} disabled={!importeLargo}
                 accessibilityRole={importeLargo?'button':undefined} accessibilityLabel={'Importe: '+importeFormateado}
                 accessibilityHint={importeLargo?'Abre el importe completo.':undefined}
-                onPress={()=>establecerImporteVisible(true)}>
+                onPress={conRespuestaVisual(()=>establecerImporteVisible(true))}>
                 <View style={estilos.encabezadoImporte}>
                   <Text style={estilos.etiquetaImporte}>Importe</Text>
                   {importeLargo?<Ionicons name="expand-outline" size={16} color={tema.foco} accessible={false}/>:null}
@@ -249,10 +257,10 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
             </View>
           </View>
           {movimientoId && !esAnulado && !movimiento.transferencia_id && !movimiento.reversion_de_id ? <View style={estilos.accionesMovimiento}>
-            <Pressable accessibilityRole="button" onPress={()=>navegacion.push(movimiento.tipo==='ingreso'?RUTAS.INGRESO:RUTAS.EGRESO,{movimientoId})} style={estilos.botonEstadoHistorial}><Text style={estilos.textoBotonEstadoHistorial}>Editar movimiento</Text></Pressable>
-            <Pressable accessibilityRole="button" onPress={()=>establecerConfirmandoEliminacion(true)} style={estilos.botonEliminar}><Ionicons name="trash-outline" size={21} color="#FFFFFF"/><Text style={estilos.textoEliminar}>Eliminar movimiento</Text></Pressable>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(()=>navegacion.push(movimiento.tipo==='ingreso'?RUTAS.INGRESO:RUTAS.EGRESO,{movimientoId}))} style={estilos.botonEstadoHistorial}><Text style={estilos.textoBotonEstadoHistorial}>Editar movimiento</Text></Pressable>
+            <BotonAccion completado={finalizacion.completado} tema={tema} texto={"Eliminar movimiento"} variante="peligro" cargando={false} deshabilitado={false} alPresionar={()=>establecerConfirmandoEliminacion(true)} estilo={estilos.botonEliminar} />
           </View>:null}
-          {movimiento.reversion_de_id?<Pressable accessibilityRole="button" onPress={()=>navegacion.push(RUTAS.DETALLE_MOVIMIENTO,{movimientoId:movimiento.reversion_de_id!})} style={[estilos.botonCancelar,estilos.enlaceOriginal]}><Text style={estilos.textoCancelar}>Ver movimiento original</Text></Pressable>:null}
+          {movimiento.reversion_de_id?<Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(()=>navegacion.push(RUTAS.DETALLE_MOVIMIENTO,{movimientoId:movimiento.reversion_de_id!}))} style={[estilos.botonCancelar,estilos.enlaceOriginal]}><Text style={estilos.textoCancelar}>Ver movimiento original</Text></Pressable>:null}
         </DesplazamientoEncabezado>
         <Modal transparent animationType="fade" visible={confirmandoEliminacion} onRequestClose={()=>!bloqueoEliminacion.current&&establecerConfirmandoEliminacion(false)}>
           <SafeAreaView style={estilos.fondoModalImporte}>
@@ -261,19 +269,19 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
               <Text accessibilityRole="header" style={estilos.tituloConfirmacion}>¿Eliminar este movimiento?</Text>
               <Text style={estilos.nombreMovimiento}>{movimiento.descripcion}</Text>
               <Text style={estilos.ayudaModalImporte}>Se conservará el original como eliminado y se registrará una corrección vinculada. El saldo se ajustará una sola vez y ambos quedarán fuera de las estadísticas. Los acuerdos de Social conservarán su estado.</Text>
-              <Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>confirmarEliminacion()} style={estilos.botonEliminar}><Ionicons name="trash-outline" size={20} color="#FFFFFF"/><Text style={estilos.textoEliminar}>{eliminando&&!accionEliminar?'Eliminando…':'Eliminar movimiento'}</Text></Pressable>
-              {movimiento.recurrencia_id?<Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>confirmarEliminacion(true)} style={estilos.botonCancelar}><Text style={[estilos.textoCancelar,{color:tema.error}]}>{eliminando&&accionEliminar?'Eliminando…':'Eliminar y desactivar recurrencia'}</Text></Pressable>:null}
-              <Pressable accessibilityRole="button" disabled={eliminando} onPress={()=>{if(!bloqueoEliminacion.current)establecerConfirmandoEliminacion(false);}} style={estilos.botonCancelar}><Text style={estilos.textoCancelar}>Cancelar</Text></Pressable>
+              <BotonAccion completado={finalizacion.completado} tema={tema} texto={'Eliminar movimiento'} variante="peligro" cargando={eliminando&&!accionEliminar} deshabilitado={eliminando} alPresionar={()=>confirmarEliminacion()} estilo={estilos.botonEliminar} />
+              {movimiento.recurrencia_id?<BotonAccion completado={finalizacion.completado} tema={tema} texto={'Eliminar y desactivar recurrencia'} variante="peligro" cargando={eliminando&&accionEliminar} deshabilitado={eliminando} alPresionar={()=>confirmarEliminacion(true)} estilo={estilos.botonCancelar} />:null}
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={eliminando} onPress={conRespuestaVisual(()=>{if(!bloqueoEliminacion.current)establecerConfirmandoEliminacion(false);})} style={estilos.botonCancelar}><Text style={estilos.textoCancelar}>Cancelar</Text></Pressable>
             </View>
           </SafeAreaView>
         </Modal>
         <Modal transparent animationType="fade" visible={importeVisible} onRequestClose={()=>establecerImporteVisible(false)}>
           <SafeAreaView style={estilos.fondoModalImporte}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar importe completo" onPress={()=>establecerImporteVisible(false)} style={estilos.cierreModalImporte}/>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar importe completo" onPress={conRespuestaVisual(()=>establecerImporteVisible(false))} style={estilos.cierreModalImporte}/>
             <View accessibilityViewIsModal style={estilos.modalImporte}>
               <View style={estilos.cabeceraModalImporte}>
                 <Text accessibilityRole="header" style={estilos.tituloModalImporte}>Importe completo</Text>
-                <Pressable accessibilityRole="button" accessibilityLabel="Cerrar" onPress={()=>establecerImporteVisible(false)} style={estilos.botonCerrarImporte}>
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar" onPress={conRespuestaVisual(()=>establecerImporteVisible(false))} style={estilos.botonCerrarImporte}>
                   <Ionicons name="close" size={24} color={tema.textoSecundario}/>
                 </Pressable>
               </View>
@@ -284,7 +292,7 @@ export default function PantallaDetalleMovimiento({ navigation: navegacion, rout
                 </ScrollView>
               </View>
               <Text style={estilos.ayudaModalImporte}>Podés deslizar el importe para verlo completo y mantenerlo presionado para copiarlo.</Text>
-              <Pressable accessibilityRole="button" onPress={()=>establecerImporteVisible(false)} style={estilos.botonEstadoHistorial}>
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(()=>establecerImporteVisible(false))} style={estilos.botonEstadoHistorial}>
                 <Text style={estilos.textoBotonEstadoHistorial}>Cerrar</Text>
               </Pressable>
             </View>

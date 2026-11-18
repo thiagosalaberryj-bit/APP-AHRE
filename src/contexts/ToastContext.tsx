@@ -11,7 +11,7 @@ type Aviso = { id: number; mensaje: string; tipo: TipoAviso; duracion: number };
 type Presentador = (aviso: Aviso) => void;
 type DatosAvisos = {
   mostrarAviso: (mensaje: string, opciones?: OpcionesAviso) => void;
-  registrarPresentador: (presentar: Presentador, profundidad: number, recuperar?: () => Aviso | null) => () => void;
+  registrarPresentador: (presentar: Presentador, profundidad: number) => () => void;
 };
 const ContextoProfundidadAvisos = createContext(0);
 export const ContextoAvisos = createContext<DatosAvisos>(null!);
@@ -26,16 +26,11 @@ export function ProveedorAvisos({ children: contenido }: PropsWithChildren) {
   const [aviso, establecerAviso] = useState<Aviso | null>(null);
   const siguienteId = useRef(0);
   const presentadores = useRef<{ presentar: Presentador; profundidad: number }[]>([]);
-  const registrarPresentador = useCallback((presentar: Presentador, profundidad: number, recuperar?: () => Aviso | null) => {
+  const registrarPresentador = useCallback((presentar: Presentador, profundidad: number) => {
     const registro = { presentar, profundidad };
     presentadores.current.push(registro);
     return () => {
       presentadores.current = presentadores.current.filter(valor => valor !== registro);
-      const pendiente = recuperar?.();
-      if (pendiente) {
-        const destino = [...presentadores.current].sort((a, b) => a.profundidad - b.profundidad).at(-1);
-        if (destino) destino.presentar(pendiente); else establecerAviso(pendiente);
-      }
     };
   }, []);
 
@@ -67,7 +62,7 @@ export function ProveedorAvisos({ children: contenido }: PropsWithChildren) {
 
   return (
     <ContextoAvisos.Provider value={valor}>
-      <View style={estilos.contenedor}>
+      <View collapsable={false} style={estilos.contenedor}>
         {contenido}
         <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
           {aviso ? (
@@ -102,7 +97,7 @@ export function AvisosEnModal({ children, visible = true }: PropsWithChildren<{ 
   const presentar = useCallback((valor: Aviso) => { actual.current = valor; establecerAviso(valor); }, []);
   useEffect(() => {
     if (!visible) { actual.current = null; establecerAviso(null); return; }
-    return registrarPresentador(presentar, profundidad, () => actual.current);
+    return registrarPresentador(presentar, profundidad);
   }, [visible, registrarPresentador, profundidad, presentar]);
   return <ContextoProfundidadAvisos.Provider value={profundidad}>
     <View style={estilos.contenedor}>

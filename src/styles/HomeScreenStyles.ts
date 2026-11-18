@@ -16,6 +16,7 @@ export function crearEstilosInicio(
 ) {
   const altoDeslizador = TAMANO_CONTROL_DESLIZADOR + ESPACIADO.pequeno * 2;
   const colorLetras = tema.nombre === 'oscuro' ? '#FFFFFF' : COLORES_MARCA.verdeOscuro;
+  const colorEstela = tema.nombre === 'oscuro' ? tema.borde : tema.botonPrincipalTexto;
 
   return StyleSheet.create({
     pantalla: {
@@ -112,7 +113,7 @@ export function crearEstilosInicio(
       letterSpacing: tamanoLetras * 0.2,
       lineHeight: tamanoLetras * 1.12,
       textAlign: 'center',
-      textShadowColor: COLORES_MARCA.verdeMedio,
+      textShadowColor: tema.nombre === 'oscuro' ? tema.fondo : COLORES_MARCA.verdeMedio,
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 5,
     },
@@ -122,8 +123,8 @@ export function crearEstilosInicio(
       flexShrink: 0,
       justifyContent: 'center',
       marginBottom: ESPACIADO.extraGrande,
-      backgroundColor: COLORES_MARCA.verdeOscuro,
-      borderColor: COLORES_MARCA.verdeMedio,
+      backgroundColor: tema.botonSecundario,
+      borderColor: tema.nombre === 'oscuro' ? tema.borde : COLORES_MARCA.verdeMedio,
       borderRadius: 20,
       borderWidth: 1,
       overflow: 'hidden',
@@ -133,7 +134,7 @@ export function crearEstilosInicio(
       top: 0,
       bottom: 0,
       left: 0,
-      backgroundColor: COLORES_MARCA.verdeMedio,
+      backgroundColor: colorEstela,
       borderTopLeftRadius: 20,
       borderBottomLeftRadius: 20,
     },
@@ -142,7 +143,7 @@ export function crearEstilosInicio(
       top: 0,
       bottom: 0,
       left: 0,
-      backgroundColor: COLORES_MARCA.verdeMedio,
+      backgroundColor: colorEstela,
       borderTopLeftRadius: 0,
       borderBottomLeftRadius: 0,
       borderTopRightRadius: 20,
@@ -152,14 +153,14 @@ export function crearEstilosInicio(
       position: 'absolute',
       left: ESPACIADO.pequeno,
       right: ESPACIADO.pequeno,
-      color: '#FFFFFF',
+      color: tema.botonSecundarioTexto,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.secundario + 1,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
       textAlign: 'center',
     },
     textoIniciando: {
-      color: '#FFFFFF',
+      color: tema.botonSecundarioTexto,
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
     controlDeslizador: {
@@ -179,7 +180,7 @@ export function crearEstilosInicio(
       elevation: 3,
     },
     controlDeslizadorIniciando: {
-      backgroundColor: COLORES_MARCA.verdeOscuro,
+      backgroundColor: tema.botonSecundario,
     },
     flecha: {
       width: 30,

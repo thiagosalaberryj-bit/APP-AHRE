@@ -1,3 +1,7 @@
+import {programarCargaVisible} from '../utils/visibleScreenWork';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from '../components/LoadingDots';
 import { useAvisoError } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -18,14 +22,7 @@ import { formatearEntradaMonto } from '../utils/moneyInput';
 import { useContext, useCallback, useEffect, useMemo, useRef, useState, SetStateAction } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import {
-  ActivityIndicator,
-  Pressable,
-
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -162,7 +159,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
     establecerCategoriaFiltroIds((ids) => ids.filter((id) => idsPermitidos.has(id)));
   };
 
-  useFocusEffect(useCallback(() => {
+  useFocusEffect(useCallback(() => {let limpieza:(()=>void)|undefined;const cancelar=programarCargaVisible(()=>{const resultado=(()=>{
     let vigente = true;
     establecerEnfocada(true);
     establecerCargando(true);
@@ -214,7 +211,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
       vigente = false;
       establecerEnfocada(false);
     };
-  }, [mostrarAviso, intentoCargaOpciones]));
+  })();if(typeof resultado==='function')limpieza=resultado;});return()=>{cancelar();limpieza?.();};}, [mostrarAviso, intentoCargaOpciones]));
 
   const alternarSeccionFiltro = (seccion: string) => {
     establecerSeccionesFiltrosAbiertas((abiertas) => (abiertas.includes(seccion)
@@ -480,11 +477,11 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                 errorMontoFiltro={errorMontoFiltro} establecerMontoMinimo={establecerMontoMinimo} establecerMontoMaximo={establecerMontoMaximo}/>
             </BuscadorFiltrosMovimientos>
 
-            {esperandoHistorial ? <ActivityIndicator color={tema.foco} accessibilityLabel="Cargando meses"/> : errorConsulta || datosMeses.error ? (
+            {esperandoHistorial ? <PuntosCarga color={tema.foco} accessibilityLabel="Cargando meses"/> : errorConsulta || datosMeses.error ? (
               <View style={estilos.estadoVacio}>
 
 
-                <Pressable accessibilityRole="button" onPress={errorConsulta ? reintentarHistorial : datosMeses.reintentar} style={estilos.botonLimpiar}>
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(errorConsulta ? reintentarHistorial : datosMeses.reintentar)} style={estilos.botonLimpiar}>
                   <Text style={estilos.textoBotonLimpiar}>Reintentar</Text>
                 </Pressable>
               </View>
@@ -501,7 +498,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
                     ? `Sin resultados para “${busqueda.trim()}”.`
                     : 'Sin resultados para los filtros elegidos.'}
                 </Text>
-                <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(limpiarFiltros)} style={estilos.botonLimpiar}>
                   <Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text>
                 </Pressable>
               </View>

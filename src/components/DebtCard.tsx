@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import EtiquetaImporte from './AmountLabel';
 import { Pressable, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,7 +43,7 @@ export default function TarjetaDeuda({ tema, deuda, nombrePersona, alAbrir, solo
   </>;
   const etiqueta = descripcion + '. ' + nombrePersona + '. ' + estado + '. ' + importe;
   return soloLectura ? <View accessible accessibilityLabel={etiqueta} style={[estilos.tarjeta,invitacion&&estilos.invitacion]}>{contenido}</View> : (
-    <Pressable accessibilityRole="button" accessibilityLabel={etiqueta} accessibilityHint="Abre toda la información de esta deuda."
-      onPress={alAbrir} style={({ pressed }) => [estilos.tarjeta,invitacion&&estilos.invitacion, pressed && estilos.presionada]}>{contenido}</Pressable>
+    <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={etiqueta} accessibilityHint="Abre toda la información de esta deuda."
+      onPress={conRespuestaVisual(alAbrir)} style={({ pressed }) => [estilos.tarjeta,invitacion&&estilos.invitacion, pressed && estilos.presionada]}>{contenido}</Pressable>
   );
 }

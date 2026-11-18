@@ -25,6 +25,22 @@ Cada fila muestra un contador de solicitudes y navega al detalle del integrante
 en `SocialRoomPersonScreen.tsx`, parametrizado por sala y persona. El listado
 original conserva su estado al volver. El detalle reutiliza los controles de
 solicitudes y permisos, sin crear una pantalla distinta por cada integrante.
+La fila propia del administrador se identifica como «Administrador», con la
+aclaración «Administrás esta sala», sin flecha ni acceso a solicitudes propias.
+Abrir directamente ese detalle tampoco ofrece historial, envío o simulación.
+
+El detalle del integrante muestra su avatar y nombre en una fila compacta. El historial
+separa estado, fecha, mensaje y gasto relacionado en cada solicitud; las acciones
+de respuesta quedan a la derecha, en la misma fila que la descripción del pedido.
+El mensaje se ajusta al espacio disponible y el gasto relacionado queda debajo. Sin pedidos
+se presenta un estado vacío. La nueva solicitud y los permisos del integrante
+usan tarjetas independientes. Los estilos locales viven en
+`src/styles/social/RoomRequestHistoryStyles.ts` y respetan ambos temas.
+El historial usa relleno de 12 puntos, separación de 8 y mensajes de 14 puntos,
+sin repetir una explicación de espera en cada pendiente. Los botones de permisos
+y Quitar se presentan en una fila; Quitar usa el rojo destructivo. Su confirmación
+identifica al integrante, explica qué se conserva y lista los gastos afectados
+en un cuerpo desplazable, con Cancelar y Quitar de la sala en el pie.
 Ingresos contiene tarjetas compactas, sin formularios ni decisiones
 incrustados. Tocar una abre la revisión: elegir una ficha de agenda o crear una
 persona, y luego Admitir o Rechazar. Las fichas vinculadas a otra cuenta no se
@@ -831,3 +847,25 @@ Sin hardware biométrico o sin huella configurada, Inicio deriva a Login y exige
 Nombre y apellido del registro fuerzan una única línea en el input desde el primer render. Aceptar/rechazar tienen separación explícita. Quitar de una sala muestra los gastos afectados como lista desplazable, con confirmación visible. Una solicitud de una cuenta amiga se acepta directamente con su ficha confirmada; el servidor rechaza cualquier intento de asignarla a otra.
 
 Notificaciones muestra primero Paso 1 para habilitar los avisos y, al concederlo, Paso 2 para configurar horarios precisos, con el mismo contenedor y acceso por flecha. El Paso 2 desaparece cuando Android confirma el permiso. Al fondo del modal de ajustes queda la fila Horarios precisos, con el estilo de Perfil y el estado real; abre los ajustes de Android para activar o desactivar el permiso y vuelve a consultarlo al regresar. Los horarios precisos reducen retrasos de recordatorios locales, no cambian la entrega del proveedor push. Las push y los recordatorios muestran el mismo título y mensaje del historial, sin sustituirlos por «Tenés que revisar algo en AHRE»; se retira el control que ocultaba ese contenido. El campo mostrarDetalles se conserva solo por compatibilidad del contrato.
+
+
+El formulario de otro pago utiliza el selector segmentado animado compartido
+para «Saldar todo» y «Otro importe», con los colores de ambos temas. Elegir
+«Saldar todo» repone el pendiente; «Otro importe» permite ingresar el monto.
+
+
+## Identidad y decisiones de solicitudes · 17/11/2026
+
+Las solicitudes de vínculo y los ingresos pendientes de sala usan una fila de
+identidad y acciones: avatar de iniciales de nombre y apellido, nombre completo,
+dato secundario y botones de cruz/tick centrados verticalmente. Los vínculos
+muestran el correo; los ingresos de sala conservan estado y fecha porque su
+respuesta actual no incluye correo. Los botones compactos tienen marco fino
+y esquinas redondeadas en ambos temas, manteniendo carga, éxito y bloqueo.
+Los nombres admiten dos líneas y el dato secundario una con elipsis para evitar
+que desplacen los controles en pantallas estrechas.
+
+Al rechazar, el botón de aceptar se bloquea sin cambiar altura ni padding: el
+estilo deshabilitado del botón compartido modifica solo el fondo y el color del
+contenido. Lista de ingresos, historial de solicitudes y modal de admisión de
+sala utilizan las mismas decisiones compactas con tick/cruz y sus estados.

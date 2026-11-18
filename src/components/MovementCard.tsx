@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import EtiquetaImporte from './AmountLabel';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
@@ -61,7 +63,7 @@ export default function TarjetaMovimiento({ tema, movimiento, alPresionar }: imp
     </View>
   </>;
   const etiqueta = tipo+': '+movimiento.descripcion+'. '+importe+'. '+metadatos+'. '+fecha.dia+' · '+fecha.hora;
-  return alPresionar ? <Pressable accessibilityLabel={etiqueta} accessibilityRole="button" onPress={()=>alPresionar(movimiento,categoria)}
+  return alPresionar ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel={etiqueta} accessibilityRole="button" onPress={conRespuestaVisual(()=>alPresionar(movimiento,categoria))}
     style={({pressed:presionado})=>[estilos.tarjeta,presionado&&estilos.presionada]}>{contenido}</Pressable>
     : <View accessible accessibilityLabel={etiqueta} style={estilos.tarjeta}>{contenido}</View>;
 }

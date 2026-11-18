@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { crearEstilosEditorGastos } from '../../styles/social/ExpenseEditorStyles';
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosLista from '../../styles/social/ExpenseListRowStyles';
@@ -83,14 +85,14 @@ export default function FormularioListaGastos({ sala, participantes, ticket, bor
     {editando ? <Modal transparent visible animationType="fade" onRequestClose={() => establecerEditando(null)}>
       <KeyboardAvoidingView style={estilosEditor.teclado} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={estilosEditor.fondo}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Descartar edición del ítem" onPress={() => establecerEditando(null)} style={estilosEditor.cierre} />
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Descartar edición del ítem" onPress={conRespuestaVisual(() => establecerEditando(null))} style={estilosEditor.cierre} />
         <View accessibilityViewIsModal style={estilosEditor.panel}>
           <View style={estilosEditor.cabecera}>
             <View style={estilosEditor.datosCabecera}>
               <Text accessibilityRole="header" style={estilosEditor.titulo}>Ajustar ítem {filas.findIndex(fila => fila.id === editando.id) + 1}</Text>
               <Text numberOfLines={1} style={estilosEditor.ayuda}>{editando.descripcion || 'Los cambios afectan solo a este ítem.'}</Text>
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar edición del ítem" onPress={() => establecerEditando(null)} style={estilosEditor.cerrar}><Ionicons color={aspecto.tema.textoSecundario} name="close" size={22} /></Pressable>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar edición del ítem" onPress={conRespuestaVisual(() => establecerEditando(null))} style={estilosEditor.cerrar}><Ionicons color={aspecto.tema.textoSecundario} name="close" size={22} /></Pressable>
           </View>
           <ScrollView style={estilosEditor.scroll} contentContainerStyle={estilosEditor.contenido} keyboardShouldPersistTaps="handled">
             <FormularioGasto borradorInicial={individual.current as import('../../social/types').EditorGasto} participantes={participantes} alCambiar={(datos) => { individual.current = { ...individual.current, ...datos }; }} {...aspecto} />
@@ -101,10 +103,10 @@ export default function FormularioListaGastos({ sala, participantes, ticket, bor
           </ScrollView>
           <View style={estilosEditor.pie}>
             <View style={estilosEditor.acciones}>
-              <Pressable accessibilityRole="button" accessibilityLabel="Aplicar al ítem" onPress={() => {
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Aplicar al ítem" onPress={conRespuestaVisual(() => {
                 cambiar(editando.id, { ajustes: individual.current, descripcion: individual.current.descripcion, monto: individual.current.monto, depositoId: editando.depositoId });
                 establecerEditando(null);
-              }} style={estilosEditor.aplicar}><Text style={estilosEditor.textoAplicar}>Aplicar al ítem</Text></Pressable>
+              })} style={estilosEditor.aplicar}><Text style={estilosEditor.textoAplicar}>Aplicar al ítem</Text></Pressable>
             </View>
           </View>
         </View>

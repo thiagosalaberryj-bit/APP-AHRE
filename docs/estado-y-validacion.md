@@ -1,8 +1,105 @@
 # Estado y validación de AHRE
 
-Referencia vigente: **16 de noviembre de 2026**, rama
-`codex/mejoras-visuales-accesibilidad`, versión configurada 0.9.2 / Android versionCode 16.
+Referencia vigente: **17 de noviembre de 2026**, rama
+`codex/modo-oscuro-neutro`, versión configurada 0.9.3 / Android versionCode 18.
 Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
+
+## Preparación de app 0.9.3 · 17/11/2026
+
+Se sincronizan app.json, package.json y raíz del lockfile en 0.9.3; Android
+versionCode 18. Servidor coordinado 0.3.4. Se conservan dependencias y esquema.
+Incluye mini tarjetas de información con modal, identidad y acciones alineadas
+en solicitudes y corrección de altura/padding del tick y la cruz compactos.
+La revisión visual final de estas presentaciones queda pendiente en el teléfono.
+Verificación de la preparación: tipos y exportación Android/Hermes correctos;
+628 casos, 579 aprobados, cero fallos y 49 integraciones MySQL omitidas.
+Las regresiones incluyen la igualdad de geometría de ambos botones compactos
+en claro y oscuro. Servidor: 117 casos, 57 aprobados y 60 omitidos, sin fallos.
+Los resultados siguientes identifican las ejecuciones previas; los casos omitidos no se
+consideran comprobados. La APK 0.9.3 / Android 18 fue enviada a EAS:
+[seguimiento](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
+Su compilación finalizó y la APK se publicó en la web el 18/11/2026; no acredita
+instalación probada. Backend 0.3.4
+desplegado por el agente con respaldos, contenedor healthy y API local/pública
+disponible. No se crearon tags, releases ni merge a main. Las notas de descarga
+están publicadas en SERVER-AHRE. Tamaño: 173.306.576 bytes; SHA-256
+2f345053baf37b7b565e6dd9ec9f82a08576de01aea3b29549ec8adc94b32dc0.
+Se descargó la APK completa desde HTTPS y coincidió el hash; las cuatro
+descargas responden con el tamaño esperado. La web elimina de todas las
+tarjetas el bloque App y servidor, sin un aviso sustituto.
+
+## Formularios, continuidad de Social y recordatorios · 17/11/2026
+
+- App: tipos correctos; 615 casos, 566 aprobados, cero fallos y 49 integraciones
+  MySQL omitidas. Tras los ajustes finales de ayudas se repitieron 40 regresiones
+  de depósitos, avisos y parser OCR: todas aprobadas.
+- Backend coordinado: tipos y compilación correctos; 117 casos, 57 aprobados,
+  cero fallos y 60 integraciones omitidas por falta de MySQL. No se consideran
+  ejecutadas las integraciones omitidas de ninguno de los repositorios.
+- Metro generó y sirvió el bundle Android con HTTP 200. No se generó otra APK
+  ni se comprobó el resultado de EAS para estos cambios.
+- El usuario confirmó el funcionamiento de los recorridos corregidos y del
+  recordatorio tras actualizar el servidor. El agente no ejecutó ese despliegue.
+- Pendiente de revisión visual: ayudas con icono de información y organización
+  de la confirmación OCR. El criterio de extracción del comercio no cambió.
+- Incidencia observada en logs de Expo: database is locked al preparar datos de
+  prueba (consultar-cuenta-prueba / reservar-escritura). No se presenta como resuelta.
+- En la revisión previa se conservaron app 0.9.2 / Android 17 y servidor 0.3.3; se actualizan los PR
+  y la documentación de Sin publicar sin mergear main ni crear una release.
+
+Los resultados siguientes corresponden a las preparaciones anteriores.
+
+## Interfaz clara y oscura · 16 de noviembre de 2026
+
+Esta revisión unifica fondos oscuros en tonos azulados neutros, botones e inputs
+reutilizables en ambos temas, avatares y controles del encabezado. Retira la
+pantalla temporal de estilos, unifica las acciones de las solicitudes de integrantes y mejora
+los selectores y la respuesta visual de las acciones.
+
+Guardar muestra «Procesando» con tres puntos durante al menos 2 segundos;
+«Listo» permanece otro segundo antes de cerrar o navegar. Una operación
+online espera su resultado real antes de confirmar. La navegación responde sin
+una pausa artificial. Las operaciones pendientes conservan el bloqueo y los
+errores permiten reintentar sin confirmar éxito.
+
+- Tipos de app y herramientas: correctos con `npm run typecheck`.
+- Suite completa de esta entrega: **611 casos**, 560 aprobados, 49 integraciones
+  MySQL omitidas y dos fallos en expectativas de los antiguos iconos compactos.
+  Se actualizaron esas dos pruebas para verificar el botón compartido y ambas
+  pasaron al repetirlas (**2/2**). No se repitió la suite completa después de ese
+  ajuste exclusivo de pruebas; el código enviado a EAS no cambió.
+- Los 49 casos MySQL omitidos no se consideran verificados en esta ejecución.
+  El registro anterior de 593 casos queda como antecedente de esta rama.
+- Exportación Android/Hermes: correcta.
+- La transición desplaza juntas las filas anterior y nueva (texto e icono),
+  conservando la identidad de la fila saliente: los puntos siguen animados y
+  salen junto con «Procesando». Un único ciclo nativo mueve los tres puntos
+  sin combinar bucles nativos con secuencias de JavaScript; la máscara queda fija.
+- Cobertura específica: tiempos de carga y éxito, cancelación al desmontar,
+  bloqueo de doble envío, estados en ambos temas y marcado masivo de 2.000 avisos.
+- Modales de Social: 14 pruebas de continuidad aprobadas en ambos temas y
+  10 regresiones de interfaz aprobadas. Se verifica una sola ventana durante
+  la carga, «Listo», errores y reintentos, sin cierres ni reaperturas intermedias.
+- Las operaciones de Social, Mercado Pago y corrección de correo comparten
+  los tiempos; las recargas conservan el contenido mientras se confirma.
+- Pendiente: comprobar los nuevos tiempos y la fluidez final en la APK instalada
+  en el teléfono. La exportación no equivale a una APK finalizada.
+- No se cambian dependencias ni contratos del servidor. La rama se prepara
+  con documentación, changelog y commit/push por pedido del usuario, sin merge
+  ni despliegue.
+
+### Envío de APK de esta revisión
+
+[APK interna 0.9.2 / Android 17 enviada a EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/df14e9e9-9e8f-4295-b242-bb5ec5bef9db)
+el 16/11/2026 desde las fuentes locales de `codex/modo-oscuro-neutro`
+posteriores a `58e3fb0`. Perfil `ocr-comparison`, firma existente y entorno
+`preview`. Se confirmaron carga y fingerprint con `--non-interactive --no-wait`.
+No se esperó ni verificó la compilación, por indicación del usuario. No se
+publica la descarga ni se despliega el servidor; el commit y push de esta rama
+se preparan sin merge. La APK Android 16 probada previamente es un antecedente.
+
+Los resultados siguientes pertenecen a la preparación anterior de 0.9.2 y
+se conservan como antecedente; no describen una repetición de MySQL en esta rama.
 
 ## Cierre de release 0.9.2 · 16 de noviembre de 2026
 

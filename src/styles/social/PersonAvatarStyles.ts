@@ -5,7 +5,7 @@ export default function crearEstilosPropios(tema: Tema) {
   return StyleSheet.create({
     avatar: {
       alignItems: 'center',
-      backgroundColor: tema.contenedorVerde,
+      backgroundColor: tema.avatarFondo,
       borderRadius: BORDES.radios.circular,
       height: 44,
       justifyContent: 'center',

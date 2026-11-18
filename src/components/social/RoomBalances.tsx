@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import EtiquetaImporte from '../AmountLabel';
 import {useState} from 'react';
 import crearEstilosSala from '../../styles/social/RoomDetailsStyles';
@@ -44,7 +46,7 @@ export default function BalancesSala(propiedades: import('../../social/types').A
         {provisional ? <Text style={estilosGlobales.textoAyuda}>Reparto provisional. Al cerrar la sala, las partes sin pagar quedarán como deudas.</Text> : null}
       </View>
       <View style={estilos.detalleBalances}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Quién le debe a quién" accessibilityState={{expanded:desplegado}} onPress={()=>cambiarDesplegado(actual=>!actual)} style={estilos.encabezadoBalances}>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Quién le debe a quién" accessibilityState={{expanded:desplegado}} onPress={conRespuestaVisual(()=>cambiarDesplegado(actual=>!actual))} style={estilos.encabezadoBalances}>
         <Text style={[estilosGlobales.encabezadoSeccion,estilos.tituloFila,estilos.textoFlexible]}>Quién le debe a quién</Text>
         <Ionicons name={desplegado?'chevron-up':'chevron-down'} size={22} color={tema.foco}/>
       </Pressable>
@@ -57,7 +59,7 @@ export default function BalancesSala(propiedades: import('../../social/types').A
 
       const color = pagasVos ? tema.error : tema.foco;
       const estado = tePagan ? provisional ? 'Te pagaría' : 'Te debe' : pagasVos ? provisional ? 'Pagarías' : 'Le debés' : 'Pendiente';
-      return <Pressable key={`${gasto.id}-${parte.personaId}`} accessibilityRole="button" accessibilityLabel={`${nombreCompletoPersona(obtenerPersona(parte.personaId))} a ${nombreCompletoPersona(obtenerPersona(gasto.pagadorId))}, ${parte.pendiente || parte.monto}, por ${gasto.descripcion}`} accessibilityHint="Abre el ítem y sus pagos." onPress={() => alAbrirGasto(gasto.id)} style={({
+      return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={`${gasto.id}-${parte.personaId}`} accessibilityRole="button" accessibilityLabel={`${nombreCompletoPersona(obtenerPersona(parte.personaId))} a ${nombreCompletoPersona(obtenerPersona(gasto.pagadorId))}, ${parte.pendiente || parte.monto}, por ${gasto.descripcion}`} accessibilityHint="Abre el ítem y sus pagos." onPress={conRespuestaVisual(() => alAbrirGasto(gasto.id))} style={({
         pressed: presionado
       }) => [estilosGlobales.tarjeta, estilos.tarjetaSala, estilos.deudaHistorial, presionado && estilos.deudaHistorialPresionada]}>
             <View style={estilos.filaCampos}>

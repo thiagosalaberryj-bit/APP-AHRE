@@ -1,3 +1,4 @@
+import type {PressableProps,PressableStateCallbackType} from 'react-native';
 import type { Tema } from './colors';
 import { StyleSheet } from 'react-native';
 
@@ -15,6 +16,8 @@ export const ESPACIADO = Object.freeze({
   formulario: 16,
 });
 
+export const RETROALIMENTACION_PULSACION = Object.freeze({color:'transparent', foreground:false});
+export const ANIMACION_ACCION = Object.freeze({cargaMinima:2000,exitoVisible:1000,transicion:260,punto:240,separacionPuntos:130});
 export const MARGEN_LATERAL_PANTALLA = ESPACIADO.medio;
 
 export const BORDES = Object.freeze({
@@ -49,7 +52,7 @@ export const TIPOGRAFIA = Object.freeze({
  * componerse a partir de esta base y de estilos locales de layout cuando sea
  * necesario.
  */
-export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
+function construirEstilosGlobales(tema: Tema) {
   return StyleSheet.create({
     areaSegura: {
       flex: 1,
@@ -164,6 +167,18 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
       fontSize: TIPOGRAFIA.tamanos.boton,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
+    botonPeligro: { minHeight:48, alignItems:'center', justifyContent:'center', backgroundColor:tema.botonPeligro, borderRadius:BORDES.radios.boton, paddingHorizontal:ESPACIADO.grande, paddingVertical:ESPACIADO.medio },
+    botonContornoPeligro: {minHeight:48,alignItems:'center',justifyContent:'center',borderColor:tema.error,borderWidth:BORDES.anchos.fino,borderRadius:BORDES.radios.boton,paddingHorizontal:ESPACIADO.medio,paddingVertical:ESPACIADO.medio},
+    textoBotonPeligro: { color:tema.botonPeligroTexto, fontSize:TIPOGRAFIA.tamanos.boton, fontWeight:TIPOGRAFIA.pesos.seminegrita },
+    botonCancelar: { minHeight:48, alignItems:'center', justifyContent:'center', backgroundColor:tema.fondoDeshabilitado, borderRadius:BORDES.radios.boton, paddingHorizontal:ESPACIADO.grande, paddingVertical:ESPACIADO.medio },
+    textoBotonCancelar: { color:tema.textoPrincipal, fontSize:TIPOGRAFIA.tamanos.boton, fontWeight:TIPOGRAFIA.pesos.seminegrita },
+    botonPresionado: {opacity:0.78},
+    accionContenido: {minHeight:28,overflow:'hidden',alignSelf:'stretch',justifyContent:'center'},
+    accionFila: {minHeight:28,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:ESPACIADO.pequeno},
+    accionAnterior: {position:'absolute',top:0,bottom:0,left:0,right:0},
+    accionPuntos: {flexDirection:'row',alignItems:'center',gap:4,minHeight:20},
+    accionPunto: {width:5,height:5,borderRadius:BORDES.radios.circular},
+    accionTexto: {fontSize:TIPOGRAFIA.tamanos.boton,fontWeight:TIPOGRAFIA.pesos.seminegrita,textAlign:'center',flexShrink:1},
     botonTexto: {
       minHeight: 44,
       alignItems: 'center',
@@ -177,6 +192,7 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
       fontSize: TIPOGRAFIA.tamanos.boton,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
+    botonAccionDeshabilitada: {backgroundColor:tema.fondoDeshabilitado},
     botonDeshabilitado: {
       minHeight: 48,
       alignItems: 'center',
@@ -192,19 +208,21 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
       fontSize: TIPOGRAFIA.tamanos.boton,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
+    superficieCampo: {backgroundColor:tema.campoFondo,borderColor:tema.campoBorde,borderWidth:BORDES.anchos.fino},
     campo: {
       minHeight: 52,
-      backgroundColor: tema.superficie,
-      borderColor: tema.bordeFuerte,
+      backgroundColor: tema.campoFondo,
+      borderColor: tema.campoBorde,
       borderRadius: BORDES.radios.campo,
-      borderWidth: BORDES.anchos.normal,
+      borderWidth: BORDES.anchos.fino,
       color: tema.textoPrincipal,
       fontFamily: TIPOGRAFIA.familias.principal,
       fontSize: TIPOGRAFIA.tamanos.cuerpo,
-      paddingHorizontal: ESPACIADO.grande,
+      paddingHorizontal: ESPACIADO.medio,
     },
     campoEnfocado: {
       borderColor: tema.foco,
+      backgroundColor: tema.campoFondoActivo,
     },
     campoCompletado: {
       borderColor: tema.exito,
@@ -217,6 +235,15 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
       borderColor: tema.borde,
       color: tema.deshabilitado,
     },
+    avisoFormulario: {minHeight:48,flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno,paddingVertical:ESPACIADO.pequeno,paddingHorizontal:ESPACIADO.medio,backgroundColor:tema.superficie,borderWidth:1,borderColor:tema.borde,borderRadius:BORDES.radios.boton},
+    avisoFormularioTitulo: {flex:1,fontFamily:TIPOGRAFIA.familias.principal,fontSize:14,lineHeight:21,fontWeight:TIPOGRAFIA.pesos.seminegrita},
+    avisoFormularioTexto: {color:tema.textoSecundario,fontFamily:TIPOGRAFIA.familias.principal,fontSize:15,lineHeight:23},
+    avisoFormularioFondo: {flex:1,justifyContent:'center',alignItems:'center',padding:ESPACIADO.grande,backgroundColor:'rgba(0,0,0,0.5)'},
+    avisoFormularioCierre: {position:'absolute',top:0,bottom:0,left:0,right:0},
+    avisoFormularioModal: {width:'100%',maxWidth:480,maxHeight:'80%',backgroundColor:tema.superficieElevada,borderRadius:BORDES.radios.tarjeta,padding:ESPACIADO.medio,gap:ESPACIADO.medio},
+    avisoFormularioCabecera: {flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno},
+    avisoFormularioBotonCerrar: {width:44,height:44,alignItems:'center',justifyContent:'center'},
+    avisoFormularioDetalle: {paddingHorizontal:ESPACIADO.pequeno,paddingBottom:ESPACIADO.pequeno},
     textoAyuda: {
       color: tema.textoSecundario,
       fontFamily: TIPOGRAFIA.familias.principal,
@@ -247,8 +274,8 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
     navegacion: {
       minHeight: 76,
       alignItems: 'stretch',
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
+      backgroundColor: tema.navegacion,
+      borderColor: tema.navegacionBorde,
       borderTopWidth: BORDES.anchos.fino,
       flexDirection: 'row',
       paddingHorizontal: ESPACIADO.pequeno,
@@ -265,4 +292,16 @@ export function crearEstilosGlobales(tema: Tema = TEMAS.claro) {
       borderTopWidth: BORDES.anchos.normal,
     },
   });
+}
+
+const cacheEstilosGlobales=new WeakMap<Tema,ReturnType<typeof construirEstilosGlobales>>();
+export function crearEstilosGlobales(tema:Tema=TEMAS.claro){
+ let estilos=cacheEstilosGlobales.get(tema);
+ if(!estilos){estilos=construirEstilosGlobales(tema);cacheEstilosGlobales.set(tema,estilos);}
+ return estilos;
+}
+
+/** Feedback sin dibujar un rectángulo encima del control. */
+export function conEstiloDePulsacion(estilo:PressableProps['style']){
+ return(estado:PressableStateCallbackType)=>[typeof estilo==='function'?estilo(estado):estilo,estado.pressed&&{opacity:0.78}];
 }

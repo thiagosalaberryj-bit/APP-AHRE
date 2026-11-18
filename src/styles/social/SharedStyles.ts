@@ -96,7 +96,7 @@ export default function crearEstilosCompartidos(tema: Tema) {
       borderRadius: BORDES.radios.circular,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: tema.contenedorVerde
+      backgroundColor: tema.avatarFondo
     },
     resumenPrincipal: {
       backgroundColor: tema.superficie,
@@ -195,7 +195,7 @@ export default function crearEstilosCompartidos(tema: Tema) {
     },
     iconoLista: {
       alignItems: 'center',
-      backgroundColor: tema.contenedorVerde,
+      backgroundColor: tema.superficieElevada,
       borderRadius: BORDES.radios.boton,
       height: 48,
       justifyContent: 'center',
@@ -226,7 +226,7 @@ export default function crearEstilosCompartidos(tema: Tema) {
       paddingVertical: ESPACIADO.pequeno
     },
     textoAvatar: {
-      color: tema.contenedorVerdeTexto,
+      color: tema.avatarTexto,
       fontSize: TIPOGRAFIA.tamanos.etiqueta,
       fontWeight: TIPOGRAFIA.pesos.negrita
     },

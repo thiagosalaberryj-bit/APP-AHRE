@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -43,11 +45,11 @@ export function FiltroTipoMovimientos({ tema, estilos, estilosChips, resumen, ab
         {OPCIONES_TIPO.map((opcion) => {
           const activa = tipoFiltro === opcion.id;
           return (
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               key={opcion.id}
               accessibilityRole="button"
               accessibilityState={{ selected: activa }}
-              onPress={() => cambiarTipoFiltro(opcion.id)}
+              onPress={conRespuestaVisual(() => cambiarTipoFiltro(opcion.id))}
               style={[estilosChips?.filtro ?? estilos.chip, estilos.chipTipo, activa ? estilosChips?.filtroActivo ?? estilos.chipActivo : null]}
             >
               <Text numberOfLines={1} style={[estilosChips?.textoFiltro ?? estilos.textoChip, activa ? estilosChips?.textoActivo ?? estilos.textoChipActivo : null]}>
@@ -139,11 +141,11 @@ export function FiltroFechaMovimientos({
           {OPCIONES_FECHA.map((opcion) => {
             const activa = fechaFiltro === opcion.id;
             return (
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 key={opcion.id}
                 accessibilityRole="button"
                 accessibilityState={{ selected: activa }}
-                onPress={() => cambiarFechaFiltro(opcion.id)}
+                onPress={conRespuestaVisual(() => cambiarFechaFiltro(opcion.id))}
                 style={[estilosChips?.filtro ?? estilos.chip, estilos.chipFecha, activa ? estilosChips?.filtroActivo ?? estilos.chipActivo : null]}
               >
                 <Text style={[estilosChips?.textoFiltro ?? estilos.textoChip, activa ? estilosChips?.textoActivo ?? estilos.textoChipActivo : null]}>
@@ -215,19 +217,19 @@ export function FiltroFechaMovimientos({
       {fechaFiltro === 'mes' ? (
         <View style={estilos.grupoCalendarioFiltro}>
           <View style={estilos.encabezadoCalendario}>
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityLabel="Año anterior"
               accessibilityRole="button"
-              onPress={() => establecerAnioMesVisible((anio) => anio - 1)}
+              onPress={conRespuestaVisual(() => establecerAnioMesVisible((anio) => anio - 1))}
               style={estilos.botonMes}
             >
               <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
             </Pressable>
             <Text style={estilos.mesCalendario}>{anioMesVisible}</Text>
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityLabel="Año siguiente"
               accessibilityRole="button"
-              onPress={() => establecerAnioMesVisible((anio) => anio + 1)}
+              onPress={conRespuestaVisual(() => establecerAnioMesVisible((anio) => anio + 1))}
               style={estilos.botonMes}
             >
               <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
@@ -239,11 +241,11 @@ export function FiltroFechaMovimientos({
                 && mesSeleccionado.getMonth() === indice
                 && mesSeleccionado.getFullYear() === anioMesVisible;
               return (
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityRole="button"
                   accessibilityState={{ selected: Boolean(activo) }}
                   key={mes}
-                  onPress={() => establecerMesSeleccionado(new Date(anioMesVisible, indice, 1))}
+                  onPress={conRespuestaVisual(() => establecerMesSeleccionado(new Date(anioMesVisible, indice, 1)))}
                   style={[estilos.opcionMes, activo ? estilos.opcionMesActiva : null]}
                 >
                   <Text style={[estilos.textoOpcionMes, activo ? estilos.textoOpcionMesActivo : null]}>

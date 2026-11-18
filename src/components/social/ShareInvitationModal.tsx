@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { useContext } from 'react';
 import { ContextoAvisos } from '../../contexts/ToastContext';
 import { useErrorNotificado } from '../../hooks/useErrorNotice';
@@ -13,7 +15,7 @@ import DialogoInvitacion from './InvitationDialog';
 // El núcleo no necesita canvas, DOM ni servicios externos.
 const {create}=require('qrcode/lib/core/qrcode') as Pick<typeof import('qrcode'),'create'>;
 
-export default function CompartirInvitacion({enlace,nombre,alCerrar,global:esGlobal=false,alConfigurar,...aspecto}:AspectoSocial&{enlace:string;nombre:string;alCerrar:()=>void;global?:boolean;alConfigurar?:()=>void}){
+export default function CompartirInvitacion({enlace,nombre,alCerrar,global:esGlobal=false,alConfigurar,sinVentana=false,...aspecto}:AspectoSocial&{enlace:string;nombre:string;alCerrar:()=>void;global?:boolean;sinVentana?:boolean;alConfigurar?:()=>void}){
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilos=crearEstilosSocialOnline(aspecto.tema),{width}=useWindowDimensions();
   const [, cambiarError]=useErrorNotificado(''),[compartiendo,cambiarCompartiendo]=useState(false),enCurso=useRef(false);
@@ -32,10 +34,10 @@ export default function CompartirInvitacion({enlace,nombre,alCerrar,global:esGlo
   };
   const qr=useMemo(()=>{const matriz=create(enlace,{errorCorrectionLevel:'M'}).modules;let trazado='';for(let y=0;y<matriz.size;y++)for(let x=0;x<matriz.size;x++)if(matriz.get(y,x))trazado+='M'+(x+4)+' '+(y+4)+'h1v1h-1z';return {trazado,tamano:matriz.size+8};},[enlace]);
   const lado=Math.max(120,Math.min(190,width-112));
-  return <DialogoInvitacion {...aspecto} titulo={esGlobal?'Compartir '+nombre:'Invitar a '+nombre} descripcion={esGlobal?'Un mismo enlace y QR para todas las personas':'Un enlace personal para esta sala'} icono="person-add-outline" alCerrar={alCerrar} ocupado={compartiendo||copiando} pie={<Pressable accessibilityRole="button" disabled={compartiendo||copiando} onPress={()=>{void compartir();}} style={[estilos.principal,(compartiendo||copiando)&&estilos.deshabilitado]}><Ionicons name="share-social-outline" size={21} color={aspecto.tema.botonPrincipalTexto}/><Text style={estilos.textoPrincipal}>{compartiendo?'Abriendo…':'Compartir por una app'}</Text></Pressable>}>
+  return <DialogoInvitacion sinVentana={sinVentana} {...aspecto} titulo={esGlobal?'Compartir '+nombre:'Invitar a '+nombre} descripcion={esGlobal?'Un mismo enlace y QR para todas las personas':'Un enlace personal para esta sala'} icono="person-add-outline" alCerrar={alCerrar} ocupado={compartiendo||copiando} pie={<Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={compartiendo||copiando} onPress={conRespuestaVisual(()=>{void compartir();})} style={[estilos.principal,(compartiendo||copiando)&&estilos.deshabilitado]}><Ionicons name="share-social-outline" size={21} color={aspecto.tema.botonPrincipalTexto}/><Text style={estilos.textoPrincipal}>{compartiendo?'Abriendo…':'Compartir por una app'}</Text></Pressable>}>
     <View style={estilos.grupo}>
       <Text style={aspecto.estilosGlobales.etiqueta}>Enlace de invitación</Text>
-      <View style={estilos.enlaceCampo}><Ionicons name="link-outline" size={21} color={aspecto.tema.foco}/><TextInput accessibilityLabel="Enlace personal para compartir" value={enlace} editable={false} multiline={false} numberOfLines={1} style={estilos.enlaceTexto}/><Pressable accessibilityRole="button" accessibilityLabel="Copiar enlace de invitación" accessibilityHint="Copia el enlace completo al portapapeles." disabled={copiando||compartiendo} onPress={()=>{void copiar();}} style={[estilos.accionCopiar,(copiando||compartiendo)&&estilos.deshabilitado]}><Ionicons name={copiado?'checkmark-outline':'copy-outline'} size={21} color={aspecto.tema.foco}/></Pressable></View>
+      <View style={estilos.enlaceCampo}><Ionicons name="link-outline" size={21} color={aspecto.tema.foco}/><TextInput accessibilityLabel="Enlace personal para compartir" value={enlace} editable={false} multiline={false} numberOfLines={1} style={estilos.enlaceTexto}/><Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Copiar enlace de invitación" accessibilityHint="Copia el enlace completo al portapapeles." disabled={copiando||compartiendo} onPress={conRespuestaVisual(()=>{void copiar();})} style={[estilos.accionCopiar,(copiando||compartiendo)&&estilos.deshabilitado]}><Ionicons name={copiado?'checkmark-outline':'copy-outline'} size={21} color={aspecto.tema.foco}/></Pressable></View>
 
     </View>
     <View style={estilos.qrCentrado}>

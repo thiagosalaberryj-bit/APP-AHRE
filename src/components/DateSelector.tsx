@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import type { Tema } from '../styles/colors';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -90,10 +92,10 @@ export default function SelectorFecha({
   const mostrarCalendario = () => (
     <>
       <View style={estilosMovimiento.encabezadoCalendario}>
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Mes anterior"
           accessibilityRole="button"
-          onPress={() => cambiarMes(-1)}
+          onPress={conRespuestaVisual(() => cambiarMes(-1))}
           style={estilosMovimiento.botonMes}
         >
           <Ionicons color={tema.textoPrincipal} name="chevron-back" size={20} />
@@ -101,10 +103,10 @@ export default function SelectorFecha({
         <Text style={estilosMovimiento.mesCalendario}>
           {MESES[mesVisible.getMonth()]} {mesVisible.getFullYear()}
         </Text>
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Mes siguiente"
           accessibilityRole="button"
-          onPress={() => cambiarMes(1)}
+          onPress={conRespuestaVisual(() => cambiarMes(1))}
           style={estilosMovimiento.botonMes}
         >
           <Ionicons color={tema.textoPrincipal} name="chevron-forward" size={20} />
@@ -136,11 +138,11 @@ export default function SelectorFecha({
 
           return (
             <View key={dia} style={estilosMovimiento.celdaCalendario}>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityLabel={format(fechaDia, 'd MMMM yyyy', { locale: es })}
                 accessibilityRole="button"
                 accessibilityState={{ selected: seleccionada }}
-                onPress={() => elegirFecha(dia)}
+                onPress={conRespuestaVisual(() => elegirFecha(dia))}
                 style={[
                   estilosMovimiento.diaCalendario,
                   esHoy ? estilosMovimiento.diaCalendarioHoy : null,
@@ -161,9 +163,9 @@ export default function SelectorFecha({
           );
         })}
       </View>
-      <Pressable
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
         accessibilityRole="button"
-        onPress={elegirHoy}
+        onPress={conRespuestaVisual(elegirHoy)}
         style={estilosMovimiento.botonHoy}
       >
         <Text style={estilosMovimiento.textoBotonHoy}>Ir a hoy</Text>
@@ -173,11 +175,11 @@ export default function SelectorFecha({
 
   return (
     <>
-      <Pressable
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
         accessibilityLabel={`Seleccionar fecha, ${textoFecha}`}
         accessibilityRole="button"
         accessibilityState={{ expanded: enLinea ? expandido : modalVisible }}
-        onPress={enLinea ? alternarCalendario : abrirCalendario}
+        onPress={conRespuestaVisual(enLinea ? alternarCalendario : abrirCalendario)}
         style={estilosMovimiento.filaInformacion}
       >
         <Ionicons color={tema.textoPrincipal} name="calendar-outline" size={22} />
@@ -195,19 +197,19 @@ export default function SelectorFecha({
         transparent
         visible={modalVisible}
       >
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Cerrar calendario"
-          onPress={() => establecerModalVisible(false)}
+          onPress={conRespuestaVisual(() => establecerModalVisible(false))}
           style={estilosMovimiento.fondoSuperpuesto}
         >
-          <Pressable onPress={() => {}} style={estilosMovimiento.tarjetaModalFecha}>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} onPress={conRespuestaVisual(() => {})} style={estilosMovimiento.tarjetaModalFecha}>
             <View style={estilosMovimiento.encabezadoModal}>
               <Text style={estilosMovimiento.tituloModal}>Elegí una fecha</Text>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityLabel="Cerrar calendario"
                 accessibilityRole="button"
                 hitSlop={8}
-                onPress={() => establecerModalVisible(false)}
+                onPress={conRespuestaVisual(() => establecerModalVisible(false))}
                 style={estilosMovimiento.botonCerrarModal}
               >
                 <Ionicons color={tema.textoPrincipal} name="close" size={22} />

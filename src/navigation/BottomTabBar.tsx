@@ -1,3 +1,7 @@
+import {conEstiloDePulsacion} from '../styles/globalStyles';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import {useAccionEnCurso} from '../hooks/useActionInProgress';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import type { NombreIcono } from '../constants/movimientos';
 import type { Tema } from '../styles/colors';
 import { useContext, useState } from 'react';
@@ -17,11 +21,12 @@ const ACCIONES_NUEVO = Object.freeze([
 ]);
 
 export default function BarraPestanasInferior({ state: estado, descriptors: descriptores, navigation: navegacion }: import('@react-navigation/bottom-tabs').BottomTabBarProps) {
+  const accionOcupada=useAccionEnCurso();
   const margenesSeguros = useSafeAreaInsets();
   const { tema } = useContext(ContextoApariencia);
   const estilos = crearEstilosBarra(tema);
   const colorActivo = tema.foco;
-  const colorInactivo = tema.textoSecundario;
+  const colorInactivo = tema.navegacionTexto;
   const [accionesAbiertas, establecerAccionesAbiertas] = useState(false);
 
   const abrirAccionRapida = (ruta: string) => {
@@ -72,7 +77,7 @@ export default function BarraPestanasInferior({ state: estado, descriptors: desc
           });
 
           return (
-            <Pressable
+            <Pressable disabled={accionOcupada} android_ripple={RETROALIMENTACION_PULSACION}
               key={ruta.key}
               accessibilityLabel={opciones.tabBarAccessibilityLabel}
               accessibilityHint={esNuevo ? 'Toca para abrir acciones rápidas' : undefined}
@@ -80,10 +85,10 @@ export default function BarraPestanasInferior({ state: estado, descriptors: desc
               accessibilityState={seleccionada ? { selected: true } : {}}
               accessibilityValue={(opciones as typeof opciones & {tabBarAccessibilityValue?: import('react-native').AccessibilityValue}).tabBarAccessibilityValue}
               onLongPress={alMantenerPresionado}
-              onPress={alPresionar}
+              onPress={conRespuestaVisual(alPresionar)}
               delayLongPress={450}
               testID={opciones.tabBarButtonTestID}
-              style={[estilos.elemento, esNuevo && estilos.elementoNuevo]}
+              style={conEstiloDePulsacion([estilos.elemento, esNuevo && estilos.elementoNuevo])}
             >
               {seleccionada && !esNuevo ? <View style={estilos.indicadorActivo} /> : null}
               {esNuevo ? <View style={estilos.iconoNuevo}>{icono}</View> : icono}
@@ -109,11 +114,11 @@ export default function BarraPestanasInferior({ state: estado, descriptors: desc
         visible={accionesAbiertas}
       >
         <View style={estilos.modalAcciones}>
-          <Pressable
+          <Pressable disabled={accionOcupada} android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityLabel="Cerrar acciones rápidas"
             accessibilityRole="button"
             onPress={() => establecerAccionesAbiertas(false)}
-            style={StyleSheet.absoluteFill}
+            style={conEstiloDePulsacion(StyleSheet.absoluteFill)}
           />
           <View accessibilityViewIsModal style={estilos.contenidoAcciones}>
             <Text
@@ -136,27 +141,27 @@ export default function BarraPestanasInferior({ state: estado, descriptors: desc
                 const fondo = esOCR
                   ? COLORES_ESTADO.informacion
                   : esIngreso
-                    ? tema.contenedorVerde
+                    ? tema.botonSecundario
                     : tema.botonPrincipal;
                 const colorIcono = esOCR
                   ? '#FFFFFF'
                   : esIngreso
                     ? tema.botonPrincipal
-                    : tema.encabezado;
+                    : tema.botonPrincipalTexto;
 
                 return (
-                  <Pressable
+                  <Pressable disabled={accionOcupada} android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityLabel={accion.etiqueta}
                     accessibilityRole="button"
                     key={accion.ruta}
-                    onPress={() => abrirAccionRapida(accion.ruta)}
-                    style={({ pressed }) => [
+                    onPress={conRespuestaVisual(() => abrirAccionRapida(accion.ruta))}
+                    style={conEstiloDePulsacion(({ pressed }) => [
                       estilos.accionModal,
                       indice === 0 && estilos.accionOCR,
                       indice === 1 && estilos.accionIngreso,
                       indice === 2 && estilos.accionEgreso,
                       pressed && estilos.accionModalPresionada,
-                    ]}
+                    ])}
                   >
                     <View style={[estilos.botonAccionModal, { backgroundColor: fondo }]}>
                       <Ionicons color={colorIcono} name={accion.icono as NombreIcono} size={27} />
@@ -184,8 +189,8 @@ function crearEstilosBarra(tema: Tema) {
       minHeight: 64,
       flexDirection: 'row',
       alignItems: 'stretch',
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
+      backgroundColor: tema.navegacion,
+      borderColor: tema.navegacionBorde,
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
       borderBottomLeftRadius: 0,

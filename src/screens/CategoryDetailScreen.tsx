@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useAvisoError } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -184,7 +186,7 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
                   </View>
                 </View>
               </> : (
-                <Pressable accessibilityRole="button" onPress={() => establecerIntentoCarga(intento => intento + 1)} style={estilos.estadoDetalle}>
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(() => establecerIntentoCarga(intento => intento + 1))} style={estilos.estadoDetalle}>
 
                   <Text style={estilos.textoEstado}>Reintentar</Text>
                 </Pressable>
@@ -201,8 +203,8 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
             <View style={estilos.evolucionCategoria}>
               <View style={estilos.encabezadoSeccion}>
                 <Text accessibilityRole="header" style={estilos.tituloSeccion}>Evolución anual</Text>
-                <Pressable ref={controlAnio} accessibilityLabel={'Año ' + anio + '. Cambiar año'} accessibilityRole="button"
-                  accessibilityState={{ expanded: selectorPeriodo !== null }} onPress={abrirSelector}
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION} ref={controlAnio} accessibilityLabel={'Año ' + anio + '. Cambiar año'} accessibilityRole="button"
+                  accessibilityState={{ expanded: selectorPeriodo !== null }} onPress={conRespuestaVisual(abrirSelector)}
                   style={[estilos.selectorPeriodo, selectorPeriodo && estilos.selectorPeriodoActivo]}>
                   <Text numberOfLines={1} style={estilos.textoSelectorPeriodo}>{anio}</Text>
                   <Ionicons color={tema.textoSecundario} name={selectorPeriodo ? 'chevron-up' : 'chevron-down'} size={14} />
@@ -211,9 +213,9 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
               <View style={estilos.graficoEvolucion}>
                 {evolucion.map(item => {
                   const seleccionado = item.mes === mesSeleccionado;
-                  return <Pressable key={item.mes} accessibilityRole="button" accessibilityState={{ selected: seleccionado }}
+                  return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={item.mes} accessibilityRole="button" accessibilityState={{ selected: seleccionado }}
                     accessibilityLabel={MESES[item.mes].nombre + ': ' + formatearMonto(item.total, tipoMovimiento) + '. Ver movimientos'}
-                    onPress={() => establecerMesSeleccionado(item.mes)} style={estilos.columnaMes}>
+                    onPress={conRespuestaVisual(() => establecerMesSeleccionado(item.mes))} style={estilos.columnaMes}>
                     <View style={[estilos.pistaMes, seleccionado && estilos.pistaMesActiva]}>
                       <View style={[estilos.barraMes, { height: item.total > 0 ? Math.max(4, item.total / maximoEvolucion * 100) + '%' as `${number}%` : 2, backgroundColor: item.total > 0 ? categoria.color : tema.borde }]} />
                     </View>
@@ -240,13 +242,13 @@ export default function PantallaDetalleCategoria({ navigation: navegacion, route
             ) : null}
           </DesplazamientoEncabezado>
           {selectorPeriodo ? <View style={estilos.capaSelector}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar selección del período" onPress={() => establecerSelectorPeriodo(null)} style={StyleSheet.absoluteFill} />
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar selección del período" onPress={() => establecerSelectorPeriodo(null)} style={StyleSheet.absoluteFill} />
             <View style={[estilos.menuPeriodo, anclaSelector]}>
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: anclaSelector.maxHeight }} keyboardShouldPersistTaps="handled">
                 {aniosDisponibles.map(valor => ({ valor, etiqueta: String(valor) })).map(opcion => {
                   const seleccionado = opcion.valor === anio;
-                  return <Pressable key={opcion.valor} accessibilityRole="button" accessibilityState={{ selected: seleccionado }}
-                    onPress={() => { establecerAnio(opcion.valor); establecerSelectorPeriodo(null); }}
+                  return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.valor} accessibilityRole="button" accessibilityState={{ selected: seleccionado }}
+                    onPress={conRespuestaVisual(() => { establecerAnio(opcion.valor); establecerSelectorPeriodo(null); })}
                     style={[estilos.opcionPeriodo, seleccionado && estilos.opcionPeriodoActiva]}>
                     <Text numberOfLines={1} style={estilos.textoSelectorPeriodo}>{opcion.etiqueta}</Text>
                     <Ionicons color={tema.foco} name="checkmark" size={16} style={{ opacity: seleccionado ? 1 : 0 }} />

@@ -116,8 +116,9 @@ Siempre deben acompañarse con texto, signo o icono.
 
 ### Notificaciones superiores
 
-Las notificaciones superiores conservan la misma tarjeta verde oscuro en los
-temas claro y oscuro. `COLORES_NOTIFICACIONES` centraliza el fondo, los textos,
+Las notificaciones superiores usan una tarjeta verde oscuro en el tema claro
+y gris pizarra elevada en el oscuro, siguiendo la apariencia activa.
+`COLORES_NOTIFICACIONES` centraliza los textos,
 la barra de tiempo y el color del icono según el tipo de aviso. Los errores usan
 rosa claro, los éxitos verde claro y la información azul claro; el tipo también
 se comunica con un icono distinto.
@@ -172,13 +173,50 @@ saturación del relleno para conservar matices vivos, especialmente el naranja
 de Alimentación, sin alterar la paleta de los gráficos. Íconos y textos conservan
 contraste: los íconos claros usan una tinta más oscura de su propia familia,
 tanto en las cards como en el modal. El modo oscuro conserva su tinta anterior.
-La selección utiliza el verde de encabezado. Este tratamiento solo
+La selección utiliza el token verde independiente `seleccion`. Este tratamiento solo
 afecta las cards del selector, sin modificar los colores de los gráficos.
 Salas prioriza Alimentación, Compras, Hogar y Servicios como Egresos; las demás
 opciones y el modal siguen el orden de familias y tonos de intenso a claro.
 La etiqueta superior del selector compartido de depósitos usa peso regular.
 
 ## Encabezados de pantalla
+
+### Controles compartidos
+
+La propuesta aprobada de la pantalla de prueba se aplica a las pantallas de la
+app. Se retiraron esa pantalla, su ruta y sus archivos experimentales.
+
+La paleta vive en `src/styles/colors.ts`. `globalStyles.ts` centraliza los
+estilos de campos y botones, el feedback de presión y las constantes de animación:
+
+- Principal: ácido `#CCEB6C` y texto verde oscuro `#024C42` en ambos temas.
+- Secundario y botones de Volver, Perfil y Sincronización: verde `#296860` en
+  claro y azul grisáceo `#35475D` en oscuro, con texto/iconos ácido.
+- Crítico: rojo `#BA3024` con texto blanco. Los textos de error mantienen su
+  propio color para conservar contraste.
+- Cancelar: fondo gris y texto normal. Bloqueado: gris y texto deshabilitado.
+- Selector Ingresos/Egresos: usa el color secundario aprobado y texto ácido.
+- Campos: borde de 1 punto en reposo y foco. En claro, relleno `#F8F8F8`, borde
+  gris neutro `#A0A0A0` y relleno blanco al enfocar; en oscuro, relleno
+  `#29323F`, borde `#7D8B9E` y relleno `#343E4B` al enfocar. El borde y
+  el icono activos usan el foco del tema. No hay relleno verde de foco.
+
+`ActionButton.tsx` comparte la interacción, `ActionContent.tsx` el cambio
+vertical de dos filas sincronizadas (texto e icono) con una sola animación nativa,
+sin callbacks intermedios de JavaScript. El contenedor queda fijo y recorta solo
+la salida y entrada de las filas. `LoadingDots.tsx` muestra los tres puntos. La carga dice
+«Procesando», sin puntos suspensivos escritos. Las animaciones respetan Reducir
+movimiento y se detienen al desmontar. Los pulsables conservan feedback nativo.
+
+Cargando impide nuevos envíos, conservando el color de la acción. Un botón
+bloqueado por requisitos incumplidos usa gris. «Listo» solo se muestra tras un
+éxito explícito; al cambiar de acción se libera esa confirmación. Un fallo o
+una validación no muestran un éxito ficticio y permiten reintentar.
+
+Los guardados financieros bloquean otras escrituras y los accesos incompatibles
+hasta finalizar; la liberación también ocurre ante fallos. Los modales no se
+cierran durante esas operaciones. Las solicitudes del historial muestran
+Rechazar y Aceptar juntos, con texto y carga en la acción elegida.
 
 Los encabezados principales y secundarios comparten una altura de `120` puntos.
 Las descripciones se alinean a la izquierda y quedan centradas verticalmente
@@ -275,17 +313,41 @@ que la interfaz pinte esa zona sin un velo de contraste de Android.
 
 ### Tema oscuro
 
-- Fondo general: `#081C19`.
-- Tarjetas y formularios: `#10322D`.
-- Texto principal: `#FFFFFF`.
-- Texto secundario: `#C5D1CF`.
-- Bordes: `#557570`.
-- Encabezado: `#024C42` con texto blanco.
+- Fondo general azul grafito: `#141A23`.
+- Tarjetas: `#202833`.
+- Encabezado y barra compacta: azul grafito `#1B222D` con texto blanco.
+- Navegación inferior y zona segura inferior: azul grafito `#1B222D`, mediante
+  `tema.navegacion`, independiente de las superficies de las pantallas.
+  Usa textos `#B9C3D0` y bordes `#536174`,
+  mediante `navegacionTexto` y `navegacionBorde`.
+- Superficie elevada (avatares, iconos y avisos): `#303C4C`.
+- Texto principal blanco suave: `#F1F4F8`.
+- Texto secundario gris claro: `#B9C3D0`.
+- Bordes: `#536174`; bordes de campos: `#7D8B9E`.
+- Controles deshabilitados: fondo `#2B3543` y texto `#8794A6`.
+- Selección de filtros y categorías: verde `#024C42` con texto blanco.
+- Enfoque: verde claro `#CCEB6C`.
 - Acción principal: `#CCEB6C` con texto `#024C42`.
-- Acción secundaria: `#296860` con texto `#CCEB6C`.
+- Acción secundaria: `#35475D` con texto `#CCEB6C`.
 
-El tema oscuro conserva la jerarquía de marca y modifica fondos, superficies y
-textos para mantener contraste.
+El tema oscuro usa grises con matiz azul, sin fondos negros puros. Los tokens
+`superficieElevada` y `superficieElevadaTexto` describen los contenedores;
+`seleccion` y `seleccionTexto` conservan el verde de los controles activos sin
+vincularlo al color del encabezado. Los botones, el foco y los indicadores de
+éxito mantienen sus verdes. Los colores de categorías, depósitos, gráficos y
+errores conservan su significado. El tema claro mantiene su paleta.
+El fondo nativo de arranque oscuro coincide con `#141A23`; requiere recompilar
+la APK para reflejar ese cambio anterior a la carga de JavaScript.
+
+Los avatares con iniciales comparten `avatarFondo` y `avatarTexto` en Perfil,
+agenda, detalles de personas/deudas y participantes de salas. En oscuro usan
+el verde ácido `#CCEB6C` para las letras y ese mismo verde al 9,4 % de opacidad
+para el círculo, como en la lista de Personas. Las fotos de perfil se conservan.
+
+Las acciones destructivas usan `botonPeligro` (`#BA3024` en ambos temas) y texto
+blanco `botonPeligroTexto`. Este rojo cálido se separa de `error`
+(`#FF8A80`), que sigue reservado para textos, iconos y validaciones legibles
+sobre fondos oscuros. Los textos de error en claro conservan `#C62828`.
 
 ## Tipografía
 
@@ -421,3 +483,135 @@ la animación: ninguna capa rectangular tapa las esquinas al plegar o desplegar.
 En el encabezado plegado, las insignias de notificaciones y sincronización se
 ubican seis puntos debajo del borde superior de sus controles para evitar
 el recorte por la máscara. El encabezado desplegado conserva su posición.
+
+### Respuesta de pulsación y navegación
+
+La navegación, los selectores y las aperturas responden al toque sin pausas artificiales. Los botones recién montados no animan una pulsación ni desplazan su texto.
+
+Las acciones que guardan muestran «Procesando» y tres puntos durante la
+operación real, con un mínimo de 2 segundos también para escrituras locales
+rápidas. Solo tras el éxito muestran «Listo» durante otro segundo antes de
+cerrar el formulario o navegar. Si una solicitud online tarda más de 2 segundos,
+los puntos continúan hasta terminar la respuesta y sincronización necesarias;
+recién entonces comienza el tiempo de «Listo». Los errores permiten reintentar
+sin mostrar éxito. El bloqueo de interacción se mantiene durante toda la
+secuencia. Los tiempos se definen en `ANIMACION_ACCION`, dentro de
+`src/styles/globalStyles.ts`, y se coordinan con `useActionCompletion.ts`;
+no se agregan esperas a la navegación ni a las selecciones.
+
+Los estilos globales se reutilizan por tema y Reducir movimiento comparte una
+consulta/suscripción nativa. Las pestañas principales programan su carga tras
+dos fotogramas de dibujo y cancelan ese inicio si se sale antes, sin temporizadores de navegación. El selector de apariencia
+deja dibujar el cierre del modal antes de aplicar el tema. La fluidez final debe
+comprobarse también en el teléfono.
+
+La pulsación no agrega una capa ni un marco gris sobre los controles. Los
+botones de encabezado, opciones, interruptores y navegación usan un cambio
+sutil de opacidad; las operaciones muestran la carga de tres puntos. Las animaciones de carga y
+transición no crean interacciones que bloqueen otras tareas de la interfaz.
+
+
+Las decisiones de Social (aceptar o rechazar solicitudes, registrar personas,
+enviar o cancelar vínculos, invitaciones, archivar o desarchivar y guardar accesos)
+usan el mismo botón que los formularios financieros. `useConfirmedAction.ts`
+coordina estas operaciones con los tiempos de `useActionCompletion.ts`. Las
+recargas de la pantalla y de vínculos o salas conservan su contenido hasta que
+termine la confirmación: una respuesta local o de demo no puede quitar el botón
+antes de mostrar «Listo». Los errores liberan el bloqueo sin confirmar éxito.
+Las confirmaciones de movimientos y desvinculación de Mercado Pago y de corrección de correo
+se muestran en los modales existentes, con el mismo componente y los mismos tiempos.
+
+Al pasar de «Procesando» a «Listo», se conserva la identidad de la fila saliente:
+la palabra y los puntos salen juntos y estos siguen animados hasta completar la
+transición. Un único ciclo nativo mueve los tres puntos; no depende de combinar
+bucles nativos con secuencias de JavaScript. Reducir movimiento evita los
+desplazamientos, manteniendo los tiempos de confirmación.
+
+
+Los pasos de un mismo diálogo de Social conservan una única ventana nativa:
+opciones de persona y vínculos/archivo, opciones de salas e ingreso,
+compartir sala y configuración, y confirmación y selección financiera.
+Los contenidos admiten `sinVentana` cuando la ventana pertenece al recorrido
+contenedor. Guardar no cambia `visible` ni vuelve a presentar el modal para
+mostrar la animación. La ventana permanece montada durante «Procesando»,
+«Listo» y los errores recuperables; solo se cierra al finalizar o cancelar.
+
+
+### Ajustes locales de continuidad · 17/11/2026
+
+Editar persona desde su menú conserva la misma ventana nativa durante la
+edición, el guardado y la confirmación. Agregar integrantes online recibe
+también el estado de éxito. Las decisiones compactas vuelven a usar tick y cruz,
+con etiquetas de accesibilidad y los mismos estados de carga y bloqueo del
+botón compartido; el historial de solicitudes de sala comparte los símbolos.
+
+El header oscuro usa un contorno fino del color de borde del navbar, superpuesto
+sin modificar su altura ni el plegado. En los modales de Perfil, el fondo que
+cierra y la tarjeta son hermanos: tocar un control dentro de la tarjeta no
+pertenece al área pulsable que cierra.
+
+
+### Continuidad de Social y recordatorios dirigidos · 17/11/2026
+
+El contenedor de Social conserva una vista nativa (collapsable=false) y bloquea
+nuevos gestos mediante captura, sin alternar pointerEvents de la vista que aloja
+los modales. Evita cambiar la jerarquía nativa al iniciar o terminar una acción.
+Archivar y desarchivar cierran todos los estados del menú tras confirmar; los
+toasts del modal no se vuelven a presentar al cerrarlo. La invitación muestra
+la animación de su acción únicamente en el botón, sin otra carga en la tarjeta.
+
+Las decisiones compactas son símbolos sin relleno, con marco fino; rechazar conserva puntos y confirmación, aceptar abre la
+selección/confirmación, también para personas conocidas en las salas. El selector
+de persona de una deuda reutiliza el modal de participantes de sala en modo
+individual, con búsqueda, archivadas y confirmación explícita.
+
+En salas online abiertas, el administrador dispone de Recordar registros pendientes.
+El servidor calcula destinatarios con cuenta y selección financiera pendiente o
+inválida; excluye invitados, al administrador y a quienes ya enlazaron sus gastos.
+Se evita repetir el aviso para la misma cuenta, revisión de sala y hora. La demo
+solo simula el resultado. Requiere desplegar el nuevo endpoint del servidor;
+los cambios locales no despliegan servicios.
+
+Verificación local de estos ajustes: tipos de app/herramientas correctos;
+615 casos de app, 566 aprobados y 49 integraciones MySQL omitidas. Tras ajustar
+el momento de envío de la propuesta de deuda, las 27 regresiones de Social y
+toasts pasaron de nuevo. El servidor pasó tipos y 57 pruebas; 60 integraciones
+se omitieron por falta de MySQL. La estabilidad visual nativa queda por confirmar
+en el teléfono. No se hicieron commits, push, merge ni despliegues.
+
+Confirmación manual del 17/11/2026: el usuario comprobó los recorridos y el
+recordatorio tras actualizar el servidor e indicó que todo funciona. Esta
+confirmación complementa las pruebas automatizadas; no agrega una ejecución
+de las integraciones MySQL omitidas.
+
+
+### Ayudas de formularios · 17/11/2026
+
+FormNotice.tsx presenta una mini tarjeta pulsable con information-circle-outline,
+título contextual y flecha. Icono y título usan el acento ácido en oscuro y el
+verde oscuro en claro. Una superficie del tema y un borde sutil distinguen el
+acceso; el texto completo queda en un modal de lectura, con título e icono en
+el mismo acento y cuerpo secundario de 15 puntos con interlineado 23. El modal
+permite desplazamiento y cierre por X, fondo y Atrás, conservando el formulario.
+Los tokens de presentación viven en globalStyles.ts y sirven en claro y oscuro.
+Se utiliza en movimientos, depósitos, formularios de Social, ajustes de avisos
+y revisión OCR. Los errores conservan su presentación propia, y los valores,
+contadores y etiquetas de campos no se convierten en avisos.
+
+En Ingreso/Egreso la explicación de movimientos anteriores al depósito se
+identifica como Cómo afecta al saldo. En OCR se separan revisión, comercio
+sugerido, total a completar, descripción, fechas sugeridas y efecto sobre el
+saldo. La explicación del comercio se abre directamente en su modal de información. No cambian las
+reglas de interpretación del comprobante ni los datos que se guardan.
+
+
+### Acción activa y bloqueo de controles vecinos
+
+El estado de interacción no se comparte como carga: el cierre de sesión y la
+desvinculación identifican la acción elegida y bloquean ambos controles. Solo
+el elegido muestra Procesando y Listo. Los botones bloqueados actualizan su
+texto sin transición ni sombreado de pulsación; conservan su geometría.
+Los formularios que abren una confirmación conservan el bloqueo de su botón
+principal, pero muestran la animación únicamente dentro del modal activo.
+Las simulaciones de respuesta usan también el identificador de solicitud,
+evitan animar otras filas y separan revisión de salidas de registros demo.

@@ -17,7 +17,7 @@ Abrir AHRE muestra Inicio. Al deslizar, una cuenta sin sesión pasa a Login; una
   alrededor del caballo mediante el plugin local `withCompleteAdaptiveIcon`.
   Estas configuraciones requieren una nueva compilación del APK.
 - Fondo uniforme del tema activo, sin luces ni círculos decorativos (`#F4F4F4`
-  en claro y `#081C19` en oscuro).
+  en claro y `#141A23` en oscuro).
 - Símbolo de AHRE desde `assets/ahre-mark.png`.
 - Nombre de AHRE en dos líneas (`AH` y `RE`), centrado en la pantalla.
 - Deslizador inferior con el texto «Desliza para iniciar».

@@ -17,12 +17,12 @@ export function crearEstilosMovimientos(tema: Tema, _anchoVentana = 390) {
     grupo: {
       gap: ESPACIADO.pequeno,
     },
-    buscador: {
+    buscador: { backgroundColor: tema.campoFondo,
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
-      borderColor: tema.borde,
+      borderColor: tema.campoBorde,
       borderWidth: BORDES.anchos.fino,
     },
     entradaBuscador: {
@@ -181,7 +181,7 @@ export function crearEstilosMovimientos(tema: Tema, _anchoVentana = 390) {
       fontWeight: TIPOGRAFIA.pesos.medio,
     },
     textoOpcionMesActivo: {
-      color: tema.nombre === 'oscuro' ? tema.encabezado : tema.superficie,
+      color: tema.nombre === 'oscuro' ? tema.botonPrincipalTexto : tema.superficie,
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     fondoFiltros: {
@@ -345,8 +345,8 @@ export function crearEstilosMovimientos(tema: Tema, _anchoVentana = 390) {
       width: '100%',
       minWidth: 0,
       minHeight: 52,
-      backgroundColor: tema.superficie,
-      borderColor: tema.borde,
+      backgroundColor: tema.campoFondo,
+      borderColor: tema.campoBorde,
       borderRadius: BORDES.radios.campo,
       borderWidth: BORDES.anchos.fino,
       color: tema.textoPrincipal,
@@ -705,7 +705,7 @@ export function crearEstilosMovimientos(tema: Tema, _anchoVentana = 390) {
       fontSize: TIPOGRAFIA.tamanos.secundario,
     },
     textoDiaCalendarioSeleccionado: {
-      color: tema.nombre === 'oscuro' ? tema.encabezado : tema.superficie,
+      color: tema.nombre === 'oscuro' ? tema.botonPrincipalTexto : tema.superficie,
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
     botonHoy: {

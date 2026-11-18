@@ -1,11 +1,15 @@
+import {operacionFinancieraEnCurso} from '../../social/financialOperation';
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { AvisosEnModal } from '../../contexts/ToastContext';
 import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FormularioPersona from './PersonForm';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-export default function ModalPersona(propiedades: import('../../social/types').AspectoSocial & ({visible:boolean;alCerrar:(persona?:Pick<import('../../database/types').Persona,'id'> | null)=>void;personaInicial?:import('../../social/types').PersonaVista | null} & Pick<import('../../social/types').AccionesSociales,'abrirPersona'>)) {
+export default function ModalPersona(propiedades: import('../../social/types').AspectoSocial & ({visible:boolean;sinVentana?:boolean;alCerrar:(persona?:Pick<import('../../database/types').Persona,'id'> | null)=>void;personaInicial?:import('../../social/types').PersonaVista | null} & Pick<import('../../social/types').AccionesSociales,'abrirPersona'>)) {
   const {
     visible,
+    sinVentana=false,
     alCerrar,
     abrirPersona,
     personaInicial,
@@ -21,13 +25,14 @@ export default function ModalPersona(propiedades: import('../../social/types').A
     estilos,
     estilosGlobales
   } = aspecto;
-  return <Modal transparent animationType="fade" visible={visible} onRequestClose={() => alCerrar()}><AvisosEnModal visible={visible}>
+  const cerrar=()=>{if(!operacionFinancieraEnCurso())alCerrar();};
+  const contenido=<AvisosEnModal visible={visible}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={estilos.fondoModal}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Cerrar formulario de persona" onPress={() => alCerrar()} style={estilos.cierreFondo} />
+        <Pressable accessibilityRole="button" accessibilityLabel="Cerrar formulario de persona" onPress={cerrar} style={estilos.cierreFondo} />
         <View accessibilityViewIsModal style={estilos.tarjetaModal}>
           <View style={estilos.filaModal}>
             <Text accessibilityRole="header" style={[estilosGlobales.encabezadoSeccion, estilos.textoFlexible]}>{personaInicial ? 'Editar persona' : 'Agregar persona'}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar edición de persona" onPress={() => alCerrar()} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar edición de persona" onPress={conRespuestaVisual(cerrar)} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={24} /></Pressable>
           </View>
           <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal}>
             {visible ? <FormularioPersona personaInicial={personaInicial} alCerrar={alCerrar} abrirPersona={id => {
@@ -37,5 +42,6 @@ export default function ModalPersona(propiedades: import('../../social/types').A
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </AvisosEnModal></Modal>;
+    </AvisosEnModal>;
+  return sinVentana?contenido:<Modal transparent animationType="fade" visible={visible} onRequestClose={cerrar}>{contenido}</Modal>;
 }

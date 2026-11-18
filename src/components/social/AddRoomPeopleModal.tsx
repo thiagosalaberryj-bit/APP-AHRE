@@ -1,3 +1,6 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import BotonAccion from '../ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { AvisosEnModal } from '../../contexts/ToastContext';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
@@ -6,13 +9,15 @@ import { Modal, KeyboardAvoidingView, Platform, Pressable, View, Text, TextInput
 import { Ionicons } from '@expo/vector-icons';
 import crearEstilosModal from '../../styles/social/AddRoomPeopleModalStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
-export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[]; guardando?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean})) {
+export default function ModalAgregarPersonasSala(propiedades: import('../../social/types').AspectoSocial & ({personasSala:string[];multiple?:boolean; guardando?:boolean;completado?:boolean; alAgregar:(ids:string[])=>void; alCerrar:()=>void; alCrear:()=>void; seleccionInicial?:string[]; titulo?:string; textoConfirmar?:string; permitirVacia?:boolean})) {
   const {
     personas: personasSociales
   } = useDatosSociales();
   const {
     personasSala,
+    multiple=true,
     guardando:guardandoExterno,
+    completado,
     alAgregar,
     alCerrar,
     alCrear,
@@ -47,19 +52,19 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
         <View accessibilityViewIsModal style={estilos.tarjetaModal}>
           <View style={estilos.filaModal}>
             <View style={estilos.iconoTitulo}><Ionicons name="people-outline" size={23} color={tema.foco}/></View>
-            <View style={estilos.textoFlexible}><Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>{titulo}</Text><Text style={estilos.contador}>Elegí personas de tu agenda</Text></View>
-            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar selección de personas" disabled={guardando} onPress={alCerrar} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={22} /></Pressable>
+            <View style={estilos.textoFlexible}><Text accessibilityRole="header" style={estilosGlobales.encabezadoSeccion}>{titulo}</Text><Text style={estilos.contador}>{multiple?'Elegí personas de tu agenda':'Elegí una persona de tu agenda'}</Text></View>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar selección de personas" disabled={guardando} onPress={conRespuestaVisual(alCerrar)} style={estilos.botonCerrar}><Ionicons color={tema.textoPrincipal} name="close" size={22} /></Pressable>
           </View>
           <View style={[estilos.buscador, enfocado && estilos.buscadorEnfocado]}>
-            <Ionicons color={tema.textoSecundario} name="search-outline" size={22} />
+            <Ionicons color={enfocado?tema.foco:tema.textoSecundario} name="search-outline" size={22} />
             <TextInput accessibilityLabel="Buscar personas para agregar" editable={!guardando} value={busqueda} onChangeText={establecerBusqueda} onFocus={() => establecerEnfocado(true)} onBlur={() => establecerEnfocado(false)} placeholder="Nombre, apellido o apodo" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={estilos.entradaBusqueda} />
           </View>
-          {disponibles.some(p=>!p.activa)?<Pressable accessibilityRole="checkbox" accessibilityLabel="Incluir personas archivadas" accessibilityState={{checked:archivadas}} onPress={()=>mostrarArchivadas(!archivadas)} style={estilos.filaModal}><Ionicons name={archivadas?'checkbox':'square-outline'} size={22} color={tema.foco}/><Text style={estilosGlobales.texto}>Incluir personas archivadas</Text></Pressable>:null}
-          <Text accessibilityLiveRegion="polite" style={estilos.contador}>{seleccionadas.length} seleccionadas</Text>
+          {disponibles.some(p=>!p.activa)?<Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityLabel="Incluir personas archivadas" accessibilityState={{checked:archivadas}} onPress={conRespuestaVisual(()=>mostrarArchivadas(!archivadas))} style={estilos.filaModal}><Ionicons name={archivadas?'checkbox':'square-outline'} size={22} color={tema.foco}/><Text style={estilosGlobales.texto}>Incluir personas archivadas</Text></Pressable>:null}
+          <Text accessibilityLiveRegion="polite" style={estilos.contador}>{multiple?seleccionadas.length+' seleccionadas':seleccionadas.length?'Una persona seleccionada':'Sin persona seleccionada'}</Text>
           <ScrollView keyboardShouldPersistTaps="handled" style={estilos.desplazamientoModal} contentContainerStyle={estilos.listaPersonas}>
-            {personas.length ? personas.map((persona) => <Pressable key={persona.id} accessibilityRole="checkbox" accessibilityLabel={`Seleccionar a ${nombreCompletoPersona(persona)}`} accessibilityState={{
+            {personas.length ? personas.map((persona) => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={persona.id} accessibilityRole={multiple?"checkbox":"radio"} accessibilityLabel={`Seleccionar a ${nombreCompletoPersona(persona)}`} accessibilityState={{
             checked: seleccionadas.includes(persona.id)
-          }} disabled={guardando} onPress={() => establecerSeleccionadas(anteriores => anteriores.includes(persona.id) ? anteriores.filter(id => id !== persona.id) : [...anteriores, persona.id])} style={[estilos.personaAgenda, seleccionadas.includes(persona.id) && estilos.personaSeleccionada]}>
+          }} disabled={guardando} onPress={conRespuestaVisual(() => establecerSeleccionadas(anteriores => !multiple?[persona.id]:anteriores.includes(persona.id) ? anteriores.filter(id => id !== persona.id) : [...anteriores, persona.id]))} style={[estilos.personaAgenda, seleccionadas.includes(persona.id) && estilos.personaSeleccionada]}>
                 <View style={estilos.avatarPersona}><Text style={estilos.inicialesPersona}>{persona.iniciales}</Text></View>
                 <View style={estilos.textoFlexible}><Text numberOfLines={1} ellipsizeMode="tail" style={estilos.nombrePersona}>{nombreCompletoPersona(persona)}</Text>{persona.apodo?<Text ellipsizeMode="tail" numberOfLines={1} style={estilos.apodo}>{persona.apodo}</Text>:null}</View>
                 <Ionicons color={seleccionadas.includes(persona.id)?tema.foco:tema.textoSecundario} name={seleccionadas.includes(persona.id) ? 'checkmark-circle' : 'ellipse-outline'} size={23} />
@@ -67,12 +72,10 @@ export default function ModalAgregarPersonasSala(propiedades: import('../../soci
           </ScrollView>
 
           <View style={estilos.acciones}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Crear una persona" disabled={guardando} onPress={alCrear} style={[estilos.crear, guardando && estilos.deshabilitado]}>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Crear una persona" disabled={guardando} onPress={conRespuestaVisual(alCrear)} style={[estilos.crear, guardando && estilos.deshabilitado]}>
               <Ionicons name="person-add-outline" color={tema.foco} size={18} /><Text style={estilos.textoCrear}>Crear persona</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel={textoConfirmar === 'Agregar' ? 'Agregar seleccionadas' : textoConfirmar} disabled={(!permitirVacia && !seleccionadas.length) || guardando} onPress={() => alAgregar(seleccionadas)} style={[estilos.agregar, ((!permitirVacia && !seleccionadas.length) || guardando) && estilos.deshabilitado]}>
-              <Text style={estilos.textoAgregar}>{guardando ? 'Agregando…' : textoConfirmar + (seleccionadas.length ? ' · ' + seleccionadas.length : '')}</Text>
-            </Pressable>
+            <BotonAccion completado={completado} tema={tema} texto={textoConfirmar + (seleccionadas.length ? ' · ' + seleccionadas.length : '')} variante="principal" cargando={guardando} deshabilitado={(!permitirVacia && !seleccionadas.length) || guardando} alPresionar={() => alAgregar(seleccionadas)} estilo={[estilos.agregar]} etiquetaAccesibilidad={textoConfirmar === 'Agregar' ? 'Agregar seleccionadas' : textoConfirmar}/>
           </View>
         </View>
       </KeyboardAvoidingView>

@@ -1,3 +1,7 @@
+import {actualizarTrasOperacion} from '../../social/financialOperation';
+import {useAccionConfirmada} from '../../hooks/useConfirmedAction';
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { useErrorNotificado } from '../../hooks/useErrorNotice';
 import {useEffect,useRef,useState} from 'react';
 import {Text,View,Pressable} from 'react-native';
@@ -14,6 +18,7 @@ import BotonSocial from './SocialButton';
 import Dialogo from './InvitationDialog';
 
 export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial&{deuda:DeudaVista}) {
+ const respuesta=useAccionConfirmada();
   const social=useDatosSociales(),estilos=crearEstilosDetalle(aspecto.tema),compartidos=crearEstilosCompartidos(aspecto.tema);
   const [pagos,cambiarPagos]=useState<PagoSocial[]>([]),[acuerdo,cambiarAcuerdo]=useState<DeudaOnline|null>(null),[operaciones,cambiarOperaciones]=useState<OperacionPersonal[]>([]),[vinculos,cambiarVinculos]=useState<{clave:string;movimiento_id:string}[]>([]),[, cambiarError]=useErrorNotificado('');
   const [esDemo,cambiarDemo]=useState(false),[simulando,cambiarSimulando]=useState(false),[ocupado,cambiarOcupado]=useState(false);
@@ -26,7 +31,7 @@ export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial
         const demo=deuda.id.startsWith('demo-social:')&&!!await usuarioDemoActual();
         if(demo)await sincronizarSocialOnline();
         const [privados,deudas,operaciones,vinculos]=await Promise.all([deuda.soloOnline?Promise.resolve([]):consultarHistorialDeuda(deuda.id),leerDatosOnline<DeudaOnline[]>(social.usuarioId,'deudas',[]),leerDatosOnline<OperacionPersonal[]>(social.usuarioId,'operaciones',[]),consultarMovimientosSociales()]);
-        if(activo){cambiarPagos(privados);cambiarAcuerdo(deudas.find(d=>d.id===deuda.acuerdoOnlineId)||null);cambiarOperaciones(operaciones);cambiarVinculos(vinculos);cambiarDemo(demo);cambiarError('');}
+        actualizarTrasOperacion(()=>{if(activo){cambiarPagos(privados);cambiarAcuerdo(deudas.find(d=>d.id===deuda.acuerdoOnlineId)||null);cambiarOperaciones(operaciones);cambiarVinculos(vinculos);cambiarDemo(demo);cambiarError('');}});
       }catch{if(activo)cambiarError('No se pudo cargar el historial.');}
     };
     void cargar();const dejar=observarSocialOnline(()=>{void cargar();});
@@ -37,9 +42,7 @@ export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial
     if(bloqueo.current||!acuerdo)return;
     bloqueo.current=true;cambiarOcupado(true);cambiarError('');
     try{
-      await simularRespuestaDemo(acuerdo.id,{decision,pagoId,pendienteEsperado:acuerdo.pendiente});
-      await social.recargar();
-      if(montado.current)cambiarSimulando(false);
+      await respuesta.ejecutar(async()=>{await simularRespuestaDemo(acuerdo.id,{decision,pagoId,pendienteEsperado:acuerdo.pendiente});await social.recargar();},()=>{if(montado.current)cambiarSimulando(false);},decision+':'+(pagoId||''));
     }catch(e){if(montado.current)cambiarError(e instanceof Error?e.message:'No se pudo simular la respuesta.');}
     finally{bloqueo.current=false;if(montado.current)cambiarOcupado(false);}
   };
@@ -56,7 +59,7 @@ export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial
   const registro=(id:string,titulo:string,fecha:string,descripcion:string,movimientoId?:string,accion?:()=>void,atencion=false,estado:keyof typeof estados='registrado')=>{
     const indicador=estados[estado];
     const contenido=<><View style={estilos.metadatos}><Ionicons accessible accessibilityLabel={indicador.etiqueta} name={indicador.icono} size={22} color={indicador.color}/><Text style={[aspecto.estilosGlobales.etiqueta,compartidos.textoFlexible]}>{titulo}</Text>{movimientoId||accion?<Ionicons name="chevron-forward" size={20} color={atencion?aspecto.tema.foco:aspecto.tema.textoSecundario}/>:null}</View><Text style={estilos.detalle}>{new Date(fecha).toLocaleString('es-AR')}</Text>{descripcion?<Text style={estilos.detalle}>{descripcion}</Text>:null}</>;
-    return movimientoId||accion?<Pressable key={id} accessibilityRole="button" accessibilityLabel={(movimientoId?'Ver movimiento: ':'Gestionar registro: ')+titulo} onPress={movimientoId?()=>social.abrirMovimiento(movimientoId):accion} style={[estilos.registro,atencion&&estilos.registroPendiente]}>{contenido}</Pressable>:<View key={id} style={estilos.registro}>{contenido}</View>;
+    return movimientoId||accion?<Pressable android_ripple={RETROALIMENTACION_PULSACION} key={id} accessibilityRole="button" accessibilityLabel={(movimientoId?'Ver movimiento: ':'Gestionar registro: ')+titulo} onPress={conRespuestaVisual(movimientoId?()=>social.abrirMovimiento(movimientoId):accion)} style={[estilos.registro,atencion&&estilos.registroPendiente]}>{contenido}</Pressable>:<View key={id} style={estilos.registro}>{contenido}</View>;
   };
   return <View style={estilos.historial}>
     <Text accessibilityRole="header" style={aspecto.estilosGlobales.encabezadoSeccion}>Historial de la deuda</Text>
@@ -76,12 +79,12 @@ export default function HistorialActividadDeuda({deuda,...aspecto}:AspectoSocial
       {acuerdo.pagos.filter(p=>p.estado==='informado').map(p=><View key={p.id} style={estilos.registro}>
         <Text style={aspecto.estilosGlobales.etiqueta}>Tu pago de {formatearMontoSocial(p.monto)}</Text>
         <View style={compartidos.filaCampos}>
-          <View style={compartidos.columnaCampo}><BotonSocial texto={'Aceptar pago de '+formatearMontoSocial(p.monto)} deshabilitado={ocupado} alPresionar={()=>{void responder('confirmado',p.id);}} {...aspecto}/></View>
-          <View style={compartidos.columnaCampo}><BotonSocial secundario texto={'Rechazar pago de '+formatearMontoSocial(p.monto)} deshabilitado={ocupado} alPresionar={()=>{void responder('rechazado',p.id);}} {...aspecto}/></View>
+          <View style={compartidos.columnaCampo}><BotonSocial cargando={respuesta.accionActiva==='confirmado:'+p.id} completado={respuesta.completado&&respuesta.accionActiva==='confirmado:'+p.id} texto={'Aceptar pago de '+formatearMontoSocial(p.monto)} deshabilitado={ocupado} alPresionar={()=>responder('confirmado',p.id)} {...aspecto}/></View>
+          <View style={compartidos.columnaCampo}><BotonSocial cargando={respuesta.accionActiva==='rechazado:'+p.id} completado={respuesta.completado&&respuesta.accionActiva==='rechazado:'+p.id} secundario texto={'Rechazar pago de '+formatearMontoSocial(p.monto)} deshabilitado={ocupado} alPresionar={()=>responder('rechazado',p.id)} {...aspecto}/></View>
         </View>
       </View>)}
       {!acuerdo.pagos.some(p=>p.estado==='informado')?<Text style={aspecto.estilosGlobales.textoSecundario}>Registrá un pago desde tu lado para simular cómo te lo acepta o rechaza.</Text>:null}
-      <BotonSocial secundario texto={'Perdonarme '+formatearMontoSocial(acuerdo.pendiente)} deshabilitado={ocupado||acuerdo.pendiente<=0} alPresionar={()=>{void responder('perdonado');}} {...aspecto}/>
+      <BotonSocial cargando={respuesta.accionActiva==='perdonado:'} completado={respuesta.completado&&respuesta.accionActiva==='perdonado:'} secundario texto={'Perdonarme '+formatearMontoSocial(acuerdo.pendiente)} deshabilitado={ocupado||acuerdo.pendiente<=0} alPresionar={()=>responder('perdonado')} {...aspecto}/>
 
     </Dialogo>:null}
   </View>;

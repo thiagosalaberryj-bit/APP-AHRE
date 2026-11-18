@@ -78,7 +78,9 @@ mostrarAviso('La sincronización sigue en curso.', {
 La notificación también se puede cerrar con la X o deslizando hacia un costado.
 Si se muestra otro aviso, reemplaza al que estaba visible. El color del icono
 depende del tipo; los colores compartidos están en
-`src/styles/colors.ts` (`COLORES_NOTIFICACIONES`).
+`src/styles/colors.ts` (`COLORES_NOTIFICACIONES`). El fondo sigue la apariencia:
+verde oscuro en claro y `tema.superficieElevada` en oscuro. El texto y los iconos
+mantienen contraste en ambas superficies.
 
 ## Uso actual
 
@@ -104,8 +106,8 @@ vez. Los resultados de una acción se notifican desde su callback, nunca durante
 el render.
 
 Los modales nativos montan `AvisosEnModal` dentro de su ventana. El proveedor
-compartido dirige el aviso al modal visible más profundo; al cerrarlo conserva
-el aviso en la ventana que queda activa, sin perder confirmaciones. Se reutiliza
+compartido dirige el aviso al modal visible más profundo. Al cerrar esa ventana
+no vuelve a reproducir su aviso en la pantalla ni en otro modal. Se reutiliza
 `ToastNotification`, con duración, cierre, gesto y accesibilidad existentes.
 No se crean entradas en el historial de Notificaciones ni escrituras en SQLite.
 

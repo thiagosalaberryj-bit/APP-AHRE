@@ -16,7 +16,7 @@ export default function crearEstilosPropios(tema: Tema) {
       width: 40,
       height: 40,
       borderRadius: BORDES.radios.circular,
-      backgroundColor: `${tema.foco}18`,
+      backgroundColor: tema.avatarFondo,
       alignItems: 'center',
       justifyContent: 'center'
     },

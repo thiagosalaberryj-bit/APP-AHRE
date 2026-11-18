@@ -1,3 +1,8 @@
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import BotonAccion from './ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from './LoadingDots';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useContext } from 'react';
 import { ContextoAvisos } from '../contexts/ToastContext';
@@ -6,7 +11,7 @@ import EtiquetaImporte from './AmountLabel';
 import {iniciarOperacionFinanciera} from '../social/financialOperation';
 import {useFocusEffect} from '@react-navigation/native';
 import {useCallback,useEffect,useRef,useState} from 'react';
-import {ActivityIndicator,KeyboardAvoidingView,Modal,Platform,Pressable,ScrollView,Text,View} from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {CATEGORIAS_EGRESO,CATEGORIAS_INGRESO} from '../constants/movimientos';
 import {consultarRecurrenciasDeposito,actualizarRecurrencia,consultarHistorialRecurrencia,aceptarOcurrenciaRecurrencia} from '../recurrences/recurrenceService';
@@ -27,6 +32,7 @@ const monto=(valor:number)=>'$ '+valor.toLocaleString('es-AR',{minimumFractionDi
 export default function PanelRecurrencias({depositoId,tema,alCambiar,alCambiarCantidad,filtrar}:{
   depositoId:string;tema:Tema;alCambiar:()=>void;alCambiarCantidad?:(cantidad:number)=>void;filtrar?:(fila:Recurrencia)=>boolean;
 }){
+  const finalizacion=useFinalizacionAccion();
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilos=crearEstilosGlobales(tema),tarjeta=crearEstilosTarjetaMovimiento(tema),propios=crearEstilosRecurrencias(tema),modal=crearEstilosDetalleMovimiento(tema),estilosMovimiento=crearEstilosEgreso(tema);
   const [filas,establecerFilas]=useState<Recurrencia[]>([]),[seleccionadaId,establecerSeleccionadaId]=useState<string|null>(null),[editando,establecerEditando]=useState(false);
@@ -48,15 +54,15 @@ export default function PanelRecurrencias({depositoId,tema,alCambiar,alCambiarCa
   const abrir=(fila:Recurrencia)=>{establecerError('');establecerEditando(false);establecerSeleccionadaId(fila.id);};
   const reprogramar=()=>{if(!seleccionada)return;const proxima=new Date(Date.parse(seleccionada.proxima_ejecucion)>Date.now()?Date.parse(seleccionada.proxima_ejecucion):Date.now()+86400000);const civil=partesCalendario(proxima.toISOString(),seleccionada.zona_horaria);establecerFecha(new Date(civil.anio,civil.mes-1,civil.dia));establecerHora(String(civil.hora).padStart(2,'0')+':'+String(civil.minuto).padStart(2,'0'));establecerImporte(String(seleccionada.monto).replace('.',','));establecerEditando(v=>!v);};
   const guardar=async(activa:boolean,cambiarFecha=false)=>{
-    if(!seleccionada||bloqueo.current)return;const liberar=iniciarOperacionFinanciera();if(!liberar)return;bloqueo.current=true;cambiarAccion(cambiarFecha?'guardar':'desactivar');establecerGuardando(true);establecerError('');
+    if(!seleccionada||bloqueo.current)return;const liberar=iniciarOperacionFinanciera();if(!liberar)return;bloqueo.current=true;cambiarAccion(cambiarFecha?'guardar':'desactivar');finalizacion.iniciar();establecerGuardando(true);establecerError('');
     try{
       await actualizarRecurrencia(seleccionada.id,{activa,...(cambiarFecha?{monto:importe,proximaEjecucion:instanteCalendario({anio:fecha.getFullYear(),mes:fecha.getMonth()+1,dia:fecha.getDate(),hora:Number(hora.split(':')[0]),minuto:Number(hora.split(':')[1]),segundo:0},seleccionada.zona_horaria)}:{})});
-      await recargar();establecerEditando(false);alCambiar();mostrarAviso(cambiarFecha?'Programación actualizada.':'Programación desactivada.',{tipo:'exito'});
+      if(!await finalizacion.confirmar())return;await recargar();establecerEditando(false);alCambiar();mostrarAviso(cambiarFecha?'Programación actualizada.':'Programación desactivada.',{tipo:'exito'});
     }catch(fallo){establecerError(fallo instanceof Error?fallo.message:'No se pudo guardar la programación.');}finally{liberar();bloqueo.current=false;establecerGuardando(false);cambiarAccion('');}
   };
   const aceptar=async()=>{
-    if(!seleccionada||bloqueo.current)return;const liberar=iniciarOperacionFinanciera();if(!liberar)return;bloqueo.current=true;establecerGuardando(true);cambiarAccion('aceptar');establecerError('');
-    try{await aceptarOcurrenciaRecurrencia(seleccionada.id,seleccionada.proxima_ejecucion);await recargar();alCambiar();mostrarAviso('Movimiento recurrente registrado.',{tipo:'exito'});}catch(e){establecerError(e instanceof Error?e.message:'No se pudo registrar.');}finally{liberar();bloqueo.current=false;establecerGuardando(false);cambiarAccion('');}
+    if(!seleccionada||bloqueo.current)return;const liberar=iniciarOperacionFinanciera();if(!liberar)return;bloqueo.current=true;finalizacion.iniciar();establecerGuardando(true);cambiarAccion('aceptar');establecerError('');
+    try{await aceptarOcurrenciaRecurrencia(seleccionada.id,seleccionada.proxima_ejecucion);if(!await finalizacion.confirmar())return;await recargar();alCambiar();mostrarAviso('Movimiento recurrente registrado.',{tipo:'exito'});}catch(e){establecerError(e instanceof Error?e.message:'No se pudo registrar.');}finally{liberar();bloqueo.current=false;establecerGuardando(false);cambiarAccion('');}
   };
   const visibles=filas.filter(f=>!filtrar||filtrar(f)).sort((a,b)=>b.activa-a.activa||Date.parse(a.proxima_ejecucion)-Date.parse(b.proxima_ejecucion));
   return <View style={propios.grupo}>
@@ -66,7 +72,7 @@ export default function PanelRecurrencias({depositoId,tema,alCambiar,alCambiarCa
     {!visibles.length?<Text style={estilos.textoSecundario}>{filas.length?'No hay recurrencias que coincidan con los filtros.':'Este depósito no tiene recurrencias.'}</Text>:null}
     {visibles.map(fila=>{
       const ingreso=fila.tipo==='ingreso',color=ingreso?tema.exito:tema.error,categoria=(ingreso?CATEGORIAS_INGRESO:CATEGORIAS_EGRESO).find(c=>c.id===fila.categoria),restante=tiempoHastaRecurrencia(fila.proxima_ejecucion,!!fila.activa,ahora);
-      return <Pressable key={fila.id} accessibilityRole="button" accessibilityLabel={fila.descripcion+'. '+monto(fila.monto)+'. '+restante+'. Ver opciones y resumen.'} onPress={()=>abrir(fila)} style={({pressed})=>[tarjeta.tarjeta,pressed&&tarjeta.presionada]}>
+      return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={fila.id} accessibilityRole="button" accessibilityLabel={fila.descripcion+'. '+monto(fila.monto)+'. '+restante+'. Ver opciones y resumen.'} onPress={conRespuestaVisual(()=>abrir(fila))} style={({pressed})=>[tarjeta.tarjeta,pressed&&tarjeta.presionada]}>
         <View style={[tarjeta.icono,{backgroundColor:color+'18'}]}><Ionicons color={color} name={categoria?.icono||'repeat-outline'} size={18}/></View>
         <View style={tarjeta.contenido}>
           <View style={tarjeta.filaTitulo}><Text numberOfLines={1} ellipsizeMode="tail" style={tarjeta.titulo}>{fila.descripcion}</Text></View>
@@ -80,34 +86,34 @@ export default function PanelRecurrencias({depositoId,tema,alCambiar,alCambiarCa
     })}
     <Modal transparent animationType="fade" visible={!!seleccionada} onRequestClose={()=>!bloqueo.current&&establecerSeleccionadaId(null)}><AvisosEnModal visible={!!seleccionada}>
       <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':'height'} style={modal.fondoModalImporte}>
-        <Pressable accessibilityLabel="Cerrar detalle recurrente" disabled={guardando} onPress={()=>{if(!bloqueo.current)establecerSeleccionadaId(null);}} style={modal.cierreModalImporte}/>
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel="Cerrar detalle recurrente" disabled={guardando} onPress={conRespuestaVisual(()=>{if(!bloqueo.current)establecerSeleccionadaId(null);})} style={modal.cierreModalImporte}/>
         <View accessibilityViewIsModal style={modal.tarjetaConfirmacion}>
           <View style={propios.encabezado}>
             <Text accessibilityRole="header" style={[modal.tituloConfirmacion,propios.textoFlexible]}>{seleccionada?.descripcion}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar detalle recurrente" disabled={guardando} onPress={()=>{if(!bloqueo.current)establecerSeleccionadaId(null);}} style={modal.botonCerrarImporte}><Ionicons name="close" size={24} color={tema.textoSecundario}/></Pressable>
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar detalle recurrente" disabled={guardando} onPress={conRespuestaVisual(()=>{if(!bloqueo.current)establecerSeleccionadaId(null);})} style={modal.botonCerrarImporte}><Ionicons name="close" size={24} color={tema.textoSecundario}/></Pressable>
           </View>
           {seleccionada?<ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={propios.grupo}>
             <View style={propios.hero}>
               <View style={propios.encabezado}><View style={propios.iconoModal}><Ionicons name="repeat-outline" size={24} color={tema.foco}/></View><View style={propios.textoFlexible}><Text style={estilos.textoSecundario}>{seleccionada.activa?'Programación activa':'Programación pausada'} · {seleccionada.frecuencia}</Text><Text style={propios.importeModal}>{monto(seleccionada.monto)}</Text></View></View>
               <Text style={estilos.etiqueta}>{tiempoHastaRecurrencia(seleccionada.proxima_ejecucion,!!seleccionada.activa,ahora)}</Text>
             </View>
-            {seleccionada.activa&&Date.parse(seleccionada.proxima_ejecucion)<=ahora?<Pressable accessibilityRole="button" disabled={guardando} onPress={()=>{void aceptar();}} style={estilos.botonPrincipal}><Text style={estilos.textoBotonPrincipal}>{accion==='aceptar'?'Registrando…':'Aceptar y registrar'}</Text></Pressable>:null}
+            {seleccionada.activa&&Date.parse(seleccionada.proxima_ejecucion)<=ahora?<BotonAccion completado={finalizacion.completado} tema={tema} texto={'Aceptar y registrar'} variante="principal" cargando={accion==='aceptar'} deshabilitado={guardando} alPresionar={()=>aceptar()} estilo={estilos.botonPrincipal} />:null}
             <Text style={estilos.textoAyuda}>Cada fecha requiere tu aceptación. El saldo cambia únicamente cuando la registrás.</Text>
             <Text style={estilos.etiqueta}>Administrar programación</Text>
             <View style={propios.acciones}>
-              <Pressable accessibilityRole="button" disabled={guardando} onPress={reprogramar} style={propios.accion}><Ionicons name={seleccionada.activa?'create-outline':'play-outline'} size={18} color={tema.foco}/><Text style={propios.textoAccion}>{seleccionada.activa?'Editar programación':'Reactivar'}</Text></Pressable>
-              {seleccionada.activa?<Pressable accessibilityRole="button" disabled={guardando} onPress={()=>guardar(false)} style={propios.accion}><Ionicons name="pause-outline" size={18} color={tema.error}/><Text style={[propios.textoAccion,{color:tema.error}]}>{accion==='desactivar'?'Desactivando…':'Desactivar'}</Text></Pressable>:null}
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" disabled={guardando} onPress={conRespuestaVisual(reprogramar)} style={propios.accion}><Ionicons name={seleccionada.activa?'create-outline':'play-outline'} size={18} color={tema.foco}/><Text style={propios.textoAccion}>{seleccionada.activa?'Editar programación':'Reactivar'}</Text></Pressable>
+              {seleccionada.activa?<BotonAccion completado={finalizacion.completado} tema={tema} texto={'Desactivar'} variante="peligro" cargando={accion==='desactivar'} deshabilitado={guardando} alPresionar={()=>guardar(false)} estilo={propios.accion} />:null}
             </View>
             {editando?<View style={propios.grupo}>
               <EntradaMonto tema={tema} estilosGlobales={estilos} estilosMovimiento={estilosMovimiento} etiqueta="Importe de los próximos registros" valor={importe} alCambiarTexto={establecerImporte} editable={!guardando}/>
               <SelectorFecha valor={fecha} alSeleccionar={establecerFecha} tema={tema} estilosMovimiento={estilosMovimiento}/>
               <SelectorHora valor={hora} alSeleccionar={establecerHora} tema={tema} estilosMovimiento={estilosMovimiento}/>
-              <Pressable accessibilityRole="button" disabled={guardando} onPress={()=>guardar(true,true)} style={estilos.botonPrincipal}><Text style={estilos.textoBotonPrincipal}>{accion==='guardar'?'Guardando…':'Guardar programación'}</Text></Pressable>
+              <BotonAccion completado={finalizacion.completado} tema={tema} texto={'Guardar programación'} variante="principal" cargando={accion==='guardar'} deshabilitado={guardando} alPresionar={()=>guardar(true,true)} estilo={estilos.botonPrincipal} />
             </View>:null}
 
             <View style={propios.historial}>
               <Text accessibilityRole="header" style={estilos.encabezadoSeccion}>Resumen acumulado</Text>
-              {errorHistorial?null:!historial?<ActivityIndicator color={tema.foco}/>:<>
+              {errorHistorial?null:!historial?<PuntosCarga color={tema.foco}/>:<>
                 <View style={propios.hero}><Text style={estilos.textoSecundario}>{seleccionada.tipo==='egreso'?'Total gastado':'Total recibido'}</Text><Text style={propios.importeModal}>{monto(historial.total)}</Text></View>
                 <Text style={estilos.textoSecundario}>Registrado {historial.repeticiones} {historial.repeticiones===1?'vez':'veces'}</Text>
                 {historial.montoInicial!==null&&Math.round(seleccionada.monto*100)!==Math.round(historial.montoInicial*100)?<View style={propios.hero}>

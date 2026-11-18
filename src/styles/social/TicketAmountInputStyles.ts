@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { BORDES, ESPACIADO, TIPOGRAFIA } from '../globalStyles';
 export default function crearEstilosPropios(tema: Tema) {
   return StyleSheet.create({
-    campoImporteTicket: {
+    campoImporteTicket: { backgroundColor: tema.campoFondo,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.minimo,
@@ -12,7 +12,7 @@ export default function crearEstilosPropios(tema: Tema) {
       minHeight: 38,
       paddingVertical: 0,
       borderWidth: BORDES.anchos.fino,
-      borderColor: tema.borde,
+      borderColor: tema.campoBorde,
       borderRadius: BORDES.radios.campo / 2,
       paddingHorizontal: ESPACIADO.pequeno,
     },

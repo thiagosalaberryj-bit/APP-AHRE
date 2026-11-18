@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
   PanResponder,
@@ -9,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { COLORES_NOTIFICACIONES } from '../styles/colors';
 import { crearEstilosNotificacion } from '../styles/toastNotificationStyles';
 
@@ -27,7 +29,8 @@ export default function NotificacionTexto({
   margenSuperior,
 }: import('../types/ui').AvisoProps) {
   const { width: anchoVentana } = useWindowDimensions();
-  const estilos = useMemo(() => crearEstilosNotificacion(), []);
+  const { tema } = useContext(ContextoApariencia);
+  const estilos = useMemo(() => crearEstilosNotificacion(tema), [tema]);
   const desplazamientoX = useRef(new Animated.Value(0)).current;
   const desplazamientoY = useRef(new Animated.Value(-24)).current;
   const opacidad = useRef(new Animated.Value(0)).current;
@@ -203,7 +206,7 @@ export default function NotificacionTexto({
         <Text accessibilityLiveRegion="polite" style={estilos.mensaje}>
           {mensaje}
         </Text>
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Cerrar notificación"
           accessibilityRole="button"
           hitSlop={8}

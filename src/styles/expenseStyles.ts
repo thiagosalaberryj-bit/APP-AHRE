@@ -16,12 +16,12 @@ export function crearEstilosEgreso(tema: Tema) {
     grupo: {
       gap: ESPACIADO.pequeno,
     },
-    filaMonto: {
+    filaMonto: { backgroundColor: tema.campoFondo,
       minHeight: 76,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
-      borderColor: tema.borde,
+      borderColor: tema.campoBorde,
       borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
     },
@@ -46,12 +46,12 @@ export function crearEstilosEgreso(tema: Tema) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    filaDescripcion: {
+    filaDescripcion: { backgroundColor: tema.campoFondo,
       minHeight: 56,
       flexDirection: 'row',
       alignItems: 'center',
       gap: ESPACIADO.pequeno,
-      borderColor: tema.borde,
+      borderColor: tema.campoBorde,
       borderWidth: BORDES.anchos.fino,
       paddingHorizontal: ESPACIADO.grande,
     },
@@ -354,7 +354,7 @@ export function crearEstilosEgreso(tema: Tema) {
       fontSize: TIPOGRAFIA.tamanos.secundario,
     },
     textoDiaCalendarioSeleccionado: {
-      color: tema.nombre === 'oscuro' ? tema.encabezado : tema.superficie,
+      color: tema.nombre === 'oscuro' ? tema.botonPrincipalTexto : tema.superficie,
       fontWeight: TIPOGRAFIA.pesos.negrita,
     },
     botonHoy: {
@@ -501,7 +501,7 @@ export function crearEstilosEgreso(tema: Tema) {
       fontWeight: TIPOGRAFIA.pesos.seminegrita,
     },
     textoFrecuenciaSeleccionado: {
-      color: tema.nombre === 'oscuro' ? tema.encabezado : tema.superficie,
+      color: tema.nombre === 'oscuro' ? tema.botonPrincipalTexto : tema.superficie,
     },
     errorCampo: {
       marginTop: -ESPACIADO.minimo,

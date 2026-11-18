@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import {useContext,useEffect,useState} from 'react';
 import {Pressable,Text,View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
@@ -18,7 +20,7 @@ export default function RegistrosPropiosSala(aspecto:AspectoSocial){
  return <View style={estilos.grupo}>
   <Text style={aspecto.estilosGlobales.encabezadoSeccion}>Registros propios pendientes</Text>
   <Text style={aspecto.estilosGlobales.textoAyuda}>Aunque ya no participes en una sala, podés completar tus gastos y pagos para su cierre.</Text>
-  {operaciones.map(op=><Pressable key={op.salaId+':'+op.clave} accessibilityRole="button" accessibilityLabel={'Completar registro: '+op.descripcion} onPress={()=>cambiarSeleccion(op)} style={[aspecto.estilosGlobales.tarjeta,estilos.filaCampos]}><Ionicons name="wallet-outline" size={22} color={aspecto.tema.foco}/><View style={estilos.textoFlexible}><Text style={aspecto.estilosGlobales.etiqueta}>{op.salaNombre}</Text><Text style={aspecto.estilosGlobales.texto}>{op.descripcion}</Text></View><Ionicons name="chevron-forward" size={20} color={aspecto.tema.textoSecundario}/></Pressable>)}
+  {operaciones.map(op=><Pressable android_ripple={RETROALIMENTACION_PULSACION} key={op.salaId+':'+op.clave} accessibilityRole="button" accessibilityLabel={'Completar registro: '+op.descripcion} onPress={conRespuestaVisual(()=>cambiarSeleccion(op))} style={[aspecto.estilosGlobales.tarjeta,estilos.filaCampos]}><Ionicons name="wallet-outline" size={22} color={aspecto.tema.foco}/><View style={estilos.textoFlexible}><Text style={aspecto.estilosGlobales.etiqueta}>{op.salaNombre}</Text><Text style={aspecto.estilosGlobales.texto}>{op.descripcion}</Text></View><Ionicons name="chevron-forward" size={20} color={aspecto.tema.textoSecundario}/></Pressable>)}
   {seleccion?.salaId?<Dialogo {...aspecto} titulo="Completar mi registro" descripcion={seleccion.salaNombre||'Operación propia de una sala'} icono="wallet-outline" ocupado={ocupado} alCerrar={()=>cambiarSeleccion(null)}><Seleccion {...aspecto} operacion={seleccion} salaId={seleccion.salaId} cerrada={false} alCambiarOcupado={cambiarOcupado} alGuardar={()=>cambiarSeleccion(null)}/></Dialogo>:null}
  </View>;
 }

@@ -1,3 +1,6 @@
+import {conEstiloDePulsacion} from '../styles/globalStyles';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable } from 'react-native';
 
@@ -30,13 +33,13 @@ export default function Conmutador({ tema, valor, alCambiar, etiquetaAccesibilid
   });
 
   return (
-    <Pressable
+    <Pressable android_ripple={RETROALIMENTACION_PULSACION}
       accessibilityLabel={etiquetaAccesibilidad}
       accessibilityRole="switch"
       accessibilityState={{ checked: valor,disabled:deshabilitado }}
       disabled={deshabilitado}
-      onPress={() => {if(!deshabilitado)alCambiar(!valor);}}
-      style={{ minWidth: 56, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+      onPress={conRespuestaVisual(() => {if(!deshabilitado)alCambiar(!valor);})}
+      style={conEstiloDePulsacion({ minWidth: 56, minHeight: 44, alignItems: 'center', justifyContent: 'center' })}
     >
       <Animated.View
         style={{

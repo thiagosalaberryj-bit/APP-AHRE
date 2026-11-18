@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 
@@ -32,11 +34,11 @@ export default function ControlRecurrencia({
             {frecuencias.map((opcion) => {
               const seleccionada = opcion.id === frecuenciaSeleccionada;
               return (
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   key={opcion.id}
                   accessibilityRole="button"
                   accessibilityState={{ selected: seleccionada }}
-                  onPress={() => alCambiarFrecuencia(opcion.id)}
+                  onPress={conRespuestaVisual(() => alCambiarFrecuencia(opcion.id))}
                   style={[
                     estilosMovimiento.botonFrecuencia,
                     seleccionada ? estilosMovimiento.botonFrecuenciaSeleccionado : null,

@@ -42,7 +42,7 @@ export function crearEstilosEstadisticas(tema: Tema) {
     },
 
     botonTipoMovimientoActivo: {
-      backgroundColor: tema.encabezado,
+      backgroundColor: tema.seleccion,
     },
 
     textoBotonTipo: {
@@ -53,7 +53,7 @@ export function crearEstilosEstadisticas(tema: Tema) {
     },
 
     textoBotonTipoActivo: {
-      color: tema.encabezadoTexto,
+      color: tema.seleccionTexto,
     },
 
     encabezadoFiltrosRapidos: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACIADO.pequeno },

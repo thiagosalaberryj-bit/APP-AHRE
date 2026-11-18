@@ -2,7 +2,7 @@
   "expo": {
     "name": "AHRE",
     "slug": "APP-AHRE",
-    "version": "0.9.2",
+    "version": "0.9.3",
     "orientation": "portrait",
     "icon": "./assets/ahre-mark.png",
     "userInterfaceStyle": "automatic",
@@ -11,7 +11,7 @@
     },
     "android": {
       "googleServicesFile": "./google-services.json",
-      "versionCode": 16,
+      "versionCode": 18,
       "adaptiveIcon": {
         "backgroundColor": "#024C42",
         "foregroundImage": "./assets/ahre-mark.png"
@@ -65,7 +65,7 @@
           "backgroundColor": "#F4F4F4",
           "dark": {
             "image": "./assets/ahre-logo.png",
-            "backgroundColor": "#081C19"
+            "backgroundColor": "#141A23"
           }
         }
       ],

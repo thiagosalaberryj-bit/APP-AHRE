@@ -6,7 +6,7 @@ import {crearCargadorComponentes} from './helpers/componentInterface.ts';
 const raiz=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 type Nodo={type:unknown;props:Record<string,any>};
 function nodos(v:any):Nodo[]{if(Array.isArray(v))return v.flatMap(nodos);return v?.props?[v,...nodos(v.props.children)]:[];}
-test('el toast elige el modal más profundo y conserva el mismo aviso al cerrar hasta llegar a la pantalla',()=>{
+test('el toast elige el modal más profundo y no repite el aviso al cerrar la ventana',()=>{
  let indice=0;const casillas:any[]=[];
  const {cargar}=crearCargadorComponentes(raiz,{
   react:{createContext:(valor:unknown)=>({Provider:'Provider',valor}),useState:(valor:any)=>{const i=indice++;casillas[i]??={valor};return [casillas[i].valor,(v:any)=>{casillas[i].valor=typeof v==='function'?v(casillas[i].valor):v;}];},useRef:(current:any)=>casillas[indice++]??={current},useCallback:(v:unknown)=>v,useMemo:(f:()=>unknown)=>f()},
@@ -18,13 +18,11 @@ test('el toast elige el modal más profundo y conserva el mismo aviso al cerrar 
  const contexto=renderizar().props.value;
  let padre:any=null,hijo:any=null;
  // Registrar el padre después del hijo no altera la prioridad del modal más profundo.
- const cerrarHijo=contexto.registrarPresentador((v:any)=>{hijo=v;},2,()=>hijo);
- const cerrarPadre=contexto.registrarPresentador((v:any)=>{padre=v;},1,()=>padre);
+ const cerrarHijo=contexto.registrarPresentador((v:any)=>{hijo=v;},2);
+ const cerrarPadre=contexto.registrarPresentador((v:any)=>{padre=v;},1);
  contexto.mostrarAviso(' Falló el guardado. ',{tipo:'error'});
  assert.equal(hijo.mensaje,'Falló el guardado.');assert.equal(padre,null);assert.ok(!nodos(renderizar()).some(n=>n.type==='Toast'));
- const id=hijo.id;const leerPadre=()=>padre;cerrarHijo();assert.equal(leerPadre().id,id);
- cerrarPadre();const aviso=nodos(renderizar()).find(n=>n.type==='Toast')!;assert.equal(aviso.props.mensaje,'Falló el guardado.');assert.equal(aviso.props.tipo,'error');
- aviso.props.onDismiss();assert.ok(!nodos(renderizar()).some(n=>n.type==='Toast'));
+ cerrarHijo();assert.equal(padre,null);cerrarPadre();assert.ok(!nodos(renderizar()).some(n=>n.type==='Toast'));
  contexto.mostrarAviso('Guardado',{tipo:'exito',duracion:1});const exito=nodos(renderizar()).find(n=>n.type==='Toast')!;assert.equal(exito.props.tipo,'exito');assert.equal(exito.props.duracion,1500);
 });
 test('los errores generales conservan estado, notifican una vez y permiten avisar tras un reintento',()=>{

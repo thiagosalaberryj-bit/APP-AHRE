@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import usarPanelInferior from '../../utils/useBottomSheet';
 import SelectorSegmentado from '../SegmentedSelector';
 import { useState } from 'react';
@@ -25,16 +27,16 @@ export default function OpcionesRapidasGastos({ valores, depositoId, depositos, 
     <KeyboardAvoidingView style={estilos.teclado} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <View style={estilos.fondoAnimado}>
       <Animated.View pointerEvents="none" style={[estilos.overlay, { opacity: opacidadOverlay }]} />
-      <Pressable accessibilityRole="button" accessibilityLabel="Descartar opciones rápidas" onPress={cerrarPanel} style={estilos.cierre} />
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Descartar opciones rápidas" onPress={conRespuestaVisual(cerrarPanel)} style={estilos.cierre} />
       <Animated.View accessibilityViewIsModal style={[estilos.panel, { transform: [{ translateY: desplazamientoPanel }] }]}>
       <View accessibilityLabel="Deslizar hacia abajo para cerrar opciones rápidas" style={estilos.zonaManija} {...responderManija.panHandlers}><View style={estilos.manija} /></View>
       <View style={estilos.cabecera}>
         <View style={estilos.datosCabecera}><Text accessibilityRole="header" style={estilos.titulo}>Opciones rápidas</Text><Text style={estilos.ayuda}>Cambiá los valores que quieras aplicar a toda la lista.</Text></View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Cerrar opciones rápidas" onPress={cerrarPanel} style={estilos.cerrar}><Ionicons color={aspecto.tema.textoSecundario} name="close" size={22} /></Pressable>
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Cerrar opciones rápidas" onPress={conRespuestaVisual(cerrarPanel)} style={estilos.cerrar}><Ionicons color={aspecto.tema.textoSecundario} name="close" size={22} /></Pressable>
       </View>
       <ScrollView style={estilos.scroll} contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled">
         {Object.entries(titulos).map(([campo, titulo]) => <View key={campo} style={[estilos.seccion, campos.includes(campo) && estilos.seccionActiva]}>
-          <Pressable accessibilityRole="checkbox" accessibilityLabel={`Aplicar ${titulo.toLowerCase()} a todos`} accessibilityState={{ checked: campos.includes(campo) }} style={estilos.activar} onPress={() => establecerCampos(actual => actual.includes(campo) ? actual.filter(c => c !== campo) : [...actual, campo])}>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityLabel={`Aplicar ${titulo.toLowerCase()} a todos`} accessibilityState={{ checked: campos.includes(campo) }} style={estilos.activar} onPress={conRespuestaVisual(() => establecerCampos(actual => actual.includes(campo) ? actual.filter(c => c !== campo) : [...actual, campo]))}>
             <Ionicons name={campos.includes(campo) ? 'checkbox' : 'square-outline'} size={22} color={aspecto.tema.foco} /><Text style={estilos.nombreCampo}>{titulo}</Text><Text style={estilos.estadoCampo}>{campos.includes(campo) ? 'Se aplicará' : 'Sin cambios'}</Text>
           </Pressable>
           {campo === 'categoriaId' ? <SelectorCategoria categorias={CATEGORIAS_EGRESO} tipoMovimiento="egreso" seleccionadaId={datos.categoriaId} alSeleccionar={id => cambiar(campo, id)} {...aspecto} /> : campo === 'pagadorId' ? <SelectorPersonas compacto desplegable etiqueta="Quién pagó" personas={participantes} seleccionadas={[datos.pagadorId]} alCambiar={ids => cambiar(campo, ids[0])} {...aspecto} />
@@ -49,7 +51,7 @@ export default function OpcionesRapidasGastos({ valores, depositoId, depositos, 
       <View style={estilos.pie}>
         <Text accessibilityLiveRegion="polite" style={estilos.ayuda}>{campos.length ? 'Se aplicará: ' + Object.entries(titulos).filter(([campo]) => campos.includes(campo)).map(([,titulo]) => titulo).join(' · ') : 'Sin cambios seleccionados. Los demás datos se conservan.'}</Text>
         <View style={estilos.acciones}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Aplicar a todos" disabled={!puedeAplicar} onPress={() => confirmarCierre(() => alAplicar(campos, datos))} style={[estilos.aplicar, !puedeAplicar && estilos.deshabilitado]}><Text style={estilos.textoAplicar}>Aplicar a todos</Text></Pressable>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Aplicar a todos" disabled={!puedeAplicar} onPress={conRespuestaVisual(() => confirmarCierre(() => alAplicar(campos, datos)))} style={[estilos.aplicar, !puedeAplicar && estilos.deshabilitado]}><Text style={estilos.textoAplicar}>Aplicar a todos</Text></Pressable>
         </View>
       </View>
       </Animated.View>

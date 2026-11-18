@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
 import { useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,7 +34,7 @@ export default function EntradaMonto({
   };
 
   const campo = <>
-    <View style={[estilosGlobales.campo, compacto ? estilos.compacto : estilosMovimiento.filaMonto, estiloContenedor, estiloEstado]}>
+    <View style={[estilosGlobales.campo, compacto ? estilos.compacto : estilosMovimiento.filaMonto, estiloContenedor, estiloEstado, !editable && estilosGlobales.campoDeshabilitado]}>
       <Text style={[compacto ? estilosGlobales.textoSecundario : estilosMovimiento.simboloMonto, estiloSimbolo]}>$</Text>
       <TextInput ref={entrada}
         accessibilityLabel={etiquetaAccesibilidad} accessibilityHint={error || ayudaAccesibilidad}
@@ -45,12 +47,12 @@ export default function EntradaMonto({
         placeholder="0" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco}
         style={[compacto ? estilos.entradaCompacta : estilosMovimiento.entradaMonto, estiloEntrada]} value={formateado}
       />
-      {mostrarLimpiar && valor ? <Pressable
+      {mostrarLimpiar && valor ? <Pressable android_ripple={RETROALIMENTACION_PULSACION}
         accessibilityLabel={'Limpiar ' + etiquetaAccesibilidad.toLocaleLowerCase('es')}
         accessibilityRole="button" disabled={!editable}
-        onPress={() => { establecerSeleccion(undefined); (alLimpiar || (() => alCambiarTexto('')))(); }}
+        onPress={conRespuestaVisual(() => { establecerSeleccion(undefined); (alLimpiar || (() => alCambiarTexto('')))(); })}
         style={estiloLimpiar || estilosMovimiento.accionLimpiar}>
-        <Ionicons color={tema.textoSecundario} name="close-circle-outline" size={24}/>
+        <Ionicons color={!editable ? tema.deshabilitado : error ? tema.error : enfocado ? tema.foco : tema.textoSecundario} name="close-circle-outline" size={24}/>
       </Pressable> : null}
     </View>
     {error ? <Text style={[estilosGlobales.textoError, estilosMovimiento.errorCampo]}>{error}</Text> : null}

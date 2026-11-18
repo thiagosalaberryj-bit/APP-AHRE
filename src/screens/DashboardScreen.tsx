@@ -1,3 +1,6 @@
+import {programarCargaVisible} from '../utils/visibleScreenWork';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
 import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
@@ -169,7 +172,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
     }
   }, [mostrarAviso]);
 
-  useFocusEffect(useCallback(() => {
+  useFocusEffect(useCallback(() => {let limpieza:(()=>void)|undefined;const cancelar=programarCargaVisible(()=>{const resultado=(()=>{
     let activa=true;
     cargarDatos();
     const dejar=observarIntegraciones(()=>{void consultarResumenMp().then(resumen=>{if(activa)establecerResumenMp(resumen);}).catch(()=>{});});
@@ -177,7 +180,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
       activa=false;dejar();
       secuenciaCarga.current += 1;
     };
-  }, [cargarDatos]));
+  })();if(typeof resultado==='function')limpieza=resultado;});return()=>{cancelar();limpieza?.();};}, [cargarDatos]));
 
   const variacion = saldoAnterior !== null && saldoAnterior > 0
     ? Math.round((balance - saldoAnterior) / saldoAnterior * 1000) / 10 : null;
@@ -213,12 +216,12 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                         <Text style={estilosGlobales.etiqueta}>Saldo disponible</Text>
                       </View>
                       <View style={estilos.controlesTotal}>
-                        <Pressable accessibilityLabel={saldoVisible ? 'Ocultar saldo' : 'Mostrar saldo'} accessibilityRole="button"
-                          disabled={!usuario || guardandoVisibilidadSaldo} hitSlop={8} onPress={alternarVisibilidadSaldo} style={estilos.botonVisibilidad}>
+                        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel={saldoVisible ? 'Ocultar saldo' : 'Mostrar saldo'} accessibilityRole="button"
+                          disabled={!usuario || guardandoVisibilidadSaldo} hitSlop={8} onPress={conRespuestaVisual(alternarVisibilidadSaldo)} style={estilos.botonVisibilidad}>
                           <Ionicons color={tema.textoSecundario} name={saldoVisible ? 'eye-outline' : 'eye-off-outline'} size={20} />
                         </Pressable>
-                        <Pressable accessibilityLabel="Ver movimientos" accessibilityRole="button" hitSlop={8}
-                          onPress={() => navegacion.navigate(RUTAS.MOVIMIENTOS)} style={estilos.botonAccesoMovimientos}>
+                        <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityLabel="Ver movimientos" accessibilityRole="button" hitSlop={8}
+                          onPress={conRespuestaVisual(() => navegacion.navigate(RUTAS.MOVIMIENTOS))} style={estilos.botonAccesoMovimientos}>
                           <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
                         </Pressable>
                       </View>
@@ -239,10 +242,10 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
 
                   <View style={estilos.accionesRapidas}>
                     {ACCIONES_RAPIDAS.map((accion) => (
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
                         key={accion.ruta}
-                        onPress={() => abrirPantalla(accion.ruta)}
+                        onPress={conRespuestaVisual(() => abrirPantalla(accion.ruta))}
                         style={({ pressed }) => [
                           estilos.accionRapida,
                           pressed && estilos.accionRapidaPresionada,
@@ -260,9 +263,9 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
             {errorCarga ? (
               <View>
 
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityRole="button"
-                  onPress={() => cargarDatos(!datosCargados.current)}
+                  onPress={conRespuestaVisual(() => cargarDatos(!datosCargados.current))}
                   style={({ pressed }) => [
                     estilos.botonReintentar,
                     pressed && estilos.accionSeccionPresionada,
@@ -277,11 +280,11 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
               <View style={estilos.encabezadoSeccion}>
                 <Text style={estilosGlobales.encabezadoSeccion}>Tus depósitos</Text>
                 {depositos.length > 0 || cargando || errorCarga ? (
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityLabel="Agregar depósito"
                     accessibilityRole="button"
                     hitSlop={4}
-                    onPress={() => abrirPantalla(RUTAS.DEPOSITO)}
+                    onPress={conRespuestaVisual(() => abrirPantalla(RUTAS.DEPOSITO))}
                     style={({ pressed }) => [
                       estilos.accionSeccion,
                       pressed && estilos.accionSeccionPresionada,
@@ -306,10 +309,10 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                       </Text>
                     </View>
                   </View>
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityLabel="Crear depósito"
                     accessibilityRole="button"
-                    onPress={() => abrirPantalla(RUTAS.DEPOSITO)}
+                    onPress={conRespuestaVisual(() => abrirPantalla(RUTAS.DEPOSITO))}
                     style={({ pressed }) => [
                       estilos.botonCrearDeposito,
                       pressed && estilos.accionSeccionPresionada,
@@ -330,11 +333,11 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
                     ].filter(Boolean).join(' · ');
 
                     return (
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
                         accessibilityLabel={deposito.nombre+'. '+detalleDeposito+'. '+(saldoVisible?'Saldo '+formatearMonto(deposito.saldo_actual):'Saldo oculto')}
                         key={deposito.id}
-                        onPress={() => navegacion.getParent()?.navigate(RUTAS.DETALLE_DEPOSITO, { depositoId: deposito.id })}
+                        onPress={conRespuestaVisual(() => navegacion.getParent()?.navigate(RUTAS.DETALLE_DEPOSITO, { depositoId: deposito.id }))}
                         style={({ pressed }) => [
                           estilos.filaDeposito,
                           pressed && estilos.elementoPresionado,
@@ -370,11 +373,11 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
             <View style={estilos.seccion}>
               <View style={estilos.encabezadoSeccion}>
                 <Text style={estilosGlobales.encabezadoSeccion}>Movimientos recientes</Text>
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityLabel="Ver todos los movimientos"
                   accessibilityRole="button"
                   hitSlop={4}
-                  onPress={() => navegacion.navigate(RUTAS.MOVIMIENTOS)}
+                  onPress={conRespuestaVisual(() => navegacion.navigate(RUTAS.MOVIMIENTOS))}
                   style={({ pressed }) => [
                     estilos.accionSeccion,
                     pressed && estilos.accionSeccionPresionada,

@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import usarPanelInferior from '../utils/useBottomSheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ESPACIADO } from '../styles/globalStyles';
@@ -18,10 +20,10 @@ export function SeccionFiltro({
 }: {titulo:string;resumen:string;abierta:boolean;alAlternar:()=>void;colorAcento:string;estilos:ReturnType<typeof crearEstilosMovimientos>;children:import('react').ReactNode}) {
   return (
     <View style={estilos.seccionFiltro}>
-      <Pressable
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
         accessibilityRole="button"
         accessibilityState={{ expanded: abierta }}
-        onPress={alAlternar}
+        onPress={conRespuestaVisual(alAlternar)}
         style={estilos.encabezadoSeccionFiltro}
       >
         <View style={estilos.detalleEncabezadoSeccionFiltro}>
@@ -57,9 +59,9 @@ export default function PanelFiltrosMovimientos({ tema, filtrosVisibles, alCerra
         >
           <View style={estilos.fondoFiltros}>
             <Animated.View pointerEvents="none" style={[estilos.overlayFiltros, { opacity: opacidadOverlay }]} />
-            <Pressable
+            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityLabel="Cerrar filtros"
-              onPress={cerrarFiltros}
+              onPress={conRespuestaVisual(cerrarFiltros)}
               style={estilos.fondoTactilFiltros}
             />
             <Animated.View
@@ -75,10 +77,10 @@ export default function PanelFiltrosMovimientos({ tema, filtrosVisibles, alCerra
                 </View>
                 <View style={estilos.encabezadoPanelContenido}>
                   <Text style={estilos.tituloModal}>Filtros</Text>
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityLabel="Cerrar filtros"
                     accessibilityRole="button"
-                    onPress={cerrarFiltros}
+                    onPress={conRespuestaVisual(cerrarFiltros)}
                     style={estilos.botonCerrarModal}
                   >
                     <Ionicons color={tema.textoPrincipal} name="close" size={24} />
@@ -95,7 +97,7 @@ export default function PanelFiltrosMovimientos({ tema, filtrosVisibles, alCerra
               </ScrollView>
               {cantidadFiltros > 0 ? (
                 <View style={estilos.piePanelFiltros}>
-                  <Pressable accessibilityRole="button" onPress={limpiarFiltros} style={estilos.botonLimpiar}>
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(limpiarFiltros)} style={estilos.botonLimpiar}>
                     <Text style={estilos.textoBotonLimpiar}>Limpiar filtros</Text>
                   </Pressable>
                 </View>

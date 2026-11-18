@@ -42,7 +42,8 @@ Ver [reinicio de datos y retirada](reinicio-datos-pruebas.md).
 `.easignore` excluye `/docs/`, `/tests/`, `/README.md` y `/AGENTS.md` del
 archivo enviado a EAS. Los archivos permanecen en Git y disponibles localmente.
 Se conservan código, recursos, plugins, módulos nativos, sus avisos legales,
-configuración y lockfile. Esta exclusión reduce el envío de fuentes; no implica
+configuración y lockfile. También excluye los informes temporales locales
+`/.codex-*.txt`. Esta exclusión reduce el envío de fuentes; no implica
 una reducción del APK instalado. No se excluyen todos los Markdown mediante un
 patrón global porque los módulos nativos pueden requerir avisos y licencias.
 
@@ -65,7 +66,7 @@ El comando envía el código local a EAS y devuelve el seguimiento. Descargar el
 APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
-entrega. El estado actual declara versión 0.9.2 y `android.versionCode` 16;
+entrega. El estado actual declara versión 0.9.3 y `android.versionCode` 18;
 la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
 `Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
@@ -356,3 +357,59 @@ sin fallos ni omisiones. Los 12 casos de publicación/carrusel se comprobaron po
 separado; no se suman a las suites por solapamiento. Tipos y Android/Hermes correctos.
 La prueba manual de la APK quedó confirmada; la comprobación pública de la nueva
 descarga corresponde al despliegue posterior.
+
+
+## Interfaz y confirmaciones · APK 0.9.2 / Android 17 · 16/11/2026
+
+[Envío de APK interna a Expo/EAS](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/df14e9e9-9e8f-4295-b242-bb5ec5bef9db),
+identificador `df14e9e9-9e8f-4295-b242-bb5ec5bef9db`. Perfil `ocr-comparison`,
+distribución interna y firma existente. Mantiene la versión 0.9.2 e incrementa
+`android.versionCode` de 16 a 17 para distinguirla de la APK anterior.
+
+El envío incluye las fuentes locales de `codex/modo-oscuro-neutro` posteriores
+a `58e3fb0`: tema oscuro neutro, secuencia uniforme de «Procesando» y «Listo»,
+puntos nativos y modales de Social que conservan su ventana. EAS recibió los
+cambios locales antes del commit de documentación, no solo el contenido de HEAD.
+Se incluye `google-services.json`, excluido de Git, y la variable pública de API
+se resuelve desde el entorno `preview` de EAS. `.env`, `credentials/`, documentos,
+pruebas e informes temporales quedan fuera del archivo enviado.
+
+Se ejecutó `eas build --platform android --profile ocr-comparison
+--non-interactive --no-wait`. EAS confirmó la carga y el fingerprint.
+Por pedido del usuario no se esperó la compilación ni se comprobó su resultado;
+el enlace de seguimiento no acredita una APK terminada o probada en dispositivo.
+La exportación local Android/Hermes y los tipos pasaron. No se publica la
+descarga en la web ni en Google Play, no se despliega el servidor y no se mergea
+la rama a `main`. La instalación y la comprobación visual siguen pendientes.
+
+
+## Preparación 0.9.3 / Android 18 · 17/11/2026
+
+Los manifiestos de app y raíz del lockfile declaran 0.9.3, con versionCode 18,
+coordinada con servidor 0.3.4. Esta preparación actualiza el changelog, las ayudas
+y la presentación de solicitudes; no ejecuta EAS, crea tags ni publica APK.
+No reemplaza los archivos de descargas ni acredita la compilación de 0.9.3.
+
+### Envío autorizado de 0.9.3 / Android 18
+
+EAS recibió las fuentes locales con `--platform android --profile ocr-comparison
+--non-interactive --no-wait`, conservando la firma remota existente y el entorno
+`preview`. [Seguimiento de la APK](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
+Carga y fingerprint confirmados; no se esperó ni verificó el resultado de
+compilación. Este envío no publica la descarga web, no despliega el servidor
+ni mergea las ramas. Posteriormente se autorizó una nueva clave SSH exclusiva
+de deploy y se desplegó backend 0.3.4 el 17/11/2026, con respaldos de MySQL,
+código e imagen previa. Contenedor healthy, versión comprobada desde su
+package.json y API local/pública disponibles. La compilación finalizó y la
+descarga fue publicada el 18/11/2026, según el cierre siguiente.
+
+### APK 0.9.3 publicada · 18/11/2026
+
+[Descarga pública](https://ahre-server.tailc5dfc5.ts.net/downloads/ahre-0.9.3.apk):
+173.306.576 bytes, SHA-256
+2f345053baf37b7b565e6dd9ec9f82a08576de01aea3b29549ec8adc94b32dc0.
+La descarga HTTPS completa coincide con el archivo finalizado en EAS.
+Latest y catálogo apuntan a 0.9.3; se conservan las tres APK anteriores.
+Frontend desplegado sin el bloque App y servidor en ninguna tarjeta, ni un
+aviso sustituto. Las cuatro descargas responden con su tamaño esperado.
+La instalación física de la APK queda pendiente; sin merge ni release de fuentes.

@@ -1,3 +1,13 @@
+import AccionesCierreSesion from '../components/SessionExitActions';
+import {useAccionConfirmada} from '../hooks/useConfirmedAction';
+import AvisoFormulario from '../components/FormNotice';
+import {useFinalizacionAccion} from '../hooks/useActionCompletion';
+import {esperarDibujo} from '../utils/renderFrame';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import {iniciarOperacionFinanciera} from '../social/financialOperation';
+import BotonAccion from '../components/ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from '../components/LoadingDots';
 import ReinicioDatosPerfil from '../components/ProfileDataReset';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
@@ -12,20 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Constantes from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import * as AutenticacionLocal from 'expo-local-authentication';
-import {
-  Alert,
-  AppState,
-  ActivityIndicator,
-  Image,
-  Linking,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, AppState, Image, Linking, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -88,7 +85,11 @@ function formatearFechaRegistro(fecha: string|number|Date|null) {
 }
 
 export default function PantallaPerfil({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
-  const volverProtegido = useRegresoProtegido(navegacion);
+ const finalizacion=useFinalizacionAccion();
+
+  const [campoEnfocado,cambiarCampoEnfocado]=useState<string|null>(null);
+  const bloqueoPerfil=useRef(false);
+  const volverProtegido = useRegresoProtegido(navegacion,()=>bloqueoPerfil.current);
   const { tema, apariencia, establecerApariencia } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const estilosGlobales = crearEstilosGlobales(tema);
@@ -123,6 +124,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const [errorCambioContrasena, establecerErrorCambioContrasena] = useState<{ campo: string; mensaje: string; } | null>(null);
   const [guardandoContrasena, establecerGuardandoContrasena] = useState(false);
   const [guardando, establecerGuardando] = useState(false);
+  bloqueoPerfil.current=guardando||guardandoContrasena||verificandoContrasena||verificandoHuella;
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [erroresEdicion, establecerErroresEdicion] = useState<Partial<Record<string, string>>>({});
   const [idioma, establecerIdioma] = useState('es');
@@ -135,7 +137,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const [modalApariencia, establecerModalApariencia] = useState(false);
   const [modalCierre, establecerModalCierre] = useState(false);
   const [modalAcercaDe, establecerModalAcercaDe] = useState(false);
-  const [cerrandoSesion, establecerCerrandoSesion] = useState(false);
+  const cierreSesion=useAccionConfirmada();
   const referenciaCorreoEdicion = useRef<import('react-native').TextInput | null>(null);
   const referenciaContrasenaNueva = useRef<import('react-native').TextInput | null>(null);
   const referenciaConfirmacionContrasenaNueva = useRef<import('react-native').TextInput | null>(null);
@@ -271,7 +273,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   };
 
   const guardarCambioContrasena = async () => {
-    if (guardandoContrasena) return;
+    if (bloqueoPerfil.current) return;
     if (!contrasenaActualCambio.trim()) {
       establecerErrorCambioContrasena({ campo: 'actual', mensaje: 'Ingresá tu contraseña actual.' });
       return;
@@ -289,9 +291,11 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
       return;
     }
 
-    establecerGuardandoContrasena(true);
+    const liberarContrasena=iniciarOperacionFinanciera();if(!liberarContrasena)return;
+    bloqueoPerfil.current=true;finalizacion.iniciar();establecerGuardandoContrasena(true);
     try {
       await actualizarContrasenaPerfil(contrasenaActualCambio, contrasenaNueva);
+      if(!await finalizacion.confirmar())return;
       establecerModalCambioContrasena(false);
       establecerContrasenaActualCambio('');
       establecerContrasenaNueva('');
@@ -310,7 +314,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
         );
       }
     } finally {
-      establecerGuardandoContrasena(false);
+      liberarContrasena();bloqueoPerfil.current=false;establecerGuardandoContrasena(false);
     }
   };
 
@@ -340,7 +344,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const quitarFoto = () => establecerFotoPerfil(null);
 
   const guardarCambios = async () => {
-    if (guardando) return;
+    if (bloqueoPerfil.current) return;
     const datos = { nombre: nombreEdicion, apellido: apellidoEdicion, correo: correoEdicion };
     const nuevosErrores = validarDatosPerfil(datos);
     establecerIntentoGuardar(true);
@@ -349,12 +353,14 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
 
     const nuevoNombre = nombreEdicion.trim();
     const nuevoCorreo = correoEdicion.trim();
-    establecerGuardando(true);
+    const liberarAccion=iniciarOperacionFinanciera();if(!liberarAccion)return;
+    bloqueoPerfil.current=true;finalizacion.iniciar();establecerGuardando(true);
     try {
       const resultadoPerfil = await actualizarPerfil(datos);
       establecerNombre(nuevoNombre);
       establecerApellido(apellidoEdicion.trim());
       establecerCorreo(nuevoCorreo);
+      if(!await finalizacion.confirmar())return;
       establecerModalEdicion(false);
       mostrarAviso(resultadoPerfil.correoModificado
         ? 'Correo guardado en este teléfono. Hasta que el servidor confirme el cambio, usá el correo anterior para ingresar con conexión.'
@@ -371,7 +377,8 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
         { tipo: 'error' },
       );
     } finally {
-      establecerGuardando(false);
+      liberarAccion();
+      bloqueoPerfil.current=false;establecerGuardando(false);
     }
   };
 
@@ -422,9 +429,10 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
     finally{gestionAvisos.current=false;establecerGestionandoAvisos(false);}
   };
 
-  const seleccionarApariencia = (nuevaApariencia: import('../styles/colors').Apariencia) => {
+  const seleccionarApariencia = async (nuevaApariencia: import('../styles/colors').Apariencia) => {
     const aparienciaAnterior = apariencia;
     establecerModalApariencia(false);
+    if(typeof requestAnimationFrame==='function')await esperarDibujo();
     guardarPreferencia(
       { apariencia: nuevaApariencia },
       () => establecerApariencia(nuevaApariencia),
@@ -433,33 +441,14 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   };
 
   const cerrarSesionLocal = async () => {
-    if (cerrandoSesion) return;
-    establecerCerrandoSesion(true);
-    try {
-      await cerrarSesion();
-      establecerApariencia('sistema');
-      navegacion.reset({ index: 0, routes: [{ name: RUTAS.INICIO_SESION }] });
-    } catch (error) {
-      mostrarAviso(
-        error instanceof ErrorPerfil
-          ? error.message
-          : 'No se pudo cerrar la sesión local. Intentá nuevamente.',
-        { tipo: 'error' },
-      );
-    } finally {
-      establecerCerrandoSesion(false);
-    }
-  };
-
-  const cambiarDispositivoLocal=async()=>{
-    if(cerrandoSesion)return;
-    establecerCerrandoSesion(true);
     try{
-      await prepararCambioDispositivo();
-      establecerApariencia('sistema');
-      navegacion.reset({index:0,routes:[{name:RUTAS.INICIO_SESION}]});
+      await cierreSesion.ejecutar(cerrarSesion,()=>{establecerApariencia('sistema');navegacion.reset({index:0,routes:[{name:RUTAS.INICIO_SESION}]});},'cerrar');
+    }catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudo cerrar la sesión local. Intentá nuevamente.',{tipo:'error'});}
+  };
+  const cambiarDispositivoLocal=async()=>{
+    try{
+      await cierreSesion.ejecutar(prepararCambioDispositivo,()=>{establecerApariencia('sistema');navegacion.reset({index:0,routes:[{name:RUTAS.INICIO_SESION}]});},'desvincular');
     }catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudo preparar el cambio de dispositivo.',{tipo:'error'});}
-    finally{establecerCerrandoSesion(false);}
   };
 
   return (
@@ -480,13 +469,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
               {cargandoInfo ? null : errorCarga ? (
                 <View style={[estilosGlobales.tarjeta, estilos.grupo]}>
 
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => navegacion.replace(RUTAS.INICIO_SESION)}
-                    style={estilosGlobales.botonPrincipal}
-                  >
-                    <Text style={estilosGlobales.textoBotonPrincipal}>Ir a Login</Text>
-                  </Pressable>
+                  <BotonAccion completado={finalizacion.completado} tema={tema} texto={"Ir a Login"} variante="principal" cargando={false} deshabilitado={false} alPresionar={() => navegacion.replace(RUTAS.INICIO_SESION)} estilo={estilosGlobales.botonPrincipal} />
                 </View>
               ) : (
                 <>
@@ -504,28 +487,28 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                           </View>
                           {fotoPerfil ? (
                             <View style={estilos.accionesFoto}>
-                              <Pressable
+                              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                                 accessibilityLabel="Cambiar foto de perfil"
                                 accessibilityRole="button"
-                                onPress={seleccionarFoto}
+                                onPress={conRespuestaVisual(seleccionarFoto)}
                                 style={[estilos.accionFoto, estilos.accionFotoCompacta]}
                               >
                                 <Text numberOfLines={1} style={estilos.textoAccionFoto}>Cambiar</Text>
                               </Pressable>
-                              <Pressable
+                              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                                 accessibilityLabel="Quitar foto de perfil"
                                 accessibilityRole="button"
-                                onPress={quitarFoto}
+                                onPress={conRespuestaVisual(quitarFoto)}
                                 style={[estilos.accionFoto, estilos.accionFotoCompacta]}
                               >
                                 <Text numberOfLines={1} style={estilos.textoQuitarFoto}>Quitar</Text>
                               </Pressable>
                             </View>
                           ) : (
-                            <Pressable
+                            <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                               accessibilityLabel="Cambiar foto de perfil"
                               accessibilityRole="button"
-                              onPress={seleccionarFoto}
+                              onPress={conRespuestaVisual(seleccionarFoto)}
                               style={estilos.accionFoto}
                             >
                               <Text style={estilos.textoAccionFoto}>Cambiar foto</Text>
@@ -546,9 +529,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                         </View>
                       </View>
                       <View style={estilos.separadorOpcion} />
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
-                        onPress={abrirConfirmacionEdicion}
+                        onPress={conRespuestaVisual(abrirConfirmacionEdicion)}
                         style={estilos.filaOpcion}
                       >
                         <View style={estilos.iconoSelector}>
@@ -563,9 +546,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   <View style={estilos.grupo}>
                     <Text style={estilos.tituloGrupo}>Preferencias</Text>
                     <View style={estilos.tarjetaOpciones}>
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
-                        onPress={() => establecerModalIdioma(true)}
+                        onPress={conRespuestaVisual(() => establecerModalIdioma(true))}
                         style={estilos.filaSelector}
                       >
                         <View style={estilos.iconoSelector}>
@@ -580,9 +563,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                       <View style={estilos.separadorOpcion} />
                       <OpcionNotificacionesPerfil tema={tema} estilos={estilos} preferencia={notificaciones} permiso={permisoAvisos} ocupada={gestionandoAvisos} alCambiar={cambiarNotificaciones}/>
                       <View style={estilos.separadorOpcion} />
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
-                        onPress={() => establecerModalApariencia(true)}
+                        onPress={conRespuestaVisual(() => establecerModalApariencia(true))}
                         style={estilos.filaSelector}
                       >
                         <View style={estilos.iconoSelector}>
@@ -595,9 +578,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                         <Ionicons color={tema.textoSecundario} name="chevron-forward" size={20} />
                       </Pressable>
                       <View style={estilos.separadorOpcion} />
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
-                        onPress={() => seleccionarApariencia('sistema')}
+                        onPress={conRespuestaVisual(() => seleccionarApariencia('sistema'))}
                         style={estilos.filaSelector}
                       >
                         <View style={estilos.iconoSelector}>
@@ -615,9 +598,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   <View style={estilos.grupo}>
                     <Text style={estilos.tituloGrupo}>Cuenta</Text>
                     <View style={estilos.tarjetaOpciones}>
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
-                        onPress={abrirCambioContrasena}
+                        onPress={conRespuestaVisual(abrirCambioContrasena)}
                         style={estilos.filaOpcion}
                       >
                         <View style={estilos.iconoSelector}>
@@ -647,9 +630,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                           <View style={estilos.separadorOpcion} />
                         </View>
                       ))}
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
-                        onPress={() => establecerModalAcercaDe(true)}
+                        onPress={conRespuestaVisual(() => establecerModalAcercaDe(true))}
                         style={estilos.filaOpcion}
                       >
                         <View style={estilos.iconoSelector}>
@@ -664,9 +647,9 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   <View style={estilos.grupo}>
                     <Text style={estilos.tituloGrupo}>Sesión</Text>
                     <View style={estilos.tarjetaOpciones}>
-                      <Pressable
+                      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
-                        onPress={() => establecerModalCierre(true)}
+                        onPress={conRespuestaVisual(() => establecerModalCierre(true))}
                         style={estilos.filaCerrarSesion}
                       >
                         <View style={estilos.iconoPeligro}>
@@ -696,7 +679,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           <View style={estilos.grupoCampoModal}>
             <Text style={estilosGlobales.etiqueta}>Contraseña</Text>
             <View style={[estilos.campoEdicion, errorContrasena ? estilosGlobales.campoError : null]}>
-              <TextInput
+              <TextInput editable={!bloqueoPerfil.current}
                 accessibilityLabel="Contraseña actual"
                 autoCapitalize="none"
                 onChangeText={(valor) => {
@@ -712,10 +695,10 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                 style={estilos.entradaEdicion}
                 value={contrasenaConfirmacion}
               />
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityRole="button"
                 accessibilityLabel={mostrarContrasenaConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                onPress={() => establecerMostrarContrasenaConfirmacion((visibilidadActual) => !visibilidadActual)}
+                onPress={conRespuestaVisual(() => establecerMostrarContrasenaConfirmacion((visibilidadActual) => !visibilidadActual))}
                 style={estilos.botonVisibilidad}
               >
                 <Ionicons
@@ -724,17 +707,17 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   size={21}
                 />
               </Pressable>
-              {verificandoContrasena ? <ActivityIndicator color={tema.foco} size="small" /> : null}
+              {verificandoContrasena ? <PuntosCarga color={tema.foco} size="small" /> : null}
             </View>
             {errorContrasena ? (
               <Text style={estilosGlobales.textoError}>{errorContrasena}</Text>
             ) : null}
           </View>
-          <Pressable
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityRole="button"
             accessibilityState={{ busy: verificandoHuella, disabled: verificandoHuella || verificandoContrasena }}
             disabled={verificandoHuella || verificandoContrasena}
-            onPress={confirmarHuella}
+            onPress={conRespuestaVisual(confirmarHuella)}
             style={({ pressed: presionado }) => [
               estilos.botonBiometria,
               presionado && !verificandoHuella && estilos.botonPresionado,
@@ -745,7 +728,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
             <Text style={estilos.textoBotonBiometria}>
               {verificandoHuella ? 'Verificando huella…' : 'Usar huella'}
             </Text>
-            {verificandoHuella ? <ActivityIndicator color={tema.foco} size="small" /> : null}
+            {verificandoHuella ? <PuntosCarga color={tema.foco} size="small" /> : null}
           </Pressable>
         </ModalPerfil>
 
@@ -763,7 +746,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           <View style={estilos.grupoCampoModal}>
             <Text style={estilosGlobales.etiqueta}>Contraseña actual</Text>
             <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'actual' && estilosGlobales.campoError]}>
-              <TextInput
+              <TextInput editable={!bloqueoPerfil.current}
                 accessibilityLabel="Contraseña actual"
                 autoCapitalize="none"
                 onChangeText={(valor) => {
@@ -779,10 +762,10 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                 style={estilos.entradaEdicion}
                 value={contrasenaActualCambio}
               />
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityRole="button"
                 accessibilityLabel={mostrarContrasenaActualCambio ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'}
-                onPress={() => establecerMostrarContrasenaActualCambio((visibilidadActual) => !visibilidadActual)}
+                onPress={conRespuestaVisual(() => establecerMostrarContrasenaActualCambio((visibilidadActual) => !visibilidadActual))}
                 style={estilos.botonVisibilidad}
               >
                 <Ionicons color={tema.textoSecundario} name={mostrarContrasenaActualCambio ? 'eye-off-outline' : 'eye-outline'} size={21} />
@@ -793,7 +776,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           <View style={estilos.grupoCampoModal}>
             <Text style={estilosGlobales.etiqueta}>Nueva contraseña</Text>
             <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'nueva' && estilosGlobales.campoError]}>
-              <TextInput
+              <TextInput editable={!bloqueoPerfil.current}
                 accessibilityLabel="Nueva contraseña"
                 autoCapitalize="none"
                 onChangeText={(valor) => {
@@ -810,10 +793,10 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                 style={estilos.entradaEdicion}
                 value={contrasenaNueva}
               />
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityRole="button"
                 accessibilityLabel={mostrarContrasenaNueva ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'}
-                onPress={() => establecerMostrarContrasenaNueva((visibilidadActual) => !visibilidadActual)}
+                onPress={conRespuestaVisual(() => establecerMostrarContrasenaNueva((visibilidadActual) => !visibilidadActual))}
                 style={estilos.botonVisibilidad}
               >
                 <Ionicons color={tema.textoSecundario} name={mostrarContrasenaNueva ? 'eye-off-outline' : 'eye-outline'} size={21} />
@@ -824,7 +807,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           <View style={estilos.grupoCampoModal}>
             <Text style={estilosGlobales.etiqueta}>Confirmar nueva contraseña</Text>
             <View style={[estilos.campoEdicion, errorCambioContrasena?.campo === 'confirmacion' && estilosGlobales.campoError]}>
-              <TextInput
+              <TextInput editable={!bloqueoPerfil.current}
                 accessibilityLabel="Confirmar nueva contraseña"
                 autoCapitalize="none"
                 onChangeText={(valor) => {
@@ -841,10 +824,10 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                 style={estilos.entradaEdicion}
                 value={confirmacionContrasenaNueva}
               />
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityRole="button"
                 accessibilityLabel={mostrarConfirmacionContrasenaNueva ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
-                onPress={() => establecerMostrarConfirmacionContrasenaNueva((visibilidadActual) => !visibilidadActual)}
+                onPress={conRespuestaVisual(() => establecerMostrarConfirmacionContrasenaNueva((visibilidadActual) => !visibilidadActual))}
                 style={estilos.botonVisibilidad}
               >
                 <Ionicons color={tema.textoSecundario} name={mostrarConfirmacionContrasenaNueva ? 'eye-off-outline' : 'eye-outline'} size={21} />
@@ -852,7 +835,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
             </View>
             {errorCambioContrasena?.campo === 'confirmacion' ? <Text style={estilosGlobales.textoError}>{errorCambioContrasena.mensaje}</Text> : null}
           </View>
-          <BotonPrincipal
+          <BotonPrincipal completado={finalizacion.completado}
             estilosAutenticacion={estilos}
             estilosGlobales={estilosGlobales}
             titulo="Actualizar contraseña"
@@ -878,7 +861,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
               <Text style={estilosGlobales.contadorCampo}>{nombreEdicion.length}/80</Text>
             </View>
             <View style={[estilos.campoEdicion, errorEdicion ? estilosGlobales.campoError : null]}>
-              <TextInput
+              <TextInput editable={!bloqueoPerfil.current}
                 accessibilityLabel="Nombre"
                 maxLength={80}
                 onChangeText={(valor) => {
@@ -915,7 +898,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
               <Text style={estilosGlobales.contadorCampo}>{correoEdicion.length}/120</Text>
             </View>
             <View style={[estilos.campoEdicion, errorCorreoEdicion ? estilosGlobales.campoError : null]}>
-              <TextInput
+              <TextInput editable={!bloqueoPerfil.current}
                 accessibilityLabel="Correo electrónico"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -939,7 +922,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
               <Text style={estilosGlobales.textoError}>{errorCorreoEdicion}</Text>
             ) : null}
           </View>
-          <BotonPrincipal
+          <BotonPrincipal completado={finalizacion.completado}
             estilosAutenticacion={estilos}
             estilosGlobales={estilosGlobales}
             titulo="Guardar cambios"
@@ -972,9 +955,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           titulo="Apariencia"
         >
           <ListaOpcionesPerfil tema={tema} estilos={estilos} opciones={APARIENCIAS} valor={apariencia} alSeleccionar={seleccionarApariencia} />
-          <Text style={[estilosGlobales.textoAyuda, estilos.textoAyudaModal]}>
-            La selección se guarda en este dispositivo y se aplica en toda AHRE.
-          </Text>
+          <AvisoFormulario tema={tema} titulo="Dónde se guarda la apariencia">La selección se guarda en este dispositivo y se aplica en toda AHRE.</AvisoFormulario>
         </ModalPerfil>
 
         <ModalPerfil
@@ -1006,7 +987,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
               {icono:'phone-portrait-outline' as const,texto:'Tus registros disponibles sin conexión'},
             ].map(({icono,texto})=><View key={icono} style={estilos.filaAcerca}><Ionicons name={icono} size={21} color={tema.foco}/><Text style={estilos.textoAcerca}>{texto}</Text></View>)}
           </View>
-          <Pressable accessibilityRole="link" accessibilityLabel="Visitar la web de AHRE" accessibilityHint="Abre el sitio de AHRE en el navegador." onPress={()=>{void Linking.openURL('https://ahre-server.tailc5dfc5.ts.net/').catch(()=>mostrarAviso('No se pudo abrir la web de AHRE. Intentá nuevamente.',{tipo:'error'}));}} style={({pressed:presionado})=>[estilos.enlaceAcerca,presionado&&estilosGlobales.botonDeshabilitado]}>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="link" accessibilityLabel="Visitar la web de AHRE" accessibilityHint="Abre el sitio de AHRE en el navegador." onPress={conRespuestaVisual(()=>{void Linking.openURL('https://ahre-server.tailc5dfc5.ts.net/').catch(()=>mostrarAviso('No se pudo abrir la web de AHRE. Intentá nuevamente.',{tipo:'error'}));})} style={({pressed:presionado})=>[estilos.enlaceAcerca,presionado&&estilosGlobales.botonDeshabilitado]}>
             <Ionicons name="globe-outline" size={23} color={tema.botonPrincipalTexto}/>
             <Text style={estilos.textoEnlaceAcerca}>Visitar la web de AHRE</Text>
             <Ionicons name="open-outline" size={20} color={tema.botonPrincipalTexto}/>
@@ -1025,22 +1006,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           tema={tema}
           titulo="Cerrar sesión"
         >
-          <Pressable
-            accessibilityRole="button"
-            disabled={cerrandoSesion}
-            onPress={cambiarDispositivoLocal}
-            style={estilos.botonPeligro}
-          >
-            <Text style={estilos.textoBotonPeligro}>{cerrandoSesion?'Preparando…':'Sincronizar y desvincular'}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={cerrandoSesion}
-            onPress={cerrarSesionLocal}
-            style={estilos.botonPeligro}
-          >
-            <Text style={estilos.textoBotonPeligro}>{cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión'}</Text>
-          </Pressable>
+          <AccionesCierreSesion tema={tema} accionActiva={cierreSesion.accionActiva} completado={cierreSesion.completado} alDesvincular={cambiarDispositivoLocal} alCerrarSesion={cerrarSesionLocal} estilo={estilos.botonPeligro}/>
         </ModalPerfil>
       </MarcoEncabezado>
     </SafeAreaView>

@@ -61,7 +61,7 @@ export default forwardRef<TextInput, PropiedadesCampoAutenticacion>(function Cam
       <View style={[estilosGlobales.campo, estilosAutenticacion.campo, estiloEstadoCampo]}>
         {icono ? (
           <Ionicons
-            color={deshabilitado ? tema.deshabilitado : tema.textoSecundario}
+            color={deshabilitado ? tema.deshabilitado : error ? tema.error : enfocado ? tema.foco : tema.textoSecundario}
             name={icono}
             size={20}
             style={estilosAutenticacion.iconoCampo}

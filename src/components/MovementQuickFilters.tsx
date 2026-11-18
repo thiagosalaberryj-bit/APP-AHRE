@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import type { Dispatch, SetStateAction } from 'react';
 import { Pressable, Text } from 'react-native';
 import { OPCIONES_TIPO } from '../constants/movementFilters';
@@ -23,25 +25,25 @@ export default function FiltrosRapidosMovimientos({
   establecerMontoMaximo: (texto: string) => void;
 }) {
   return (<>
-      {OPCIONES_TIPO.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: tipoFiltro === opcion.id }} onPress={() => cambiarTipoFiltro(opcion.id)} style={[estilosAccesos.filtro, tipoFiltro === opcion.id && estilosAccesos.filtroActivo]}>
+      {OPCIONES_TIPO.map(opcion => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="button" accessibilityState={{ selected: tipoFiltro === opcion.id }} onPress={conRespuestaVisual(() => cambiarTipoFiltro(opcion.id))} style={[estilosAccesos.filtro, tipoFiltro === opcion.id && estilosAccesos.filtroActivo]}>
         <Text style={[estilosAccesos.textoFiltro, tipoFiltro === opcion.id && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
       </Pressable>)}
       {preajustesCategorias.map(opcion => {
         const disponible = opcion.categorias.length > 0;
         const activo = disponible && tipoFiltro === opcion.tipo && opcion.categorias.every(id => categoriaFiltroIds.includes(id));
-        return <Pressable key={opcion.tipo + ':' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo, disabled: !disponible }} disabled={!disponible} accessibilityHint={disponible ? undefined : 'No hay movimientos de estas categorías.'}
-          onPress={() => {
+        return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.tipo + ':' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo, disabled: !disponible }} disabled={!disponible} accessibilityHint={disponible ? undefined : 'No hay movimientos de estas categorías.'}
+          onPress={conRespuestaVisual(() => {
             establecerTipoFiltro(opcion.tipo);
             establecerCategoriaFiltroIds(actuales => alternarGrupoCategorias(tipoFiltro === opcion.tipo || tipoFiltro === 'todos' ? actuales : [], opcion.categorias));
-          }}
+          })}
           style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo, !disponible && { opacity: 0.5 }]}>
           <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
         </Pressable>;
       })}
       {PREAJUSTES_MONTOS.filter(opcion => opcion.id !== 'todos').map(opcion => {
         const activo = !errorMontoFiltro && (montoMinimoNumerico ?? undefined) === opcion.rango.minimo && (montoMaximoNumerico ?? undefined) === opcion.rango.maximo;
-        return <Pressable key={'monto:' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo }}
-          onPress={() => { establecerMontoMinimo(activo || opcion.rango.minimo === undefined ? '' : String(opcion.rango.minimo).replace('.', ',')); establecerMontoMaximo(activo || opcion.rango.maximo === undefined ? '' : String(opcion.rango.maximo).replace('.', ',')); }}
+        return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={'monto:' + opcion.id} accessibilityRole="button" accessibilityState={{ selected: activo }}
+          onPress={conRespuestaVisual(() => { establecerMontoMinimo(activo || opcion.rango.minimo === undefined ? '' : String(opcion.rango.minimo).replace('.', ',')); establecerMontoMaximo(activo || opcion.rango.maximo === undefined ? '' : String(opcion.rango.maximo).replace('.', ',')); })}
           style={[estilosAccesos.filtro, activo && estilosAccesos.filtroActivo]}>
           <Text style={[estilosAccesos.textoFiltro, activo && estilosAccesos.textoActivo]}>{opcion.nombre}</Text>
         </Pressable>;

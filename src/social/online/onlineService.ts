@@ -391,3 +391,12 @@ export async function consultarMovimientosSociales(){const {usuario}=await obten
 export async function perdonarDeudaOnline(id:string,pendienteEsperado:number){await enviarAccionSocial('perdonar:'+id,'/deudas/'+id+'/perdonar',{pendienteEsperado});await sincronizarSocialOnline();}
 
 export async function revisarSalidaSala(salaId:string,personaId:string){await encolar(salaId,{tipo:'revisar_salida',personaId});await sincronizarSocialOnline();}
+
+export async function recordarRegistrosSala(salaId:string){
+ if(esRecursoDemo(salaId)||await usuarioDemoActual()){
+  const detalle=await leerSalaDemo(salaId);exigir(detalle.administrador&&detalle.sala.estado==='abierta','Solo el administrador puede recordar registros en una sala abierta.');
+  const cuentas=new Set((detalle.identidades||[]).filter(i=>i.conCuenta&&i.personaId!==detalle.personaPropiaId).map(i=>i.personaId));
+  return {cantidad:new Set((detalle.pendientesCierre||[]).filter(p=>cuentas.has(p.personaId)&&(p.clave.startsWith('compra:')||p.clave.startsWith('parte:'))).map(p=>p.personaId)).size};
+ }
+ return enviarAccionSocial<{cantidad:number}>('recordatorio-registros:'+salaId,'/salas/'+encodeURIComponent(salaId)+'/recordatorios-registros',{});
+}

@@ -1,3 +1,6 @@
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import {crearEstilosGlobales} from '../../styles/globalStyles';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useState } from 'react';
 import { normalizarNombrePersona, nombreCompletoPersona } from '../../social/socialHelpers';
@@ -10,6 +13,9 @@ import EstadoVacio from './SocialEmptyState';
 import BotonSocial from './SocialButton';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 export default function ListaSalas(propiedades: import('../../social/types').AspectoSocial & (Pick<import('../../social/types').AccionesSociales,'abrirSala'|'abrirRegistro'>)) {
+ const [focoEntrada,cambiarFocoEntrada]=useState<string|null>(null);
+ const estilosEntrada=crearEstilosGlobales(propiedades.tema);
+
   const {
     obtenerPersona,
     salas: salasSociales
@@ -49,14 +55,14 @@ export default function ListaSalas(propiedades: import('../../social/types').Asp
   return <>
       <View style={estilos.grupo}>
         <View style={estilos.filaCampos}>
-          <View style={[estilosMovimiento.botonDeposito, estilos.columnaCampo, estilos.busquedaAgenda]}>
-            <Ionicons color={tema.textoSecundario} name="search-outline" size={22} />
-            <TextInput accessibilityLabel="Buscar salas" value={busqueda} onChangeText={establecerBusqueda} placeholder="Sala, categoría o persona" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosMovimiento.entradaDescripcion, estilos.entradaBusquedaAgenda]} />
-            {busqueda ? <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda de salas" onPress={() => establecerBusqueda('')} style={estilos.accionIcono}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
+          <View style={[[estilosMovimiento.botonDeposito, estilos.columnaCampo, estilos.busquedaAgenda],estilosEntrada.superficieCampo,focoEntrada==="0"&&estilosEntrada.campoEnfocado]}>
+            <Ionicons color={focoEntrada==="0"?tema.foco:tema.textoSecundario} name="search-outline" size={22} />
+            <TextInput onFocus={()=>cambiarFocoEntrada("0")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Buscar salas" value={busqueda} onChangeText={establecerBusqueda} placeholder="Sala, categoría o persona" placeholderTextColor={tema.textoSecundario} selectionColor={tema.foco} style={[estilosMovimiento.entradaDescripcion, estilos.entradaBusquedaAgenda]} />
+            {busqueda ? <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Limpiar búsqueda de salas" onPress={conRespuestaVisual(() => establecerBusqueda(''))} style={estilos.accionIcono}><Ionicons color={tema.textoSecundario} name="close-circle-outline" size={22} /></Pressable> : null}
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Crear sala" accessibilityHint={activas.length >= LIMITE_SALAS_ACTIVAS ? 'Cerrá una sala para liberar un lugar.' : undefined} accessibilityState={{
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Crear sala" accessibilityHint={activas.length >= LIMITE_SALAS_ACTIVAS ? 'Cerrá una sala para liberar un lugar.' : undefined} accessibilityState={{
           disabled: activas.length >= LIMITE_SALAS_ACTIVAS
-        }} disabled={activas.length >= LIMITE_SALAS_ACTIVAS} onPress={() => abrirRegistro('crear')} style={[estilos.agregarPersonaAgenda, activas.length >= LIMITE_SALAS_ACTIVAS && estilos.accionPanelDeshabilitada]}><Ionicons color={tema.botonPrincipalTexto} name="add" size={28} /></Pressable>
+        }} disabled={activas.length >= LIMITE_SALAS_ACTIVAS} onPress={conRespuestaVisual(() => abrirRegistro('crear'))} style={[estilos.agregarPersonaAgenda, activas.length >= LIMITE_SALAS_ACTIVAS && estilos.accionPanelDeshabilitada]}><Ionicons color={tema.botonPrincipalTexto} name="add" size={28} /></Pressable>
         </View>
         <View style={estilos.repartoEnLinea}>
           {[{
@@ -68,9 +74,9 @@ export default function ListaSalas(propiedades: import('../../social/types').Asp
         }, {
           id: 'cerrada',
           nombre: 'Cerradas'
-        }].map(opcion => <Pressable key={opcion.id} accessibilityRole="radio" accessibilityLabel={`Salas ${opcion.nombre.toLocaleLowerCase('es')}`} accessibilityState={{
+        }].map(opcion => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="radio" accessibilityLabel={`Salas ${opcion.nombre.toLocaleLowerCase('es')}`} accessibilityState={{
           checked: estado === opcion.id
-        }} onPress={() => establecerEstado(opcion.id)} style={[estilos.opcionReparto, estado === opcion.id && estilos.pestanaActiva]}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, estado === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
+        }} onPress={conRespuestaVisual(() => establecerEstado(opcion.id))} style={[estilos.opcionReparto, estado === opcion.id && estilos.pestanaActiva]}><Text numberOfLines={1} ellipsizeMode="tail" style={[estilos.textoPestana, estado === opcion.id && estilos.textoPestanaActiva]}>{opcion.nombre}</Text></Pressable>)}
         </View>
         <View style={estilos.filaTitulo}><Text accessibilityLiveRegion="polite" style={estilosGlobales.textoSecundario}>{salas.length} de {salasSociales.length} salas</Text><Text style={estilosGlobales.textoSecundario}>{activas.length}/{LIMITE_SALAS_ACTIVAS} propias activas</Text></View>
       </View>

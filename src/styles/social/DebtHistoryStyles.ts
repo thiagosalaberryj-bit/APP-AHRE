@@ -6,7 +6,7 @@ export default function crearEstilosHistorial(tema: Tema) {
   return StyleSheet.create({
     historial: { gap: ESPACIADO.pequeno },
     grupo: { gap: ESPACIADO.pequeno },
-    buscador: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.pequeno, minHeight: 44, paddingLeft: ESPACIADO.medio, backgroundColor: tema.superficie, borderColor: tema.borde, borderWidth: BORDES.anchos.fino, borderRadius: BORDES.radios.campo },
+    buscador: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.pequeno, minHeight: 44, paddingLeft: ESPACIADO.medio, backgroundColor: tema.campoFondo, borderColor: tema.campoBorde, borderWidth: BORDES.anchos.fino, borderRadius: BORDES.radios.campo },
     buscadorEnfocado: { borderColor: tema.foco },
     entradaBusqueda: { flex: 1, minWidth: 0, minHeight: 44, paddingVertical: ESPACIADO.pequeno, color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.secundario },
     accionBusqueda: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },

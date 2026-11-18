@@ -8,7 +8,7 @@ export default function EscanerInvitacion({alLeer,...aspecto}:AspectoSocial&{alL
   const [permiso,pedirPermiso]=useCameraPermissions();
   const [, cambiarError]=useErrorNotificado('');
   const habilitar=async()=>{cambiarError('');try{if(permiso&&!permiso.canAskAgain)await Linking.openSettings();else await pedirPermiso();}catch{cambiarError('No se pudo habilitar la cámara. Podés pegar el enlace de invitación.');}};
-  if(!permiso?.granted)return <View style={crearEstilosSocialOnline(aspecto.tema).grupo}><Text style={aspecto.estilosGlobales.textoSecundario}>{permiso&&!permiso.canAskAgain?'Habilitá la cámara desde los ajustes del teléfono, o elegí Pegar enlace.':'Permití usar la cámara para escanear la invitación. También podés pegar el enlace.'}</Text><BotonSocial texto={permiso&&!permiso.canAskAgain?'Abrir ajustes':'Permitir cámara'} alPresionar={()=>{void habilitar();}} {...aspecto}/></View>;
+  if(!permiso?.granted)return <View style={crearEstilosSocialOnline(aspecto.tema).grupo}><Text style={aspecto.estilosGlobales.textoSecundario}>{permiso&&!permiso.canAskAgain?'Habilitá la cámara desde los ajustes del teléfono, o elegí Pegar enlace.':'Permití usar la cámara para escanear la invitación. También podés pegar el enlace.'}</Text><BotonSocial texto={permiso&&!permiso.canAskAgain?'Abrir ajustes':'Permitir cámara'} alPresionar={()=>habilitar()} {...aspecto}/></View>;
   const estilos=crearEstilosSocialOnline(aspecto.tema);
   return <View collapsable={false} style={estilos.marcoCamara}><CameraView style={estilos.camara} facing="back" barcodeScannerSettings={{barcodeTypes:['qr']}} onBarcodeScanned={({data})=>alLeer(data)}/></View>;
 }

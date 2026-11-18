@@ -1,3 +1,6 @@
+import {conEstiloDePulsacion} from '../styles/globalStyles';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Pressable, Text, View } from 'react-native';
 import type { Tema } from '../styles/colors';
@@ -38,8 +41,8 @@ export default function SelectorSegmentado({ tema, opciones, valor, alSelecciona
     <View style={estilos.fila} onLayout={evento => establecerAncho(evento.nativeEvent.layout.width)}>
       {anchoOpcion > 0 ? <Animated.View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
         style={[estilos.indicador, { width:anchoOpcion, transform:[{ translateX:desplazamiento }] }]}/> : null}
-      {opciones.map(opcion => <Pressable key={opcion.id} accessibilityRole="button" accessibilityLabel={etiqueta + ': ' + opcion.nombre}
-        accessibilityState={{ selected:valor === opcion.id }} onPress={() => alSeleccionar(opcion.id)} style={estilos.opcion}>
+      {opciones.map(opcion => <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="button" accessibilityLabel={etiqueta + ': ' + opcion.nombre}
+        accessibilityState={{ selected:valor === opcion.id }} onPress={conRespuestaVisual(() => alSeleccionar(opcion.id))} style={conEstiloDePulsacion(estilos.opcion)}>
         <Text numberOfLines={1} adjustsFontSizeToFit style={[estilos.texto, valor === opcion.id && estilos.textoActivo]}>{opcion.nombre}{opcion.contador?' · '+opcion.contador:''}</Text>
       </Pressable>)}
     </View>

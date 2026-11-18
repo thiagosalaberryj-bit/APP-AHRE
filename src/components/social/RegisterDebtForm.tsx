@@ -1,3 +1,6 @@
+import AvisoFormulario from '../FormNotice';
+import {conRespuestaVisual} from '../../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
 import {ContextoAvisos} from '../../contexts/ToastContext';
 import type {VinculoOnline} from '../../social/online/types';
 import {crearEstilosSocialOnline} from '../../styles/social/OnlineSocialStyles';
@@ -10,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AccionesFormulario from './SocialFormActions';
 import MontoSocial from './SocialAmountInput';
 import CampoFormulario from './SocialTextField';
-import SelectorPersonas from './PeopleSelector';
+import ModalSeleccionPersona from './AddRoomPeopleModal';
 import OpcionesSeleccion from './SocialChoiceGroup';
 import { convertirMontoMovimiento } from '../../utils/movementValidation';
 import { nombreCompletoPersona } from '../../social/socialHelpers';
@@ -33,7 +36,7 @@ export default function FormularioRegistrarDeuda({
   const estilos = crearEstilosCompartidos(tema),estilosOnline=crearEstilosSocialOnline(tema);
   const [compartir,cambiarCompartir]=useState(false),[vinculos,cambiarVinculos]=useState<VinculoOnline[]>([]);
   const [conexion,cambiarConexion]=useState(obtenerVistaSincronizacion);
-  const compartirSolicitud=useRef(false);
+  const compartirSolicitud=useRef(false),errorPropuesta=useRef<string|null>(null);
   useEffect(()=>observarSincronizacion(cambiarConexion),[]);
   useEffect(()=>{
     let activo=true;
@@ -41,6 +44,7 @@ export default function FormularioRegistrarDeuda({
     cargar();const dejar=observarSocialOnline(cargar);
     return()=>{activo=false;dejar();};
   },[social.usuarioId]);
+  const [seleccionandoPersona,cambiarSeleccionandoPersona]=useState(false);
   const [personaId, establecerPersonaId] = useState(parametros.personaId || null);
   const [direccion, establecerDireccion] = useState('me_deben');
   const [monto, establecerMonto] = useState('');
@@ -62,20 +66,21 @@ export default function FormularioRegistrarDeuda({
         id: 'debo',
         nombre: 'Le debo'
       }]} elegida={direccion} alElegir={establecerDireccion} {...aspecto} />
-      <SelectorPersonas ocultarArchivadas etiqueta="Persona" personas={personasSociales} seleccionadas={personaId ? [personaId] : []} alCambiar={ids => {establecerPersonaId(ids[0]);cambiarCompartir(false);}} alRegistrar={() => abrirRegistro('persona')} {...aspecto} />
+      <Pressable accessibilityRole="button" accessibilityLabel="Persona" accessibilityState={{expanded:seleccionandoPersona}} onPress={()=>cambiarSeleccionandoPersona(true)} style={aspecto.estilosMovimiento.botonDeposito}><Ionicons name="person-outline" size={22} color={tema.foco}/><Text style={[estilosGlobales.texto,estilos.textoFlexible]}>{persona?nombreCompletoPersona(persona):'Seleccioná una persona'}</Text><Ionicons name="chevron-down" size={20} color={tema.textoSecundario}/></Pressable>
+      {seleccionandoPersona?<ModalSeleccionPersona personasSala={[]} multiple={false} seleccionInicial={personaId?[personaId]:[]} titulo="Persona de la deuda" textoConfirmar="Elegir persona" alAgregar={ids=>{establecerPersonaId(ids[0]);cambiarCompartir(false);cambiarSeleccionandoPersona(false);}} alCerrar={()=>cambiarSeleccionandoPersona(false)} alCrear={()=>{cambiarSeleccionandoPersona(false);abrirRegistro('persona');}} {...aspecto}/>:null}
       <Text numberOfLines={1} ellipsizeMode="tail" style={estilosGlobales.textoSecundario}>{persona ? direccion === 'debo' ? `Vos le debés a ${nombreCompletoPersona(persona)}.` : `${nombreCompletoPersona(persona)} te debe a vos.` : 'Elegí una persona de tu agenda o registrá una nueva.'}</Text>
     </View>
     {errores.persona?<Text style={estilosGlobales.textoError}>{errores.persona}</Text>:null}
     <MontoSocial error={errores.monto} etiqueta="Monto de la deuda" valor={monto} alCambiar={establecerMonto} {...aspecto} />
     <CampoFormulario etiqueta="Descripción" error={errores.descripcion} ejemplo="Ej.: Almuerzo, compra, préstamo" valor={descripcion} alCambiar={establecerDescripcion} limite={500} {...aspecto} />
     {direccion === 'me_deben' ? <>
-      <Text style={estilosGlobales.textoAyuda}>Registraremos el dinero que adelantaste como un egreso. Podés elegir el depósito o vincular un egreso existente para no duplicarlo.</Text>
-    </> : <Text style={estilosGlobales.textoAyuda}>Registrar lo que debés no genera un ingreso ni modifica tus depósitos. Al pagar, elegirás el depósito y se registrará el egreso.</Text>}
+      <AvisoFormulario tema={aspecto.tema} titulo="Dinero que adelantaste">Registraremos el dinero que adelantaste como un egreso. Podés elegir el depósito o vincular un egreso existente para no duplicarlo.</AvisoFormulario>
+    </> : <AvisoFormulario tema={aspecto.tema} titulo="Deuda sin ingreso">Registrar lo que debés no genera un ingreso ni modifica tus depósitos. Al pagar, elegirás el depósito y se registrará el egreso.</AvisoFormulario>}
     <View style={estilosOnline.grupo}>
-      <Pressable accessibilityRole="checkbox" accessibilityLabel="Proponer deuda online al registrar" accessibilityState={{checked:compartir,disabled:!disponible&&!compartir}} disabled={!disponible&&!compartir} onPress={()=>cambiarCompartir(!compartir)} style={[estilosOnline.opcionCompartir,!disponible&&estilosOnline.deshabilitado]}>
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityLabel="Proponer deuda online al registrar" accessibilityState={{checked:compartir,disabled:!disponible&&!compartir}} disabled={!disponible&&!compartir} onPress={conRespuestaVisual(()=>cambiarCompartir(!compartir))} style={[estilosOnline.opcionCompartir,!disponible&&estilosOnline.deshabilitado]}>
         <Ionicons name={compartir?'checkbox':'square-outline'} color={tema.foco} size={23}/><Text style={estilosGlobales.etiqueta}>Proponer deuda online</Text>
       </Pressable>
-      <Text style={estilosGlobales.textoAyuda}>{!personaId?'Elegí una persona para compartir la deuda.':!vinculada?'La persona necesita una cuenta vinculada y confirmada.':sinConexion?'Necesitás conexión para enviar la propuesta.':compartir?'Se enviará al guardar y esperará la aceptación de la otra persona.':'Opcional. Si no lo activás, queda solo en tus registros.'}</Text>
+      <AvisoFormulario tema={aspecto.tema} titulo="Compartir la deuda">{!personaId?'Elegí una persona para compartir la deuda.':!vinculada?'La persona necesita una cuenta vinculada y confirmada.':sinConexion?'Necesitás conexión para enviar la propuesta.':compartir?'Se enviará al guardar y esperará la aceptación de la otra persona.':'Opcional. Si no lo activás, queda solo en tus registros.'}</AvisoFormulario>
     </View>
     <AccionesFormulario texto="Registrar deuda" preparar={async () => {
       const campos:Record<string,string>={};if(!personaId)campos.persona='Elegí una persona.';if(convertirMontoMovimiento(monto)===null)campos.monto='Ingresá un importe mayor que cero, con hasta dos decimales.';if(!descripcion.trim()||descripcion.trim().length>500)campos.descripcion='Completá una descripción de hasta 500 caracteres.';cambiarErrores(campos);if(Object.keys(campos).length)throw new Error('Revisá los campos marcados.');
@@ -84,14 +89,16 @@ export default function FormularioRegistrarDeuda({
       if(compartirSolicitud.current)await sesionOnline();
       solicitud.current = { id: id.current, personaId: personaId || '', direccion, monto, descripcion };
       return previsualizarDeudaPersonal(solicitud.current!);
-    }} alGuardar={(financiaciones) => crearDeudaPersonal(solicitud.current!, financiaciones.origen || undefined)} alExito={async deuda=>{
+    }} alGuardar={async financiaciones=>{
+      errorPropuesta.current=null;
+      const deuda=await crearDeudaPersonal(solicitud.current!,financiaciones.origen||undefined);
       if(compartirSolicitud.current){
         try{await proponerDeudaOnline(deuda.id);}
-        catch(error){
-          mostrarAviso('La deuda quedó guardada. No se pudo confirmar la propuesta: '+(error instanceof Error?error.message:'Intentá nuevamente desde el detalle.'),{tipo:'error'});
-          await social.recargar();abrirRegistro('detalleDeuda',{deudaId:deuda.id});return;
-        }
+        catch(error){errorPropuesta.current='La deuda quedó guardada. No se pudo confirmar la propuesta: '+(error instanceof Error?error.message:'Intentá nuevamente desde el detalle.');await social.recargar();}
       }
+      return deuda;
+    }} alExito={deuda=>{
+      if(errorPropuesta.current){mostrarAviso(errorPropuesta.current,{tipo:'error'});abrirRegistro('detalleDeuda',{deudaId:deuda.id});return;}
       social.volver();
     }} {...aspecto} />
   </>;

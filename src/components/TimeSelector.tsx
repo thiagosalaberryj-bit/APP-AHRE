@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, Text, View } from 'react-native';
@@ -39,12 +41,12 @@ export default function SelectorHora({
 
   return (
     <>
-      <Pressable
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
         accessibilityLabel={`${etiquetaAccesibilidad}, ${valor}`}
         accessibilityRole="button"
         disabled={deshabilitado}
         accessibilityState={{disabled:deshabilitado}}
-        onPress={abrirSelector}
+        onPress={conRespuestaVisual(abrirSelector)}
         style={estilosMovimiento.filaInformacion}
       >
         <Ionicons color={tema.textoPrincipal} name="time-outline" size={22} />
@@ -58,19 +60,19 @@ export default function SelectorHora({
         transparent
         visible={modalVisible}
       >
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Cerrar selector de hora"
-          onPress={() => establecerModalVisible(false)}
+          onPress={conRespuestaVisual(() => establecerModalVisible(false))}
           style={estilosMovimiento.fondoSuperpuesto}
         >
-          <Pressable onPress={() => {}} style={estilosMovimiento.tarjetaModalHora}>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} onPress={conRespuestaVisual(() => {})} style={estilosMovimiento.tarjetaModalHora}>
             <View style={estilosMovimiento.encabezadoModal}>
               <Text style={estilosMovimiento.tituloModal}>Elegí una hora</Text>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityLabel="Cerrar selector de hora"
                 accessibilityRole="button"
                 hitSlop={8}
-                onPress={() => establecerModalVisible(false)}
+                onPress={conRespuestaVisual(() => establecerModalVisible(false))}
                 style={estilosMovimiento.botonCerrarModal}
               >
                 <Ionicons color={tema.textoPrincipal} name="close" size={22} />
@@ -80,10 +82,10 @@ export default function SelectorHora({
             <View style={estilosMovimiento.selectoresHora}>
               <View style={estilosMovimiento.columnaHora}>
                 <Text style={estilosMovimiento.etiquetaSelectorHora}>Hora</Text>
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityLabel="Sumar una hora"
                   accessibilityRole="button"
-                  onPress={() => cambiarHora(1)}
+                  onPress={conRespuestaVisual(() => cambiarHora(1))}
                   style={estilosMovimiento.botonAjustarHora}
                 >
                   <Ionicons color={tema.foco} name="chevron-up" size={24} />
@@ -91,10 +93,10 @@ export default function SelectorHora({
                 <Text style={estilosMovimiento.valorSelectorHora}>
                   {completarDosDigitos(horaElegida)}
                 </Text>
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityLabel="Restar una hora"
                   accessibilityRole="button"
-                  onPress={() => cambiarHora(-1)}
+                  onPress={conRespuestaVisual(() => cambiarHora(-1))}
                   style={estilosMovimiento.botonAjustarHora}
                 >
                   <Ionicons color={tema.foco} name="chevron-down" size={24} />
@@ -103,10 +105,10 @@ export default function SelectorHora({
               <Text style={estilosMovimiento.separadorHora}>:</Text>
               <View style={estilosMovimiento.columnaHora}>
                 <Text style={estilosMovimiento.etiquetaSelectorHora}>Minuto</Text>
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityLabel="Sumar un minuto"
                   accessibilityRole="button"
-                  onPress={() => cambiarMinuto(1)}
+                  onPress={conRespuestaVisual(() => cambiarMinuto(1))}
                   style={estilosMovimiento.botonAjustarHora}
                 >
                   <Ionicons color={tema.foco} name="chevron-up" size={24} />
@@ -114,10 +116,10 @@ export default function SelectorHora({
                 <Text style={estilosMovimiento.valorSelectorHora}>
                   {completarDosDigitos(minutoElegido)}
                 </Text>
-                <Pressable
+                <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityLabel="Restar un minuto"
                   accessibilityRole="button"
-                  onPress={() => cambiarMinuto(-1)}
+                  onPress={conRespuestaVisual(() => cambiarMinuto(-1))}
                   style={estilosMovimiento.botonAjustarHora}
                 >
                   <Ionicons color={tema.foco} name="chevron-down" size={24} />
@@ -125,16 +127,16 @@ export default function SelectorHora({
               </View>
             </View>
             <View style={estilosMovimiento.accionesModal}>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityRole="button"
-                onPress={() => establecerModalVisible(false)}
+                onPress={conRespuestaVisual(() => establecerModalVisible(false))}
                 style={estilosMovimiento.botonModalSecundario}
               >
                 <Text style={estilosMovimiento.textoBotonModalSecundario}>Cerrar</Text>
               </Pressable>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityRole="button"
-                onPress={confirmarHora}
+                onPress={conRespuestaVisual(confirmarHora)}
                 style={estilosMovimiento.botonModalPrincipal}
               >
                 <Text style={estilosMovimiento.textoBotonModalPrincipal}>Listo</Text>

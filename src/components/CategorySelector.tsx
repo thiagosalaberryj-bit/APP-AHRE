@@ -1,3 +1,5 @@
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
 import type { Tema } from '../styles/colors';
 import { useState } from 'react';
@@ -89,25 +91,25 @@ export default function SelectorCategoria({
   const mostrarOpcion = (categoria: (typeof categorias)[number]) => {
     const activa=categoriaActiva(categoria.id);
     const color=obtenerColorCategoria(categoria.id,tema,tipoMovimiento);
-    return <Pressable key={categoria.id} accessibilityRole={seleccionMultiple?'checkbox':'button'} accessibilityLabel={categoria.nombre} accessibilityState={seleccionMultiple?{checked:activa}:{selected:activa}} onPress={()=>seleccionarCategoria(categoria.id)} style={[estilosMovimiento.opcionCategoria,{backgroundColor:activa?tema.encabezado:crearFondoCategoria(color,tema)},bordeCampo]}>
-      <Ionicons name={categoria.icono} size={22} color={activa?tema.encabezadoTexto:obtenerTintaCategoria(categoria.id,tema,tipoMovimiento)}/>
-      <Text style={[estilosMovimiento.textoOpcionCategoria,{color:activa?tema.encabezadoTexto:tema.textoPrincipal}]}>{categoria.nombre}</Text>
-      <Ionicons name={activa?'checkbox':'square-outline'} size={20} color={activa?tema.encabezadoTexto:tema.textoSecundario}/>
+    return <Pressable android_ripple={RETROALIMENTACION_PULSACION} key={categoria.id} accessibilityRole={seleccionMultiple?'checkbox':'button'} accessibilityLabel={categoria.nombre} accessibilityState={seleccionMultiple?{checked:activa}:{selected:activa}} onPress={conRespuestaVisual(()=>seleccionarCategoria(categoria.id))} style={[estilosMovimiento.opcionCategoria,{backgroundColor:activa?tema.seleccion:crearFondoCategoria(color,tema)},bordeCampo]}>
+      <Ionicons name={categoria.icono} size={22} color={activa?tema.seleccionTexto:obtenerTintaCategoria(categoria.id,tema,tipoMovimiento)}/>
+      <Text style={[estilosMovimiento.textoOpcionCategoria,{color:activa?tema.seleccionTexto:tema.textoPrincipal}]}>{categoria.nombre}</Text>
+      <Ionicons name={activa?'checkbox':'square-outline'} size={20} color={activa?tema.seleccionTexto:tema.textoSecundario}/>
     </Pressable>;
   };
 
   const mostrarTarjeta = (categoria: NonNullable<import('../types/ui').SelectorCategoriaProps['categorias']>[number], abrirSelector = false) => {
     const activa = categoriaActiva(categoria.id);
     const color = obtenerColorCategoria(categoria.id, tema, tipoMovimiento);
-    const colorFondo = activa ? tema.encabezado : crearFondoCategoria(color, tema);
-    const colorIcono = activa ? tema.encabezadoTexto : obtenerTintaCategoria(categoria.id, tema, tipoMovimiento);
+    const colorFondo = activa ? tema.seleccion : crearFondoCategoria(color, tema);
+    const colorIcono = activa ? tema.seleccionTexto : obtenerTintaCategoria(categoria.id, tema, tipoMovimiento);
     return (
-      <Pressable
+      <Pressable android_ripple={RETROALIMENTACION_PULSACION}
         key={categoria.id}
         accessibilityLabel={abrirSelector ? `${categoria.nombre}. Ver más categorías` : categoria.nombre}
         accessibilityRole="button"
         accessibilityState={{ selected: activa, ...(abrirSelector ? { expanded: modalVisible } : {}) }}
-        onPress={() => abrirSelector ? establecerModalVisible(true) : seleccionarCategoria(categoria.id)}
+        onPress={conRespuestaVisual(() => abrirSelector ? establecerModalVisible(true) : seleccionarCategoria(categoria.id))}
         style={({ pressed: presionado }) => [
           estiloTarjeta || estilosMovimiento.tarjetaCategoria,
           { backgroundColor: colorFondo },
@@ -125,7 +127,7 @@ export default function SelectorCategoria({
           style={[
             estilosMovimiento.nombreCategoria,
             { color: tema.textoPrincipal },
-            activa && { color: tema.encabezadoTexto },
+            activa && { color: tema.seleccionTexto },
           ]}
         >
           {categoria.nombreCorto || categoria.nombre}
@@ -148,11 +150,11 @@ export default function SelectorCategoria({
       <View style={[estilosMovimiento.listaCategorias, enGrilla ? { flexWrap: 'wrap' } : null]}>
         {categoriasPrincipales.map((categoria) => mostrarTarjeta(categoria))}
         {enGrilla ? null : seleccionFueraDeVista && !seleccionMultiple ? mostrarTarjeta(seleccionada, true) : (
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Ver más categorías"
           accessibilityRole="button"
           accessibilityState={{ expanded: modalVisible }}
-          onPress={() => establecerModalVisible(true)}
+          onPress={conRespuestaVisual(() => establecerModalVisible(true))}
           style={({ pressed: presionado }) => [
             estilosMovimiento.tarjetaCategoria,
             estilosMovimiento.tarjetaMasCategorias,
@@ -183,19 +185,19 @@ export default function SelectorCategoria({
         transparent
         visible={modalVisible}
       >
-        <Pressable
+        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityLabel="Cerrar selector de categorías"
-          onPress={() => establecerModalVisible(false)}
+          onPress={conRespuestaVisual(() => establecerModalVisible(false))}
           style={estilosMovimiento.fondoSuperpuesto}
         >
-          <Pressable onPress={() => {}} style={estilosMovimiento.tarjetaSuperpuesta}>
+          <Pressable android_ripple={RETROALIMENTACION_PULSACION} onPress={conRespuestaVisual(() => {})} style={estilosMovimiento.tarjetaSuperpuesta}>
             <View style={estilosMovimiento.encabezadoModal}>
               <Text style={estilosMovimiento.tituloModal}>Todas las categorías</Text>
-              <Pressable
+              <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityLabel="Cerrar"
                 accessibilityRole="button"
                 hitSlop={8}
-                onPress={() => establecerModalVisible(false)}
+                onPress={conRespuestaVisual(() => establecerModalVisible(false))}
                 style={estilosMovimiento.botonCerrarModal}
               >
                 <Ionicons color={tema.textoPrincipal} name="close" size={22} />
@@ -211,25 +213,25 @@ export default function SelectorCategoria({
                 const activa = categoria.id === seleccionadaId;
                 const color = obtenerColorCategoria(categoria.id, tema, tipoMovimiento);
                 return (
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     key={categoria.id}
                     accessibilityRole="button"
                     accessibilityState={{ selected: activa }}
-                    onPress={() => seleccionarCategoria(categoria.id)}
+                    onPress={conRespuestaVisual(() => seleccionarCategoria(categoria.id))}
                     style={[
                       estilosMovimiento.opcionCategoria,
-                      { backgroundColor: activa ? tema.encabezado : crearFondoCategoria(color, tema) },
+                      { backgroundColor: activa ? tema.seleccion : crearFondoCategoria(color, tema) },
                       bordeCampo,
                     ]}
                   >
                     <Ionicons
-                      color={activa ? tema.encabezadoTexto : obtenerTintaCategoria(categoria.id, tema, tipoMovimiento)}
+                      color={activa ? tema.seleccionTexto : obtenerTintaCategoria(categoria.id, tema, tipoMovimiento)}
                       name={categoria.icono}
                       size={22}
                     />
-                    <Text style={[estilosMovimiento.textoOpcionCategoria, { color: activa ? tema.encabezadoTexto : tema.textoPrincipal }]}>{categoria.nombre}</Text>
+                    <Text style={[estilosMovimiento.textoOpcionCategoria, { color: activa ? tema.seleccionTexto : tema.textoPrincipal }]}>{categoria.nombre}</Text>
                     <Ionicons
-                      color={activa ? tema.encabezadoTexto : tema.textoSecundario}
+                      color={activa ? tema.seleccionTexto : tema.textoSecundario}
                       name={activa ? 'radio-button-on' : 'radio-button-off'}
                       size={20}
                     />

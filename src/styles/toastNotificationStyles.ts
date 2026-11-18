@@ -1,9 +1,10 @@
 import { StyleSheet } from 'react-native';
 
 import { TIPOGRAFIA } from './globalStyles';
-import { COLORES_NOTIFICACIONES } from './colors';
+import { COLORES_NOTIFICACIONES, TEMAS } from './colors';
+import type { Tema } from './colors';
 
-export function crearEstilosNotificacion() {
+export function crearEstilosNotificacion(tema: Tema = TEMAS.claro) {
   return StyleSheet.create({
     contenedor: {
       position: 'absolute',
@@ -14,7 +15,7 @@ export function crearEstilosNotificacion() {
       maxWidth: 560,
       overflow: 'hidden',
       borderRadius: 14,
-      backgroundColor: COLORES_NOTIFICACIONES.fondo,
+      backgroundColor: tema.nombre === 'oscuro' ? tema.superficieElevada : COLORES_NOTIFICACIONES.fondo,
       elevation: 14,
       shadowColor: '#000000',
       shadowOffset: { width: 0, height: 4 },

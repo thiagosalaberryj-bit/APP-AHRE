@@ -101,7 +101,7 @@ export default function NavegadorAplicacion({ rutaInicial }: {rutaInicial: impor
   const { tema } = useContext(ContextoApariencia);
   const margenesSeguros = useSafeAreaInsets();
   const [tieneBarraInferior, establecerBarraInferior] = useState(rutaInicial === RUTAS.PRINCIPAL);
-  const colorZonaNavegacion = tieneBarraInferior ? tema.superficie : tema.fondo;
+  const colorZonaNavegacion = tieneBarraInferior ? tema.navegacion : tema.fondo;
   const temaNavegacionBase = tema.nombre === 'oscuro' ? DarkTheme : DefaultTheme;
   const temaNavegacion = {
     ...temaNavegacionBase,

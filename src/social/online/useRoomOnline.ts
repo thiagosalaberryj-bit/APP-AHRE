@@ -1,3 +1,4 @@
+import {actualizarTrasOperacion} from '../financialOperation';
 import {useEffect,useState} from 'react';
 import {observarSocialOnline,obtenerSalaOnline} from '../socialService';
 import {useDatosSociales} from '../SocialDataContext';
@@ -20,7 +21,7 @@ export default function useSalaOnline(id:string,online=true){
       const actual=++version;
       const anterior=novedad?lecturas.get(clave):null;
       const lectura=anterior?anterior.catch(()=>null).then(()=>consultar(usuarioId,id)):consultar(usuarioId,id);
-      void lectura.then(detalle=>{if(activo&&actual===version)cambiar({clave,detalle});}).catch(()=>{if(activo&&actual===version)cambiar(null);});
+      void lectura.then(detalle=>{actualizarTrasOperacion(()=>{if(activo&&actual===version)cambiar({clave,detalle});});}).catch(()=>{actualizarTrasOperacion(()=>{if(activo&&actual===version)cambiar(null);});});
     };
     cargar();const dejar=observarSocialOnline(()=>cargar(true));return()=>{activo=false;dejar();};
   },[id,online,usuarioId]);

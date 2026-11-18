@@ -1,3 +1,8 @@
+import AvisoFormulario from '../components/FormNotice';
+import {conRespuestaVisual} from '../utils/pressFeedback';
+import BotonAccion from '../components/ActionButton';
+import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
+import PuntosCarga from '../components/LoadingDots';
 import RequisitoDeposito from '../components/DepositRequiredState';
 import { useRegresoProtegido } from '../navigation/useSafeGoBack';
 import MarcoEncabezado from '../components/ScreenHeaderFrame';
@@ -11,17 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import {
-  ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  PanResponder,
-  Pressable,
-  Platform,
-
-  Text,
-  View,
-} from 'react-native';
+import { Image, KeyboardAvoidingView, PanResponder, Pressable, Platform, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ContextoApariencia } from '../contexts/AppearanceContext';
@@ -401,7 +396,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
             showsVerticalScrollIndicator={false}
           >
           <View style={estilos.contenido}>
-            {cargandoDepositos?<ActivityIndicator color={tema.foco} accessibilityLabel="Cargando depósitos"/>:errorDepositos?<View style={estilos.tarjetaEstado}><Pressable accessibilityRole="button" onPress={()=>{void cargarDepositos();}} style={estilosGlobales.botonPrincipal}><Text style={estilosGlobales.textoBotonPrincipal}>Reintentar</Text></Pressable></View>:!tieneDepositos?<RequisitoDeposito tema={tema} descripcion="Creá un depósito antes de escanear un comprobante." alCrear={()=>navegacion.navigate(RUTAS.DEPOSITO)}/>:<>
+            {cargandoDepositos?<PuntosCarga color={tema.foco} accessibilityLabel="Cargando depósitos"/>:errorDepositos?<View style={estilos.tarjetaEstado}><BotonAccion tema={tema} texto={"Reintentar"} variante="principal" cargando={false} deshabilitado={false} alPresionar={()=>cargarDepositos()} estilo={estilosGlobales.botonPrincipal} /></View>:!tieneDepositos?<RequisitoDeposito tema={tema} descripcion="Creá un depósito antes de escanear un comprobante." alCrear={()=>navegacion.navigate(RUTAS.DEPOSITO)}/>:<>
             {estado === 'camara' && !OCR_DISPONIBLE ? (
               <Text accessibilityRole="alert" style={estilosGlobales.textoError}>Para reconocer comprobantes necesitás el APK Android con ML Kit. Expo Go no incluye el motor.</Text>
             ) : null}
@@ -423,7 +418,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                       <Text style={estilos.textoCamara}>Ubicá el ticket completo en la cámara.</Text>
                     ) : (
                       <View pointerEvents="none" style={estilos.estadoCamara}>
-                        <ActivityIndicator color="#FFFFFF" size="large" />
+                        <PuntosCarga color="#FFFFFF" size="large" />
                         <Text style={estilos.textoVisor}>Preparando cámara...</Text>
                       </View>
                     )
@@ -434,16 +429,16 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                     </>
                   )}
                 </View>
-                <Text style={estilos.instrucciones}>Usá buena luz y evitá sombras o arrugas.</Text>
+                <AvisoFormulario tema={tema} titulo="Consejos para la foto">Usá buena luz y evitá sombras o arrugas.</AvisoFormulario>
                 <View style={estilos.filaBotones}>
                   <View style={estilos.botonMitad}>
-                    <Pressable accessibilityRole="button" accessibilityLabel={camaraActiva?'Tomar foto del comprobante':'Escanear'} disabled={camaraActiva&&!camaraLista} onPress={camaraActiva?capturarComprobante:activarCamara} style={[estilos.botonCaptura,camaraActiva&&!camaraLista&&estilos.botonDeshabilitado]}>
+                    <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={camaraActiva?'Tomar foto del comprobante':'Escanear'} disabled={camaraActiva&&!camaraLista} onPress={conRespuestaVisual(camaraActiva?capturarComprobante:activarCamara)} style={[estilos.botonCaptura,camaraActiva&&!camaraLista&&estilos.botonDeshabilitado]}>
                       <Ionicons name="camera-outline" size={24} color={tema.botonPrincipalTexto}/>
                       <Text style={estilos.textoBotonCaptura}>{camaraActiva?'Tomar foto':'Escanear'}</Text>
                     </Pressable>
                   </View>
                   <View style={estilos.botonMitad}>
-                    <Pressable accessibilityRole="button" onPress={seleccionarComprobante} style={estilos.botonGaleria}>
+                    <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(seleccionarComprobante)} style={estilos.botonGaleria}>
                       <Ionicons color={tema.textoPrincipal} name="image-outline" size={22}/>
                       <Text style={estilos.textoBotonGaleria}>Galería</Text>
                     </Pressable>
@@ -454,9 +449,9 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
 
             {estado === 'recorte' ? (
               <>
-                <Text style={estilos.instruccionesRecorte}>
+                <AvisoFormulario tema={tema} titulo="Qué incluir">
                   Incluí el comercio, los productos, la fecha y el total dentro del recorte.
-                </Text>
+                </AvisoFormulario>
                 <View
                   onLayout={({ nativeEvent }) => establecerTamanoVisorRecorte({
                     width: nativeEvent.layout.width,
@@ -499,42 +494,42 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                   </View>
                 </View>
                 <View style={estilos.controlesRecorte}>
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityLabel="Alejar la foto"
                     accessibilityRole="button"
                     accessibilityState={{ disabled: escalaRecorte <= 1 }}
                     disabled={escalaRecorte <= 1}
-                    onPress={() => ajustarEscalaRecorte(-0.25)}
+                    onPress={conRespuestaVisual(() => ajustarEscalaRecorte(-0.25))}
                     style={[estilos.botonZoom, escalaRecorte <= 1 && estilos.botonDeshabilitado]}
                   >
                     <Ionicons color={tema.textoPrincipal} name="remove" size={24} />
                   </Pressable>
                   <Text style={estilos.textoZoom}>{Math.round(escalaRecorte * 100)}%</Text>
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityLabel="Acercar la foto"
                     accessibilityRole="button"
                     accessibilityState={{ disabled: escalaRecorte >= 3.5 }}
                     disabled={escalaRecorte >= 3.5}
-                    onPress={() => ajustarEscalaRecorte(0.25)}
+                    onPress={conRespuestaVisual(() => ajustarEscalaRecorte(0.25))}
                     style={[estilos.botonZoom, escalaRecorte >= 3.5 && estilos.botonDeshabilitado]}
                   >
                     <Ionicons color={tema.textoPrincipal} name="add" size={24} />
                   </Pressable>
                 </View>
                 <View style={estilos.accionesEscaner}>
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityRole="button"
-                    onPress={cancelarAjusteRecorte}
+                    onPress={conRespuestaVisual(cancelarAjusteRecorte)}
                     style={estilos.botonGaleria}
                   >
                     <Ionicons color={tema.textoPrincipal} name="refresh-outline" size={22} />
                     <Text style={estilos.textoBotonGaleria}>Volver a escanear</Text>
                   </Pressable>
-                  <Pressable
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                     accessibilityLabel="Usar el recorte y adjuntar la foto"
                     accessibilityRole="button"
                     disabled={!marcoRecorte.ancho}
-                    onPress={() => confirmarRecorte()}
+                    onPress={conRespuestaVisual(() => confirmarRecorte())}
                     style={[estilos.botonUsarRecorte, !marcoRecorte.ancho && estilos.botonDeshabilitado]}
                   >
                     <Ionicons color="#FFFFFF" name="checkmark-circle-outline" size={22} />
@@ -546,18 +541,12 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
 
             {estado === 'procesando' ? (
               <View style={estilos.tarjetaEstado}>
-                <ActivityIndicator size="large" color={tema.foco} />
+                <PuntosCarga size="large" color={tema.foco} />
                 <Text style={estilos.tituloEstado}>Analizando comprobante...</Text>
                 <Text style={estilos.textoEstado}>
                   El procesamiento ocurre en este dispositivo.
                 </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => volverProtegido()}
-                  style={estilosGlobales.botonSecundario}
-                >
-                  <Text style={estilosGlobales.textoBotonSecundario}>Cancelar</Text>
-                </Pressable>
+                <BotonAccion tema={tema} texto={"Cancelar"} variante="cancelar" cargando={false} deshabilitado={false} alPresionar={() => volverProtegido()} estilo={estilosGlobales.botonSecundario} />
               </View>
             ) : null}
 
@@ -598,17 +587,11 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                   )}
                 />
                 {imagenPendiente || imagenComprobante ? (
-                  <Pressable accessibilityRole="button" onPress={volverAEscanear} style={estilos.botonGaleria}>
+                  <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" onPress={conRespuestaVisual(volverAEscanear)} style={estilos.botonGaleria}>
                     <Text style={estilos.textoBotonGaleria}>Volver a escanear</Text>
                   </Pressable>
                 ) : null}
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => volverProtegido()}
-                  style={estilosGlobales.botonSecundario}
-                >
-                  <Text style={estilosGlobales.textoBotonSecundario}>Cancelar</Text>
-                </Pressable>
+                <BotonAccion tema={tema} texto={"Cancelar"} variante="cancelar" cargando={false} deshabilitado={false} alPresionar={() => volverProtegido()} estilo={estilosGlobales.botonSecundario} />
               </View>
             ) : null}
             </>}

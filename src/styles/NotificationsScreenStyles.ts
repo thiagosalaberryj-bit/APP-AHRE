@@ -19,7 +19,7 @@ export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
     opcionesAjuste:{width:'100%',alignItems:'stretch'},
     controlesAjuste:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:ESPACIADO.pequeno,flexWrap:'wrap'},
     horaAjuste:{width:140},
-    campoHora:{minHeight:36,flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo,paddingHorizontal:ESPACIADO.pequeno,backgroundColor:tema.fondo,borderRadius:BORDES.radios.campo,borderWidth:0},
+    campoHora:{minHeight:36,flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo,paddingHorizontal:ESPACIADO.pequeno,backgroundColor: tema.campoFondo,borderRadius:BORDES.radios.campo,borderWidth:0},
     anticipacion:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.minimo},
     pasoAnticipacion:{width:36,minHeight:36,alignItems:'center',justifyContent:'center'},
     accesoPermisos:{minHeight:44,justifyContent:'center'},
@@ -88,7 +88,7 @@ export function crearEstilosNotificaciones(tema: Tema, insetInferior = 0) {
       height: 52,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: tema.contenedorVerde,
+      backgroundColor: tema.superficieElevada,
       borderRadius: BORDES.radios.tarjeta,
     },
     contenidoNotificacion: {
