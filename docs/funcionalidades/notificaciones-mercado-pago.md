@@ -55,23 +55,35 @@ al recuperarse; publicar el backend actualizado es necesario para estas reglas.
 
 ## Mercado Pago
 
-La fuente es exclusivamente `GET /v1/payments/search`. No se usan reportes ni se
-presenta el resultado como el extracto completo de la cuenta. El servidor
-autoriza cada cuenta con OAuth/PKCE; los tokens personales no llegan a la app ni
-quedan en los flujos n8n. La dirección se determina por la identidad de la cuenta,
-no por asumir que `regular_payment` significa un ingreso.
+El botón **Conectar Mercado Pago** aparece en todos los depósitos mientras no
+haya una vinculación activa. Al vincular uno, se usa **Opciones → Mercado Pago**
+en ese depósito. Los tres puntos muestran el contador de movimientos pendientes.
+Al vincular, la persona elige
+1, 2 o 3 meses de historial y autoriza su cuenta. En el flujo Settlement, ese
+rango termina en la fecha de creación del depósito. Cada usuario y cada
+cuenta externa tienen una sola vinculación activa.
 
-Desde un depósito activo y sincronizado se elige un rango orientativo de 1, 2 o
-3 meses. La primera consulta recupera hasta 500 pagos recientes. Se muestran el
-intervalo solicitado y, si se alcanza el límite, el inicio real recuperado.
-Cada usuario y cada cuenta externa tienen una sola vinculación activa.
+Search muestra los pagos del período a medida que se descargan. Mientras
+se espera y concilia Settlement, los resultados permanecen en solo lectura.
+La barra muestra la etapa y los tramos que ya se conciliaron. Al terminar
+se muestran primero los pagos de Search y luego los movimientos adicionales
+del reporte. Los pendientes con datos suficientes permiten editar la
+descripción y la categoría. La app conserva esos cambios en borradores.
 
-La app solicita una consulta automática al entrar con conexión, con límite
-diario en el servidor, y admite dos manuales adicionales. Un worker separado
-procesa las páginas con turnos entre usuarios; n8n supervisa su recuperación
-cada minuto. Si no hay trabajos no consulta Mercado Pago. Cerrar la app no
-cancela un trabajo iniciado. La ausencia durante varios días se recupera desde
-el último tramo completo, con los límites de disponibilidad de Search.
+Los créditos del reporte sin coincidencia con Search reciben la categoría
+editable **Rendimientos**. El importe neto distingue créditos y débitos.
+La conciliación excluye los importes cero de la revisión de la nueva consulta.
+Si el sentido sigue siendo ambiguo, la app lo deja pendiente de confirmar.
+
+Desde el día siguiente a la vinculación, el servidor programa la consulta a
+las 12:00 de Argentina para el día calendario anterior, aunque la app esté
+cerrada. **Retomar consulta** aparece ante un fallo y sigue el trabajo
+guardado. Actualizar la pantalla trae el avance que ya tiene el servidor.
+
+El servidor controla qué cuentas usan Settlement. Las cuentas con el flujo
+anterior conservan Search, el límite de 500 pagos iniciales y los usos manuales
+descritos en el historial de esta guía. Los tokens OAuth se manejan en el
+servidor y el worker.
 
 Los resultados se muestran como pendientes, ignorados o registrados. Se puede
 seleccionar hasta 500 por confirmación, registrar, ignorar, recuperar ignorados
@@ -81,8 +93,7 @@ usa Transferencias o Transferencias recibidas según el sentido. Los pagos no
 aprobados y las monedas distintas de ARS se muestran sin habilitar el registro.
 La dirección desconocida exige confirmación. No hay conversión monetaria ni
 transferencias automáticas entre dos depósitos.
-Los pagos de importe cero se muestran con una explicación y pueden ignorarse;
-no habilitan registro ni asociación financiera ni bloquean la descarga del resto.
+En el flujo anterior, los pagos de importe cero se muestran con una explicación y pueden ignorarse.
 
 Guardar una selección es transaccional: movimientos, saldo, asociación externa
 y decisión pendiente se confirman o revierten juntos. Los históricos anteriores
@@ -121,8 +132,7 @@ completa requiere una APK propia, un Android físico y FCM v1 configurado.
 ### Revisión de interfaz · 11 de noviembre
 
 El acceso está en Detalle del depósito → Opciones (tres puntos) → Mercado Pago,
-con el contador de pendientes cuando hay vinculación. No se intercala un botón
-de vinculación entre el saldo y las pestañas de movimientos.
+con el contador de pendientes cuando hay vinculación.
 La revisión actualiza la vinculación al recuperar foco y al volver del navegador.
 Deslizar hacia abajo recupera resultados del servidor sin solicitar una nueva
 búsqueda. Buscar movimientos solicita una manual y se deshabilita durante una
@@ -190,7 +200,7 @@ Comparten el resumen local y se actualizan al cambiar decisiones o sincronizar;
 abrir la pantalla no los elimina. Desvincular retira los indicadores.
 
 La guía de credenciales y arranque está en SERVER-AHRE:
-`docs/notificaciones-mercado-pago.md`. Las claves privadas nunca deben copiarse
+`docs/funcionalidades/notificaciones.md`. Las claves privadas nunca deben copiarse
 al chat ni versionarse. La nueva dependencia autorizada por el líder para esta
 tarea es `expo-notifications`, compatible con SDK 57.
 

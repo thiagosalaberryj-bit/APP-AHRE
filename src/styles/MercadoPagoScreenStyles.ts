@@ -5,6 +5,8 @@ import type { Tema } from './colors';
 export function crearEstilosMercadoPago(tema: Tema) {
   const registro = crearEstilosTarjetaMovimiento(tema);
   return StyleSheet.create({
+    pistaProgreso: {height: 6, borderRadius: 3, overflow: 'hidden', backgroundColor: tema.borde},
+    rellenoProgreso: {height: '100%', borderRadius: 3, backgroundColor: tema.foco},
     contenido: { padding: ESPACIADO.grande, paddingHorizontal: MARGEN_LATERAL_PANTALLA, gap: ESPACIADO.grande, paddingBottom: ESPACIADO.extraGrande },
     resumen: { padding: ESPACIADO.medio, gap: ESPACIADO.pequeno, borderRadius: BORDES.radios.boton, borderWidth: BORDES.anchos.fino, borderColor: tema.borde, backgroundColor: tema.superficie },
     identidadResumen: { flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio,paddingBottom:ESPACIADO.pequeno },

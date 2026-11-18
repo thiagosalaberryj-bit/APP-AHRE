@@ -36,9 +36,9 @@ test('categorías desconocidas conservan un color neutro estable', () => {
   assert.match(obtenerColorCategoria('historica', { nombre: 'oscuro' }), /^#[0-9a-f]{6}$/i);
 });
 
-test('cada grupo principal mantiene tres tonos de intenso a claro en ambos temas', () => {
+test('cada grupo principal conserva sus tonos de intenso a claro en ambos temas', () => {
   for (const familia of FAMILIAS_CATEGORIAS.filter(familia => !['otros', 'regalos'].includes(familia.id))) {
-    assert.equal(familia.categorias.length, 3);
+    assert.equal(familia.categorias.length, familia.id === 'finanzas' ? 4 : 3);
     const originales = familia.categorias.toReversed().map(id => ({ id }));
     for (const nombre of ['claro', 'oscuro']) {
       assert.deepEqual(ordenarCategoriasPorColor(originales, { nombre }, familia.tipo).map(categoria => categoria.id), familia.categorias);
@@ -47,9 +47,10 @@ test('cada grupo principal mantiene tres tonos de intenso a claro en ambos temas
   }
 });
 
-test('Regalos distingue ayudas de ingreso y gastos de egreso sin cambiar el catálogo', () => {
+test('Regalos distingue ingresos de egresos y Rendimientos pertenece a Finanzas', () => {
   assert.equal(obtenerFamiliaCategoria('regalos', 'ingreso').id, 'ayudas');
   assert.equal(obtenerFamiliaCategoria('regalos', 'egreso').id, 'regalos');
-  assert.equal(CATEGORIAS_INGRESO.length, 10);
+  assert.equal(obtenerFamiliaCategoria('rendimientos', 'ingreso').id, 'finanzas');
+  assert.equal(CATEGORIAS_INGRESO.length, 11);
   assert.equal(CATEGORIAS_EGRESO.length, 17);
 });

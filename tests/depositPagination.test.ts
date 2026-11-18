@@ -11,7 +11,7 @@ test('SQLite con 10.000 movimientos devuelve resumen pequeño y páginas estable
   sql.length = 0;
   const detalle = await e.consultarDetalleDeposito(id);
   assert.equal(detalle.cantidadMovimientos, 10000); assert.ok(!('movimientos' in detalle));
-  assert.equal(detalle.categoriasMovimientos.length, 26); // Transferencias comparte identificador entre tipos.
+  assert.equal(detalle.categoriasMovimientos.length, 27); // Transferencias comparte identificador entre tipos.
   assert.equal(detalle.comparacionMensual.disponible && detalle.comparacionMensual.saldoAnterior, 1000000);
   assert.ok(!sql.some(consulta => /SELECT (?:m\.)?\* FROM movimientos/.test(consulta)));
   const meses = await e.consultarMesesMovimientosDeposito(id, {});

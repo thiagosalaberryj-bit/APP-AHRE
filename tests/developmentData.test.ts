@@ -2,6 +2,7 @@ import { presente } from './helpers/assertions.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { preparar } from './helpers/localDatabase.ts';
+import { CATEGORIAS_INGRESO } from '../src/constants/movimientos.ts';
 
 test('el acceso prepara cuenta, depósitos y movimientos con saldos reales y sesión no recordada', async prueba => {
   const { base, almacenamiento, prepararDatosPrueba, obtenerSesionActual, MOVIMIENTOS_PRUEBA } = await preparar(prueba);
@@ -14,7 +15,7 @@ test('el acceso prepara cuenta, depósitos y movimientos con saldos reales y ses
   assert.equal(MOVIMIENTOS_PRUEBA.length, 220);
   assert.equal(new Set(MOVIMIENTOS_PRUEBA.map(movimiento => movimiento.clave)).size, MOVIMIENTOS_PRUEBA.length);
   assert.equal(new Set(MOVIMIENTOS_PRUEBA.filter(movimiento => movimiento.tipo === 'egreso').map(movimiento => movimiento.categoria)).size, 17);
-  assert.equal(new Set(MOVIMIENTOS_PRUEBA.filter(movimiento => movimiento.tipo === 'ingreso').map(movimiento => movimiento.categoria)).size, 10);
+  assert.deepEqual(new Set(MOVIMIENTOS_PRUEBA.filter(movimiento => movimiento.tipo === 'ingreso').map(movimiento => movimiento.categoria)), new Set(CATEGORIAS_INGRESO.map(categoria => categoria.id)));
   assert.ok(Math.max(...MOVIMIENTOS_PRUEBA.map(movimiento => movimiento.dias)) >= 150);
   for (const monto of [450, 1000, 5000, 1250000]) assert.ok(MOVIMIENTOS_PRUEBA.some(movimiento => movimiento.monto === monto));
   assert.equal(presente(base.prepare('SELECT SUM(saldo_actual) AS saldo FROM depositos').get()).saldo, 872800);

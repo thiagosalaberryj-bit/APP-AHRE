@@ -5,7 +5,7 @@
 La nueva APK requiere el archivo `google-services.json` de la app Firebase con
 package `com.thiagosalaberry.APPAHRE`, la credencial FCM v1 en el proyecto Expo
 existente y el backend con OAuth/n8n configurado. Ver la guía
-`docs/notificaciones-mercado-pago.md` de SERVER-AHRE. La exportación Metro/Hermes
+`docs/funcionalidades/notificaciones.md` de SERVER-AHRE. La exportación Metro/Hermes
 comprueba el paquete JS; no acredita entrega push ni sustituye una APK.
 El perfil existente `ocr-comparison` sigue disponible. Preparar una numeración
 de entrega antes de publicar; esta implementación no publica un APK.
@@ -84,7 +84,7 @@ no publica el archivo en la web de AHRE.
 
 SERVER-AHRE contiene `scripts/publish-apk.mjs`. El procedimiento de preparar el
 manifiesto, copiar APK y `latest.json` y verificar SHA-256 está en su guía
-`docs/infraestructura-y-despliegue.md`, accesible desde el
+`docs/infraestructura/despliegue.md`, accesible desde el
 [repositorio del servidor](https://github.com/thiagosalaberryj-bit/SERVER-AHRE).
 No usar la exportación local como si fuera un APK.
 

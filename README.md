@@ -27,9 +27,9 @@ Finanzas personales, gastos compartidos y comprobantes en una app Android con da
 | Social | Agenda privada, salas locales/online, invitados web, acuerdos y pagos con movimientos propios. |
 | Recurrencias | Programaciones locales con aceptación manual desde depósitos; no modifican el saldo hasta confirmar. |
 | Notificaciones | Historial, preferencias y recordatorios locales; push Android requiere configurar FCM y generar APK. |
-| Mercado Pago | Vinculación y revisión offline de pagos disponibles mediante Search, con consultas gestionadas por SERVER-AHRE y n8n. |
+| Mercado Pago | Vinculación desde el detalle del depósito y revisión offline. Las cuentas habilitadas ven Search en vivo, conciliación con Settlement y consultas diarias. |
 | Comprobantes | OCR local con ML Kit y revisión antes de guardar; requiere APK Android. |
-| Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado y preferencias. |
+| Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado, recuperación por correo y preferencias. |
 | Sincronización | Lotes ordenados, reintentos sin duplicados y corrección guiada de correo rechazado. |
 
 SQLite guarda primero cada operación. Al reconectar, la app envía los pendientes
@@ -58,9 +58,10 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
-Preparación actual: **app 0.9.3 / Android 18**, coordinada con servidor 0.3.4.
-Los manifiestos y el changelog están preparados; no se generó ni publicó una
-APK 0.9.3. Los envíos anteriores de 0.9.2 son antecedentes.
+Versiones de trabajo **app 0.9.3 / Android 18** y **servidor 0.3.4**.
+La recuperación por correo y la conciliación de Mercado Pago se pueden probar
+desde Expo Go con esta rama. La APK 0.9.3 publicada corresponde a una entrega
+anterior a estos cambios.
 
 Revisión del 17/11/2026: ayudas de formularios con icono de información,
 confirmación OCR organizada y recorridos de Social con continuidad de modales.

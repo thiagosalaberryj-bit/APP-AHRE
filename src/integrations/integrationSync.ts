@@ -38,12 +38,12 @@ async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatic
       await solicitarRemoto('/mercado-pago/identificar', {}, remota.token);
       estado = await solicitarRemoto<EstadoMp>('/mercado-pago', undefined, remota.token);
     }
-    if (estado.vinculacion && pedirAutomatica && !estado.automatica?.usadaHoy) {
+    if (estado.vinculacion && !estado.settlement && pedirAutomatica && !estado.automatica?.usadaHoy) {
       await solicitarConsultaMp('automatica', usuario.id);
       estado = await solicitarRemoto<EstadoMp>('/mercado-pago', undefined, remota.token);
     }
     if (!await vigente()) return;
-    const operaciones: OperacionMp[] = [];
+    let operaciones: OperacionMp[] = [];
     if (estado.vinculacion) {
       let desde: string | null = '';
       do {
@@ -51,6 +51,22 @@ async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatic
         if (!Array.isArray(pagina.operaciones) || pagina.siguiente === desde) throw new Error('La página de Mercado Pago no es válida.');
         operaciones.push(...pagina.operaciones); desde = pagina.siguiente;
       } while (desde);
+      if (estado.trabajo?.settlement && estado.trabajo.estado !== 'completo' && estado.trabajo.estado !== 'cancelado') {
+        const porId = new Map(operaciones.map(op => [op.id, op]));
+        desde = '';
+        do {
+          const pagina: { operaciones: OperacionMp[]; siguiente: string | null } = await solicitarRemoto(
+            '/mercado-pago/vista-previa?trabajo=' + encodeURIComponent(estado.trabajo.id) + '&desde=' + encodeURIComponent(desde || ''),
+            undefined, remota.token);
+          if (!Array.isArray(pagina.operaciones) || pagina.siguiente === desde) throw new Error('La vista previa de Mercado Pago no es válida.');
+          for (const op of pagina.operaciones) {
+            const anterior = porId.get(op.id);
+            porId.set(op.id, {...op, decision: anterior?.decision ?? op.decision, movimientoId: anterior?.movimientoId ?? null});
+          }
+          desde = pagina.siguiente;
+        } while (desde);
+        operaciones = [...porId.values()];
+      }
     }
     if (!await vigente()) return;
     await ejecutarTransaccion(async c => {

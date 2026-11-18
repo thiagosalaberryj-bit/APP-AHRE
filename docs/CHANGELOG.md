@@ -5,7 +5,25 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
-Sin cambios pendientes.
+### Añadido
+
+- Recuperación de contraseña desde Login con un código de seis dígitos por
+  correo y actualización del acceso local al iniciar sesión con conexión.
+- Categoría **Rendimientos** para créditos exclusivos de Settlement. Su
+  descripción y categoría se pueden editar después de conciliar.
+
+### Cambiado
+
+- Al crear un depósito se abre su detalle. El botón estándar **Conectar
+  Mercado Pago** aparece en todos los depósitos hasta que se vincula uno.
+  La revisión queda en el menú de tres puntos con su contador de pendientes.
+- Las cuentas habilitadas eligen de uno a tres meses anteriores a la creación
+  del depósito. Search muestra los pagos en vivo y en solo lectura mientras
+  se concilian con Settlement. La pantalla muestra el período y el avance.
+- La consulta diaria se programa al mediodía de Argentina para el día anterior.
+  Si falla, el botón **Retomar consulta** continúa desde la etapa guardada.
+- Las referencias al servidor apuntan al nuevo índice y a la documentación
+  específica de recuperación, publicaciones e integraciones.
 
 ## [v0.9.3] - 2026-11-18 - no estable
 

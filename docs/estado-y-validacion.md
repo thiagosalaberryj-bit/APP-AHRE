@@ -159,7 +159,7 @@ las pruebas automatizadas registradas; no representa una repetición de esas
 pruebas en esta revisión ni una certificación de todos los dispositivos.
 
 Comprobé también el servidor y su supervisor n8n;
-ver [cierre operativo](https://github.com/thiagosalaberryj-bit/SERVER-AHRE/blob/main/docs/infraestructura-y-despliegue.md#cierre-operativo-031--14-de-noviembre-de-2026).
+ver [cierre operativo](https://github.com/thiagosalaberryj-bit/SERVER-AHRE/blob/main/docs/bitacoras/despliegues.md#cierre-operativo-031--14-de-noviembre-de-2026).
 La release de código no compila ni publica una APK automáticamente.
 
 ### Verificación automatizada del 13 de noviembre

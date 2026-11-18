@@ -10,7 +10,7 @@ import { movimientosRepositorio, depositosRepositorio } from '../database/reposi
 import { CATEGORIAS_EGRESO, CATEGORIAS_INGRESO } from '../constants/movimientos';
 import { generarIdentificador } from '../database/identifiers';
 import { avisarIntegraciones, encolarIntegracion, guardarDato, leerDato } from '../integrations/integrationStore';
-import type { BorradorMp, ConsultaMp, EstadoMp, OperacionMp } from './types';
+import { vistaPreviaMp, type BorradorMp, type ConsultaMp, type EstadoMp, type OperacionMp } from './types';
 
 class ErrorMercadoPago extends ErrorBaseDatos { constructor(mensaje: string) { super('integridad'); this.message = mensaje; this.name = 'ErrorMercadoPago'; } }
 
@@ -66,7 +66,17 @@ export async function desvincularEnConexion(c: Conexion, usuarioId: string, depo
   await c.runAsync("UPDATE avisos_locales SET resuelta=1 WHERE usuario_id=? AND json_extract(datos,'$.tipo')='mercado_pago'", [usuarioId]);
 }
 export async function desvincularMercadoPago() { const usuario = await usuarioIntegraciones(); await ejecutarTransaccion(c => desvincularEnConexion(c, usuario.id)); avisarIntegraciones(); }
-export async function guardarBorradorMp(id: string, borrador: BorradorMp) { const usuario = await usuarioIntegraciones(); await ejecutarTransaccion(c => guardarDato(c, usuario.id, 'mp:borrador:' + id, borrador)); }
+export async function guardarBorradorMp(id: string, borrador: BorradorMp) {
+  const usuario = await usuarioIntegraciones();
+  await ejecutarTransaccion(async c => {
+    const estado = await leerDato(usuario.id, 'mp:estado', ESTADO_MP_INICIAL, c);
+    if (vistaPreviaMp(estado.trabajo)) throw new ErrorMercadoPago('Esperá a que termine la consulta para revisar los movimientos.');
+    const operaciones = await leerDato<OperacionMp[]>(usuario.id, 'mp:operaciones', [], c);
+    const op = operaciones.find(fila => fila.id === id);
+    if (op?.provisional || op?.pendienteConfirmacion) throw new ErrorMercadoPago('El movimiento está pendiente de confirmar.');
+    await guardarDato(c, usuario.id, 'mp:borrador:' + id, borrador);
+  });
+}
 export async function cargarBorradoresMp() {
   const usuario = await usuarioIntegraciones();
   return ejecutarLecturaConConexion(async c => Object.fromEntries((await c.getAllAsync<{ clave: string; datos: string }>("SELECT clave,datos FROM integraciones_locales WHERE usuario_id=? AND clave LIKE 'mp:borrador:%'", [usuario.id])).map(f => [f.clave.slice(12), JSON.parse(f.datos) as BorradorMp])));
@@ -76,12 +86,16 @@ export async function decidirMovimientosMp(ids: string[], decision: 'registrado'
   const usuario = await usuarioIntegraciones();
   const resultado = await ejecutarTransaccion(async c => {
     const estado = await leerDato(usuario.id, 'mp:estado', ESTADO_MP_INICIAL, c), v = estado.vinculacion;
+    if (vistaPreviaMp(estado.trabajo)) {
+      throw new ErrorMercadoPago('Esperá a que termine la consulta para revisar los movimientos.');
+    }
     if (!v) throw new ErrorMercadoPago('La vinculación ya no está disponible.');
     const deposito = await depositosRepositorio.consultarPorId(v.deposito_id, c);
     if (!deposito?.activo || deposito.usuario_id !== usuario.id) throw new ErrorMercadoPago('El depósito ya no está disponible.');
     const operaciones = await leerDato<OperacionMp[]>(usuario.id, 'mp:operaciones', [], c);
     for (const id of new Set(ids)) {
       const op = operaciones.find(f => f.id === id); if (!op) throw new ErrorMercadoPago('Actualizá la lista de movimientos.');
+      if (op.provisional || op.pendienteConfirmacion) throw new ErrorMercadoPago('El movimiento está pendiente de confirmar.');
       if (decision === 'registrado' && op.decision === 'registrado') continue;
       if (['ignorado', 'recuperado'].includes(decision) && op.decision === 'registrado') throw new ErrorMercadoPago('Ese pago ya tiene un movimiento registrado.');
       let movimientoId = op.movimientoId;

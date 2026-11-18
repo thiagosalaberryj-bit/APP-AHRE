@@ -2,7 +2,7 @@
 
 ## Alcance
 
-AHRE registra y autentica cuentas mediante SERVER-AHRE y conserva en SQLite un verificador para ingresos offline posteriores. El registro y la primera autorización necesitan conexión. Solo una instalación por cuenta puede sincronizar. No incluye verificación de correo, OAuth ni recuperación de contraseña.
+AHRE registra y autentica cuentas mediante SERVER-AHRE y conserva en SQLite un verificador para ingresos offline posteriores. El registro y la primera autorización necesitan conexión. Solo una instalación por cuenta puede sincronizar.
 
 El registro valida los datos, registra y autoriza la cuenta en el servidor y crea la cuenta local antes de volver a Login. El acceso autentica con el servidor o valida el acceso offline autorizado; después crea la sesión y abre Dashboard.
 
@@ -40,6 +40,14 @@ Login valida el formulario y autentica con el servidor cuando está disponible. 
 Hasta confirmar un cambio de correo, el ingreso remoto utiliza el correo anterior. Después de sincronizar, utiliza el nuevo. El ingreso offline autorizado valida el correo y verificador locales. Si una autorización revocada conserva pendientes, tampoco puede vincularse entrando con el correo anterior.
 
 La contraseña no se escribe en almacenamiento local, logs ni errores. Si la autenticación falla, la persona permanece en Login y no se crea sesión.
+
+## Recuperación desde Login
+
+Si olvidaste la contraseña, abrí «¿Olvidaste tu contraseña?» en Login con conexión.
+Ingresá el correo de tu cuenta, el código de seis dígitos y la contraseña nueva.
+El código vence en diez minutos y el reenvío reemplaza al anterior. Después de
+confirmar, volvé a iniciar sesión con conexión para actualizar el verificador
+local. Se conservan los datos y los cambios pendientes de tu instalación.
 
 ## Cambio de contraseña desde Perfil
 

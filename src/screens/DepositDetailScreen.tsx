@@ -183,6 +183,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const [resumenMercadoPago,establecerResumenMercadoPago]=useState<{obtenidos:number;pendientes:number}|null>(null);
   const [guardandoConexionMp,establecerGuardandoConexionMp]=useState(false);
   const [requiereAutorizacionMp,establecerRequiereAutorizacionMp]=useState(false);
+  const [tieneDepositoVinculadoMp,establecerTieneDepositoVinculadoMp]=useState<boolean>();
   const estilosFiltros = crearEstilosMovimientos(tema, anchoVentana);
   const estilosAccesos=crearEstilosBusquedaFiltros(tema);
   const [cantidadMovimientos, establecerCantidadMovimientos] = useState(0);
@@ -218,6 +219,11 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
   const [categoriaFiltroIds, establecerCategoriaFiltroIds] = useState<string[]>([]);
   const [seccionesFiltrosAbiertas, establecerSeccionesFiltrosAbiertas] = useState(['tipo', 'fecha']);
   const [modalOpcionesVisible, establecerModalOpcionesVisible] = useState(false);
+  const abrirMercadoPago = () => {
+    if (!depositoId) return;
+    establecerModalOpcionesVisible(false);
+    navegacion.navigate(RUTAS.MERCADO_PAGO, { depositoId });
+  };
   const [modalEdicionVisible, establecerModalEdicionVisible] = useState(false);
   const [modalIconosEdicionVisible, establecerModalIconosEdicionVisible] = useState(false);
   const [modalEliminacionVisible, establecerModalEliminacionVisible] = useState(false);
@@ -284,7 +290,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
     establecerEnfocada(true);
     cargarDetalle();
     const comprobarConexion=()=>{void cargarMercadoPago().then(({estado})=>{
-      if(activa)establecerRequiereAutorizacionMp(!!estado.vinculacion&&estado.vinculacion.deposito_id===depositoId&&!!estado.vinculacion.error);
+      if(!activa)return;
+      establecerTieneDepositoVinculadoMp(!!estado.vinculacion);
+      establecerRequiereAutorizacionMp(estado.vinculacion?.deposito_id===depositoId&&!!estado.vinculacion?.error);
     }).catch(()=>{});};
     comprobarConexion();
     const dejar=observarIntegraciones(()=>{comprobarConexion();void consultarResumenMp().then(resumen=>{
@@ -295,7 +303,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
       establecerEnfocada(false);
       secuenciaCarga.current += 1;
     };
-  }, [cargarDetalle]));
+  }, [cargarDetalle, depositoId]));
 
   const categoriasDisponiblesFiltro = useMemo(() => {
     const categoriasPorTipo = tipoFiltro === 'ingreso'
@@ -715,6 +723,9 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
           </View>
 
           <View style={estilos.seccionMovimientos}>
+            {depositoId && tieneDepositoVinculadoMp === false && !resumenMercadoPago ? (
+              <BotonAccion tema={tema} texto="Conectar Mercado Pago" icono="wallet-outline" alPresionar={abrirMercadoPago} />
+            ) : null}
             <SelectorSegmentado tema={tema} opciones={[{id:'movimientos',nombre:'Movimientos'},{id:'recurrentes',nombre:'Recurrentes'+(cantidadRecurrencias?' · '+cantidadRecurrencias:'')}]} valor={seccionDeposito} alSeleccionar={v => establecerSeccionDeposito(v as 'movimientos' | 'recurrentes')} etiqueta="Sección del depósito"/>
             <BuscadorFiltrosMovimientos tema={tema} busqueda={busqueda} alBuscar={cambiarBusqueda} alAbrirFiltros={abrirFiltros} alLimpiar={limpiarFiltros} filtrosActivos={filtrosActivos} cantidad={cantidadFiltros}>
               <FiltrosRapidosMovimientos estilosAccesos={estilosAccesos}
@@ -830,10 +841,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
             <View style={estilos.separadorOpcionModal} />
             <Pressable android_ripple={RETROALIMENTACION_PULSACION}
               accessibilityRole="button"
-              onPress={conRespuestaVisual(() => {
-                establecerModalOpcionesVisible(false);
-                navegacion.navigate(RUTAS.MERCADO_PAGO, { depositoId });
-              })}
+              onPress={conRespuestaVisual(abrirMercadoPago)}
               style={({ pressed }) => [estilos.opcionModal, pressed ? estilos.opcionPresionada : null]}
             >
               <View style={estilos.iconoOpcionModal}>

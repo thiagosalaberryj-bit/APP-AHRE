@@ -13,6 +13,7 @@ import { ContextoAvisos } from '../contexts/ToastContext';
 import ContenedorAutenticacion from '../components/AuthContainer';
 import CampoAutenticacion from '../components/AuthInput';
 import CampoContrasena from '../components/PasswordInput';
+import RecuperacionContrasena from '../components/PasswordRecovery';
 import BotonPrincipal from '../components/PrimaryButton';
 import { iniciarSesion } from '../authentication/authenticationService';
 import { RUTAS } from '../constants/routes';
@@ -37,6 +38,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
   const [contrasena, establecerContrasena] = useState('');
   const [recordarme, establecerRecordarme] = useState(true);
   const [cargando, establecerCargando] = useState(false);
+  const [recuperando, establecerRecuperando] = useState(false);
   const [errores, establecerErrores] = useState<Partial<Record<string, string>>>({});
   useEffect(()=>{let vigente=true;void Promise.all([leerRecordatorioIngreso(),obtenerSesionActual()]).then(([datos,sesion])=>{if(vigente&&!recordatorioCambiado.current){establecerCorreo(actual=>actual||(datos.recordar&&sesion.usuario?sesion.usuario.correo_electronico:''));establecerRecordarme(datos.recordar);progresoRecordarme.setValue(datos.recordar?1:0);}}).catch(()=>{if(vigente)mostrarAviso('No se pudo recuperar el correo recordado.',{tipo:'informacion'});});return()=>{vigente=false;};},[]);
   const moverControlRecordarme = progresoRecordarme.interpolate({ inputRange: [0, 1], outputRange: [0, 24] });
@@ -170,7 +172,9 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
             </Animated.View>
             <Text style={estilosAutenticacion.textoRecordarme}>Recordarme</Text>
           </Pressable>
-          <Pressable accessibilityRole="button" style={estilosAutenticacion.accionRecuperar}>
+          <Pressable accessibilityRole="button" disabled={cargando}
+            onPress={conRespuestaVisual(() => establecerRecuperando(true))}
+            style={estilosAutenticacion.accionRecuperar}>
             <Text style={estilosAutenticacion.textoRecuperar}>¿Olvidaste tu contraseña?</Text>
           </Pressable>
         </View>
@@ -195,6 +199,14 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           <Text style={estilosAutenticacion.textoAccionPie}>Ir a Registro</Text>
         </Pressable>
       </View>
+      {recuperando ? <RecuperacionContrasena correoInicial={correo} tema={tema}
+        alCerrar={() => establecerRecuperando(false)}
+        alCompletar={correoRecuperado => {
+          cambiarCorreo(correoRecuperado);
+          cambiarContrasena('');
+          establecerRecuperando(false);
+          mostrarAviso('Contraseña actualizada. Iniciá sesión con conexión.', {tipo: 'exito'});
+        }} /> : null}
     </ContenedorAutenticacion>
   );
 }

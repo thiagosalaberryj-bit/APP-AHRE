@@ -20,6 +20,6 @@ export function agruparMovimientosMp(operaciones: OperacionMp[], limite: number)
 }
 
 export function alternarSeleccionMp(visibles: OperacionMp[], seleccionadas: string[]) {
-  const elegibles = visibles.filter(op => !op.revisionPendiente).slice(0, 500).map(op => op.id);
+  const elegibles = visibles.filter(op => !op.revisionPendiente && !op.provisional && !op.pendienteConfirmacion).slice(0, 500).map(op => op.id);
   return elegibles.length && elegibles.every(id => seleccionadas.includes(id)) ? [] : elegibles;
 }

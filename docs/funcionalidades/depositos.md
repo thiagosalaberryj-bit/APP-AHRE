@@ -9,7 +9,10 @@ realiza la inserción. La pantalla no ejecuta SQL. El flujo no depende de una
 conexión de red y funciona con el almacenamiento local disponible en modo
 avión.
 
-Al crear el depósito, el formulario se cierra y vuelve a la pantalla anterior.
+Al crear el depósito, el formulario abre directamente su detalle. Mientras la
+cuenta de AHRE no tenga un depósito vinculado a Mercado Pago, el botón de
+conexión se muestra en todos los depósitos. Al vincular uno, la revisión de
+movimientos se abre desde su menú de tres puntos.
 El Dashboard consulta los depósitos activos de la sesión local y abre el detalle
 enviando el identificador del depósito, no su nombre ni una copia permanente
 del registro.

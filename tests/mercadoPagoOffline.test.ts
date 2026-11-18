@@ -1,7 +1,7 @@
 import test, { type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { preparar } from './helpers/localDatabase.ts';
-import type { OperacionMp } from '../src/mercadoPago/types.ts';
+import type { EstadoMp, OperacionMp } from '../src/mercadoPago/types.ts';
 import { ajustesPredeterminados } from '../src/notifications/types.ts';
 
 async function escenario(t: TestContext) {
@@ -9,12 +9,32 @@ async function escenario(t: TestContext) {
   const { usuario } = await e.obtenerSesionActual(); assert.ok(usuario);
   const deposito = e.base.prepare('SELECT * FROM depositos WHERE usuario_id=? ORDER BY id LIMIT 1').get(usuario.id)!;
   const pago: OperacionMp = { id: 'pago-1', monto: 123.45, moneda: 'ARS', descripcion: 'Compra MP', fecha: new Date().toISOString(), actualizado: new Date().toISOString(), estado: 'approved', tipo: 'egreso', categoria: 'transferencias', contraparte: null, registrable: true, version: 'version-1', decision: 'pendiente', movimientoId: null, revisionPendiente: false, huella: 'hash-1' };
-  const guardar = async (operaciones = [pago]) => e.ejecutarTransaccion(async c => {
-    await e.guardarDato(c, usuario.id, 'mp:estado', { configurada: true, manualesRestantes: 2, trabajo: null, vinculacion: { deposito_id: deposito.id, cuenta_id: 'cuenta-mp', version: 'version-1', activa: 1, meses: 1, desde: null, hasta: null, error: null } });
+  const guardar = async (operaciones = [pago], trabajo: EstadoMp['trabajo'] = null) => e.ejecutarTransaccion(async c => {
+    await e.guardarDato(c, usuario.id, 'mp:estado', { configurada: true, manualesRestantes: 2, trabajo, vinculacion: { deposito_id: deposito.id, cuenta_id: 'cuenta-mp', version: 'version-1', activa: 1, meses: 1, desde: null, hasta: null, error: null } });
     await e.guardarDato(c, usuario.id, 'mp:operaciones', operaciones);
   }); await guardar();
   return { e, usuario, deposito, pago, guardar, saldo: () => Number(e.base.prepare('SELECT saldo_actual FROM depositos WHERE id=?').get(deposito.id!)!.saldo_actual) };
 }
+test('la vista previa de Search se puede leer pero no altera movimientos ni saldos durante la consulta', async t => {
+  const {e, pago, guardar, saldo} = await escenario(t), antes = saldo();
+  await guardar([pago], {id: 'consulta', estado: 'pendiente', inicial: 1, desde: pago.fecha,
+    hasta: pago.fecha, total: 1, truncado: 0, primera_fecha: pago.fecha, error: null});
+  assert.equal((await e.cargarMercadoPago()).operaciones[0].id, pago.id);
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'registrado'), /termine la consulta/);
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'ignorado'), /termine la consulta/);
+  await assert.rejects(e.guardarBorradorMp(pago.id, {tipo: pago.tipo, categoria: pago.categoria}), /termine la consulta/);
+  assert.equal(saldo(), antes);
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM integraciones_outbox').get()!.n, 0);
+  await guardar([{...pago, provisional: true}], {id: 'consulta', estado: 'fallido', inicial: 1,
+    desde: pago.fecha, hasta: pago.fecha, total: 1, truncado: 0, primera_fecha: pago.fecha,
+    error: 'Reporte demorado', settlement: {etapa: 'reporte', conciliados: 0, tramos: 1}});
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'registrado'), /termine la consulta/);
+  await guardar([{...pago, pendienteConfirmacion: true}]);
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'ignorado'), /pendiente de confirmar/);
+  await guardar();
+  await e.decidirMovimientosMp([pago.id], 'registrado');
+  assert.equal(Math.round(saldo() * 100), Math.round(antes * 100) - 12345);
+});
 test('Mercado Pago offline registra una sola vez, actualiza saldo y conserva la decisión para sincronizar', async t => {
   const { e, saldo } = await escenario(t), antes = saldo();
   await e.decidirMovimientosMp(['pago-1'], 'registrado');
