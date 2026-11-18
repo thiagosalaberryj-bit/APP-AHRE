@@ -9,11 +9,6 @@ Sin cambios pendientes.
 
 ## [v0.9.3] - 2026-11-18 - no estable
 
-Preparación solicitada por el usuario: app 0.9.3 / Android versionCode 18,
-coordinada con SERVER-AHRE 0.3.4. APK finalizada en EAS y publicada en la web el
-18/11/2026; backend desplegado. Cierre revisado y aprobado por el usuario
-para integrar el PR #73 en main y publicar v0.9.3 como release no estable.
-
 ### Añadido
 
 - Recordatorio del administrador para cuentas con gastos sin enlazar a un depósito
@@ -34,12 +29,10 @@ para integrar el PR #73 en main y publicar v0.9.3 como release no estable.
   altura de 48 y separación interna; se conservan sus colores y estados.
 - Versiones de app.json, package.json y raíz del lockfile sincronizadas en 0.9.3,
   sin cambios de dependencias; Android versionCode pasa a 18.
-
 - Selector individual de persona en nueva deuda basado en el de participantes
   de sala, con búsqueda, archivadas y confirmación explícita.
 - Tick y cruz compactos sin relleno ni texto; aceptar ingresos de sala abre
   la confirmación también para personas conocidas. Borde fino en header oscuro.
-
 - Tema oscuro en tonos azulados neutros y controles compartidos en ambos temas;
   se conservan los estilos y tokens de la app.
 - Guardar y confirmar comparten «Procesando» con tres puntos durante al menos
@@ -55,18 +48,15 @@ para integrar el PR #73 en main y publicar v0.9.3 como release no estable.
   permisos, quitar integrantes y simulaciones de sala. Los controles bloqueados
   no animan su texto ni conservan el efecto de pulsación. La confirmación en un
   modal no repite su animación en el botón del formulario de fondo.
-
 - El bloqueo del botón opuesto no cambia sus paddings ni recorta el tick al
   rechazar. La corrección cubre vínculos, ingresos, historial de solicitudes y
   confirmación de ingreso de salas mediante el componente compartido.
-
 - Bloqueo de Social sin sustituir la vista nativa antecesora de los modales.
 - Desarchivar cierra todos los estados del menú; cerrar un modal no reproduce
   su toast en otra ventana. El editor de personas conserva la ventana del menú.
 - Carga duplicada dentro de la tarjeta de invitación: queda solo en el botón.
 - Envío de propuestas de deuda antes de mostrar Listo, evitando trabajo de red
   posterior a la confirmación y demoras al abandonar el formulario.
-
 - Ciclo nativo de los tres puntos sin congelamientos; la palabra «Procesando»
   y los puntos salen juntos al entrar «Listo», sin repetir la carga al cerrar.
 - Acciones de Social que cerraban instantáneamente: vínculos, registro de
@@ -78,23 +68,29 @@ para integrar el PR #73 en main y publicar v0.9.3 como release no estable.
 - Cierre accidental del formulario de persona durante el guardado e indicador
   duplicado que cambiaba la altura del modal de acceso a salas.
 
+### Entrega
+
+- Preparación solicitada por el usuario: app 0.9.3 / Android versionCode 18,
+  coordinada con SERVER-AHRE 0.3.4. APK finalizada en EAS y publicada en la web el
+  18/11/2026; backend desplegado. Cierre revisado y aprobado por el usuario
+  para integrar el PR #73 en main y publicar v0.9.3 como release no estable.
+
 ### Verificación y entrega
 
-Actualización del 17/11/2026, solicitada por el usuario sin Issue asociado.
-Tipos y exportación Android/Hermes correctos; suite de app: 628 casos, 579 aprobados, cero fallos y 49
-integraciones MySQL omitidas. Las 40 regresiones de depósitos, avisos y parser
-OCR pasaron después de los ajustes finales de ayudas. Bundle Android de Metro
-servido con HTTP 200 en la revisión previa. Fuentes locales de 0.9.3 / Android 18
-enviadas a EAS por autorización explícita del usuario:
-[seguimiento de compilación](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
-Compilación finalizada; APK publicada y descarga HTTPS completa verificada por
-SHA-256. Las cuatro versiones siguen disponibles. Instalación física pendiente.
-
-El usuario confirmó los recorridos de Social y el recordatorio tras actualizar
-el servidor; las mini tarjetas de ayuda aún requieren revisión visual en el teléfono.
-Se observó posteriormente un bloqueo SQLite al preparar datos de prueba: queda
-registrado para diagnóstico, sin atribuirlo a la presentación de formularios.
-La publicación de ramas y PR no implica merge ni despliegue.
+- Actualización del 17/11/2026, solicitada por el usuario sin Issue asociado.
+  Tipos y exportación Android/Hermes correctos; suite de app: 628 casos, 579 aprobados, cero fallos y 49
+  integraciones MySQL omitidas. Las 40 regresiones de depósitos, avisos y parser
+  OCR pasaron después de los ajustes finales de ayudas. Bundle Android de Metro
+  servido con HTTP 200 en la revisión previa. Fuentes locales de 0.9.3 / Android 18
+  enviadas a EAS por autorización explícita del usuario:
+  [seguimiento de compilación](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
+  Compilación finalizada; APK publicada y descarga HTTPS completa verificada por
+  SHA-256. Las cuatro versiones siguen disponibles. Instalación física pendiente.
+- El usuario confirmó los recorridos de Social y el recordatorio tras actualizar
+  el servidor; las mini tarjetas de ayuda aún requieren revisión visual en el teléfono.
+  Se observó posteriormente un bloqueo SQLite al preparar datos de prueba: queda
+  registrado para diagnóstico, sin atribuirlo a la presentación de formularios.
+  La publicación de ramas y PR no implica merge ni despliegue.
 
 #### Antecedente de preparación · 16/11/2026
 
@@ -113,10 +109,12 @@ La publicación de ramas y PR no implica merge ni despliegue.
 - La prueba visual de la nueva APK instalada sigue pendiente; compilar no
   publica la descarga en la web ni despliega SERVER-AHRE.
 
-## [v0.9.2] - 2026-11-16 - no estable
+### Integración y revisión
 
-Actualicé el historial y la documentación el 16/11/2026. Versión configurada
-0.9.2 / Android versionCode 16, coordinada con SERVER-AHRE 0.3.3.
+- Integrado mediante el [PR #73](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/73).
+- Se conserva el carácter no estable y el alcance de verificación registrado en esta versión.
+
+## [v0.9.2] - 2026-11-16 - no estable
 
 ### Añadido
 
@@ -179,13 +177,21 @@ Actualicé el historial y la documentación el 16/11/2026. Versión configurada
   acción Marcar todas como vistas junto a ajustes.
 - Vista previa del reinicio espera las operaciones activas antes de calcular el alcance.
 
+### Entrega
+
+- Actualicé el historial y la documentación el 16/11/2026. Versión configurada
+  0.9.2 / Android versionCode 16, coordinada con SERVER-AHRE 0.3.3.
+
 ### Verificación y entrega
 
-Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
+- Completé la validación automatizada de esta preparación el 16/11/2026: **579 pruebas de app y 116 del servidor aprobadas, cero fallos y cero omisiones**. Pasaron los tipos de app/herramientas y backend, la compilación del backend y una nueva exportación Android/Hermes. Usé MySQL 8.4.3 temporal en 127.0.0.1:13307, con bases sintéticas y usuario limitado a ahre_test_*. Al finalizar quedaron cero bases de pruebas y detuve la instancia; conservé los logs locales. No utilicé datos reales.
+- La APK 0.9.2 / Android 16 del envío EAS 44178bff, generada desde 99ecf91, quedó probada en el teléfono el 16/11/2026 con funcionamiento confirmado. Archivo de distribución: ahre-0.9.2.apk, 173.236.452 bytes; SHA-256 ebb3439873e23a51272322af224dfdf66edc7b5ba7157788418c4695f2e55f79.
+- La copia y el despliegue en el servidor siguen siendo manuales. Preparé APK, manifiesto, hash y catálogo localmente; no conecté el repositorio al servidor ni ejecuté el despliegue remoto. Los comandos conservan .env, la base y las descargas históricas.
 
-La APK 0.9.2 / Android 16 del envío EAS 44178bff, generada desde 99ecf91, quedó probada en el teléfono el 16/11/2026 con funcionamiento confirmado. Archivo de distribución: ahre-0.9.2.apk, 173.236.452 bytes; SHA-256 ebb3439873e23a51272322af224dfdf66edc7b5ba7157788418c4695f2e55f79.
+### Integración y revisión
 
-La copia y el despliegue en el servidor siguen siendo manuales. Preparé APK, manifiesto, hash y catálogo localmente; no conecté el repositorio al servidor ni ejecuté el despliegue remoto. Los comandos conservan .env, la base y las descargas históricas.
+- Integrado mediante el [PR #72](https://github.com/thiagosalaberryj-bit/APP-AHRE/pull/72).
+- Se conserva el carácter no estable y el alcance de verificación registrado en esta versión.
 
 ## [v0.9.1] - 2026-11-14 - no estable
 
