@@ -10,8 +10,8 @@ Sin cambios pendientes.
 ## [v0.9.3] - 2026-11-17 - no estable · en preparación
 
 Preparación solicitada por el usuario: app 0.9.3 / Android versionCode 18,
-coordinada con SERVER-AHRE 0.3.4. No implica una release publicada, una APK
-compilada ni un despliegue.
+coordinada con SERVER-AHRE 0.3.4. APK finalizada en EAS y publicada en la web el
+18/11/2026; backend desplegado. No se creó una release de fuentes ni se mergeó main.
 
 ### Añadido
 
@@ -86,7 +86,8 @@ OCR pasaron después de los ajustes finales de ayudas. Bundle Android de Metro
 servido con HTTP 200 en la revisión previa. Fuentes locales de 0.9.3 / Android 18
 enviadas a EAS por autorización explícita del usuario:
 [seguimiento de compilación](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
-Carga y fingerprint confirmados; resultado de compilación e instalación pendientes.
+Compilación finalizada; APK publicada y descarga HTTPS completa verificada por
+SHA-256. Las cuatro versiones siguen disponibles. Instalación física pendiente.
 
 El usuario confirmó los recorridos de Social y el recordatorio tras actualizar
 el servidor; las mini tarjetas de ayuda aún requieren revisión visual en el teléfono.

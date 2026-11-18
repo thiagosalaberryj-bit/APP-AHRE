@@ -18,10 +18,15 @@ en claro y oscuro. Servidor: 117 casos, 57 aprobados y 60 omitidos, sin fallos.
 Los resultados siguientes identifican las ejecuciones previas; los casos omitidos no se
 consideran comprobados. La APK 0.9.3 / Android 18 fue enviada a EAS:
 [seguimiento](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
-Su compilación sigue en curso; no acredita instalación probada. Backend 0.3.4
+Su compilación finalizó y la APK se publicó en la web el 18/11/2026; no acredita
+instalación probada. Backend 0.3.4
 desplegado por el agente con respaldos, contenedor healthy y API local/pública
 disponible. No se crearon tags, releases ni merge a main. Las notas de descarga
-están preparadas en SERVER-AHRE, sin publicar todavía un enlace a la nueva APK.
+están publicadas en SERVER-AHRE. Tamaño: 173.306.576 bytes; SHA-256
+2f345053baf37b7b565e6dd9ec9f82a08576de01aea3b29549ec8adc94b32dc0.
+Se descargó la APK completa desde HTTPS y coincidió el hash; las cuatro
+descargas responden con el tamaño esperado. La web elimina de todas las
+tarjetas el bloque App y servidor, sin un aviso sustituto.
 
 ## Formularios, continuidad de Social y recordatorios · 17/11/2026
 

@@ -400,5 +400,16 @@ compilación. Este envío no publica la descarga web, no despliega el servidor
 ni mergea las ramas. Posteriormente se autorizó una nueva clave SSH exclusiva
 de deploy y se desplegó backend 0.3.4 el 17/11/2026, con respaldos de MySQL,
 código e imagen previa. Contenedor healthy, versión comprobada desde su
-package.json y API local/pública disponibles. La APK sigue en compilación;
-no se publicó la descarga en la web.
+package.json y API local/pública disponibles. La compilación finalizó y la
+descarga fue publicada el 18/11/2026, según el cierre siguiente.
+
+### APK 0.9.3 publicada · 18/11/2026
+
+[Descarga pública](https://ahre-server.tailc5dfc5.ts.net/downloads/ahre-0.9.3.apk):
+173.306.576 bytes, SHA-256
+2f345053baf37b7b565e6dd9ec9f82a08576de01aea3b29549ec8adc94b32dc0.
+La descarga HTTPS completa coincide con el archivo finalizado en EAS.
+Latest y catálogo apuntan a 0.9.3; se conservan las tres APK anteriores.
+Frontend desplegado sin el bloque App y servidor en ninguna tarjeta, ni un
+aviso sustituto. Las cuatro descargas responden con su tamaño esperado.
+La instalación física de la APK queda pendiente; sin merge ni release de fuentes.
