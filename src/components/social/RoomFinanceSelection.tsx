@@ -37,9 +37,9 @@ export default function SeleccionFinanciera({operacion,salaId,cerrada,alGuardar,
     <SelectorSegmentado tema={aspecto.tema} opciones={[{id:'deposito',nombre:'Crear movimiento'},{id:'existente',nombre:'Adjuntar movimiento'}]} valor={modo} alSeleccionar={cambiarModo} etiqueta="Origen del movimiento"/>
     {modo==='deposito'?<SelectorDeposito depositos={social.depositos} seleccionadoId={deposito} alSeleccionar={cambiarDeposito} {...aspecto}/>:<>
       <OpcionesSeleccion opciones={compatibles.map(m=>({id:m.id,nombre:m.descripcion+' · '+m.deposito}))} elegida={movimiento||''} alElegir={cambiarMovimiento} {...aspecto}/>
-      {cargando||!compatibles.length?<AvisoFormulario tema={aspecto.tema}>{cargando?'Buscando movimientos…':'No hay movimientos disponibles con ese importe y dirección.'}</AvisoFormulario>:null}
+      {cargando||!compatibles.length?<AvisoFormulario tema={aspecto.tema} titulo="Movimientos disponibles">{cargando?'Buscando movimientos…':'No hay movimientos disponibles con ese importe y dirección.'}</AvisoFormulario>:null}
     </>}
-    <AvisoFormulario tema={aspecto.tema}>{cerrada?'Los movimientos se confirmaron al cerrar la sala.': 'Tu saldo no cambia todavía. Se aplicará al cerrar la sala.'}</AvisoFormulario>
+    <AvisoFormulario tema={aspecto.tema} titulo="Cuándo cambia el saldo">{cerrada?'Los movimientos se confirmaron al cerrar la sala.': 'Tu saldo no cambia todavía. Se aplicará al cerrar la sala.'}</AvisoFormulario>
 
     <View style={estilos.filaCampos}><View style={estilos.columnaCampo}><BotonSocial texto={cerrada?'Incorporar':'Guardar'} cargando={ocupado&&!quitando} completado={finalizacion.completado} deshabilitado={cerrada||ocupado||cargando||(modo==='deposito'?!deposito:!movimiento)} alPresionar={()=>ejecutar()} {...aspecto}/></View>
     {!cerrada&&operacion.seleccion?<View style={estilos.columnaCampo}><BotonSocial secundario texto="Quitar" cargando={ocupado&&quitando} completado={finalizacion.completado} deshabilitado={ocupado} alPresionar={()=>ejecutar(true)} {...aspecto}/></View>:null}</View>

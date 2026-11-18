@@ -9,8 +9,8 @@ import PuntosCarga from './LoadingDots';
 
 type EstadoContenido = {etiqueta:string;tipo:'carga'|'exito'|'texto'};
 
-export default function ContenidoAccion({texto,color,cargando=false,completado=false,estiloTexto,icono,ocultarTexto=false}:{icono?:NombreIcono;ocultarTexto?:boolean;texto:string;color:string;cargando?:boolean;completado?:boolean;estiloTexto?:StyleProp<TextStyle>}) {
-  const reducido=useMovimientoReducido(),estilos=crearEstilosGlobales();
+export default function ContenidoAccion({texto,color,cargando=false,completado=false,estiloTexto,icono,ocultarTexto=false,animarCambios=true}:{icono?:NombreIcono;ocultarTexto?:boolean;animarCambios?:boolean;texto:string;color:string;cargando?:boolean;completado?:boolean;estiloTexto?:StyleProp<TextStyle>}) {
+  const reducido=useMovimientoReducido()||!animarCambios,estilos=crearEstilosGlobales();
   const tipo=cargando?'carga':completado?'exito':'texto';
   const etiqueta=cargando?'Procesando':completado?'Listo':texto;
   const mostrado=useRef<EstadoContenido>({etiqueta,tipo});

@@ -1,8 +1,27 @@
 # Estado y validación de AHRE
 
 Referencia vigente: **17 de noviembre de 2026**, rama
-`codex/modo-oscuro-neutro`, versión configurada 0.9.2 / Android versionCode 17.
+`codex/modo-oscuro-neutro`, versión configurada 0.9.3 / Android versionCode 18.
 Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
+
+## Preparación de app 0.9.3 · 17/11/2026
+
+Se sincronizan app.json, package.json y raíz del lockfile en 0.9.3; Android
+versionCode 18. Servidor coordinado 0.3.4. Se conservan dependencias y esquema.
+Incluye mini tarjetas de información con modal, identidad y acciones alineadas
+en solicitudes y corrección de altura/padding del tick y la cruz compactos.
+La revisión visual final de estas presentaciones queda pendiente en el teléfono.
+Verificación de la preparación: tipos y exportación Android/Hermes correctos;
+628 casos, 579 aprobados, cero fallos y 49 integraciones MySQL omitidas.
+Las regresiones incluyen la igualdad de geometría de ambos botones compactos
+en claro y oscuro. Servidor: 117 casos, 57 aprobados y 60 omitidos, sin fallos.
+Los resultados siguientes identifican las ejecuciones previas; los casos omitidos no se
+consideran comprobados. La APK 0.9.3 / Android 18 fue enviada a EAS:
+[seguimiento](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
+Su compilación sigue en curso; no acredita instalación probada. Backend 0.3.4
+desplegado por el agente con respaldos, contenedor healthy y API local/pública
+disponible. No se crearon tags, releases ni merge a main. Las notas de descarga
+están preparadas en SERVER-AHRE, sin publicar todavía un enlace a la nueva APK.
 
 ## Formularios, continuidad de Social y recordatorios · 17/11/2026
 
@@ -20,7 +39,7 @@ Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
   de la confirmación OCR. El criterio de extracción del comercio no cambió.
 - Incidencia observada en logs de Expo: database is locked al preparar datos de
   prueba (consultar-cuenta-prueba / reservar-escritura). No se presenta como resuelta.
-- Se conservan app 0.9.2 / Android 17 y servidor 0.3.3; se actualizan los PR
+- En la revisión previa se conservaron app 0.9.2 / Android 17 y servidor 0.3.3; se actualizan los PR
   y la documentación de Sin publicar sin mergear main ni crear una release.
 
 Los resultados siguientes corresponden a las preparaciones anteriores.

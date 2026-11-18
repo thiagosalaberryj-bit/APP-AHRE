@@ -66,7 +66,7 @@ El comando envía el código local a EAS y devuelve el seguimiento. Descargar el
 APK al finalizar y probarlo en Android. No publica en Google Play.
 `appVersionSource` es `local`: la versión proviene de `app.json`; comprobar
 coherencia con `package.json` y la raíz de `package-lock.json` antes de una
-entrega. El estado actual declara versión 0.9.2 y `android.versionCode` 17;
+entrega. El estado actual declara versión 0.9.3 y `android.versionCode` 18;
 la pantalla «Acerca de AHRE» lee la versión de la configuración Expo mediante
 `Constants.expoConfig.version`, tanto en Expo Go como en la app compilada.
 
@@ -381,3 +381,24 @@ el enlace de seguimiento no acredita una APK terminada o probada en dispositivo.
 La exportación local Android/Hermes y los tipos pasaron. No se publica la
 descarga en la web ni en Google Play, no se despliega el servidor y no se mergea
 la rama a `main`. La instalación y la comprobación visual siguen pendientes.
+
+
+## Preparación 0.9.3 / Android 18 · 17/11/2026
+
+Los manifiestos de app y raíz del lockfile declaran 0.9.3, con versionCode 18,
+coordinada con servidor 0.3.4. Esta preparación actualiza el changelog, las ayudas
+y la presentación de solicitudes; no ejecuta EAS, crea tags ni publica APK.
+No reemplaza los archivos de descargas ni acredita la compilación de 0.9.3.
+
+### Envío autorizado de 0.9.3 / Android 18
+
+EAS recibió las fuentes locales con `--platform android --profile ocr-comparison
+--non-interactive --no-wait`, conservando la firma remota existente y el entorno
+`preview`. [Seguimiento de la APK](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
+Carga y fingerprint confirmados; no se esperó ni verificó el resultado de
+compilación. Este envío no publica la descarga web, no despliega el servidor
+ni mergea las ramas. Posteriormente se autorizó una nueva clave SSH exclusiva
+de deploy y se desplegó backend 0.3.4 el 17/11/2026, con respaldos de MySQL,
+código e imagen previa. Contenedor healthy, versión comprobada desde su
+package.json y API local/pública disponibles. La APK sigue en compilación;
+no se publicó la descarga en la web.

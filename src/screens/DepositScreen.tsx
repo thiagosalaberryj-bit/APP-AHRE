@@ -137,7 +137,7 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
                 ayudaAccesibilidad="Ingresá el monto en pesos."
                 estiloContenedor={estilos.filaSaldo} estiloEntrada={estilos.entradaSaldo}
                 estiloSimbolo={estilos.simboloSaldo} estiloLimpiar={estilos.accionLimpiarSaldo}/>
-              <AvisoFormulario tema={tema}>
+              <AvisoFormulario tema={tema} titulo="Decimales del saldo">
                 Para ingresar decimales, usá coma.
               </AvisoFormulario>
             </View>

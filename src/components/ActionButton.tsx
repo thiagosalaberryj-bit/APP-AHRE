@@ -8,9 +8,9 @@ import { crearEstilosGlobales, RETROALIMENTACION_PULSACION } from '../styles/glo
 import type {NombreIcono} from '../constants/movimientos';
 import ContenidoAccion from './ActionContent';
 
-export default function BotonAccion({tema,texto,variante='principal',cargando=false,completado:completadoExterno,deshabilitado=false,alPresionar,estilo,etiquetaAccesibilidad,icono,ocultarTexto=false}: {
+export default function BotonAccion({tema,texto,variante='principal',cargando=false,completado:completadoExterno,deshabilitado=false,alPresionar,estilo,etiquetaAccesibilidad,icono,ocultarTexto=false,mostrarActividad=true}: {
   tema:Tema;texto:string;variante?:'principal'|'secundario'|'peligro'|'texto'|'cancelar'|'contorno';cargando?:boolean;completado?:boolean;deshabilitado?:boolean;
-  icono?:NombreIcono;ocultarTexto?:boolean;alPresionar:()=>unknown;estilo?:StyleProp<ViewStyle>;etiquetaAccesibilidad?:string;
+  icono?:NombreIcono;ocultarTexto?:boolean;mostrarActividad?:boolean;alPresionar:()=>unknown;estilo?:StyleProp<ViewStyle>;etiquetaAccesibilidad?:string;
 }) {
   const estilos=crearEstilosGlobales(tema),{mostrarAviso}=useContext(ContextoAvisos);
   const [enCurso,cambiarEnCurso]=useState(false);
@@ -21,14 +21,14 @@ export default function BotonAccion({tema,texto,variante='principal',cargando=fa
   useEffect(()=>{montado.current=true;return()=>{montado.current=false;};},[]);
   const ocupado=cargando||enCurso;
   // La promesa del botón sigue pendiente mientras el formulario inicia el cierre.
-  const exitoVisible=(completadoExterno&&ocupado)||completado;
+  const exitoVisible=mostrarActividad&&((completadoExterno&&ocupado)||completado);
   // Bloqueo de interacción y aspecto deshabilitado son estados distintos.
-  const bloqueado=deshabilitado&&!ocupado&&!exitoVisible;
+  const bloqueado=(deshabilitado||ocupado)&&(!mostrarActividad||(!ocupado&&!exitoVisible));
   const fondo=variante==='contorno'?estilos.botonContornoPeligro:variante==='texto'?estilos.botonTexto:variante==='cancelar'?estilos.botonCancelar:variante==='peligro'?estilos.botonPeligro:variante==='secundario'?estilos.botonSecundario:estilos.botonPrincipal;
   const colorFondo=variante==='texto'||variante==='contorno'?'transparent':variante==='cancelar'?tema.fondoDeshabilitado:variante==='peligro'?tema.botonPeligro:variante==='secundario'?tema.botonSecundario:tema.botonPrincipal;
   const color=bloqueado?tema.deshabilitado:variante==='contorno'?tema.error:variante==='peligro'?tema.botonPeligroTexto:variante==='secundario'?tema.botonSecundarioTexto:variante==='texto'?tema.foco:variante==='cancelar'?tema.textoPrincipal:tema.botonPrincipalTexto;
-  return <Pressable accessibilityRole="button" accessibilityLabel={etiquetaAccesibilidad||texto} accessibilityState={{busy:ocupado,disabled:deshabilitado||ocupado||exitoVisible}} disabled={deshabilitado||ocupado||exitoVisible}
-    android_ripple={RETROALIMENTACION_PULSACION} style={({pressed})=>[fondo,estilo,{backgroundColor:colorFondo,overflow:'hidden'},bloqueado&&estilos.botonDeshabilitado,pressed&&estilos.botonPresionado]}
+  return <Pressable accessibilityRole="button" accessibilityLabel={etiquetaAccesibilidad||texto} accessibilityState={{busy:mostrarActividad&&ocupado,disabled:deshabilitado||ocupado||exitoVisible}} disabled={deshabilitado||ocupado||exitoVisible}
+    android_ripple={RETROALIMENTACION_PULSACION} style={({pressed})=>[fondo,estilo,{backgroundColor:colorFondo,overflow:'hidden'},bloqueado&&estilos.botonAccionDeshabilitada,pressed&&!deshabilitado&&!ocupado&&!exitoVisible&&estilos.botonPresionado]}
     onPress={async ()=>{
       if(bloqueo.current||deshabilitado||cargando||exitoVisible)return;
       bloqueo.current=true;finalizacion.iniciar();
@@ -42,5 +42,5 @@ export default function BotonAccion({tema,texto,variante='principal',cargando=fa
         if(promesa&&exito===true&&completadoExterno===undefined&&montado.current&&textoActual.current===textoInicial)await finalizacion.confirmar();
       }catch(error){if(montado.current)mostrarAviso(error instanceof Error?error.message:'No se pudo completar la acción.',{tipo:'error'});}
       finally{bloqueo.current=false;if(montado.current){finalizacion.iniciar();cambiarEnCurso(false);}}
-    }}><ContenidoAccion icono={icono} ocultarTexto={ocultarTexto} texto={texto} color={color} cargando={ocupado&&!exitoVisible} completado={exitoVisible}/></Pressable>;
+    }}><ContenidoAccion animarCambios={mostrarActividad&&!bloqueado} icono={icono} ocultarTexto={ocultarTexto} texto={texto} color={color} cargando={mostrarActividad&&ocupado&&!exitoVisible} completado={exitoVisible}/></Pressable>;
 }

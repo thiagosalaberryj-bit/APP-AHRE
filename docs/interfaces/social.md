@@ -31,7 +31,8 @@ Abrir directamente ese detalle tampoco ofrece historial, envío o simulación.
 
 El detalle del integrante muestra su avatar y nombre en una fila compacta. El historial
 separa estado, fecha, mensaje y gasto relacionado en cada solicitud; las acciones
-de respuesta quedan debajo del contenido, sin comprimirlo en una fila. Sin pedidos
+de respuesta quedan a la derecha, en la misma fila que la descripción del pedido.
+El mensaje se ajusta al espacio disponible y el gasto relacionado queda debajo. Sin pedidos
 se presenta un estado vacío. La nueva solicitud y los permisos del integrante
 usan tarjetas independientes. Los estilos locales viven en
 `src/styles/social/RoomRequestHistoryStyles.ts` y respetan ambos temas.
@@ -851,3 +852,20 @@ Notificaciones muestra primero Paso 1 para habilitar los avisos y, al concederlo
 El formulario de otro pago utiliza el selector segmentado animado compartido
 para «Saldar todo» y «Otro importe», con los colores de ambos temas. Elegir
 «Saldar todo» repone el pendiente; «Otro importe» permite ingresar el monto.
+
+
+## Identidad y decisiones de solicitudes · 17/11/2026
+
+Las solicitudes de vínculo y los ingresos pendientes de sala usan una fila de
+identidad y acciones: avatar de iniciales de nombre y apellido, nombre completo,
+dato secundario y botones de cruz/tick centrados verticalmente. Los vínculos
+muestran el correo; los ingresos de sala conservan estado y fecha porque su
+respuesta actual no incluye correo. Los botones compactos tienen marco fino
+y esquinas redondeadas en ambos temas, manteniendo carga, éxito y bloqueo.
+Los nombres admiten dos líneas y el dato secundario una con elipsis para evitar
+que desplacen los controles en pantallas estrechas.
+
+Al rechazar, el botón de aceptar se bloquea sin cambiar altura ni padding: el
+estilo deshabilitado del botón compartido modifica solo el fondo y el color del
+contenido. Lista de ingresos, historial de solicitudes y modal de admisión de
+sala utilizan las mismas decisiones compactas con tick/cruz y sus estados.

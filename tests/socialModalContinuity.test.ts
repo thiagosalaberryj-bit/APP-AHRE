@@ -112,3 +112,23 @@ for(const tema of ['claro','oscuro'] as const){
   pendiente.resolver();await guardado;await vista.asentar();assert.deepEqual(vista.ventanas(),[]);
  });
 }
+
+for(const tema of ['claro','oscuro'] as const)test('permisos y quitar integrante animan solo el botón elegido en '+tema,async t=>{
+ const e=await preparar(t);await e.prepararDatosPrueba({vistaSocialOnline:true});
+ const sala=(await e.cargarSocial()).salas.find(s=>s.demo&&s.online&&s.administrador&&s.estado==='abierta')!;
+ const detalle=await e.obtenerSalaOnline(sala.id),persona=detalle.sala.participantes.find(p=>p.id!==detalle.personaPropiaId&&p.activa)!;
+ let pendiente=espera();
+ const vista=interfazSocial({...e,cambiarPermisoGastos:async()=>{await pendiente.promesa;},cambiarPersonasSala:async()=>{await pendiente.promesa;}},tema);
+ await vista.abrir(vista.rutas.REGISTRO_SOCIAL,{tipo:'personaSala',salaId:sala.id,personaId:persona.id});
+ const etiqueta=vista.texto().includes('Permitir editar')?'Permitir editar':'Quitar permiso';
+ const permiso=(vista.buscarBoton(etiqueta).props.onPress as ()=>Promise<unknown>)();await vista.asentar();
+ assert.equal((vista.buscarBoton(etiqueta).props.accessibilityState as {busy?:boolean}).busy,true);
+ assert.equal((vista.buscarBoton('Quitar').props.accessibilityState as {busy?:boolean}).busy,false);assert.equal(vista.buscarBoton('Quitar').props.disabled,true);
+ pendiente.resolver();await permiso;await vista.asentar();
+ await vista.pulsar('Quitar');pendiente=espera();
+ const quitar=(vista.buscarBoton('Quitar de la sala').props.onPress as ()=>Promise<unknown>)();await vista.asentar();
+ assert.equal((vista.buscarBoton('Quitar de la sala').props.accessibilityState as {busy?:boolean}).busy,true);
+ assert.equal(vista.todos().filter(n=>n.type==='Pressable'&&(n.props.accessibilityState as {busy?:boolean}|undefined)?.busy).length,1);
+ assert.equal((vista.buscarBoton('Cancelar').props.accessibilityState as {busy?:boolean}).busy,false);assert.equal(vista.buscarBoton('Cancelar').props.disabled,true);
+ pendiente.resolver();await quitar;await vista.asentar();
+});

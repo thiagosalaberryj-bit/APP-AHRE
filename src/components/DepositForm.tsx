@@ -331,7 +331,7 @@ export default function FormularioDeposito({
         ) : null}
       </View>
       {!esEdicion && errorDescripcion ? <Text style={estilosGlobales.textoError}>{errorDescripcion}</Text> : null}
-      <AvisoFormulario tema={tema}>
+      <AvisoFormulario tema={tema} titulo="Descripción automática">
         {esEdicion
           ? 'Si la dejás vacía, se generará automáticamente con el nombre y el tipo.'
           : 'Si la dejás vacía, se genera automáticamente con el nombre y el tipo.'}

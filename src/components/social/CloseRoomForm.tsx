@@ -39,7 +39,7 @@ export default function FormularioCerrarSala({
     parte
   })));
   return <>
-    {!verificado?<AvisoFormulario tema={aspecto.tema}>Esperá a verificar los registros de todos los integrantes. Actualizá la sala si no se completa.</AvisoFormulario>:null}
+    {!verificado?<AvisoFormulario tema={aspecto.tema} titulo="Verificar registros pendientes">Esperá a verificar los registros de todos los integrantes. Actualizá la sala si no se completa.</AvisoFormulario>:null}
     <View style={[estilos.resumenPrincipal, estilos.perfilCompacto]}>
       <View style={estilos.filaCampos}>
         <View style={[estilos.iconoSala, {

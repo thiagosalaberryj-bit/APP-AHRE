@@ -543,7 +543,7 @@ Editar persona desde su menú conserva la misma ventana nativa durante la
 edición, el guardado y la confirmación. Agregar integrantes online recibe
 también el estado de éxito. Las decisiones compactas vuelven a usar tick y cruz,
 con etiquetas de accesibilidad y los mismos estados de carga y bloqueo del
-botón compartido; el historial expandido conserva los textos explícitos.
+botón compartido; el historial de solicitudes de sala comparte los símbolos.
 
 El header oscuro usa un contorno fino del color de borde del navbar, superpuesto
 sin modificar su altura ni el plegado. En los modales de Perfil, el fondo que
@@ -560,8 +560,7 @@ Archivar y desarchivar cierran todos los estados del menú tras confirmar; los
 toasts del modal no se vuelven a presentar al cerrarlo. La invitación muestra
 la animación de su acción únicamente en el botón, sin otra carga en la tarjeta.
 
-Las decisiones compactas son símbolos sin relleno ni marco, como los accesos
-de Notificaciones; rechazar conserva puntos y confirmación, aceptar abre la
+Las decisiones compactas son símbolos sin relleno, con marco fino; rechazar conserva puntos y confirmación, aceptar abre la
 selección/confirmación, también para personas conocidas en las salas. El selector
 de persona de una deuda reutiliza el modal de participantes de sala en modo
 individual, con búsqueda, archivadas y confirmación explícita.
@@ -588,9 +587,12 @@ de las integraciones MySQL omitidas.
 
 ### Ayudas de formularios · 17/11/2026
 
-FormNotice.tsx presenta las explicaciones con information-circle-outline y
-texto de 14 puntos, interlineado 21 y color principal del tema. No usa relleno,
-borde ni tarjeta: se distingue por el icono, el espacio y un título opcional.
+FormNotice.tsx presenta una mini tarjeta pulsable con information-circle-outline,
+título contextual y flecha. Icono y título usan el acento ácido en oscuro y el
+verde oscuro en claro. Una superficie del tema y un borde sutil distinguen el
+acceso; el texto completo queda en un modal de lectura, con título e icono en
+el mismo acento y cuerpo secundario de 15 puntos con interlineado 23. El modal
+permite desplazamiento y cierre por X, fondo y Atrás, conservando el formulario.
 Los tokens de presentación viven en globalStyles.ts y sirven en claro y oscuro.
 Se utiliza en movimientos, depósitos, formularios de Social, ajustes de avisos
 y revisión OCR. Los errores conservan su presentación propia, y los valores,
@@ -599,5 +601,17 @@ contadores y etiquetas de campos no se convierten en avisos.
 En Ingreso/Egreso la explicación de movimientos anteriores al depósito se
 identifica como Cómo afecta al saldo. En OCR se separan revisión, comercio
 sugerido, total a completar, descripción, fechas sugeridas y efecto sobre el
-saldo. La explicación del comercio se despliega bajo demanda. No cambian las
+saldo. La explicación del comercio se abre directamente en su modal de información. No cambian las
 reglas de interpretación del comprobante ni los datos que se guardan.
+
+
+### Acción activa y bloqueo de controles vecinos
+
+El estado de interacción no se comparte como carga: el cierre de sesión y la
+desvinculación identifican la acción elegida y bloquean ambos controles. Solo
+el elegido muestra Procesando y Listo. Los botones bloqueados actualizan su
+texto sin transición ni sombreado de pulsación; conservan su geometría.
+Los formularios que abren una confirmación conservan el bloqueo de su botón
+principal, pero muestran la animación únicamente dentro del modal activo.
+Las simulaciones de respuesta usan también el identificador de solicitud,
+evitan animar otras filas y separan revisión de salidas de registros demo.

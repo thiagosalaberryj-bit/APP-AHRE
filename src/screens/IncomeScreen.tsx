@@ -301,7 +301,7 @@ export function FormularioMovimiento({ navigation: navegacion,route:ruta,tipo = 
               frecuencias={FRECUENCIAS_RECURRENCIA}
               frecuenciaSeleccionada={frecuencia}
               alCambiarFrecuencia={establecerFrecuencia}
-            />:<AvisoFormulario tema={tema}>Se conserva el original y se registra su corrección junto al movimiento actualizado. Las recurrencias futuras no cambian.</AvisoFormulario>}
+            />:<AvisoFormulario tema={tema} titulo="Corrección del movimiento">Se conserva el original y se registra su corrección junto al movimiento actualizado. Las recurrencias futuras no cambian.</AvisoFormulario>}
           </View>
           <AvisoFormulario tema={tema} titulo="Cómo afecta al saldo">
             Los movimientos con fecha y hora anteriores a la creación del depósito

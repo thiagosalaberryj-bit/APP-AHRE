@@ -10,6 +10,7 @@ import {iniciarOperacionFinanciera} from '../../social/financialOperation';
 
 export default function AccionesFormulario<Resultado>({ texto, peligro = false, deshabilitado = false, confirmacion = undefined,
   alGuardar, preparar = undefined, alExito = undefined, recargarAntesDeCerrar = false, mensajeExito = 'Cambios guardados.', ...aspecto }: import('../../social/types').AccionesFormularioProps<Resultado>) {
+ const origenEnModal=useRef(false);
  const finalizacion=useFinalizacionAccion();
 
   const social = useDatosSociales();
@@ -54,7 +55,7 @@ export default function AccionesFormulario<Resultado>({ texto, peligro = false, 
       ocupada.current = true; finalizacion.iniciar();establecerGuardando(true);
       try {
         const siguiente = await preparar();
-        if (montado.current && siguiente.operaciones.length) { establecerConfirmando(false); establecerPlan(siguiente); return; }
+        if (montado.current && siguiente.operaciones.length) { origenEnModal.current=true; establecerConfirmando(false); establecerPlan(siguiente); return; }
       } catch (error) {
         if (montado.current) mostrarAviso((error instanceof Error ? error.message : "") || 'Revisá los datos del formulario.', { tipo: 'error' });
         return;
@@ -63,8 +64,8 @@ export default function AccionesFormulario<Resultado>({ texto, peligro = false, 
     if (montado.current) await guardar({});
   };
   return <>
-    <BotonSocial completado={finalizacion.completado} cargando={guardando} peligro={peligro} deshabilitado={deshabilitado || guardando || Boolean(plan)} texto={texto}
-      alPresionar={() => confirmacion ? establecerConfirmando(true) : iniciar()} {...aspecto} />
+    <BotonSocial mostrarActividad={!origenEnModal.current} completado={finalizacion.completado} cargando={guardando} peligro={peligro} deshabilitado={deshabilitado || guardando || Boolean(plan)} texto={texto}
+      alPresionar={() => {origenEnModal.current=!!confirmacion;return confirmacion ? establecerConfirmando(true) : iniciar();}} {...aspecto} />
     {confirmando||plan?<Modal statusBarTranslucent navigationBarTranslucent transparent animationType="fade" visible onRequestClose={()=>{if(!ocupada.current){establecerConfirmando(false);establecerPlan(null);}}}>
       {plan?<ModalMovimientoSocial sinVentana completado={finalizacion.completado} plan={plan} guardando={guardando} alCerrar={()=>{if(!ocupada.current)establecerPlan(null);}} alConfirmar={guardar} {...aspecto}/>:confirmacion?<ModalConfirmacionSocial sinVentana cargando={guardando} completado={finalizacion.completado} {...confirmacion} peligro={peligro} alCerrar={()=>{if(!ocupada.current)establecerConfirmando(false);}} alConfirmar={iniciar} {...aspecto}/>:null}
     </Modal>:null}

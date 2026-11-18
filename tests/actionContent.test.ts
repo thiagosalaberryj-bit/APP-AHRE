@@ -51,3 +51,10 @@ test('Reducir movimiento cambia el estado completo sin desplazamientos ni copias
  assert.equal(e.animaciones.length,0);assert.equal(carga.props.children[0],null);
  assert.equal(fila(carga,1).texto,'Procesando');assert.equal(fila(carga,1).icono.props.animado,true);
 });
+
+test('un control bloqueado actualiza su texto sin animación de pulsación o carga',()=>{
+ const e=preparar();e.renderizar({texto:'Permitir editar',animarCambios:false});
+ e.renderizar({texto:'Quitar permiso',animarCambios:false});const arbol=e.renderizar({texto:'Quitar permiso',animarCambios:false});
+ assert.equal(e.animaciones.length,0);assert.equal(arbol.props.children[0],null);
+ assert.equal(fila(arbol,1).texto,'Quitar permiso');assert.equal(fila(arbol,1).icono,null);
+});

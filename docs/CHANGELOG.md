@@ -5,16 +5,34 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+Sin cambios pendientes.
+
+## [v0.9.3] - 2026-11-17 - no estable · en preparación
+
+Preparación solicitada por el usuario: app 0.9.3 / Android versionCode 18,
+coordinada con SERVER-AHRE 0.3.4. No implica una release publicada, una APK
+compilada ni un despliegue.
+
 ### Añadido
 
 - Recordatorio del administrador para cuentas con gastos sin enlazar a un depósito
   o movimiento válido; excluye invitados, al administrador y registros completos.
-- Ayudas de formulario con icono de información, mejor contraste y títulos
-  opcionales, sin tarjetas adicionales, en los temas claro y oscuro.
-- Explicación desplegable del comercio sugerido por OCR, diferenciando los datos
+- Ayudas de formulario reutilizables con icono de información, mejor contraste
+  y títulos por contexto, disponibles como mini tarjetas que abren un modal.
+- Explicación en modal del comercio sugerido por OCR, diferenciando los datos
   detectados de las indicaciones para revisar, sin modificar el parser.
 
 ### Cambiado
+
+- Decisiones del historial de solicitudes a la derecha de la descripción,
+  alineadas en su misma fila, en ambos temas.
+- Ayudas como mini tarjetas de icono y título, con explicación en modal. Verde
+  ácido en oscuro y verde oscuro en claro, texto secundario y títulos por contexto.
+- Solicitudes de vínculo e ingresos de sala con avatar de iniciales de nombre y
+  apellido, identidad y botones en una fila. Tick y cruz tienen el mismo marco,
+  altura de 48 y separación interna; se conservan sus colores y estados.
+- Versiones de app.json, package.json y raíz del lockfile sincronizadas en 0.9.3,
+  sin cambios de dependencias; Android versionCode pasa a 18.
 
 - Selector individual de persona en nueva deuda basado en el de participantes
   de sala, con búsqueda, archivadas y confirmación explícita.
@@ -28,9 +46,18 @@ documentación se registran en este archivo.
   operaciones online esperan el resultado real y los datos de prueba respetan
   los mismos tiempos; navegar, cancelar y seleccionar no tienen esas esperas.
 - Confirmaciones de Mercado Pago y corrección de correo con el componente de
-  acción compartido; Android versionCode 17 para la APK interna 0.9.2.
+  acción compartido. La APK interna anterior 0.9.2 / Android 17 es un antecedente.
 
 ### Corregido
+
+- Carga y éxito limitados a la acción elegida: cerrar sesión/desvincular,
+  permisos, quitar integrantes y simulaciones de sala. Los controles bloqueados
+  no animan su texto ni conservan el efecto de pulsación. La confirmación en un
+  modal no repite su animación en el botón del formulario de fondo.
+
+- El bloqueo del botón opuesto no cambia sus paddings ni recorta el tick al
+  rechazar. La corrección cubre vínculos, ingresos, historial de solicitudes y
+  confirmación de ingreso de salas mediante el componente compartido.
 
 - Bloqueo de Social sin sustituir la vista nativa antecesora de los modales.
 - Desarchivar cierra todos los estados del menú; cerrar un modal no reproduce
@@ -53,13 +80,16 @@ documentación se registran en este archivo.
 ### Verificación y entrega
 
 Actualización del 17/11/2026, solicitada por el usuario sin Issue asociado.
-Tipos correctos; suite de app: 615 casos, 566 aprobados, cero fallos y 49
+Tipos y exportación Android/Hermes correctos; suite de app: 628 casos, 579 aprobados, cero fallos y 49
 integraciones MySQL omitidas. Las 40 regresiones de depósitos, avisos y parser
 OCR pasaron después de los ajustes finales de ayudas. Bundle Android de Metro
-servido con HTTP 200. No se generó otra APK para estos cambios.
+servido con HTTP 200 en la revisión previa. Fuentes locales de 0.9.3 / Android 18
+enviadas a EAS por autorización explícita del usuario:
+[seguimiento de compilación](https://expo.dev/accounts/thiago-salaberry/projects/APP-AHRE/builds/4fce02b6-9ae4-4036-95be-3abd66e12272).
+Carga y fingerprint confirmados; resultado de compilación e instalación pendientes.
 
 El usuario confirmó los recorridos de Social y el recordatorio tras actualizar
-el servidor; las ayudas nuevas aún requieren revisión visual en el teléfono.
+el servidor; las mini tarjetas de ayuda aún requieren revisión visual en el teléfono.
 Se observó posteriormente un bloqueo SQLite al preparar datos de prueba: queda
 registrado para diagnóstico, sin atribuirlo a la presentación de formularios.
 La publicación de ramas y PR no implica merge ni despliegue.

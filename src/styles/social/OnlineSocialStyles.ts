@@ -2,9 +2,9 @@ import {StyleSheet} from 'react-native';
 import type {Tema} from '../colors';
 import {BORDES,ESPACIADO,TIPOGRAFIA} from '../globalStyles';
 export const crearEstilosSocialOnline=(tema:Tema)=>StyleSheet.create({
-  decisionesCompactas:{alignSelf:'flex-end'},
+  decisionesCompactas:{alignSelf:'center',flexShrink:0},
   decisionCompacta:{width:48},
-  decisionSimple:{minHeight:48,paddingHorizontal:0,borderWidth:0},
+  decisionSimple:{height:48,minHeight:48,paddingVertical:0,paddingHorizontal:0,borderRadius:BORDES.radios.boton,borderWidth:BORDES.anchos.fino,borderColor:tema.borde},
   accionesDecision:{alignSelf:'stretch'},
   filaSolicitud:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.medio},
   accionSolicitud:{minHeight:44,minWidth:44,alignItems:'center',justifyContent:'center',borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.boton},
@@ -37,5 +37,11 @@ export const crearEstilosSocialOnline=(tema:Tema)=>StyleSheet.create({
   principal:{minHeight:48,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:ESPACIADO.pequeno,backgroundColor:tema.botonPrincipal,borderRadius:BORDES.radios.boton,padding:ESPACIADO.medio},
   textoPrincipal:{color:tema.botonPrincipalTexto,fontSize:TIPOGRAFIA.tamanos.boton,fontWeight:TIPOGRAFIA.pesos.seminegrita},
   qrCentrado:{alignItems:'center',gap:ESPACIADO.pequeno},
-  personaSolicitudes:{borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.campo,padding:ESPACIADO.medio,gap:ESPACIADO.medio,backgroundColor:tema.superficie},
+  identidadSolicitud:{flex:1,minWidth:0,flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno},
+  avatarSolicitud:{flexShrink:0},
+  inicialesSolicitud:{color:tema.avatarTexto,fontSize:TIPOGRAFIA.tamanos.etiqueta,fontWeight:TIPOGRAFIA.pesos.negrita},
+  nombreSolicitud:{color:tema.textoPrincipal,fontSize:TIPOGRAFIA.tamanos.etiqueta,fontWeight:TIPOGRAFIA.pesos.seminegrita},
+  detalleSolicitud:{color:tema.textoSecundario,fontSize:TIPOGRAFIA.tamanos.auxiliar},
+  filaIdentidadSolicitud:{flexDirection:'row',alignItems:'center',gap:ESPACIADO.pequeno},
+  personaSolicitudes:{flexDirection:'row',alignItems:'center',borderWidth:BORDES.anchos.fino,borderColor:tema.borde,borderRadius:BORDES.radios.campo,padding:ESPACIADO.medio,gap:ESPACIADO.medio,backgroundColor:tema.superficie},
 });

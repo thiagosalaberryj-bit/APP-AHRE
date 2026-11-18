@@ -36,7 +36,6 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
   const [categorias, establecerCategorias] = useState<import('../constants/movimientos').Categoria[]>([]);
   const [cargando, establecerCargando] = useState(true);
   const [errorCarga, establecerErrorCarga] = useErrorNotificado('');
-  const [mostrarCriterio,cambiarMostrarCriterio]=useState(false);
   const [guardando, establecerGuardando] = useState(false);
   const [intentoGuardar, establecerIntentoGuardar] = useState(false);
   const [mostrarTexto, establecerMostrarTexto] = useState(false);
@@ -105,8 +104,7 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
       <View>
         <Text style={estilosGlobales.etiqueta}>Comercio sugerido</Text>
         <Text selectable style={estilosGlobales.texto}>{resultado.comercio||'No identificado'}</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Cómo se eligió el comercio" accessibilityState={{expanded:mostrarCriterio}} onPress={()=>cambiarMostrarCriterio(v=>!v)} style={estilos.encabezadoTexto}><Text style={[estilosGlobales.textoBotonTexto,{flex:1}]}>Cómo se eligió el comercio</Text><Ionicons name={mostrarCriterio?'chevron-up':'chevron-down'} size={20} color={tema.foco}/></Pressable>
-        {mostrarCriterio?<AvisoFormulario tema={tema} titulo="Es una sugerencia">Se toma la primera línea candidata entre las cinco primeras: debe contener letras y no parecer un importe, una fecha o un dato administrativo. También se evita tomar una línea seguida solo de un importe. Puede confundirse con un producto. Corregí el nombre en Descripción si hace falta.</AvisoFormulario>:null}
+        <AvisoFormulario tema={tema} titulo="Cómo se eligió el comercio">Se toma la primera línea candidata entre las cinco primeras: debe contener letras y no parecer un importe, una fecha o un dato administrativo. También se evita tomar una línea seguida solo de un importe. Puede confundirse con un producto. Corregí el nombre en Descripción si hace falta.</AvisoFormulario>
       </View>
       <View pointerEvents={guardando ? 'none' : 'auto'} style={estilos.formularioResultado}>
         <EntradaMonto tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosMovimiento}
@@ -125,7 +123,7 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
               intentoGuardar && errores.descripcion ? estilosGlobales.campoError : null],estilosEntrada.campo,focoEntrada==="0"&&estilosEntrada.campoEnfocado]}
             textAlignVertical="top" value={datos.descripcion} />
           {intentoGuardar && errores.descripcion ? <Text style={estilosGlobales.textoError}>{errores.descripcion}</Text> : null}
-          <AvisoFormulario tema={tema}>
+          <AvisoFormulario tema={tema} titulo="Descripción del egreso">
             {datos.descripcion.length > 500 ? 'Resumí la descripción a 500 caracteres para guardar; el texto reconocido sigue disponible abajo.'
               : 'Conservamos el comercio y el detalle detectado. Podés agregar los productos que falten.'}
           </AvisoFormulario>
@@ -158,7 +156,7 @@ export default function FormularioEgresoOcr({ resultado, imagen, navegacion, tem
         <AvisoFormulario tema={tema} titulo="Cómo afecta al saldo">Los egresos anteriores a la creación del depósito quedan en el historial sin cambiar su saldo actual.</AvisoFormulario>
       </View>
       <Image accessibilityLabel="Foto temporal del comprobante" resizeMode="contain" source={{ uri: imagen!.uri }} style={estilos.imagenComprobante} />
-      <AvisoFormulario tema={tema}>La foto se usa para revisar y no se guarda junto al egreso.</AvisoFormulario>
+      <AvisoFormulario tema={tema} titulo="Foto temporal">La foto se usa para revisar y no se guarda junto al egreso.</AvisoFormulario>
       <View style={estilos.desplegableTexto}>
         <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Texto reconocido" accessibilityState={{expanded:mostrarTexto,disabled:guardando}} onPress={conRespuestaVisual(()=>establecerMostrarTexto(!mostrarTexto))} disabled={guardando} style={estilos.encabezadoTexto}>
           <Ionicons name="document-text-outline" size={22} color={tema.textoSecundario}/>

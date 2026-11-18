@@ -429,7 +429,7 @@ export default function PantallaOCR({ navigation: navegacion, route: ruta }: imp
                     </>
                   )}
                 </View>
-                <AvisoFormulario tema={tema}>Usá buena luz y evitá sombras o arrugas.</AvisoFormulario>
+                <AvisoFormulario tema={tema} titulo="Consejos para la foto">Usá buena luz y evitá sombras o arrugas.</AvisoFormulario>
                 <View style={estilos.filaBotones}>
                   <View style={estilos.botonMitad}>
                     <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={camaraActiva?'Tomar foto del comprobante':'Escanear'} disabled={camaraActiva&&!camaraLista} onPress={conRespuestaVisual(camaraActiva?capturarComprobante:activarCamara)} style={[estilos.botonCaptura,camaraActiva&&!camaraLista&&estilos.botonDeshabilitado]}>

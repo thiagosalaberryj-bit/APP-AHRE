@@ -9,7 +9,7 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.9.2-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.9.3-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
@@ -58,25 +58,29 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
+Preparación actual: **app 0.9.3 / Android 18**, coordinada con servidor 0.3.4.
+Los manifiestos y el changelog están preparados; no se generó ni publicó una
+APK 0.9.3. Los envíos anteriores de 0.9.2 son antecedentes.
+
 Revisión del 17/11/2026: ayudas de formularios con icono de información,
 confirmación OCR organizada y recorridos de Social con continuidad de modales.
 Incluye recordatorios del administrador para cuentas con gastos sin enlazar;
 el servidor recalcula los destinatarios y la demo solo simula el resultado.
 
-Tipos correctos; 566 pruebas aprobadas y 49 integraciones MySQL omitidas.
+Tipos correctos; 572 pruebas aprobadas y 49 integraciones MySQL omitidas.
 Se verificó el bundle Android en Metro. El usuario confirmó los recorridos de
 Social y el recordatorio; las ayudas nuevas requieren revisión visual. La
 incidencia SQLite al preparar datos de prueba está registrada para diagnóstico.
 Ver [estado y validación](docs/estado-y-validacion.md).
 
-La preparación de APK interna
-mantiene la versión 0.9.2 y usa Android versionCode 17. El envío a EAS, la
+La preparación de APK interna anterior
+mantenía la versión 0.9.2 y usa Android versionCode 17. El envío a EAS, la
 compilación terminada y la prueba en teléfono se registran por separado en
 [Estado y validación](docs/estado-y-validacion.md) y
 [Publicación](docs/configuracion/publicacion.md). Falta comprobar visualmente
 esta APK en el teléfono. La APK 0.9.2 / Android 16 validada anteriormente es un
-antecedente; no contiene automáticamente estas correcciones. El backend
-coordinado sigue siendo 0.3.3 y su despliegue es manual.
+antecedente; no contiene automáticamente estas correcciones. Esa preparación anterior estaba coordinada con el backend 0.3.3.
+La entrega actual prepara 0.9.3 junto al backend 0.3.4; el despliegue es manual.
 
 ```powershell
 npm run typecheck

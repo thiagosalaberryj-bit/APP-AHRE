@@ -98,9 +98,9 @@ export default function FormularioGasto(propiedades: import('../../social/types'
             <Text style={estilos.nombreReparto}>{nombreCompletoPersona(obtenerPersona(parte.personaId))}</Text>
             <Text style={estilos.importeReparto}>{formatearParte(parte.centavos)}</Text>
           </View>)}
-          {new Set(partesIguales.map(parte => parte.centavos)).size > 1 ? <AvisoFormulario tema={aspecto.tema}>Los centavos restantes se reparten entre las primeras personas.</AvisoFormulario> : null}
-        </> : <AvisoFormulario tema={aspecto.tema}>{!personasGasto.length ? 'Elegí quiénes participan para calcular sus partes.' : montoNumero === null ? 'Ingresá el importe para ver cuánto le corresponde a cada persona.' : 'El importe debe alcanzar para asignar al menos un centavo a cada persona.'}</AvisoFormulario> : <>
-          {personasGasto.length ? personasGasto.map(persona => <FilaMontoManual key={persona.id} persona={persona} valor={String(montosManuales[persona.id] || '')} alCambiar={valor => establecerMontosManuales(anteriores => ({ ...anteriores, [persona.id]: valor }))} {...aspecto} />) : <AvisoFormulario tema={aspecto.tema}>Elegí quiénes participan para asignar sus partes.</AvisoFormulario>}
+          {new Set(partesIguales.map(parte => parte.centavos)).size > 1 ? <AvisoFormulario tema={aspecto.tema} titulo="Reparto de centavos">Los centavos restantes se reparten entre las primeras personas.</AvisoFormulario> : null}
+        </> : <AvisoFormulario tema={aspecto.tema} titulo="Importes del reparto">{!personasGasto.length ? 'Elegí quiénes participan para calcular sus partes.' : montoNumero === null ? 'Ingresá el importe para ver cuánto le corresponde a cada persona.' : 'El importe debe alcanzar para asignar al menos un centavo a cada persona.'}</AvisoFormulario> : <>
+          {personasGasto.length ? personasGasto.map(persona => <FilaMontoManual key={persona.id} persona={persona} valor={String(montosManuales[persona.id] || '')} alCambiar={valor => establecerMontosManuales(anteriores => ({ ...anteriores, [persona.id]: valor }))} {...aspecto} />) : <AvisoFormulario tema={aspecto.tema} titulo="Reparto manual">Elegí quiénes participan para asignar sus partes.</AvisoFormulario>}
           <View accessibilityLiveRegion="polite" style={estilos.totalReparto}>
             <View style={estilos.encabezadoReparto}>
               <Text style={estilos.ayudaReparto}>Total asignado</Text>
@@ -120,7 +120,7 @@ export default function FormularioGasto(propiedades: import('../../social/types'
           <Ionicons color={tema.textoSecundario} name={mostrarPagos ? 'chevron-up' : 'chevron-down'} size={20} />
         </Pressable>
         {mostrarPagos ? <>
-            <AvisoFormulario tema={aspecto.tema}>{pagadorId === 'vos' ? '¿Quién ya te dio su parte?' : `¿Quién ya le dio su parte a ${pagador.nombre}?`}</AvisoFormulario>
+            <AvisoFormulario tema={aspecto.tema} titulo="Partes pagadas">{pagadorId === 'vos' ? '¿Quién ya te dio su parte?' : `¿Quién ya le dio su parte a ${pagador.nombre}?`}</AvisoFormulario>
             <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityState={{
           checked: todasPagaron
         }} onPress={conRespuestaVisual(() => establecerPagaron(todasPagaron ? [] : personasGasto.map(persona => persona.id)))} style={estilos.opcionPersona}>

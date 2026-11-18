@@ -1,3 +1,4 @@
+import IdentidadSolicitud from './RequestIdentity';
 import {useAccionConfirmada} from '../../hooks/useConfirmedAction';
 import AccionesSolicitud from './RequestDecisionActions';
 import {useContext,useRef,useState} from 'react';
@@ -44,7 +45,7 @@ export default function SolicitudesVinculo(aspecto:AspectoSocial){
  return <View style={estilos.grupo}>
   <Text accessibilityRole="header" style={aspecto.estilosGlobales.encabezadoSeccion}>Solicitudes de vínculo</Text>
   {solicitudes.map(solicitud=><View key={solicitud.id} style={estilos.personaSolicitudes}>
-   <View style={estilos.flexible}><Text style={aspecto.estilosGlobales.etiqueta}>{[solicitud.nombre,solicitud.apellido].filter(Boolean).join(' ')}</Text><Text style={aspecto.estilosGlobales.textoAyuda}>{solicitud.correo_electronico||'Solicitud de vínculo'}</Text></View>
+   <IdentidadSolicitud tema={aspecto.tema} nombre={solicitud.nombre} apellido={solicitud.apellido} detalle={solicitud.correo_electronico||'Solicitud de vínculo'}/>
    <AccionesSolicitud tema={aspecto.tema} etiquetaAceptar={'Aceptar vínculo de '+solicitud.nombre} etiquetaRechazar={'Rechazar vínculo de '+solicitud.nombre} completado={respuesta.completado} deshabilitado={ocupado||sinConexion} procesando={enviando?.id===solicitud.id?enviando.accion:null} alAceptar={()=>abrir(solicitud)} alRechazar={()=>responder(solicitud.id,'rechazado')}/>
   </View>)}
   {seleccion?<DialogoInvitacion {...aspecto} titulo="Registrar vínculo" descripcion="Elegí una persona de tu agenda o registrala con su apodo para aceptar." icono="person-add-outline" ocupado={ocupado} alCerrar={()=>cambiarSeleccion(null)}>

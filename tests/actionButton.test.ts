@@ -64,3 +64,30 @@ test('el éxito externo se mantiene al iniciar el cierre y permite reutilizar la
  assert.equal(final.props.children.props.cargando,false);
  assert.equal(final.props.disabled,false);e.cerrar();
 });
+
+for(const nombre of ['claro','oscuro'] as const)test('tick y cruz compactos conservan la misma geometría en '+nombre,()=>{
+ const {cargar}=crearCargadorComponentes(process.cwd());
+ const {crearEstilosSocialOnline}=cargar<typeof import('../src/styles/social/OnlineSocialStyles.ts')>('src/styles/social/OnlineSocialStyles.ts');
+ const tema=TEMAS[nombre],comun=crearEstilosSocialOnline(tema).decisionSimple;
+ const estilos=[{variante:'texto',deshabilitado:false},{variante:'texto',deshabilitado:true},{variante:'contorno',deshabilitado:false},{variante:'contorno',deshabilitado:true},{variante:'texto',deshabilitado:true,cargando:true},{variante:'contorno',deshabilitado:true,cargando:true}].map(({variante,deshabilitado,cargando})=>{
+  const e=prepararBoton();const boton=e.renderizar({tema,texto:'Decidir',deshabilitado,cargando,variante:variante as 'texto'|'contorno',ocultarTexto:true,icono:variante==='texto'?'checkmark':'close',estilo:comun,alPresionar:()=>{}});
+  const estilo=Object.assign({},...boton.props.style({pressed:false}).filter(Boolean));e.cerrar();return estilo;
+ });
+ for(const estilo of estilos.slice(1))for(const propiedad of ['height','minHeight','paddingVertical','paddingHorizontal','borderWidth','borderRadius','borderColor'])assert.equal(estilos[0][propiedad],estilo[propiedad],propiedad);
+ for(const estilo of estilos){assert.ok(48-2*estilo.paddingHorizontal-2*estilo.borderWidth>=22,'El tick bloqueado conserva espacio horizontal para el icono');assert.ok(estilo.height-2*estilo.paddingVertical-2*estilo.borderWidth>=28,'El contenido no se recorta al bloquear el botón');}
+ assert.equal(estilos[0].height,48);assert.equal(estilos[0].paddingVertical,0);
+});
+
+for(const nombre of ['claro','oscuro'] as const)test('el botón opuesto bloqueado queda quieto y la acción del modal no anima el disparador en '+nombre,async()=>{
+ const e=prepararBoton();let terminar!:()=>void;
+ const props={tema:TEMAS[nombre],texto:'Confirmar',alPresionar:()=>new Promise<void>(r=>{terminar=r;})};
+ const bloqueado=e.renderizar({...props,deshabilitado:true});
+ assert.equal(bloqueado.props.children.props.cargando,false);assert.equal(bloqueado.props.children.props.completado,false);
+ assert.equal(bloqueado.props.children.props.animarCambios,false);
+ assert.deepEqual(bloqueado.props.style({pressed:true}),bloqueado.props.style({pressed:false}),'No conserva el sombreado de toque');
+ const pendiente=e.renderizar(props).props.onPress();
+ const fondo=e.renderizar({...props,deshabilitado:true,mostrarActividad:false});
+ assert.equal(fondo.props.disabled,true);assert.equal(fondo.props.accessibilityState.busy,false);
+ assert.equal(fondo.props.children.props.cargando,false);assert.equal(fondo.props.children.props.completado,false);assert.equal(fondo.props.children.props.animarCambios,false);
+ terminar();await pendiente;e.cerrar();
+});

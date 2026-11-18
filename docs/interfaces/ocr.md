@@ -74,9 +74,9 @@ están documentados en [`../funcionalidades/ocr.md`](../funcionalidades/ocr.md).
 
 ## Lectura y ayudas de revisión
 
-La confirmación distingue los valores editables de las ayudas con el icono de
-información compartido. El comercio aparece como sugerencia, con una explicación
-desplegable del criterio: el parser recorre las cinco primeras líneas
+La confirmación distingue los valores editables de los accesos de ayuda con
+icono, título coloreado y modal de información compartido. El comercio aparece como sugerencia, con una explicación
+en un modal del criterio: el parser recorre las cinco primeras líneas
 reconstruidas por posición y elige la primera con tres letras consecutivas, sin
 moneda ni importe decimal, que no parezca información administrativa ni esté
 seguida solo por un importe. Puede confundir un producto con el nombre del

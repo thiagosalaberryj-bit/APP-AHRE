@@ -9,10 +9,11 @@ export function crearEstilosHistorialSolicitudes(tema: Tema) {
     encabezado: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: ESPACIADO.pequeno, justifyContent: 'space-between' },
     tarjeta: { gap: ESPACIADO.pequeno, padding: ESPACIADO.medio, borderRadius: BORDES.radios.campo },
     estado: { flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.pequeno },
-    mensaje: { color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.secundario, lineHeight: 20 },
+    filaMensaje: { flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.pequeno },
+    mensaje: { flex: 1, minWidth: 0, color: tema.textoPrincipal, fontSize: TIPOGRAFIA.tamanos.secundario, lineHeight: 20 },
     referencia: { flexDirection: 'row', alignItems: 'center', gap: ESPACIADO.pequeno },
     pie: { gap: ESPACIADO.minimo },
-    decisiones: { alignSelf: 'stretch' },
+    decisiones: { flexShrink: 0 },
     avisoQuitar: { flexDirection: 'row', alignItems: 'flex-start', gap: ESPACIADO.pequeno, padding: ESPACIADO.medio, borderRadius: BORDES.radios.campo, backgroundColor: tema.errorFondo },
   });
 }

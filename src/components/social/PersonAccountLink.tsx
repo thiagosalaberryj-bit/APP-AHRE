@@ -39,10 +39,10 @@ export default function ModalVinculoCuenta({persona,vinculo,sinConexion,alCerrar
       {['confirmado','rechazado'].map(decision=><BotonSocial cargando={respuesta.accionActiva===decision} completado={respuesta.completado&&respuesta.accionActiva===decision} texto={decision==='confirmado'?'Confirmar vínculo':'Rechazar vínculo'} key={decision} deshabilitado={ocupado||sinConexion} alPresionar={()=>ejecutar(async()=>{await enviarAccionSocial('vinculo:'+vinculo.id,'/vinculos/'+vinculo.id+'/decidir',{decision});await sincronizarSocialOnline();},undefined,decision)} {...aspecto}/>)}
     </>:<>
         <TextInput onFocus={()=>cambiarFocoEntrada("0")} onBlur={()=>cambiarFocoEntrada(null)} accessibilityLabel="Correo de la cuenta a vincular" value={correo} onChangeText={cambiarCorreo} placeholder="Correo de su cuenta AHRE" placeholderTextColor={aspecto.tema.textoSecundario} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} editable={!ocupado} style={[estilos.entrada,estilosEntrada.campo,focoEntrada==="0"&&estilosEntrada.campoEnfocado]}/>
-        <AvisoFormulario tema={aspecto.tema}>La otra persona debe aceptar. Sus deudas anteriores siguen siendo privadas.</AvisoFormulario>
+        <AvisoFormulario tema={aspecto.tema} titulo="Qué implica vincular la cuenta">La otra persona debe aceptar. Sus deudas anteriores siguen siendo privadas.</AvisoFormulario>
         <BotonSocial cargando={respuesta.ocupado} completado={respuesta.completado} texto="Enviar solicitud de vínculo" deshabilitado={ocupado||sinConexion||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())} alPresionar={()=>ejecutar(()=>solicitarVinculoOnline(persona.id,correo),'Solicitud de vínculo enviada. La otra persona debe aceptarla.')} {...aspecto}/>
     </>}
-    {sinConexion?<AvisoFormulario tema={aspecto.tema}>Iniciá sesión con conexión para vincular una cuenta.</AvisoFormulario>:null}
+    {sinConexion?<AvisoFormulario tema={aspecto.tema} titulo="Conexión necesaria">Iniciá sesión con conexión para vincular una cuenta.</AvisoFormulario>:null}
 
   </DialogoInvitacion>;
 }

@@ -1,3 +1,5 @@
+import AccionesCierreSesion from '../components/SessionExitActions';
+import {useAccionConfirmada} from '../hooks/useConfirmedAction';
 import AvisoFormulario from '../components/FormNotice';
 import {useFinalizacionAccion} from '../hooks/useActionCompletion';
 import {esperarDibujo} from '../utils/renderFrame';
@@ -135,7 +137,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   const [modalApariencia, establecerModalApariencia] = useState(false);
   const [modalCierre, establecerModalCierre] = useState(false);
   const [modalAcercaDe, establecerModalAcercaDe] = useState(false);
-  const [cerrandoSesion, establecerCerrandoSesion] = useState(false);
+  const cierreSesion=useAccionConfirmada();
   const referenciaCorreoEdicion = useRef<import('react-native').TextInput | null>(null);
   const referenciaContrasenaNueva = useRef<import('react-native').TextInput | null>(null);
   const referenciaConfirmacionContrasenaNueva = useRef<import('react-native').TextInput | null>(null);
@@ -439,35 +441,14 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
   };
 
   const cerrarSesionLocal = async () => {
-    if (cerrandoSesion) return;
-    finalizacion.iniciar();establecerCerrandoSesion(true);
-    try {
-      await cerrarSesion();
-      if(!await finalizacion.confirmar())return;
-      establecerApariencia('sistema');
-      navegacion.reset({ index: 0, routes: [{ name: RUTAS.INICIO_SESION }] });
-    } catch (error) {
-      mostrarAviso(
-        error instanceof ErrorPerfil
-          ? error.message
-          : 'No se pudo cerrar la sesión local. Intentá nuevamente.',
-        { tipo: 'error' },
-      );
-    } finally {
-      establecerCerrandoSesion(false);
-    }
-  };
-
-  const cambiarDispositivoLocal=async()=>{
-    if(cerrandoSesion)return;
-    finalizacion.iniciar();establecerCerrandoSesion(true);
     try{
-      await prepararCambioDispositivo();
-      if(!await finalizacion.confirmar())return;
-      establecerApariencia('sistema');
-      navegacion.reset({index:0,routes:[{name:RUTAS.INICIO_SESION}]});
+      await cierreSesion.ejecutar(cerrarSesion,()=>{establecerApariencia('sistema');navegacion.reset({index:0,routes:[{name:RUTAS.INICIO_SESION}]});},'cerrar');
+    }catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudo cerrar la sesión local. Intentá nuevamente.',{tipo:'error'});}
+  };
+  const cambiarDispositivoLocal=async()=>{
+    try{
+      await cierreSesion.ejecutar(prepararCambioDispositivo,()=>{establecerApariencia('sistema');navegacion.reset({index:0,routes:[{name:RUTAS.INICIO_SESION}]});},'desvincular');
     }catch(error){mostrarAviso(error instanceof Error?error.message:'No se pudo preparar el cambio de dispositivo.',{tipo:'error'});}
-    finally{establecerCerrandoSesion(false);}
   };
 
   return (
@@ -974,7 +955,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           titulo="Apariencia"
         >
           <ListaOpcionesPerfil tema={tema} estilos={estilos} opciones={APARIENCIAS} valor={apariencia} alSeleccionar={seleccionarApariencia} />
-          <AvisoFormulario tema={tema}>La selección se guarda en este dispositivo y se aplica en toda AHRE.</AvisoFormulario>
+          <AvisoFormulario tema={tema} titulo="Dónde se guarda la apariencia">La selección se guarda en este dispositivo y se aplica en toda AHRE.</AvisoFormulario>
         </ModalPerfil>
 
         <ModalPerfil
@@ -1025,8 +1006,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
           tema={tema}
           titulo="Cerrar sesión"
         >
-          <BotonAccion completado={finalizacion.completado} tema={tema} texto={'Sincronizar y desvincular'} variante="peligro" cargando={cerrandoSesion} deshabilitado={cerrandoSesion} alPresionar={cambiarDispositivoLocal} estilo={estilos.botonPeligro} />
-          <BotonAccion completado={finalizacion.completado} tema={tema} texto={'Cerrar sesión'} variante="peligro" cargando={cerrandoSesion} deshabilitado={cerrandoSesion} alPresionar={cerrarSesionLocal} estilo={estilos.botonPeligro} />
+          <AccionesCierreSesion tema={tema} accionActiva={cierreSesion.accionActiva} completado={cierreSesion.completado} alDesvincular={cambiarDispositivoLocal} alCerrarSesion={cerrarSesionLocal} estilo={estilos.botonPeligro}/>
         </ModalPerfil>
       </MarcoEncabezado>
     </SafeAreaView>

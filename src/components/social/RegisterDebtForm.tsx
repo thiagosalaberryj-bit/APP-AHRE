@@ -74,13 +74,13 @@ export default function FormularioRegistrarDeuda({
     <MontoSocial error={errores.monto} etiqueta="Monto de la deuda" valor={monto} alCambiar={establecerMonto} {...aspecto} />
     <CampoFormulario etiqueta="Descripción" error={errores.descripcion} ejemplo="Ej.: Almuerzo, compra, préstamo" valor={descripcion} alCambiar={establecerDescripcion} limite={500} {...aspecto} />
     {direccion === 'me_deben' ? <>
-      <AvisoFormulario tema={aspecto.tema}>Registraremos el dinero que adelantaste como un egreso. Podés elegir el depósito o vincular un egreso existente para no duplicarlo.</AvisoFormulario>
-    </> : <AvisoFormulario tema={aspecto.tema}>Registrar lo que debés no genera un ingreso ni modifica tus depósitos. Al pagar, elegirás el depósito y se registrará el egreso.</AvisoFormulario>}
+      <AvisoFormulario tema={aspecto.tema} titulo="Dinero que adelantaste">Registraremos el dinero que adelantaste como un egreso. Podés elegir el depósito o vincular un egreso existente para no duplicarlo.</AvisoFormulario>
+    </> : <AvisoFormulario tema={aspecto.tema} titulo="Deuda sin ingreso">Registrar lo que debés no genera un ingreso ni modifica tus depósitos. Al pagar, elegirás el depósito y se registrará el egreso.</AvisoFormulario>}
     <View style={estilosOnline.grupo}>
       <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="checkbox" accessibilityLabel="Proponer deuda online al registrar" accessibilityState={{checked:compartir,disabled:!disponible&&!compartir}} disabled={!disponible&&!compartir} onPress={conRespuestaVisual(()=>cambiarCompartir(!compartir))} style={[estilosOnline.opcionCompartir,!disponible&&estilosOnline.deshabilitado]}>
         <Ionicons name={compartir?'checkbox':'square-outline'} color={tema.foco} size={23}/><Text style={estilosGlobales.etiqueta}>Proponer deuda online</Text>
       </Pressable>
-      <AvisoFormulario tema={aspecto.tema}>{!personaId?'Elegí una persona para compartir la deuda.':!vinculada?'La persona necesita una cuenta vinculada y confirmada.':sinConexion?'Necesitás conexión para enviar la propuesta.':compartir?'Se enviará al guardar y esperará la aceptación de la otra persona.':'Opcional. Si no lo activás, queda solo en tus registros.'}</AvisoFormulario>
+      <AvisoFormulario tema={aspecto.tema} titulo="Compartir la deuda">{!personaId?'Elegí una persona para compartir la deuda.':!vinculada?'La persona necesita una cuenta vinculada y confirmada.':sinConexion?'Necesitás conexión para enviar la propuesta.':compartir?'Se enviará al guardar y esperará la aceptación de la otra persona.':'Opcional. Si no lo activás, queda solo en tus registros.'}</AvisoFormulario>
     </View>
     <AccionesFormulario texto="Registrar deuda" preparar={async () => {
       const campos:Record<string,string>={};if(!personaId)campos.persona='Elegí una persona.';if(convertirMontoMovimiento(monto)===null)campos.monto='Ingresá un importe mayor que cero, con hasta dos decimales.';if(!descripcion.trim()||descripcion.trim().length>500)campos.descripcion='Completá una descripción de hasta 500 caracteres.';cambiarErrores(campos);if(Object.keys(campos).length)throw new Error('Revisá los campos marcados.');
