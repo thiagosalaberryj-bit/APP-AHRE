@@ -1,8 +1,6 @@
 import BotonAccion from './ActionButton';
-import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import { useContext, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Text, View } from 'react-native';
 import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import { prepararDatosPrueba } from '../development/seedDevelopmentData';
@@ -10,7 +8,12 @@ import { cargarPreferenciasActuales } from '../profile/profileService';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 import crearEstilosDatosPrueba from '../styles/DevelopmentDataButtonStyles';
 
-export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntrar }: {deshabilitado:boolean;alCambiarCarga?:(cargando:boolean)=>void;alEntrar:()=>void}) {
+export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntrar, alAbrirVista }: {
+  deshabilitado: boolean;
+  alCambiarCarga?: (cargando: boolean) => void;
+  alEntrar: () => void;
+  alAbrirVista: () => void;
+}) {
   const { tema, establecerApariencia } = useContext(ContextoApariencia);
   const { mostrarAviso } = useContext(ContextoAvisos);
   const accionEnCurso = useRef(false);
@@ -52,6 +55,8 @@ export default function BotonDatosPrueba({ deshabilitado, alCambiarCarga, alEntr
   return <View style={estilos.contenedor}>
     <BotonAccion tema={tema} texto={'Entrar con datos de prueba'} variante="secundario" cargando={cargando && !volumenEnCurso} deshabilitado={deshabilitado || cargando} alPresionar={() => entrar()} estilo={[estilosGlobales.botonSecundario,estilos.boton]} etiquetaAccesibilidad="Entrar con datos de prueba"/>
     <BotonAccion tema={tema} texto={'Entrar con 10.000 movimientos'} variante="secundario" cargando={cargando && volumenEnCurso} deshabilitado={deshabilitado || cargando} alPresionar={() => entrar(true)} estilo={[estilosGlobales.botonSecundario,estilos.boton]} etiquetaAccesibilidad="Entrar con 10.000 movimientos"/>
-    <Text style={[estilosGlobales.textoAyuda, estilos.texto]}>Solo desarrollo · Cuenta local independiente</Text>
+    <Text style={[estilosGlobales.textoAyuda, estilos.texto]}>Vistas de prueba · Solo desarrollo</Text>
+    <BotonAccion tema={tema} texto="Recuperar contraseña" variante="secundario"
+      deshabilitado={deshabilitado || cargando} alPresionar={alAbrirVista} />
   </View>;
 }

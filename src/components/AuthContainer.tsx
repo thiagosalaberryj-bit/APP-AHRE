@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ESPACIADO, TIPOGRAFIA, MARGEN_LATERAL_PANTALLA } from '../styles/globalStyles';
 
-export default function ContenedorAutenticacion({ tema, titulo, descripcion, children: contenido }: import('../types/ui').ContenedorAuthProps) {
+export default function ContenedorAutenticacion({ tema, titulo, descripcion, accionInicial, children: contenido }: import('../types/ui').ContenedorAuthProps) {
   const estilos = crearEstilos(tema);
 
   return (
@@ -22,6 +22,7 @@ export default function ContenedorAutenticacion({ tema, titulo, descripcion, chi
         >
           <View style={estilos.contenido}>
             <View style={estilos.marca}>
+              {accionInicial}
               <Image
                 accessibilityLabel="Símbolo de AHRE"
                 resizeMode="contain"

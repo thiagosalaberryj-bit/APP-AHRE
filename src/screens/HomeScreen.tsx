@@ -314,6 +314,7 @@ export default function PantallaInicio({ navigation: navegacion }: import('../na
               deshabilitado={iniciando}
               alCambiarCarga={establecerPreparandoPruebas}
               alEntrar={() => navegacion.reset({ index: 0, routes: [{ name: RUTAS.PRINCIPAL }] })}
+              alAbrirVista={() => navegacion.navigate(RUTAS.INICIO_SESION, {vistaPrueba: 'recuperacion'})}
             /> : null}
 
             <View style={estilos.deslizador}>

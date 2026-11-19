@@ -83,3 +83,37 @@ test('la vista previa espera operaciones activas antes de calcular el alcance de
  terminar();assert.equal((await consulta).huella,'vista');assert.equal(e.consultasVista(),1);assert.equal(e.reinicioEnCurso(),false);
  assert.ok(Number(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n)>0);
 });
+
+test('el reinicio administrativo limpia la cuenta local al recuperar un historial remoto reemplazado', async t => {
+  let cambioPreferencia: unknown;
+  const e = await preparar(t, true, {url: 'https://ahre.test/api/v1', fetch: async (entrada, opciones) => {
+    const url = new URL(String(entrada));
+    if (url.pathname.endsWith('/auth/status')) return Response.json({});
+    if (url.pathname.endsWith('/sync') && opciones?.method !== 'POST') {
+      const lotes = Number(url.searchParams.get('desde')) < 5 ? [{revision: 5, lote: {
+        id: 'reinicio:de-prueba', base: 4, generacion: 0, reinicioPruebas: true, reinicioCuenta: true,
+        cambios: [cambioPreferencia],
+      }}] : [];
+      return Response.json({lotes, mas: false});
+    }
+    throw Error('No se esperaba enviar cambios anteriores al reinicio.');
+  }});
+  await e.prepararDatosPrueba();
+  const {usuario} = await e.obtenerSesionActual();
+  assert.ok(usuario);
+  const otra = await e.usuariosRepositorio.crear({id: randomUUID(), nombre: 'Otra', correo_electronico: 'otra@example.test', activo: 1});
+  const depositoAjeno = await e.depositosRepositorio.crear({usuario_id: otra.id, nombre: 'Ajeno', tipo: 'efectivo', saldo_inicial: 500, icono: 'cash-outline'});
+  cambioPreferencia = {tabla: 'preferencias', accion: 'guardar', datos: {...e.base.prepare('SELECT * FROM preferencias WHERE usuario_id=?').get(usuario.id), id: randomUUID()}};
+  e.base.prepare('INSERT OR REPLACE INTO sync_state(usuario_id,revision,preparada) VALUES(?,2,1)').run(usuario.id);
+  e.base.prepare('DELETE FROM sync_outbox WHERE usuario_id=?').run(usuario.id);
+  e.base.prepare('DELETE FROM sync_batch_authorization WHERE usuario_id=?').run(usuario.id);
+  await e.guardarSesionRemota(usuario.id, {token: 'a'.repeat(64), vence: Date.now() + 86400000, usuario, dispositivoId: await e.obtenerInstalacion(), generacion: 1, revision: 5}, true);
+  await e.depositosRepositorio.crear({usuario_id: usuario.id, nombre: 'Depósito local pendiente', tipo: 'efectivo', saldo_inicial: 150, icono: 'cash-outline'});
+  assert.ok(Number(e.base.prepare('SELECT COUNT(*) n FROM sync_outbox WHERE usuario_id=?').get(usuario.id)!.n) > 0);
+  await e.sincronizarCuenta(usuario.id);
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM depositos WHERE usuario_id=?').get(usuario.id)!.n, 0);
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM sync_outbox WHERE usuario_id=?').get(usuario.id)!.n, 0);
+  assert.equal(e.base.prepare('SELECT revision FROM sync_state WHERE usuario_id=?').get(usuario.id)!.revision, 5);
+  assert.equal(e.base.prepare('SELECT saldo_actual FROM depositos WHERE id=?').get(depositoAjeno.id)!.saldo_actual, 500);
+  assert.equal((await e.obtenerSesionActual()).usuario?.id, usuario.id);
+});

@@ -1,8 +1,15 @@
 # Estado y validación de AHRE
 
-Referencia vigente: **17 de noviembre de 2026**, rama
-`codex/modo-oscuro-neutro`, versión configurada 0.9.3 / Android versionCode 18.
-Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
+Referencia vigente al **19 de noviembre de 2026**, APP-AHRE 0.9.4 / Android
+versionCode 19, coordinada con SERVER-AHRE 0.3.4.
+
+## App 0.9.4 · 19/11/2026
+
+Incluye la recuperación por correo con verificación antes del cambio de
+contraseña y la conciliación de Mercado Pago con Search, Settlement y
+Liquidaciones. La APK interna se compiló localmente y se verificó su firma.
+El flujo diario se habilitó en el servidor para las cuentas vinculadas.
+Ver [Validación de notificaciones y Mercado Pago](validacion-notificaciones-mercado-pago.md).
 
 ## Preparación de app 0.9.3 · 17/11/2026
 

@@ -22,8 +22,9 @@ import { validarInicioSesion } from '../utils/authenticationValidation';
 import { crearEstilosAutenticacion } from '../styles/authStyles';
 import { crearEstilosGlobales } from '../styles/globalStyles';
 
-export default function PantallaInicioSesion({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
+export default function PantallaInicioSesion({ navigation: navegacion, route: ruta }: import('../navigation/types').PropiedadesPantalla) {
  const finalizacion=useFinalizacionAccion();
+  const vistaPrueba = ruta?.params?.vistaPrueba === 'recuperacion' && __DEV__;
 
   useRegresoProtegido(navegacion, () => cargando);
   const { tema, establecerApariencia } = useContext(ContextoApariencia);
@@ -38,9 +39,9 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
   const [contrasena, establecerContrasena] = useState('');
   const [recordarme, establecerRecordarme] = useState(true);
   const [cargando, establecerCargando] = useState(false);
-  const [recuperando, establecerRecuperando] = useState(false);
+  const [recuperando, establecerRecuperando] = useState(vistaPrueba);
   const [errores, establecerErrores] = useState<Partial<Record<string, string>>>({});
-  useEffect(()=>{let vigente=true;void Promise.all([leerRecordatorioIngreso(),obtenerSesionActual()]).then(([datos,sesion])=>{if(vigente&&!recordatorioCambiado.current){establecerCorreo(actual=>actual||(datos.recordar&&sesion.usuario?sesion.usuario.correo_electronico:''));establecerRecordarme(datos.recordar);progresoRecordarme.setValue(datos.recordar?1:0);}}).catch(()=>{if(vigente)mostrarAviso('No se pudo recuperar el correo recordado.',{tipo:'informacion'});});return()=>{vigente=false;};},[]);
+  useEffect(()=>{if(vistaPrueba)return;let vigente=true;void Promise.all([leerRecordatorioIngreso(),obtenerSesionActual()]).then(([datos,sesion])=>{if(vigente&&!recordatorioCambiado.current){establecerCorreo(actual=>actual||(datos.recordar&&sesion.usuario?sesion.usuario.correo_electronico:''));establecerRecordarme(datos.recordar);progresoRecordarme.setValue(datos.recordar?1:0);}}).catch(()=>{if(vigente)mostrarAviso('No se pudo recuperar el correo recordado.',{tipo:'informacion'});});return()=>{vigente=false;};},[vistaPrueba]);
   const moverControlRecordarme = progresoRecordarme.interpolate({ inputRange: [0, 1], outputRange: [0, 24] });
   const colorFondoRecordarme = progresoRecordarme.interpolate({
     inputRange: [0, 1],
@@ -56,7 +57,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
     recordatorioCambiado.current=true;
     const nuevoEstado = !recordarme;
     establecerRecordarme(nuevoEstado);
-    void guardarRecordatorioIngreso(correo,nuevoEstado).catch(()=>mostrarAviso('No se pudo guardar la preferencia de ingreso.',{tipo:'error'}));
+    if (!vistaPrueba) void guardarRecordatorioIngreso(correo,nuevoEstado).catch(()=>mostrarAviso('No se pudo guardar la preferencia de ingreso.',{tipo:'error'}));
     Animated.spring(progresoRecordarme, {
       toValue: nuevoEstado ? 1 : 0,
       damping: 16,
@@ -66,7 +67,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
   };
 
   const manejarInicioSesion = async (reemplazarDispositivo=false) => {
-    if (accionEnCurso.current) return;
+    if (vistaPrueba || accionEnCurso.current) return;
 
     const nuevosErrores = validarInicioSesion({ correo, contrasena });
     establecerErrores(nuevosErrores);
@@ -113,7 +114,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
     establecerErrores((actuales) => ({ ...actuales, contrasena: undefined }));
   };
 
-  return (
+  const formulario = (
     <ContenedorAutenticacion tema={tema} titulo="Iniciá sesión" descripcion="La primera autorización necesita conexión. Después podés usar esta instalación sin internet.">
       <View style={estilosAutenticacion.formulario}>
         <CampoAutenticacion
@@ -122,6 +123,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           autoComplete="email"
           blurOnSubmit={false}
           deshabilitado={cargando}
+          editable={!vistaPrueba && !cargando}
           error={errores.correo}
           estilosGlobales={estilosGlobales}
           icono="mail-outline"
@@ -140,6 +142,7 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           ref={referenciaContrasena}
           estilosAutenticacion={estilosAutenticacion}
           deshabilitado={cargando}
+          editable={!vistaPrueba && !cargando}
           error={errores.contrasena}
           estilosGlobales={estilosGlobales}
           icono="lock-closed-outline"
@@ -157,8 +160,8 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           <Pressable android_ripple={RETROALIMENTACION_PULSACION}
             accessibilityLabel="Recordarme"
             accessibilityRole="switch"
-            accessibilityState={{ checked: recordarme, disabled: cargando }}
-            disabled={cargando}
+            accessibilityState={{ checked: recordarme, disabled: cargando || vistaPrueba }}
+            disabled={cargando || vistaPrueba}
             onPress={conRespuestaVisual(alternarRecordarme)}
             style={estilosAutenticacion.recordarme}
           >
@@ -183,12 +186,17 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
           estilosAutenticacion={estilosAutenticacion}
           estilosGlobales={estilosGlobales}
           cargando={cargando}
+          deshabilitado={vistaPrueba}
           alPresionar={()=>manejarInicioSesion()}
           titulo="Iniciar sesión"
         />
       </View>
 
-      <View style={estilosAutenticacion.pie}>
+      {vistaPrueba ? <View style={estilosAutenticacion.pie}>
+        <Pressable accessibilityRole="button" onPress={() => navegacion.goBack()} style={estilosAutenticacion.accionPie}>
+          <Text style={estilosAutenticacion.textoAccionPie}>Volver a las vistas de prueba</Text>
+        </Pressable>
+      </View> : <View style={estilosAutenticacion.pie}>
         <Text style={estilosAutenticacion.textoPie}>¿Todavía no tenés una cuenta?</Text>
         <Pressable android_ripple={RETROALIMENTACION_PULSACION}
           accessibilityRole="button"
@@ -198,15 +206,18 @@ export default function PantallaInicioSesion({ navigation: navegacion }: import(
         >
           <Text style={estilosAutenticacion.textoAccionPie}>Ir a Registro</Text>
         </Pressable>
-      </View>
-      {recuperando ? <RecuperacionContrasena correoInicial={correo} tema={tema}
-        alCerrar={() => establecerRecuperando(false)}
-        alCompletar={correoRecuperado => {
-          cambiarCorreo(correoRecuperado);
-          cambiarContrasena('');
-          establecerRecuperando(false);
-          mostrarAviso('Contraseña actualizada. Iniciá sesión con conexión.', {tipo: 'exito'});
-        }} /> : null}
+      </View>}
     </ContenedorAutenticacion>
   );
+
+  if (!recuperando) return formulario;
+
+  return <RecuperacionContrasena correoInicial={vistaPrueba ? '' : correo} tema={tema} fondo={formulario} vistaPrueba={vistaPrueba}
+    alCerrar={() => establecerRecuperando(false)}
+    alCompletar={correoRecuperado => {
+      cambiarCorreo(correoRecuperado);
+      cambiarContrasena('');
+      establecerRecuperando(false);
+      mostrarAviso('Contraseña actualizada. Iniciá sesión con conexión.', {tipo: 'exito'});
+    }} />;
 }

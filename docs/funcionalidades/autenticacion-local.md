@@ -44,10 +44,25 @@ La contraseña no se escribe en almacenamiento local, logs ni errores. Si la aut
 ## Recuperación desde Login
 
 Si olvidaste la contraseña, abrí «¿Olvidaste tu contraseña?» en Login con conexión.
-Ingresá el correo de tu cuenta, el código de seis dígitos y la contraseña nueva.
+
+1. Ingresá el correo de tu cuenta en el modal y tocá «Enviar código».
+2. Ingresá el código en dos grupos de tres casillas o pegalo completo en una
+   de ellas. La pantalla muestra el correo completo. **Continuar** comprueba
+   el código. Si falla, las casillas se marcan en rojo y aparece un aviso en
+   la misma pantalla. **Reenviar código** queda debajo de **Continuar**. Para
+   corregir el correo, volvé al modal con la flecha.
+3. Cuando el código sea válido, escribí y confirmá la contraseña nueva. Tenés
+   cinco minutos para guardarla después de la verificación.
+
 El código vence en diez minutos y el reenvío reemplaza al anterior. Después de
-confirmar, volvé a iniciar sesión con conexión para actualizar el verificador
-local. Se conservan los datos y los cambios pendientes de tu instalación.
+guardar, AHRE vuelve a Login con el correo completado. Iniciá sesión con conexión
+para actualizar el verificador local. Se conservan los datos y los cambios
+pendientes de tu instalación.
+
+Para revisar las pantallas en Expo Go, en **Inicio → Vistas de prueba** elegí
+**Recuperar contraseña**. El modal abre las seis casillas para escribir o pegar
+un código de ejemplo. Desde ahí podés ver el formulario de contraseña nueva.
+La vista de prueba no envía correos ni cambia contraseñas.
 
 ## Cambio de contraseña desde Perfil
 

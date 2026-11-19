@@ -59,41 +59,55 @@ El botón **Conectar Mercado Pago** aparece en todos los depósitos mientras no
 haya una vinculación activa. Al vincular uno, se usa **Opciones → Mercado Pago**
 en ese depósito. Los tres puntos muestran el contador de movimientos pendientes.
 Al vincular, la persona elige
-1, 2 o 3 meses de historial y autoriza su cuenta. En el flujo Settlement, ese
+1, 2 o 3 meses de historial y autoriza su cuenta. Ese
 rango termina en la fecha de creación del depósito. Cada usuario y cada
 cuenta externa tienen una sola vinculación activa.
 
-Search muestra los pagos del período a medida que se descargan. Mientras
-se espera y concilia Settlement, los resultados permanecen en solo lectura.
-La barra muestra la etapa y los tramos que ya se conciliaron. Al terminar
-se muestran primero los pagos de Search y luego los movimientos adicionales
-del reporte. Los pendientes con datos suficientes permiten editar la
-descripción y la categoría. La app conserva esos cambios en borradores.
+Antes de autorizar, tocá **Cuánto puede tardar** para abrir la ayuda. Los
+primeros resultados aparecen progresivamente. Con un historial largo, la
+revisión del reporte puede tardar unos diez minutos o más. Se puede cerrar la
+app y volver para ver el avance.
 
-Los créditos del reporte sin coincidencia con Search reciben la categoría
-editable **Rendimientos**. El importe neto distingue créditos y débitos.
-La conciliación excluye los importes cero de la revisión de la nueva consulta.
-Si el sentido sigue siendo ambiguo, la app lo deja pendiente de confirmar.
+Al volver de autorizar, **Verificando conexión** aparece mientras AHRE consulta el
+estado. Cuando confirma el vínculo, la pantalla cambia a resultados y muestra
+la barra de actividad antes de que termine de descargar la lista de movimientos.
+
+El panel superior muestra cuándo AHRE busca movimientos, espera Settlement o
+Liquidaciones y verifica sus datos. La parte llena de la barra representa el avance confirmado.
+La animación en la parte libre indica actividad durante la espera. La lista
+**Resultados** reúne los movimientos por fecha a medida que llegan y permanece
+en solo lectura hasta que termine la consulta. Tocá un movimiento pendiente
+para editar su descripción y elegir una categoría. La app conserva esos cambios
+en borradores. Al lado de **Resultados** está **Historial**, con las últimas 20
+consultas.
+
+Liquidaciones confirma los **Rendimientos** y completa las transferencias
+salientes. El importe neto distingue créditos y débitos. **Resultados**
+omite los importes cero, los posibles duplicados y las filas no registrables.
+El filtro **Registrados** conserva los movimientos incorporados y **Pendientes**
+incluye los cambios que requieren revisión.
+Si un importe aprobado en pesos queda sin sentido identificado, podés tocarlo
+y elegir **Ingreso** o **Egreso**. La elección se guarda en borradores y el saldo
+se actualiza recién al registrar. Si faltan otros datos para confirmar la
+operación, sigue como **Pendiente de confirmar** con el importe fuera del saldo.
 
 Desde el día siguiente a la vinculación, el servidor programa la consulta a
-las 12:00 de Argentina para el día calendario anterior, aunque la app esté
-cerrada. **Retomar consulta** aparece ante un fallo y sigue el trabajo
+las 12:00 de Argentina para el día calendario anterior en esa misma zona,
+de 00:00 a 23:59. La zona horaria del teléfono no cambia el rango. La consulta
+se ejecuta aunque la app esté cerrada. **Retomar consulta** aparece ante un fallo y sigue el trabajo
 guardado. Actualizar la pantalla trae el avance que ya tiene el servidor.
 
-El servidor controla qué cuentas usan Settlement. Las cuentas con el flujo
-anterior conservan Search, el límite de 500 pagos iniciales y los usos manuales
-descritos en el historial de esta guía. Los tokens OAuth se manejan en el
-servidor y el worker.
+El servidor habilita la conciliación en todas las cuentas vinculadas. La
+automatización de n8n despierta al worker y los tokens OAuth se manejan
+en el servidor.
 
 Los resultados se muestran como pendientes, ignorados o registrados. Se puede
 seleccionar hasta 500 por confirmación, registrar, ignorar, recuperar ignorados
 o asociar un movimiento compatible existente. Desmarcar conserva el pendiente.
-Las categorías propuestas son las existentes de AHRE; sin datos suficientes se
-usa Transferencias o Transferencias recibidas según el sentido. Los pagos no
-aprobados y las monedas distintas de ARS se muestran sin habilitar el registro.
-La dirección desconocida exige confirmación. No hay conversión monetaria ni
-transferencias automáticas entre dos depósitos.
-En el flujo anterior, los pagos de importe cero se muestran con una explicación y pueden ignorarse.
+AHRE propone una categoría según los datos del proveedor. Cuando solo conoce
+el sentido, propone **Transferencias** o **Transferencias recibidas**. Se
+revisan operaciones aprobadas en pesos. Registrar un movimiento afecta
+únicamente el depósito vinculado.
 
 Guardar una selección es transaccional: movimientos, saldo, asociación externa
 y decisión pendiente se confirman o revierten juntos. Los históricos anteriores
@@ -129,103 +143,33 @@ Expo Go conserva interfaz, SQLite, revisión, sincronización y recordatorios
 locales compatibles. El registro de token push remoto se omite allí. La prueba
 completa requiere una APK propia, un Android físico y FCM v1 configurado.
 
-### Revisión de interfaz · 11 de noviembre
+### Actualización y conexión
 
-El acceso está en Detalle del depósito → Opciones (tres puntos) → Mercado Pago,
-con el contador de pendientes cuando hay vinculación.
-La revisión actualiza la vinculación al recuperar foco y al volver del navegador.
-Deslizar hacia abajo recupera resultados del servidor sin solicitar una nueva
-búsqueda. Buscar movimientos solicita una manual y se deshabilita durante una
-consulta activa o al consumir el cupo. Renovar autorización y desvincular están
-en las opciones del depósito, junto a la entrada de Mercado Pago.
-El retorno a Expo Go se hace manualmente; el enlace de esquema `ahre://` del
-servidor puede abrir una APK instalada. No se modificó ese enlace en esta revisión.
+Al recuperar el foco o volver de OAuth, la app consulta el estado del vínculo.
+El enlace del navegador puede abrir la APK instalada. En Expo Go, volvé
+manualmente a AHRE. Renovar autorización y desvincular están en las opciones
+del depósito. El worker renueva el token automáticamente cuando corresponde.
 
-El resumen usa el contenedor de superficie habitual y destaca la cantidad por
-revisar. El botón muestra las manuales disponibles del cupo de dos, centradas; la automática es
-independiente. Se muestra cuándo se habilita la próxima automática en la zona
-configurada: se pide al entrar con conexión, sin una ejecución programada fija.
-Desde el resumen se abre un modal con el historial de las últimas 20 consultas,
-con clase, estado, período, novedades, errores y límite inicial alcanzado.
+Deslizar hacia abajo recupera el estado y las operaciones guardadas en el
+servidor. El historial abre una consulta remota y usa la copia local si falla
+la conexión. La lista ordena las operaciones por fecha y hora y las agrupa por
+día antes de aplicar el límite de filas visibles.
 
-Las tarjetas reutilizan medidas y tipografía de los registros financieros.
-Los movimientos se ordenan del más reciente al más antiguo y se agrupan por día
-antes de limitar las filas visibles. El slider conserva el componente segmentado
-habitual. Tocar una tarjeta abre directamente el mismo modal de categorías de
-ingresos y egresos. El control compacto de la derecha solo selecciona.
-Las opciones se consultan tocando la tarjeta; no hay tres puntos.
-La hora queda a la altura de la categoría, fuera de la franja del importe.
-El título conserva altura natural y la columna central usa la misma separación
-entre líneas que movimientos recientes. La categoría propuesta sigue visible
-aunque el sentido todavía no se haya completado; no se infiere uno del otro.
-El icono y la franja del importe reutilizan los
-estilos de movimientos recientes, con color según el sentido recibido.
-No se vuelve a pedir el sentido: si Mercado Pago no permite identificar quién
-paga o cobra respecto de la cuenta autorizada, el pago no se registra hasta
-disponer de esa información. Los pagos de $0 se pueden
-ignorar y su explicación completa queda en el detalle. Seleccionar todo y
-deseleccionar ocupan el mismo control; el pie mantiene acciones apiladas, con
-registro atenuado cuando no puede continuar: tocarlo explica la falta de selección
-o qué pagos no son registrables, sin modificar saldos. Ignorar permanece
-deshabilitado sin selección. Registrar no consume búsquedas manuales.
+Durante una consulta activa, la pantalla enfocada sigue el canal autenticado
+de Mercado Pago por WebSocket. Los eventos avisan que hay cambios y la app
+vuelve a cargar los datos por HTTP. Si se pierde un evento, una comprobación
+cada 15 segundos recupera el avance mientras se sigue el trabajo. El socket
+y sus temporizadores se cierran al terminar la consulta, cambiar de vínculo,
+salir de la pantalla o pasar a segundo plano.
 
-Buscar de nuevo usa un acceso compacto con lupa junto a la próxima automática y
-muestra debajo los usos manuales disponibles. El historial abre en un modal y
-hace un único intento remoto al abrir; si la conexión
-falla, recupera la copia persistida del usuario. Solo muestra las filas cuando
-termina ese proceso y no reinicia la carga por cambios de estado del trabajo.
-Renovar autorización solo se ofrece si la vinculación informa un error de acceso;
-la renovación normal del token es automática en el servidor.
+### Probar desde el inicio
 
-Si el servidor anuncia identificación pendiente de una descarga antigua, la
-sincronización solicita completar esos datos antes de traer los resultados. Se
-retoma el trabajo original sin crear otra consulta diaria ni restablecer usos.
-Funciona aunque queden cero búsquedas manuales. El seguimiento temporal muestra
-«Completando identificación de pagos guardados» y termina con ese trabajo.
+Con una cuenta de pruebas, [Reiniciar mis datos](../configuracion/reinicio-datos-pruebas.md)
+borra de AHRE los depósitos, la vinculación, las consultas y las decisiones
+asociadas. Se conservan el acceso a la cuenta y el dinero de Mercado Pago.
+Después del reinicio, iniciá sesión, creá un depósito y elegí el período de
+historial al volver a vincular. La nueva vinculación programa su primera
+consulta diaria para el día siguiente a las 12:00 de Argentina.
 
-Mientras la búsqueda está pendiente o procesando, con esta pantalla enfocada y
-la app activa, se abre una suscripción WebSocket autenticada al canal propio de
-Mercado Pago. Los eventos solo invalidan la copia local y recuperan los datos
-por HTTP. El socket y sus temporizadores se cierran al completar, fallar de forma
-definitiva, cancelar, cambiar de vinculación, salir o pasar a segundo plano.
-Las reconexiones usan espera creciente; una comprobación cada 15 segundos solo
-mientras se sigue el trabajo recupera eventos perdidos. Refrescar no inicia una
-automática ni consume consultas manuales. El controlador general de avisos y
-la conexión de Social conservan su ciclo independiente.
-
-La lista de depósitos muestra un aviso compacto junto al nombre, sin tercera
-línea. Los tres puntos del detalle y la opción Mercado Pago del
-modal muestran indicadores cuando quedan pendientes o cambios por revisar.
-Comparten el resumen local y se actualizan al cambiar decisiones o sincronizar;
-abrir la pantalla no los elimina. Desvincular retira los indicadores.
-
-La guía de credenciales y arranque está en SERVER-AHRE:
-`docs/funcionalidades/notificaciones.md`. Las claves privadas nunca deben copiarse
-al chat ni versionarse. La nueva dependencia autorizada por el líder para esta
-tarea es `expo-notifications`, compatible con SDK 57.
-
-### Cierre de entrega 0.9.0
-
-Al tocar una card pendiente registrable, el selector habitual permite editar
-su descripción y categoría. El borrador persiste offline; al registrar se recortan
-espacios y se exige una descripción de 1 a 500 caracteres. La descripción original
-de Mercado Pago no cambia y la asociación no sobrescribe movimientos existentes.
-
-Los errores se muestran en un diálogo central y en un aviso fijo junto a las
-acciones, accesible aunque la lista esté desplazada. Los pagos de importe cero,
-no aprobados, de otra moneda o sin sentido no se incorporan; se explica el motivo.
-
-«Próxima búsqueda automática» indica disponibilidad al entrar con conexión,
-no una ejecución fija a esa hora. Al completar la identificación no se mantiene
-un texto técnico en el resumen: queda una notificación en el historial y un aviso
-de éxito cuando la pantalla sigue el trabajo. Los fallos definitivos también
-generan notificación; los reintentos intermedios no producen avisos repetidos.
-Sin Firebase/FCM configurado no se garantiza entrega remota al teléfono.
-
-Sin internet se revisan los datos descargados, guardan borradores y registran
-o ignoran selecciones atómicamente. Se requiere conexión para vincular, buscar
-y sincronizar. Rendimientos y transferencias entre cuentas propias quedan
-pendientes de definición; no se agregaron en esta entrega.
-
-Aclaración: recordar deudas pendientes no representa vencimientos. El modelo
-de recordatorios ya no toma fecha de vencimiento ni anticipación para deudas.
+Las comprobaciones de cada entrega se registran en
+[Validación de notificaciones y Mercado Pago](../validacion-notificaciones-mercado-pago.md).

@@ -6,13 +6,18 @@ import { ejecutarLecturaConConexion } from '../database/connectionQueue';
 import { ejecutarTransaccion } from '../database/transactions';
 import { avisarIntegraciones, guardarDato, leerDato } from './integrationStore';
 import { ESTADO_MP_INICIAL, solicitarConsultaMp } from '../mercadoPago/mercadoPagoService';
-import type { EstadoMp, OperacionMp } from '../mercadoPago/types';
+import { consultaMpEnCurso, resultadoPendienteMp, resultadoVisibleMp, type EstadoMp, type OperacionMp } from '../mercadoPago/types';
 import type { AjustesAvisos, Aviso } from '../notifications/types';
 
 let enCurso: Promise<void> | null = null;
+let soloCancelacionesEnCurso = false;
 export function sincronizarIntegraciones(soloCancelaciones = false, pedirAutomatica = true): Promise<void> {
-  if (enCurso) return enCurso;
+  if (enCurso) {
+    return !soloCancelaciones && soloCancelacionesEnCurso
+      ? enCurso.then(() => sincronizarIntegraciones(false, pedirAutomatica)) : enCurso;
+  }
   const terminar=iniciarActividadReinicio();if(!terminar)return Promise.resolve();
+  soloCancelacionesEnCurso = soloCancelaciones;
   enCurso = ejecutarSincronizacion(soloCancelaciones, pedirAutomatica).finally(() => { enCurso = null; terminar(); });
   return enCurso;
 }
@@ -43,6 +48,18 @@ async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatic
       estado = await solicitarRemoto<EstadoMp>('/mercado-pago', undefined, remota.token);
     }
     if (!await vigente()) return;
+    if (estado.vinculacion) {
+      const avanceDisponible = await ejecutarTransaccion(async c => {
+        if (await c.getFirstAsync("SELECT id FROM integraciones_outbox WHERE usuario_id=? AND ruta='/mercado-pago/desvincular'", [usuario.id])) return false;
+        const anterior = await leerDato(usuario.id, 'mp:estado', ESTADO_MP_INICIAL, c);
+        const cambioVinculacion = anterior.vinculacion?.version !== estado.vinculacion?.version;
+        if (!cambioVinculacion && !consultaMpEnCurso(estado.trabajo)) return false;
+        if (cambioVinculacion) await guardarDato(c, usuario.id, 'mp:operaciones', []);
+        await guardarDato(c, usuario.id, 'mp:estado', estado);
+        return true;
+      });
+      if (avanceDisponible) avisarIntegraciones();
+    }
     let operaciones: OperacionMp[] = [];
     if (estado.vinculacion) {
       let desde: string | null = '';
@@ -90,9 +107,9 @@ async function ejecutarSincronizacion(soloCancelaciones: boolean, pedirAutomatic
           if (vistaLocal && vistaLocal >= aviso.fecha) aviso.vista = true;
           if (aviso.tipo === 'mercado_pago' && await c.getFirstAsync("SELECT id FROM integraciones_outbox WHERE usuario_id=? AND ruta='/mercado-pago/decisiones' LIMIT 1", [usuario.id])) {
             const locales = await leerDato<OperacionMp[]>(usuario.id, 'mp:operaciones', [], c);
-            aviso.pendientes = locales.filter(f => f.decision === 'pendiente' || f.revisionPendiente).length;
+            aviso.pendientes = locales.filter(resultadoPendienteMp).length;
             aviso.resuelta = aviso.pendientes === 0;
-            aviso.mensaje = `${locales.length} obtenidos · ${aviso.pendientes} pendientes`;
+            aviso.mensaje = `${locales.filter(resultadoVisibleMp).length} obtenidos · ${aviso.pendientes} pendientes`;
           }
           await c.runAsync('INSERT INTO avisos_locales(usuario_id,id,datos,fecha,vista,resuelta,remota) VALUES(?,?,?,?,?,?,1) ON CONFLICT(usuario_id,id) DO UPDATE SET datos=excluded.datos,fecha=excluded.fecha,vista=CASE WHEN avisos_locales.fecha>=excluded.fecha THEN MAX(avisos_locales.vista,excluded.vista) ELSE excluded.vista END,resuelta=excluded.resuelta', [usuario.id, aviso.id, JSON.stringify(aviso), aviso.fecha, aviso.vista ? 1 : 0, aviso.resuelta ? 1 : 0]);
         }

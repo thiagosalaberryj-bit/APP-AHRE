@@ -4,8 +4,11 @@ import { aplicarCambios } from '../sync/journal';
 import { solicitarRemoto, type SesionRemota } from '../sync/remote';
 import type { CambioSync, VersionSync } from '../sync/protocol';
 import { cancelarAviso } from '../notifications/nativeAdapter';
+import { borrarDatosLocalesReinicio } from './accountResetData';
 
-type LoteReinicio = VersionSync['lote'] & { reinicioPruebas?: boolean; recursosEliminados?: string[]; actualizacionSocial?: boolean; ajustesSaldo?: Record<string,number> };
+type LoteReinicio = VersionSync['lote'] & { reinicioPruebas?: boolean; reinicioCuenta?: boolean; recursosEliminados?: string[]; actualizacionSocial?: boolean; ajustesSaldo?: Record<string,number> };
+const reiniciaCuenta = ({lote}: VersionSync) => lote.generacion === 0 && lote.id.startsWith('reinicio:')
+  && (lote as LoteReinicio).reinicioPruebas === true && (lote as LoteReinicio).reinicioCuenta === true;
 export function contieneRecurso(valor: unknown, recursos: Set<string>, campo = ''): boolean {
   if (typeof valor === 'string') {
     try { const datos: unknown = JSON.parse(valor); if (datos && typeof datos === 'object') return contieneRecurso(datos, recursos); } catch { /* Texto simple. */ }
@@ -25,7 +28,8 @@ export async function recuperarReinicios(usuarioId: string, remota: SesionRemota
   while (mas) {
     const pagina = validar(await solicitarRemoto(`/sync?desde=${revision}`, undefined, remota.token));
     for (const version of pagina.lotes) {
-      if (version.revision !== revision + 1) throw new Error('Secuencia remota incompleta.');
+      if (version.revision <= revision || (version.revision !== revision + 1 && !reiniciaCuenta(version))) throw new Error('Secuencia remota incompleta.');
+      if (reiniciaCuenta(version)) versiones.length = 0;
       versiones.push(version); revision = version.revision;
     }
     mas = pagina.mas;
@@ -43,6 +47,14 @@ export async function recuperarReinicios(usuarioId: string, remota: SesionRemota
   await ejecutarConConexion(async c => {
     const actual = Number((await c.getFirstAsync<{ revision: number }>('SELECT revision FROM sync_state WHERE usuario_id=?', [usuarioId]))?.revision || 0);
     if (actual !== inicial) throw new Error('La revisión cambió al recuperar el reinicio.');
+    if (versiones.some(reiniciaCuenta)) {
+      const avisos = await c.getAllAsync<{nativo: string | null}>('SELECT nativo FROM programaciones_avisos WHERE usuario_id=?', [usuarioId]);
+      for (const aviso of avisos) if (aviso.nativo) avisosNativos.push(aviso.nativo);
+      await borrarDatosLocalesReinicio(c, usuarioId, true);
+      await aplicarCambios(c, versiones.flatMap(v => v.lote.cambios));
+      await c.runAsync('UPDATE sync_state SET revision=? WHERE usuario_id=?', [revision, usuarioId]);
+      return;
+    }
     const pendientes = await c.getAllAsync<{ secuencia: number; lote: string; cambio: string }>('SELECT secuencia,lote,cambio FROM sync_outbox WHERE usuario_id=? ORDER BY secuencia', [usuarioId]);
     const conservados: CambioSync[] = [];
     const lotes = new Map<string, typeof pendientes>();
