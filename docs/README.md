@@ -1,8 +1,8 @@
 # Documentación de APP-AHRE
 
 Guía vigente al 19 de noviembre de 2026 para APP-AHRE 0.9.4, Android
-versionCode 19, coordinada con SERVER-AHRE 0.3.4. La APK interna se
-compiló localmente con el SDK de Android.
+versionCode 19, coordinada con la release de código SERVER-AHRE 0.3.5. La APK se compiló localmente
+con el SDK de Android. [Descargas Android](https://ahre-server.tailc5dfc5.ts.net/descargas/).
 El [README](../README.md) presenta la app; este índice enlaza el detalle. El [estado y las verificaciones](estado-y-validacion.md)
 separan lo implementado, las pruebas automáticas, las confirmaciones del líder y
 el trabajo pendiente. Los documentos históricos de TypeScript y dependencias
@@ -12,7 +12,7 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 
 - [Entorno, Expo Go y pruebas](configuracion/entorno.md).
 - [Integraciones MySQL y pruebas con muchos movimientos](configuracion/pruebas-optimizacion.md).
-- [Reiniciar datos desde Perfil: APK, alcance y retirada](configuracion/reinicio-datos-pruebas.md).
+- [Eliminar mis datos: alcance y recuperación](configuracion/reinicio-datos-pruebas.md).
 - [Compilar y publicar Android](configuracion/publicacion.md).
 - [Dependencias y auditoría](configuracion/dependencias.md).
 

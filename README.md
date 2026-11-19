@@ -13,7 +13,7 @@ Finanzas personales, gastos compartidos y comprobantes en una app Android con da
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
-[Documentación](docs/README.md) · [Pruebas](docs/configuracion/entorno.md#pruebas) · [Servidor](https://github.com/thiagosalaberryj-bit/SERVER-AHRE)
+[Documentación](docs/README.md) · [Descargas Android](https://ahre-server.tailc5dfc5.ts.net/descargas/) · [Pruebas](docs/configuracion/entorno.md#pruebas) · [Servidor](https://github.com/thiagosalaberryj-bit/SERVER-AHRE)
 
 </div>
 
@@ -29,7 +29,7 @@ Finanzas personales, gastos compartidos y comprobantes en una app Android con da
 | Notificaciones | Historial, preferencias y recordatorios locales; push Android requiere configurar FCM y generar APK. |
 | Mercado Pago | Vinculación desde el depósito, búsqueda rápida y conciliación con Settlement y Liquidaciones. Consulta diaria a las 12:00 de Argentina. |
 | Comprobantes | OCR local con ML Kit y revisión antes de guardar; requiere APK Android. |
-| Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado, recuperación por correo y preferencias. |
+| Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado, recuperación por correo y eliminación de datos privados con acceso conservado. |
 | Sincronización | Lotes ordenados, reintentos sin duplicados y corrección guiada de correo rechazado. |
 
 SQLite guarda primero cada operación. Al reconectar, la app envía los pendientes
@@ -58,8 +58,10 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
-Versiones de trabajo **app 0.9.4 / Android 19** y **servidor 0.3.4**.
-La APK interna de esta revisión se compiló localmente con el SDK de Android.
+Entrega de código coordinada **app 0.9.4 / Android 19** y **servidor 0.3.5**.
+La APK se compiló localmente con el SDK de Android. En
+**Perfil → Zona de peligro** podés [eliminar tus datos](docs/configuracion/reinicio-datos-pruebas.md)
+y volver a entrar con el mismo correo y contraseña.
 La [guía de Mercado Pago](docs/funcionalidades/notificaciones-mercado-pago.md#mercado-pago)
 describe la vinculación, el progreso y la consulta diaria. La
 [recuperación de contraseña](docs/funcionalidades/autenticacion-local.md)

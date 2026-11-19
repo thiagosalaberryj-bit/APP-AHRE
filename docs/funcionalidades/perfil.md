@@ -68,6 +68,14 @@ El cierre de sesión no elimina usuarios, depósitos, movimientos, categorías,
 estadísticas ni preferencias. Los datos financieros quedan asociados al
 usuario para el próximo inicio de sesión.
 
+## Zona de peligro
+
+**Cerrar sesión** y **Eliminar mis datos** están juntos al final de Perfil.
+Eliminar datos pide conexión y la contraseña actual, borra los registros
+privados y devuelve al inicio de sesión. Se conserva el acceso con el mismo
+correo y contraseña. Las otras cuentas conservan sus registros y sus saldos.
+[Alcance y recuperación](../configuracion/reinicio-datos-pruebas.md).
+
 ## Estados y errores
 
 - **Cargando:** consulta el usuario y sus preferencias sin mostrar esqueletos.

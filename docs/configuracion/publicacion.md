@@ -31,11 +31,11 @@ Comprueba el empaquetado JavaScript/Hermes y los recursos. No produce un APK ni
 instala la app. En la etapa 7 se exportó fuera del repositorio y el primer intento
 necesitó reintentarse con permisos para el temporal de Hermes en Windows.
 
-## Reinicio temporal de datos en APK
+## Eliminar mis datos desde la APK
 
-El botón de Perfil está disponible para cualquier cuenta en la APK, sin
-variables de entorno ni listas de correos. Solo necesita backend actualizado.
-Ver [reinicio de datos y retirada](reinicio-datos-pruebas.md).
+En **Perfil → Zona de peligro**, **Eliminar mis datos** requiere conexión con
+el backend actualizado. Borra los registros privados y conserva el acceso
+con el mismo correo y contraseña. [Alcance y recuperación](reinicio-datos-pruebas.md).
 
 ## APK interno con EAS
 
@@ -83,13 +83,26 @@ no publica el archivo en la web de AHRE.
 ## Publicar la descarga
 
 SERVER-AHRE contiene `scripts/publish-apk.mjs`. El procedimiento de preparar el
-manifiesto, copiar APK y `latest.json` y verificar SHA-256 está en su guía
+manifiesto, copiar el APK, publicar `releases.json` y `latest.json` y verificar
+SHA-256 está en su guía
 `docs/infraestructura/despliegue.md`, accesible desde el
 [repositorio del servidor](https://github.com/thiagosalaberryj-bit/SERVER-AHRE).
 No usar la exportación local como si fuera un APK.
 
 Subir un backend, hacer commit/push, compilar un APK y publicar su descarga son
 acciones diferentes. La etapa 8 documenta el proceso; no ejecuta esas acciones.
+
+### APK 0.9.4 · Android 19
+
+Compilada localmente con `gradlew.bat :app:assembleRelease` y firmada con una
+clave propia de AHRE para la descarga web. La 0.9.3 pública tiene una firma
+distinta. Si está instalada, Android requiere una instalación limpia para
+pasar a 0.9.4. Al desinstalar se pierden los datos que solo están en el
+dispositivo. [Descargas Android](https://ahre-server.tailc5dfc5.ts.net/descargas/).
+
+El catálogo público ofrece cinco versiones y la 0.9.4 aparece primera. La
+descarga HTTPS completa coincidió con el SHA-256 del APK firmado.
+[APK 0.9.4](https://ahre-server.tailc5dfc5.ts.net/downloads/ahre-0.9.4.apk).
 
 ## Mantenimiento 0.9.1 · build 15
 

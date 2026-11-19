@@ -49,7 +49,8 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
   const deudas = deudasSociales.filter(deuda => {
     const persona = obtenerPersona(deuda.personaId);
     const coincideEstado = estado === 'todas' || (estado === 'invitaciones' ? !!deuda.invitacionOnline : estado === 'perdonadas' ? deuda.perdonadoNumero>0 : estado === 'saldadas' ? deuda.saldada&&!deuda.perdonadoNumero : !deuda.saldada&&deuda.tipo===estado);
-    return (origen==='todas'||(origen==='online'?!!deuda.acuerdoOnlineId:!deuda.acuerdoOnlineId))&&coincideEstado && normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona?.apodo || ''} ${deuda.descripcion} ${deuda.origen}`).includes(consulta);
+    const online=!!deuda.acuerdoOnlineId&&!(deuda.desvinculada&&deuda.saldada);
+    return (origen==='todas'||(origen==='online'?online:!online))&&coincideEstado && normalizarNombrePersona(`${nombreCompletoPersona(persona)} ${persona?.apodo || ''} ${deuda.descripcion} ${deuda.origen}`).includes(consulta);
   }).sort((a, b) => (b.ultimaActividad||b.fechaISO).localeCompare(a.ultimaActividad||a.fechaISO) || b.id.localeCompare(a.id));
   const grupos: {clave:string;deudas:import('../../social/types').DeudaVista[]}[] = [];
   deudas.forEach(deuda => {
@@ -70,7 +71,7 @@ export default function HistorialDeudas(propiedades: import('../../social/types'
           </View>
           <Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel="Registrar deuda" onPress={conRespuestaVisual(() => abrirRegistro('deuda'))} style={estilos.agregarDeuda}><Ionicons color={tema.botonPrincipalTexto} name="add" size={24} /></Pressable>
         </View>
-        <SelectorSegmentado tema={tema} opciones={[{id:'todas',nombre:'Todas'},{id:'locales',nombre:'Locales'},{id:'online',nombre:'Online'}]} valor={origen} alSeleccionar={valor=>{cambiarOrigen(valor);if(estado==='invitaciones')cambiarEstado('todas');}} etiqueta="Origen de deudas"/>
+        <SelectorSegmentado tema={tema} opciones={[{id:'todas',nombre:'Todas'},{id:'locales',nombre:'Personales'},{id:'online',nombre:'Online'}]} valor={origen} alSeleccionar={valor=>{cambiarOrigen(valor);if(estado==='invitaciones')cambiarEstado('todas');}} etiqueta="Origen de deudas"/>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.filaFiltros}>
           {[{id:'todas',nombre:'Todas'},...(origen==='online'?[{id:'invitaciones',nombre:'Invitaciones'}]:[]),{id:'saldadas',nombre:'Saldadas'},{id:'perdonadas',nombre:'Perdonadas'},{id:'me_deben',nombre:'Me deben'},{id:'debo',nombre:'Debo'}].map(opcion=><Pressable android_ripple={RETROALIMENTACION_PULSACION} key={opcion.id} accessibilityRole="radio" accessibilityLabel={opcion.nombre} accessibilityState={{checked:estado===opcion.id}} onPress={conRespuestaVisual(()=>cambiarEstado(opcion.id))} style={[estilosFiltros.filtro,estado===opcion.id&&estilosFiltros.filtroActivo]}><Text numberOfLines={1} style={[estilosFiltros.textoFiltro,estado===opcion.id&&estilosFiltros.textoActivo]}>{opcion.nombre}{opcion.id==='invitaciones'?' · '+deudasSociales.filter(d=>d.invitacionOnline).length:''}</Text></Pressable>)}
         </ScrollView>

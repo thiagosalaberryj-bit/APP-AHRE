@@ -21,7 +21,7 @@ export default function TarjetaDeuda({ tema, deuda, nombrePersona, alAbrir, solo
   const descripcion = deuda.id.startsWith('demo-social:') ? deuda.descripcion.replace(/^Invitación · /, '') : deuda.descripcion;
   const colorEstado = invitacion || deuda.perdonadoNumero>0 ? tema.textoSecundario : deuda.saldada || deuda.tipo !== 'debo' ? tema.exito : tema.error;
   const importe = deuda.perdonadoNumero>0?deuda.pendiente:deuda.saldada ? deuda.monto : deuda.pendiente;
-  const estado = invitacion?'Invitación':deuda.estadoOnline==='rechazada'?'Rechazada':deuda.perdonadoNumero>0?'Perdonada':deuda.saldada ? 'Saldada' : deuda.tipo === 'debo' ? 'Le debés' : 'Te debe';
+  const estado = invitacion?'Invitación':deuda.estadoOnline==='rechazada'?'Rechazada':deuda.perdonadoNumero>0?'Perdonada':deuda.saldada ? 'Saldada' : deuda.desvinculada ? 'Cuenta desvinculada' : deuda.tipo === 'debo' ? 'Le debés' : 'Te debe';
   const contenido = <>
     <View style={[estilos.icono, { backgroundColor: colorEstado + '18' }]}>
       <Ionicons color={colorEstado} name={invitacion ? 'mail-outline' : deuda.saldada ? 'checkmark-circle-outline' : 'swap-horizontal-outline'} size={18} />

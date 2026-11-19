@@ -615,7 +615,6 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   <View style={estilos.grupo}>
                     <Text style={estilos.tituloGrupo}>Ajustes avanzados</Text>
                     <View style={estilos.tarjetaOpciones}>
-                      <ReinicioDatosPerfil navegacion={navegacion} />
                       {OPCIONES_AVANZADAS_FUTURAS.map((opcion) => (
                         <View key={opcion.id}>
                           <View style={[estilos.filaOpcion, estilos.filaOpcionDeshabilitada]}>
@@ -645,7 +644,7 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                   </View>
 
                   <View style={estilos.grupo}>
-                    <Text style={estilos.tituloGrupo}>Sesión</Text>
+                    <Text style={estilos.tituloGrupo}>Zona de peligro</Text>
                     <View style={estilos.tarjetaOpciones}>
                       <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                         accessibilityRole="button"
@@ -657,6 +656,8 @@ export default function PantallaPerfil({ navigation: navegacion }: import('../na
                         </View>
                         <Text style={estilos.textoOpcionPeligro}>Cerrar sesión</Text>
                       </Pressable>
+                      <View style={estilos.separadorOpcion} />
+                      <ReinicioDatosPerfil navegacion={navegacion} />
                     </View>
                   </View>
                 </>

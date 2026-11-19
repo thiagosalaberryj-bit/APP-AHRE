@@ -169,7 +169,7 @@ for(const tema of ['claro','oscuro'] as const)test(`Invitaciones filtra propuest
   await vista.abrir(vista.rutas.PERSONAS_SOCIAL);await vista.pulsar('Origen de deudas: Online');await vista.pulsar('Invitaciones');
   assert.ok(vista.texto().includes('No hay invitaciones pendientes'));
   await vista.pulsar('Debo');assert.ok(vista.texto().includes('Le debés'));assert.ok(!vista.texto().includes('Invitación ·'));
-  await vista.pulsar('Origen de deudas: Locales');
+  await vista.pulsar('Origen de deudas: Personales');
   assert.ok(!vista.todos().some(n=>n.type==='Pressable'&&n.props.accessibilityLabel==='Invitaciones'));
   comprobarRed();
 });

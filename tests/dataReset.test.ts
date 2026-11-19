@@ -4,28 +4,37 @@ import {randomUUID} from 'node:crypto';
 import {preparar} from './helpers/localDatabase.ts';
 import type {VistaReinicio} from '../src/development/dataResetService.ts';
 
-const vista:VistaReinicio={huella:'vista',cantidades:{},cuentas:[],salasActualizadas:0};
+const crearVista=(usuario:{id:string;correo_electronico:string}):VistaReinicio=>({alcance:'cuenta_propia',huella:'vista',cantidades:{},cuentas:[{id:usuario.id,correo:usuario.correo_electronico}]});
 async function escenario(t:import('node:test').TestContext,perderRespuesta=false){
- let servidorBorrado=false,usuarioId='',fallar=false,consultasVista=0;
+ let servidorBorrado=false,usuarioId='',fallar=false,consultasVista=0,servidorAnterior=false;
+ let vista:VistaReinicio;
  const e=await preparar(t,true,{url:'https://ahre.test/api/v1',fetch:async(url,opciones)=>{
   if(fallar)throw new Error('sin conexión');
-  if(String(url).endsWith('/testing/reset/preview')){consultasVista++;return Response.json(vista);}
+  if(String(url).endsWith('/testing/reset/preview')){consultasVista++;return Response.json(servidorAnterior?{huella:vista.huella,cuentas:vista.cuentas}:vista);}
   if(String(url).endsWith('/testing/reset')){servidorBorrado=true;if(perderRespuesta)throw new Error('respuesta perdida');return Response.json({reiniciado:true,usuarioId});}
   if(String(url).includes('/testing/reset/receipt'))return Response.json({reiniciado:servidorBorrado,usuarioId});
   return new Response(null,{status:204});
  }});
- await e.prepararDatosPrueba();const {usuario}=await e.obtenerSesionActual();assert.ok(usuario);usuarioId=usuario.id;
+ await e.prepararDatosPrueba();const {usuario}=await e.obtenerSesionActual();assert.ok(usuario);usuarioId=usuario.id;vista=crearVista(usuario);
  // Simular autorización online de la cuenta sembrada; todos los datos son sintéticos.
  e.base.exec('DELETE FROM sync_outbox;DELETE FROM sync_batch_authorization');
  await e.guardarSesionRemota(usuario.id,{token:'a'.repeat(64),vence:Date.now()+86400000,usuario,dispositivoId:await e.obtenerInstalacion(),generacion:1,revision:0},true);
  const otra=await e.usuariosRepositorio.crear({id:randomUUID(),nombre:'Otra',correo_electronico:'otra@example.test',activo:1});
  const deposito=await e.depositosRepositorio.crear({usuario_id:otra.id,nombre:'Ajeno',tipo:'efectivo',saldo_inicial:500,icono:'cash-outline'});
- return {...e,usuario,otra,deposito,consultasVista:()=>consultasVista,desconectar:()=>{fallar=true;}};
+ return {...e,usuario,otra,deposito,vista,consultasVista:()=>consultasVista,desconectar:()=>{fallar=true;},usarServidorAnterior:()=>{servidorAnterior=true;}};
 }
+
+test('un servidor anterior no habilita un borrado que pueda afectar datos compartidos',async t=>{
+ const e=await escenario(t);
+ e.usarServidorAnterior();
+ await assert.rejects(e.consultarReinicio(),/solo tus datos/);
+ assert.ok(e.base.prepare('SELECT 1 FROM depositos WHERE usuario_id=?').get(e.usuario.id));
+ assert.equal(e.reinicioEnCurso(),false);
+});
 for(const perderRespuesta of [false,true])test('reinicio local limpia relaciones, colas y cachés y conserva cuentas y datos ajenos'+(perderRespuesta?' con respuesta perdida':''),async t=>{
  const e=await escenario(t,perderRespuesta);
  assert.ok(Number(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n)>0);
- await e.reiniciarDatos(vista,e.usuario.correo_electronico,'clave','BORRAR MIS DATOS');
+ await e.reiniciarDatos(e.vista,e.usuario.correo_electronico,'clave','BORRAR MIS DATOS');
  for(const tabla of ['depositos','movimientos','personas','salas','deudas','pagos_sociales','preferencias','sync_outbox','datos_sociales_online','salas_online_locales','sync_authorization']){
   const sql=tabla==='movimientos'?'SELECT COUNT(*) n FROM movimientos m JOIN depositos d ON d.id=m.deposito_id WHERE d.usuario_id=?':`SELECT COUNT(*) n FROM ${tabla} WHERE usuario_id=?`;
   assert.equal(Number(e.base.prepare(sql).get(e.usuario.id)!.n),0,tabla);
@@ -41,7 +50,7 @@ for(const perderRespuesta of [false,true])test('reinicio local limpia relaciones
 test('sin confirmación del servidor conserva SQLite y deja recuperación pendiente',async t=>{
  const e=await escenario(t);e.desconectar();
  const antes=e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n;
- await assert.rejects(e.reiniciarDatos(vista,e.usuario.correo_electronico,'clave','BORRAR MIS DATOS'),/confirmar el reinicio/);
+ await assert.rejects(e.reiniciarDatos(e.vista,e.usuario.correo_electronico,'clave','BORRAR MIS DATOS'),/confirmar el reinicio/);
  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n,antes);
  assert.equal(e.reinicioEnCurso(),true);
  assert.equal(e.almacenamiento.has('ahre.pruebas.reinicio'),true);
@@ -70,7 +79,7 @@ test('un rechazo explícito conserva datos y no deja una recuperación bloqueada
  e.base.exec('DELETE FROM sync_outbox;DELETE FROM sync_batch_authorization');
  await e.guardarSesionRemota(usuarioId,{token:'a'.repeat(64),vence:Date.now()+86400000,usuario,dispositivoId:await e.obtenerInstalacion(),generacion:1,revision:0},true);
  const antes=e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n;
- await assert.rejects(e.reiniciarDatos(vista,usuario.correo_electronico,'clave','BORRAR MIS DATOS'),/alcance cambió/);
+ await assert.rejects(e.reiniciarDatos(crearVista(usuario),usuario.correo_electronico,'clave','BORRAR MIS DATOS'),/alcance cambió/);
  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM movimientos').get()!.n,antes);
  assert.equal(e.reinicioEnCurso(),false);assert.equal(e.almacenamiento.has('ahre.pruebas.reinicio'),false);
 });

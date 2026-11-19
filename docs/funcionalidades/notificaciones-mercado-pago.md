@@ -164,7 +164,7 @@ salir de la pantalla o pasar a segundo plano.
 
 ### Probar desde el inicio
 
-Con una cuenta de pruebas, [Reiniciar mis datos](../configuracion/reinicio-datos-pruebas.md)
+Con una cuenta de pruebas, [Eliminar mis datos](../configuracion/reinicio-datos-pruebas.md)
 borra de AHRE los depósitos, la vinculación, las consultas y las decisiones
 asociadas. Se conservan el acceso a la cuenta y el dinero de Mercado Pago.
 Después del reinicio, iniciá sesión, creá un depósito y elegí el período de

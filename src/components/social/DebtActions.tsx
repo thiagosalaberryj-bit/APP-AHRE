@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import crearEstilosPropios from '../../styles/social/DebtCardStyles';
 
 export default function AccionesDeuda({ deuda, abrirRegistro, tema, estilosGlobales }: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & ({deuda:import('../../social/types').DeudaVista} & Pick<import('../../social/types').AccionesSociales,'abrirRegistro'>)) {
-  if (deuda.invitacionOnline) return null;
+  if (deuda.invitacionOnline || deuda.desvinculada) return null;
   const estilos = crearEstilosPropios();
   return <View style={estilos.grupoAccionesDeuda}><View style={estilos.accionesDeuda}>
     {!deuda.saldada?<Pressable android_ripple={RETROALIMENTACION_PULSACION} accessibilityRole="button" accessibilityLabel={deuda.tipo === 'debo' ? 'Registrar mi pago' : 'Registrar pago recibido'}

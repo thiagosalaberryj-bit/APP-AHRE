@@ -37,7 +37,7 @@ export default function FormularioRegistrarPago({parametros,...aspecto}:import('
   useEffect(()=>{let activo=true;cambiarMovimiento('');cambiarCompatibles([]);if(online&&enlace==='existente'&&Number.isFinite(importe)&&importe>0){void consultarMovimientosOnline({clave:'seleccion',tipo,monto:importe,categoria:tipo==='ingreso'?'devoluciones':'deudas',descripcion:'Pago',fecha:new Date().toISOString(),salaId:null}).then(m=>{if(activo)cambiarCompatibles(m);}).catch(()=>{if(activo)cambiarError('No se pudieron consultar los movimientos.');});}return()=>{activo=false;};},[online,enlace,importe,tipo]);
   if(!deuda)return <RegistroNoDisponible {...aspecto}/>;
 
-  if(online&&deuda.estadoOnline!=='aceptada')return <RegistroNoDisponible {...aspecto}/>;
+  if(deuda.desvinculada||online&&deuda.estadoOnline!=='aceptada')return <RegistroNoDisponible {...aspecto}/>;
   const sinConexion=online&&!deuda.id.startsWith('demo-social:')&&['offline','sesion','revocado','local'].includes(obtenerVistaSincronizacion().estado);
   const confirmando=online&&!esPago&&!!pago&&!operacion;
   const nombre=nombreCompletoPersona(social.obtenerPersona(deuda.personaId));
