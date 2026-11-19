@@ -5,25 +5,35 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+## [v0.9.4] - 2026-11-19 - no estable
+
 ### Añadido
 
-- Recuperación de contraseña desde Login con un código de seis dígitos por
-  correo y actualización del acceso local al iniciar sesión con conexión.
-- Categoría **Rendimientos** para créditos exclusivos de Settlement. Su
-  descripción y categoría se pueden editar después de conciliar.
+- Recuperación de contraseña por correo con un código de seis dígitos. La app verifica el código antes de mostrar el formulario de contraseña nueva.
+- **Perfil → Zona de peligro** agrupa Cerrar sesión y Eliminar mis datos. El borrado conserva la cuenta, el correo y la contraseña.
 
 ### Cambiado
 
-- Al crear un depósito se abre su detalle. El botón estándar **Conectar
-  Mercado Pago** aparece en todos los depósitos hasta que se vincula uno.
-  La revisión queda en el menú de tres puntos con su contador de pendientes.
-- Las cuentas habilitadas eligen de uno a tres meses anteriores a la creación
-  del depósito. Search muestra los pagos en vivo y en solo lectura mientras
-  se concilian con Settlement. La pantalla muestra el período y el avance.
-- La consulta diaria se programa al mediodía de Argentina para el día anterior.
-  Si falla, el botón **Retomar consulta** continúa desde la etapa guardada.
-- Las referencias al servidor apuntan al nuevo índice y a la documentación
-  específica de recuperación, publicaciones e integraciones.
+- El detalle de depósito muestra la conexión con Mercado Pago hasta vincular un depósito. La vista se actualiza al volver de autorizar.
+- Una sola lista muestra primero la búsqueda rápida. El avance continúa durante la conciliación con Settlement y Liquidaciones. Las transferencias y los rendimientos se identifican con los datos del proveedor, y se ocultan ceros y posibles duplicados.
+- Los movimientos conciliados admiten edición de categoría y descripción. Cuando falta el sentido del movimiento, se puede indicar ingreso o egreso.
+- La eliminación de datos propios corta los vínculos online. Las otras personas conservan sus fichas, pagos y saldos. Las deudas saldadas quedan en el historial personal y las pendientes siguen visibles en solo lectura.
+
+### Entrega
+
+- Versión no estable para evaluación. App 0.9.4 / Android versionCode 19.
+- APK compilada y firmada localmente con una clave propia de AHRE. Las APK previas con otra firma requieren instalación limpia.
+- Tamaño de 173.443.655 bytes y SHA-256 `8d2f60f60429eb449f3767d02871a44b107b5ca71157f031440c8c17bf4b707c`.
+- [Guía y descarga de APK](https://ahre-server.tailc5dfc5.ts.net/descargas/) · [APK 0.9.4](https://ahre-server.tailc5dfc5.ts.net/downloads/ahre-0.9.4.apk).
+
+### Verificación y entrega
+
+- TypeScript correcto. 636 casos en la suite de app, 587 aprobados, 49 integraciones MySQL omitidas y cero fallos. Se ejecutaron aparte los escenarios de eliminación de datos con cuentas ficticias en MySQL aislado.
+- Descarga completa verificada por HTTPS y SHA-256. La instalación en el dispositivo queda pendiente de comprobación.
+
+### Integración y revisión
+
+- Integración mediante PR #75. Release de código coordinada con SERVER-AHRE 0.3.5.
 
 ## [v0.9.3] - 2026-11-18 - no estable
 
