@@ -1,7 +1,7 @@
 import test, { type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { preparar } from './helpers/localDatabase.ts';
-import type { OperacionMp } from '../src/mercadoPago/types.ts';
+import type { EstadoMp, OperacionMp } from '../src/mercadoPago/types.ts';
 import { ajustesPredeterminados } from '../src/notifications/types.ts';
 
 async function escenario(t: TestContext) {
@@ -9,12 +9,32 @@ async function escenario(t: TestContext) {
   const { usuario } = await e.obtenerSesionActual(); assert.ok(usuario);
   const deposito = e.base.prepare('SELECT * FROM depositos WHERE usuario_id=? ORDER BY id LIMIT 1').get(usuario.id)!;
   const pago: OperacionMp = { id: 'pago-1', monto: 123.45, moneda: 'ARS', descripcion: 'Compra MP', fecha: new Date().toISOString(), actualizado: new Date().toISOString(), estado: 'approved', tipo: 'egreso', categoria: 'transferencias', contraparte: null, registrable: true, version: 'version-1', decision: 'pendiente', movimientoId: null, revisionPendiente: false, huella: 'hash-1' };
-  const guardar = async (operaciones = [pago]) => e.ejecutarTransaccion(async c => {
-    await e.guardarDato(c, usuario.id, 'mp:estado', { configurada: true, manualesRestantes: 2, trabajo: null, vinculacion: { deposito_id: deposito.id, cuenta_id: 'cuenta-mp', version: 'version-1', activa: 1, meses: 1, desde: null, hasta: null, error: null } });
+  const guardar = async (operaciones = [pago], trabajo: EstadoMp['trabajo'] = null, sentidoManual = false) => e.ejecutarTransaccion(async c => {
+    await e.guardarDato(c, usuario.id, 'mp:estado', { configurada: true, manualesRestantes: 2, trabajo, sentidoManual, vinculacion: { deposito_id: deposito.id, cuenta_id: 'cuenta-mp', version: 'version-1', activa: 1, meses: 1, desde: null, hasta: null, error: null } });
     await e.guardarDato(c, usuario.id, 'mp:operaciones', operaciones);
   }); await guardar();
   return { e, usuario, deposito, pago, guardar, saldo: () => Number(e.base.prepare('SELECT saldo_actual FROM depositos WHERE id=?').get(deposito.id!)!.saldo_actual) };
 }
+test('la vista previa de Search se puede leer pero no altera movimientos ni saldos durante la consulta', async t => {
+  const {e, pago, guardar, saldo} = await escenario(t), antes = saldo();
+  await guardar([pago], {id: 'consulta', estado: 'pendiente', inicial: 1, desde: pago.fecha,
+    hasta: pago.fecha, total: 1, truncado: 0, primera_fecha: pago.fecha, error: null});
+  assert.equal((await e.cargarMercadoPago()).operaciones[0].id, pago.id);
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'registrado'), /termine la consulta/);
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'ignorado'), /termine la consulta/);
+  await assert.rejects(e.guardarBorradorMp(pago.id, {tipo: pago.tipo, categoria: pago.categoria}), /termine la consulta/);
+  assert.equal(saldo(), antes);
+  assert.equal(e.base.prepare('SELECT COUNT(*) n FROM integraciones_outbox').get()!.n, 0);
+  await guardar([{...pago, provisional: true}], {id: 'consulta', estado: 'fallido', inicial: 1,
+    desde: pago.fecha, hasta: pago.fecha, total: 1, truncado: 0, primera_fecha: pago.fecha,
+    error: 'Reporte demorado', settlement: {etapa: 'reporte', conciliados: 0, tramos: 1}});
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'registrado'), /termine la consulta/);
+  await guardar([{...pago, pendienteConfirmacion: true}]);
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'ignorado'), /pendiente de confirmar/);
+  await guardar();
+  await e.decidirMovimientosMp([pago.id], 'registrado');
+  assert.equal(Math.round(saldo() * 100), Math.round(antes * 100) - 12345);
+});
 test('Mercado Pago offline registra una sola vez, actualiza saldo y conserva la decisión para sincronizar', async t => {
   const { e, saldo } = await escenario(t), antes = saldo();
   await e.decidirMovimientosMp(['pago-1'], 'registrado');
@@ -38,6 +58,24 @@ test('la descripción editada persiste offline y se registra sin alterar el dato
   assert.equal((await e.cargarMercadoPago()).operaciones[0].descripcion, pago.descripcion);
 });
 
+test('elegir el sentido manual de un pago aprobado no afecta el saldo hasta registrarlo', async t => {
+  const {e, pago, guardar, saldo} = await escenario(t), saldoOriginal = saldo();
+  const pendiente = {...pago, tipo: null, categoria: '', pendienteConfirmacion: true};
+  const borrador = {tipo: 'ingreso' as const, sentidoManual: 'ingreso' as const, categoria: 'otros_ingresos', descripcion: 'Ingreso identificado'};
+  await guardar([pendiente]);
+  await assert.rejects(e.guardarBorradorMp(pago.id, borrador), /pendiente de confirmar/);
+  await guardar([pendiente], null, true);
+  await assert.rejects(e.decidirMovimientosMp([pago.id], 'registrado'), /pendiente de confirmar/);
+  await e.guardarBorradorMp(pago.id, borrador);
+  assert.equal(saldo(), saldoOriginal);
+  await e.decidirMovimientosMp([pago.id], 'registrado');
+  await e.decidirMovimientosMp([pago.id], 'registrado');
+  assert.equal(Math.round(saldo() * 100), Math.round(saldoOriginal * 100) + 12345);
+  assert.equal((await e.cargarMercadoPago()).operaciones[0].tipo, 'ingreso');
+  const fila = e.base.prepare("SELECT datos FROM integraciones_outbox WHERE ruta='/mercado-pago/decisiones'").get()!;
+  assert.equal(JSON.parse(String(fila.datos)).sentidoManual, 'ingreso');
+});
+
 test('una descripción vacía impide registrar el lote completo y no modifica el saldo', async t => {
   const { e, pago, guardar, saldo } = await escenario(t), antes = saldo();
   await guardar([pago, { ...pago, id: 'pago-2' }]);
@@ -58,8 +96,8 @@ test('los indicadores cuentan pendientes y revisiones, se actualizan al decidir 
   ]);
   const resumen = await e.consultarResumenMp();
   assert.equal(resumen?.depositoId, deposito.id);
-  assert.equal(resumen?.obtenidos, 5);
-  assert.equal(resumen?.pendientes, 3);
+  assert.equal(resumen?.obtenidos, 4);
+  assert.equal(resumen?.pendientes, 2);
   await e.decidirMovimientosMp([pago.id, 'cero'], 'ignorado');
   assert.equal((await e.consultarResumenMp())?.pendientes, 1);
   await e.decidirMovimientosMp(['actualizado'], 'revisado');
@@ -141,6 +179,50 @@ test('historial espera la respuesta remota, la conserva y recupera la copia cuan
   offline = true;
   const guardadas = await e.consultarHistorialMp(); assert.equal(guardadas.length, 1); assert.equal(guardadas[0].id, consulta.id);
   assert.equal(solicitudes, 2);
+});
+test('la vuelta de OAuth confirma el vínculo y publica el avance antes de recibir la lista', async t => {
+  let liberarOperaciones!: () => void;
+  const operaciones = new Promise<void>(resolver => { liberarOperaciones = resolver; });
+  let recibidaOperacion!: () => void;
+  const llegoOperacion = new Promise<void>(resolver => { recibidaOperacion = resolver; });
+  const fecha = '2026-11-19T10:00:00.000Z';
+  const estado: EstadoMp = {
+    configurada: true, settlement: true, manualesRestantes: 0,
+    vinculacion: {deposito_id: 'deposito', cuenta_id: 'cuenta', version: 'nueva', activa: 1, meses: 1, desde: fecha, hasta: fecha, error: null},
+    trabajo: {id: 'inicial', estado: 'procesando', desde: fecha, hasta: fecha, inicial: 1, total: 0, truncado: 0, primera_fecha: null, error: null,
+      settlement: {etapa: 'search', conciliados: 0, tramos: 1}},
+  };
+  const e = await preparar(t, true, {url: 'http://example.test/api/v1', fetch: async entrada => {
+    const ruta = new URL(String(entrada)).pathname;
+    if (ruta.endsWith('/mercado-pago')) return Response.json(estado);
+    if (ruta.endsWith('/mercado-pago/operaciones')) {
+      recibidaOperacion();
+      await operaciones;
+      return Response.json({operaciones: [], siguiente: null});
+    }
+    if (ruta.endsWith('/mercado-pago/vista-previa')) return Response.json({operaciones: [], siguiente: null});
+    if (ruta.endsWith('/notificaciones')) return Response.json({avisos: [], siguiente: null});
+    if (ruta.endsWith('/notificaciones/preferencias')) return Response.json(ajustesPredeterminados());
+    throw Error('Ruta inesperada: ' + ruta);
+  }});
+  await e.prepararDatosPrueba();
+  const {usuario} = await e.obtenerSesionActual();
+  assert.ok(usuario);
+  e.base.exec('DELETE FROM sync_outbox');
+  await e.guardarSesionRemota(usuario.id, {token: 'ab'.repeat(32), vence: Date.now() + 3600000, usuario, dispositivoId: await e.obtenerInstalacion(), generacion: 1, revision: 0}, false);
+  const cancelaciones = e.sincronizarIntegraciones(true);
+  const actualizacion = e.sincronizarIntegraciones(false, false);
+  assert.notEqual(actualizacion, cancelaciones);
+  await cancelaciones;
+  try {
+    await llegoOperacion;
+    const datos = await e.cargarMercadoPago();
+    assert.equal(datos.estado.vinculacion?.version, 'nueva');
+    assert.equal(datos.estado.trabajo?.settlement?.etapa, 'search');
+  } finally {
+    liberarOperaciones();
+    await actualizacion;
+  }
 });
 test('el sentido obtenido del proveedor reemplaza borradores antiguos sin permitir inventar uno',async t=>{
   const {e,pago}=await escenario(t);

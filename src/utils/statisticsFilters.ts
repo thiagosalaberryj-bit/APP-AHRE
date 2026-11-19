@@ -11,7 +11,7 @@ export const PREAJUSTES_CATEGORIAS = Object.freeze({
   ],
   ingreso: [
     { id: 'actividad', nombre: 'Trabajo y ventas', categorias: ['sueldo', 'trabajo_independiente', 'ventas'] },
-    { id: 'finanzas', nombre: 'Finanzas', categorias: ['inversiones', 'prestamos_recibidos', 'transferencias_recibidas'] },
+    { id: 'finanzas', nombre: 'Finanzas', categorias: ['inversiones', 'rendimientos', 'prestamos_recibidos', 'transferencias_recibidas'] },
     { id: 'ayudas', nombre: 'Ayudas y reintegros', categorias: ['becas_ayudas', 'regalos', 'devoluciones'] },
   ],
 });

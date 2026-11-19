@@ -95,8 +95,8 @@ al reiniciar la aplicación.
 
 ## Confirmación de cierre de sesión
 
-La fila `Cerrar sesión` aparece al final de la pantalla, separada de las
-configuraciones, con icono centrado sobre un rojo atenuado. Abre un modal con
+La fila `Cerrar sesión` aparece al final de la pantalla, en `Zona de peligro`,
+con un icono centrado sobre un rojo atenuado. Abre un modal con
 el encabezado común (icono, título y descripción a la izquierda), una `X` para
 cerrarlo y la acción `Cerrar sesión` en rojo. Confirmar elimina la sesión
 local y reemplaza la pila por Login, sin borrar datos financieros ni
@@ -117,10 +117,15 @@ Grupo `Ajustes avanzados` con los apartados `Cuenta fantasma`, `Seguridad` y
 `Registro` desactivados con la etiqueta `Próximamente`, y `Acerca de AHRE`,
 que abre un modal estático con el encabezado común, una descripción de las
 funciones de AHRE, la versión de `Constants.expoConfig.version` (actualmente `0.6.0`) alineada a la derecha y una `X` para
-cerrar. Incluye temporalmente `Reiniciar mis datos` para cuentas de pruebas,
-también en APK interna: conserva la cuenta, elimina datos locales/remotos y
-retira acuerdos sociales relacionados en ambos lados. Disponible para cualquier
-cuenta con backend actualizado; requiere contraseña y confirmación. Ver [alcance, configuración y retirada](../configuracion/reinicio-datos-pruebas.md).
+cerrar.
+
+## Zona de peligro
+
+`Cerrar sesión` y `Eliminar mis datos` comparten esta sección.
+`Eliminar mis datos` abre un modal con el correo de la cuenta y el resumen de
+datos privados que se eliminarán. Pide la contraseña y la frase de confirmación.
+Al sincronizar, los demás participantes conservan sus fichas y deudas. Ver
+[alcance y recuperación](../configuracion/reinicio-datos-pruebas.md).
 
 ## Estados visuales
 

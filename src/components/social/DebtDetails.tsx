@@ -38,14 +38,14 @@ export default function DetalleDeuda({ deudaId, abrirPersona, abrirSala, abrirRe
       </Pressable>
       <View style={estilos.grupoCampo}>
         <Text numberOfLines={1} ellipsizeMode="tail" style={estilos.descripcion}>{deuda.descripcion}</Text>
-        <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.etiqueta, { color }]}>{deuda.invitacionOnline?'Invitación pendiente':deuda.estadoOnline==='rechazada'?'Propuesta rechazada':deuda.saldada ? deuda.estado : deuda.estado.startsWith('Pago parcial') ? 'Pago parcial' : 'Pendiente'}</Text>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={[estilosGlobales.etiqueta, { color }]}>{deuda.invitacionOnline?'Invitación pendiente':deuda.estadoOnline==='rechazada'?'Propuesta rechazada':deuda.saldada || deuda.desvinculada ? deuda.estado : deuda.estado.startsWith('Pago parcial') ? 'Pago parcial' : 'Pendiente'}</Text>
       </View>
       <View style={estilos.filaImportes}>
         <ImporteDeuda etiqueta="Original" valor={deuda.monto} icono="receipt-outline" color={tema.foco} {...aspecto}/>
         <ImporteDeuda etiqueta={esPago?'Le debés':'Te debe'} valor={deuda.pendiente} icono={esPago?'arrow-down-outline':'arrow-up-outline'} color={color} {...aspecto}/>
         <ImporteDeuda etiqueta={esPago?'Pagaste':'Recibiste'} valor={pagado} icono="checkmark-outline" color={tema.exito} {...aspecto}/>
       </View>
-      <View style={estilos.metadatos}><Text style={estilos.detalle}>{deuda.fecha.split('-').reverse().join('/')}</Text><Text style={estilos.detalle}>{deuda.acuerdoOnlineId?'Vinculada online':deuda.salaId?'De sala':'Deuda personal'}</Text></View>
+      <View style={estilos.metadatos}><Text style={estilos.detalle}>{deuda.fecha.split('-').reverse().join('/')}</Text><Text style={estilos.detalle}>{deuda.desvinculada?(deuda.saldada?'Deuda personal':'Cuenta desvinculada'):deuda.acuerdoOnlineId?'Vinculada online':deuda.salaId?'De sala':'Deuda personal'}</Text></View>
       {deuda.origen!=='Deuda personal'?<Text style={estilos.detalle}>{deuda.origen}</Text>:null}
       {deuda.perdonadoNumero>0?<Text style={estilos.detalle}>Perdonado sin pago · {formatearMontoSocial(deuda.perdonadoNumero)}</Text>:null}
       <AccionesDeuda deuda={deuda} abrirRegistro={abrirRegistro} {...aspecto} />

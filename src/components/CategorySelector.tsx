@@ -4,7 +4,7 @@ import { crearEstilosEgreso } from '../styles/expenseStyles';
 import type { Tema } from '../styles/colors';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BORDES } from '../styles/globalStyles';
 
 import { obtenerColorIconoCategoria, obtenerColorCategoria, ordenarCategoriasPorColor } from '../styles/categoryColors';
@@ -50,10 +50,14 @@ export default function SelectorCategoria({
   modalAbierto,
   alCerrarModal,
   contenidoAntesDeCategorias,
+  tituloModal = 'Todas las categorías',
 }: import('../types/ui').SelectorCategoriaProps) {
   const [modalLocal, establecerModalLocal] = useState(false);
   const modalVisible = modalAbierto ?? modalLocal;
   const establecerModalVisible = (valor: boolean) => { establecerModalLocal(valor); if (!valor) alCerrarModal?.(); };
+  const FondoModal = contenidoAntesDeCategorias ? View : Pressable;
+  const TarjetaModal = contenidoAntesDeCategorias ? View : Pressable;
+  const cerrarModal = conRespuestaVisual(() => establecerModalVisible(false));
   const bordeCampo = {
     borderColor: estilosMovimiento.filaDescripcion?.borderColor ?? tema.borde,
     borderWidth: estilosMovimiento.filaDescripcion?.borderWidth ?? BORDES.anchos.fino,
@@ -185,14 +189,14 @@ export default function SelectorCategoria({
         transparent
         visible={modalVisible}
       >
-        <Pressable android_ripple={RETROALIMENTACION_PULSACION}
-          accessibilityLabel="Cerrar selector de categorías"
-          onPress={conRespuestaVisual(() => establecerModalVisible(false))}
-          style={estilosMovimiento.fondoSuperpuesto}
-        >
-          <Pressable android_ripple={RETROALIMENTACION_PULSACION} onPress={conRespuestaVisual(() => {})} style={estilosMovimiento.tarjetaSuperpuesta}>
+        <FondoModal style={estilosMovimiento.fondoSuperpuesto}
+          {...(!contenidoAntesDeCategorias ? {android_ripple: RETROALIMENTACION_PULSACION, accessibilityLabel: 'Cerrar selector de categorías', onPress: cerrarModal} : {})}>
+          {contenidoAntesDeCategorias ? <Pressable style={StyleSheet.absoluteFill} accessibilityRole="button"
+            accessibilityLabel="Cerrar editor" onPress={cerrarModal} /> : null}
+          <TarjetaModal style={estilosMovimiento.tarjetaSuperpuesta}
+            {...(!contenidoAntesDeCategorias ? {android_ripple: RETROALIMENTACION_PULSACION, onPress: conRespuestaVisual(() => {})} : {})}>
             <View style={estilosMovimiento.encabezadoModal}>
-              <Text style={estilosMovimiento.tituloModal}>Todas las categorías</Text>
+              <Text style={estilosMovimiento.tituloModal}>{tituloModal}</Text>
               <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                 accessibilityLabel="Cerrar"
                 accessibilityRole="button"
@@ -205,6 +209,7 @@ export default function SelectorCategoria({
             </View>
             <ScrollView
               contentContainerStyle={estilosMovimiento.listaOpcionesCategoria}
+              keyboardShouldPersistTaps={contenidoAntesDeCategorias ? 'handled' : undefined}
               showsVerticalScrollIndicator={false}
               style={estilosMovimiento.scrollCategorias}
             >
@@ -239,8 +244,8 @@ export default function SelectorCategoria({
                 );
               })}
             </ScrollView>
-          </Pressable>
-        </Pressable>
+          </TarjetaModal>
+        </FondoModal>
       </Modal>
       )}
     </View>

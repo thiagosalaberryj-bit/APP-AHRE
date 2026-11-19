@@ -5,7 +5,7 @@ import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
 import { URL } from 'node:url';
 import { compilarFuente } from './helpers/typescript.ts';
 import { agruparMovimientosMp, alternarSeleccionMp } from '../src/mercadoPago/mercadoPagoPresentation.ts';
-import type { OperacionMp } from '../src/mercadoPago/types.ts';
+import { resultadoPendienteMp, resultadoVisibleMp, type OperacionMp } from '../src/mercadoPago/types.ts';
 
 const pago = (id: string, fecha: string, revisionPendiente = false) => ({ id, fecha, revisionPendiente }) as OperacionMp;
 test('Mercado Pago agrupa por día y ordena por fecha y hora antes de aplicar el límite', () => {
@@ -22,6 +22,15 @@ test('el mismo control selecciona y deselecciona el filtro, excluye revisiones y
   assert.equal(alternarSeleccionMp(Array.from({ length: 700 }, (_, i) => pago(String(i), '')), []).length, 500);
 });
 
+test('los resultados ocultan los no registrables y conservan las filas ya registradas', () => {
+  const base = {...pago('pago', ''), registrable: true, decision: 'pendiente' as const};
+  assert.equal(resultadoPendienteMp(base), true);
+  assert.equal(resultadoVisibleMp({...base, registrable: false}), false);
+  assert.equal(resultadoVisibleMp({...base, posibleDuplicadoDe: 'otro'}), false);
+  assert.equal(resultadoPendienteMp({...base, posibleDuplicadoDe: 'otro'}), false);
+  assert.equal(resultadoVisibleMp({...base, decision: 'registrado', registrable: false}), true);
+  assert.equal(resultadoPendienteMp({...base, decision: 'registrado', registrable: false, revisionPendiente: true}), true);
+});
 class SocketPrueba {
   onopen: (() => void) | null = null;
   onmessage: ((evento: { data: string }) => void) | null = null;
@@ -53,15 +62,15 @@ async function escenarioSocket() {
 }
 test('el WebSocket filtra eventos ajenos y cierra conexión y temporizadores al completar la búsqueda', async () => {
   const e = await escenarioSocket(); let llamadas = 0;
-  e.seguirConsultaMp('trabajo', 'v1', async () => { llamadas++; return false; }, () => {}, e.dependencias);
+  e.seguirConsultaMp('trabajo', 'v1', async () => { llamadas++; return llamadas === 1; }, () => {}, e.dependencias);
   await vaciar(); const socket = e.sockets[0]; socket.onopen?.();
   assert.equal(e.protocolos[0].join('|'), 'ahre.social.v1|ticket.temporal');
   socket.recibir({ tipo: 'mercado_pago', canal: 'mp:ajeno', trabajoId: 'trabajo', version: 'v1' });
   socket.recibir({ tipo: 'mercado_pago', canal: 'mp:propio', trabajoId: 'otro', version: 'v1' });
   socket.recibir({ tipo: 'mercado_pago', canal: 'mp:propio', trabajoId: 'trabajo', version: 'anterior' });
-  await vaciar(); assert.equal(llamadas, 0);
+  await vaciar(); assert.equal(llamadas, 1);
   socket.recibir({ tipo: 'mercado_pago', canal: 'mp:propio', trabajoId: 'trabajo', version: 'v1' });
-  await vaciar(); assert.equal(llamadas, 1); assert.equal(socket.cerrado, true); assert.equal(e.tiempos.size, 0); assert.equal(e.intervalos.size, 0);
+  await vaciar(); assert.equal(llamadas, 2); assert.equal(socket.cerrado, true); assert.equal(e.tiempos.size, 0); assert.equal(e.intervalos.size, 0);
 });
 test('salir o pasar a segundo plano cancela reconexiones y no abre un socket después de obtener un ticket tardío', async () => {
   const e = await escenarioSocket(); let entregar!: (valor: { url: string; ticket: string; canal: string }) => void;

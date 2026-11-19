@@ -599,7 +599,7 @@ for(const tema of ['claro','oscuro'] as const)test(`el perfil solicita un víncu
     cancelarVinculoOnline:async id=>{assert.equal(id,'vinculo-prueba');cache('cancelado');},
   },tema);
   await vista.abrir(vista.rutas.PERSONA_SOCIAL,{personaId:persona.id});
-  assert.ok(vista.texto().includes('Sin cuenta vinculada'));
+  assert.ok(vista.texto().includes('Sin vincular'));
   assert.ok(!vista.texto().includes('Vincular cuenta'));
   await vista.pulsar('Opciones de persona');await vista.pulsar('Vincular cuenta');await vista.llenar('Correo de la cuenta a vincular','sofi@example.test');
   await vista.pulsar('Enviar solicitud de vínculo');
@@ -608,7 +608,7 @@ for(const tema of ['claro','oscuro'] as const)test(`el perfil solicita un víncu
   await vista.pulsar('Opciones de persona');await vista.pulsar('Gestionar vínculo');
   assert.ok(vista.texto().includes('Espera su aceptación'));
   assert.ok(!vista.texto().includes('Cuenta vinculada:'));
-  await vista.pulsar('Cancelar solicitud de vínculo');assert.ok(vista.texto().includes('Sin cuenta vinculada'));
+  await vista.pulsar('Cancelar solicitud de vínculo');assert.ok(vista.texto().includes('Sin vincular'));
   cache('confirmado');await vista.asentar();
   assert.ok(vista.texto().includes('Cuenta vinculada'));
   assert.ok(!vista.todos().some(n=>n.type==='TextInput'&&n.props.accessibilityLabel==='Correo de la cuenta a vincular'));

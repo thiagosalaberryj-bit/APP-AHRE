@@ -9,11 +9,11 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.9.3-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.9.4-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
-[Documentación](docs/README.md) · [Pruebas](docs/configuracion/entorno.md#pruebas) · [Servidor](https://github.com/thiagosalaberryj-bit/SERVER-AHRE)
+[Documentación](docs/README.md) · [Descargas Android](https://ahre-server.tailc5dfc5.ts.net/descargas/) · [Pruebas](docs/configuracion/entorno.md#pruebas) · [Servidor](https://github.com/thiagosalaberryj-bit/SERVER-AHRE)
 
 </div>
 
@@ -27,9 +27,9 @@ Finanzas personales, gastos compartidos y comprobantes en una app Android con da
 | Social | Agenda privada, salas locales/online, invitados web, acuerdos y pagos con movimientos propios. |
 | Recurrencias | Programaciones locales con aceptación manual desde depósitos; no modifican el saldo hasta confirmar. |
 | Notificaciones | Historial, preferencias y recordatorios locales; push Android requiere configurar FCM y generar APK. |
-| Mercado Pago | Vinculación y revisión offline de pagos disponibles mediante Search, con consultas gestionadas por SERVER-AHRE y n8n. |
+| Mercado Pago | Vinculación desde el depósito, búsqueda rápida y conciliación con Settlement y Liquidaciones. Consulta diaria a las 12:00 de Argentina. |
 | Comprobantes | OCR local con ML Kit y revisión antes de guardar; requiere APK Android. |
-| Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado y preferencias. |
+| Cuenta | Registro e ingreso inicial con servidor, acceso offline autorizado, recuperación por correo y eliminación de datos privados con acceso conservado. |
 | Sincronización | Lotes ordenados, reintentos sin duplicados y corrección guiada de correo rechazado. |
 
 SQLite guarda primero cada operación. Al reconectar, la app envía los pendientes
@@ -58,29 +58,14 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
-Preparación actual: **app 0.9.3 / Android 18**, coordinada con servidor 0.3.4.
-Los manifiestos y el changelog están preparados; no se generó ni publicó una
-APK 0.9.3. Los envíos anteriores de 0.9.2 son antecedentes.
-
-Revisión del 17/11/2026: ayudas de formularios con icono de información,
-confirmación OCR organizada y recorridos de Social con continuidad de modales.
-Incluye recordatorios del administrador para cuentas con gastos sin enlazar;
-el servidor recalcula los destinatarios y la demo solo simula el resultado.
-
-Tipos correctos; 572 pruebas aprobadas y 49 integraciones MySQL omitidas.
-Se verificó el bundle Android en Metro. El usuario confirmó los recorridos de
-Social y el recordatorio; las ayudas nuevas requieren revisión visual. La
-incidencia SQLite al preparar datos de prueba está registrada para diagnóstico.
-Ver [estado y validación](docs/estado-y-validacion.md).
-
-La preparación de APK interna anterior
-mantenía la versión 0.9.2 y usa Android versionCode 17. El envío a EAS, la
-compilación terminada y la prueba en teléfono se registran por separado en
-[Estado y validación](docs/estado-y-validacion.md) y
-[Publicación](docs/configuracion/publicacion.md). Falta comprobar visualmente
-esta APK en el teléfono. La APK 0.9.2 / Android 16 validada anteriormente es un
-antecedente; no contiene automáticamente estas correcciones. Esa preparación anterior estaba coordinada con el backend 0.3.3.
-La entrega actual prepara 0.9.3 junto al backend 0.3.4; el despliegue es manual.
+Entrega de código coordinada **app 0.9.4 / Android 19** y **servidor 0.3.5**.
+La APK se compiló localmente con el SDK de Android. En
+**Perfil → Zona de peligro** podés [eliminar tus datos](docs/configuracion/reinicio-datos-pruebas.md)
+y volver a entrar con el mismo correo y contraseña.
+La [guía de Mercado Pago](docs/funcionalidades/notificaciones-mercado-pago.md#mercado-pago)
+describe la vinculación, el progreso y la consulta diaria. La
+[recuperación de contraseña](docs/funcionalidades/autenticacion-local.md)
+explica la verificación por correo.
 
 ```powershell
 npm run typecheck
@@ -105,8 +90,8 @@ Los resultados actuales y los resultados históricos se distinguen en
 La sincronización privada funciona con la app activa; Social compartido utiliza
 HTTP, eventos persistentes y WebSocket, con acceso web limitado a invitados.
 Expo Go permite probar la interfaz y las demos, pero no WorkManager ni OCR nativo.
-Mercado Pago requiere configurar OAuth y n8n en el servidor; Search no cubre
-todo el extracto. Los recordatorios locales preparan 60 días y renuevan ese
+Mercado Pago requiere OAuth y n8n en el servidor y su cobertura depende
+de los datos que entrega el proveedor. Los recordatorios locales preparan 60 días y renuevan ese
 horizonte al usar la app. El idioma elegido no traduce
 toda la interfaz. Los pendientes de una autorización revocada se conservan sin
 recuperación automática. La app es una versión de evaluación; ver los

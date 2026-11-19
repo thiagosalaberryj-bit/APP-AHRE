@@ -50,6 +50,12 @@ export const CATEGORIAS_INGRESO: readonly Categoria[] = Object.freeze([
     icono: 'trending-up-outline',
   }),
   Object.freeze({
+    id: 'rendimientos',
+    nombre: 'Rendimientos',
+    descripcion: 'Rendimientos acreditados sobre el saldo.',
+    icono: 'trending-up-outline',
+  }),
+  Object.freeze({
     id: 'prestamos_recibidos',
     nombre: 'Préstamos recibidos',
     descripcion: 'Dinero recibido en calidad de préstamo.',

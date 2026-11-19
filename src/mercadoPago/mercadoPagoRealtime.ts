@@ -47,6 +47,7 @@ export function seguirConsultaMp(trabajoId: string, version: string, actualizar:
         clearTimeout(esperaConexion);
         if (cerrada) { conexion.close(); return; }
         fallos = 0; cambiarConexion(true); conexion.send(JSON.stringify({ canal: acceso.canal }));
+        void refrescar();
       };
       conexion.onmessage = evento => {
         if (cerrada) return;

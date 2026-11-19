@@ -13,6 +13,7 @@ export interface ParametrosPantalla extends ParametrosSociales {
   deposito_nombre?: string; destino?: string;
   seccionDeposito?: 'movimientos' | 'recurrentes';
   seccionSala?: 'gastos' | 'participantes' | 'balances';
+  vistaPrueba?: 'recuperacion';
 }
 export type ParametrosNavegacion = { [Ruta in NombreRuta]: ParametrosPantalla | undefined };
 export type PropiedadesPantalla = NativeStackScreenProps<ParametrosNavegacion, NombreRuta>;

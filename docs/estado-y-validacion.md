@@ -1,8 +1,34 @@
 # Estado y validación de AHRE
 
-Referencia vigente: **17 de noviembre de 2026**, rama
-`codex/modo-oscuro-neutro`, versión configurada 0.9.3 / Android versionCode 18.
-Los resultados del 14/11 y sus despliegues se conservan como antecedentes.
+Referencia vigente al **19 de noviembre de 2026**, APP-AHRE 0.9.4 / Android
+versionCode 19, coordinada con la release de código SERVER-AHRE 0.3.5.
+
+## App 0.9.4 · 19/11/2026
+
+Incluye la recuperación por correo con verificación antes del cambio de
+contraseña y la conciliación de Mercado Pago con Search, Settlement y
+Liquidaciones. El flujo diario se habilitó en el servidor para las cuentas
+vinculadas.
+Ver [Validación de notificaciones y Mercado Pago](validacion-notificaciones-mercado-pago.md).
+
+**Perfil → Zona de peligro** agrupa Cerrar sesión y Eliminar mis datos. El
+borrado conserva la cuenta y su acceso. Las otras personas mantienen fichas,
+deudas, pagos y saldos, con el contacto como **Sin vincular**. El backend del
+reinicio quedó desplegado y respondió por HTTPS el 19/11/2026 con metadatos
+0.3.4 en el contenedor. La numeración de la release de código es 0.3.5.
+
+Pasaron 587 pruebas de app y 66 de servidor en las suites sin integración
+MySQL. Los casos omitidos fueron 49 y 62, respectivamente. En MySQL aislado se
+comprobaron con cuentas ficticias el borrado de registros propios, la
+conservación de saldos ajenos, las deudas pendientes y saldadas y el ingreso
+con la cuenta original. La prueba en un teléfono con la APK publicada queda
+pendiente. [Flujo de eliminación de datos](configuracion/reinicio-datos-pruebas.md).
+
+La APK pública se compiló localmente para Android 19 y se firmó con una clave
+propia de AHRE. Se verificaron los 173.443.655 bytes de la descarga HTTPS y su
+SHA-256 `8d2f60f60429eb449f3767d02871a44b107b5ca71157f031440c8c17bf4b707c`.
+El catálogo conserva las cuatro versiones anteriores.
+[Descarga 0.9.4](https://ahre-server.tailc5dfc5.ts.net/downloads/ahre-0.9.4.apk).
 
 ## Preparación de app 0.9.3 · 17/11/2026
 
@@ -159,7 +185,7 @@ las pruebas automatizadas registradas; no representa una repetición de esas
 pruebas en esta revisión ni una certificación de todos los dispositivos.
 
 Comprobé también el servidor y su supervisor n8n;
-ver [cierre operativo](https://github.com/thiagosalaberryj-bit/SERVER-AHRE/blob/main/docs/infraestructura-y-despliegue.md#cierre-operativo-031--14-de-noviembre-de-2026).
+ver [cierre operativo](https://github.com/thiagosalaberryj-bit/SERVER-AHRE/blob/main/docs/bitacoras/despliegues.md#cierre-operativo-031--14-de-noviembre-de-2026).
 La release de código no compila ni publica una APK automáticamente.
 
 ### Verificación automatizada del 13 de noviembre

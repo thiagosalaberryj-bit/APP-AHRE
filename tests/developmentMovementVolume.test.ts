@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { preparar } from './helpers/localDatabase.ts';
 import { presente } from './helpers/assertions.ts';
+import { CATEGORIAS_INGRESO } from '../src/constants/movimientos.ts';
 
 test('10.000 movimientos en SQLite: categorías, fechas, saldos, lotes y cero tráfico al servidor', async prueba => {
   let solicitudes = 0;
@@ -16,7 +17,7 @@ test('10.000 movimientos en SQLite: categorías, fechas, saldos, lotes y cero tr
   assert.equal(movimientos.length, 10000);
   assert.equal(movimientos.filter(m => m.tipo === 'ingreso').length, 5000);
   assert.equal(movimientos.filter(m => m.tipo === 'egreso').length, 5000);
-  assert.equal(new Set(movimientos.filter(m => m.tipo === 'ingreso').map(m => m.categoria)).size, 10);
+  assert.deepEqual(new Set(movimientos.filter(m => m.tipo === 'ingreso').map(m => m.categoria)), new Set(CATEGORIAS_INGRESO.map(categoria => categoria.id)));
   assert.equal(new Set(movimientos.filter(m => m.tipo === 'egreso').map(m => m.categoria)).size, 17);
   const ahora = new Date();
   const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1).getTime();

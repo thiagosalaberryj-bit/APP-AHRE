@@ -1,6 +1,18 @@
-# Validación de notificaciones y Mercado Pago · 9 de noviembre de 2026
+# Validación de notificaciones y Mercado Pago
 
-## Cierre vigente · 14 de noviembre de 2026
+## Conciliación y consulta diaria · 19 de noviembre de 2026
+
+APP-AHRE 0.9.4 / Android 19 y SERVER-AHRE 0.3.4. El piloto de Liquidaciones
+se ejecutó en una cuenta autorizada. El servidor también verificó una
+consulta automática del 19 de noviembre, limitada al día calendario
+anterior en hora argentina. Los reintentos del disparador conservaron un
+solo trabajo y la consulta dejó un resultado pendiente.
+
+La verificación de la APK interna incluyó compilación y firma. La guía de
+[Mercado Pago](funcionalidades/notificaciones-mercado-pago.md#mercado-pago)
+describe el recorrido vigente.
+
+## Antecedente · cierre del 14 de noviembre de 2026
 
 El 14 de noviembre de 2026 el líder confirmó que completó la validación
 integral de la app y del servidor para esta actualización, incluidos los

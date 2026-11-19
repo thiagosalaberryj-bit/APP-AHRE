@@ -1,9 +1,8 @@
 # Documentación de APP-AHRE
 
-Guía vigente al 16 de noviembre de 2026, versión configurada 0.9.2 (no estable),
-Android versionCode 16, coordinada con SERVER-AHRE 0.3.3. La revisión actual
-completa las suites automatizadas y la APK ya fue probada en el teléfono.
-El cierre prepara la release no estable; el despliegue y la descarga web son manuales.
+Guía vigente al 19 de noviembre de 2026 para APP-AHRE 0.9.4, Android
+versionCode 19, coordinada con la release de código SERVER-AHRE 0.3.5. La APK se compiló localmente
+con el SDK de Android. [Descargas Android](https://ahre-server.tailc5dfc5.ts.net/descargas/).
 El [README](../README.md) presenta la app; este índice enlaza el detalle. El [estado y las verificaciones](estado-y-validacion.md)
 separan lo implementado, las pruebas automáticas, las confirmaciones del líder y
 el trabajo pendiente. Los documentos históricos de TypeScript y dependencias
@@ -13,7 +12,7 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 
 - [Entorno, Expo Go y pruebas](configuracion/entorno.md).
 - [Integraciones MySQL y pruebas con muchos movimientos](configuracion/pruebas-optimizacion.md).
-- [Reiniciar datos desde Perfil: APK, alcance y retirada](configuracion/reinicio-datos-pruebas.md).
+- [Eliminar mis datos: alcance y recuperación](configuracion/reinicio-datos-pruebas.md).
 - [Compilar y publicar Android](configuracion/publicacion.md).
 - [Dependencias y auditoría](configuracion/dependencias.md).
 
@@ -56,7 +55,7 @@ conservan sus fechas; sus recuentos no sustituyen el estado más reciente.
 | Lógica de inicio de AHRE | [inicio](funcionalidades/inicio.md) |
 | Registro local de ingresos y egresos | [movimientos](funcionalidades/movimientos.md) |
 | Notificaciones toast | [notificaciones-toast](funcionalidades/notificaciones-toast.md) |
-| Recordatorios, historial y revisión de pagos Search | [notificaciones-mercado-pago](funcionalidades/notificaciones-mercado-pago.md) |
+| Avisos, revisión de Mercado Pago, Liquidaciones y consulta diaria | [notificaciones-mercado-pago](funcionalidades/notificaciones-mercado-pago.md) |
 | OCR offline de comprobantes — Issue 31 | [ocr](funcionalidades/ocr.md) |
 | Perfil y preferencias locales | [perfil](funcionalidades/perfil.md) |
 | Funcionamiento local de Social | [social](funcionalidades/social.md) |

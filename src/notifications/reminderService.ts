@@ -3,7 +3,7 @@ import { ejecutarLecturaConConexion } from '../database/connectionQueue';
 import { ejecutarTransaccion } from '../database/transactions';
 import { avisarIntegraciones, leerDato } from '../integrations/integrationStore';
 import { ESTADO_MP_INICIAL } from '../mercadoPago/mercadoPagoService';
-import type { OperacionMp } from '../mercadoPago/types';
+import { resultadoPendienteMp, type OperacionMp } from '../mercadoPago/types';
 import { cargarAjustesAvisos,guardarAjustesAvisos } from './notificationService';
 import type { AjustesAvisos } from './types';
 import { avisoLocalResuelto, planificarRecordatorios, type DatosRecordatorios } from './reminderPlanner';
@@ -53,7 +53,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
     const deudasCompletas:DatosRecordatorios['deudas'] = deudas.filter(d => d.pendiente>0&&!acuerdos.some(a => a.estado === 'aceptada' && (a.origenLocalId === d.id || a.id === d.id)));
     for (const a of acuerdos) if (a.estado === 'aceptada' && a.pendiente > 0) deudasCompletas.push({ id: a.id, tipo: a.esDeudor ? 'debo' : 'me_deben',persona:a.otraPersonaNombre||deudas.find(d=>d.id===a.origenLocalId)?.persona||'esta persona',pendiente:a.pendiente,origenLocalId:a.origenLocalId??undefined });
     const activo = await c.getFirstAsync<{ notificaciones_activas: number }>('SELECT notificaciones_activas FROM preferencias WHERE usuario_id=?', [usuario.id]);
-    return { activa: !!activo?.notificaciones_activas, datos: { registros: registros.map(f => f.fecha), deudas: deudasCompletas, recurrencias, mercadoPago: estado.vinculacion ? { pendientes: operaciones.filter(f => f.decision === 'pendiente' || f.revisionPendiente).length, depositoId: estado.vinculacion.deposito_id } : null, salas: [...salas].map(([id, pendientes]) => ({ id, nombre:nombresSalas.get(id)||'Sala compartida', pendientes })) } satisfies DatosRecordatorios };
+    return { activa: !!activo?.notificaciones_activas, datos: { registros: registros.map(f => f.fecha), deudas: deudasCompletas, recurrencias, mercadoPago: estado.vinculacion ? { pendientes: operaciones.filter(resultadoPendienteMp).length, depositoId: estado.vinculacion.deposito_id } : null, salas: [...salas].map(([id, pendientes]) => ({ id, nombre:nombresSalas.get(id)||'Sala compartida', pendientes })) } satisfies DatosRecordatorios };
   });
   const anteriores = await ejecutarLecturaConConexion(c => c.getAllAsync<{ clave: string; fecha: string; datos: string; nativo: string | null }>('SELECT * FROM programaciones_avisos WHERE usuario_id=?', [usuario.id]));
   let historialCambiado = false;

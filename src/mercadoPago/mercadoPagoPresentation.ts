@@ -3,6 +3,7 @@ import type { OperacionMp } from './types';
 export function ordenarMovimientosMp(operaciones: OperacionMp[]) {
   return [...operaciones].sort((a, b) => Date.parse(b.fecha) - Date.parse(a.fecha) || a.id.localeCompare(b.id));
 }
+
 export function agruparMovimientosMp(operaciones: OperacionMp[], limite: number) {
   const ordenadas = ordenarMovimientosMp(operaciones);
   const grupos: { dia: string; titulo: string; operaciones: OperacionMp[] }[] = [];
@@ -19,7 +20,7 @@ export function agruparMovimientosMp(operaciones: OperacionMp[], limite: number)
   return grupos;
 }
 
-export function alternarSeleccionMp(visibles: OperacionMp[], seleccionadas: string[]) {
-  const elegibles = visibles.filter(op => !op.revisionPendiente).slice(0, 500).map(op => op.id);
+export function alternarSeleccionMp(visibles: OperacionMp[], seleccionadas: string[], confirmada = (_op: OperacionMp) => false) {
+  const elegibles = visibles.filter(op => !op.revisionPendiente && !op.provisional && (!op.pendienteConfirmacion || confirmada(op))).slice(0, 500).map(op => op.id);
   return elegibles.length && elegibles.every(id => seleccionadas.includes(id)) ? [] : elegibles;
 }

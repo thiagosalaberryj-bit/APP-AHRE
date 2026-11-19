@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { RUTAS } from '../constants/routes';
 import { ErrorBaseDatos } from '../database/errors';
 import { crearDeposito, ErrorDeposito } from '../deposits/depositService';
 import { ContextoAvisos } from '../contexts/ToastContext';
@@ -83,7 +84,7 @@ export default function PantallaDeposito({ navigation: navegacion }: import('../
       liberarAccion();
       establecerGuardando(false);
       mostrarAviso(`Se creó el depósito «${depositoCreado.nombre}».`, { tipo: 'exito' });
-      volverProtegido();
+      navegacion.replace(RUTAS.DETALLE_DEPOSITO, { depositoId: depositoCreado.id });
     } catch (error) {
       liberarAccion();
       guardandoRef.current = false;

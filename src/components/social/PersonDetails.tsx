@@ -38,7 +38,7 @@ export default function DetallePersona(propiedades: import('../../social/types')
   const [cerradas,cambiarCerradas]=useState<string[]>([]);
   const {vinculos,sinConexion}=useVinculosOnline(social.usuarioId);
   const vinculo=vinculos.find(v=>v.persona_id===persona.id&&v.direccion!=='recibida');
-  const estadoCuenta=vinculo?.estado==='confirmado'?'Cuenta vinculada':vinculo?.estado==='solicitado'?'Vínculo pendiente':vinculo?.estado==='pendiente'&&vinculo.cuenta_id?'Confirmación pendiente':'Sin cuenta vinculada';
+  const estadoCuenta=vinculo?.estado==='confirmado'?'Cuenta vinculada':vinculo?.estado==='solicitado'?'Vínculo pendiente':vinculo?.estado==='pendiente'&&vinculo.cuenta_id?'Confirmación pendiente':'Sin vincular';
   const deudas = deudasSociales.filter(deuda => deuda.personaId === persona.id);
   return <View style={estilos.pagina}>
       <View style={estilos.tarjeta}>

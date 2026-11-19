@@ -3,18 +3,14 @@ import { ejecutarConConexion, ejecutarLecturaConConexion } from '../database/con
 import { generarIdentificador } from '../database/identifiers';
 import { obtenerSesionActual, cerrarSesion } from '../authentication/sessionService';
 import { ErrorRemoto, obtenerSesionRemota, solicitarRemoto } from '../sync/remote';
-import { aplicarCambios } from '../sync/journal';
-import { TABLAS_SYNC, type CambioSync } from '../sync/protocol';
 import { operacionFinancieraEnCurso } from '../social/financialOperation';
 import { cancelarAviso, notificacionesNativas } from '../notifications/nativeAdapter';
 import { pausarParaReinicio } from './testResetState';
+import { borrarDatosLocalesReinicio } from './accountResetData';
 
 const CLAVE_RECUPERACION = 'ahre.pruebas.reinicio';
-const AUXILIARES = ['incorporaciones_sociales_locales', 'comandos_sociales_locales', 'salas_online_locales', 'datos_sociales_online',
-  'integraciones_outbox', 'integraciones_locales', 'avisos_locales', 'programaciones_avisos',
-  'sync_outbox', 'sync_batch_authorization', 'sync_profile_backup', 'sync_profile_rejection', 'sync_state', 'sync_last_success', 'sync_authorization'] as const;
 export interface VistaReinicio {
-  huella: string; cantidades: Record<string, number>; salasActualizadas: number;
+  alcance: 'cuenta_propia'; huella: string; cantidades: Record<string, number>;
   cuentas: { id: string; correo: string }[];
 }
 interface ReciboReinicio { usuarioId: string; token: string; operacion: string; confirmado: boolean; }
@@ -25,7 +21,11 @@ export async function consultarReinicio(): Promise<VistaReinicio> {
     const { usuario } = await obtenerSesionActual();
     const remota = usuario && await obtenerSesionRemota(usuario.id);
     if (!remota) throw new Error('Iniciá sesión con conexión. El reinicio requiere confirmar también el servidor.');
-    return await solicitarRemoto('/testing/reset/preview', undefined, remota.token, 30000);
+    const vista = await solicitarRemoto<VistaReinicio>('/testing/reset/preview', undefined, remota.token, 30000);
+    if (vista?.alcance !== 'cuenta_propia' || !vista.huella || vista.cuentas?.length !== 1 || vista.cuentas[0]?.id !== usuario?.id) {
+      throw new Error('El servidor todavía no permite reiniciar solo tus datos.');
+    }
+    return vista;
   } finally { continuar(); }
 }
 
@@ -36,23 +36,8 @@ async function limpiarLocal(usuarioId: string) {
   if (notificaciones?.getPresentedNotificationsAsync) {
     for (const aviso of await notificaciones.getPresentedNotificationsAsync()) if (aviso.request.content.data?.usuarioId === usuarioId) await notificaciones.dismissNotificationAsync(aviso.request.identifier);
   }
-  await ejecutarConConexion(async c => {
-    const cambios: CambioSync[] = [];
-    for (const tabla of [...TABLAS_SYNC].reverse()) {
-      if (tabla === 'usuarios') continue;
-      const sql = ['movimientos', 'recurrencias', 'historial_saldos_deposito'].includes(tabla)
-        ? `SELECT t.id FROM ${tabla} t JOIN depositos d ON d.id=t.deposito_id WHERE d.usuario_id=?`
-        : `SELECT id FROM ${tabla} WHERE usuario_id=?`;
-      for (const fila of await c.getAllAsync<{ id: string }>(sql, [usuarioId])) cambios.push({ tabla, accion: 'eliminar', datos: { id: fila.id } });
-    }
-    await c.execAsync('PRAGMA defer_foreign_keys=ON;');
-    for (const tabla of AUXILIARES) await c.runAsync(`DELETE FROM ${tabla} WHERE usuario_id=?`, [usuarioId]);
-    await aplicarCambios(c, cambios);
-    // La cuenta y su verificador de contraseña permanecen; el siguiente login
-    // recupera una instantánea vacía y vuelve a crear preferencias por defecto.
-  });
+  await ejecutarConConexion(c => borrarDatosLocalesReinicio(c, usuarioId));
   await SecureStore.deleteItemAsync(`ahre.saldos_ocultos.${usuarioId}`);
-  await SecureStore.deleteItemAsync('ahre.invitacion.pendiente');
   const destino = await SecureStore.getItemAsync('ahre.notificacion.destino');
   if (destino && JSON.parse(destino).usuarioId === usuarioId) await SecureStore.deleteItemAsync('ahre.notificacion.destino');
   await cerrarSesion();
@@ -76,6 +61,9 @@ export async function completarReinicioPendiente() {
 }
 
 export async function reiniciarDatos(vista: VistaReinicio, correo: string, contrasena: string, confirmacion: string) {
+  if (vista.alcance !== 'cuenta_propia' || !vista.huella) {
+    throw new Error('Volvé a consultar la vista previa para reiniciar solo tus datos.');
+  }
   if (operacionFinancieraEnCurso()) throw new Error('Esperá a que termine el guardado o la eliminación.');
   const continuar = await pausarParaReinicio();
   let liberar=true;
@@ -83,6 +71,9 @@ export async function reiniciarDatos(vista: VistaReinicio, correo: string, contr
     const { usuario } = await obtenerSesionActual();
     const remota = usuario && await obtenerSesionRemota(usuario.id);
     if (!usuario || !remota) throw new Error('Iniciá sesión con conexión antes de reiniciar.');
+    if (vista.cuentas.length !== 1 || vista.cuentas[0]?.id !== usuario.id || vista.cuentas[0].correo !== correo) {
+      throw new Error('Volvé a consultar la vista previa para la cuenta actual.');
+    }
     const recibo: ReciboReinicio = { usuarioId: usuario.id, token: remota.token, operacion: generarIdentificador(), confirmado: false };
     await SecureStore.setItemAsync(CLAVE_RECUPERACION, JSON.stringify(recibo));
     try {
