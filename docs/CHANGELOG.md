@@ -5,6 +5,24 @@ documentación se registran en este archivo.
 
 ## [Sin publicar]
 
+## [v0.9.5] - 2026-11-20 - no estable
+
+### Cambiado
+
+- Inicio muestra el saldo y los movimientos recientes mientras carga el aviso de Mercado Pago por separado.
+- Estadísticas consulta solo los depósitos para llenar su selector.
+- Social muestra los resúmenes al abrir la pantalla y carga los detalles al entrar a cada sala.
+- La comprobación de conexión de cinco segundos conserva su frecuencia. Se retiró la revisión de recurrencias de ese intervalo y se conserva la limpieza de tareas antiguas.
+- Git y EAS excluyen los artefactos de compilación de los módulos Android locales.
+
+### Eliminado
+
+- Se retiraron declaraciones sin uso, lecturas redundantes de Social y cinco imágenes sin referencias en la app.
+
+### Entrega
+
+- Versión no estable para evaluación. App 0.9.5 / Android versionCode 20, coordinada con SERVER-AHRE 0.3.6.
+
 ## [v0.9.4] - 2026-11-19 - no estable
 
 ### Añadido

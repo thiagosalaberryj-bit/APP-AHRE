@@ -9,7 +9,7 @@
 Finanzas personales, gastos compartidos y comprobantes en una app Android con datos locales.
 
 ![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-F97316?style=flat-square)
-![Versión](https://img.shields.io/badge/App-0.9.4-024C42?style=flat-square)
+![Versión](https://img.shields.io/badge/App-0.9.5-024C42?style=flat-square)
 ![Expo](https://img.shields.io/badge/Expo-SDK%2057-2563EB?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Estricto-3178C6?style=flat-square)
 
@@ -58,9 +58,8 @@ explica EAS, Expo Go y el paso separado de publicar la descarga.
 
 ## Verificar
 
-Entrega de código coordinada **app 0.9.4 / Android 19** y **servidor 0.3.5**.
-La APK se compiló localmente con el SDK de Android. En
-**Perfil → Zona de peligro** podés [eliminar tus datos](docs/configuracion/reinicio-datos-pruebas.md)
+Entrega de código coordinada **app 0.9.5 / Android 20** y **servidor 0.3.6**.
+En **Perfil → Zona de peligro** podés [eliminar tus datos](docs/configuracion/reinicio-datos-pruebas.md)
 y volver a entrar con el mismo correo y contraseña.
 La [guía de Mercado Pago](docs/funcionalidades/notificaciones-mercado-pago.md#mercado-pago)
 describe la vinculación, el progreso y la consulta diaria. La
