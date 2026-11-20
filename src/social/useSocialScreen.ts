@@ -12,7 +12,8 @@ import crearEstilosMarco from '../styles/social/SocialScreenFrameStyles';
 import { crearEstilosEgreso } from '../styles/expenseStyles';
 import { RUTAS } from '../constants/routes';
 import {observarSocialOnline} from './socialService';
-import { cargarSocial } from './socialService';
+import { cargarResumenSocial } from './socialService';
+import type { DatosSocialesVisibles } from './socialQueryService';
 export default function usePantallaSocial({
   navigation: navegacion,
   route: ruta
@@ -45,7 +46,9 @@ export default function usePantallaSocial({
   const esListaSalas = ruta?.name === RUTAS.SALA_SOCIAL && !parametros.salaId;
   const esSala = Boolean(parametros.salaId) && !esRegistro && !esGasto;
   const esSecundaria = esRegistro || esPersona || esListado || esGasto || esSala || esListaSalas;
-  const [registros, establecerRegistros] = useState<import('./socialQueryService').DatosSocialesVisibles | null>(null);
+  const salaId = parametros.salaId;
+  const [vista, establecerVista] = useState<{ salaId?: string; registros: DatosSocialesVisibles } | null>(null);
+  const registros = vista?.salaId === salaId ? vista?.registros : undefined;
   const [error, establecerError] = useErrorNotificado(null);
   const [cargando, establecerCargando] = useState(true);
   const montado = useRef(true);
@@ -54,15 +57,26 @@ export default function usePantallaSocial({
   const recargar = useCallback(async () => {
     const numero = ++solicitud.current;
     try {
-      const datos = await cargarSocial();
-      actualizarTrasOperacion(()=>{if (montado.current && numero === solicitud.current) { establecerRegistros(datos); establecerError(null); }});
+      const datos = await cargarResumenSocial(salaId);
+      actualizarTrasOperacion(()=>{if (montado.current && numero === solicitud.current) { establecerVista({ salaId, registros: datos }); establecerError(null); }});
     } catch (fallo) {
-      actualizarTrasOperacion(()=>{if (montado.current && numero === solicitud.current) { establecerRegistros(null); establecerError((fallo instanceof Error ? fallo.message : "") || 'No se pudo cargar Social.'); }});
+      actualizarTrasOperacion(()=>{if (montado.current && numero === solicitud.current) { establecerVista(null); establecerError((fallo instanceof Error ? fallo.message : "") || 'No se pudo cargar Social.'); }});
     } finally {
       if (montado.current && numero === solicitud.current) establecerCargando(false);
     }
-  }, []);
-  useFocusEffect(useCallback(() => {let limpieza:(()=>void)|undefined;const cancelar=programarCargaVisible(()=>{const resultado=(()=>{ recargar();return observarSocialOnline(()=>{void recargar();}); })();if(typeof resultado==='function')limpieza=resultado;});return()=>{cancelar();limpieza?.();};}, [recargar]));
+  }, [salaId, establecerError]);
+  useFocusEffect(useCallback(() => {
+    let dejarDeObservar: (() => void) | undefined;
+    const cancelar = programarCargaVisible(() => {
+      void recargar();
+      dejarDeObservar = observarSocialOnline(() => { void recargar(); });
+    });
+    return () => {
+      cancelar();
+      dejarDeObservar?.();
+      solicitud.current++;
+    };
+  }, [recargar]));
   const social = registros ? {
     ...registros, recargar,
     abrirMovimiento: (movimientoId:string) => raiz.push(RUTAS.DETALLE_MOVIMIENTO,{movimientoId}),
@@ -76,7 +90,7 @@ export default function usePantallaSocial({
     abrirOcrSala: (salaId: string) => raiz.push(RUTAS.OCR, { destino: 'social', salaId }),
     alCrearSala: (salaCreada: {id:string}) => raiz.replace(RUTAS.SALA_SOCIAL, { salaId: salaCreada.id }),
   } : null;
-  const sala = registros?.salas.find(elemento => elemento.id === parametros.salaId);
+  const sala = registros?.sala;
   const persona = social?.obtenerPersona(parametros.personaId);
   const gasto = sala?.gastos.find(elemento => elemento.id === parametros.gastoId);
   const irA = (destino: typeof RUTAS.SALA_SOCIAL | typeof RUTAS.PERSONA_SOCIAL | typeof RUTAS.PERSONAS_SOCIAL | typeof RUTAS.REGISTRO_SOCIAL | typeof RUTAS.GASTO_SOCIAL, datos: import('../navigation/types').ParametrosPantalla = {}) => {
@@ -109,7 +123,7 @@ export default function usePantallaSocial({
     cerrar: ['Cerrar sala', 'Revisá el reparto antes de finalizar la ocasión.']
   };
   const [titulo, descripcion] = esRegistro ? titulosRegistro[parametros.tipo || ""] || ['Social', 'Registro no disponible.'] : esPersona ? ['Persona', 'Sus datos, deudas y pagos.'] : esListado ? parametros.todas ? ['Personas', 'Tu agenda personal, ordenada por nombre.'] : ['Historial de deudas', 'Consultá tus deudas pendientes y saldadas.'] : esListaSalas ? ['Salas', 'Tus ocasiones activas y cerradas.'] : esGasto ? [gasto?.descripcion || 'Gasto', 'Reparto y pagos de esta ocasión.'] : [sala?.nombre || 'Sala', 'Gastos de esta ocasión.'];
-  const noDisponible = Boolean(error) || !registros || (esSala || esGasto) && !sala || esGasto && !gasto || esPersona && !persona;
+  const noDisponible = Boolean(error) || !registros || (Boolean(salaId) || esGasto) && !sala || esGasto && !gasto || esPersona && !persona;
   return {
     aspecto,
     navegacion,
@@ -119,7 +133,7 @@ export default function usePantallaSocial({
     parametros,
     titulo,
     descripcion,
-    cargando,
+    cargando: cargando || (vista !== null && vista.salaId !== salaId),
     social,
     error,
     recargar,

@@ -2,7 +2,6 @@ import AvisoFormulario from '../components/FormNotice';
 import {useFinalizacionAccion} from '../hooks/useActionCompletion';
 import {iniciarOperacionFinanciera} from '../social/financialOperation';
 import BotonAccion from '../components/ActionButton';
-import { RETROALIMENTACION_PULSACION } from '../styles/globalStyles';
 import PuntosCarga from '../components/LoadingDots';
 import RequisitoDeposito from '../components/DepositRequiredState';
 import { useErrorNotificado } from '../hooks/useErrorNotice';
@@ -12,7 +11,7 @@ import { DesplazamientoEncabezado } from '../components/HeaderScrollView';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ContextoAvisos } from '../contexts/ToastContext';

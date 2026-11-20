@@ -275,6 +275,25 @@ async function consultarResumenDeposito(depositoId: string, inicioMes: string) {
   }));
 }
 
+async function consultarDepositosHistorial(usuarioId: string, conexion: Conexion | null = null) {
+  return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion((baseDatos) => {
+    if (typeof usuarioId !== 'string' || !usuarioId) {
+      throw new ErrorBaseDatos('integridad');
+    }
+
+    return baseDatos.getAllAsync<Pick<Tablas['depositos'], 'id' | 'nombre' | 'tipo' | 'icono' | 'color'>>(
+      `SELECT d.id, d.nombre, d.tipo, d.icono, d.color
+       FROM depositos d
+       WHERE d.usuario_id = ? AND EXISTS (
+         SELECT 1 FROM movimientos m
+         WHERE m.deposito_id = d.id AND m.tipo IN ('ingreso', 'egreso')
+       )
+       ORDER BY d.nombre COLLATE NOCASE ASC, d.id ASC;`,
+      [usuarioId],
+    );
+  }, conexion));
+}
+
 async function consultarOpcionesHistorial(usuarioId: string, conexion: Conexion | null = null) {
   return ejecutarConManejoDeErrores('consulta', () => ejecutarLecturaConConexion(async (baseDatos) => {
     if (typeof usuarioId !== 'string' || !usuarioId) {
@@ -298,15 +317,7 @@ async function consultarOpcionesHistorial(usuarioId: string, conexion: Conexion 
        ORDER BY m.tipo ASC, m.categoria ASC;`,
       [usuarioId],
     );
-    const depositos = await baseDatos.getAllAsync<Pick<Tablas['depositos'], 'id' | 'nombre' | 'tipo' | 'icono' | 'color'>>(
-      `SELECT DISTINCT d.id, d.nombre, d.tipo, d.icono, d.color
-       FROM depositos d
-       INNER JOIN movimientos m ON m.deposito_id = d.id
-       WHERE d.usuario_id = ?
-         AND m.tipo IN ('ingreso', 'egreso')
-       ORDER BY d.nombre COLLATE NOCASE ASC, d.id ASC;`,
-      [usuarioId],
-    );
+    const depositos = await consultarDepositosHistorial(usuarioId, baseDatos);
 
     return {
       cantidad: Number(cantidad?.cantidad || 0),
@@ -755,6 +766,7 @@ export const movimientosRepositorio = Object.freeze({
   consultarMesesHistorial,
   consultarResumenDeposito,
   consultarSaldoCierreAnterior,
+  consultarDepositosHistorial,
   consultarOpcionesHistorial,
   consultarHistorialPorId,
   consultarResumenPorCategoria,

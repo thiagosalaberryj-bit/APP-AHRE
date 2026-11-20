@@ -31,12 +31,9 @@ APP-AHRE/
 ├── app.json
 ├── README.md
 ├── assets/
-│   ├── icon.png
 │   ├── ahre-mark.png
 │   ├── ahre-logo.png
-│   ├── favicon.png
-│   ├── splash-icon.png
-│   └── android-icon-*.png
+│   └── favicon.png
 ├── docs/
 │   ├── CHANGELOG.md
 │   ├── arquitectura/

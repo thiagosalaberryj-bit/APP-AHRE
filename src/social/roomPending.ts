@@ -1,17 +1,14 @@
-import type { OperacionPersonal, RespuestaSala } from './online/types';
+import type { DatosResumenSalaOnline } from './online/onlineStore';
 
-export function pendientesSala(detalle: RespuestaSala, operaciones: OperacionPersonal[], incorporadas: ReadonlySet<string>): OperacionPersonal[] {
-  if(detalle.sala.estado==='cerrada')return [];
-  const abierta = true;
-  const candidatas = abierta ? detalle.misFinanzas || [] : operaciones.filter(o => o.salaId === detalle.sala.id);
+export function pendientesSala(detalle: DatosResumenSalaOnline, incorporadas: ReadonlySet<string>) {
+  if (detalle.sala.estado === 'cerrada' || !detalle.misFinanzas?.length) return [];
+  const gastos = new Map(detalle.sala.gastos.filter(g => g.estado === 'vigente').map(g => [g.id, g]));
   const claves = new Set<string>();
-  return candidatas.filter(o => {
+  return detalle.misFinanzas.filter(o => {
     if (o.incorporada || incorporadas.has(o.clave) || claves.has(o.clave)) return false;
-    if (abierta) {
-      const gasto = detalle.sala.gastos.find(g => g.id === o.gastoId && g.estado === 'vigente');
-      if (!gasto || o.seleccion && !o.necesitaRevision) return false;
-      if (!o.clave.startsWith('compra:') && o.tipo !== 'ingreso' && !gasto.pagaron.includes(detalle.personaPropiaId)) return false;
-    }
+    const gasto = o.gastoId ? gastos.get(o.gastoId) : undefined;
+    if (!gasto || o.seleccion && !o.necesitaRevision) return false;
+    if (!o.clave.startsWith('compra:') && o.tipo !== 'ingreso' && !gasto.pagaron.includes(detalle.personaPropiaId)) return false;
     claves.add(o.clave); return true;
   });
 }

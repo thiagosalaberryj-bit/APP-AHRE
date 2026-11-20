@@ -124,6 +124,12 @@ la app Android; la clave privada de servicio no forma parte del paquete.
 | `expo-task-manager` | `~57.0.23` | Registro de tareas nativas. | Integración de tareas del módulo de recurrencias. |
 | `qrcode` | `^1.5.4` | Generación de códigos QR. | Invitaciones de Social. |
 
+La compilación Android de AHRE 0.9.5 enlaza de forma automática Gesture
+Handler, Reanimated y Worklets. Expo también carga el plugin de Babel de
+Worklets cuando el paquete está instalado, y `expo-modules-core` lo declara
+como dependencia opcional. Retirar estas dependencias requiere comprobar el
+enlace nativo y probar una APK con el cambio aplicado.
+
 ## Formularios y validación
 
 Los formularios de AHRE utilizan estado de React y validaciones locales.

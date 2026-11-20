@@ -28,7 +28,7 @@ export async function obtenerTokenPush() {
   const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined; if (!projectId) return null;
   return (await n.getExpoPushTokenAsync({ projectId })).data;
 }
-export async function programarAviso(aviso: Aviso, usuarioId: string, detalles: boolean) {
+export async function programarAviso(aviso: Aviso, usuarioId: string) {
   const n = await notificacionesNativas(); if (!n || !(await n.getPermissionsAsync()).granted) return null;
   return n.scheduleNotificationAsync({ identifier: usuarioId + ':' + aviso.id, content: { title: aviso.titulo, body: aviso.mensaje, sound: 'default', data: { aplicacion: 'ahre', usuarioId, avisoId: aviso.id, destino: aviso.destino } }, trigger: { type: n.SchedulableTriggerInputTypes.DATE, date: new Date(aviso.fecha), channelId: aviso.tipo } });
 }

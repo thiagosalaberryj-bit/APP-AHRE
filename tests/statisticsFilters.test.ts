@@ -68,6 +68,48 @@ test('rechaza límites negativos, no finitos o invertidos y acepta límites abie
   for (const rango of [{}, { minimo: 1000 }, { maximo: 5000 }, { minimo: 1000, maximo: 5000 }]) assert.equal(validarRangoMontoEstadistica(rango), true);
 });
 
+test('el selector carga los mismos depósitos del historial en una sola consulta', async prueba => {
+  const consultas: string[] = [];
+  const e = await preparar(prueba, true, {
+    url: '/', // La normalización deja vacía la URL y permite crear las cuentas locales de la prueba.
+    fetch: async () => { throw new Error('Sin red'); },
+    registrarSql: sql => consultas.push(sql),
+  });
+  const acceso = { correo: 'estadisticas@example.test', contrasena: 'ClavePrueba123' };
+  const usuario = await e.registrarUsuario({ ...acceso, nombre: 'Titular', confirmacion: acceso.contrasena });
+  await e.iniciarSesion(acceso);
+  const otro = await e.registrarUsuario({ ...acceso, correo: 'otro@example.test', nombre: 'Otro', confirmacion: acceso.contrasena });
+  const datosDeposito = {
+    usuario_id: usuario.id, tipo: 'efectivo' as const, saldo_inicial: 1000, icono: 'cash-outline',
+    fecha_creacion: '2026-01-01T12:00:00.000Z',
+  };
+  const historico = await e.depositosRepositorio.crear({ ...datosDeposito, nombre: 'Zeta' });
+  const activo = await e.depositosRepositorio.crear({ ...datosDeposito, nombre: 'alfa' });
+  const transferencias = await e.depositosRepositorio.crear({ ...datosDeposito, nombre: 'Transferencias' });
+  await e.depositosRepositorio.crear({ ...datosDeposito, nombre: 'Sin movimientos' });
+  const ajeno = await e.depositosRepositorio.crear({ ...datosDeposito, usuario_id: otro.id, nombre: 'Ajeno' });
+  const fecha = '2026-01-02T12:00:00.000Z';
+  for (const deposito of [historico, activo, activo, ajeno]) {
+    await e.movimientosRepositorio.crear({
+      deposito_id: deposito.id, tipo: 'ingreso', categoria: 'sueldo', descripcion: 'Cobro',
+      monto: 100, fecha_hora: fecha,
+    });
+  }
+  await e.depositosRepositorio.eliminar(historico.id);
+  await e.transferenciasRepositorio.crearConMovimientos({
+    usuario_id: usuario.id, deposito_origen_id: activo.id, deposito_destino_id: transferencias.id,
+    monto: 10, fecha_hora: fecha,
+  });
+
+  consultas.length = 0;
+  const depositos = await e.cargarDepositosHistorialMovimientos();
+  assert.deepEqual(Array.from(depositos, deposito => deposito.id), [activo.id, historico.id]);
+  assert.equal(consultas.filter(sql => /\b(?:depositos|movimientos)\b/.test(sql)).length, 1);
+  const opcionesHistorial = await e.cargarOpcionesHistorialMovimientos();
+  assert.deepEqual(depositos, opcionesHistorial.depositos);
+  assert.equal(opcionesHistorial.cantidad, 3);
+});
+
 test('el rango filtra movimientos antes de sumar y se conserva en resumen, columnas y detalle', async prueba => {
   const e = await preparar(prueba);
   await e.prepararDatosPrueba();

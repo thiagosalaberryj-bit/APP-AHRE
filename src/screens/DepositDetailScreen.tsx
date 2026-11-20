@@ -774,7 +774,7 @@ export default function PantallaDetalleDeposito({ navigation: navegacion, route:
 
                 <FiltroCategoriasMovimientos tema={tema} estilos={estilosFiltros} resumen={resumenCategorias}
                     abierta={seccionesFiltrosAbiertas.includes('categorias')} alAlternar={() => alternarSeccionFiltro('categorias')}
-                    estilosSelectores={estilos} estilosGlobales={estilosGlobales}
+                    estilosGlobales={estilosGlobales}
                     categoriasDisponiblesFiltro={categoriasDisponiblesFiltro}
                     categoriaFiltroIds={categoriaFiltroIds} establecerCategoriaFiltroIds={establecerCategoriaFiltroIds}
                   />

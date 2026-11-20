@@ -379,7 +379,7 @@ export function simularRespuestaSalaDemo(salaId:string,solicitudId:string,decisi
   });
 }
 
-export function solicitarIngresoDemo(codigo:string,nombre:string,contrasena:string) {
+export function solicitarIngresoDemo(codigo:string,contrasena:string) {
   return conDemo(async(c,usuarioId)=>{
     const detalle=(await salas(c,usuarioId)).find(s=>s.acceso?.codigo===codigo);
     exigir(detalle?.acceso?.habilitado&&detalle.sala.estado==='abierta','Este enlace demo no está disponible.');

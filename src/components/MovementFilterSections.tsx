@@ -284,10 +284,9 @@ export function FiltroFechaMovimientos({
 }
 
 export function FiltroCategoriasMovimientos({
-  tema, estilos, estilosSelectores, estilosGlobales, resumen, abierta, alAlternar,
+  tema, estilos, estilosGlobales, resumen, abierta, alAlternar,
   categoriasDisponiblesFiltro, tipoMovimiento, categoriaFiltroIds, establecerCategoriaFiltroIds,
 }: PropiedadesSeccion & {
-  estilosSelectores: EstilosMovimiento;
   estilosGlobales: EstilosGlobales;
   categoriasDisponiblesFiltro: SelectorCategoriaProps['categorias'];
   tipoMovimiento?: string;

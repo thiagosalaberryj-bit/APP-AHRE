@@ -41,7 +41,7 @@ export default function ListaSalas(propiedades: import('../../social/types').Asp
   const consulta = normalizarNombrePersona(busqueda);
   const activas = salasSociales.filter((sala) => sala.estado === 'abierta'&&sala.administrador);
   const salas = salasSociales.filter(sala => {
-    const categorias = sala.gastos.map(gasto => CATEGORIAS_EGRESO.find(elemento => elemento.id === gasto.categoriaId)?.nombre || '').join(' ');
+    const categorias = sala.categorias.map(id => CATEGORIAS_EGRESO.find(categoria => categoria.id === id)?.nombre || '').join(' ');
     const personas = sala.participantes.map(id => {
       const persona = obtenerPersona(id);
       return `${nombreCompletoPersona(persona)} ${persona?.apodo}`;

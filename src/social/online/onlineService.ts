@@ -11,7 +11,7 @@ import {generarIdentificador} from '../../database/identifiers';
 import {movimientosRepositorio,depositosRepositorio} from '../../database/repositories';
 import {CATEGORIAS_EGRESO} from '../../constants/movimientos';
 import {repartirGasto,exigir} from '../socialValidation';
-import {guardarCacheSala,confirmarComandoOnline,leerSalasOnline,guardarDatosOnline,leerDatosOnline,avisarSocialOnline} from './onlineStore';
+import {guardarCacheSala,confirmarComandoOnline,leerIdsSalasOnline,leerSalasOnline,guardarDatosOnline,leerDatosOnline,avisarSocialOnline} from './onlineStore';
 import type {RespuestaSala,ComandoOnline,PendienteOnline,OperacionPersonal,DeudaOnline,VinculoOnline,SalaOnline} from './types';
 import type {BorradorGasto} from '../types';
 import type {GastoCompartido,ParticipanteGasto,Persona,Sala} from '../../database/types';
@@ -258,8 +258,8 @@ export async function consultarMovimientosOnline(operacion:OperacionPersonal){
 }
 
 export async function recuperarEventosSociales(forzar=false){
-  const {usuario}=await sesionOnline(),salas=await leerSalasOnline(usuario.id),deudas=await leerDatosOnline<DeudaOnline[]>(usuario.id,'deudas',[]);
-  const canales=['usuario:'+usuario.id,...salas.map(s=>'sala:'+s.sala.id),...deudas.filter(d=>!d.salaId).map(d=>'deuda:'+d.id)];
+  const {usuario}=await sesionOnline(),salas=await leerIdsSalasOnline(usuario.id),deudas=await leerDatosOnline<DeudaOnline[]>(usuario.id,'deudas',[]);
+  const canales=['usuario:'+usuario.id,...salas.map(id=>'sala:'+id),...deudas.filter(d=>!d.salaId).map(d=>'deuda:'+d.id)];
   const cursores=await leerDatosOnline<Record<string,number>>(usuario.id,'cursores-eventos',{});
   const anteriores=JSON.stringify(cursores);let novedades=false;
   for(const canal of canales){
@@ -285,8 +285,8 @@ export async function recuperarEventosSociales(forzar=false){
   // altas de canales y cambios anteriores al cursor sin descargar todo cada 15 s.
   if(forzar||novedades||pendientes||ultimaReconciliacion?.usuarioId!==usuario.id||Date.now()<ultimaReconciliacion.fecha||Date.now()-ultimaReconciliacion.fecha>=60000)await sincronizarSocialOnline();
   if(JSON.stringify(cursores)!==anteriores)await guardarDatosOnline(usuario.id,'cursores-eventos',cursores);
-  const actuales=await leerSalasOnline(usuario.id),deudasActuales=await leerDatosOnline<DeudaOnline[]>(usuario.id,'deudas',[]);
-  return ['usuario:'+usuario.id,...actuales.map(s=>'sala:'+s.sala.id),...deudasActuales.filter(d=>!d.salaId).map(d=>'deuda:'+d.id)];
+  const actuales=await leerIdsSalasOnline(usuario.id),deudasActuales=await leerDatosOnline<DeudaOnline[]>(usuario.id,'deudas',[]);
+  return ['usuario:'+usuario.id,...actuales.map(id=>'sala:'+id),...deudasActuales.filter(d=>!d.salaId).map(d=>'deuda:'+d.id)];
 }
 
 export async function consultarRevisionesSala(salaId:string){
@@ -358,7 +358,7 @@ export async function configurarAccesoSala(salaId:string,contrasena:string,opcio
  await enviarAccionSocial('acceso:'+salaId,'/salas/'+salaId+'/acceso',{contrasena,...opciones});await recuperarSalaOnline(salaId);
 }
 export async function solicitarIngresoSala(codigo:string,nombre:string,contrasena:string){
- if(await usuarioDemoActual())return solicitarIngresoDemo(codigo,nombre,contrasena);
+ if(await usuarioDemoActual())return solicitarIngresoDemo(codigo,contrasena);
  const resultado=await enviarAccionSocial<{id:string|null;estado:string;salaId:string}>('ingreso:'+codigo,'/accesos/'+codigo+'/solicitar',{nombre,contrasena});
  await sincronizarSocialOnline();return resultado;
 }

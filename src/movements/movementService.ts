@@ -100,6 +100,11 @@ export async function cargarOpcionesHistorialMovimientos() {
   return { usuarioId: usuario.id, ...opciones };
 }
 
+export async function cargarDepositosHistorialMovimientos() {
+  const usuario = await consultarUsuarioHistorial();
+  return movimientosRepositorio.consultarDepositosHistorial(usuario.id);
+}
+
 export async function cargarPaginaHistorialMovimientos(usuarioId: string, filtros: import('../types/forms').FiltrosHistorial, cursor: {fecha_hora:string;id:string}|null = null) {
   await consultarUsuarioHistorial(usuarioId);
   return movimientosRepositorio.consultarHistorial(

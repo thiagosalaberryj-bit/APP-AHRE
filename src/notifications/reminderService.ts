@@ -45,7 +45,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
     const salas = new Map<string, number>(); for (const p of personales) if (p.salaId && !p.incorporada && !incorporadas.has(p.clave)) {salas.set(p.salaId, (salas.get(p.salaId) || 0) + 1);if(p.salaNombre)nombresSalas.set(p.salaId,p.salaNombre);}
     for(const detalle of await leerSalasOnline(usuario.id,c)){
       nombresSalas.set(detalle.sala.id,detalle.sala.nombre);
-      const pendientes=pendientesSala(detalle,personales,incorporadas).length;
+      const pendientes=pendientesSala(detalle,incorporadas).length;
       if(pendientes)salas.set(detalle.sala.id,pendientes);else salas.delete(detalle.sala.id);
     }
     const cacheDeudas = await c.getFirstAsync<{ datos: string }>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='deudas'", [usuario.id]);
@@ -100,7 +100,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
     const anterior = anteriores.find(f => f.clave === aviso.clave && f.datos === JSON.stringify(aviso));
     if (anterior?.nativo && permitida && pendientesNativas.has(anterior.nativo) && !forzarProgramacion) continue;
     if (anterior?.nativo) await cancelarAviso(anterior.nativo);
-    const nativo = permitida ? await programarAviso(aviso, usuario.id, true) : null;
+    const nativo = permitida ? await programarAviso(aviso, usuario.id) : null;
     await ejecutarTransaccion(c => c.runAsync('INSERT INTO programaciones_avisos(usuario_id,clave,fecha,datos,nativo) VALUES(?,?,?,?,?) ON CONFLICT(usuario_id,clave) DO UPDATE SET fecha=excluded.fecha,datos=excluded.datos,nativo=excluded.nativo', [usuario.id, aviso.clave, aviso.fecha, JSON.stringify(aviso), nativo]));
   }
   if (historialCambiado) avisarIntegraciones();

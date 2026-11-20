@@ -10,8 +10,6 @@ import { useContext, useEffect,useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
-
   Text,
   View,
 } from 'react-native';

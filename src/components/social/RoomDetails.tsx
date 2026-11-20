@@ -17,7 +17,7 @@ import PanelSalaOnline from './OnlineRoomPanel';
 import SelectorSegmentado from '../SegmentedSelector';
 import { useDatosSociales } from '../../social/SocialDataContext';
 import { useEffect,useState } from 'react';
-import { leerDatosOnline,observarSocialOnline,consultarMovimientosSociales,obtenerVistaSincronizacion, cambiarPersonasSala,enviarAccionSocial } from '../../social/socialService';
+import { observarSocialOnline,consultarMovimientosSociales,obtenerVistaSincronizacion, cambiarPersonasSala,enviarAccionSocial } from '../../social/socialService';
 import { SECCIONES_SALA } from "../../social/socialConstants";
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -55,7 +55,22 @@ export default function DetalleSala(propiedades: import('../../social/types').As
   } = aspecto;
   const detalleOnline=useSalaOnline(sala.id,sala.online);
   const [pendientes,cambiarPendientes]=useState<import('../../social/online/types').OperacionPersonal[]>([]);
-  useEffect(()=>{let activo=true;const cargar=async()=>{try{const [ops,locales]=await Promise.all([leerDatosOnline<import('../../social/online/types').OperacionPersonal[]>(usuarioId,'operaciones',[]),consultarMovimientosSociales()]);if(activo)cambiarPendientes(detalleOnline ? pendientesSala(detalleOnline,ops,new Set(locales.map(l=>l.clave))) : []);}catch{}};void cargar();const dejar=observarSocialOnline(()=>{void cargar();});return()=>{activo=false;dejar();};},[usuarioId,sala.id,detalleOnline]);
+  useEffect(() => {
+    if (!detalleOnline) {
+      cambiarPendientes([]);
+      return;
+    }
+    let activo = true;
+    const cargar = async () => {
+      try {
+        const locales = await consultarMovimientosSociales();
+        if (activo) cambiarPendientes(pendientesSala(detalleOnline, new Set(locales.map(l => l.clave))));
+      } catch {}
+    };
+    void cargar();
+    const dejar = observarSocialOnline(() => { void cargar(); });
+    return () => { activo = false; dejar(); };
+  }, [usuarioId, sala.id, detalleOnline]);
   const contador=(detalleOnline?.solicitudes.filter(s=>s.estado==='pendiente').length||0)+(detalleOnline?.admisiones?.filter(s=>s.estado==='pendiente').length||0);
   const [seccion, establecerSeccion] = useState(propiedades.seccionInicial || 'balances');
   useEffect(()=>{if(propiedades.seccionInicial)establecerSeccion(propiedades.seccionInicial);},[propiedades.seccionInicial]);
