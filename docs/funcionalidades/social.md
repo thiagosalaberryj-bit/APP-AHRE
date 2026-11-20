@@ -239,9 +239,11 @@ El arranque normal no inserta personas, salas o deudas ficticias. El acceso
 explícito de Inicio a la cuenta de desarrollo sí prepara los
 [ejemplos sociales](inicio.md#datos-temporales-para-expo-go), conservados al reingresar.
 
-La consulta agrupa pagos por deuda y parte, partes por gasto e integrantes y
-gastos por sala antes de construir la vista. Así evita recorrer todas las
-filas repetidamente por cada registro. Los borradores de gastos se leen como
+El panel y el listado de salas cargan resúmenes con participantes, categorías,
+total gastado y movimientos por registrar. Al abrir una sala, la consulta trae
+los gastos, el reparto y los pagos de esa sala. Los cambios de salas compartidas
+guardados sin conexión también se reflejan en sus resúmenes.
+Los borradores de gastos se leen como
 `unknown` y comprueban las listas de personas pagadas y las asociaciones a
 depósitos o movimientos antes de utilizarlas.
 

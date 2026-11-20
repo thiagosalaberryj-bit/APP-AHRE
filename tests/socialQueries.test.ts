@@ -14,36 +14,38 @@ async function cuentaNueva(t:import('node:test').TestContext,registrarSql:(sql:s
 test('la primera lectura crea una sola identidad y las siguientes no escriben ni emiten pendientes',async t=>{
   const sql:string[]=[];const e=await cuentaNueva(t,s=>sql.push(s));
   let avisos=0;const dejar=e.observarCambiosLocales(()=>avisos++);t.after(dejar);
-  const [uno,dos]=await Promise.all([e.cargarSocial(),e.cargarSocial()]);
+  const [uno,dos]=await Promise.all([e.cargarResumenSocial(),e.cargarResumenSocial()]);
   assert.equal(uno.personaActual.idPersistente,dos.personaActual.idPersistente);
   assert.equal(e.base.prepare('SELECT COUNT(*) n FROM personas').get()!.n,1);
   assert.equal(avisos,1);
   const cola=JSON.stringify(e.base.prepare('SELECT * FROM sync_outbox').all());sql.length=0;
-  assert.equal(JSON.stringify(await e.cargarSocial()),JSON.stringify(uno));
-  assert.ok(sql.length>0);assert.ok(sql.every(s=>/^SELECT/i.test(s)));
+  assert.equal(JSON.stringify(await e.cargarResumenSocial()),JSON.stringify(uno));
+  assert.ok(sql.length>0);
+  assert.ok(sql.every(s => /^\s*(SELECT|WITH)\b/i.test(s) && !/\b(INSERT|UPDATE|DELETE|REPLACE)\b/i.test(s)));
   assert.ok(sql.every(s=>!s.includes('SELECT MAX(secuencia) AS n')));
   assert.equal(avisos,1);assert.equal(JSON.stringify(e.base.prepare('SELECT * FROM sync_outbox').all()),cola);
 });
 
 test('un error de lectura revierte la identidad inicial y permite reintentar sin duplicarla',async t=>{
-  let fallar=true;
-  const e=await cuentaNueva(t,sql=>{if(fallar&&sql.includes('FROM "gastos_compartidos"'))throw new Error('fallo de lectura');});
+  let fallar=false;
+  const e=await cuentaNueva(t,sql=>{if(fallar&&sql.includes('GROUP BY g.sala_id, g.categoria'))throw new Error('fallo de lectura');});
   const cola=JSON.stringify(e.base.prepare('SELECT * FROM sync_outbox').all());
-  await assert.rejects(e.cargarSocial());
+  fallar=true;
+  await assert.rejects(e.cargarResumenSocial());
   assert.equal(e.base.prepare('SELECT COUNT(*) n FROM personas').get()!.n,0);
   assert.equal(JSON.stringify(e.base.prepare('SELECT * FROM sync_outbox').all()),cola);
-  fallar=false;assert.equal((await e.cargarSocial()).personas.length,0);
+  fallar=false;assert.equal((await e.cargarResumenSocial()).personas.length,0);
   assert.equal(e.base.prepare('SELECT COUNT(*) n FROM personas').get()!.n,1);
 });
 
 test('las consultas conservan los adelantos y reflejan las ediciones sin usar datos cacheados',async t=>{
   const e=await preparar(t);await e.prepararDatosPrueba();
-  const antes=await e.cargarSocial();
+  const antes=await e.cargarResumenSocial();
   const persona=antes.personas[0];
   const deuda=await e.crearDeudaPersonal({personaId:persona.id,direccion:'me_deben',monto:'100',descripcion:'Adelanto de prueba'}, {depositoId:antes.depositos[0].id});
-  const actualizado=await e.cargarSocial();
+  const actualizado=await e.cargarResumenSocial();
   const visible=actualizado.deudas.find(d=>d.id===deuda.id)!;
   assert.ok(visible);assert.match(visible.origen,/Adelanto/);assert.equal(visible.movimientoOrigen!.monto,100);
   assert.equal(antes.deudas.some(d=>d.id===deuda.id),false);
-  assert.deepEqual(await e.cargarSocial(),actualizado);
+  assert.deepEqual(await e.cargarResumenSocial(),actualizado);
 });

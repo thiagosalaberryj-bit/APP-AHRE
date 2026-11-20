@@ -72,6 +72,8 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
   const [cargando, establecerCargando] = useState(true);
   const [errorCarga, establecerErrorCarga] = useState<string | null>(null);
   const secuenciaCarga = useRef(0);
+  const secuenciaResumenMp = useRef(0);
+  const cargaFinancieraEnCurso = useRef(false);
   const datosCargados = useRef(false);
   const guardadoVisibilidadEnCurso = useRef(false);
   const abrirPantalla = (ruta: string) => navegacion.getParent()?.navigate(ruta);
@@ -96,9 +98,22 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
     }
   };
 
+  const cargarResumenMp = useCallback(async () => {
+    if (cargaFinancieraEnCurso.current) return;
+
+    const identificadorCarga = ++secuenciaResumenMp.current;
+    try {
+      const resumen = await consultarResumenMp();
+      if (identificadorCarga === secuenciaResumenMp.current) establecerResumenMp(resumen);
+    } catch {
+      // Si falla la actualización, se conserva el último resumen disponible.
+    }
+  }, []);
+
   const cargarDatos = useCallback(async (forzarCarga = false) => {
     const identificadorCarga = secuenciaCarga.current + 1;
     secuenciaCarga.current = identificadorCarga;
+    cargaFinancieraEnCurso.current = true;
     const mostrarCarga = forzarCarga || !datosCargados.current;
     if (mostrarCarga) establecerCargando(true);
     establecerErrorCarga(null);
@@ -151,9 +166,6 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
       if (identificadorCarga !== secuenciaCarga.current) return;
       datosCargados.current = true;
       establecerUsuario(sesion.usuario);
-      const pendientesMp=await consultarResumenMp();
-      if(identificadorCarga!==secuenciaCarga.current)return;
-      establecerResumenMp(pendientesMp);
       establecerDepositos(depositosUsuario);
       establecerMovimientos(movimientosPreparados);
       establecerBalance(balanceUsuario);
@@ -165,22 +177,30 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
         : 'No se pudieron cargar los datos del inicio. Intentá nuevamente.';
       establecerErrorCarga(mensaje);
       mostrarAviso?.(mensaje, { tipo: 'error' });
+      return;
     } finally {
-      if (identificadorCarga === secuenciaCarga.current && mostrarCarga) {
-        establecerCargando(false);
+      if (identificadorCarga === secuenciaCarga.current) {
+        cargaFinancieraEnCurso.current = false;
+        if (mostrarCarga) establecerCargando(false);
       }
     }
-  }, [mostrarAviso]);
+    void cargarResumenMp();
+  }, [cargarResumenMp, mostrarAviso]);
 
-  useFocusEffect(useCallback(() => {let limpieza:(()=>void)|undefined;const cancelar=programarCargaVisible(()=>{const resultado=(()=>{
-    let activa=true;
-    cargarDatos();
-    const dejar=observarIntegraciones(()=>{void consultarResumenMp().then(resumen=>{if(activa)establecerResumenMp(resumen);}).catch(()=>{});});
+  useFocusEffect(useCallback(() => {
+    let dejarDeObservar: (() => void) | undefined;
+    const cancelar = programarCargaVisible(() => {
+      void cargarDatos();
+      dejarDeObservar = observarIntegraciones(cargarResumenMp);
+    });
     return () => {
-      activa=false;dejar();
+      cancelar();
+      dejarDeObservar?.();
       secuenciaCarga.current += 1;
+      secuenciaResumenMp.current += 1;
+      cargaFinancieraEnCurso.current = false;
     };
-  })();if(typeof resultado==='function')limpieza=resultado;});return()=>{cancelar();limpieza?.();};}, [cargarDatos]));
+  }, [cargarDatos, cargarResumenMp]));
 
   const variacion = saldoAnterior !== null && saldoAnterior > 0
     ? Math.round((balance - saldoAnterior) / saldoAnterior * 1000) / 10 : null;

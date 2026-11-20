@@ -45,7 +45,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
     const salas = new Map<string, number>(); for (const p of personales) if (p.salaId && !p.incorporada && !incorporadas.has(p.clave)) {salas.set(p.salaId, (salas.get(p.salaId) || 0) + 1);if(p.salaNombre)nombresSalas.set(p.salaId,p.salaNombre);}
     for(const detalle of await leerSalasOnline(usuario.id,c)){
       nombresSalas.set(detalle.sala.id,detalle.sala.nombre);
-      const pendientes=pendientesSala(detalle,personales,incorporadas).length;
+      const pendientes=pendientesSala(detalle,incorporadas).length;
       if(pendientes)salas.set(detalle.sala.id,pendientes);else salas.delete(detalle.sala.id);
     }
     const cacheDeudas = await c.getFirstAsync<{ datos: string }>("SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave='deudas'", [usuario.id]);

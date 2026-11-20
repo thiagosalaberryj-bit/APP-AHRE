@@ -1,7 +1,7 @@
 import type {Conexion} from '../../database/types';
 import {ejecutarLecturaConConexion} from '../../database/connectionQueue';
 import {ejecutarTransaccion} from '../../database/transactions';
-import type {RespuestaSala,ComandoOnline,PendienteOnline,SalaOnline} from './types';
+import type {RespuestaSala,ComandoOnline,GastoOnline,PendienteOnline,SalaOnline} from './types';
 
 const oyentes=new Set<()=>void>();
 export function observarSocialOnline(oyente:()=>void){oyentes.add(oyente);return()=>{oyentes.delete(oyente);};}
@@ -25,18 +25,144 @@ export async function confirmarComandoOnline(usuarioId:string,pendiente:Pendient
     await c.runAsync('DELETE FROM comandos_sociales_locales WHERE id=? AND usuario_id=?',[pendiente.id,usuarioId]);
   });avisarSocialOnline();
 }
+type FilaSala = { sala_id: string; datos: string; fecha_actualizacion: string };
+
+export type DatosResumenSalaOnline = Pick<RespuestaSala, 'administrador' | 'personaPropiaId' | 'misFinanzas'> & {
+  sala: Pick<SalaOnline, 'id' | 'nombre' | 'icono' | 'color' | 'fecha' | 'estado' | 'archivadaPorReinicio' | 'participantes' | 'revision'> & {
+    gastos: Pick<GastoOnline, 'id' | 'categoriaId' | 'monto' | 'estado' | 'pagaron' | 'version'>[];
+  };
+};
+
+function aplicarComandosSala(sala: DatosResumenSalaOnline['sala'], pendientes: PendienteOnline[]) {
+  let cierrePendiente = false;
+  const indices = new Map(sala.gastos.map((gasto, indice) => [gasto.id, indice]));
+  const guardarGasto = (gasto: GastoOnline, deLista: boolean) => {
+    const indice = indices.get(gasto.id);
+    if (indice === undefined) {
+      indices.set(gasto.id, sala.gastos.length);
+      sala.gastos.push(deLista ? gasto : { ...gasto, version: 1 });
+    } else {
+      const version = deLista ? gasto.version : sala.gastos[indice].version;
+      sala.gastos[indice] = { ...gasto, version: version + 1 };
+    }
+  };
+  for (const pendiente of pendientes) {
+    const comando = JSON.parse(pendiente.datos) as ComandoOnline;
+    if (comando.tipo === 'guardar_lista' && comando.gastos) {
+      for (const gasto of comando.gastos) guardarGasto(gasto, true);
+      sala.revision++;
+    } else if (comando.tipo === 'guardar_gasto' && comando.gasto) {
+      guardarGasto(comando.gasto, false);
+      sala.revision++;
+    } else if (comando.tipo === 'parte_pagada') {
+      const indice = comando.gastoId === undefined ? undefined : indices.get(comando.gastoId);
+      if (indice === undefined) continue;
+      const gasto = sala.gastos[indice];
+      gasto.pagaron = gasto.pagaron.filter(id => id !== comando.personaId);
+      if (comando.pagada && comando.personaId) gasto.pagaron.push(comando.personaId);
+      gasto.version++;
+      sala.revision++;
+    } else if (comando.tipo === 'integrantes' && comando.personas) {
+      const ids = new Set(comando.personas.map(p => p.id));
+      const anteriores = new Set(sala.participantes.map(p => p.id));
+      for (const persona of sala.participantes) persona.activa = ids.has(persona.id);
+      for (const persona of comando.personas) {
+        if (anteriores.has(persona.id)) continue;
+        sala.participantes.push({ ...persona, activa: true });
+        anteriores.add(persona.id);
+      }
+      sala.revision++;
+    } else if (comando.tipo === 'cerrar') {
+      cierrePendiente = true;
+    }
+  }
+  return cierrePendiente;
+}
+
+function reconstruirSalaOnline(fila: FilaSala, propios: PendienteOnline[]) {
+  const respuesta = JSON.parse(fila.datos) as RespuestaSala;
+  const cierrePendiente = propios.length > 0 && aplicarComandosSala(respuesta.sala, propios);
+  return { ...respuesta, pendientes: propios, ultimaActualizacion: fila.fecha_actualizacion, cierrePendiente };
+}
+
+async function leerComandosPorSala(conexion: Conexion, usuarioId: string, salaId?: string) {
+  const comandos = await conexion.getAllAsync<PendienteOnline>(
+    'SELECT id,sala_id,datos,error FROM comandos_sociales_locales WHERE usuario_id=?' + (salaId ? ' AND sala_id=?' : '') + ' ORDER BY secuencia',
+    salaId ? [usuarioId, salaId] : [usuarioId],
+  );
+  const porSala = new Map<string, PendienteOnline[]>();
+  for (const comando of comandos) {
+    const propios = porSala.get(comando.sala_id);
+    if (propios) propios.push(comando);
+    else porSala.set(comando.sala_id, [comando]);
+  }
+  return porSala;
+}
+
 export async function leerSalasOnline(usuarioId:string,conexion?:Conexion,salaId?:string){
   const leer=async(c:Conexion)=>{
     const parametros=salaId?[usuarioId,salaId]:[usuarioId],filtro=salaId?' AND sala_id=?':'';
-    const filas=await c.getAllAsync<{datos:string;fecha_actualizacion:string}>('SELECT datos,fecha_actualizacion FROM salas_online_locales WHERE usuario_id=?'+filtro+' ORDER BY sala_id',parametros);
-    const pendientes=await c.getAllAsync<PendienteOnline>('SELECT id,sala_id,datos,error FROM comandos_sociales_locales WHERE usuario_id=?'+filtro+' ORDER BY secuencia',parametros);
-    return filas.map(fila=>{
-      const respuesta=JSON.parse(fila.datos) as RespuestaSala;const propios=pendientes.filter(p=>p.sala_id===respuesta.sala.id);
-      for(const pendiente of propios){const comando=JSON.parse(pendiente.datos) as ComandoOnline;if(comando.tipo==='guardar_lista'&&comando.gastos){for(const gasto of comando.gastos){const i=respuesta.sala.gastos.findIndex(g=>g.id===gasto.id);if(i<0)respuesta.sala.gastos.push(gasto);else respuesta.sala.gastos[i]={...gasto,version:gasto.version+1};}respuesta.sala.revision++;}else if(comando.tipo==='guardar_gasto'&&comando.gasto){const i=respuesta.sala.gastos.findIndex(g=>g.id===comando.gasto!.id);const gasto={...comando.gasto,version:i<0?1:respuesta.sala.gastos[i].version+1};if(i<0)respuesta.sala.gastos.push(gasto);else respuesta.sala.gastos[i]=gasto;respuesta.sala.revision++;}else if(comando.tipo==='parte_pagada'){const gasto=respuesta.sala.gastos.find(g=>g.id===comando.gastoId);if(gasto){gasto.pagaron=gasto.pagaron.filter(id=>id!==comando.personaId);if(comando.pagada&&comando.personaId)gasto.pagaron.push(comando.personaId);gasto.version++;respuesta.sala.revision++;}}else if(comando.tipo==='integrantes'&&comando.personas){const ids=new Set(comando.personas.map(p=>p.id));for(const p of respuesta.sala.participantes)p.activa=ids.has(p.id);for(const p of comando.personas)if(!respuesta.sala.participantes.some(a=>a.id===p.id))respuesta.sala.participantes.push({...p,activa:true});respuesta.sala.revision++;}}
-      return {...respuesta,pendientes:propios,ultimaActualizacion:fila.fecha_actualizacion,cierrePendiente:propios.some(p=>(JSON.parse(p.datos) as ComandoOnline).tipo==='cerrar')};
-    });
+    const filas=await c.getAllAsync<FilaSala>('SELECT sala_id,datos,fecha_actualizacion FROM salas_online_locales WHERE usuario_id=?'+filtro+' ORDER BY sala_id',parametros);
+    const comandos = await leerComandosPorSala(c, usuarioId, salaId);
+    return filas.map(fila => reconstruirSalaOnline(fila, comandos.get(fila.sala_id) || []));
   };
   return conexion?leer(conexion):ejecutarLecturaConConexion(leer);
+}
+
+export type DetalleSalaOnlineGuardado = ReturnType<typeof reconstruirSalaOnline>;
+
+export async function leerSalasOnlineParaVista(usuarioId: string, conexion: Conexion, demo: boolean, salaId?: string) {
+  // La simulación recalcula elecciones y pendientes desde el reparto original.
+  const filas = await conexion.getAllAsync<FilaSala & { completa: number }>(`
+    WITH salas AS (
+      SELECT sala_id, datos, fecha_actualizacion,
+        (? OR sala_id = ? OR substr(sala_id, 1, 12) = 'demo-social:') AS completa
+      FROM salas_online_locales WHERE usuario_id = ?
+    )
+    SELECT sala_id, fecha_actualizacion, completa, CASE WHEN completa THEN datos ELSE json_object(
+      'administrador', json_extract(datos, '$.administrador'),
+      'personaPropiaId', json_extract(datos, '$.personaPropiaId'),
+      'misFinanzas', json_extract(datos, '$.misFinanzas'),
+      'sala', json_object(
+        'id', sala_id,
+        'nombre', json_extract(datos, '$.sala.nombre'),
+        'icono', json_extract(datos, '$.sala.icono'),
+        'color', json_extract(datos, '$.sala.color'),
+        'fecha', json_extract(datos, '$.sala.fecha'),
+        'estado', json_extract(datos, '$.sala.estado'),
+        'revision', json_extract(datos, '$.sala.revision'),
+        'archivadaPorReinicio', json_extract(datos, '$.sala.archivadaPorReinicio'),
+        'participantes', json_extract(datos, '$.sala.participantes'),
+        'gastos', json((
+          SELECT json_group_array(json_object(
+            'id', json_extract(value, '$.id'),
+            'categoriaId', json_extract(value, '$.categoriaId'),
+            'monto', json_extract(value, '$.monto'),
+            'pagaron', json_extract(value, '$.pagaron'),
+            'version', json_extract(value, '$.version'),
+            'estado', 'vigente'
+          ))
+          FROM json_each(datos, '$.sala.gastos') WHERE json_extract(value, '$.estado') = 'vigente'
+        ))
+      )
+    ) END AS datos
+    FROM salas ORDER BY sala_id`, [Number(demo), salaId || '', usuarioId]);
+  const comandos = await leerComandosPorSala(conexion, usuarioId);
+  return filas.map(fila => {
+    const propios = comandos.get(fila.sala_id) || [];
+    const completa = fila.completa ? reconstruirSalaOnline(fila, propios) : undefined;
+    const respaldo = completa && (demo || fila.sala_id.startsWith('demo-social:')) ? completa : undefined;
+    const resumen: DatosResumenSalaOnline = completa || JSON.parse(fila.datos);
+    if (!completa && propios.length) aplicarComandosSala(resumen.sala, propios);
+    return { resumen, detalle: fila.sala_id === salaId ? completa : undefined, respaldo };
+  });
+}
+
+export async function leerIdsSalasOnline(usuarioId: string) {
+  const filas = await ejecutarLecturaConConexion(conexion => conexion.getAllAsync<{sala_id: string}>(
+    'SELECT sala_id FROM salas_online_locales WHERE usuario_id = ? ORDER BY sala_id', [usuarioId],
+  ));
+  return filas.map(fila => fila.sala_id);
 }
 export async function guardarDatosOnline(usuarioId:string,clave:string,datos:unknown){await ejecutarTransaccion(c=>c.runAsync('INSERT INTO datos_sociales_online(usuario_id,clave,datos) VALUES(?,?,?) ON CONFLICT(usuario_id,clave) DO UPDATE SET datos=excluded.datos',[usuarioId,clave,JSON.stringify(datos)]));avisarSocialOnline();}
 export async function leerDatosOnline<T>(usuarioId:string,clave:string,defecto:T){return ejecutarLecturaConConexion(async c=>{const fila=await c.getFirstAsync<{datos:string}>('SELECT datos FROM datos_sociales_online WHERE usuario_id=? AND clave=?',[usuarioId,clave]);return fila?JSON.parse(fila.datos) as T:defecto;});}

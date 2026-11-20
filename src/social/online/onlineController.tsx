@@ -4,7 +4,7 @@ import {AppState} from 'react-native';
 import {obtenerSesionActual} from '../../authentication/sessionService';
 import {URL_SERVIDOR} from '../../sync/remote';
 import {recuperarEventosSociales,solicitarSocial} from './onlineService';
-import {observarSocialOnline,leerSalasOnline} from './onlineStore';
+import {observarSocialOnline,leerIdsSalasOnline} from './onlineStore';
 
 export default function ControladorSocialOnline(){
   useEffect(()=>{
@@ -21,8 +21,8 @@ export default function ControladorSocialOnline(){
         if(usuarioConectado&&usuarioConectado!==usuario.id){socket?.close();socket=null;suscritos.clear();}
         const canales=await recuperarEventosSociales(forzar);
         if(cerrado||(await obtenerSesionActual()).usuario?.id!==usuario.id||AppState.currentState!=='active')return;
-        const salas=await leerSalasOnline(usuario.id);
-        const actuales=[...new Set([...canales,...salas.map(s=>'sala:'+s.sala.id)])];
+        const salas=await leerIdsSalasOnline(usuario.id);
+        const actuales=[...new Set([...canales,...salas.map(id=>'sala:'+id)])];
         suscribir(actuales);
         if(!socket&&Date.now()>=proximaConexion){
           const {ticket}=await solicitarSocial<{ticket:string}>('/realtime-ticket',{});

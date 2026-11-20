@@ -32,10 +32,11 @@ export function interfazSocial(servicios: typeof import('../../src/social/social
   const apariencia: Contexto = {}, notificaciones: Contexto = {};
   let temas: typeof TEMAS, propiedades: {route:{name:string;params:ParametrosSociales};navigation:unknown}, arbol: Nodo;
   const iguales = (a?: readonly unknown[], b?: readonly unknown[]) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
+  const mostrarAviso = (mensaje: string) => avisos.push(mensaje);
   const react = {
     isValidElement: (valor: unknown) => !!valor && typeof valor === 'object' && 'props' in valor,
     createContext(valor: unknown) { const contexto: Contexto = { valor }; contexto.Provider = { contexto }; return contexto; },
-    useContext: (contexto: Contexto) => contexto === apariencia ? { tema: temas[nombreTema] } : contexto === notificaciones ? { mostrarAviso: (mensaje: string) => avisos.push(mensaje) } : contexto.valor,
+    useContext: (contexto: Contexto) => contexto === apariencia ? { tema: temas[nombreTema] } : contexto === notificaciones ? { mostrarAviso } : contexto.valor,
     useState<T>(inicial: T | (() => T)): [T, (valor: T | ((anterior: T) => T)) => void] {
       const registro = actual, posicion = indice++;
       if (!(posicion in registro)) registro[posicion] = { valor: typeof inicial === 'function' ? (inicial as () => T)() : inicial };

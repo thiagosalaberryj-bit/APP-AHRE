@@ -7,7 +7,7 @@ import { COLOR_ICONO_DEPOSITO } from '../../styles/colors';
 import crearEstilosPanel from '../../styles/social/SocialPanelStyles';
 import crearEstilosCompartidos from '../../styles/social/SharedStyles';
 import IndicadorPendientesSala from './RoomPendingBadge';
-export default function TarjetaResumenSala(propiedades: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & ({sala:import('../../social/types').SalaVista;alAbrir:()=>void})) {
+export default function TarjetaResumenSala(propiedades: Omit<import('../../social/types').AspectoSocial, 'estilosMovimiento'> & ({sala:import('../../social/socialQueryService').ResumenSalaVisible;alAbrir:()=>void})) {
   const {
     sala,
     alAbrir,

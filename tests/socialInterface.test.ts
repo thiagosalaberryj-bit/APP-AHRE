@@ -90,7 +90,7 @@ test('aceptar un enlace abre directamente la sala y las invitaciones ajenas no c
   const datos=await e.cargarSocial(),sala=datos.salas[0];
   let aceptaciones=0;
   const vista=interfazSocial({...e,
-    cargarSocial:async()=>({...datos,salas:[sala,...Array.from({length:3},(_,i)=>({...sala,id:'invitada-'+i,administrador:false,online:true}))]}),
+    cargarResumenSocial:async salaId=>({...datos,sala:salaId===sala.id?sala:undefined,salas:[sala,...Array.from({length:3},(_,i)=>({...sala,id:'invitada-'+i,administrador:false,online:true}))]}),
     aceptarInvitacionOnline:async(token:string)=>{assert.equal(token,'a'.repeat(64));aceptaciones++;return {salaId:sala.id};},
   },'claro');
   await vista.abrir();await vista.pulsar('Salas');assert.equal(vista.buscarBoton('Crear sala').props.disabled,false);
@@ -650,7 +650,7 @@ for(const tema of ['claro','oscuro'] as const)test(`el menú Salas separa creaci
   await vista.pulsar('Salas');await vista.pulsar('Cerrar opciones');assert.equal(vista.destinos.length,0);
   await vista.pulsar('Salas');await vista.pulsar('Crear sala');
   assert.deepEqual(vista.destinos.at(-1),[vista.rutas.REGISTRO_SOCIAL,{tipo:'crear'}]);
-  const llena=interfazSocial({...e,cargarSocial:async()=>({...datos,salas:Array.from({length:3},(_,i)=>({...datos.salas[0],id:'propia-'+i,administrador:true,estado:'abierta' as const}))})},tema);
+  const llena=interfazSocial({...e,cargarResumenSocial:async()=>({...datos,sala:undefined,salas:Array.from({length:3},(_,i)=>({...datos.salas[0],id:'propia-'+i,administrador:true,estado:'abierta' as const}))})},tema);
   await llena.abrir();await llena.pulsar('Salas');
   assert.equal(llena.buscarBoton('Crear sala').props.disabled,true);
   assert.ok(!llena.buscarBoton('Unirme a sala').props.disabled);
