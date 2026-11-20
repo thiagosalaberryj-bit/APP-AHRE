@@ -100,7 +100,7 @@ async function ejecutarReconciliacion(forzarProgramacion:boolean) {
     const anterior = anteriores.find(f => f.clave === aviso.clave && f.datos === JSON.stringify(aviso));
     if (anterior?.nativo && permitida && pendientesNativas.has(anterior.nativo) && !forzarProgramacion) continue;
     if (anterior?.nativo) await cancelarAviso(anterior.nativo);
-    const nativo = permitida ? await programarAviso(aviso, usuario.id, true) : null;
+    const nativo = permitida ? await programarAviso(aviso, usuario.id) : null;
     await ejecutarTransaccion(c => c.runAsync('INSERT INTO programaciones_avisos(usuario_id,clave,fecha,datos,nativo) VALUES(?,?,?,?,?) ON CONFLICT(usuario_id,clave) DO UPDATE SET fecha=excluded.fecha,datos=excluded.datos,nativo=excluded.nativo', [usuario.id, aviso.clave, aviso.fecha, JSON.stringify(aviso), nativo]));
   }
   if (historialCambiado) avisarIntegraciones();

@@ -31,7 +31,6 @@ import BuscadorFiltrosMovimientos from '../components/MovementSearchFilters';
 import PanelFiltrosMovimientos, { SeccionFiltro } from '../components/MovementFiltersPanel';
 import { FiltroCategoriasMovimientos, FiltroMontoMovimientos } from '../components/MovementFilterSections';
 import SelectorDeposito from '../components/DepositSelector';
-import EntradaMonto from '../components/MoneyInput';
 import { crearEstilosMovimientos } from '../styles/MovementsScreenStyles';
 import { crearEstilosBusquedaFiltros } from '../styles/MovementSearchFiltersStyles';
 import { cargarDepositosHistorialMovimientos } from '../movements/movementService';
@@ -666,7 +665,7 @@ export default function PantallaEstadisticas({ navigation: navegacion }: import(
         </View> : null}
 
         <PanelFiltrosMovimientos tema={tema} filtrosVisibles={filtroCategoriasAbierto} alCerrar={() => establecerFiltroCategoriasAbierto(false)} limpiarFiltros={limpiarFiltrosEstadistica} cantidadFiltros={cantidadFiltrosActivos}>
-          <FiltroCategoriasMovimientos tema={tema} estilos={estilosFiltros} estilosSelectores={estilosFiltros} estilosGlobales={estilosGlobales} resumen={textoCategoriasActivas} abierta={seccionesAbiertas.includes('categorias')} alAlternar={()=>alternarSeccion('categorias')} categoriasDisponiblesFiltro={categorias} tipoMovimiento={tipoMovimiento} categoriaFiltroIds={todasSeleccionadas?[]:categoriasSeleccionadas} establecerCategoriaFiltroIds={ids=>{establecerCategoriasSeleccionadas(ids.length?ids:todasLasCategorias);establecerCategoriaSeleccionada(null);}}/>
+          <FiltroCategoriasMovimientos tema={tema} estilos={estilosFiltros} estilosGlobales={estilosGlobales} resumen={textoCategoriasActivas} abierta={seccionesAbiertas.includes('categorias')} alAlternar={()=>alternarSeccion('categorias')} categoriasDisponiblesFiltro={categorias} tipoMovimiento={tipoMovimiento} categoriaFiltroIds={todasSeleccionadas?[]:categoriasSeleccionadas} establecerCategoriaFiltroIds={ids=>{establecerCategoriasSeleccionadas(ids.length?ids:todasLasCategorias);establecerCategoriaSeleccionada(null);}}/>
           <SeccionFiltro titulo="Depósitos" resumen={depositosIds === null ? 'Todos los depósitos' : depositosIds.length + ' seleccionados'} abierta={seccionesAbiertas.includes('depositos')} alAlternar={() => alternarSeccion('depositos')} colorAcento={tema.foco} estilos={estilosFiltros}>
             {errorDepositos ? <Text style={estilosGlobales.textoAyuda}>Volvé a abrir el selector para reintentar.</Text> : <SelectorDeposito tema={tema} estilosGlobales={estilosGlobales} estilosMovimiento={estilosFiltros} etiqueta="" depositos={depositos} seleccionMultiple seleccionadasIds={depositosIds ?? depositos.map(deposito => deposito.id)} alCambiarMulti={establecerDepositosIds} impedirSeleccionVacia/>}
           </SeccionFiltro>

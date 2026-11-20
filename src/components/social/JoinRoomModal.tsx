@@ -4,7 +4,6 @@ import {conRespuestaVisual} from '../../utils/pressFeedback';
 import BotonAccion from '../ActionButton';
 import {crearEstilosGlobales} from '../../styles/globalStyles';
 import { RETROALIMENTACION_PULSACION } from '../../styles/globalStyles';
-import PuntosCarga from '../LoadingDots';
 import { useContext,useEffect } from 'react';
 import {obtenerSesionActual} from '../../authentication/sessionService';
 import {leerDatosOnline,observarSocialOnline} from '../../social/socialService';

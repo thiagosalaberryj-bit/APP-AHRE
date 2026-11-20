@@ -25,10 +25,7 @@ export default function FormularioRegistrarDeuda({
 }: import('../../social/types').AspectoSocial & ({parametros:import('../../social/types').ParametrosSociales} & Pick<import('../../social/types').AccionesSociales,'abrirRegistro'>)) {
   const social=useDatosSociales();
   const {mostrarAviso}=useContext(ContextoAvisos);
-  const {
-    personas: personasSociales,
-    obtenerPersona
-  } = social;
+  const { obtenerPersona } = social;
   const {
     tema,
     estilosGlobales

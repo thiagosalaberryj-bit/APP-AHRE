@@ -50,7 +50,6 @@ export function ControladorSincronizacion({alRevocar}:{alRevocar:()=>void}){
     });
     const conexion=setInterval(()=>{
       if(AppState.currentState!=='active')return;
-      void procesar();
       void comprobarConexionServidor().then(recuperada=>{
         if(activo&&recuperada&&AppState.currentState==='active')programador.solicitar(false,0);
       }).catch(()=>{});

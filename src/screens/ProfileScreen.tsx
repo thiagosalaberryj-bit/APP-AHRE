@@ -29,7 +29,6 @@ import { ContextoApariencia } from '../contexts/AppearanceContext';
 import { ContextoAvisos } from '../contexts/ToastContext';
 import BotonPrincipal from '../components/PrimaryButton';
 import EncabezadoSeccion from '../components/SectionHeader';
-import Conmutador from '../components/Toggle';
 import { RUTAS } from '../constants/routes';
 import {
   ErrorPerfil,
@@ -87,7 +86,6 @@ function formatearFechaRegistro(fecha: string|number|Date|null) {
 export default function PantallaPerfil({ navigation: navegacion }: import('../navigation/types').PropiedadesPantalla) {
  const finalizacion=useFinalizacionAccion();
 
-  const [campoEnfocado,cambiarCampoEnfocado]=useState<string|null>(null);
   const bloqueoPerfil=useRef(false);
   const volverProtegido = useRegresoProtegido(navegacion,()=>bloqueoPerfil.current);
   const { tema, apariencia, establecerApariencia } = useContext(ContextoApariencia);

@@ -529,7 +529,7 @@ export default function PantallaMovimientos({ navigation: navegacion }: import('
 
                   <FiltroCategoriasMovimientos tema={tema} estilos={estilos} resumen={resumenCategorias}
                     abierta={seccionesFiltrosAbiertas.includes('categorias')} alAlternar={() => alternarSeccionFiltro('categorias')}
-                    estilosSelectores={estilos} estilosGlobales={estilosGlobales}
+                    estilosGlobales={estilosGlobales}
                     categoriasDisponiblesFiltro={categoriasDisponiblesFiltro}
                     tipoMovimiento={tipoFiltro === 'todos' ? undefined : tipoFiltro}
                     categoriaFiltroIds={categoriaFiltroIds} establecerCategoriaFiltroIds={establecerCategoriaFiltroIds}

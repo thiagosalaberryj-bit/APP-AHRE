@@ -358,7 +358,7 @@ export async function configurarAccesoSala(salaId:string,contrasena:string,opcio
  await enviarAccionSocial('acceso:'+salaId,'/salas/'+salaId+'/acceso',{contrasena,...opciones});await recuperarSalaOnline(salaId);
 }
 export async function solicitarIngresoSala(codigo:string,nombre:string,contrasena:string){
- if(await usuarioDemoActual())return solicitarIngresoDemo(codigo,nombre,contrasena);
+ if(await usuarioDemoActual())return solicitarIngresoDemo(codigo,contrasena);
  const resultado=await enviarAccionSocial<{id:string|null;estado:string;salaId:string}>('ingreso:'+codigo,'/accesos/'+codigo+'/solicitar',{nombre,contrasena});
  await sincronizarSocialOnline();return resultado;
 }
