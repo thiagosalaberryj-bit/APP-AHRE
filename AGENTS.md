@@ -114,6 +114,33 @@ si falta información indispensable para avanzar con criterio.
   parte y pide al líder que lo resuelva. No edites `package.json` ni archivos de
   lock para sortear esta regla.
 
+## APK local firmada en Windows
+
+- Cuando el usuario pida una APK para instalar o actualizar AHRE, ejecuta
+  desde la raíz de APP-AHRE en PowerShell:
+
+  ```powershell
+  .\scripts\build-signed-apk.ps1
+  ```
+
+- El script compila con Gradle, firma con la clave de distribución de Expo EAS
+  y verifica el certificado. Entrega `.expo/ahre-local-firmada.apk`. Usa
+  `-SoloFirmar` solo si la APK de Gradle ya se compiló con los cambios que
+  vas a entregar.
+- La credencial cifrada está fuera de Git, en
+  `%LOCALAPPDATA%\AHRE\android-signing\ahre-eas-release.dpapi`, y pertenece
+  al usuario de Windows que la configuró. Si falta, coordina con el líder
+  para recuperar la clave de distribución existente de EAS. No generes una
+  clave nueva ni uses la de depuración para reemplazarla.
+- Para una prueba de actualización, comprueba que el identificador de
+  aplicación y el certificado coincidan con los de la APK instalada, y que
+  el `versionCode` sea igual o mayor. Indica si se probó la instalación en el
+  teléfono. Este flujo ya se probó actualizando sobre la APK pública 0.9.5
+  sin desinstalar.
+
+Consulta [Compilación y publicación Android](docs/configuracion/publicacion.md#apk-local-firmada-en-windows)
+para preparar el entorno.
+
 ## Changelog y Pull Requests
 
 - El agente que implementa una tarea, con o sin Issue, no debe editar `docs/CHANGELOG.md`.

@@ -392,7 +392,7 @@ export default function PantallaPanel({ navigation: navegacion }: import('../nav
 
             <View style={estilos.seccion}>
               <View style={estilos.encabezadoSeccion}>
-                <Text style={estilosGlobales.encabezadoSeccion}>Movimientos recientes</Text>
+                <Text style={estilosGlobales.encabezadoSeccion}>Últimos movimientos</Text>
                 <Pressable android_ripple={RETROALIMENTACION_PULSACION}
                   accessibilityLabel="Ver todos los movimientos"
                   accessibilityRole="button"

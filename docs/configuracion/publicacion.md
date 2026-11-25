@@ -31,6 +31,27 @@ Comprueba el empaquetado JavaScript/Hermes y los recursos. No produce un APK ni
 instala la app. En la etapa 7 se exportó fuera del repositorio y el primer intento
 necesitó reintentarse con permisos para el temporal de Hermes en Windows.
 
+## APK local firmada en Windows
+
+Con el proyecto nativo `android/` generado, el SDK configurado en
+`android/local.properties` y el JDK disponible, ejecutá desde APP-AHRE:
+
+```powershell
+.\scripts\build-signed-apk.ps1
+```
+
+El script compila con Gradle, firma con la clave de distribución de Expo EAS
+usada en la APK pública 0.9.5 y verifica el certificado antes de guardar
+`.expo/ahre-local-firmada.apk`. Usá `-SoloFirmar` si ya generaste
+`android/app/build/outputs/apk/release/app-release.apk`.
+
+La credencial cifrada se prepara por usuario de Windows y se guarda en
+`%LOCALAPPDATA%\AHRE\android-signing\ahre-eas-release.dpapi`, fuera del
+repositorio. Android puede actualizar la instalación cuando coinciden el
+identificador y el certificado y el `versionCode` es igual o mayor que el
+instalado. La APK pública 0.9.4 y las APK firmadas con la clave de depuración
+tienen certificados diferentes.
+
 ## Eliminar mis datos desde la APK
 
 En **Perfil → Zona de peligro**, **Eliminar mis datos** requiere conexión con
